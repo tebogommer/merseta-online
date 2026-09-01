@@ -1,0 +1,362 @@
+@page "/levies/deviations"
+@page "/finance/levy-deviations"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject ILevyService LevyService
+@inject ILookupService LookupService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<PageTitle>SARS Levy Statistical Deviation &amp; Chamber Analysis | merSETA NSDMS</PageTitle>
+
+<div class="mb-4">
+    <!-- Top Bar -->
+    <MudPaper Elevation="1" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+        <div class="d-flex align-center gap-3">
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Color="Color.Default"
+                       OnClick="@(() => Navigation.NavigateTo("/levies"))">
+                Back to Levy Files
+            </MudButton>
+            <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 ma-0" />
+                <MudText Typo="Typo.h5" Class="font-weight-bold">
+                    SARS Levy Statistical Deviation &amp; Chamber Intelligence
+                </MudText>
+            </div>
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="LoadDataAsync">
+                Refresh Analysis
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    <!-- Summary KPI Cards -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2" Class="pa-3">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Total Employers Analyzed</MudText>
+                        <MudText Typo="Typo.h6" Class="font-weight-bold">@_deviations.Count</MudText>
+                    </div>
+                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.Business" />
+                    </MudAvatar>
+                </div>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2" Class="pa-3">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Inconsistent Contributors</MudText>
+                        <MudText Typo="Typo.h6" Class="font-weight-bold" Color="Color.Warning">
+                            @_deviations.Count(d => d.IsInconsistentContributor)
+                        </MudText>
+                    </div>
+                    <MudAvatar Color="Color.Warning" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" />
+                    </MudAvatar>
+                </div>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2" Class="pa-3">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Gross Levy Income</MudText>
+                        <MudText Typo="Typo.h6" Class="font-weight-bold" Color="Color.Success">
+                            @_chamberBreakdowns.Sum(c => c.TotalGrossLevy).ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                        </MudText>
+                    </div>
+                    <MudAvatar Color="Color.Success" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.Payments" />
+                    </MudAvatar>
+                </div>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2" Class="pa-3">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Active Chambers</MudText>
+                        <MudText Typo="Typo.h6" Class="font-weight-bold">
+                            @_chamberBreakdowns.Count(c => c.EmployerCount > 0) / @(Math.Max(1, _availableChambers.Count))
+                        </MudText>
+                    </div>
+                    <MudAvatar Color="Color.Info" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.Domain" />
+                    </MudAvatar>
+                </div>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Filter Bar -->
+    <MudCard Elevation="1" Class="pa-3 mb-4">
+        <MudGrid Spacing="2" Class="align-center">
+            <MudItem xs="12" sm="4" md="3">
+                <MudTextField T="string" Label="Search SDL / Employer"
+                              @bind-Value="_searchString"
+                              Variant="Variant.Outlined"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate="true"
+                              Placeholder="e.g. L123456789" />
+            </MudItem>
+            <MudItem xs="12" sm="4" md="3">
+                <MudSelect T="string" Label="Filter by Chamber" @bind-Value="_selectedChamber" Variant="Variant.Outlined" Clearable="true" OnSelectedValuesChanged="LoadDataAsync">
+                    <MudSelectItem Value="@("")">All Chambers</MudSelectItem>
+                    @foreach (var ch in _availableChambers)
+                    {
+                        <MudSelectItem Value="@ch.Code">@ch.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="4" md="3">
+                <MudSelect T="string" Label="Scheme Year" @bind-Value="_selectedSchemeYear" Variant="Variant.Outlined" OnSelectedValuesChanged="LoadDataAsync">
+                    <MudSelectItem Value="@("2026")">2026</MudSelectItem>
+                    <MudSelectItem Value="@("2025")">2025</MudSelectItem>
+                    <MudSelectItem Value="@("2024")">2024</MudSelectItem>
+                    <MudSelectItem Value="@("2023")">2023</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="3" Class="d-flex justify-end gap-2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune" OnClick="@(() => Navigation.NavigateTo("/levies/scheme-years"))">
+                    Scheme Year Rates
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudCard>
+
+    <!-- Main Content Tabs -->
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+        <!-- Tab 1: Statistical Deviation Anomaly Analysis -->
+        <MudTabPanel Text="12-Month Statistical Deviation Analysis" Icon="@Icons.Material.Filled.QueryStats">
+            <div class="d-flex justify-space-between align-center mb-3">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Identifies employers exhibiting inconsistent monthly levy patterns (&mu; &ge; R40,000 and Standard Deviation &ge; 20%), indicating unannounced workforce shifts or reporting irregularities.
+                </MudText>
+            </div>
+
+            <MudTable Items="@FilteredDeviations" Hover="true" Striped="true" Elevation="0" Dense="true" RowsPerPage="15">
+                <HeaderContent>
+                    <MudTh>SDL Number</MudTh>
+                    <MudTh>Employer Name</MudTh>
+                    <MudTh>Chamber</MudTh>
+                    <MudTh Class="text-right">Latest Levy</MudTh>
+                    <MudTh Class="text-right">Average Monthly (&mu;)</MudTh>
+                    <MudTh Class="text-right">Std Deviation (&sigma;)</MudTh>
+                    <MudTh Class="text-right">Deviation %</MudTh>
+                    <MudTh Class="text-center">Anomaly Flag</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="SDL Number">
+                        <MudText Typo="Typo.body2" Class="font-weight-bold">@context.SdlNumber</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Employer Name">@context.OrganisationName</MudTd>
+                    <MudTd DataLabel="Chamber">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">@context.ChamberCode</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Latest Levy" Class="text-right font-weight-bold">
+                        @context.LatestLevy.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                    <MudTd DataLabel="Average Monthly" Class="text-right">
+                        @context.AverageMonthlyLevy.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                    <MudTd DataLabel="Std Dev" Class="text-right">
+                        @context.StandardDeviation.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                    <MudTd DataLabel="Deviation %" Class="text-right">
+                        <span class="@(context.DeviationPercentage >= 20.0m ? "text-danger font-weight-bold" : "")">
+                            @context.DeviationPercentage.ToString("F1")%
+                        </span>
+                    </MudTd>
+                    <MudTd DataLabel="Anomaly Flag" Class="text-center">
+                        @if (context.IsInconsistentContributor)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Icon="@Icons.Material.Filled.Warning" Variant="Variant.Filled">
+                                Inconsistent (&ge;20%)
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.CheckCircle" Variant="Variant.Outlined">
+                                Consistent
+                            </MudChip>
+                        }
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudTabPanel>
+
+        <!-- Tab 2: Chamber Revenue Intelligence Breakdown -->
+        <MudTabPanel Text="Chamber Revenue Distribution" Icon="@Icons.Material.Filled.PieChart">
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                Aggregate statutory 80/20 breakdown of Skills Development Levies across merSETA manufacturing and retail chambers.
+            </MudText>
+
+            <MudTable Items="@_chamberBreakdowns" Hover="true" Striped="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Chamber Sector</MudTh>
+                    <MudTh Class="text-center">Employers</MudTh>
+                    <MudTh Class="text-right">Gross Total (100%)</MudTh>
+                    <MudTh Class="text-right">Mandatory Grant (20%)</MudTh>
+                    <MudTh Class="text-right">Discretionary Grant (49.5%)</MudTh>
+                    <MudTh Class="text-right">Administration (10.5%)</MudTh>
+                    <MudTh Class="text-right">QCTO (0.5%)</MudTh>
+                    <MudTh Class="text-right">Interest &amp; Penalties</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Chamber Sector">
+                        <div>
+                            <MudText Typo="Typo.body2" Class="font-weight-bold">@context.ChamberName</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Code: @context.ChamberCode</MudText>
+                        </div>
+                    </MudTd>
+                    <MudTd DataLabel="Employers" Class="text-center font-weight-bold">@context.EmployerCount</MudTd>
+                    <MudTd DataLabel="Gross Total" Class="text-right font-weight-bold" Style="color: var(--mud-palette-primary);">
+                        @context.TotalGrossLevy.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                    <MudTd DataLabel="Mandatory Grant" Class="text-right">
+                        @context.MandatoryGrantPortion.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                    <MudTd DataLabel="Discretionary Grant" Class="text-right">
+                        @context.DiscretionaryGrantPortion.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                    <MudTd DataLabel="Administration" Class="text-right">
+                        @context.AdminPortion.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                    <MudTd DataLabel="QCTO" Class="text-right">
+                        @context.QctoPortion.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                    <MudTd DataLabel="Interest & Penalties" Class="text-right">
+                        @context.InterestAndPenalties.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+
+        <!-- Tab 3: Chamber Grant Envelopes & Budget Burn-Rate Intelligence -->
+        <MudTabPanel Text="Grant Envelopes &amp; Sector Burn Rate" Icon="@Icons.Material.Filled.AccountBalance">
+            <MudTable Items="_chamberGrantSummaries" Dense="true" Hover="true" Striped="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Chamber Sector</MudTh>
+                    <MudTh Class="text-center">Employers</MudTh>
+                    <MudTh Class="text-right">Gross Levy</MudTh>
+                    <MudTh Class="text-right">MG Rebates Paid</MudTh>
+                    <MudTh Class="text-right">DG Budget Envelope</MudTh>
+                    <MudTh Class="text-right">DG Committed</MudTh>
+                    <MudTh Class="text-right">DG Disbursed</MudTh>
+                    <MudTh Class="text-center" Style="min-width: 140px;">DG Burn Rate</MudTh>
+                    <MudTh Class="text-right">Unallocated Reserve</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Chamber Sector">
+                        <div>
+                            <MudText Typo="Typo.body2" Class="font-weight-bold">@context.ChamberName</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Code: @context.ChamberCode</MudText>
+                        </div>
+                    </MudTd>
+                    <MudTd DataLabel="Employers" Class="text-center font-weight-bold">@context.EmployerCount</MudTd>
+                    <MudTd DataLabel="Gross Levy" Class="text-right font-weight-bold">
+                        @context.TotalGrossLevyCollected.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                    <MudTd DataLabel="MG Rebates Paid" Class="text-right" Style="color: var(--mud-palette-success);">
+                        @context.MandatoryGrantRebatesPaid.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                    <MudTd DataLabel="DG Envelope" Class="text-right font-weight-bold" Style="color: var(--mud-palette-primary);">
+                        @context.DiscretionaryGrantEnvelope.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                    <MudTd DataLabel="DG Committed" Class="text-right">
+                        @context.DiscretionaryGrantCommitted.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                    <MudTd DataLabel="DG Disbursed" Class="text-right font-weight-bold" Style="color: var(--mud-palette-info);">
+                        @context.DiscretionaryGrantDisbursed.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                    <MudTd DataLabel="DG Burn Rate">
+                        <div class="d-flex flex-column align-center gap-1">
+                            <MudProgressLinear Color="@(context.GrantBurnRatePercentage >= 80 ? Color.Success : context.GrantBurnRatePercentage >= 50 ? Color.Info : Color.Warning)"
+                                               Value="@context.GrantBurnRatePercentage"
+                                               Class="my-1 rounded" />
+                            <MudText Typo="Typo.caption" Class="font-weight-bold">@context.GrantBurnRatePercentage%</MudText>
+                        </div>
+                    </MudTd>
+                    <MudTd DataLabel="Unallocated Reserve" Class="text-right font-weight-bold">
+                        @context.UnallocatedReserveBalance.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+    </MudTabs>
+</div>
+
+@code {
+    [Inject] private IAnalyticsService AnalyticsService { get; set; } = default!;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Finance & Levies", href: "/levies"),
+        new BreadcrumbItem("Statistical Deviations & Chambers", href: "/levies/deviations", disabled: true)
+    };
+
+    private List<SarsLevyDeviationDto> _deviations = new();
+    private List<ChamberLevyBreakdownDto> _chamberBreakdowns = new();
+    private List<ChamberGrantFinancialSummaryDto> _chamberGrantSummaries = new();
+    private List<LookupItemDto> _availableChambers = new();
+
+    private string _searchString = string.Empty;
+    private string _selectedChamber = string.Empty;
+    private string _selectedSchemeYear = "2026";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _availableChambers = await LookupService.GetLookupItemsAsync("ChamberType");
+        }
+        catch
+        {
+            // Graceful fallback
+        }
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            _deviations = await LevyService.GetLevyDeviationReportAsync(_selectedSchemeYear, string.IsNullOrWhiteSpace(_selectedChamber) ? null : _selectedChamber);
+            _chamberBreakdowns = await LevyService.GetChamberLevyBreakdownAsync(_selectedSchemeYear);
+            _chamberGrantSummaries = await AnalyticsService.GetChamberGrantFinancialSummaryAsync(_selectedSchemeYear);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error calculating levy deviations: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private IEnumerable<SarsLevyDeviationDto> FilteredDeviations
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(_searchString)) return _deviations;
+            return _deviations.Where(d =>
+                d.SdlNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                d.OrganisationName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                d.ChamberCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+}

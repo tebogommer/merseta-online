@@ -22,38 +22,49 @@ public class BackgroundSchedulerHostedService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Background Scheduler Hosted Service initialized (Off-By-Default Check Active).");
-        await Task.Delay(5000, stoppingToken);
-
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            await Task.Delay(10000, stoppingToken);
+
+            while (!stoppingToken.IsCancellationRequested)
             {
-                using var scope = _serviceProvider.CreateScope();
-                var featureFlags = scope.ServiceProvider.GetRequiredService<IFeatureFlagService>();
-                var isSchedulerEnabled = await featureFlags.IsFeatureEnabledAsync("Scheduler.BackgroundWorker", false);
-
-                if (isSchedulerEnabled)
+                try
                 {
-                    _logger.LogInformation("Background Scheduler: Executing active scheduled maintenance cycle...");
-                    var levyService = scope.ServiceProvider.GetRequiredService<LevyService>();
-                    var configService = scope.ServiceProvider.GetRequiredService<ISystemConfigurationService>();
+                    using var scope = _serviceProvider.CreateScope();
+                    var featureFlags = scope.ServiceProvider.GetRequiredService<IFeatureFlagService>();
+                    var isSchedulerEnabled = await featureFlags.IsFeatureEnabledAsync("Scheduler.BackgroundWorker", false);
 
-                    // Automated SLA Task check and maintenance logic
-                    var lastRun = DateTime.UtcNow;
-                    await configService.SetConfigAsync("Scheduler.LastHeartbeat", lastRun.ToString("o"), "Scheduler", "Last recorded background scheduler execution timestamp", "String", "SYSTEM");
+                    if (isSchedulerEnabled)
+                    {
+                        _logger.LogInformation("Background Scheduler: Executing active scheduled maintenance cycle...");
+                        var levyService = scope.ServiceProvider.GetRequiredService<LevyService>();
+                        var configService = scope.ServiceProvider.GetRequiredService<ISystemConfigurationService>();
+
+                        // Automated SLA Task check and maintenance logic
+                        var lastRun = DateTime.UtcNow;
+                        await configService.SetConfigAsync("Scheduler.LastHeartbeat", lastRun.ToString("o"), "Scheduler", "Last recorded background scheduler execution timestamp", "String", "SYSTEM");
+                    }
+                    else
+                    {
+                        _logger.LogDebug("Background Scheduler: Feature 'Scheduler.BackgroundWorker' is DISABLED by policy. Skipping execution cycle.");
+                    }
                 }
-                else
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {
-                    _logger.LogDebug("Background Scheduler: Feature 'Scheduler.BackgroundWorker' is DISABLED by policy. Skipping execution cycle.");
+                    break;
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred during background scheduler execution cycle.");
-            }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error occurred during background scheduler execution cycle.");
+                }
 
-            // Sleep for 60 seconds between cycles
-            await Task.Delay(TimeSpan.FromSeconds(60), stoppingToken);
+                // Sleep for 60 seconds between cycles
+                await Task.Delay(TimeSpan.FromSeconds(60), stoppingToken);
+            }
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            // Clean host shutdown
         }
     }
 }

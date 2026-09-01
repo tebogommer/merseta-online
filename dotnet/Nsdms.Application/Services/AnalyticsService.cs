@@ -138,4 +138,76 @@ public class AnalyticsService : IAnalyticsService
 
         return (totalCommitted, totalDisbursed, totalRebates);
     }
+
+    public async Task<List<ChamberGrantFinancialSummaryDto>> GetChamberGrantFinancialSummaryAsync(string? schemeYear = null)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var chambers = await db.ChamberTypes.Where(c => c.Active).OrderBy(c => c.Name).ToListAsync();
+        var orgs = await db.Organisations.ToListAsync();
+
+        var levyQuery = db.LevyFileLines.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(schemeYear) && schemeYear != "All")
+        {
+            levyQuery = levyQuery.Where(l => l.SchemeYear == schemeYear || l.SchemeYear.StartsWith(schemeYear));
+        }
+        var levyLines = await levyQuery.ToListAsync();
+
+        var moas = await db.GrantMoas
+            .Include(m => m.GrantApplication)
+            .Include(m => m.Milestones)
+                .ThenInclude(ms => ms.Payments)
+            .ToListAsync();
+
+        var rebates = await db.MandatoryGrantDisbursements.ToListAsync();
+
+        var result = new List<ChamberGrantFinancialSummaryDto>();
+
+        foreach (var ch in chambers)
+        {
+            var chamberOrgs = orgs.Where(o => o.ChamberCode == ch.Code).ToList();
+            var chamberOrgIds = chamberOrgs.Select(o => o.Id).ToHashSet();
+            var chamberSdlSet = chamberOrgs.Select(o => o.SdlNumber).ToHashSet();
+
+            // Match levy lines by explicit ChamberCode or by Organisation SDL
+            var chamberLevies = levyLines.Where(l => l.ChamberCode == ch.Code || chamberSdlSet.Contains(l.SdlNumber)).ToList();
+
+            var totalGross = chamberLevies.Sum(l => l.TotalLevyAmount);
+            var mandatoryEnvelope = chamberLevies.Sum(l => l.MandatoryLevyAmount);
+            var discretionaryEnvelope = chamberLevies.Sum(l => l.DiscretionaryLevyAmount);
+            var adminPortion = chamberLevies.Sum(l => l.AdminLevyAmount);
+            var qctoPortion = chamberLevies.Sum(l => l.QctoLevyAmount);
+
+            // If no individual lines imported, calculate 20% / 49.5% statutory defaults from gross
+            if (mandatoryEnvelope == 0 && totalGross > 0)
+            {
+                mandatoryEnvelope = totalGross * 0.20m;
+                discretionaryEnvelope = totalGross * 0.495m;
+                adminPortion = totalGross * 0.105m;
+                qctoPortion = totalGross * 0.005m;
+            }
+
+            var chamberMoas = moas.Where(m => m.GrantApplication != null && chamberOrgIds.Contains(m.GrantApplication.OrganisationId)).ToList();
+            var dgCommitted = chamberMoas.Sum(m => m.TotalContractValue);
+            var dgDisbursed = chamberMoas.SelectMany(m => m.Milestones).SelectMany(ms => ms.Payments).Where(p => p.PaymentStatusCode == "Paid").Sum(p => p.ApprovedPaymentAmount);
+
+            var mgPaid = rebates.Where(r => chamberOrgIds.Contains(r.OrganisationId) && r.DisbursementStatusCode == "Paid").Sum(r => r.CalculatedRebateAmount);
+
+            result.Add(new ChamberGrantFinancialSummaryDto
+            {
+                ChamberCode = ch.Code,
+                ChamberName = ch.Name,
+                EmployerCount = chamberOrgs.Count,
+                TotalGrossLevyCollected = totalGross,
+                MandatoryGrantRebateTarget = mandatoryEnvelope,
+                MandatoryGrantRebatesPaid = mgPaid,
+                DiscretionaryGrantEnvelope = discretionaryEnvelope,
+                DiscretionaryGrantCommitted = dgCommitted,
+                DiscretionaryGrantDisbursed = dgDisbursed,
+                AdministrationExpensePortion = adminPortion,
+                QctoLevyPortion = qctoPortion
+            });
+        }
+
+        return result;
+    }
 }

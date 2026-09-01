@@ -1,17 +1,21 @@
+@page "/dg-grants/{id:int}"
+@page "/dg-grants/{id:int}/edit"
+@page "/dg-grants/create"
 @page "/grants/{id:int}"
 @page "/grants/{id:int}/edit"
 @page "/grants/create"
 @using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
 @inject IGrantService GrantService
 @inject IOrganisationService OrgService
-@inject LookupService LookupService
+@inject ILookupService LookupService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @rendermode InteractiveServer
 
-<PageTitle>@(Id == 0 ? "New Discretionary Grant Application" : $"{_grant.ApplicationNumber} - {_grant.ProjectTitle}") - merSETA NSDMS</PageTitle>
+<PageTitle>@(Id == 0 ? "New Discretionary Grant (DG) Application" : $"{_grant.ApplicationNumber} - {_grant.ProjectTitle}") - merSETA NSDMS</PageTitle>
 
 <!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
 <MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3 bg-surface" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
@@ -20,8 +24,8 @@
                    StartIcon="@Icons.Material.Filled.ArrowBack"
                    Color="Color.Default"
                    OnClick="BackToList"
-                   aria-label="Back to Discretionary Grants">
-            Back to Grants
+                   aria-label="Back to Discretionary Grants (DG)">
+            Back to DG Applications
         </MudButton>
         <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
         <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
@@ -30,7 +34,7 @@
         <div>
             <div class="d-flex align-center gap-2">
                 <MudText Typo="Typo.h5" Class="fw-bold">
-                    @(Id == 0 ? "New Discretionary Grant Application" : $"{_grant.ApplicationNumber} - {_grant.ProjectTitle}")
+                    @(Id == 0 ? "New Discretionary Grant (DG) Application" : $"{_grant.ApplicationNumber} - {_grant.ProjectTitle}")
                 </MudText>
                 @if (Id > 0)
                 {
@@ -56,7 +60,7 @@
                        Color="Color.Error"
                        StartIcon="@Icons.Material.Filled.Delete"
                        OnClick="DeleteGrant"
-                       aria-label="Delete Grant Application">
+                       aria-label="Delete Discretionary Grant Application">
                 Delete
             </MudButton>
         }
@@ -72,8 +76,8 @@
                    StartIcon="@Icons.Material.Filled.Save"
                    OnClick="SaveGrant"
                    Disabled="_isSaving"
-                   aria-label="Save Application">
-            @(_isSaving ? "Saving..." : "Save Application")
+                   aria-label="Save Discretionary Grant Application">
+            @(_isSaving ? "Saving..." : "Save DG Application")
         </MudButton>
     </div>
 </MudPaper>
@@ -102,16 +106,22 @@
     else
     {
         <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" @bind-ActivePanelIndex="_activeTabIndex">
-            <!-- TAB 1: Application Details -->
-            <MudTabPanel Text="Application Details" Icon="@Icons.Material.Filled.AssignmentTurnedIn">
+            <!-- TAB 1: DG Application Details -->
+            <MudTabPanel Text="DG Application Details" Icon="@Icons.Material.Filled.AssignmentTurnedIn">
                 <MudForm @ref="_form" @bind-IsValid="_isValid" Class="pa-4">
                     <MudGrid Spacing="3">
                         <MudItem xs="12" lg="8">
                             <MudCard Outlined="true" Class="pa-4 mb-4">
-                                <MudText Typo="Typo.h6" Class="fw-bold mb-3">Grant Project Specification</MudText>
+                                <MudText Typo="Typo.h6" Class="fw-bold mb-3">Discretionary Grant Project Specification</MudText>
                                 <MudGrid>
                                     <MudItem xs="12" md="6">
-                                        <MudSelect T="int" Label="Applying Organisation / Employer" Required="true" RequiredError="Organisation is mandatory" @bind-Value="_grant.OrganisationId" Variant="Variant.Outlined">
+                                        <MudSelect T="int" 
+                                                   Label="Applying Organisation / Employer" 
+                                                   Required="true" 
+                                                   RequiredError="Organisation is mandatory" 
+                                                   @bind-Value="_grant.OrganisationId" 
+                                                   ToStringFunc="@FormatOrganisationDisplay"
+                                                   Variant="Variant.Outlined">
                                             @foreach (var org in _organisations)
                                             {
                                                 <MudSelectItem Value="@org.Id">@org.CompanyName (@org.SdlNumber)</MudSelectItem>
@@ -180,6 +190,20 @@
                                     </MudItem>
                                     <MudItem xs="12" md="6">
                                         <MudDatePicker Label="Application Date" @bind-Date="_appDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudSelect T="int?"
+                                                   Label="Strategic Priority / Focus Area Theme"
+                                                   @bind-Value="_grant.StrategicPriorityId"
+                                                   ToStringFunc="@FormatStrategicPriorityDisplay"
+                                                   Variant="Variant.Outlined"
+                                                   Clearable="true">
+                                            <MudSelectItem Value="@((int?)null)">-- General Discretionary Grant / Strategic Theme Unassigned --</MudSelectItem>
+                                            @foreach (var sp in _strategicPriorities)
+                                            {
+                                                <MudSelectItem Value="@((int?)sp.Id)">@sp.Code - @sp.Name (@sp.NsdpOutcomeCode)</MudSelectItem>
+                                            }
+                                        </MudSelect>
                                     </MudItem>
                                 </MudGrid>
                             </MudCard>
@@ -262,20 +286,30 @@
                 </MudForm>
             </MudTabPanel>
 
-            <!-- TAB 2: Funding Window -->
-            <MudTabPanel Text="Funding Window" Icon="@Icons.Material.Filled.EventNote">
+            <!-- TAB 2: DG Funding Window -->
+            <MudTabPanel Text="DG Funding Window" Icon="@Icons.Material.Filled.EventNote">
                 <div class="pa-4">
                     <MudCard Outlined="true" Class="pa-4 mb-4">
-                        <MudText Typo="Typo.h6" Class="fw-bold mb-3">Associated Discretionary Funding Window</MudText>
+                        <MudText Typo="Typo.h6" Class="fw-bold mb-3">Associated Discretionary Grant (DG) Funding Window</MudText>
                         <MudGrid>
-                            <MudItem xs="12" md="6">
-                                <MudSelect T="int?" Label="Assigned Funding Window" @bind-Value="_grant.FundingWindowId" Variant="Variant.Outlined" Clearable="true">
-                                    <MudSelectItem Value="@((int?)null)">-- No Window Assigned / Direct Application --</MudSelectItem>
+                            <MudItem xs="12" md="8">
+                                <MudSelect T="int?" 
+                                           Label="Assigned DG Funding Window" 
+                                           @bind-Value="_grant.FundingWindowId" 
+                                           ToStringFunc="@FormatFundingWindowDisplay"
+                                           Variant="Variant.Outlined" 
+                                           Clearable="true">
+                                    <MudSelectItem Value="@((int?)null)">-- No DG Window Assigned / Direct Submission --</MudSelectItem>
                                     @foreach (var fw in _fundingWindows)
                                     {
                                         <MudSelectItem Value="@((int?)fw.Id)">@fw.WindowName (FY @fw.FinYear - @fw.TotalAvailableBudget.ToString("C"))</MudSelectItem>
                                     }
                                 </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="4" Class="d-flex align-center">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.EventNote" Href="/dg-funding-windows">
+                                    Manage DG Windows
+                                </MudButton>
                             </MudItem>
                         </MudGrid>
 
@@ -285,6 +319,12 @@
                             if (selectedWindow != null)
                             {
                                 <MudPaper Elevation="0" Class="pa-4 mt-4 mud-background-gray rounded">
+                                    <div class="d-flex justify-space-between align-center mb-3">
+                                        <MudText Typo="Typo.subtitle2" Class="fw-bold">Window Specification</MudText>
+                                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInNew" Href="@($"/grants/windows/{selectedWindow.Id}")">
+                                            View Window 360° Hub
+                                        </MudButton>
+                                    </div>
                                     <MudGrid>
                                         <MudItem xs="12" md="4">
                                             <MudText Typo="Typo.caption" Class="text-muted">Window Name:</MudText>
@@ -534,6 +574,7 @@
     private List<Organisation> _organisations = new();
     private List<LookupItemDto> _grantTypes = new();
     private List<GrantFundingWindow> _fundingWindows = new();
+    private List<StrategicPriority> _strategicPriorities = new();
     private List<GrantProjectBudget> _budgets = new();
 
     private DateTime? _appDate;
@@ -551,7 +592,8 @@
 
         // Sequential lookup loading
         _grantTypes = await LookupService.GetLookupItemsAsync("GrantTypeType");
-        _fundingWindows = await GrantService.GetFundingWindowsAsync();
+        _fundingWindows = await GrantService.GetFundingWindowsAsync(activeOnly: false);
+        _strategicPriorities = await GrantService.GetStrategicPrioritiesAsync(activeOnly: true);
         _organisations = await OrgService.GetAllAsync();
 
         if (Id > 0)
@@ -581,9 +623,38 @@
         _breadcrumbItems = new List<BreadcrumbItem>
         {
             new BreadcrumbItem("Home", href: "/"),
-            new BreadcrumbItem("Discretionary Grants", href: "/grants"),
-            new BreadcrumbItem(Id == 0 ? "Create" : $"Grant #{Id}", href: null, disabled: true)
+            new BreadcrumbItem("Discretionary Grants (DG)", href: "/dg-grants"),
+            new BreadcrumbItem(Id == 0 ? "New DG Application" : _grant.ApplicationNumber, href: null, disabled: true)
         };
+    }
+
+    private string FormatOrganisationDisplay(int orgId)
+    {
+        if (orgId == 0) return "-- Select Applying Organisation / Employer --";
+        var org = _organisations?.FirstOrDefault(o => o.Id == orgId) ?? _grant?.Organisation;
+        return org != null && !string.IsNullOrWhiteSpace(org.CompanyName) 
+            ? $"{org.CompanyName} ({org.SdlNumber})" 
+            : "Applying Organisation / Employer";
+    }
+
+    private string FormatStrategicPriorityDisplay(int? spId)
+    {
+        if (!spId.HasValue || spId.Value == 0) 
+            return "-- General Discretionary Grant / Strategic Theme Unassigned --";
+        var sp = _strategicPriorities?.FirstOrDefault(s => s.Id == spId.Value) ?? _grant?.StrategicPriority;
+        return sp != null && !string.IsNullOrWhiteSpace(sp.Name)
+            ? $"{sp.Code} - {sp.Name} ({sp.NsdpOutcomeCode})"
+            : "Strategic Priority / Focus Area Theme";
+    }
+
+    private string FormatFundingWindowDisplay(int? windowId)
+    {
+        if (!windowId.HasValue || windowId.Value == 0) 
+            return "-- No DG Window Assigned / Direct Submission --";
+        var fw = _fundingWindows?.FirstOrDefault(w => w.Id == windowId.Value) ?? _grant?.FundingWindow;
+        return fw != null && !string.IsNullOrWhiteSpace(fw.WindowName) 
+            ? $"{fw.WindowName} (FY {fw.FinYear} - {fw.TotalAvailableBudget:C})" 
+            : "Assigned DG Funding Window";
     }
 
     private async Task LoadGrantData()
@@ -596,11 +667,12 @@
             _budgets = await GrantService.GetProjectBudgetsAsync(Id);
             _linkedMoa = await GrantService.GetGrantMoaByApplicationIdAsync(Id);
             await CheckWspCompliance();
+            SetupBreadcrumbs();
         }
         else
         {
-            Snackbar.Add($"Grant Application #{Id} not found.", Severity.Error);
-            NavManager.NavigateTo("/grants");
+            Snackbar.Add($"Discretionary Grant Application #{Id} not found.", Severity.Error);
+            NavManager.NavigateTo("/dg-grants");
         }
     }
 
@@ -630,12 +702,12 @@
         {
             var moa = await GrantService.GenerateGrantMoaFromApplicationAsync(Id, "AdminUser");
             _linkedMoa = moa;
-            Snackbar.Add($"Bilateral MoA contract '{moa.MoaNumber}' generated with 4 milestone tranches.", Severity.Success);
+            Snackbar.Add($"Bilateral DG MoA contract '{moa.MoaNumber}' generated with 4 milestone tranches.", Severity.Success);
             await LoadGrantData();
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error generating MoA contract: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error generating DG MoA contract: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -659,19 +731,19 @@
             if (Id == 0)
             {
                 var created = await GrantService.CreateApplicationAsync(_grant, "CoordinatorUser");
-                Snackbar.Add($"Grant application '{created.ApplicationNumber}' created successfully.", Severity.Success);
-                NavManager.NavigateTo($"/grants/{created.Id}");
+                Snackbar.Add($"Discretionary Grant application '{created.ApplicationNumber}' created successfully.", Severity.Success);
+                NavManager.NavigateTo($"/dg-grants/{created.Id}");
             }
             else
             {
                 var updated = await GrantService.UpdateApplicationAsync(_grant, "CoordinatorUser");
-                Snackbar.Add($"Grant application '{updated.ApplicationNumber}' updated successfully.", Severity.Success);
+                Snackbar.Add($"Discretionary Grant application '{updated.ApplicationNumber}' updated successfully.", Severity.Success);
                 await LoadGrantData();
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error saving grant application: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error saving DG application: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -688,13 +760,13 @@
             var deleted = await GrantService.DeleteAsync(Id, "AdminUser");
             if (deleted)
             {
-                Snackbar.Add("Grant application deleted successfully.", Severity.Success);
-                NavManager.NavigateTo("/grants");
+                Snackbar.Add("Discretionary Grant application deleted successfully.", Severity.Success);
+                NavManager.NavigateTo("/dg-grants");
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error deleting grant application: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error deleting DG application: {ex.Message}", Severity.Error);
         }
     }
 
@@ -753,7 +825,7 @@
         StateHasChanged();
     }
 
-    private void BackToList() => NavManager.NavigateTo("/grants");
+    private void BackToList() => NavManager.NavigateTo("/dg-grants");
 
     private static Color GetStatusColor(string? status) => status switch
     {

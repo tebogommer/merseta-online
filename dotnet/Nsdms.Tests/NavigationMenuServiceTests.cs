@@ -59,14 +59,14 @@ public class NavigationMenuServiceTests
 
         Assert.NotNull(result);
         Assert.True(result.TotalItemsCount >= 25, $"Expected >= 25 items, got {result.TotalItemsCount}");
-        Assert.True(result.Groups.Count >= 8, $"Expected >= 8 groups, got {result.Groups.Count}");
-        Assert.Contains(result.Groups, g => g.GroupName == "WORKFLOW ORCHESTRATION");
-        Assert.Contains(result.Groups, g => g.GroupName == "CORE REGISTRIES");
-        Assert.Contains(result.Groups, g => g.GroupName == "GRANTS & WSP");
-        Assert.Contains(result.Groups, g => g.GroupName == "FINANCE & DISBURSEMENTS");
-        Assert.Contains(result.Groups, g => g.GroupName == "LEARNER LIFECYCLE");
-        Assert.Contains(result.Groups, g => g.GroupName == "QUALITY ASSURANCE");
-        Assert.Contains(result.Groups, g => g.GroupName == "SYSTEM ADMINISTRATION");
+        Assert.Equal(7, result.Groups.Count);
+        Assert.Contains(result.Groups, g => g.GroupName == "Overview & tasks");
+        Assert.Contains(result.Groups, g => g.GroupName == "Registries & stakeholders");
+        Assert.Contains(result.Groups, g => g.GroupName == "Grants, levies & finance");
+        Assert.Contains(result.Groups, g => g.GroupName == "Learner & artisan development");
+        Assert.Contains(result.Groups, g => g.GroupName == "Quality assurance & ETQA");
+        Assert.Contains(result.Groups, g => g.GroupName == "Legal, compliance & BI");
+        Assert.Contains(result.Groups, g => g.GroupName == "System administration");
     }
 
     [Fact]
@@ -97,6 +97,49 @@ public class NavigationMenuServiceTests
         Assert.DoesNotContain(allItems, i => i.Id == "nav-admin-settings");
         Assert.DoesNotContain(allItems, i => i.Id == "nav-admin-roles");
         Assert.DoesNotContain(allItems, i => i.Id == "nav-admin-lookups");
+    }
+
+    [Fact]
+    public async Task GetUserNavigationTreeAsync_LegalRole_ReturnsLegalAndMoAModules()
+    {
+        var (_, _, navService) = CreateService();
+
+        var roles = new List<string> { "Legal" };
+        var perms = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "System:View", "System:Manage", "System:Verify", "Grants:Edit"
+        };
+
+        var result = await navService.GetUserNavigationTreeAsync("Legal_User", roles, perms, "Legal & Contracting Specialist");
+
+        Assert.NotNull(result);
+        var allItems = result.Groups.SelectMany(g => g.Items).ToList();
+
+        Assert.Contains(allItems, i => i.Id == "nav-moa-templates");
+        Assert.Contains(allItems, i => i.Id == "nav-doc-templates");
+        Assert.Contains(allItems, i => i.Id == "nav-moa-clauses");
+        Assert.Contains(allItems, i => i.Id == "nav-contracts-variations");
+    }
+
+    [Fact]
+    public async Task GetUserNavigationTreeAsync_ComplianceRole_ReturnsComplianceAndAudits()
+    {
+        var (_, _, navService) = CreateService();
+
+        var roles = new List<string> { "Compliance" };
+        var perms = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Compliance:View", "Workplace:View", "Etqa:View"
+        };
+
+        var result = await navService.GetUserNavigationTreeAsync("Compliance_User", roles, perms, "Statutory Compliance Auditor");
+
+        Assert.NotNull(result);
+        var allItems = result.Groups.SelectMany(g => g.Items).ToList();
+
+        Assert.Contains(allItems, i => i.Id == "nav-admin-statutory");
+        Assert.Contains(allItems, i => i.Id == "nav-monitoring");
+        Assert.Contains(allItems, i => i.Id == "nav-etqa");
     }
 
     [Fact]
@@ -145,6 +188,31 @@ public class NavigationMenuServiceTests
         await navService.TogglePinItemAsync(username, "nav-bi-reports");
         var pinnedAfterRemove = await navService.GetPinnedItemsAsync(username);
         Assert.DoesNotContain(pinnedAfterRemove, p => p.Id == "nav-bi-reports");
+    }
+
+    [Fact]
+    public async Task SaveUserPreferencesAsync_PersistsPreferencesToDatabase()
+    {
+        var (_, db, navService) = CreateService();
+        var username = "Persist_User";
+
+        var prefs = new UserNavPreferencesDto
+        {
+            Username = username,
+            PinnedItemIds = new List<string> { "nav-tasks", "nav-wsp" },
+            CollapsedGroupIds = new List<string> { "System administration" },
+            ActivePersonaFilter = "Finance & Disbursements Specialist"
+        };
+
+        var saved = await navService.SaveUserPreferencesAsync(prefs);
+        Assert.True(saved);
+
+        var configKey = $"{username}:NavPreferences";
+        var dbConfig = await db.SystemConfigs
+            .FirstOrDefaultAsync(s => s.ConfigCategory == "NavPreferences" && s.ConfigKey == configKey);
+
+        Assert.NotNull(dbConfig);
+        Assert.Contains("nav-wsp", dbConfig.ConfigValue);
     }
 
     [Fact]

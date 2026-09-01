@@ -53,6 +53,48 @@ public static class Phase12SchemaAlignmentMigrator
                     CREATE INDEX [IX_TrainingCommitteeMember_Person] ON [dbo].[TrainingCommitteeMember] ([PersonId]);
                 END;
 
+                IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'WspDispute')
+                BEGIN
+                    CREATE TABLE [dbo].[WspDispute] (
+                        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                        [OrganisationId] INT NOT NULL,
+                        [WspSubmissionId] INT NULL,
+                        [DisputeReferenceNumber] NVARCHAR(50) NOT NULL,
+                        [DisputeReasonCode] NVARCHAR(50) NOT NULL DEFAULT 'UnionRefusalToSign',
+                        [Description] NVARCHAR(2000) NOT NULL DEFAULT '',
+                        [DisputeStatusCode] NVARCHAR(50) NOT NULL DEFAULT 'Logged',
+                        [ResolutionDate] DATETIME2 NULL,
+                        [ResolutionNotes] NVARCHAR(2000) NULL,
+                        [CreatedAt] DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                        [CreatedBy] NVARCHAR(100) NULL,
+                        [ModifiedAt] DATETIME2 NULL,
+                        [ModifiedBy] NVARCHAR(100) NULL
+                    );
+                    CREATE INDEX [IX_WspDispute_Org] ON [dbo].[WspDispute] ([OrganisationId]);
+                    CREATE INDEX [IX_WspDispute_Ref] ON [dbo].[WspDispute] ([DisputeReferenceNumber]);
+                    CREATE INDEX [IX_WspDispute_Status] ON [dbo].[WspDispute] ([DisputeStatusCode]);
+                    CREATE INDEX [IX_WspDispute_WspSubmission] ON [dbo].[WspDispute] ([WspSubmissionId]);
+                END;
+
+                IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'WspSkillsGap')
+                BEGIN
+                    CREATE TABLE [dbo].[WspSkillsGap] (
+                        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                        [OrganisationId] INT NOT NULL,
+                        [FinancialYear] INT NOT NULL DEFAULT 2026,
+                        [OfoCode] NVARCHAR(50) NOT NULL DEFAULT '651202',
+                        [OccupationTitle] NVARCHAR(200) NOT NULL DEFAULT 'Welder',
+                        [HardToFillVacanciesCount] INT NOT NULL DEFAULT 0,
+                        [SkillsGapReason] NVARCHAR(1000) NOT NULL DEFAULT '',
+                        [CreatedAt] DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                        [CreatedBy] NVARCHAR(100) NULL,
+                        [ModifiedAt] DATETIME2 NULL,
+                        [ModifiedBy] NVARCHAR(100) NULL
+                    );
+                    CREATE INDEX [IX_WspSkillsGap_Org] ON [dbo].[WspSkillsGap] ([OrganisationId]);
+                    CREATE INDEX [IX_WspSkillsGap_Year] ON [dbo].[WspSkillsGap] ([FinancialYear]);
+                END;
+
                 IF EXISTS (SELECT * FROM sys.tables WHERE name = 'BankingDetails')
                 BEGIN
                     IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('BankingDetails') AND name = 'RequiresForensicApproval')

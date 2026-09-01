@@ -1,4 +1,4 @@
-﻿namespace Nsdms.Domain.Entities;
+namespace Nsdms.Domain.Entities;
 
 /// <summary>
 /// Executive Skills Intelligence DTO models for Sector Skills Plan (SSP) &amp; Business Intelligence.
@@ -37,4 +37,24 @@ public class SspScarceSkillDto
     public int ReportedNeedCount { get; set; }
     public int EnrolledTrainingCount { get; set; }
     public string InterventionsRequired { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Chamber-partitioned statutory levy collection, Mandatory Grant rebates, Discretionary Grant envelopes, and budget burn-rate intelligence.
+/// </summary>
+public class ChamberGrantFinancialSummaryDto
+{
+    public string ChamberCode { get; set; } = string.Empty;
+    public string ChamberName { get; set; } = string.Empty;
+    public int EmployerCount { get; set; }
+    public decimal TotalGrossLevyCollected { get; set; }
+    public decimal MandatoryGrantRebateTarget { get; set; }
+    public decimal MandatoryGrantRebatesPaid { get; set; }
+    public decimal DiscretionaryGrantEnvelope { get; set; }
+    public decimal DiscretionaryGrantCommitted { get; set; }
+    public decimal DiscretionaryGrantDisbursed { get; set; }
+    public decimal AdministrationExpensePortion { get; set; }
+    public decimal QctoLevyPortion { get; set; }
+    public decimal UnallocatedReserveBalance => Math.Max(0m, DiscretionaryGrantEnvelope - DiscretionaryGrantCommitted);
+    public double GrantBurnRatePercentage => DiscretionaryGrantEnvelope > 0 ? (double)Math.Round((DiscretionaryGrantCommitted / DiscretionaryGrantEnvelope) * 100m, 1) : 0;
 }

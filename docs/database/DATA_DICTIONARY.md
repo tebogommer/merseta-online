@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-08-31 20:33:44 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 168
+> **Generated:** 2026-09-01 22:05:00 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 171
 
 ---
 
@@ -45,19 +45,20 @@
 | `dbo` | [`EisaAssessmentEntry`](#eisaassessmententry) | `EisaAssessmentEntry` | 15 | `Id` | External Integrated Summative Assessment (EISA) exam entry for QCTO occupational qualifications. |
 | `dbo` | [`EtqaAssessor`](#etqaassessor) | `EtqaAssessor` | 17 | `Id` | Registered ETQA Assessors and Moderators with approved qualification scopes, capturing all statutory fields required for SETMIS File 401 (Person Designation) reporting. |
 | `dbo` | [`FinancialApprovalThreshold`](#financialapprovalthreshold) | `FinancialApprovalThreshold` | 12 | `Id` | Represents a tiered financial delegation limit (DoA) enforcing role-based threshold caps on grants and disbursements. |
-| `dbo` | [`GrantApplication`](#grantapplication) | `GrantApplication` | 18 | `Id` | Discretionary Grant funding applications submitted by employers for skills development projects. |
-| `dbo` | [`GrantFundingWindow`](#grantfundingwindow) | `GrantFundingWindow` | 12 | `Id` | Gazette-announced Discretionary Grant funding window opening and allocation cycle. |
+| `dbo` | [`FundingWindowPriority`](#fundingwindowpriority) | `FundingWindowPriority` | 12 | `Id` | Gazetted Strategic Priority sub-budget envelope and beneficiary quota allocated to a Discretionary Grant Funding Window. |
+| `dbo` | [`GrantApplication`](#grantapplication) | `GrantApplication` | 20 | `Id` | Discretionary Grant funding applications submitted by employers for skills development projects. |
+| `dbo` | [`GrantFundingWindow`](#grantfundingwindow) | `GrantFundingWindow` | 13 | `Id` | Gazette-announced Discretionary Grant funding window opening and allocation cycle. |
 | `dbo` | [`GrantMoa`](#grantmoa) | `GrantMoa` | 16 | `Id` | Memorandum of Agreement (MOA) for approved Discretionary Grants. |
 | `dbo` | [`GrantMoaMilestone`](#grantmoamilestone) | `GrantMoaMilestone` | 17 | `Id` | Delivery milestones linked to MOA tranches. |
 | `dbo` | [`GrantPaymentClaim`](#grantpaymentclaim) | `GrantPaymentClaim` | 14 | `Id` | Milestone-based Payment Claim against a Project Implementation Plan. |
-| `dbo` | [`GrantProjectBudget`](#grantprojectbudget) | `GrantProjectBudget` | 11 | `Id` | Detailed cost item and financial budget breakdown submitted in a Discretionary Grant application. |
+| `dbo` | [`GrantProjectBudget`](#grantprojectbudget) | `GrantProjectBudget` | 12 | `Id` | Detailed cost item and financial budget breakdown submitted in a Discretionary Grant application. |
 | `dbo` | [`GrantTranchePayment`](#granttranchepayment) | `GrantTranchePayment` | 19 | `Id` | Tranche Invoices and Payment Requisitions. |
 | `dbo` | [`InterSetaTransfer`](#intersetatransfer) | `InterSetaTransfer` | 16 | `Id` | Inter-SETA Transfer of employer registration and levy funds between SETAs. |
 | `dbo` | [`LearnerAssessment`](#learnerassessment) | `LearnerAssessment` | 30 | `Id` | Formative and summative learning programme unit standard assessment evaluations, capturing all statutory fields required for SETMIS File 503 (Unit Standard Enrolment) reporting. |
 | `dbo` | [`LearnerTradeTest`](#learnertradetest) | `LearnerTradeTest` | 28 | `Id` | Trade test final competency evaluation and artisan certification attempt records (ARPL & standard), fully normalized with statutory columns required for SETMIS File 505 (Trade Test) reporting. |
 | `dbo` | [`LearnerTradeTestApplication`](#learnertradetestapplication) | `LearnerTradeTestApplication` | 32 | `Id` | Artisan Trade Test Application and Assessment Record (Section 26D / Section 28 ARPL / Apprenticeships). |
 | `dbo` | [`LevyFile`](#levyfile) | `LevyFile` | 11 | `Id` | Monthly SARS Skills Development Levy file import batches. |
-| `dbo` | [`LevyFileLine`](#levyfileline) | `LevyFileLine` | 16 | `Id` | Individual employer monthly SARS levy transaction breakdown. |
+| `dbo` | [`LevyFileLine`](#levyfileline) | `LevyFileLine` | 21 | `Id` | Individual employer monthly SARS levy transaction breakdown. |
 | `dbo` | [`MandatoryGrantDisbursement`](#mandatorygrantdisbursement) | `MandatoryGrantDisbursement` | 17 | `Id` | Mandatory Grant 20% Rebate Payouts for compliant employers submitting WSP/ATR. |
 | `dbo` | [`MoaClause`](#moaclause) | `MoaClause` | 11 | `Id` | Reusable atomic legal clause in the MerSETA clause library. |
 | `dbo` | [`MoaExecutionSnapshot`](#moaexecutionsnapshot) | `MoaExecutionSnapshot` | 14 | `Id` | Cryptographically frozen snapshot of an issued MoA contract for legal non-repudiation and audit defense. |
@@ -66,7 +67,7 @@
 | `dbo` | [`NambDecisionHistory`](#nambdecisionhistory) | `NambDecisionHistory` | 12 | `Id` | National Artisan Moderation Body (NAMB) adjudication trace and serial assignment log. |
 | `dbo` | [`NonSetaCompany`](#nonsetacompany) | `NonSetaCompany` | 13 | `Id` | Non-SETA External Employer / Organisation registered with other Quality Councils / SETAs. |
 | `dbo` | [`NonSetaQualificationsCompletion`](#nonsetaqualificationscompletion) | `NonSetaQualificationsCompletion` | 19 | `Id` | Cross-SETA Qualification & TVET College Achievement Verification for merSETA articulation. |
-| `dbo` | [`Organisation`](#organisation) | `Organisation` | 40 | `Id` | Registered employer, host workplace, or skills development entity under MerSETA jurisdiction, fully normalized with statutory columns required for SETMIS File 100 and File 200 reporting. |
+| `dbo` | [`Organisation`](#organisation) | `Organisation` | 44 | `Id` | Registered employer, host workplace, or skills development entity under MerSETA jurisdiction, fully normalized with statutory columns required for SETMIS File 100 and File 200 reporting. |
 | `dbo` | [`OrganisationContact`](#organisationcontact) | `OrganisationContact` | 12 | `Id` | Liaison contact person link associating an individual Person with an Employer Organisation. |
 | `dbo` | [`OrganisationSite`](#organisationsite) | `OrganisationSite` | 25 | `Id` | Operational branch facility, plant, or training site belonging to an Employer Organisation, supporting multi-site mapping and GPS geolocation for SETMIS File 200 reporting. |
 | `dbo` | [`Person`](#person) | `Person` | 47 | `Id` | Core demographic profile storing individual identity, SA ID/Passport, Washington Group functioning, POPIA compliance, educational background, and contact details for SETMIS statutory reporting. |
@@ -76,7 +77,8 @@
 | `dbo` | [`ReviewCommitteeMeeting`](#reviewcommitteemeeting) | `ReviewCommitteeMeeting` | 15 | `Id` | Executive & ETQA Review Committee / MANCO Governance Meeting. |
 | `dbo` | [`ReviewCommitteeMeetingAgenda`](#reviewcommitteemeetingagenda) | `ReviewCommitteeMeetingAgenda` | 16 | `Id` | Specific agenda item submitted for committee adjudication or voting resolution. |
 | `dbo` | [`ReviewCommitteeMeetingMember`](#reviewcommitteemeetingmember) | `ReviewCommitteeMeetingMember` | 9 | `Id` | Committee attendee / voting member. |
-| `dbo` | [`SarsLevyReconAudit`](#sarslevyreconaudit) | `SarsLevyReconAudit` | 21 | `Id` | Advanced SARS Monthly SDL Levy Reconciliation Audit and Discrepancy Tracking. |
+| `dbo` | [`SarsLevyReconAudit`](#sarslevyreconaudit) | `SarsLevyReconAudit` | 26 | `Id` | Advanced SARS Monthly SDL Levy Reconciliation Audit and Discrepancy Tracking. |
+| `dbo` | [`SarsSchemeYearCalculation`](#sarsschemeyearcalculation) | `SarsSchemeYearCalculation` | 17 | `Id` | System entity for SarsSchemeYearCalculation data governance. |
 | `dbo` | [`SdfAppointmentHistory`](#sdfappointmenthistory) | `SdfAppointmentHistory` | 7 | `Id` | System entity for SdfAppointmentHistory data governance. |
 | `dbo` | [`SdfCompany`](#sdfcompany) | `SdfCompany` | 21 | `Id` | System entity for SdfCompany data governance. |
 | `dbo` | [`SdpExtensionOfScope`](#sdpextensionofscope) | `SdpExtensionOfScope` | 19 | `Id` | System entity for SdpExtensionOfScope data governance. |
@@ -84,6 +86,7 @@
 | `dbo` | [`SdpScopeExtensionApplication`](#sdpscopeextensionapplication) | `SdpScopeExtensionApplication` | 12 | `Id` | Skills Development Provider (SDP) Scope Extension Application. |
 | `dbo` | [`SkillsRegistration`](#skillsregistration) | `SkillsRegistration` | 17 | `Id` | Skills Programme / Part-Qualification Curriculum Registration, capturing all statutory fields required for SETMIS File 304 (Non NQF Intervention) reporting. |
 | `dbo` | [`StatementOfResults`](#statementofresults) | `StatementOfResults` | 14 | `Id` | Formal merSETA Statement of Results (SOR) document record with cryptographic tamper-proof hash. |
+| `dbo` | [`StrategicPriority`](#strategicpriority) | `StrategicPriority` | 13 | `Id` | Statutory Strategic Priorities, Key Focus Areas, and Sector Skills Plan (SSP) Themes mapped to National Skills Development Plan (NSDP III) Outcomes and Strategic Infrastructure Projects (SIPs). |
 | `dbo` | [`SummativeAssessmentReport`](#summativeassessmentreport) | `SummativeAssessmentReport` | 26 | `Id` | Comprehensive Summative Assessment Report capturing unit standard credits, EISA exams, and moderation outcomes. |
 | `dbo` | [`SummativeAssessmentUnitStandard`](#summativeassessmentunitstandard) | `SummativeAssessmentUnitStandard` | 16 | `Id` | Unit Standard credit assessment and moderation outcome line item. |
 | `dbo` | [`SystemConfig`](#systemconfig) | `SystemConfig` | 12 | `Id` | Runtime system configuration key-value overrides. |
@@ -166,7 +169,7 @@
 | `lookup` | [`SeeingRatingType`](#seeingratingtype) | `SeeingRatingType` | 8 | `Code` | Washington Group Vision functional rating (Field: Seeing_Rating_Id - 1: No difficulty to 6: Cannot yet be determined). |
 | `lookup` | [`SelfCareRatingType`](#selfcareratingtype) | `SelfCareRatingType` | 8 | `Code` | Washington Group Self-Care functional rating (Field: Self_Care_Rating_Id - 1: No difficulty to 6: Cannot yet be determined). |
 | `lookup` | [`SetaType`](#setatype) | `SetaType` | 8 | `Code` | South African Sector Education and Training Authorities (Field: SETA_Id - 21 SETAs including MerSETA). |
-| `lookup` | [`SicCodeType`](#siccodetype) | `SicCodeType` | 8 | `Code` | Standard Industrial Classification (SIC) 5-digit economic activity codes (Field: SIC_Code - 815 statutory codes). |
+| `lookup` | [`SicCodeType`](#siccodetype) | `SicCodeType` | 10 | `Code` | Standard Industrial Classification (SIC) 5-digit economic activity codes (Field: SIC_Code - 815 statutory codes). |
 | `lookup` | [`SiteVisitApprovalStatusType`](#sitevisitapprovalstatustype) | `SiteVisitApprovalStatusType` | 8 | `Code` | On-site physical facility inspection approval status codes. |
 | `lookup` | [`StatssaAreaCodeType`](#statssaareacodetype) | `StatssaAreaCodeType` | 8 | `Code` | Stats SA spatial geographic sub-place and municipal area codes (Field: STATSSA_Area_Code - 22,108 statutory codes). |
 | `lookup` | [`StatusType`](#statustype) | `StatusType` | 8 | `Code` | General system and workflow operational status codes (Active, Inactive, Pending, Approved, Rejected, Suspended). |
@@ -1637,6 +1640,47 @@
 
 ---
 
+### <a id="fundingwindowpriority"></a> `dbo.FundingWindowPriority`
+
+**Description:** Gazetted Strategic Priority sub-budget envelope and beneficiary quota allocated to a Discretionary Grant Funding Window.  
+**CLR Model:** `Nsdms.Domain.Entities.FundingWindowPriority`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AllocatedBudget` | `decimal(18,2)` | **NOT NULL** |  | Monetary sub-budget allocation envelope dedicated to this theme in ZAR. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `FundingWindowId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent GrantFundingWindow. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this theme allocation is active within the funding window. |
+| `IsRingFenced` | `bit` | **NOT NULL** |  | If true, funds under this priority cannot be vired or reallocated to other themes without MANCO approval. |
+| `MinScoreThreshold` | `decimal(18,2)` | **NOT NULL** |  | Minimum technical evaluation score threshold required for approval under this theme (e.g. 65.00%). |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `StrategicPriorityId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the StrategicPriority theme. |
+| `TargetBeneficiaries` | `int` | **NOT NULL** |  | Target number of learners/beneficiaries planned for this strategic priority. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_FundingWindowPriority_GrantFundingWindow_FundingWindowId` | `FundingWindowId` | `dbo.GrantFundingWindow` | `Cascade` |
+| `FK_FundingWindowPriority_StrategicPriority_StrategicPriorityId` | `StrategicPriorityId` | `dbo.StrategicPriority` | `Restrict` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_FundingWindowPriority_FundingWindowId` | `FundingWindowId` | No |
+| `IX_FundingWindowPriority_IsActive` | `IsActive` | No |
+| `IX_FundingWindowPriority_StrategicPriorityId` | `StrategicPriorityId` | No |
+| `IX_FundingWindowPriority_FundingWindowId_StrategicPriorityId` | `FundingWindowId, StrategicPriorityId` | ✅ Yes |
+
+---
+
 ### <a id="grantapplication"></a> `dbo.GrantApplication`
 
 **Description:** Discretionary Grant funding applications submitted by employers for skills development projects.  
@@ -1655,6 +1699,7 @@
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
 | `FundingWindowId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the open GrantFundingWindow. |
+| `FundingWindowPriorityId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the specific FundingWindowPriority allocation envelope. |
 | `GrantTypeCode` | `nvarchar(15)` | NULL |  | Discretionary grant funding type code (e.g. PIVOTAL, NON_PIVOTAL, BURSARY, APPRENTICESHIP). |
 | `IsWspCompliant` | `bit` | **NOT NULL** |  | Indicates whether the applicant has an approved, compliant WSP/ATR on file for the scheme year. |
 | `IsWspExempt` | `bit` | **NOT NULL** |  | Indicates whether the applicant is legally exempt from WSP submission (e.g. Non-Levy Payer, Public TVET, NGO, Community Trust). |
@@ -1663,6 +1708,7 @@
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the applying Employer Organisation. |
 | `ProjectTitle` | `nvarchar(300)` | **NOT NULL** |  | Descriptive title of the skills development project. |
 | `RequestedAmount` | `decimal(18,2)` | **NOT NULL** |  | Total grant funding amount requested by the applicant in ZAR. |
+| `StrategicPriorityId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the primary StrategicPriority theme addressed by this application. |
 | `WspExemptionReason` | `nvarchar(500)` | NULL |  | Statutory justification or rationale for WSP submission exemption. |
 | `WspSubmissionId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the compliant Mandatory Grant WSP submission for this financial year (SETA Grant Regulation 4(4)). |
 
@@ -1670,8 +1716,10 @@
 
 | Constraint Name | Foreign Columns | Principal Table | Delete Rule |
 | :--- | :--- | :--- | :--- |
-| `FK_GrantApplication_GrantFundingWindow_FundingWindowId` | `FundingWindowId` | `dbo.GrantFundingWindow` | `ClientSetNull` |
+| `FK_GrantApplication_GrantFundingWindow_FundingWindowId` | `FundingWindowId` | `dbo.GrantFundingWindow` | `SetNull` |
+| `FK_GrantApplication_FundingWindowPriority_FundingWindowPriorityId` | `FundingWindowPriorityId` | `dbo.FundingWindowPriority` | `SetNull` |
 | `FK_GrantApplication_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `Restrict` |
+| `FK_GrantApplication_StrategicPriority_StrategicPriorityId` | `StrategicPriorityId` | `dbo.StrategicPriority` | `SetNull` |
 | `FK_GrantApplication_WspSubmission_WspSubmissionId` | `WspSubmissionId` | `dbo.WspSubmission` | `SetNull` |
 
 #### Performance Indexes
@@ -1680,7 +1728,10 @@
 | :--- | :--- | :--- |
 | `IX_GrantApplication_ApplicationNumber` | `ApplicationNumber` | No |
 | `IX_GrantApplication_ApplicationStatusCode` | `ApplicationStatusCode` | No |
+| `IX_GrantApplication_FundingWindowId` | `FundingWindowId` | No |
+| `IX_GrantApplication_FundingWindowPriorityId` | `FundingWindowPriorityId` | No |
 | `IX_GrantApplication_OrganisationId` | `OrganisationId` | No |
+| `IX_GrantApplication_StrategicPriorityId` | `StrategicPriorityId` | No |
 | `IX_GrantApplication_WspSubmissionId` | `WspSubmissionId` | No |
 
 ---
@@ -1699,6 +1750,7 @@
 | `ClosingDate` | `datetime2` | **NOT NULL** |  | Hard deadline closing date and time after which no new applications are accepted. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `Description` | `nvarchar(max)` | NULL |  | Optional gazette reference or policy notice circular reference. |
 | `FinYear` | `int` | **NOT NULL** |  | Financial scheme year for this funding allocation window (e.g. 2026). |
 | `GrantTypeCode` | `nvarchar(15)` | NULL |  | Grant funding type code (e.g. PIVOTAL, APPRENTICESHIP, SKILLS_PROGRAMME, BURSARY). |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this funding window is active and accepting submissions. |
@@ -1866,6 +1918,7 @@
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
 | `Quantity` | `int` | **NOT NULL** |  | Total number of beneficiary or item units budgeted. |
+| `StrategicPriorityId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the specific StrategicPriority theme this line item finances. |
 | `TotalCost` | `decimal(18,2)` | **NOT NULL** |  | Total aggregate line item cost (UnitCost * Quantity) in ZAR. |
 | `UnitCost` | `decimal(18,2)` | **NOT NULL** |  | Unit cost per beneficiary / deliverable unit in ZAR. |
 
@@ -1874,6 +1927,7 @@
 | Constraint Name | Foreign Columns | Principal Table | Delete Rule |
 | :--- | :--- | :--- | :--- |
 | `FK_GrantProjectBudget_GrantApplication_GrantApplicationId` | `GrantApplicationId` | `dbo.GrantApplication` | `Cascade` |
+| `FK_GrantProjectBudget_StrategicPriority_StrategicPriorityId` | `StrategicPriorityId` | `dbo.StrategicPriority` | `SetNull` |
 
 #### Performance Indexes
 
@@ -1881,6 +1935,7 @@
 | :--- | :--- | :--- |
 | `IX_GrantProjectBudget_ExpenseCategory` | `ExpenseCategory` | No |
 | `IX_GrantProjectBudget_GrantApplicationId` | `GrantApplicationId` | No |
+| `IX_GrantProjectBudget_StrategicPriorityId` | `StrategicPriorityId` | No |
 
 ---
 
@@ -2219,10 +2274,13 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `AdminLevyAmount` | `decimal(18,2)` | **NOT NULL** |  | 10.5% MerSETA administration levy portion in ZAR. |
+| `ChamberCode` | `nvarchar(20)` | NULL |  | Resolved merSETA Chamber Code based on statutory SIC mapping (AUTO, METAL, MOTOR, NEW_TYRE, PLASTICS, OTHER). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
 | `DiscretionaryLevyAmount` | `decimal(18,2)` | **NOT NULL** |  | 49.5% Discretionary Grant portion allocated to sector skills funding in ZAR. |
+| `HasSicCodeMismatch` | `bit` | **NOT NULL** |  | Indicates whether the declared SARS SIC code differs from the employer's verified master profile. |
 | `InterestAmount` | `decimal(18,2)` | **NOT NULL** |  | SARS penalty interest charged on late levy payments in ZAR. |
+| `IsOutOfScopeSeta` | `bit` | **NOT NULL** |  | Indicates whether this levy transaction belongs to a non-merSETA industry requiring Inter-SETA transfer. |
 | `IsReconciled` | `bit` | **NOT NULL** |  | Indicates whether this levy line has been matched and reconciled to an employer ledger. |
 | `LevyFileId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent LevyFile batch. |
 | `MandatoryLevyAmount` | `decimal(18,2)` | **NOT NULL** |  | 20% Mandatory Grant portion reserved for compliant employer rebates in ZAR. |
@@ -2232,6 +2290,8 @@
 | `QctoLevyAmount` | `decimal(18,2)` | **NOT NULL** |  | 0.5% Quality Council for Trades and Occupations (QCTO) levy portion in ZAR. |
 | `SchemeYear` | `nvarchar(10)` | **NOT NULL** |  | Scheme year or payment month reference (e.g. 2026-04). |
 | `SdlNumber` | `nvarchar(20)` | **NOT NULL** |  | SARS Skills Development Levy number (e.g. L123456789). |
+| `SetaCode` | `nvarchar(10)` | **NOT NULL** |  | Resolved statutory SETA code (SETA 17 for merSETA, or other SETA code for out-of-scope files). |
+| `SicCode` | `nvarchar(20)` | NULL |  | Declared 5-digit SIC code reported in the SARS monthly submission. |
 | `TotalLevyAmount` | `decimal(18,2)` | **NOT NULL** |  | Gross total levy amount received for this employer in ZAR. |
 
 #### Foreign Key Constraints
@@ -2244,8 +2304,13 @@
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
+| `IX_LevyFileLine_ChamberCode` | `ChamberCode` | No |
+| `IX_LevyFileLine_HasSicCodeMismatch` | `HasSicCodeMismatch` | No |
+| `IX_LevyFileLine_IsOutOfScopeSeta` | `IsOutOfScopeSeta` | No |
 | `IX_LevyFileLine_LevyFileId` | `LevyFileId` | No |
 | `IX_LevyFileLine_SdlNumber` | `SdlNumber` | No |
+| `IX_LevyFileLine_SetaCode` | `SetaCode` | No |
+| `IX_LevyFileLine_SicCode` | `SicCode` | No |
 
 ---
 
@@ -2585,7 +2650,10 @@
 | `BankName` | `nvarchar(100)` | NULL |  | Commercial bank name for grant disbursement rebates. |
 | `BankingDetailsVerified` | `bit` | **NOT NULL** |  | Indicates whether banking details and proof of banking have been verified by MerSETA finance. |
 | `BrandColorHex` | `nvarchar(max)` | NULL |  | Primary corporate brand color hex code (e.g. #865300). |
-| `ChamberCode` | `nvarchar(15)` | NULL |  | MerSETA chamber allocation code (references lookup.ChamberType: AUTO, METAL, PLASTICS, MOTOR). |
+| `ChamberCode` | `nvarchar(15)` | NULL |  | MerSETA chamber allocation code (references lookup.ChamberType: AUTO, METAL, PLASTICS, MOTOR, NEW_TYRE, OTHER). |
+| `ChamberOverrideApprovedBy` | `nvarchar(100)` | NULL |  | Executive or administrator username who authorized the chamber override. |
+| `ChamberOverrideDate` | `datetime2` | NULL |  | Date when the chamber override was approved and recorded. |
+| `ChamberOverrideReason` | `nvarchar(500)` | NULL |  | Governance justification and Board/SSP reference for the manual chamber assignment override. |
 | `CompanyName` | `nvarchar(200)` | **NOT NULL** |  | Registered legal corporate name of the enterprise. |
 | `CompanySizeCode` | `nvarchar(15)` | NULL |  | Enterprise size classification code (references lookup.CompanySizeType: MICRO, SMALL, MEDIUM, LARGE). |
 | `CountryCode` | `nvarchar(10)` | **NOT NULL** |  | Sovereign country lookup code (references lookup.CountryType, default ZA). |
@@ -2594,6 +2662,7 @@
 | `CustomMentorRatioCap` | `int` | NULL |  | Optional enterprise-wide uniform mentor capacity cap override (e.g. 5 learners per mentor across all site workshops). |
 | `FaxNumber` | `nvarchar(50)` | NULL |  | Facsimile transmission number. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the organisation is currently active. |
+| `IsManualChamberOverride` | `bit` | **NOT NULL** |  | Indicates whether the organisation's chamber assignment was manually overridden instead of auto-derived from the SIC code. |
 | `IsMentorRatioEnforced` | `bit` | NULL |  | Explicit mentor ratio enforcement override for this organisation (null = inherit Global, true = enforce, false = exempt). |
 | `LevyCategoryCode` | `nvarchar(15)` | NULL |  | Organisation SARS levy compliance category code (e.g. LEVY_PAYING, NON_LEVY_PAYING, EXEMPT). |
 | `LogoDocumentId` | `int` | NULL |  | Foreign key referencing the organisation high-DPI brand logo in DocumentMetadata vault. |
@@ -2633,12 +2702,11 @@
 | `IX_Organisation_CompanyName` | `CompanyName` | No |
 | `IX_Organisation_CompanySizeCode` | `CompanySizeCode` | No |
 | `IX_Organisation_IsActive` | `IsActive` | No |
+| `IX_Organisation_IsManualChamberOverride` | `IsManualChamberOverride` | No |
 | `IX_Organisation_IsMentorRatioEnforced` | `IsMentorRatioEnforced` | No |
 | `IX_Organisation_LevyCategoryCode` | `LevyCategoryCode` | No |
 | `IX_Organisation_MainSdlNumber` | `MainSdlNumber` | No |
 | `IX_Organisation_OrganisationStatusCode` | `OrganisationStatusCode` | No |
-| `IX_Organisation_OrganisationTypeCode` | `OrganisationTypeCode` | No |
-| `IX_Organisation_PrimaryContactPersonId` | `PrimaryContactPersonId` | No |
 | `IX_Organisation_ProvinceCode` | `ProvinceCode` | No |
 | `IX_Organisation_SdlNumber` | `SdlNumber` | ✅ Yes |
 | `IX_Organisation_SectorCode` | `SectorCode` | No |
@@ -3087,6 +3155,8 @@
 | Column | SQL Store Type | Nullable | Key | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ActualSarsChamberCode` | `nvarchar(max)` | NULL |  | Domain property for ActualSarsChamberCode. |
+| `ActualSarsSicCode` | `nvarchar(max)` | NULL |  | Domain property for ActualSarsSicCode. |
 | `AuditNotes` | `nvarchar(max)` | NULL |  | Domain property for AuditNotes. |
 | `AuditStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Status: Reconciled, DiscrepancyFlagged, ClawbackIssued, Resolved |
 | `AuditorUserId` | `nvarchar(max)` | **NOT NULL** |  | Domain property for AuditorUserId. |
@@ -3094,9 +3164,12 @@
 | `ClawbackAmount` | `decimal(18,2)` | **NOT NULL** |  | Domain property for ClawbackAmount. |
 | `ClawbackIssuedDate` | `datetime2` | NULL |  | Domain property for ClawbackIssuedDate. |
 | `ClawbackSettledDate` | `datetime2` | NULL |  | Domain property for ClawbackSettledDate. |
+| `CounterpartSetaCode` | `nvarchar(max)` | NULL |  | Domain property for CounterpartSetaCode. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
-| `DiscrepancyReasonCode` | `nvarchar(50)` | **NOT NULL** |  | Discrepancy Category: ExactMatch, Underpayment, Overpayment, ChamberMisallocation, SchemeYearMismatch |
+| `DiscrepancyReasonCode` | `nvarchar(50)` | **NOT NULL** |  | Discrepancy Category: ExactMatch, Underpayment, Overpayment, ChamberMisallocation, SicCodeMismatch, OutOfScopeSeta, SchemeYearMismatch |
+| `ExpectedChamberCode` | `nvarchar(max)` | NULL |  | Domain property for ExpectedChamberCode. |
+| `ExpectedSicCode` | `nvarchar(max)` | NULL |  | Domain property for ExpectedSicCode. |
 | `FinancialYear` | `nvarchar(10)` | **NOT NULL** |  | Domain property for FinancialYear. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
@@ -3122,6 +3195,43 @@
 | `IX_SarsLevyReconAudit_DiscrepancyReasonCode` | `DiscrepancyReasonCode` | No |
 | `IX_SarsLevyReconAudit_FinancialYear` | `FinancialYear` | No |
 | `IX_SarsLevyReconAudit_SdlNumber` | `SdlNumber` | No |
+
+---
+
+### <a id="sarsschemeyearcalculation"></a> `dbo.SarsSchemeYearCalculation`
+
+**Description:** System entity for SarsSchemeYearCalculation data governance.  
+**CLR Model:** `Nsdms.Domain.Entities.SarsSchemeYearCalculation`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AdminPercentage` | `decimal(18,2)` | **NOT NULL** |  | Domain property for AdminPercentage. |
+| `AllowInvoicesDiscretionary` | `bit` | **NOT NULL** |  | Domain property for AllowInvoicesDiscretionary. |
+| `AllowInvoicesMandatory` | `bit` | **NOT NULL** |  | Domain property for AllowInvoicesMandatory. |
+| `AllowReturnsDiscretionary` | `bit` | **NOT NULL** |  | Domain property for AllowReturnsDiscretionary. |
+| `AllowReturnsMandatory` | `bit` | **NOT NULL** |  | Domain property for AllowReturnsMandatory. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `DiscretionaryPercentage` | `decimal(18,2)` | **NOT NULL** |  | Domain property for DiscretionaryPercentage. |
+| `MandatoryPercentage` | `decimal(18,2)` | **NOT NULL** |  | Domain property for MandatoryPercentage. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `Notes` | `nvarchar(max)` | NULL |  | Domain property for Notes. |
+| `QctoPercentage` | `decimal(18,2)` | **NOT NULL** |  | Domain property for QctoPercentage. |
+| `SchemeYear` | `nvarchar(10)` | **NOT NULL** |  | Domain property for SchemeYear. |
+| `StatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current lifecycle state code in the workflow engine. |
+| `TotalPercentage` | `decimal(18,2)` | **NOT NULL** |  | Domain property for TotalPercentage. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_SarsSchemeYearCalculation_SchemeYear` | `SchemeYear` | No |
+| `IX_SarsSchemeYearCalculation_StatusCode` | `StatusCode` | No |
 
 ---
 
@@ -3416,6 +3526,40 @@
 | `IX_StatementOfResults_SorSerialNumber` | `SorSerialNumber` | ✅ Yes |
 | `IX_StatementOfResults_SummativeAssessmentReportId` | `SummativeAssessmentReportId` | No |
 | `IX_StatementOfResults_TamperProofHashSha256` | `TamperProofHashSha256` | No |
+
+---
+
+### <a id="strategicpriority"></a> `dbo.StrategicPriority`
+
+**Description:** Statutory Strategic Priorities, Key Focus Areas, and Sector Skills Plan (SSP) Themes mapped to National Skills Development Plan (NSDP III) Outcomes and Strategic Infrastructure Projects (SIPs).  
+**CLR Model:** `Nsdms.Domain.Entities.StrategicPriority`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `Code` | `nvarchar(50)` | **NOT NULL** |  | Unique strategic priority identification code (e.g. SP-GREEN-01, SP-4IR-02, SP-ARTISAN-03). |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `Description` | `nvarchar(1000)` | NULL |  | Detailed description and statutory objective of this focus area. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this strategic theme is active for allocation in new funding windows. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `Name` | `nvarchar(200)` | **NOT NULL** |  | Display title / name of the record. |
+| `NsdpOutcomeCode` | `nvarchar(50)` | **NOT NULL** |  | National Skills Development Plan (NSDP III) Outcome reference (e.g. Outcome 1, Outcome 2, Outcome 5). |
+| `NsdpOutcomeDescription` | `nvarchar(500)` | **NOT NULL** |  | Full description of the NSDP Outcome goal. |
+| `SipCategory` | `nvarchar(150)` | NULL |  | Relevant Strategic Infrastructure Project (SIP) category (e.g. SIP 8: Green Energy, SIP 2: Freight). |
+| `TargetSector` | `nvarchar(100)` | NULL |  | Domain property for TargetSector. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_StrategicPriority_Code` | `Code` | ✅ Yes |
+| `IX_StrategicPriority_IsActive` | `IsActive` | No |
+| `IX_StrategicPriority_NsdpOutcomeCode` | `NsdpOutcomeCode` | No |
 
 ---
 
@@ -6195,19 +6339,23 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Code` | `nvarchar(50)` | **NOT NULL** | 🔑 **PK** | Unique alphanumeric code identifier acting as primary key. |
 | `Active` | `bit` | **NOT NULL** |  | Indicates whether the lookup value is active and selectable in UI workflows. |
+| `ChamberCode` | `nvarchar(20)` | NULL |  | Associated merSETA Chamber Code (references lookup.ChamberType: AUTO, METAL, MOTOR, NEW_TYRE, PLASTICS, OTHER). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the lookup record was created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the lookup record. |
 | `Description` | `nvarchar(500)` | NULL |  | Detailed description and statutory context of the lookup code. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the lookup record was last modified. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the lookup record. |
 | `Name` | `nvarchar(250)` | **NOT NULL** |  | Display name / title of the lookup option. |
+| `SetaCode` | `nvarchar(10)` | **NOT NULL** |  | Designated statutory SETA Code (SETA 17 for merSETA, or other SETA code if out-of-scope). |
 
 #### Performance Indexes
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
 | `IX_SicCodeType_Active` | `Active` | No |
+| `IX_SicCodeType_ChamberCode` | `ChamberCode` | No |
 | `IX_SicCodeType_Name` | `Name` | No |
+| `IX_SicCodeType_SetaCode` | `SetaCode` | No |
 
 ---
 

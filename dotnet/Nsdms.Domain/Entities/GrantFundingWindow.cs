@@ -41,4 +41,25 @@ public class GrantFundingWindow : BaseEntity
     /// Indicates whether this funding window is active and accepting submissions.
     /// </summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Optional gazette reference or policy notice circular reference.
+    /// </summary>
+    public string? Description { get; set; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public bool IsOpen => IsActive && OpeningDate <= DateTime.UtcNow && ClosingDate >= DateTime.UtcNow;
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string StatusDisplay => !IsActive ? "Closed" : (DateTime.UtcNow < OpeningDate ? "Upcoming" : (DateTime.UtcNow > ClosingDate ? "Expired" : "Open"));
+
+    /// <summary>
+    /// Applications submitted against this funding window.
+    /// </summary>
+    public ICollection<GrantApplication> Applications { get; set; } = new List<GrantApplication>();
+
+    /// <summary>
+    /// Strategic priority allocations and sub-budget envelopes gazetted under this funding window.
+    /// </summary>
+    public ICollection<FundingWindowPriority> StrategicPriorities { get; set; } = new List<FundingWindowPriority>();
 }

@@ -1,0 +1,173 @@
+@page "/developer/simulation-recording"
+@page "/dev/simulation-recording"
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h5" Class="font-weight-bold">MoA PDF Simulation &amp; Live Document Studio Recording</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Interactive E2E verification recording showing QuestPDF real-time generation, scenario profile switching, and live token overrides</MudText>
+    </div>
+    <div class="d-flex gap-2">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Description" Href="/legal/moa-templates/1" Target="_blank">
+            Open Live MoA Studio
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew" Href="/recordings/index.html" Target="_blank">
+            Standalone Video Player
+        </MudButton>
+    </div>
+</div>
+
+<MudGrid Spacing="3">
+    <!-- Main Video Player -->
+    <MudItem xs="12" lg="8">
+        <MudCard Elevation="3" Class="overflow-hidden mb-4">
+            <div style="background: #000; border-radius: 8px 8px 0 0; overflow: hidden;">
+                <video id="moaVideoPlayer" controls autoplay muted loop playsinline style="width: 100%; max-height: 540px; display: block;">
+                    <source src="/recordings/moa_pdf_simulation_recording.webm" type="video/webm">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <MudCardContent Class="py-3 px-4 d-flex justify-space-between align-center bg-surface">
+                <div class="d-flex align-center gap-2">
+                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircle">Verified Automated Test</MudChip>
+                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.PictureAsPdf">QuestPDF Real-Time Engine</MudChip>
+                </div>
+                <div class="d-flex gap-2">
+                    <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" Href="/recordings/moa_pdf_simulation_recording.webm" download>
+                        Download Video (.webm)
+                    </MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Gif" Href="/recordings/moa_simulation_demo.gif" download>
+                        Download GIF
+                    </MudButton>
+                </div>
+            </MudCardContent>
+        </MudCard>
+
+        <!-- Animated Preview Card -->
+        <MudCard Elevation="2" Class="mb-4">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Primary" Size="Size.Small">
+                        <MudIcon Icon="@Icons.Material.Filled.Animation" />
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Continuous Animated Walkthrough</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Auto-looping visual demonstration of the entire workflow</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent Class="pa-0">
+                <img src="/recordings/moa_simulation_demo.gif" style="width: 100%; display: block; border-radius: 0 0 8px 8px;" alt="Animated Walkthrough" />
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <!-- Side Navigation & Chapters -->
+    <MudItem xs="12" lg="4">
+        <MudCard Elevation="2" Class="mb-4">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Primary" Size="Size.Small">
+                        <MudIcon Icon="@Icons.Material.Filled.Bookmark" />
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Workflow Timestamps</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Key stages captured in the recording</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent Class="pt-0">
+                <MudList T="string" Dense="true">
+                    <MudListItem Icon="@Icons.Material.Filled.ListAlt" IconColor="Color.Primary">
+                        <div class="d-flex justify-space-between align-center">
+                            <div>
+                                <MudText Typo="Typo.body2" Class="font-weight-bold">1. MoA Template Registry</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Versioned legal templates and approval states</MudText>
+                            </div>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">00:00</MudChip>
+                        </div>
+                    </MudListItem>
+                    <MudDivider Class="my-2" />
+                    <MudListItem Icon="@Icons.Material.Filled.Tune" IconColor="Color.Primary">
+                        <div class="d-flex justify-space-between align-center">
+                            <div>
+                                <MudText Typo="Typo.body2" Class="font-weight-bold">2. Policy &amp; Metadata Hub</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Grant types, effective dates, governance actors</MudText>
+                            </div>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">00:04</MudChip>
+                        </div>
+                    </MudListItem>
+                    <MudDivider Class="my-2" />
+                    <MudListItem Icon="@Icons.Material.Filled.FormatListNumbered" IconColor="Color.Primary">
+                        <div class="d-flex justify-space-between align-center">
+                            <div>
+                                <MudText Typo="Typo.body2" Class="font-weight-bold">3. Clause Section Structure</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Ordered legal clauses with sequence controls</MudText>
+                            </div>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">00:09</MudChip>
+                        </div>
+                    </MudListItem>
+                    <MudDivider Class="my-2" />
+                    <MudListItem Icon="@Icons.Material.Filled.Preview" IconColor="Color.Warning">
+                        <div class="d-flex justify-space-between align-center">
+                            <div>
+                                <MudText Typo="Typo.body2" Class="font-weight-bold">4. Live Simulation Workspace</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Split studio with live QuestPDF preview</MudText>
+                            </div>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning">00:15</MudChip>
+                        </div>
+                    </MudListItem>
+                    <MudDivider Class="my-2" />
+                    <MudListItem Icon="@Icons.Material.Filled.SwapHoriz" IconColor="Color.Info">
+                        <div class="d-flex justify-space-between align-center">
+                            <div>
+                                <MudText Typo="Typo.body2" Class="font-weight-bold">5. TVET Scenario &amp; Token Overrides</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Dynamic profile switch &amp; custom tokens</MudText>
+                            </div>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">00:22</MudChip>
+                        </div>
+                    </MudListItem>
+                    <MudDivider Class="my-2" />
+                    <MudListItem Icon="@Icons.Material.Filled.Gavel" IconColor="Color.Success">
+                        <div class="d-flex justify-space-between align-center">
+                            <div>
+                                <MudText Typo="Typo.body2" Class="font-weight-bold">6. Executed Statutory MoA</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Workflow progression &amp; Download PDF</MudText>
+                            </div>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">00:29</MudChip>
+                        </div>
+                    </MudListItem>
+                </MudList>
+            </MudCardContent>
+        </MudCard>
+
+        <!-- Direct Navigation Shortcuts -->
+        <MudCard Elevation="2">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Secondary" Size="Size.Small">
+                        <MudIcon Icon="@Icons.Material.Filled.Navigation" />
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Direct Application Routes</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent Class="pt-0">
+                <MudStack Spacing="2">
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" StartIcon="@Icons.Material.Filled.Article" Href="/legal/moa-templates" Target="_blank">
+                        MoA Template Registry
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" StartIcon="@Icons.Material.Filled.PictureAsPdf" Href="/admin/document-templates/1" Target="_blank">
+                        Universal Document Studio
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" StartIcon="@Icons.Material.Filled.AssignmentTurnedIn" Href="/finance/grants/1" Target="_blank">
+                        Executed Grant MoA Hub
+                    </MudButton>
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>

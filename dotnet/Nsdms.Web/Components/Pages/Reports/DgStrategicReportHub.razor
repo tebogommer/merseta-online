@@ -1,0 +1,410 @@
+﻿@page "/reports/dg-strategic"
+@page "/dg-strategic-reports"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using MudBlazor
+@inject IGrantService GrantService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<PageTitle>Discretionary Grant (DG) Strategic Themes &amp; 3-Tier BI Reporting - merSETA NSDMS</PageTitle>
+
+<!-- Sticky Top Bar with Filters and Actions -->
+<MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3 bg-surface" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+    <div class="d-flex align-center gap-3">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="BackToDashboard"
+                   aria-label="Back to Grants Overview">
+            Back to Overview
+        </MudButton>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        <MudAvatar Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small">
+            <MudIcon Icon="@Icons.Material.Filled.Insights" Size="Size.Small" />
+        </MudAvatar>
+        <div>
+            <MudText Typo="Typo.h5" Class="fw-bold">
+                Discretionary Grant (DG) Strategic Themes &amp; 3-Tier BI Intelligence Hub
+            </MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                Executive analytics across Operational Intake, Tactical Provincial Delivery, and Strategic NSDP III Outcomes
+            </MudText>
+        </div>
+    </div>
+    <div class="d-flex align-center gap-2 flex-wrap">
+        <MudSelect T="int?" Label="Financial Year" Dense="true" Margin="Margin.Dense" Variant="Variant.Outlined" Style="min-width: 140px;"
+                   Value="_selectedFinYear" ValueChanged="OnFinYearChanged">
+            <MudSelectItem Value="@((int?)null)">All Scheme Years</MudSelectItem>
+            <MudSelectItem Value="@((int?)2026)">2026/27</MudSelectItem>
+            <MudSelectItem Value="@((int?)2025)">2025/26</MudSelectItem>
+            <MudSelectItem Value="@((int?)2024)">2024/25</MudSelectItem>
+        </MudSelect>
+
+        <MudSelect T="int?" Label="Funding Window" Dense="true" Margin="Margin.Dense" Variant="Variant.Outlined" Style="min-width: 220px;"
+                   Value="_selectedWindowId" ValueChanged="OnWindowChanged" ToStringFunc="@FormatWindowDisplay">
+            <MudSelectItem Value="@((int?)null)">All DG Funding Windows</MudSelectItem>
+            @foreach (var w in _fundingWindows)
+            {
+                <MudSelectItem Value="@((int?)w.Id)">@w.WindowName (FY @w.FinYear)</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="LoadDashboardData">
+            Refresh
+        </MudButton>
+    </div>
+</MudPaper>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
+    }
+    else if (_dashboard != null)
+    {
+        <!-- Executive KPI Cards -->
+        <MudGrid Class="mb-4">
+            <MudItem xs="12" sm="6" md="2">
+                <MudCard Outlined="true" Class="pa-3 text-center border-primary" Style="border-left: 4px solid var(--mud-palette-primary);">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Strategic Themes</MudText>
+                    <MudText Typo="Typo.h5" Class="fw-bold text-primary">@_dashboard.TotalPrioritiesCount</MudText>
+                    <MudText Typo="Typo.caption" Class="text-muted">Active Focus Areas</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudCard Outlined="true" Class="pa-3 text-center border-info" Style="border-left: 4px solid var(--mud-palette-info);">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Allocated Sub-Envelopes</MudText>
+                    <MudText Typo="Typo.h6" Class="fw-bold text-info">@_dashboard.TotalAllocatedBudget.ToString("C0")</MudText>
+                    <MudText Typo="Typo.caption" Class="text-muted">Total Gazetted</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudCard Outlined="true" Class="pa-3 text-center border-warning" Style="border-left: 4px solid var(--mud-palette-warning);">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Requested</MudText>
+                    <MudText Typo="Typo.h6" Class="fw-bold text-warning">@_dashboard.TotalRequestedAmount.ToString("C0")</MudText>
+                    <MudText Typo="Typo.caption" Class="text-muted">Employer Pipeline</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudCard Outlined="true" Class="pa-3 text-center border-success" Style="border-left: 4px solid var(--mud-palette-success);">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Approved Grants</MudText>
+                    <MudText Typo="Typo.h6" Class="fw-bold text-success">@_dashboard.TotalApprovedAmount.ToString("C0")</MudText>
+                    <MudText Typo="Typo.caption" Class="text-muted">Committed Funds</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudCard Outlined="true" Class="pa-3 text-center border-secondary" Style="border-left: 4px solid var(--mud-palette-secondary);">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Budget Absorption</MudText>
+                    <MudText Typo="Typo.h5" Class="fw-bold text-secondary">@_dashboard.BudgetAbsorptionRate.ToString("F1")%</MudText>
+                    <MudText Typo="Typo.caption" Class="text-muted">Committed vs Envelope</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudCard Outlined="true" Class="pa-3 text-center border-dark" Style="border-left: 4px solid var(--mud-palette-dark);">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Target Beneficiaries</MudText>
+                    <MudText Typo="Typo.h5" Class="fw-bold">@_dashboard.TotalLearnersTarget</MudText>
+                    <MudText Typo="Typo.caption" Class="text-muted">@_dashboard.TotalLearnersActual Enrolled</MudText>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+
+        <!-- 3-Tier Multi-Tab Intelligence Hub -->
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" @bind-ActivePanelIndex="_activeTierIndex">
+            
+            <!-- ========================================================= -->
+            <!-- TIER 1: OPERATIONAL INTELLIGENCE (DAILY/LIVE INTAKE)     -->
+            <!-- ========================================================= -->
+            <MudTabPanel Text="Tier 1: Operational Intelligence" Icon="@Icons.Material.Filled.Dashboard">
+                <div class="pa-4">
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <div>
+                            <MudText Typo="Typo.h6" Class="fw-bold">Live Application Intake &amp; Budget Burn Rate Matrix</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Operational tracking of Discretionary Grant pipeline stages, remaining balances, and ring-fencing constraints per theme.</MudText>
+                        </div>
+                    </div>
+
+                    <MudTable Items="@_dashboard.OperationalThemes" Hover="true" Dense="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Theme Code</MudTh>
+                            <MudTh>Strategic Focus Area</MudTh>
+                            <MudTh>Allocated Sub-Envelope</MudTh>
+                            <MudTh>Requested</MudTh>
+                            <MudTh>Approved</MudTh>
+                            <MudTh>Remaining</MudTh>
+                            <MudTh>Burn Rate</MudTh>
+                            <MudTh>Quota</MudTh>
+                            <MudTh>Pipeline Stages (Appr / Rev / Draft / Rej)</MudTh>
+                            <MudTh>Ring-Fence</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Class="font-monospace">
+                                    @context.PriorityCode
+                                </MudChip>
+                            </MudTd>
+                            <MudTd>
+                                <div class="fw-bold">@context.PriorityName</div>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.NsdpOutcomeCode • @(context.SipCategory ?? "General")</MudText>
+                            </MudTd>
+                            <MudTd Class="fw-bold">@context.AllocatedBudget.ToString("C0")</MudTd>
+                            <MudTd Class="text-warning">@context.RequestedAmount.ToString("C0")</MudTd>
+                            <MudTd Class="fw-bold text-success">@context.ApprovedAmount.ToString("C0")</MudTd>
+                            <MudTd Class="text-muted">@context.RemainingBudget.ToString("C0")</MudTd>
+                            <MudTd>
+                                <div class="d-flex align-center gap-2" style="min-width: 110px;">
+                                    <MudProgressLinear Color="@(context.BurnRatePercent > 80 ? Color.Error : (context.BurnRatePercent > 40 ? Color.Success : Color.Info))"
+                                                       Value="@((double)context.BurnRatePercent)"
+                                                       Size="Size.Medium" />
+                                    <span class="small fw-bold">@context.BurnRatePercent%</span>
+                                </div>
+                            </MudTd>
+                            <MudTd Class="fw-bold">@context.TargetBeneficiaries</MudTd>
+                            <MudTd>
+                                <div class="d-flex align-center gap-1">
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled" Title="Approved">@context.ApprovedCount</MudChip>
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled" Title="Under Review">@context.UnderReviewCount</MudChip>
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined" Title="Draft">@context.DraftCount</MudChip>
+                                    @if (context.RejectedCount > 0)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Text" Title="Rejected">@context.RejectedCount</MudChip>
+                                    }
+                                </div>
+                            </MudTd>
+                            <MudTd>
+                                @if (context.IsRingFenced)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled">Ring-Fenced</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">Flexible</MudChip>
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </div>
+            </MudTabPanel>
+
+            <!-- ========================================================= -->
+            <!-- TIER 2: TACTICAL INTELLIGENCE (PROVINCIAL & SME DELIVERY) -->
+            <!-- ========================================================= -->
+            <MudTabPanel Text="Tier 2: Tactical Intelligence" Icon="@Icons.Material.Filled.Map">
+                <div class="pa-4">
+                    <MudText Typo="Typo.h6" Class="fw-bold mb-1">Provincial Footprint &amp; Enterprise Size Distribution</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-4 d-block">
+                        Tactical regional equity across South Africa's 9 provinces, including SMME incubation quotas vs Large Enterprise allocations.
+                    </MudText>
+
+                    <MudGrid>
+                        <MudItem xs="12" lg="8">
+                            <MudTable Items="@_dashboard.TacticalProvinces" Hover="true" Dense="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>Province</MudTh>
+                                    <MudTh>Application Count</MudTh>
+                                    <MudTh>Total Requested</MudTh>
+                                    <MudTh>Total Approved</MudTh>
+                                    <MudTh>Beneficiaries</MudTh>
+                                    <MudTh>SMME Share</MudTh>
+                                    <MudTh>Large Enterprise Share</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd Class="fw-bold">@context.ProvinceName</MudTd>
+                                    <MudTd>@context.ApplicationCount</MudTd>
+                                    <MudTd>@context.TotalRequested.ToString("C0")</MudTd>
+                                    <MudTd Class="fw-bold text-success">@context.TotalApproved.ToString("C0")</MudTd>
+                                    <MudTd Class="fw-bold">@context.BeneficiariesCount</MudTd>
+                                    <MudTd>
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">@context.SmeAllocationPercent.ToString("F0")%</MudChip>
+                                    </MudTd>
+                                    <MudTd>
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.LargeEnterprisePercent.ToString("F0")%</MudChip>
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudItem>
+
+                        <MudItem xs="12" lg="4">
+                            <MudCard Outlined="true" Class="pa-4">
+                                <MudText Typo="Typo.subtitle1" Class="fw-bold mb-3">Tactical Governance Highlights</MudText>
+                                <div class="d-flex flex-column gap-3">
+                                    <div class="pa-3 rounded bg-light">
+                                        <MudText Typo="Typo.subtitle2" Class="fw-bold">Average Grant Allocation</MudText>
+                                        <MudText Typo="Typo.h6" Class="text-primary">
+                                            @(_dashboard.OperationalThemes.Sum(t => t.ApprovedCount) > 0 
+                                                ? (_dashboard.TotalApprovedAmount / _dashboard.OperationalThemes.Sum(t => t.ApprovedCount)).ToString("C0") 
+                                                : "R 0")
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Per approved skills project</MudText>
+                                    </div>
+                                    <div class="pa-3 rounded bg-light">
+                                        <MudText Typo="Typo.subtitle2" Class="fw-bold">Average Cost per Learner</MudText>
+                                        <MudText Typo="Typo.h6" Class="text-success">
+                                            @(_dashboard.TotalLearnersActual > 0 
+                                                ? (_dashboard.TotalApprovedAmount / _dashboard.TotalLearnersActual).ToString("C0") 
+                                                : "R 75,000")
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Benchmarked to NSDMS unit standards</MudText>
+                                    </div>
+                                    <div class="pa-3 rounded bg-light">
+                                        <MudText Typo="Typo.subtitle2" Class="fw-bold">Tranche Payout Efficiency</MudText>
+                                        <MudText Typo="Typo.h6" Class="text-info">4-Milestone Standard</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">30% Inception • 30% Midterm • 30% Workplace • 10% Closeout</MudText>
+                                    </div>
+                                </div>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </div>
+            </MudTabPanel>
+
+            <!-- ========================================================= -->
+            <!-- TIER 3: STRATEGIC INTELLIGENCE (NSDP III & TRANSFORMATION) -->
+            <!-- ========================================================= -->
+            <MudTabPanel Text="Tier 3: Strategic Intelligence" Icon="@Icons.Material.Filled.AccountBalance">
+                <div class="pa-4">
+                    <MudText Typo="Typo.h6" Class="fw-bold mb-1">National Skills Development Plan (NSDP III) &amp; Transformation Equity</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-4 d-block">
+                        High-level strategic alignment reporting for the merSETA Accounting Authority, DHET, and National Skills Authority (NSA).
+                    </MudText>
+
+                    <!-- Transformation Equity Gauges -->
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">Statutory Transformation Equity Achievement</MudText>
+                    <MudGrid Class="mb-4">
+                        <MudItem xs="12" sm="6" md="2">
+                            <MudCard Outlined="true" Class="pa-3 text-center">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Female Beneficiaries</MudText>
+                                <MudText Typo="Typo.h5" Class="fw-bold text-secondary">@_dashboard.TransformationEquity.FemalePercent%</MudText>
+                                <MudProgressLinear Color="Color.Secondary" Value="@((double)_dashboard.TransformationEquity.FemalePercent)" Size="Size.Small" Class="my-1" />
+                                <MudText Typo="Typo.caption" Class="text-muted">Target: 54%</MudText>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="2">
+                            <MudCard Outlined="true" Class="pa-3 text-center">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Youth (&lt;35 Years)</MudText>
+                                <MudText Typo="Typo.h5" Class="fw-bold text-primary">@_dashboard.TransformationEquity.YouthPercent%</MudText>
+                                <MudProgressLinear Color="Color.Primary" Value="@((double)_dashboard.TransformationEquity.YouthPercent)" Size="Size.Small" Class="my-1" />
+                                <MudText Typo="Typo.caption" Class="text-muted">Target: 60%</MudText>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="2">
+                            <MudCard Outlined="true" Class="pa-3 text-center">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Persons with Disabilities</MudText>
+                                <MudText Typo="Typo.h5" Class="fw-bold text-warning">@_dashboard.TransformationEquity.DisabledPercent%</MudText>
+                                <MudProgressLinear Color="Color.Warning" Value="@((double)_dashboard.TransformationEquity.DisabledPercent * 10)" Size="Size.Small" Class="my-1" />
+                                <MudText Typo="Typo.caption" Class="text-muted">Target: 7%</MudText>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudCard Outlined="true" Class="pa-3 text-center">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Rural / Township Corridors</MudText>
+                                <MudText Typo="Typo.h5" Class="fw-bold text-info">@_dashboard.TransformationEquity.RuralPercent%</MudText>
+                                <MudProgressLinear Color="Color.Info" Value="@((double)_dashboard.TransformationEquity.RuralPercent)" Size="Size.Small" Class="my-1" />
+                                <MudText Typo="Typo.caption" Class="text-muted">Target: 35%</MudText>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudCard Outlined="true" Class="pa-3 text-center">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Black-Owned Enterprises</MudText>
+                                <MudText Typo="Typo.h5" Class="fw-bold text-success">@_dashboard.TransformationEquity.BlackOwnershipPercent%</MudText>
+                                <MudProgressLinear Color="Color.Success" Value="@((double)_dashboard.TransformationEquity.BlackOwnershipPercent)" Size="Size.Small" Class="my-1" />
+                                <MudText Typo="Typo.caption" Class="text-muted">Target: 75%</MudText>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+
+                    <!-- NSDP III Outcomes Table -->
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">NSDP III Outcome Delivery Progress</MudText>
+                    <MudTable Items="@_dashboard.StrategicNsdpOutcomes" Hover="true" Dense="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>NSDP III Outcome</MudTh>
+                            <MudTh>Outcome Objective</MudTh>
+                            <MudTh>Themes</MudTh>
+                            <MudTh>Committed Budget</MudTh>
+                            <MudTh>Estimated Disbursed</MudTh>
+                            <MudTh>Learners Awarded</MudTh>
+                            <MudTh>Target Completion</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
+                                    @context.OutcomeCode
+                                </MudChip>
+                            </MudTd>
+                            <MudTd Class="fw-semibold">@context.OutcomeTitle</MudTd>
+                            <MudTd>@context.SupportedThemesCount Themes</MudTd>
+                            <MudTd Class="fw-bold text-success">@context.TotalBudgetCommitted.ToString("C0")</MudTd>
+                            <MudTd Class="text-info">@context.TotalDisbursed.ToString("C0")</MudTd>
+                            <MudTd Class="fw-bold">@context.BeneficiariesAwarded</MudTd>
+                            <MudTd>
+                                <div class="d-flex align-center gap-2">
+                                    <MudProgressLinear Color="Color.Success" Value="@((double)context.TargetAchievementPercent)" Size="Size.Medium" />
+                                    <span class="small fw-bold">@context.TargetAchievementPercent%</span>
+                                </div>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </div>
+            </MudTabPanel>
+
+        </MudTabs>
+    }
+</MudContainer>
+
+@code {
+    private StrategicReportDashboardDto? _dashboard;
+    private List<GrantFundingWindow> _fundingWindows = new();
+    private bool _loading = true;
+    private int _activeTierIndex = 0;
+
+    private int? _selectedFinYear;
+    private int? _selectedWindowId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _fundingWindows = await GrantService.GetFundingWindowsAsync(activeOnly: false);
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        _loading = true;
+        try
+        {
+            _dashboard = await GrantService.GetStrategicReportDashboardAsync(_selectedFinYear, _selectedWindowId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading strategic intelligence dashboard: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnFinYearChanged(int? year)
+    {
+        _selectedFinYear = year;
+        await LoadDashboardData();
+    }
+
+    private async Task OnWindowChanged(int? windowId)
+    {
+        _selectedWindowId = windowId;
+        await LoadDashboardData();
+    }
+
+    private string FormatWindowDisplay(int? windowId)
+    {
+        if (!windowId.HasValue || windowId.Value == 0) return "All DG Funding Windows";
+        var w = _fundingWindows.FirstOrDefault(x => x.Id == windowId.Value);
+        return w != null ? $"{w.WindowName} (FY {w.FinYear})" : "DG Funding Window";
+    }
+
+    private void BackToDashboard() => NavManager.NavigateTo("/dg-grants");
+}

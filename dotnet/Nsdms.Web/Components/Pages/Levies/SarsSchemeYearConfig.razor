@@ -1,0 +1,238 @@
+@page "/levies/scheme-years"
+@page "/finance/levy-scheme-years"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject ILevyService LevyService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<PageTitle>Statutory Scheme Year Rates &amp; Return Controls | merSETA NSDMS</PageTitle>
+
+<div class="mb-4">
+    <!-- Top Bar -->
+    <MudPaper Elevation="1" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+        <div class="d-flex align-center gap-3">
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Color="Color.Default"
+                       OnClick="@(() => Navigation.NavigateTo("/levies"))">
+                Back to Levy Files
+            </MudButton>
+            <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 ma-0" />
+                <MudText Typo="Typo.h5" Class="font-weight-bold">
+                    Statutory Scheme Year Rates &amp; Return Processing Controls
+                </MudText>
+            </div>
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenNewConfigDialog">
+                Add Scheme Year Config
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    <!-- Dialog / Drawer for Edit or Create -->
+    @if (_showEditDialog)
+    {
+        <MudCard Elevation="3" Class="pa-4 mb-4 border-primary">
+            <div class="d-flex justify-space-between align-center mb-3">
+                <MudText Typo="Typo.h6" Class="font-weight-bold">
+                    @(_selectedConfig.Id == 0 ? "Add Statutory Scheme Year" : $"Edit Statutory Scheme Year {_selectedConfig.SchemeYear}")
+                </MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="@(() => _showEditDialog = false)" />
+            </div>
+
+            <MudGrid>
+                <MudItem xs="12" sm="4">
+                    <MudTextField T="string" Label="Scheme Year" Required="true" @bind-Value="_selectedConfig.SchemeYear" Variant="Variant.Outlined" Placeholder="e.g. 2027" />
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudSelect T="string" Label="Status" @bind-Value="_selectedConfig.StatusCode" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+                        <MudSelectItem Value="@("Locked")">Locked</MudSelectItem>
+                        <MudSelectItem Value="@("Closed")">Closed</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudNumericField T="decimal" Label="Total Statutory %" Value="@(_selectedConfig.MandatoryPercentage + _selectedConfig.DiscretionaryPercentage + _selectedConfig.AdminPercentage + _selectedConfig.QctoPercentage)" Variant="Variant.Outlined" ReadOnly="true" />
+                </MudItem>
+
+                <!-- Statutory Rates Breakdown -->
+                <MudItem xs="12" sm="3">
+                    <MudNumericField T="decimal" Label="Mandatory Grant %" @bind-Value="_selectedConfig.MandatoryPercentage" Variant="Variant.Outlined" Min="0" Max="100" Step="0.1m" />
+                </MudItem>
+                <MudItem xs="12" sm="3">
+                    <MudNumericField T="decimal" Label="Discretionary Grant %" @bind-Value="_selectedConfig.DiscretionaryPercentage" Variant="Variant.Outlined" Min="0" Max="100" Step="0.1m" />
+                </MudItem>
+                <MudItem xs="12" sm="3">
+                    <MudNumericField T="decimal" Label="Admin %" @bind-Value="_selectedConfig.AdminPercentage" Variant="Variant.Outlined" Min="0" Max="100" Step="0.1m" />
+                </MudItem>
+                <MudItem xs="12" sm="3">
+                    <MudNumericField T="decimal" Label="QCTO %" @bind-Value="_selectedConfig.QctoPercentage" Variant="Variant.Outlined" Min="0" Max="100" Step="0.1m" />
+                </MudItem>
+
+                <!-- Processing Switches -->
+                <MudItem xs="12" sm="3">
+                    <MudSwitch @bind-Value="_selectedConfig.AllowReturnsMandatory" Color="Color.Success" Label="Allow MG Returns" />
+                </MudItem>
+                <MudItem xs="12" sm="3">
+                    <MudSwitch @bind-Value="_selectedConfig.AllowInvoicesMandatory" Color="Color.Success" Label="Allow MG Invoices" />
+                </MudItem>
+                <MudItem xs="12" sm="3">
+                    <MudSwitch @bind-Value="_selectedConfig.AllowReturnsDiscretionary" Color="Color.Success" Label="Allow DG Returns" />
+                </MudItem>
+                <MudItem xs="12" sm="3">
+                    <MudSwitch @bind-Value="_selectedConfig.AllowInvoicesDiscretionary" Color="Color.Success" Label="Allow DG Invoices" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Notes & Statutory Gazette Reference" @bind-Value="_selectedConfig.Notes" Variant="Variant.Outlined" Lines="2" Placeholder="e.g. Gazetted under Skills Development Levies Act Amendment..." />
+                </MudItem>
+            </MudGrid>
+
+            <div class="d-flex justify-end gap-2 mt-4">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => _showEditDialog = false)">
+                    Cancel
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveConfigAsync">
+                    Save Configuration
+                </MudButton>
+            </div>
+        </MudCard>
+    }
+
+    <!-- Configuration Table -->
+    <MudCard Elevation="2">
+        <MudTable Items="@_configs" Hover="true" Striped="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>Scheme Year</MudTh>
+                <MudTh Class="text-right">Mandatory Grant (MG)</MudTh>
+                <MudTh Class="text-right">Discretionary Grant (DG)</MudTh>
+                <MudTh Class="text-right">Admin</MudTh>
+                <MudTh Class="text-right">QCTO</MudTh>
+                <MudTh Class="text-right">Total merSETA</MudTh>
+                <MudTh Class="text-center">Return Controls</MudTh>
+                <MudTh Class="text-center">Status</MudTh>
+                <MudTh Class="text-center">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Scheme Year">
+                    <MudText Typo="Typo.body2" Class="font-weight-bold">@context.SchemeYear</MudText>
+                </MudTd>
+                <MudTd DataLabel="Mandatory Grant" Class="text-right">@context.MandatoryPercentage.ToString("F1")%</MudTd>
+                <MudTd DataLabel="Discretionary Grant" Class="text-right">@context.DiscretionaryPercentage.ToString("F1")%</MudTd>
+                <MudTd DataLabel="Admin" Class="text-right">@context.AdminPercentage.ToString("F1")%</MudTd>
+                <MudTd DataLabel="QCTO" Class="text-right">@context.QctoPercentage.ToString("F1")%</MudTd>
+                <MudTd DataLabel="Total merSETA" Class="text-right font-weight-bold text-primary">@context.TotalPercentage.ToString("F1")%</MudTd>
+                <MudTd DataLabel="Return Controls" Class="text-center">
+                    <MudStack Row="true" Spacing="1" Justify="Justify.Center">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@(context.AllowReturnsMandatory ? Color.Success : Color.Default)">MG Ret</MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@(context.AllowInvoicesMandatory ? Color.Success : Color.Default)">MG Inv</MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@(context.AllowReturnsDiscretionary ? Color.Success : Color.Default)">DG Ret</MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@(context.AllowInvoicesDiscretionary ? Color.Success : Color.Default)">DG Inv</MudChip>
+                    </MudStack>
+                </MudTd>
+                <MudTd DataLabel="Status" Class="text-center">
+                    <MudChip T="string" Size="Size.Small" Color="@(context.StatusCode == "Active" ? Color.Success : context.StatusCode == "Locked" ? Color.Warning : Color.Default)">
+                        @context.StatusCode
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Actions" Class="text-center">
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => OpenEditDialog(context))">
+                        Edit
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudCard>
+</div>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Finance & Levies", href: "/levies"),
+        new BreadcrumbItem("Scheme Year Rates", href: "/levies/scheme-years", disabled: true)
+    };
+
+    private List<SarsSchemeYearCalculation> _configs = new();
+    private SarsSchemeYearCalculation _selectedConfig = new();
+    private bool _showEditDialog = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _configs = await LevyService.GetSchemeYearCalculationsAsync();
+    }
+
+    private void OpenNewConfigDialog()
+    {
+        _selectedConfig = new SarsSchemeYearCalculation
+        {
+            SchemeYear = (DateTime.UtcNow.Year + 1).ToString(),
+            MandatoryPercentage = 20.0m,
+            DiscretionaryPercentage = 49.5m,
+            AdminPercentage = 10.5m,
+            QctoPercentage = 0.5m,
+            TotalPercentage = 80.5m,
+            AllowReturnsMandatory = true,
+            AllowInvoicesMandatory = true,
+            AllowReturnsDiscretionary = true,
+            AllowInvoicesDiscretionary = true,
+            StatusCode = "Active"
+        };
+        _showEditDialog = true;
+    }
+
+    private void OpenEditDialog(SarsSchemeYearCalculation config)
+    {
+        _selectedConfig = new SarsSchemeYearCalculation
+        {
+            Id = config.Id,
+            SchemeYear = config.SchemeYear,
+            MandatoryPercentage = config.MandatoryPercentage,
+            DiscretionaryPercentage = config.DiscretionaryPercentage,
+            AdminPercentage = config.AdminPercentage,
+            QctoPercentage = config.QctoPercentage,
+            TotalPercentage = config.TotalPercentage,
+            AllowReturnsMandatory = config.AllowReturnsMandatory,
+            AllowInvoicesMandatory = config.AllowInvoicesMandatory,
+            AllowReturnsDiscretionary = config.AllowReturnsDiscretionary,
+            AllowInvoicesDiscretionary = config.AllowInvoicesDiscretionary,
+            StatusCode = config.StatusCode,
+            Notes = config.Notes
+        };
+        _showEditDialog = true;
+    }
+
+    private async Task SaveConfigAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_selectedConfig.SchemeYear))
+        {
+            Snackbar.Add("Scheme Year is required.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await LevyService.SaveSchemeYearCalculationAsync(_selectedConfig, "Admin");
+            Snackbar.Add($"Scheme Year {_selectedConfig.SchemeYear} configuration saved successfully.", Severity.Success);
+            _showEditDialog = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving configuration: {ex.Message}", Severity.Error);
+        }
+    }
+}

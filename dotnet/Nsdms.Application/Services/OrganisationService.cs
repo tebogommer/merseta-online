@@ -37,6 +37,8 @@ public interface IOrganisationService
     Task<OrganisationCommitteeMemberDto> AddTrainingCommitteeMemberAsync(int organisationId, int personId, string roleCode, string constituency, string currentUsername = "Admin");
     Task<bool> RemoveTrainingCommitteeMemberAsync(int memberId, string currentUsername = "Admin");
     Task<List<OrganisationLevyReconDto>> GetLevyReconHistoryAsync(int organisationId);
+    Task<string?> ResolveChamberFromSicCodeAsync(string sicCode);
+    Task<Organisation> SetManualChamberOverrideAsync(int organisationId, string newChamberCode, string overrideReason, string approvedBy);
 }
 
 public class OrganisationService : IOrganisationService
@@ -148,6 +150,21 @@ public class OrganisationService : IOrganisationService
         org.CreatedAt = DateTime.UtcNow;
         org.CreatedBy = currentUsername;
 
+        // Auto-cascade ChamberCode from SicCodeType unless an authorized manual override is flagged
+        if (!org.IsManualChamberOverride && !string.IsNullOrWhiteSpace(org.SicCode))
+        {
+            var matchedSic = await db.SicCodeTypes.AsNoTracking().FirstOrDefaultAsync(s => s.Code == org.SicCode);
+            if (matchedSic != null && !string.IsNullOrWhiteSpace(matchedSic.ChamberCode))
+            {
+                org.ChamberCode = matchedSic.ChamberCode;
+            }
+        }
+        else if (org.IsManualChamberOverride)
+        {
+            org.ChamberOverrideDate ??= DateTime.UtcNow;
+            org.ChamberOverrideApprovedBy ??= currentUsername;
+        }
+
         db.Organisations.Add(org);
         await db.SaveChangesAsync();
 
@@ -181,6 +198,10 @@ public class OrganisationService : IOrganisationService
             existing.SectorCode,
             existing.ChamberCode,
             existing.SicCode,
+            existing.IsManualChamberOverride,
+            existing.ChamberOverrideReason,
+            existing.ChamberOverrideDate,
+            existing.ChamberOverrideApprovedBy,
             existing.CompanySizeCode,
             existing.OrganisationTypeCode,
             existing.PhoneNumber,
@@ -199,6 +220,16 @@ public class OrganisationService : IOrganisationService
             existing.IsActive
         };
 
+        // Auto-cascade ChamberCode from SicCodeType unless an authorized manual override is active
+        if (!org.IsManualChamberOverride && !string.IsNullOrWhiteSpace(org.SicCode))
+        {
+            var matchedSic = await db.SicCodeTypes.AsNoTracking().FirstOrDefaultAsync(s => s.Code == org.SicCode);
+            if (matchedSic != null && !string.IsNullOrWhiteSpace(matchedSic.ChamberCode))
+            {
+                org.ChamberCode = matchedSic.ChamberCode;
+            }
+        }
+
         existing.CompanyName = org.CompanyName;
         existing.TradingName = org.TradingName;
         existing.SdlNumber = org.SdlNumber;
@@ -213,6 +244,10 @@ public class OrganisationService : IOrganisationService
         existing.SectorCode = org.SectorCode;
         existing.ChamberCode = org.ChamberCode;
         existing.SicCode = org.SicCode;
+        existing.IsManualChamberOverride = org.IsManualChamberOverride;
+        existing.ChamberOverrideReason = org.ChamberOverrideReason;
+        existing.ChamberOverrideDate = org.IsManualChamberOverride ? (org.ChamberOverrideDate ?? DateTime.UtcNow) : null;
+        existing.ChamberOverrideApprovedBy = org.IsManualChamberOverride ? (org.ChamberOverrideApprovedBy ?? currentUsername) : null;
         existing.CompanySizeCode = org.CompanySizeCode;
         existing.OrganisationTypeCode = org.OrganisationTypeCode;
         existing.PhoneNumber = org.PhoneNumber;
@@ -236,6 +271,45 @@ public class OrganisationService : IOrganisationService
         await db.SaveChangesAsync();
 
         return existing;
+    }
+
+    public async Task<string?> ResolveChamberFromSicCodeAsync(string sicCode)
+    {
+        if (string.IsNullOrWhiteSpace(sicCode)) return null;
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var sic = await db.SicCodeTypes.AsNoTracking().FirstOrDefaultAsync(s => s.Code == sicCode.Trim() && s.Active);
+        return sic?.ChamberCode;
+    }
+
+    public async Task<Organisation> SetManualChamberOverrideAsync(int organisationId, string newChamberCode, string overrideReason, string approvedBy)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var org = await db.Organisations.FindAsync(organisationId);
+        if (org == null)
+        {
+            throw new KeyNotFoundException($"Organisation with ID {organisationId} was not found.");
+        }
+
+        var before = new
+        {
+            org.ChamberCode,
+            org.IsManualChamberOverride,
+            org.ChamberOverrideReason,
+            org.ChamberOverrideDate,
+            org.ChamberOverrideApprovedBy
+        };
+
+        org.ChamberCode = newChamberCode;
+        org.IsManualChamberOverride = true;
+        org.ChamberOverrideReason = overrideReason;
+        org.ChamberOverrideDate = DateTime.UtcNow;
+        org.ChamberOverrideApprovedBy = approvedBy;
+        org.ModifiedAt = DateTime.UtcNow;
+        org.ModifiedBy = approvedBy;
+
+        _audit.LogAction(db, "Organisation", org.Id, "ManualChamberOverride", approvedBy, before, org);
+        await db.SaveChangesAsync();
+        return org;
     }
 
     public async Task<Organisation> SaveAsync(Organisation org, string currentUser = "Admin")

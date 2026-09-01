@@ -404,7 +404,7 @@ public class AdminCatalogService : IAdminCatalogService
             Key = "MOD-SYSTEM-SETTINGS",
             Title = "System Configuration & Overrides",
             Category = AdminCategoryConstants.SystemConfiguration,
-            Description = "Dynamic enterprise configuration engine with live database overrides and double-write audit logging.",
+            Description = "Dynamic enterprise configuration engine with live database overrides and audited change logging.",
             Icon = "Icons.Material.Filled.Settings",
             RouteUrl = "/admin/settings",
             ItemType = "Module",
@@ -504,16 +504,16 @@ public class AdminCatalogService : IAdminCatalogService
         items.Add(new AdminSearchItemDto
         {
             Key = "MOD-DOC-SNAPSHOTS",
-            Title = "Document Security & Cryptographic Snapshots",
+            Title = "Document Security & Digital Seals",
             Category = AdminCategoryConstants.DocumentsAndTemplates,
-            Description = "SHA-256 cryptographic snapshot repository and tamper-evident document integrity tracking.",
+            Description = "Digital security seal repository and tamper-evident document integrity tracking.",
             Icon = "Icons.Material.Filled.Shield",
             RouteUrl = "/admin/document-snapshots",
             ItemType = "Module",
-            CurrentValue = "SHA-256 Hashes",
+            CurrentValue = "Security Seals",
             ValueType = "Badge",
             IsEditableInline = false,
-            Tags = new List<string> { "security", "hash", "sha256", "snapshots", "tamper", "verification" },
+            Tags = new List<string> { "security", "seal", "verification", "snapshots", "tamper", "reference" },
             StatusBadgeColor = "Primary",
             DisplayOrder = 9
         });
@@ -623,13 +623,13 @@ public class AdminCatalogService : IAdminCatalogService
         items.Add(new AdminSearchItemDto
         {
             Key = "MOD-AUDIT-TRAIL",
-            Title = "Immutable System Audit Trail",
+            Title = "Immutable Audited Change Log",
             Category = AdminCategoryConstants.AuditAndForensics,
-            Description = "Enterprise double-write audit trail capturing entity mutations, actor activity, and before/after JSON diffs.",
+            Description = "Enterprise audited change log capturing entity mutations, actor activity, and before/after JSON diffs.",
             Icon = "Icons.Material.Filled.History",
             RouteUrl = "/audit-logs",
             ItemType = "Module",
-            CurrentValue = "Double-Write Log",
+            CurrentValue = "Audited Change Log",
             ValueType = "Badge",
             IsEditableInline = false,
             Tags = new List<string> { "audit", "forensics", "logs", "mutations", "history", "compliance" },
@@ -642,7 +642,7 @@ public class AdminCatalogService : IAdminCatalogService
             Key = "MOD-DATA-DICTIONARY",
             Title = "Database Data Dictionary & Extended Properties",
             Category = AdminCategoryConstants.DiagnosticsAndDeveloper,
-            Description = "Interactive schema explorer reading SQL Server extended properties, temporal tables, and foreign keys.",
+            Description = "Interactive schema explorer reading SQL Server extended properties, historical version timelines, and foreign keys.",
             Icon = "Icons.Material.Filled.MenuBook",
             RouteUrl = "/developer/schema",
             ItemType = "Module",
@@ -705,10 +705,10 @@ public class AdminCatalogService : IAdminCatalogService
             AdminCategoryConstants.SystemConfiguration => "Dynamic parameters governing business calculations, deadlines, and quotas.",
             AdminCategoryConstants.FeatureFlags => "Runtime feature switches and external ERP/SARS/DHET integration adapters.",
             AdminCategoryConstants.ReferenceLookups => "Statutory reference tables, OFO codes, SIC codes, and SETMIS standard enums.",
-            AdminCategoryConstants.DocumentsAndTemplates => "Document templates, MoA clause libraries, and cryptographic verification.",
+            AdminCategoryConstants.DocumentsAndTemplates => "Document templates, MoA clause libraries, and digital security seal verification.",
             AdminCategoryConstants.DelegationsAndGovernance => "Review committee schedules, delegated approval limits, and charter resolutions.",
             AdminCategoryConstants.ComplianceAndStatutory => "SETMIS/NLRD batch pre-submission validations and SARS levy audits.",
-            AdminCategoryConstants.AuditAndForensics => "Immutable double-write audit trail and system-versioned temporal logs.",
+            AdminCategoryConstants.AuditAndForensics => "Immutable audited change log and historical version timeline.",
             AdminCategoryConstants.DiagnosticsAndDeveloper => "Schema data dictionary, extended properties, and WCAG accessibility HUD.",
             _ => "Administrative configuration items."
         };

@@ -8,7 +8,7 @@
     <TitleContent>
         <div class="d-flex align-center gap-2">
             <MudIcon Icon="@Icons.Material.Filled.AddCircle" Color="Color.Primary" />
-            <MudText Typo="Typo.h6">Create Workflow Blueprint</MudText>
+            <MudText Typo="Typo.h6">Create Approval Process Lifecycle</MudText>
         </div>
     </TitleContent>
     <DialogContent>
@@ -16,7 +16,7 @@
             <MudGrid>
                 <MudItem xs="12" md="6">
                     <MudTextField @bind-Value="_definition.Code"
-                                  Label="Process Blueprint Code"
+                                  Label="Process Lifecycle Code"
                                   Placeholder="e.g. MOA, BURSARY, APPRENTICE"
                                   Required="true"
                                   RequiredError="Process code is mandatory"
@@ -32,15 +32,15 @@
                                RequiredError="Target entity is required"
                                Variant="Variant.Outlined"
                                Class="mb-3">
-                        <MudSelectItem Value="@("Organisation")">Organisation</MudSelectItem>
-                        <MudSelectItem Value="@("WspSubmission")">WspSubmission</MudSelectItem>
-                        <MudSelectItem Value="@("GrantApplication")">GrantApplication</MudSelectItem>
-                        <MudSelectItem Value="@("GrantMoa")">GrantMoa</MudSelectItem>
-                        <MudSelectItem Value="@("TrainingProvider")">TrainingProvider</MudSelectItem>
-                        <MudSelectItem Value="@("WorkplaceApproval")">WorkplaceApproval</MudSelectItem>
-                        <MudSelectItem Value="@("CompanyLearner")">CompanyLearner</MudSelectItem>
-                        <MudSelectItem Value="@("LearnerTradeTest")">LearnerTradeTest</MudSelectItem>
-                        <MudSelectItem Value="@("InterSetaTransfer")">InterSetaTransfer</MudSelectItem>
+                        <MudSelectItem Value="@("Organisation")">Employers &amp; Organisations</MudSelectItem>
+                        <MudSelectItem Value="@("WspSubmission")">Workplace Skills Plans (WSP)</MudSelectItem>
+                        <MudSelectItem Value="@("GrantApplication")">Discretionary Grant Applications</MudSelectItem>
+                        <MudSelectItem Value="@("GrantMoa")">Grant MoA Agreements</MudSelectItem>
+                        <MudSelectItem Value="@("TrainingProvider")">Training Providers &amp; Skills Centres</MudSelectItem>
+                        <MudSelectItem Value="@("WorkplaceApproval")">Workplace Approvals &amp; Sites</MudSelectItem>
+                        <MudSelectItem Value="@("CompanyLearner")">Learner Registrations</MudSelectItem>
+                        <MudSelectItem Value="@("LearnerTradeTest")">Artisan Trade Tests</MudSelectItem>
+                        <MudSelectItem Value="@("InterSetaTransfer")">Inter-SETA Transfers</MudSelectItem>
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="12">
@@ -54,20 +54,20 @@
                 </MudItem>
                 <MudItem xs="12" md="6">
                     <MudTextField @bind-Value="_definition.KeyFieldName"
-                                  Label="Primary Key Field Name"
+                                  Label="Record Identifier Field"
                                   Variant="Variant.Outlined"
                                   HelperText="Default is 'Id'"
                                   Class="mb-3" />
                 </MudItem>
                 <MudItem xs="12" md="6">
                     <MudSwitch @bind-Value="_definition.IsActive"
-                               Label="Activate Blueprint Immediately"
+                               Label="Activate Workflow Process Immediately"
                                Color="Color.Success"
                                Class="mt-2" />
                 </MudItem>
                 <MudItem xs="12">
                     <MudAlert Severity="Severity.Info" Dense="true" Class="rounded-lg">
-                        Initial draft and terminal approved/rejected states will be provisioned automatically. You can configure custom states and transition gates in the detail studio.
+                        Initial draft and finalized approved/rejected stages will be provisioned automatically. You can configure custom stages and review actions in the detail studio.
                     </MudAlert>
                 </MudItem>
             </MudGrid>
@@ -87,7 +87,7 @@
             }
             else
             {
-                <span>Create Blueprint</span>
+                <span>Create Process</span>
             }
         </MudButton>
     </DialogActions>
@@ -200,12 +200,12 @@
                 NewEntityStatusCode = "REJECTED"
             }, "admin@merseta.org.za", "System Administrator");
 
-            Snackbar.Add($"Workflow blueprint '{savedDef.Code}' created successfully.", Severity.Success);
+            Snackbar.Add($"Approval process lifecycle '{savedDef.Code}' created successfully.", Severity.Success);
             MudDialog.Close(DialogResult.Ok(savedDef));
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error creating blueprint: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error creating process lifecycle: {ex.Message}", Severity.Error);
         }
         finally
         {

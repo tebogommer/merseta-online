@@ -170,7 +170,15 @@
                                             </MudSelect>
                                         </MudItem>
                                         <MudItem xs="12" md="4">
-                                            <MudSelect T="string" Label="SETA Chamber" @bind-Value="_organisation.ChamberCode" Variant="Variant.Outlined">
+                                            <MudSelect T="string" Label="SIC Code (Stats SA 5-Digit)" Value="_organisation.SicCode" ValueChanged="OnSicCodeChangedAsync" Variant="Variant.Outlined" HelperText="Determines statutory Chamber jurisdiction" Dense="true">
+                                                @foreach (var sic in _sicCodes)
+                                                {
+                                                    <MudSelectItem Value="@sic.Code">@sic.Code - @sic.Name</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="4">
+                                            <MudSelect T="string" Label="merSETA Chamber" @bind-Value="_organisation.ChamberCode" Variant="Variant.Outlined" ReadOnly="@(!_organisation.IsManualChamberOverride)" HelperText="@(_organisation.IsManualChamberOverride ? "Manual Chamber Override Active" : "Auto-determined from SIC Code")" Dense="true">
                                                 @foreach (var ch in _chambers)
                                                 {
                                                     <MudSelectItem Value="@ch.Code">@ch.Name (@ch.Code)</MudSelectItem>
@@ -178,13 +186,14 @@
                                             </MudSelect>
                                         </MudItem>
                                         <MudItem xs="12" md="4">
-                                            <MudSelect T="string" Label="SIC Code (Stats SA)" @bind-Value="_organisation.SicCode" Variant="Variant.Outlined">
-                                                @foreach (var sic in _sicCodes)
-                                                {
-                                                    <MudSelectItem Value="@sic.Code">@sic.Code - @sic.Name</MudSelectItem>
-                                                }
-                                            </MudSelect>
+                                            <MudSwitch T="bool" @bind-Value="_organisation.IsManualChamberOverride" Color="Color.Warning" Label="Manual Chamber Override" />
                                         </MudItem>
+                                        @if (_organisation.IsManualChamberOverride)
+                                        {
+                                            <MudItem xs="12">
+                                                <MudTextField T="string" Label="Chamber Override Justification / Board Resolution Reference" @bind-Value="_organisation.ChamberOverrideReason" Variant="Variant.Outlined" HelperText="Statutory rationale required for non-standard chamber allocation" Required="true" />
+                                            </MudItem>
+                                        }
                                         <MudItem xs="12" md="4">
                                             <MudSelect T="string" Label="Organisation Category" @bind-Value="_organisation.CategoryCode" Variant="Variant.Outlined">
                                                 @foreach (var cat in _categories)
@@ -424,7 +433,7 @@
                             }
                             else
                             {
-                                <span>Person ID: @context.PersonId</span>
+                                <span>Designated Contact</span>
                             }
                         </MudTd>
                         <MudTd DataLabel="Contact Type">
@@ -1027,7 +1036,7 @@
                         </MudTd>
                         <MudTd DataLabel="Location">@(context.Location ?? "Head Office")</MudTd>
                         <MudTd DataLabel="Contact Met">
-                            @(context.ContactPerson != null ? $"{context.ContactPerson.FirstName} {context.ContactPerson.LastName}" : $"Person ID: {context.ContactPersonId}")
+                            @(context.ContactPerson != null ? $"{context.ContactPerson.FirstName} {context.ContactPerson.LastName}" : "Designated Contact Person")
                         </MudTd>
                         <MudTd DataLabel="Outcome">@(!string.IsNullOrWhiteSpace(context.OutcomeNotes) ? context.OutcomeNotes : "Pending completion")</MudTd>
                     </RowTemplate>
@@ -1197,6 +1206,21 @@
     private bool _showLogoDialog = false;
     private string _newLogoUri = string.Empty;
     private string _newBrandColor = "#cc9c47";
+
+    private async Task OnSicCodeChangedAsync(string newSic)
+    {
+        _organisation.SicCode = newSic;
+        if (!_organisation.IsManualChamberOverride && !string.IsNullOrWhiteSpace(newSic))
+        {
+            var derivedChamber = await OrgService.ResolveChamberFromSicCodeAsync(newSic);
+            if (!string.IsNullOrWhiteSpace(derivedChamber))
+            {
+                _organisation.ChamberCode = derivedChamber;
+                var chamberName = _chambers.FirstOrDefault(c => c.Code == derivedChamber)?.Name ?? derivedChamber;
+                Snackbar.Add($"Chamber auto-determined as '{chamberName}' from statutory SIC Code {newSic}.", Severity.Info);
+            }
+        }
+    }
 
     private async Task LoadOrganisationData()
     {

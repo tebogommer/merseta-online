@@ -29,6 +29,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<WspTrainingPlan> WspTrainingPlans => Set<WspTrainingPlan>();
     public DbSet<GrantFundingWindow> GrantFundingWindows => Set<GrantFundingWindow>();
     public DbSet<GrantProjectBudget> GrantProjectBudgets => Set<GrantProjectBudget>();
+    public DbSet<StrategicPriority> StrategicPriorities => Set<StrategicPriority>();
+    public DbSet<FundingWindowPriority> FundingWindowPriorities => Set<FundingWindowPriority>();
     public DbSet<AssessorModeratorScope> AssessorModeratorScopes => Set<AssessorModeratorScope>();
     public DbSet<LearnerAssessment> LearnerAssessments => Set<LearnerAssessment>();
     public DbSet<WorkplaceApproval> WorkplaceApprovals => Set<WorkplaceApproval>();
@@ -148,6 +150,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
 
     // Advanced SARS Historical Levy Reconciliation (Area 17)
     public DbSet<SarsLevyReconAudit> SarsLevyReconAudits => Set<SarsLevyReconAudit>();
+    public DbSet<SarsSchemeYearCalculation> SarsSchemeYearCalculations => Set<SarsSchemeYearCalculation>();
 
     // Auxiliary Enterprise Modules (Options A, B, C, D)
     public DbSet<BankingDetails> BankingDetails => Set<BankingDetails>();
@@ -382,10 +385,11 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(o => o.ChamberCode);
             entity.HasIndex(o => o.SicCode);
             entity.HasIndex(o => o.CompanySizeCode);
-            entity.HasIndex(o => o.OrganisationTypeCode);
-            entity.HasIndex(o => o.PrimaryContactPersonId);
             entity.Property(o => o.MentorRatioExemptionReason).HasMaxLength(500);
+            entity.Property(o => o.ChamberOverrideReason).HasMaxLength(500);
+            entity.Property(o => o.ChamberOverrideApprovedBy).HasMaxLength(100);
             entity.HasIndex(o => o.IsMentorRatioEnforced);
+            entity.HasIndex(o => o.IsManualChamberOverride);
             entity.HasIndex(o => o.IsActive);
         });
 
@@ -514,6 +518,9 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(l => l.AdminLevyAmount).HasPrecision(18, 2);
             entity.Property(l => l.InterestAmount).HasPrecision(18, 2);
             entity.Property(l => l.PenaltyAmount).HasPrecision(18, 2);
+            entity.Property(l => l.SicCode).HasMaxLength(20);
+            entity.Property(l => l.ChamberCode).HasMaxLength(20);
+            entity.Property(l => l.SetaCode).HasMaxLength(10).HasDefaultValue("17");
 
             entity.HasOne(l => l.LevyFile)
                   .WithMany(f => f.LineItems)
@@ -522,6 +529,11 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
 
             entity.HasIndex(l => l.LevyFileId);
             entity.HasIndex(l => l.SdlNumber);
+            entity.HasIndex(l => l.SicCode);
+            entity.HasIndex(l => l.ChamberCode);
+            entity.HasIndex(l => l.SetaCode);
+            entity.HasIndex(l => l.IsOutOfScopeSeta);
+            entity.HasIndex(l => l.HasSicCodeMismatch);
         });
 
         // GrantApplication
@@ -547,7 +559,25 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                   .HasForeignKey(g => g.WspSubmissionId)
                   .OnDelete(DeleteBehavior.SetNull);
 
+            entity.HasOne(g => g.FundingWindow)
+                  .WithMany(w => w.Applications)
+                  .HasForeignKey(g => g.FundingWindowId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(g => g.StrategicPriority)
+                  .WithMany(s => s.GrantApplications)
+                  .HasForeignKey(g => g.StrategicPriorityId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(g => g.FundingWindowPriority)
+                  .WithMany()
+                  .HasForeignKey(g => g.FundingWindowPriorityId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
             entity.HasIndex(g => g.OrganisationId);
+            entity.HasIndex(g => g.FundingWindowId);
+            entity.HasIndex(g => g.StrategicPriorityId);
+            entity.HasIndex(g => g.FundingWindowPriorityId);
             entity.HasIndex(g => g.WspSubmissionId);
             entity.HasIndex(g => g.ApplicationNumber);
             entity.HasIndex(g => g.ApplicationStatusCode);
@@ -717,8 +747,54 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                   .HasForeignKey(b => b.GrantApplicationId)
                   .OnDelete(DeleteBehavior.Cascade);
 
+            entity.HasOne(b => b.StrategicPriority)
+                  .WithMany()
+                  .HasForeignKey(b => b.StrategicPriorityId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
             entity.HasIndex(b => b.GrantApplicationId);
+            entity.HasIndex(b => b.StrategicPriorityId);
             entity.HasIndex(b => b.ExpenseCategory);
+        });
+
+        // StrategicPriority
+        modelBuilder.Entity<StrategicPriority>(entity =>
+        {
+            entity.ToTable("StrategicPriority");
+            entity.Property(s => s.Code).HasMaxLength(50).IsRequired();
+            entity.Property(s => s.Name).HasMaxLength(200).IsRequired();
+            entity.Property(s => s.Description).HasMaxLength(1000);
+            entity.Property(s => s.NsdpOutcomeCode).HasMaxLength(50).IsRequired();
+            entity.Property(s => s.NsdpOutcomeDescription).HasMaxLength(500);
+            entity.Property(s => s.SipCategory).HasMaxLength(150);
+            entity.Property(s => s.TargetSector).HasMaxLength(100);
+
+            entity.HasIndex(s => s.Code).IsUnique();
+            entity.HasIndex(s => s.NsdpOutcomeCode);
+            entity.HasIndex(s => s.IsActive);
+        });
+
+        // FundingWindowPriority
+        modelBuilder.Entity<FundingWindowPriority>(entity =>
+        {
+            entity.ToTable("FundingWindowPriority");
+            entity.Property(p => p.AllocatedBudget).HasPrecision(18, 2);
+            entity.Property(p => p.MinScoreThreshold).HasPrecision(5, 2);
+
+            entity.HasOne(p => p.FundingWindow)
+                  .WithMany(w => w.StrategicPriorities)
+                  .HasForeignKey(p => p.FundingWindowId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(p => p.StrategicPriority)
+                  .WithMany(s => s.WindowPriorities)
+                  .HasForeignKey(p => p.StrategicPriorityId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(p => p.FundingWindowId);
+            entity.HasIndex(p => p.StrategicPriorityId);
+            entity.HasIndex(p => new { p.FundingWindowId, p.StrategicPriorityId }).IsUnique();
+            entity.HasIndex(p => p.IsActive);
         });
 
         // AssessorModeratorScope
@@ -2327,6 +2403,20 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(r => r.DiscrepancyReasonCode);
         });
 
+        modelBuilder.Entity<SarsSchemeYearCalculation>(entity =>
+        {
+            entity.ToTable("SarsSchemeYearCalculation");
+            entity.Property(s => s.SchemeYear).HasMaxLength(10).IsRequired();
+            entity.Property(s => s.MandatoryPercentage).HasPrecision(18, 2);
+            entity.Property(s => s.DiscretionaryPercentage).HasPrecision(18, 2);
+            entity.Property(s => s.AdminPercentage).HasPrecision(18, 2);
+            entity.Property(s => s.QctoPercentage).HasPrecision(18, 2);
+            entity.Property(s => s.TotalPercentage).HasPrecision(18, 2);
+            entity.Property(s => s.StatusCode).HasMaxLength(50).IsRequired();
+            entity.HasIndex(s => s.SchemeYear);
+            entity.HasIndex(s => s.StatusCode);
+        });
+
         // Auxiliary Enterprise Entities (Options A, B, C, D)
         modelBuilder.Entity<BankingDetails>(entity =>
         {
@@ -2447,6 +2537,13 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         ConfigureLookup<SectorType>(modelBuilder, "SectorType");
         ConfigureLookup<ChamberType>(modelBuilder, "ChamberType");
         ConfigureLookup<SicCodeType>(modelBuilder, "SicCodeType");
+        modelBuilder.Entity<SicCodeType>(entity =>
+        {
+            entity.Property(s => s.ChamberCode).HasMaxLength(20);
+            entity.Property(s => s.SetaCode).HasMaxLength(10).HasDefaultValue("17");
+            entity.HasIndex(s => s.ChamberCode);
+            entity.HasIndex(s => s.SetaCode);
+        });
         ConfigureLookup<StatusType>(modelBuilder, "StatusType");
         ConfigureLookup<LearningProgrammeType>(modelBuilder, "LearningProgrammeType");
         ConfigureLookup<EnrolmentType>(modelBuilder, "EnrolmentType");

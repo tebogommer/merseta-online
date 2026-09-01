@@ -326,4 +326,294 @@ public class GrantServiceTests
         Assert.NotNull(auditLog);
         Assert.Equal("GenerateFromApplication", auditLog.ActionName);
     }
+
+    [Fact]
+    public async Task UpdateFundingWindowAsync_UpdatesFieldsAndLogsAudit()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var window = await service.CreateFundingWindowAsync(new GrantFundingWindow
+        {
+            WindowName = "Initial Window Name",
+            FinYear = 2026,
+            TotalAvailableBudget = 10000000m,
+            OpeningDate = DateTime.UtcNow,
+            ClosingDate = DateTime.UtcNow.AddMonths(1)
+        });
+
+        // Act
+        window.WindowName = "Updated Window Name 2026/27";
+        window.TotalAvailableBudget = 12500000m;
+        var updated = await service.UpdateFundingWindowAsync(window, "AdminUser");
+
+        // Assert
+        Assert.Equal("Updated Window Name 2026/27", updated.WindowName);
+        Assert.Equal(12500000m, updated.TotalAvailableBudget);
+
+        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "GrantFundingWindow" && a.ActionName == "UpdateFundingWindow");
+        Assert.NotNull(auditLog);
+    }
+
+    [Fact]
+    public async Task GetFundingWindowSummaryAsync_CalculatesMetricsCorrectly()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Skills Org", SdlNumber = "L888999111" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var window = await service.CreateFundingWindowAsync(new GrantFundingWindow
+        {
+            WindowName = "Apprenticeship Window 2026",
+            FinYear = 2026,
+            TotalAvailableBudget = 5000000m,
+            OpeningDate = DateTime.UtcNow.AddDays(-5),
+            ClosingDate = DateTime.UtcNow.AddDays(25),
+            IsActive = true
+        });
+
+        await service.CreateApplicationAsync(new GrantApplication
+        {
+            OrganisationId = org.Id,
+            FundingWindowId = window.Id,
+            ProjectTitle = "App 1",
+            RequestedAmount = 1000000m,
+            ApprovedAmount = 800000m,
+            ApplicationStatusCode = "Approved"
+        });
+
+        await service.CreateApplicationAsync(new GrantApplication
+        {
+            OrganisationId = org.Id,
+            FundingWindowId = window.Id,
+            ProjectTitle = "App 2",
+            RequestedAmount = 1500000m,
+            ApprovedAmount = null,
+            ApplicationStatusCode = "Submitted"
+        });
+
+        // Act
+        var summary = await service.GetFundingWindowSummaryAsync(window.Id);
+
+        // Assert
+        Assert.NotNull(summary);
+        Assert.Equal(window.Id, summary.WindowId);
+        Assert.Equal(2, summary.TotalApplications);
+        Assert.Equal(2500000m, summary.TotalRequestedAmount);
+        Assert.Equal(800000m, summary.TotalApprovedAmount);
+        Assert.Equal(4200000m, summary.RemainingBudget);
+        Assert.True(summary.IsOpen);
+    }
+
+    [Fact]
+    public async Task DeleteFundingWindowAsync_DeletesWindowWhenNoApplications()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var window = await service.CreateFundingWindowAsync(new GrantFundingWindow
+        {
+            WindowName = "Unused Window",
+            FinYear = 2026,
+            TotalAvailableBudget = 1000000m,
+            OpeningDate = DateTime.UtcNow,
+            ClosingDate = DateTime.UtcNow.AddMonths(1)
+        });
+
+        // Act
+        var deleted = await service.DeleteFundingWindowAsync(window.Id, "AdminUser");
+
+        // Assert
+        Assert.True(deleted);
+        var found = await db.GrantFundingWindows.FindAsync(window.Id);
+        Assert.Null(found);
+    }
+
+    [Fact]
+    public async Task GetStrategicPrioritiesAsync_ReturnsActivePriorities()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var sp1 = new StrategicPriority
+        {
+            Code = "SP-GREEN-01",
+            Name = "Green Economy & EV Tech",
+            NsdpOutcomeCode = "NSDP-OUTCOME-1",
+            IsActive = true
+        };
+        var sp2 = new StrategicPriority
+        {
+            Code = "SP-INACTIVE-02",
+            Name = "Decommissioned Theme",
+            NsdpOutcomeCode = "NSDP-OUTCOME-2",
+            IsActive = false
+        };
+
+        db.StrategicPriorities.AddRange(sp1, sp2);
+        await db.SaveChangesAsync();
+
+        // Act
+        var activeList = await service.GetStrategicPrioritiesAsync(activeOnly: true);
+        var allList = await service.GetStrategicPrioritiesAsync(activeOnly: false);
+
+        // Assert
+        Assert.Single(activeList);
+        Assert.Equal("SP-GREEN-01", activeList[0].Code);
+        Assert.Equal(2, allList.Count);
+    }
+
+    [Fact]
+    public async Task AddWindowPriorityAsync_EnforcesWindowBudgetEnvelope()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var window = await service.CreateFundingWindowAsync(new GrantFundingWindow
+        {
+            WindowName = "Window with Capped Envelope",
+            FinYear = 2026,
+            TotalAvailableBudget = 10000000m,
+            OpeningDate = DateTime.UtcNow,
+            ClosingDate = DateTime.UtcNow.AddMonths(2),
+            IsActive = true
+        });
+
+        var sp = await service.SaveStrategicPriorityAsync(new StrategicPriority
+        {
+            Code = "SP-4IR-02",
+            Name = "Robotics & Automation",
+            NsdpOutcomeCode = "NSDP-OUTCOME-2",
+            IsActive = true
+        });
+
+        // Act & Assert 1: Valid sub-budget allocation succeeds
+        var fwp = await service.AddWindowPriorityAsync(new FundingWindowPriority
+        {
+            FundingWindowId = window.Id,
+            StrategicPriorityId = sp.Id,
+            AllocatedBudget = 6000000m,
+            TargetBeneficiaries = 100,
+            MinScoreThreshold = 65.00m,
+            IsRingFenced = true,
+            IsActive = true
+        });
+
+        Assert.True(fwp.Id > 0);
+        Assert.Equal(6000000m, fwp.AllocatedBudget);
+
+        // Act & Assert 2: Over-allocation throws InvalidOperationException
+        var sp2 = await service.SaveStrategicPriorityAsync(new StrategicPriority
+        {
+            Code = "SP-ARTISAN-03",
+            Name = "Artisan Acceleration",
+            NsdpOutcomeCode = "NSDP-OUTCOME-1",
+            IsActive = true
+        });
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.AddWindowPriorityAsync(new FundingWindowPriority
+        {
+            FundingWindowId = window.Id,
+            StrategicPriorityId = sp2.Id,
+            AllocatedBudget = 5000001m, // exceeds remaining 4,000,000 envelope!
+            TargetBeneficiaries = 50,
+            IsActive = true
+        }));
+    }
+
+    [Fact]
+    public async Task GetStrategicReportDashboardAsync_Calculates3TierMetrics()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var spGreen = await service.SaveStrategicPriorityAsync(new StrategicPriority
+        {
+            Code = "SP-GREEN-01",
+            Name = "Green Economy & EV Tech",
+            NsdpOutcomeCode = "NSDP-OUTCOME-1",
+            NsdpOutcomeDescription = "Outcome 1: High Demand Skills",
+            SipCategory = "SIP 8: Green Energy",
+            IsActive = true
+        });
+
+        var window = await service.CreateFundingWindowAsync(new GrantFundingWindow
+        {
+            WindowName = "Strategic DG Window 2026",
+            FinYear = 2026,
+            TotalAvailableBudget = 20000000m,
+            OpeningDate = DateTime.UtcNow.AddDays(-10),
+            ClosingDate = DateTime.UtcNow.AddDays(30),
+            IsActive = true
+        });
+
+        var fwp = await service.AddWindowPriorityAsync(new FundingWindowPriority
+        {
+            FundingWindowId = window.Id,
+            StrategicPriorityId = spGreen.Id,
+            AllocatedBudget = 12000000m,
+            TargetBeneficiaries = 150,
+            MinScoreThreshold = 70.00m,
+            IsRingFenced = true,
+            IsActive = true
+        });
+
+        var org = new Organisation
+        {
+            CompanyName = "Solar Mobility SA",
+            SdlNumber = "L999888777",
+            ProvinceCode = "GP"
+        };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var app = new GrantApplication
+        {
+            OrganisationId = org.Id,
+            FundingWindowId = window.Id,
+            StrategicPriorityId = spGreen.Id,
+            FundingWindowPriorityId = fwp.Id,
+            ProjectTitle = "EV Battery Cell Manufacturing Apprenticeship",
+            RequestedAmount = 6000000m,
+            ApprovedAmount = 6000000m,
+            StatusCode = "Approved",
+            ApplicationStatusCode = "Approved"
+        };
+        await service.CreateApplicationAsync(app);
+
+        // Act
+        var report = await service.GetStrategicReportDashboardAsync(finYear: 2026, windowId: window.Id);
+
+        // Assert
+        Assert.NotNull(report);
+        Assert.Equal(12000000m, report.TotalAllocatedBudget);
+        Assert.Equal(6000000m, report.TotalApprovedAmount);
+        Assert.Equal(50.0m, report.BudgetAbsorptionRate); // 6M / 12M = 50%
+        Assert.Equal(150, report.TotalLearnersTarget);
+
+        // Operational Tier
+        var opTheme = report.OperationalThemes.FirstOrDefault(t => t.PriorityCode == "SP-GREEN-01");
+        Assert.NotNull(opTheme);
+        Assert.Equal(12000000m, opTheme.AllocatedBudget);
+        Assert.Equal(6000000m, opTheme.ApprovedAmount);
+        Assert.Equal(6000000m, opTheme.RemainingBudget);
+        Assert.Equal(50.0m, opTheme.BurnRatePercent);
+        Assert.Equal(1, opTheme.ApprovedCount);
+        Assert.True(opTheme.IsRingFenced);
+
+        // Tactical Tier
+        var gp = report.TacticalProvinces.FirstOrDefault(p => p.ProvinceName == "Gauteng");
+        Assert.NotNull(gp);
+        Assert.Equal(1, gp.ApplicationCount);
+        Assert.Equal(6000000m, gp.TotalApproved);
+
+        // Strategic Tier
+        var outcome = report.StrategicNsdpOutcomes.FirstOrDefault(o => o.OutcomeCode == "NSDP-OUTCOME-1");
+        Assert.NotNull(outcome);
+        Assert.Equal(6000000m, outcome.TotalBudgetCommitted);
+        Assert.Equal(1800000m, outcome.TotalDisbursed); // 30% first tranche
+    }
 }

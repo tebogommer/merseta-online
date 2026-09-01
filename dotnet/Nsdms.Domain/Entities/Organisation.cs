@@ -82,7 +82,7 @@ public class Organisation : BaseEntity
     public string? SectorCode { get; set; }
 
     /// <summary>
-    /// MerSETA chamber allocation code (references lookup.ChamberType: AUTO, METAL, PLASTICS, MOTOR).
+    /// MerSETA chamber allocation code (references lookup.ChamberType: AUTO, METAL, PLASTICS, MOTOR, NEW_TYRE, OTHER).
     /// </summary>
     public string? ChamberCode { get; set; }
 
@@ -90,6 +90,26 @@ public class Organisation : BaseEntity
     /// Standard Industrial Classification (SIC) 5-digit economic activity code (references lookup.SicCodeType).
     /// </summary>
     public string? SicCode { get; set; }
+
+    /// <summary>
+    /// Indicates whether the organisation's chamber assignment was manually overridden instead of auto-derived from the SIC code.
+    /// </summary>
+    public bool IsManualChamberOverride { get; set; } = false;
+
+    /// <summary>
+    /// Governance justification and Board/SSP reference for the manual chamber assignment override.
+    /// </summary>
+    public string? ChamberOverrideReason { get; set; }
+
+    /// <summary>
+    /// Date when the chamber override was approved and recorded.
+    /// </summary>
+    public DateTime? ChamberOverrideDate { get; set; }
+
+    /// <summary>
+    /// Executive or administrator username who authorized the chamber override.
+    /// </summary>
+    public string? ChamberOverrideApprovedBy { get; set; }
 
     /// <summary>
     /// Enterprise size classification code (references lookup.CompanySizeType: MICRO, SMALL, MEDIUM, LARGE).

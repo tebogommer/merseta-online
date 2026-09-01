@@ -9,4 +9,5 @@ public interface IAnalyticsService
     Task<List<SspProvincialMetricDto>> GetSspProvincialMetricsAsync();
     Task<List<SspScarceSkillDto>> GetSspScarceSkillsAsync();
     Task<(decimal TotalCommitted, decimal TotalDisbursed, decimal TotalRebates)> GetFinancialOverviewAsync();
+    Task<List<ChamberGrantFinancialSummaryDto>> GetChamberGrantFinancialSummaryAsync(string? schemeYear = null);
 }

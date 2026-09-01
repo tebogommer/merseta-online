@@ -9,15 +9,15 @@
 @inject IDialogService DialogService
 @rendermode InteractiveServer
 
-<PageTitle>Workflow Studio &amp; State Machine Blueprints | merSETA NSDMS</PageTitle>
+<PageTitle>Approval Process Lifecycles &amp; Studio | merSETA NSDMS</PageTitle>
 
 @*
   UI-STANDARD.md Archetype: A1 (Master List / Reference Data & Configuration Studio)
   Clauses: 4.1, 4.3, 6.1, 7.2, 8.1, 11.1–11.9
 *@
 
-<EntityHeader Title="Workflow Studio &amp; State Machine Blueprints"
-              Subtitle="Enterprise state machine orchestration, lifecycle stages, gate transition matrices, and SLA policies"
+<EntityHeader Title="Approval Process Lifecycles &amp; Studio"
+              Subtitle="Enterprise approval process lifecycle stages, gate transition matrices, and SLA policies"
               Status="Active"
               BreadcrumbItems="@_breadcrumbItems">
     <ActionZone>
@@ -33,7 +33,7 @@
                    Size="Size.Small"
                    StartIcon="@Icons.Material.Filled.Add"
                    OnClick="OpenCreateBlueprintDialog">
-            New Blueprint
+            New Process Lifecycle
         </MudButton>
     </ActionZone>
 </EntityHeader>
@@ -43,7 +43,7 @@
     <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg border-default" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
         <div class="d-flex align-center justify-space-between">
             <div>
-                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Total Blueprints</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Total Process Lifecycles</MudText>
                 <MudText Typo="Typo.h5" Class="font-weight-bold mt-1">@_definitions.Count</MudText>
             </div>
             <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Medium">
@@ -55,7 +55,7 @@
     <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg border-default" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
         <div class="d-flex align-center justify-space-between">
             <div>
-                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Active Engines</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Active Workflows</MudText>
                 <MudText Typo="Typo.h5" Class="font-weight-bold mt-1" Color="Color.Success">@_definitions.Count(d => d.IsActive)</MudText>
             </div>
             <MudAvatar Color="Color.Success" Variant="Variant.Filled" Size="Size.Medium">
@@ -67,7 +67,7 @@
     <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg border-default" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
         <div class="d-flex align-center justify-space-between">
             <div>
-                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Configured States</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Workflow Stages</MudText>
                 <MudText Typo="Typo.h5" Class="font-weight-bold mt-1" Color="Color.Info">@_definitions.Sum(d => d.States.Count)</MudText>
             </div>
             <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Medium">
@@ -79,7 +79,7 @@
     <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg border-default" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
         <div class="d-flex align-center justify-space-between">
             <div>
-                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Live Instances</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Active Records</MudText>
                 <MudText Typo="Typo.h5" Class="font-weight-bold mt-1" Color="Color.Warning">@_definitions.Sum(d => d.Instances.Count)</MudText>
             </div>
             <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Medium">
@@ -90,7 +90,7 @@
 </div>
 
 <!-- Unified Studio Surface -->
-<div class="nsdms-workspace-surface" role="region" aria-label="Workflow Blueprint Matrix">
+<div class="nsdms-workspace-surface" role="region" aria-label="Approval Process Lifecycle Matrix">
     <!-- Compact Enterprise Toolbar -->
     <div class="nsdms-table-toolbar d-flex flex-wrap align-center justify-space-between gap-3 pa-4 border-bottom" style="border-bottom: 1px solid var(--mud-palette-lines-default);">
         <div class="d-flex align-center flex-grow-1 gap-2" style="max-width: 720px;">
@@ -98,7 +98,7 @@
                 <MudTextField T="string"
                               @bind-Value="_searchString"
                               @bind-Value:after="HandleFilterChanged"
-                              Placeholder="Search blueprint code or process name..."
+                              Placeholder="Search process code or workflow name..."
                               Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Search"
                               IconSize="Size.Small"
@@ -107,10 +107,10 @@
                               Clearable="true"
                               Immediate="true"
                               DebounceInterval="200"
-                              aria-label="Search blueprints" />
+                              aria-label="Search workflow processes" />
             </div>
 
-            <div style="width: 200px;">
+            <div style="width: 240px;">
                 <MudSelect T="string"
                            Value="@_selectedEntity"
                            ValueChanged="OnEntityFilterChanged"
@@ -120,13 +120,13 @@
                            AnchorOrigin="Origin.BottomLeft"
                            aria-label="Target entity filter">
                     <MudSelectItem Value="@("All")">All Entities</MudSelectItem>
-                    <MudSelectItem Value="@("Organisation")">Organisation</MudSelectItem>
-                    <MudSelectItem Value="@("WspSubmission")">WspSubmission</MudSelectItem>
-                    <MudSelectItem Value="@("GrantApplication")">GrantApplication</MudSelectItem>
-                    <MudSelectItem Value="@("TrainingProvider")">TrainingProvider</MudSelectItem>
-                    <MudSelectItem Value="@("WorkplaceApproval")">WorkplaceApproval</MudSelectItem>
-                    <MudSelectItem Value="@("CompanyLearner")">CompanyLearner</MudSelectItem>
-                    <MudSelectItem Value="@("LearnerTradeTest")">LearnerTradeTest</MudSelectItem>
+                    <MudSelectItem Value="@("Organisation")">Employers &amp; Organisations</MudSelectItem>
+                    <MudSelectItem Value="@("WspSubmission")">Workplace Skills Plans (WSP)</MudSelectItem>
+                    <MudSelectItem Value="@("GrantApplication")">Discretionary Grant Applications</MudSelectItem>
+                    <MudSelectItem Value="@("TrainingProvider")">Training Providers &amp; Skills Centres</MudSelectItem>
+                    <MudSelectItem Value="@("WorkplaceApproval")">Workplace Approvals &amp; Sites</MudSelectItem>
+                    <MudSelectItem Value="@("CompanyLearner")">Learner Registrations</MudSelectItem>
+                    <MudSelectItem Value="@("LearnerTradeTest")">Artisan Trade Tests</MudSelectItem>
                 </MudSelect>
             </div>
 
@@ -203,9 +203,9 @@
             <div class="nsdms-empty-icon-wrap mb-2">
                 <MudIcon Icon="@Icons.Material.Outlined.AccountTree" Color="Color.Secondary" Size="Size.Large" />
             </div>
-            <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-1">No workflow blueprints found</MudText>
+            <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-1">No approval process lifecycles found</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
-                @(HasActiveFilters ? "Try adjusting or clearing your filters." : "Create your first workflow blueprint to get started.")
+                @(HasActiveFilters ? "Try adjusting or clearing your filters." : "Create your first approval process lifecycle to get started.")
             </MudText>
             @if (HasActiveFilters)
             {
@@ -216,7 +216,7 @@
             else
             {
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateBlueprintDialog">
-                    Create Blueprint
+                    Create Process Lifecycle
                 </MudButton>
             }
         </div>
@@ -231,11 +231,11 @@
                   Breakpoint="Breakpoint.Sm">
             <HeaderContent>
                 <MudTh>Code</MudTh>
-                <MudTh>Blueprint Title &amp; Process</MudTh>
+                <MudTh>Workflow Name &amp; Process</MudTh>
                 <MudTh>Target Domain Entity</MudTh>
-                <MudTh>States</MudTh>
-                <MudTh>Transitions</MudTh>
-                <MudTh>Live Instances</MudTh>
+                <MudTh>Stages</MudTh>
+                <MudTh>Actions</MudTh>
+                <MudTh>Active Records</MudTh>
                 <MudTh>Status</MudTh>
                 <MudTh Style="text-align: right;">Actions</MudTh>
             </HeaderContent>
@@ -429,7 +429,7 @@
     private async Task OpenCreateBlueprintDialog()
     {
         var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
-        var dialog = await DialogService.ShowAsync<WorkflowCreateDialog>("Create New Workflow Blueprint", options);
+        var dialog = await DialogService.ShowAsync<WorkflowCreateDialog>("Create New Approval Process Lifecycle", options);
         var result = await dialog.Result;
 
         if (result != null && !result.Canceled && result.Data is WorkflowDefinition newDef)
@@ -443,7 +443,7 @@
     {
         var parameters = new DialogParameters { ["SourceDefinition"] = definition };
         var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
-        var dialog = await DialogService.ShowAsync<WorkflowCloneDialog>("Clone Workflow Blueprint", parameters, options);
+        var dialog = await DialogService.ShowAsync<WorkflowCloneDialog>("Clone Approval Process Lifecycle", parameters, options);
         var result = await dialog.Result;
 
         if (result != null && !result.Canceled && result.Data is WorkflowDefinition clonedDef)

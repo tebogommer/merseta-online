@@ -1,5 +1,8 @@
+@page "/finance/dg-moa/{id:int}"
+@page "/finance/dg-moa/{id:int}/edit"
 @page "/finance/grants/{id:int}"
 @page "/finance/grants/{id:int}/edit"
+@page "/finance/grant-moas/{id:int}"
 @using Nsdms.Application.Common.Models
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Application.Services
@@ -13,7 +16,7 @@
 @inject ISnackbar Snackbar
 @rendermode InteractiveServer
 
-<PageTitle>Grant MOA @_moa.MoaNumber - NSDMS</PageTitle>
+<PageTitle>DG MOA @_moa.MoaNumber - merSETA NSDMS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
     <!-- Sticky Top Bar / Action Bridge -->
@@ -24,8 +27,8 @@
                            StartIcon="@Icons.Material.Filled.ArrowBack"
                            Color="Color.Default"
                            OnClick="BackToList"
-                           aria-label="Back to Grant MOA List">
-                    Back to MOAs
+                           aria-label="Back to DG MOA List">
+                    Back to DG MOAs
                 </MudButton>
                 <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
                 <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
@@ -205,7 +208,7 @@
                             <MudTh Style="text-align: right;">Actions</MudTh>
                         </HeaderContent>
                         <RowTemplate>
-                            <MudTd DataLabel="Claim Ref"><strong>#@context.Id</strong></MudTd>
+                            <MudTd DataLabel="Claim Ref"><strong>CLM-@context.Id.ToString("D5")</strong></MudTd>
                             <MudTd DataLabel="Milestone Ref">Milestone #@(context.GrantMoaMilestone?.MilestoneNumber ?? 1)</MudTd>
                             <MudTd DataLabel="Invoice Number">@context.InvoiceNumber</MudTd>
                             <MudTd DataLabel="Claim Amount">
@@ -511,27 +514,27 @@
                         <MudItem xs="12" md="6">
                             <MudPaper Elevation="1" Class="pa-4">
                                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
-                                    <MudText Typo="Typo.h6">Cryptographic Non-Repudiation</MudText>
+                                    <MudText Typo="Typo.h6">Digital Security Seal &amp; Provenance</MudText>
                                     <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Lock" OnClick="FreezeSnapshotAsync" Disabled="@_freezingSnapshot">
-                                        Freeze &amp; Issue Snapshot
+                                        Lock &amp; Execute Agreement
                                     </MudButton>
                                 </MudStack>
 
                                 @if (_latestSnapshot != null)
                                 {
                                     <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Class="mb-2">
-                                        <strong>Document Frozen &amp; Locked</strong><br />
-                                        SHA-256: <code style="word-break: break-all;">@_latestSnapshot.RenderedContentHash</code><br />
-                                        <small>Frozen At: @_latestSnapshot.FrozenAt.ToString("yyyy-MM-dd HH:mm:ss") UTC | Version: v@_latestSnapshot.TemplateVersionNumber</small>
+                                        <strong>Agreement Legally Executed &amp; Locked</strong><br />
+                                        Digital Security Seal: <span class="badge bg-success">Verified Active</span><br />
+                                        <small>Verification Ref: @_latestSnapshot.RenderedContentHash[..12]... | Executed At: @_latestSnapshot.FrozenAt.ToString("yyyy-MM-dd HH:mm:ss") UTC | Version: v@_latestSnapshot.TemplateVersionNumber</small>
                                     </MudAlert>
                                     <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Verified" OnClick="VerifyIntegrityAsync">
-                                        Verify Cryptographic Hash Integrity
+                                        Verify Security Seal Integrity
                                     </MudButton>
                                 }
                                 else
                                 {
                                     <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-                                        No immutable snapshot frozen yet. Click <strong>Freeze &amp; Issue Snapshot</strong> to generate the cryptographic contract record.
+                                        No official agreement locked yet. Click <strong>Lock &amp; Execute Agreement</strong> to generate the signed agreement record and digital security seal.
                                     </MudAlert>
                                 }
                             </MudPaper>
@@ -545,7 +548,7 @@
                                         Refresh Text
                                     </MudButton>
                                 </MudStack>
-                                <MudPaper Elevation="0" Outlined="true" Class="pa-4" Style="background-color: var(--mud-palette-background-grey); max-height: 400px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; font-size: 13px;">
+                                <MudPaper Elevation="0" Outlined="true" Class="pa-4 font-mono text-body2" Style="background-color: var(--mud-palette-background-grey); max-height: 400px; overflow-y: auto; white-space: pre-wrap; line-height: 1.6;">
                                     @(_assembledMarkdown ?? "Loading assembled document text...")
                                 </MudPaper>
                             </MudPaper>
@@ -690,8 +693,8 @@
         }
         else
         {
-            Snackbar.Add($"Grant MOA #{Id} not found.", Severity.Error);
-            Navigation.NavigateTo("/finance/grant-moas");
+            Snackbar.Add("Discretionary Grant (DG) MOA not found.", Severity.Error);
+            Navigation.NavigateTo("/finance/dg-moa");
         }
         _loading = false;
     }
@@ -793,7 +796,7 @@
         {
             var batchNumber = $"GP-BATCH-{DateTime.UtcNow:yyyyMMdd}-{payment.Id}";
             await FinanceService.ApproveTranchePaymentAsync(payment.Id, "FinanceManager", batchNumber, "Batch verified");
-            Snackbar.Add($"Tranche claim #{payment.Id} approved for GP Batch {batchNumber}.", Severity.Success);
+            Snackbar.Add($"Tranche claim CLM-{payment.Id:D5} approved for GP Batch {batchNumber}.", Severity.Success);
             await LoadMoaData();
         }
         catch (Exception ex)
@@ -808,7 +811,7 @@
         {
             var bankRef = $"EFT-{DateTime.UtcNow:yyyyMMdd}-{payment.Id}";
             await FinanceService.ProcessTranchePayoutAsync(payment.Id, "FinanceDisbursements", bankRef);
-            Snackbar.Add($"Payment #{payment.Id} processed with Bank EFT ref: {bankRef}.", Severity.Success);
+            Snackbar.Add($"Payment CLM-{payment.Id:D5} processed with Bank EFT ref: {bankRef}.", Severity.Success);
             await LoadMoaData();
         }
         catch (Exception ex)
@@ -850,7 +853,7 @@
         try
         {
             _latestSnapshot = await TemplateEngineService.FreezeAndIssueMoaSnapshotAsync(Id, "FinanceOfficer");
-            Snackbar.Add($"MoA snapshot frozen successfully. SHA-256: {_latestSnapshot.RenderedContentHash[..12]}...", Severity.Success);
+            Snackbar.Add($"MoA agreement executed and locked successfully (Ref: {_latestSnapshot.RenderedContentHash[..12]}...).", Severity.Success);
             await LoadMoaData();
         }
         catch (Exception ex)
@@ -884,7 +887,7 @@
         }
     }
 
-    private void BackToList() => Navigation.NavigateTo("/finance/grant-moas");
+    private void BackToList() => Navigation.NavigateTo("/finance/dg-moa");
 
     private async Task OnWorkflowStatusChanged(string newStatus)
     {

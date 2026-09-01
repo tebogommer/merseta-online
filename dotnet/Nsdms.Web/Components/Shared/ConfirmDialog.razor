@@ -1,92 +1,68 @@
-@namespace Nsdms.Web.Components.Shared
+﻿@namespace Nsdms.Web.Components.Shared
 @using MudBlazor
-
-@*
-  UI-STANDARD.md Contract (Section 9.2, Clause 8.3.4, 8.3.5, 8.3.6):
-  Component: ConfirmDialog
-  Inputs: Title, Consequence, ConfirmLabel, RequiresReason, IsDestructive
-  Renders: Dialog naming the exact consequence, with mandatory reason where required.
-*@
 
 <MudDialog>
     <TitleContent>
         <div class="d-flex align-center gap-2">
-            <MudIcon Icon="@(IsDestructive ? Icons.Material.Filled.Warning : Icons.Material.Filled.Info)" 
-                     Color="@(IsDestructive ? Color.Error : Color.Primary)" />
+            @if (IsDestructive)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Small" />
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Primary" Size="Size.Small" />
+            }
             <MudText Typo="Typo.h6" Class="font-weight-bold">
                 @Title
             </MudText>
         </div>
     </TitleContent>
     <DialogContent>
-        <div class="py-2">
-            <MudText Typo="Typo.body1" Class="mb-3">
-                @Consequence
-            </MudText>
+        <MudText Typo="Typo.body2" Class="text-secondary mb-3">
+            @Consequence
+        </MudText>
 
-            @if (RequiresReason)
-            {
-                <MudTextField @bind-Value="_reason" 
-                              Label="Mandatory Reason / Justification" 
-                              Variant="Variant.Outlined" 
-                              Lines="3" 
-                              Required="true" 
-                              Immediate="true"
-                              HelperText="Please provide a clear justification for this action."
-                              Error="@(_submitted && string.IsNullOrWhiteSpace(_reason))"
-                              ErrorText="Reason is required before proceeding."
-                              Class="mt-2" />
-            }
-        </div>
+        @if (RequiresReason)
+        {
+            <MudTextField @bind-Value="Reason"
+                          Label="Reason / Justification (Mandatory)"
+                          Variant="Variant.Outlined"
+                          Lines="3"
+                          Required="true"
+                          HelperText="Provide a clear business reason for this decision."
+                          Class="mt-4" />
+        }
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel" Variant="Variant.Text">
-            @(string.IsNullOrWhiteSpace(CancelLabel) ? "Cancel" : CancelLabel)
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Close" OnClick="Cancel" Size="Size.Medium">
+            @(CancelLabel ?? "Cancel")
         </MudButton>
-        <MudButton Color="@(IsDestructive ? Color.Error : Color.Primary)" 
-                   Variant="Variant.Filled" 
-                   OnClick="Submit"
-                   Disabled="@(RequiresReason && string.IsNullOrWhiteSpace(_reason))">
-            @(string.IsNullOrWhiteSpace(ConfirmLabel) ? "Confirm" : ConfirmLabel)
+        <MudButton Variant="Variant.Filled"
+                   Color="@(IsDestructive ? Color.Error : Color.Primary)"
+                   StartIcon="@(IsDestructive ? Icons.Material.Filled.Delete : Icons.Material.Filled.Check)"
+                   Disabled="@(RequiresReason && string.IsNullOrWhiteSpace(Reason))"
+                   OnClick="Confirm"
+                   Size="Size.Medium">
+            @(ConfirmLabel ?? "Confirm")
         </MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
-    [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; } = default!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public string Title { get; set; } = "Confirm Action";
+    [Parameter] public string Consequence { get; set; } = string.Empty;
+    [Parameter] public string? ConfirmLabel { get; set; } = "Confirm";
+    [Parameter] public string? CancelLabel { get; set; } = "Cancel";
+    [Parameter] public bool RequiresReason { get; set; } = false;
+    [Parameter] public bool IsDestructive { get; set; } = false;
 
-    [Parameter]
-    public string Title { get; set; } = "Confirm Action";
-
-    [Parameter]
-    public string Consequence { get; set; } = "Please review the consequence of this operation before continuing.";
-
-    [Parameter]
-    public string? ConfirmLabel { get; set; }
-
-    [Parameter]
-    public string? CancelLabel { get; set; }
-
-    [Parameter]
-    public bool RequiresReason { get; set; } = false;
-
-    [Parameter]
-    public bool IsDestructive { get; set; } = false;
-
-    private string _reason = string.Empty;
-    private bool _submitted = false;
-
-    private void Submit()
-    {
-        _submitted = true;
-        if (RequiresReason && string.IsNullOrWhiteSpace(_reason))
-        {
-            return;
-        }
-
-        MudDialog.Close(DialogResult.Ok(_reason));
-    }
+    private string Reason { get; set; } = string.Empty;
 
     private void Cancel() => MudDialog.Cancel();
+    private void Confirm()
+    {
+        if (RequiresReason && string.IsNullOrWhiteSpace(Reason)) return;
+        MudDialog.Close(DialogResult.Ok(Reason));
+    }
 }

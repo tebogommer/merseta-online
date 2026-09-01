@@ -227,7 +227,18 @@ public class OfoCodeType : BaseLookupType { }
 /// Standard Industrial Classification (SIC) 5-digit economic activity codes (Field: SIC_Code - 815 statutory codes).
 /// </summary>
 [Table("SicCodeType", Schema = "lookup")]
-public class SicCodeType : BaseLookupType { }
+public class SicCodeType : BaseLookupType
+{
+    /// <summary>
+    /// Associated merSETA Chamber Code (references lookup.ChamberType: AUTO, METAL, MOTOR, NEW_TYRE, PLASTICS, OTHER).
+    /// </summary>
+    public string? ChamberCode { get; set; }
+
+    /// <summary>
+    /// Designated statutory SETA Code (SETA 17 for merSETA, or other SETA code if out-of-scope).
+    /// </summary>
+    public string SetaCode { get; set; } = "17";
+}
 
 /// <summary>
 /// Stats SA spatial geographic sub-place and municipal area codes (Field: STATSSA_Area_Code - 22,108 statutory codes).

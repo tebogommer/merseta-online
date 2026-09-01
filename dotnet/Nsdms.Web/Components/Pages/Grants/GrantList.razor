@@ -1,3 +1,4 @@
+@page "/dg-grants"
 @page "/grants"
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
@@ -14,17 +15,33 @@
   Clauses: 4.2, 4.3, 6.1, 7.2, 8.1, 8.3, 11.1–11.9, 15.2.5
 *@
 
+<PageTitle>Discretionary Grants (DG) - merSETA NSDMS</PageTitle>
+
 <EntityHeader Title="Discretionary Grants (DG)"
               Subtitle="Strategic project funding applications, allocation windows, budget approvals, and disbursement management"
-              ReferenceKey="T1-GRANTS"
+              ReferenceKey="T1-DG-GRANTS"
               Status="Active"
               BreadcrumbItems="@_breadcrumbs">
     <ActionZone>
+        <MudButton Variant="Variant.Outlined" 
+                    Color="Color.Secondary" 
+                    StartIcon="@Icons.Material.Filled.Insights" 
+                    OnClick="@(() => NavManager.NavigateTo("/reports/dg-strategic"))"
+                    Class="mr-2">
+            Strategic BI Hub
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.EventNote" 
+                   OnClick="@(() => NavManager.NavigateTo("/dg-funding-windows"))"
+                   Class="mr-2">
+            DG Funding Windows
+        </MudButton>
         <MudButton Variant="Variant.Filled" 
                    Color="Color.Primary" 
                    StartIcon="@Icons.Material.Filled.AddCard" 
                    OnClick="CreateNewGrant">
-            New Grant Application
+            New Discretionary Grant (DG) Application
         </MudButton>
     </ActionZone>
 </EntityHeader>
@@ -110,9 +127,8 @@
                 <MudTh Style="text-align:right">Actions</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <!-- Key column is real hyperlink (Clause 11.1) -->
                 <MudTd DataLabel="Application No">
-                    <a href="/grants/@context.Id" class="d-flex align-center gap-1 font-monospace fw-bold text-primary text-decoration-none">
+                    <a href="/dg-grants/@context.Id" class="d-flex align-center gap-1 font-monospace fw-bold text-primary text-decoration-none">
                         <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Size="Size.Small" />
                         <span>@(string.IsNullOrWhiteSpace(context.ApplicationNumber) ? $"DG-{context.Id}" : context.ApplicationNumber)</span>
                     </a>
@@ -122,7 +138,7 @@
                     <MudText Typo="Typo.caption" Color="Color.Secondary">Date: @context.ApplicationDate.ToString("yyyy-MM-dd")</MudText>
                 </MudTd>
                 <MudTd DataLabel="Organisation">
-                    <MudText Typo="Typo.body2">@(context.Organisation?.CompanyName ?? "Unlinked")</MudText>
+                    <MudText Typo="Typo.body2">@(context.Organisation?.CompanyName ?? "Unlinked Organisation")</MudText>
                     <MudText Typo="Typo.caption" Color="Color.Secondary">SDL: @(context.Organisation?.SdlNumber ?? "—")</MudText>
                 </MudTd>
                 <MudTd Class="d-none d-md-table-cell" DataLabel="Grant Type">
@@ -154,42 +170,42 @@
                     }
                     else
                     {
-                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Pending WSP</MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled">Pending WSP</MudChip>
                     }
                 </MudTd>
                 <MudTd DataLabel="Status">
-                    <!-- Non-clickable status pill (Clause 6.1, 7.2) -->
-                    <StatusBadge Status="@(!string.IsNullOrWhiteSpace(context.StatusCode) ? context.StatusCode : "DRAFT")" Size="Size.Small" />
+                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.StatusCode)" Variant="Variant.Filled">
+                        @context.StatusCode
+                    </MudChip>
                 </MudTd>
                 <MudTd Style="text-align:right" DataLabel="Actions">
                     <div class="d-flex justify-end gap-1">
-                        <MudTooltip Text="View Application">
+                        <MudTooltip Text="View DG Application">
                             <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
                                            Color="Color.Primary" 
                                            Size="Size.Small" 
                                            OnClick="@(() => OpenDetail(context.Id))" 
                                            aria-label="View Application" />
                         </MudTooltip>
-                        <MudTooltip Text="Edit Application">
+                        <MudTooltip Text="Edit DG Application">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit" 
                                            Color="Color.Secondary" 
                                            Size="Size.Small" 
                                            OnClick="@(() => OpenEdit(context.Id))" 
                                            aria-label="Edit Application" />
                         </MudTooltip>
-                        <MudTooltip Text="Delete Record">
+                        <MudTooltip Text="Delete DG Application">
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" 
                                            Color="Color.Error" 
                                            Size="Size.Small" 
                                            OnClick="@(() => DeleteGrant(context.Id, context.ApplicationNumber))" 
-                                           aria-label="Delete Record" />
+                                           aria-label="Delete Application" />
                         </MudTooltip>
                     </div>
                 </MudTd>
             </RowTemplate>
             <PagerContent>
-                <!-- Fixed page size ladder (Clause 11.3.3) -->
-                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100 }" />
             </PagerContent>
         </MudTable>
     </ChildContent>
@@ -206,7 +222,7 @@
     {
         new BreadcrumbItem("Home", href: "/"),
         new BreadcrumbItem("Grants & WSP", href: null, disabled: true),
-        new BreadcrumbItem("Discretionary Grants", href: "/grants")
+        new BreadcrumbItem("Discretionary Grants (DG)", href: "/dg-grants")
     };
 
     protected override async Task OnInitializedAsync()
@@ -247,6 +263,14 @@
         }
     }
 
+    private Color GetStatusColor(string status) => status switch
+    {
+        "APPROVED" => Color.Success,
+        "SUBMITTED" => Color.Info,
+        "REJECTED" => Color.Error,
+        _ => Color.Default
+    };
+
     private void HandleFilterChanged()
     {
         StateHasChanged();
@@ -266,17 +290,17 @@
 
     private void OpenDetail(int id)
     {
-        NavManager.NavigateTo($"/grants/{id}");
+        NavManager.NavigateTo($"/dg-grants/{id}");
     }
 
     private void OpenEdit(int id)
     {
-        NavManager.NavigateTo($"/grants/{id}/edit");
+        NavManager.NavigateTo($"/dg-grants/{id}/edit");
     }
 
     private void CreateNewGrant()
     {
-        NavManager.NavigateTo("/grants/create");
+        NavManager.NavigateTo("/dg-grants/create");
     }
 
     private void ExportSelected()

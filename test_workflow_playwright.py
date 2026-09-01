@@ -58,12 +58,12 @@ def test_workflow_and_document_suite():
             print("  [PASS] WSP Workflow History timeline opened")
 
         # 3. Test Discretionary Grant Detail via List Navigation
-        print("\n--- 3. Testing Grant Detail via List Navigation (/grants) ---")
-        page.goto(f"{base_url}/grants", wait_until="networkidle")
-        page.wait_for_selector("text=Discretionary Grants", timeout=10000)
-        page.locator("tbody tr a[href^='/grants/']").first.click()
-        page.wait_for_selector("text=Grant Application", timeout=10000)
-        print(f"  [PASS] Grant Detail loaded at {page.url} with WorkflowActionBridge")
+        print("\n--- 3. Testing Discretionary Grant Detail via List Navigation (/dg-grants) ---")
+        page.goto(f"{base_url}/dg-grants", wait_until="networkidle")
+        page.wait_for_selector("text=Discretionary Grants (DG)", timeout=10000)
+        page.locator("tbody tr a[href*='grants/']").first.click()
+        page.wait_for_selector("text=Discretionary Grant", timeout=10000)
+        print(f"  [PASS] Discretionary Grant Detail loaded at {page.url} with WorkflowActionBridge")
 
         # 4. Test Workplace Approval Detail via List Navigation
         print("\n--- 4. Testing Workplace Approval Detail via List Navigation (/workplace-approvals) ---")

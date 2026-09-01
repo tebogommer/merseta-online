@@ -1,58 +1,36 @@
 @namespace Nsdms.Web.Components.Shared
 @using MudBlazor
 
-@*
-  UI-STANDARD.md Contract (Section 9.2 & Clause 6.1, 7.2):
-  Component: StatusBadge
-  Inputs: Status, Size
-  Renders: The status pill. Resolves its own colour from the semantic map. Never clickable.
-*@
-
-<span class="nsdms-status-badge nsdms-status-@GetSemanticClass() @(Size == Size.Small ? "nsdms-status-sm" : Size == Size.Large ? "nsdms-status-lg" : "nsdms-status-md")" 
-      role="status" 
+<span class="status-badge nsdms-status-badge @Class" 
+      style="display: inline-flex; align-items: center; gap: 5px; font-weight: 500; border-radius: 9999px; background-color: @GetBgColor(); color: @GetTextColor(); border: 1px solid @GetBorderColor(); padding: @(Size == Size.Medium ? "4px 10px; font-size: 0.8125rem;" : Size == Size.Large ? "6px 14px; font-size: 0.875rem;" : "2px 8px; font-size: 0.75rem;"); line-height: 1.3; pointer-events: none; user-select: none; white-space: nowrap;"
+      role="status"
       aria-label="Status: @DisplayLabel">
-    <MudChip T="string" 
-             Color="@ResolveMudColor()" 
-             Size="@Size" 
-             Variant="Variant.Filled" 
-             Class="ma-0 px-2 font-weight-bold pointer-events-none"
-             Style="cursor: default !important; user-select: none;">
-        @DisplayLabel
-    </MudChip>
+    <span class="status-dot" style="width: @(Size == Size.Medium || Size == Size.Large ? "7px" : "6px"); height: @(Size == Size.Medium || Size == Size.Large ? "7px" : "6px"); border-radius: 50%; background-color: @GetDotColor(); flex-shrink: 0;"></span>
+    @DisplayLabel
 </span>
 
 @code {
-    [Parameter]
-    public string? Status { get; set; }
-
-    [Parameter]
-    public Size Size { get; set; } = Size.Small;
+    [Parameter] public string? Status { get; set; } = "Unknown";
+    [Parameter] public Size Size { get; set; } = Size.Small;
+    [Parameter] public string Class { get; set; } = "";
 
     private string DisplayLabel => string.IsNullOrWhiteSpace(Status) ? "None" : Status.Trim();
 
-    private string GetSemanticClass()
-    {
-        var s = (Status ?? "").ToLowerInvariant();
-        if (s.Contains("approve") || s.Contains("complete") || s.Contains("accredit") || s.Contains("certif") || s == "active" || s == "verified" || s == "endorsed")
+    private string GetGroup() {
+        var s = (Status ?? "").ToLowerInvariant().Trim();
+        if (s == "active" || s == "in use" || s == "allocated" || s == "assigned" || s.Contains("progress"))
+            return "info";
+        if (s.Contains("approve") || s.Contains("complete") || s.Contains("accredit") || s.Contains("certif") || s == "verified" || s == "endorsed" || s == "resolved" || s == "good")
             return "success";
-        if (s.Contains("reject") || s.Contains("decline") || s.Contains("terminat") || s.Contains("withdraw") || s.Contains("lapsed") || s.Contains("fail"))
+        if (s.Contains("reject") || s.Contains("decline") || s.Contains("terminat") || s.Contains("withdraw") || s.Contains("lapsed") || s.Contains("fail") || s == "written off" || s == "lost" || s == "stolen" || s == "damaged")
             return "danger";
-        if (s.Contains("review") || s.Contains("assess") || s.Contains("inspect") || s.Contains("progress") || s.Contains("schedul") || s.Contains("training") || s.Contains("evaluat"))
-            return "active";
-        if (s.Contains("submit") || s.Contains("pending") || s.Contains("await") || s.Contains("applied") || s.Contains("requested") || s.Contains("moderation"))
-            return "pending";
+        if (s.Contains("submit") || s.Contains("pending") || s.Contains("await") || s.Contains("applied") || s.Contains("requested") || s.Contains("moderation") || s == "draft" || s == "in review" || s == "under repair")
+            return "warning";
         return "neutral";
     }
 
-    private Color ResolveMudColor()
-    {
-        return GetSemanticClass() switch
-        {
-            "success" => Color.Success,
-            "danger" => Color.Error,
-            "active" => Color.Info,
-            "pending" => Color.Warning,
-            _ => Color.Default
-        };
-    }
+    private string GetBgColor() => $"var(--status-{GetGroup()}-bg)";
+    private string GetTextColor() => $"var(--status-{GetGroup()}-text)";
+    private string GetBorderColor() => $"var(--status-{GetGroup()}-border)";
+    private string GetDotColor() => $"var(--status-{GetGroup()})";
 }

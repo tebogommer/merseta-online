@@ -18,6 +18,16 @@ public class GrantProjectBudget : BaseEntity
     public GrantApplication? GrantApplication { get; set; }
 
     /// <summary>
+    /// Optional foreign key referencing the specific StrategicPriority theme this line item finances.
+    /// </summary>
+    public int? StrategicPriorityId { get; set; }
+
+    /// <summary>
+    /// Navigational reference to the StrategicPriority theme.
+    /// </summary>
+    public StrategicPriority? StrategicPriority { get; set; }
+
+    /// <summary>
     /// Expense classification category (e.g. TUITION, STIPEND, PPE_SAFETY, LEARNER_ALLOWANCE, ASSESSMENTS).
     /// </summary>
     public string ExpenseCategory { get; set; } = string.Empty;

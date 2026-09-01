@@ -40,10 +40,12 @@ public class NavigationMenuService : INavigationMenuService
         {
             "All Roles (Unified)",
             "Skills Development Facilitator (SDF)",
-            "Finance & Disbursements Specialist",
-            "Assessor & Quality Assurance Partner",
             "Skills Development Provider (SDP)",
+            "Assessor & Quality Assurance Partner",
+            "Finance & Disbursements Specialist",
             "SETA Client Liaison Officer (CLO)",
+            "Legal & Contracting Specialist",
+            "Statutory Compliance Auditor",
             "Executive & Governance",
             "System Administrator"
         };
@@ -126,7 +128,7 @@ public class NavigationMenuService : INavigationMenuService
         // Extract pinned items
         var pinnedItems = accessibleItems.Where(i => i.IsPinned).OrderBy(i => i.DisplayOrder).ToList();
 
-        // Group into sections
+        // Group into the 7 Statutory Domain Pillars
         var groups = accessibleItems
             .GroupBy(i => i.Category)
             .Select(g => new NavGroupDto
@@ -199,12 +201,35 @@ public class NavigationMenuService : INavigationMenuService
         return true;
     }
 
-    public Task<UserNavPreferencesDto> GetUserPreferencesAsync(string username)
+    public async Task<UserNavPreferencesDto> GetUserPreferencesAsync(string username)
     {
         var key = string.IsNullOrWhiteSpace(username) ? "DefaultUser" : username.Trim();
         if (_userPreferencesCache.TryGetValue(key, out var cached))
         {
-            return Task.FromResult(cached);
+            return cached;
+        }
+
+        // Attempt to load from database SystemConfig
+        try
+        {
+            using var db = await _contextFactory.CreateDbContextAsync();
+            var configKey = $"{key}:NavPreferences";
+            var setting = await db.SystemConfigs
+                .FirstOrDefaultAsync(s => s.ConfigCategory == "NavPreferences" && s.ConfigKey == configKey);
+
+            if (setting != null && !string.IsNullOrWhiteSpace(setting.ConfigValue))
+            {
+                var dto = JsonSerializer.Deserialize<UserNavPreferencesDto>(setting.ConfigValue);
+                if (dto != null)
+                {
+                    _userPreferencesCache[key] = dto;
+                    return dto;
+                }
+            }
+        }
+        catch
+        {
+            // Fallback gracefully to default
         }
 
         // Default initial shortcuts
@@ -217,7 +242,7 @@ public class NavigationMenuService : INavigationMenuService
         };
 
         _userPreferencesCache[key] = defaults;
-        return Task.FromResult(defaults);
+        return defaults;
     }
 
     public async Task<bool> SaveUserPreferencesAsync(UserNavPreferencesDto preferences)
@@ -227,7 +252,43 @@ public class NavigationMenuService : INavigationMenuService
             return false;
         }
 
-        _userPreferencesCache[preferences.Username.Trim()] = preferences;
+        var key = preferences.Username.Trim();
+        _userPreferencesCache[key] = preferences;
+
+        try
+        {
+            using var db = await _contextFactory.CreateDbContextAsync();
+            var configKey = $"{key}:NavPreferences";
+            var setting = await db.SystemConfigs
+                .FirstOrDefaultAsync(s => s.ConfigCategory == "NavPreferences" && s.ConfigKey == configKey);
+
+            var json = JsonSerializer.Serialize(preferences);
+            if (setting != null)
+            {
+                setting.ConfigValue = json;
+                setting.ModifiedAt = DateTime.UtcNow;
+                setting.ModifiedBy = key;
+            }
+            else
+            {
+                db.SystemConfigs.Add(new SystemConfig
+                {
+                    ConfigCategory = "NavPreferences",
+                    ConfigKey = configKey,
+                    ConfigValue = json,
+                    DataType = "JSON",
+                    Description = $"User navigation preferences and pinned shortcuts for {key}",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = key
+                });
+            }
+
+            await db.SaveChangesAsync();
+        }
+        catch
+        {
+            // In-memory fallback retains state for current runtime circuit
+        }
 
         // Perform double-write audit logging
         await _audit.LogAsync(
@@ -377,11 +438,11 @@ public class NavigationMenuService : INavigationMenuService
         catch
         {
             // Fallback default sample counts for demo/mock modes
-            counts["nav-tasks"] = 12;
-            counts["nav-wsp"] = 3;
-            counts["nav-grants"] = 5;
-            counts["nav-finance-grants"] = 4;
-            counts["nav-monitoring"] = 2;
+            counts["nav-tasks"] = 0;
+            counts["nav-wsp"] = 0;
+            counts["nav-grants"] = 0;
+            counts["nav-finance-grants"] = 0;
+            counts["nav-monitoring"] = 0;
         }
 
         return counts;
@@ -390,12 +451,14 @@ public class NavigationMenuService : INavigationMenuService
     private string NormalizePersonaKey(string persona)
     {
         if (persona.Contains("SDF", StringComparison.OrdinalIgnoreCase)) return "SDF";
-        if (persona.Contains("Finance", StringComparison.OrdinalIgnoreCase)) return "Finance";
-        if (persona.Contains("Assessor", StringComparison.OrdinalIgnoreCase)) return "Assessor";
         if (persona.Contains("Provider", StringComparison.OrdinalIgnoreCase) || persona.Contains("SDP", StringComparison.OrdinalIgnoreCase)) return "SDP";
-        if (persona.Contains("CLO", StringComparison.OrdinalIgnoreCase)) return "CLO";
+        if (persona.Contains("Assessor", StringComparison.OrdinalIgnoreCase) || persona.Contains("QA", StringComparison.OrdinalIgnoreCase)) return "Assessor";
+        if (persona.Contains("Finance", StringComparison.OrdinalIgnoreCase)) return "Finance";
+        if (persona.Contains("CLO", StringComparison.OrdinalIgnoreCase) || persona.Contains("Liaison", StringComparison.OrdinalIgnoreCase)) return "CLO";
+        if (persona.Contains("Legal", StringComparison.OrdinalIgnoreCase)) return "Legal";
+        if (persona.Contains("Compliance", StringComparison.OrdinalIgnoreCase)) return "Compliance";
         if (persona.Contains("Executive", StringComparison.OrdinalIgnoreCase)) return "Executive";
-        if (persona.Contains("Admin", StringComparison.OrdinalIgnoreCase)) return "Admin";
+        if (persona.Contains("Admin", StringComparison.OrdinalIgnoreCase) || persona.Contains("System", StringComparison.OrdinalIgnoreCase)) return "Admin";
         return "All";
     }
 
@@ -403,15 +466,13 @@ public class NavigationMenuService : INavigationMenuService
     {
         return category switch
         {
-            "WORKFLOW ORCHESTRATION" => "AccountTree",
-            "CORE REGISTRIES" => "FolderShared",
-            "GRANTS & WSP" => "AccountBalanceWallet",
-            "FINANCE & DISBURSEMENTS" => "ReceiptLong",
-            "LEARNER LIFECYCLE" => "School",
-            "QUALITY ASSURANCE" => "VerifiedUser",
-            "SKILLS PLANNING & BI" => "Insights",
-            "LEGAL & POLICY TEMPLATES" => "Gavel",
-            "SYSTEM ADMINISTRATION" => "AdminPanelSettings",
+            "Overview & tasks" => "Dashboard",
+            "Registries & stakeholders" => "FolderShared",
+            "Grants, levies & finance" => "AccountBalanceWallet",
+            "Learner & artisan development" => "School",
+            "Quality assurance & ETQA" => "VerifiedUser",
+            "Legal, compliance & BI" => "Gavel",
+            "System administration" => "AdminPanelSettings",
             _ => "Folder"
         };
     }
@@ -420,15 +481,13 @@ public class NavigationMenuService : INavigationMenuService
     {
         return category switch
         {
-            "WORKFLOW ORCHESTRATION" => 1,
-            "CORE REGISTRIES" => 2,
-            "GRANTS & WSP" => 3,
-            "FINANCE & DISBURSEMENTS" => 4,
-            "LEARNER LIFECYCLE" => 5,
-            "QUALITY ASSURANCE" => 6,
-            "SKILLS PLANNING & BI" => 7,
-            "LEGAL & POLICY TEMPLATES" => 8,
-            "SYSTEM ADMINISTRATION" => 9,
+            "Overview & tasks" => 1,
+            "Registries & stakeholders" => 2,
+            "Grants, levies & finance" => 3,
+            "Learner & artisan development" => 4,
+            "Quality assurance & ETQA" => 5,
+            "Legal, compliance & BI" => 6,
+            "System administration" => 7,
             _ => 99
         };
     }
@@ -451,677 +510,719 @@ public class NavigationMenuService : INavigationMenuService
     {
         return new List<NavItemDto>
         {
-            // WORKFLOW ORCHESTRATION
+            // 1. Overview & tasks
+            new()
+            {
+                Id = "nav-tasks",
+                Title = "Task inbox",
+                Href = "tasks",
+                ExactMatch = true,
+                Icon = "Inbox",
+                Category = "Overview & tasks",
+                Description = "Pending workflow approvals, sign-offs, and operational task queue",
+                PersonaTags = new() { "All", "Admin", "SDF", "Finance", "Assessor", "SDP", "CLO", "Legal", "Compliance", "Executive" },
+                DisplayOrder = 1,
+                Keywords = new() { "tasks", "inbox", "approvals", "pending", "action", "workflow", "universal task inbox" }
+            },
             new()
             {
                 Id = "nav-exec-dashboard",
-                Title = "Executive Dashboard",
-                Href = "",
+                Title = "Executive dashboard",
+                Href = "dashboard",
                 ExactMatch = true,
                 Icon = "Dashboard",
-                Category = "WORKFLOW ORCHESTRATION",
+                Category = "Overview & tasks",
                 Description = "High-level KPI overview, statutory milestones, and SETA health metrics",
                 RequiredModule = AppPermissions.ModuleSystem,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Executive", "CLO" },
-                PersonaTags = new() { "Admin", "Executive", "CLO", "All" },
-                DisplayOrder = 1,
-                Keywords = new() { "dashboard", "home", "executive", "kpi", "stats", "overview" }
-            },
-            new()
-            {
-                Id = "nav-tasks",
-                Title = "Universal Task Inbox",
-                Href = "tasks",
-                Icon = "Inbox",
-                Category = "WORKFLOW ORCHESTRATION",
-                Description = "Pending workflow approvals, sign-offs, and operational task queue",
-                PersonaTags = new() { "All", "Admin", "SDF", "Finance", "Assessor", "SDP", "CLO", "Executive" },
+                PersonaTags = new() { "Admin", "Executive", "CLO" },
                 DisplayOrder = 2,
-                Keywords = new() { "tasks", "inbox", "approvals", "pending", "action", "workflow" }
+                Keywords = new() { "dashboard", "home", "executive", "kpi", "stats", "overview", "operations portal" }
             },
             new()
             {
                 Id = "nav-workflow-studio",
-                Title = "Workflow Studio & Blueprints",
+                Title = "Workflow studio",
                 Href = "admin/workflows",
                 Icon = "AccountTree",
-                Category = "WORKFLOW ORCHESTRATION",
-                Description = "Visual workflow designer, state machine transitions, and SLA configurations",
+                Category = "Overview & tasks",
+                Description = "Visual approval process designer, state transitions, and SLA configurations",
                 RequiredModule = AppPermissions.ModuleSystem,
                 RequiredAction = AppPermissions.ActionManage,
                 RequiredRoles = new() { "SuperAdmin", "Admin" },
                 PersonaTags = new() { "Admin" },
                 DisplayOrder = 3,
-                Keywords = new() { "workflows", "blueprints", "states", "designer", "studio", "sla" }
+                Keywords = new() { "workflows", "approval process", "lifecycles", "states", "designer", "studio", "sla" }
             },
 
-            // CORE REGISTRIES
-            new()
-            {
-                Id = "nav-people",
-                Title = "People & Demographics",
-                Href = "people",
-                Icon = "People",
-                Category = "CORE REGISTRIES",
-                Description = "Master registry of citizens, learners, assessors, and demographic profiles",
-                RequiredModule = AppPermissions.ModulePeople,
-                RequiredAction = AppPermissions.ActionView,
-                RequiredRoles = new() { "SuperAdmin", "Admin", "CLO", "SDF" },
-                PersonaTags = new() { "Admin", "CLO", "SDF" },
-                DisplayOrder = 10,
-                Keywords = new() { "people", "citizens", "demographics", "rsa id", "contacts" }
-            },
+            // 2. Registries & stakeholders
             new()
             {
                 Id = "nav-employers",
-                Title = "Employers / Organisations",
+                Title = "Employers & orgs",
                 Href = "employers",
                 Icon = "Business",
-                Category = "CORE REGISTRIES",
+                Category = "Registries & stakeholders",
                 Description = "Levy and non-levy organisations, chambers, SDL numbers, and contact persons",
                 RequiredModule = AppPermissions.ModuleOrganisations,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "CLO", "Finance" },
                 PersonaTags = new() { "Admin", "SDF", "CLO", "Finance" },
-                DisplayOrder = 11,
+                DisplayOrder = 1,
                 Keywords = new() { "employers", "organisations", "companies", "sdl", "chamber", "levy" }
             },
             new()
             {
                 Id = "nav-sdf",
-                Title = "SDF Appointments",
+                Title = "SDF appointments",
                 Href = "employers/sdf",
                 Icon = "Badge",
-                Category = "CORE REGISTRIES",
+                Category = "Registries & stakeholders",
                 Description = "Skills Development Facilitator registrations, appointment letters, and linkages",
                 RequiredModule = AppPermissions.ModuleOrganisations,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "CLO" },
                 PersonaTags = new() { "Admin", "SDF", "CLO" },
-                DisplayOrder = 12,
+                DisplayOrder = 2,
                 Keywords = new() { "sdf", "facilitator", "appointments", "nominations", "skills development" }
             },
             new()
             {
                 Id = "nav-sdp",
-                Title = "Skills Development Providers",
+                Title = "SDP providers",
                 Href = "sdp",
                 Icon = "School",
-                Category = "CORE REGISTRIES",
+                Category = "Registries & stakeholders",
                 Description = "Accredited training providers, campuses, qualifications scope, and audits",
                 RequiredModule = AppPermissions.ModuleOrganisations,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "SDP", "CLO", "Assessor" },
                 PersonaTags = new() { "Admin", "SDP", "CLO", "Assessor" },
-                DisplayOrder = 13,
+                DisplayOrder = 3,
                 Keywords = new() { "sdp", "providers", "training", "colleges", "institutions", "accreditation" }
             },
             new()
             {
+                Id = "nav-people",
+                Title = "People & demographics",
+                Href = "people",
+                Icon = "People",
+                Category = "Registries & stakeholders",
+                Description = "Master registry of citizens, learners, assessors, and demographic profiles",
+                RequiredModule = AppPermissions.ModulePeople,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "CLO", "SDF" },
+                PersonaTags = new() { "Admin", "CLO", "SDF" },
+                DisplayOrder = 4,
+                Keywords = new() { "people", "citizens", "demographics", "rsa id", "contacts", "setmis" }
+            },
+            new()
+            {
                 Id = "nav-curriculum",
-                Title = "Curriculum Development (QCD)",
+                Title = "Curriculum (QCD)",
                 Href = "curriculum",
                 Icon = "MenuBook",
-                Category = "CORE REGISTRIES",
+                Category = "Registries & stakeholders",
                 Description = "QCTO curriculum scoping, occupational qualification blueprints, and modules",
                 RequiredModule = AppPermissions.ModuleEtqa,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "SDP" },
                 PersonaTags = new() { "Admin", "Assessor", "SDP" },
-                DisplayOrder = 14,
+                DisplayOrder = 5,
                 Keywords = new() { "qcd", "curriculum", "qcto", "qualifications", "scoping", "modules" }
             },
 
-            // GRANTS & WSP
+            // 3. Grants, levies & finance
             new()
             {
                 Id = "nav-wsp",
-                Title = "WSP & Mandatory Grants",
+                Title = "WSP & mandatory grants",
                 Href = "wsp",
                 Icon = "Assignment",
-                Category = "GRANTS & WSP",
-                Description = "Workplace Skills Plans, Annual Training Reports, and Mandatory Grant claims",
+                Category = "Grants, levies & finance",
+                Description = "Workplace Skills Plans, Annual Training Reports, and Mandatory Grant (MG) claims",
                 RequiredModule = AppPermissions.ModuleWsp,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "CLO", "Finance" },
                 PersonaTags = new() { "Admin", "SDF", "CLO", "Finance" },
-                DisplayOrder = 20,
-                Keywords = new() { "wsp", "atr", "mandatory grant", "skills plan", "pivotal" }
+                DisplayOrder = 1,
+                Keywords = new() { "wsp", "atr", "mandatory grant", "skills plan", "pivotal", "mg", "workplace skills plans" }
             },
             new()
             {
                 Id = "nav-wsp-committees",
-                Title = "Training Committees",
+                Title = "Training committees",
                 Href = "wsp/committees",
                 Icon = "Groups",
-                Category = "GRANTS & WSP",
+                Category = "Grants, levies & finance",
                 Description = "Consultative training committees, meeting minutes, and labour sign-offs",
                 RequiredModule = AppPermissions.ModuleWsp,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "CLO" },
                 PersonaTags = new() { "Admin", "SDF", "CLO" },
-                DisplayOrder = 21,
+                DisplayOrder = 2,
                 Keywords = new() { "committees", "training committee", "labour", "union", "consultation" }
             },
             new()
             {
                 Id = "nav-grants",
-                Title = "Discretionary Grants (DG)",
+                Title = "Discretionary grants",
                 Href = "grants",
                 Icon = "AccountBalanceWallet",
-                Category = "GRANTS & WSP",
-                Description = "Discretionary grant funding windows, applications, scoring, and MoA awards",
+                Category = "Grants, levies & finance",
+                Description = "Discretionary grant applications, scoring matrix, and project approvals",
                 RequiredModule = AppPermissions.ModuleGrants,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "Finance", "CLO" },
                 PersonaTags = new() { "Admin", "SDF", "Finance", "CLO" },
-                DisplayOrder = 22,
+                DisplayOrder = 3,
                 Keywords = new() { "dg", "discretionary grants", "funding", "allocations", "applications" }
             },
             new()
             {
+                Id = "nav-grants-windows",
+                Title = "Funding windows",
+                Href = "grants/windows",
+                Icon = "EventNote",
+                Category = "Grants, levies & finance",
+                Description = "Gazetted Discretionary Grant funding allocation cycles, opening and closing deadlines",
+                RequiredModule = AppPermissions.ModuleGrants,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Finance", "CLO" },
+                PersonaTags = new() { "Admin", "Finance", "CLO" },
+                DisplayOrder = 4,
+                Keywords = new() { "windows", "funding windows", "gazette", "opening", "deadlines", "budget allocation", "dg funding windows" }
+            },
+            new()
+            {
                 Id = "nav-grants-pip",
-                Title = "Project Implementation (PIP)",
+                Title = "Project implementation",
                 Href = "grants/pip",
                 Icon = "AssignmentTurnedIn",
-                Category = "GRANTS & WSP",
+                Category = "Grants, levies & finance",
                 Description = "PIP milestones, learner enrollment targets, and tranche claim verification",
                 RequiredModule = AppPermissions.ModuleGrants,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "Finance", "CLO" },
                 PersonaTags = new() { "Admin", "SDF", "Finance", "CLO" },
-                DisplayOrder = 23,
-                Keywords = new() { "pip", "project implementation", "milestones", "tranches", "targets" }
+                DisplayOrder = 5,
+                Keywords = new() { "pip", "project implementation", "milestones", "tranches", "targets", "dg pip" }
             },
             new()
             {
                 Id = "nav-contracts-variations",
-                Title = "Contract Addenda & Variations",
+                Title = "Contract variations",
                 Href = "contracts/variations",
                 Icon = "Difference",
-                Category = "GRANTS & WSP",
+                Category = "Grants, levies & finance",
                 Description = "Contract variation requests, time extensions, budget re-allocations, and legal addenda",
                 RequiredModule = AppPermissions.ModuleGrants,
                 RequiredAction = AppPermissions.ActionEdit,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Finance", "Legal" },
                 PersonaTags = new() { "Admin", "Finance", "Legal" },
-                DisplayOrder = 24,
+                DisplayOrder = 6,
                 Keywords = new() { "variations", "addenda", "contract amendments", "extensions", "legal" }
             },
-
-            // FINANCE & DISBURSEMENTS
             new()
             {
                 Id = "nav-finance-grants",
-                Title = "Grant MOAs & Tranches",
+                Title = "DG MOAs & tranches",
                 Href = "finance/grants",
                 Icon = "Description",
-                Category = "FINANCE & DISBURSEMENTS",
+                Category = "Grants, levies & finance",
                 Description = "Memorandums of Agreement, tranche schedules, GP ERP posting batches",
                 RequiredModule = AppPermissions.ModuleFinance,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Finance" },
                 PersonaTags = new() { "Admin", "Finance" },
-                DisplayOrder = 30,
-                Keywords = new() { "moa", "tranches", "disbursements", "erp", "gp", "payments" }
+                DisplayOrder = 7,
+                Keywords = new() { "moa", "tranches", "disbursements", "erp", "gp", "payments", "dg" }
             },
             new()
             {
                 Id = "nav-finance-banking",
-                Title = "Banking Details & Signoff",
+                Title = "Banking details",
                 Href = "finance/banking-details",
                 Icon = "AccountBalance",
-                Category = "FINANCE & DISBURSEMENTS",
+                Category = "Grants, levies & finance",
                 Description = "Bank account verification (AVS), dual-control sign-off, and audit trail",
                 RequiredModule = AppPermissions.ModuleFinance,
                 RequiredAction = AppPermissions.ActionVerify,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Finance" },
                 PersonaTags = new() { "Admin", "Finance" },
-                DisplayOrder = 31,
+                DisplayOrder = 8,
                 Keywords = new() { "banking", "avs", "bankserv", "account verification", "signoff" }
             },
             new()
             {
                 Id = "nav-finance-rebates",
-                Title = "Mandatory Grant Rebates",
+                Title = "Mandatory rebates",
                 Href = "finance/levy-rebates",
                 Icon = "Payments",
-                Category = "FINANCE & DISBURSEMENTS",
+                Category = "Grants, levies & finance",
                 Description = "20% Mandatory grant payout calculations, remittance advice, and EFT batches",
                 RequiredModule = AppPermissions.ModuleFinance,
                 RequiredAction = AppPermissions.ActionDisburse,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Finance" },
                 PersonaTags = new() { "Admin", "Finance" },
-                DisplayOrder = 32,
-                Keywords = new() { "rebates", "mandatory rebate", "remittance", "20%", "payouts" }
+                DisplayOrder = 9,
+                Keywords = new() { "rebates", "mandatory rebate", "remittance", "20%", "payouts", "mg" }
             },
             new()
             {
                 Id = "nav-finance-audits",
-                Title = "SARS Levy Audits & Clawbacks",
+                Title = "SARS levy audits",
                 Href = "finance/levy-audits",
                 Icon = "Calculate",
-                Category = "FINANCE & DISBURSEMENTS",
+                Category = "Grants, levies & finance",
                 Description = "SARS levy reconciliation audits, clawback letters, and interest calculations",
                 RequiredModule = AppPermissions.ModuleFinance,
                 RequiredAction = AppPermissions.ActionReconcile,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Finance" },
                 PersonaTags = new() { "Admin", "Finance" },
-                DisplayOrder = 33,
+                DisplayOrder = 10,
                 Keywords = new() { "clawbacks", "sars audits", "reconciliation", "adjustments" }
             },
             new()
             {
                 Id = "nav-levies",
-                Title = "SARS Levy Files",
+                Title = "SARS levy files",
                 Href = "levies",
                 Icon = "ReceiptLong",
-                Category = "FINANCE & DISBURSEMENTS",
+                Category = "Grants, levies & finance",
                 Description = "Monthly SARS electronic levy files, chamber distribution, and employer reconciliations",
                 RequiredModule = AppPermissions.ModuleFinance,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Finance" },
                 PersonaTags = new() { "Admin", "Finance" },
-                DisplayOrder = 34,
+                DisplayOrder = 11,
                 Keywords = new() { "levies", "sars files", "levy downloads", "monthly levies" }
             },
             new()
             {
+                Id = "nav-levy-deviations",
+                Title = "Levy deviations",
+                Href = "levies/deviations",
+                Icon = "QueryStats",
+                Category = "Grants, levies & finance",
+                Description = "12-month rolling standard deviation anomalies and chamber revenue intelligence",
+                RequiredModule = AppPermissions.ModuleFinance,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Finance" },
+                PersonaTags = new() { "Admin", "Finance" },
+                DisplayOrder = 12,
+                Keywords = new() { "deviations", "chambers", "anomalies", "standard deviation", "inconsistent" }
+            },
+            new()
+            {
+                Id = "nav-levy-schemes",
+                Title = "Scheme year rates",
+                Href = "levies/scheme-years",
+                Icon = "Tune",
+                Category = "Grants, levies & finance",
+                Description = "Statutory percentage splits and return processing controls by scheme year",
+                RequiredModule = AppPermissions.ModuleFinance,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Finance" },
+                PersonaTags = new() { "Admin", "Finance" },
+                DisplayOrder = 13,
+                Keywords = new() { "scheme year", "statutory rates", "mandatory %", "discretionary %", "admin %" }
+            },
+            new()
+            {
                 Id = "nav-inter-seta",
-                Title = "Inter-SETA Transfers",
+                Title = "Inter-SETA transfers",
                 Href = "inter-seta-transfers",
                 Icon = "SwapHoriz",
-                Category = "FINANCE & DISBURSEMENTS",
+                Category = "Grants, levies & finance",
                 Description = "Transfers between SETAs for SIC code moves, levy adjustments, and approvals",
                 RequiredModule = AppPermissions.ModuleFinance,
                 RequiredAction = AppPermissions.ActionTransfer,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Finance" },
                 PersonaTags = new() { "Admin", "Finance" },
-                DisplayOrder = 35,
+                DisplayOrder = 14,
                 Keywords = new() { "inter-seta", "transfers", "sic codes", "seta transfer" }
             },
 
-            // LEARNER LIFECYCLE
+            // 4. Learner & artisan development
             new()
             {
                 Id = "nav-learners",
-                Title = "Learner Management",
+                Title = "Learner agreements",
                 Href = "learners",
                 Icon = "School",
-                Category = "LEARNER LIFECYCLE",
+                Category = "Learner & artisan development",
                 Description = "Learner registrations, agreements, NLRD submissions, and progress tracking",
                 RequiredModule = AppPermissions.ModuleLearners,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "SDP", "CLO" },
                 PersonaTags = new() { "Admin", "SDF", "SDP", "CLO" },
-                DisplayOrder = 40,
+                DisplayOrder = 1,
                 Keywords = new() { "learners", "students", "agreements", "nlrd", "contracts", "artisan" }
             },
             new()
             {
                 Id = "nav-tradetests",
-                Title = "Trade Tests & ARPL",
+                Title = "Trade tests & ARPL",
                 Href = "tradetests",
                 Icon = "FactCheck",
-                Category = "LEARNER LIFECYCLE",
+                Category = "Learner & artisan development",
                 Description = "Artisan Recognition of Prior Learning (ARPL), trade test centers, and certifications",
                 RequiredModule = AppPermissions.ModuleLearners,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "SDP", "CLO" },
                 PersonaTags = new() { "Admin", "Assessor", "SDP", "CLO" },
-                DisplayOrder = 41,
+                DisplayOrder = 2,
                 Keywords = new() { "trade tests", "arpl", "artisans", "red seal", "certification" }
             },
             new()
             {
                 Id = "nav-assessments",
-                Title = "Summative Assessments & SOR",
+                Title = "Summative assessments",
                 Href = "assessments/summative",
                 Icon = "AssignmentTurnedIn",
-                Category = "LEARNER LIFECYCLE",
+                Category = "Learner & artisan development",
                 Description = "Summative assessment reporting, Statement of Results (SOR), and moderation",
                 RequiredModule = AppPermissions.ModuleLearners,
                 RequiredAction = AppPermissions.ActionModerate,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "SDP" },
                 PersonaTags = new() { "Admin", "Assessor", "SDP" },
-                DisplayOrder = 42,
+                DisplayOrder = 3,
                 Keywords = new() { "assessments", "sor", "statement of results", "moderation", "grades" }
-            },
-
-            // QUALITY ASSURANCE
-            new()
-            {
-                Id = "nav-monitoring",
-                Title = "Workplace Monitoring & Audits",
-                Href = "monitoring",
-                Icon = "FactCheck",
-                Category = "QUALITY ASSURANCE",
-                Description = "On-site employer visits, monitoring reports, and remediation findings",
-                RequiredModule = AppPermissions.ModuleWorkplace,
-                RequiredAction = AppPermissions.ActionView,
-                RequiredRoles = new() { "SuperAdmin", "Admin", "CLO", "Assessor" },
-                PersonaTags = new() { "Admin", "CLO", "Assessor" },
-                DisplayOrder = 50,
-                Keywords = new() { "monitoring", "site visits", "audits", "remediation", "workplace" }
-            },
-            new()
-            {
-                Id = "nav-etqa",
-                Title = "ETQA & Assessors",
-                Href = "etqa",
-                Icon = "VerifiedUser",
-                Category = "QUALITY ASSURANCE",
-                Description = "Assessor and moderator registrations, provider accreditation certificates",
-                RequiredModule = AppPermissions.ModuleEtqa,
-                RequiredAction = AppPermissions.ActionView,
-                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "CLO" },
-                PersonaTags = new() { "Admin", "Assessor", "CLO" },
-                DisplayOrder = 51,
-                Keywords = new() { "etqa", "assessors", "moderators", "accreditation", "qa" }
-            },
-            new()
-            {
-                Id = "nav-etqa-aqp",
-                Title = "Assessment Quality Partners (AQP)",
-                Href = "etqa/aqp",
-                Icon = "FactCheck",
-                Category = "QUALITY ASSURANCE",
-                Description = "AQP partner agreements, external integrated summative assessment (EISA) oversight",
-                RequiredModule = AppPermissions.ModuleEtqa,
-                RequiredAction = AppPermissions.ActionView,
-                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "SDP" },
-                PersonaTags = new() { "Admin", "Assessor", "SDP" },
-                DisplayOrder = 52,
-                Keywords = new() { "aqp", "eisa", "quality partners", "qcto assessment" }
-            },
-            new()
-            {
-                Id = "nav-etqa-scope",
-                Title = "Accreditation Scope Extensions",
-                Href = "etqa/scope-extensions",
-                Icon = "FactCheck",
-                Category = "QUALITY ASSURANCE",
-                Description = "Provider program extension requests, unit standard additions, and evaluations",
-                RequiredModule = AppPermissions.ModuleEtqa,
-                RequiredAction = AppPermissions.ActionEdit,
-                RequiredRoles = new() { "SuperAdmin", "Admin", "SDP", "Assessor" },
-                PersonaTags = new() { "Admin", "SDP", "Assessor" },
-                DisplayOrder = 53,
-                Keywords = new() { "scope extension", "accreditation extension", "unit standards" }
-            },
-            new()
-            {
-                Id = "nav-non-seta",
-                Title = "Non-SETA Articulations",
-                Href = "non-seta/verifications",
-                Icon = "DomainVerification",
-                Category = "QUALITY ASSURANCE",
-                Description = "Cross-SETA qualification verifications, external artisan endorsements",
-                RequiredModule = AppPermissions.ModuleEtqa,
-                RequiredAction = AppPermissions.ActionVerify,
-                RequiredRoles = new() { "SuperAdmin", "Admin", "SDP", "CLO" },
-                PersonaTags = new() { "Admin", "SDP", "CLO" },
-                DisplayOrder = 54,
-                Keywords = new() { "non-seta", "articulations", "cross-seta", "verifications" }
             },
             new()
             {
                 Id = "nav-wpa",
-                Title = "Workplace Approvals (WPA)",
+                Title = "Workplace approvals",
                 Href = "workplace-approvals",
                 Icon = "Handyman",
-                Category = "QUALITY ASSURANCE",
+                Category = "Learner & artisan development",
                 Description = "Workplace approval applications, safety checks, and mentor certifications",
                 RequiredModule = AppPermissions.ModuleWorkplace,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "CLO" },
                 PersonaTags = new() { "Admin", "SDF", "CLO" },
-                DisplayOrder = 55,
+                DisplayOrder = 4,
                 Keywords = new() { "wpa", "workplace approval", "mentor", "safety", "workplace" }
             },
             new()
             {
                 Id = "nav-trade-mentor-ratios",
-                Title = "Trade Mentor Ratios",
+                Title = "Trade mentor ratios",
                 Href = "reference-data/trade-mentor-ratios",
                 Icon = "Engineering",
-                Category = "QUALITY ASSURANCE",
+                Category = "Learner & artisan development",
                 Description = "Statutory artisan mentor-to-apprentice ratios and multi-tiered exemption policy matrix",
                 RequiredModule = AppPermissions.ModuleWorkplace,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "CLO" },
                 PersonaTags = new() { "Admin", "CLO" },
-                DisplayOrder = 56,
+                DisplayOrder = 5,
                 Keywords = new() { "ratio", "mentor ratio", "artisan ratio", "capacity", "trade policy", "exemption" }
             },
 
-            // SKILLS PLANNING & BI
+            // 5. Quality assurance & ETQA
             new()
             {
-                Id = "nav-bi-reports",
-                Title = "Executive Skills BI & SSP",
-                Href = "reports/bi",
-                Icon = "Insights",
-                Category = "SKILLS PLANNING & BI",
-                Description = "Sector Skills Plan (SSP) analytics, scarce skills heatmaps, and DHET reports",
-                RequiredModule = AppPermissions.ModuleSystem,
+                Id = "nav-monitoring",
+                Title = "Workplace monitoring",
+                Href = "monitoring",
+                Icon = "FactCheck",
+                Category = "Quality assurance & ETQA",
+                Description = "On-site employer visits, monitoring reports, and remediation findings",
+                RequiredModule = AppPermissions.ModuleWorkplace,
                 RequiredAction = AppPermissions.ActionView,
-                RequiredRoles = new() { "SuperAdmin", "Admin", "Executive", "CLO" },
-                PersonaTags = new() { "Admin", "Executive", "CLO" },
-                DisplayOrder = 60,
-                Keywords = new() { "bi", "analytics", "ssp", "sector skills plan", "scarce skills", "reports" }
+                RequiredRoles = new() { "SuperAdmin", "Admin", "CLO", "Assessor", "Compliance" },
+                PersonaTags = new() { "Admin", "CLO", "Assessor", "Compliance" },
+                DisplayOrder = 1,
+                Keywords = new() { "monitoring", "site visits", "audits", "remediation", "workplace" }
+            },
+            new()
+            {
+                Id = "nav-etqa",
+                Title = "ETQA assessors",
+                Href = "etqa",
+                Icon = "VerifiedUser",
+                Category = "Quality assurance & ETQA",
+                Description = "Assessor and moderator registrations, provider accreditation certificates",
+                RequiredModule = AppPermissions.ModuleEtqa,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "CLO", "Compliance" },
+                PersonaTags = new() { "Admin", "Assessor", "CLO", "Compliance" },
+                DisplayOrder = 2,
+                Keywords = new() { "etqa", "assessors", "moderators", "accreditation", "qa" }
+            },
+            new()
+            {
+                Id = "nav-etqa-aqp",
+                Title = "AQP partners",
+                Href = "etqa/aqp",
+                Icon = "FactCheck",
+                Category = "Quality assurance & ETQA",
+                Description = "AQP partner agreements, external integrated summative assessment (EISA) oversight",
+                RequiredModule = AppPermissions.ModuleEtqa,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "SDP" },
+                PersonaTags = new() { "Admin", "Assessor", "SDP" },
+                DisplayOrder = 3,
+                Keywords = new() { "aqp", "eisa", "quality partners", "qcto assessment" }
+            },
+            new()
+            {
+                Id = "nav-etqa-scope",
+                Title = "Scope extensions",
+                Href = "etqa/scope-extensions",
+                Icon = "FactCheck",
+                Category = "Quality assurance & ETQA",
+                Description = "Provider program extension requests, unit standard additions, and evaluations",
+                RequiredModule = AppPermissions.ModuleEtqa,
+                RequiredAction = AppPermissions.ActionEdit,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "SDP", "Assessor" },
+                PersonaTags = new() { "Admin", "SDP", "Assessor" },
+                DisplayOrder = 4,
+                Keywords = new() { "scope extension", "accreditation extension", "unit standards" }
+            },
+            new()
+            {
+                Id = "nav-non-seta",
+                Title = "Non-SETA articulations",
+                Href = "non-seta/verifications",
+                Icon = "DomainVerification",
+                Category = "Quality assurance & ETQA",
+                Description = "Cross-SETA qualification verifications, external artisan endorsements",
+                RequiredModule = AppPermissions.ModuleEtqa,
+                RequiredAction = AppPermissions.ActionVerify,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "SDP", "CLO" },
+                PersonaTags = new() { "Admin", "SDP", "CLO" },
+                DisplayOrder = 5,
+                Keywords = new() { "non-seta", "articulations", "cross-seta", "verifications" }
             },
 
-            // LEGAL & POLICY TEMPLATES
+            // 6. Legal, compliance & BI
             new()
             {
                 Id = "nav-moa-templates",
-                Title = "MoA Template Studio",
+                Title = "MoA templates",
                 Href = "legal/moa-templates",
                 Icon = "Gavel",
-                Category = "LEGAL & POLICY TEMPLATES",
+                Category = "Legal, compliance & BI",
                 Description = "Draft and publish dynamic legal MoA templates with parameterized placeholders",
                 RequiredModule = AppPermissions.ModuleSystem,
                 RequiredAction = AppPermissions.ActionManage,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Legal", "Finance" },
                 PersonaTags = new() { "Admin", "Legal", "Finance" },
-                DisplayOrder = 70,
+                DisplayOrder = 1,
                 Keywords = new() { "moa templates", "legal templates", "contracts", "studio" }
             },
             new()
             {
                 Id = "nav-doc-templates",
-                Title = "Enterprise Document Templates",
+                Title = "Document templates",
                 Href = "admin/document-templates",
                 Icon = "Description",
-                Category = "LEGAL & POLICY TEMPLATES",
+                Category = "Legal, compliance & BI",
                 Description = "Certificate templates, rejection notices, and statutory correspondence blueprints",
                 RequiredModule = AppPermissions.ModuleSystem,
                 RequiredAction = AppPermissions.ActionManage,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Legal" },
                 PersonaTags = new() { "Admin", "Legal" },
-                DisplayOrder = 71,
+                DisplayOrder = 2,
                 Keywords = new() { "document templates", "letters", "notices", "certificates" }
             },
             new()
             {
                 Id = "nav-moa-clauses",
-                Title = "Clause Library",
+                Title = "Clause library",
                 Href = "legal/moa-clauses",
                 Icon = "LibraryBooks",
-                Category = "LEGAL & POLICY TEMPLATES",
+                Category = "Legal, compliance & BI",
                 Description = "Standardized statutory clauses, dispute resolution rules, and breach terms",
                 RequiredModule = AppPermissions.ModuleSystem,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Legal" },
                 PersonaTags = new() { "Admin", "Legal" },
-                DisplayOrder = 72,
+                DisplayOrder = 3,
                 Keywords = new() { "clauses", "legal clauses", "terms", "conditions", "dispute" }
             },
             new()
             {
                 Id = "nav-doc-snapshots",
-                Title = "Document Security & Snapshots",
+                Title = "Document snapshots",
                 Href = "admin/document-snapshots",
                 Icon = "Security",
-                Category = "LEGAL & POLICY TEMPLATES",
+                Category = "Legal, compliance & BI",
                 Description = "Cryptographic document hashing, tamper-proofing logs, and digital signatures",
                 RequiredModule = AppPermissions.ModuleSystem,
                 RequiredAction = AppPermissions.ActionVerify,
-                RequiredRoles = new() { "SuperAdmin", "Admin", "Legal" },
-                PersonaTags = new() { "Admin", "Legal" },
-                DisplayOrder = 73,
-                Keywords = new() { "snapshots", "security", "hashes", "digital signatures", "tamper-proof" }
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Legal", "Compliance" },
+                PersonaTags = new() { "Admin", "Legal", "Compliance" },
+                DisplayOrder = 4,
+                Keywords = new() { "snapshots", "security", "hashes", "digital signatures", "tamper-proof", "document security" }
             },
             new()
             {
                 Id = "nav-verify",
-                Title = "Digital Verification Portal",
+                Title = "Digital verification",
                 Href = "verify",
                 Icon = "VerifiedUser",
-                Category = "LEGAL & POLICY TEMPLATES",
+                Category = "Legal, compliance & BI",
                 Description = "Public and internal verification of issued certificates, letters, and MoAs",
-                PersonaTags = new() { "All", "Admin", "SDF", "Finance", "Assessor", "SDP", "CLO" },
-                DisplayOrder = 74,
+                PersonaTags = new() { "All", "Admin", "SDF", "Finance", "Assessor", "SDP", "CLO", "Legal", "Compliance" },
+                DisplayOrder = 5,
                 Keywords = new() { "verification", "verify portal", "qr code", "authenticity" }
             },
-
-            // SYSTEM ADMINISTRATION
             new()
             {
-                Id = "nav-admin",
-                Title = "Administration & Control Hub",
-                Href = "admin",
-                ExactMatch = true,
-                Icon = "AdminPanelSettings",
-                Category = "SYSTEM ADMINISTRATION",
-                Description = "Central control hub, system telemetry, and governance dashboard",
+                Id = "nav-bi-reports",
+                Title = "Executive skills BI",
+                Href = "reports/bi",
+                Icon = "Insights",
+                Category = "Legal, compliance & BI",
+                Description = "Sector Skills Plan (SSP) analytics, scarce skills heatmaps, and DHET reports",
                 RequiredModule = AppPermissions.ModuleSystem,
                 RequiredAction = AppPermissions.ActionView,
-                RequiredRoles = new() { "SuperAdmin", "Admin" },
-                PersonaTags = new() { "Admin" },
-                DisplayOrder = 80,
-                Keywords = new() { "admin", "control hub", "telemetry", "system" }
-            },
-            new()
-            {
-                Id = "nav-admin-settings",
-                Title = "System Settings & Features",
-                Href = "admin/settings",
-                Icon = "Settings",
-                Category = "SYSTEM ADMINISTRATION",
-                Description = "System configuration parameters, external integration feature toggles",
-                RequiredModule = AppPermissions.ModuleSystem,
-                RequiredAction = AppPermissions.ActionManage,
-                RequiredRoles = new() { "SuperAdmin", "Admin" },
-                PersonaTags = new() { "Admin" },
-                DisplayOrder = 81,
-                Keywords = new() { "settings", "configuration", "feature flags", "parameters", "integrations" }
-            },
-            new()
-            {
-                Id = "nav-admin-roles",
-                Title = "Security Roles & Permissions",
-                Href = "admin/roles",
-                Icon = "Security",
-                Category = "SYSTEM ADMINISTRATION",
-                Description = "CASL claims authorization, role definitions, and user permission overrides",
-                RequiredModule = AppPermissions.ModuleSystem,
-                RequiredAction = AppPermissions.ActionManage,
-                RequiredRoles = new() { "SuperAdmin", "Admin" },
-                PersonaTags = new() { "Admin" },
-                DisplayOrder = 82,
-                Keywords = new() { "roles", "permissions", "casl", "security", "users", "rbac" }
-            },
-            new()
-            {
-                Id = "nav-admin-lookups",
-                Title = "Lookup Hub & Enums",
-                Href = "admin/lookups",
-                Icon = "Tune",
-                Category = "SYSTEM ADMINISTRATION",
-                Description = "SETMIS lookup tables, statutory enumerations, and reference data management",
-                RequiredModule = AppPermissions.ModuleSystem,
-                RequiredAction = AppPermissions.ActionManage,
-                RequiredRoles = new() { "SuperAdmin", "Admin" },
-                PersonaTags = new() { "Admin" },
-                DisplayOrder = 83,
-                Keywords = new() { "lookups", "enums", "reference data", "setmis codes", "tables" }
-            },
-            new()
-            {
-                Id = "nav-admin-meetings",
-                Title = "Committee & MANCO Meetings",
-                Href = "governance/meetings",
-                Icon = "MeetingRoom",
-                Category = "SYSTEM ADMINISTRATION",
-                Description = "Board, MANCO, and Grant Adjudication meeting resolutions and delegations",
-                RequiredModule = AppPermissions.ModuleSystem,
-                RequiredAction = AppPermissions.ActionView,
-                RequiredRoles = new() { "SuperAdmin", "Admin", "Executive" },
-                PersonaTags = new() { "Admin", "Executive" },
-                DisplayOrder = 84,
-                Keywords = new() { "meetings", "manco", "board", "governance", "resolutions", "delegations" }
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Executive", "CLO" },
+                PersonaTags = new() { "Admin", "Executive", "CLO" },
+                DisplayOrder = 6,
+                Keywords = new() { "bi", "analytics", "ssp", "sector skills plan", "scarce skills", "reports" }
             },
             new()
             {
                 Id = "nav-admin-statutory",
-                Title = "Statutory Submissions & Audits",
+                Title = "Statutory submissions",
                 Href = "compliance/statutory",
                 Icon = "FactCheck",
-                Category = "SYSTEM ADMINISTRATION",
+                Category = "Legal, compliance & BI",
                 Description = "Quarterly DHET SETMIS submissions, NLRD batch uploads, and AGSA audit pack",
                 RequiredModule = AppPermissions.ModuleCompliance,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Compliance" },
                 PersonaTags = new() { "Admin", "Compliance" },
-                DisplayOrder = 85,
+                DisplayOrder = 7,
                 Keywords = new() { "statutory", "setmis submissions", "nlrd", "agsa", "audits", "dhet" }
             },
+
+            // 7. System administration
             new()
             {
-                Id = "nav-admin-audit",
-                Title = "Audit Trail",
-                Href = "audit-logs",
-                Icon = "History",
-                Category = "SYSTEM ADMINISTRATION",
-                Description = "System-wide double-write immutable audit log, before/after JSON diffs",
+                Id = "nav-admin",
+                Title = "Administration hub",
+                Href = "admin",
+                ExactMatch = true,
+                Icon = "AdminPanelSettings",
+                Category = "System administration",
+                Description = "Central control hub, system telemetry, and governance dashboard",
                 RequiredModule = AppPermissions.ModuleSystem,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin" },
                 PersonaTags = new() { "Admin" },
-                DisplayOrder = 86,
-                Keywords = new() { "audit", "logs", "forensics", "history", "double-write", "trail" }
+                DisplayOrder = 1,
+                Keywords = new() { "admin", "control hub", "telemetry", "system", "administration and control hub" }
+            },
+            new()
+            {
+                Id = "nav-admin-settings",
+                Title = "System settings",
+                Href = "admin/settings",
+                Icon = "Settings",
+                Category = "System administration",
+                Description = "System configuration parameters, external integration feature toggles",
+                RequiredModule = AppPermissions.ModuleSystem,
+                RequiredAction = AppPermissions.ActionManage,
+                RequiredRoles = new() { "SuperAdmin", "Admin" },
+                PersonaTags = new() { "Admin" },
+                DisplayOrder = 2,
+                Keywords = new() { "settings", "configuration", "feature flags", "parameters", "integrations" }
+            },
+            new()
+            {
+                Id = "nav-admin-roles",
+                Title = "Roles & permissions",
+                Href = "admin/roles",
+                Icon = "Security",
+                Category = "System administration",
+                Description = "CASL claims authorization, role definitions, and user permission overrides",
+                RequiredModule = AppPermissions.ModuleSystem,
+                RequiredAction = AppPermissions.ActionManage,
+                RequiredRoles = new() { "SuperAdmin", "Admin" },
+                PersonaTags = new() { "Admin" },
+                DisplayOrder = 3,
+                Keywords = new() { "roles", "permissions", "casl", "security", "users", "rbac" }
+            },
+            new()
+            {
+                Id = "nav-admin-lookups",
+                Title = "Lookup tables",
+                Href = "admin/lookups",
+                Icon = "Tune",
+                Category = "System administration",
+                Description = "SETMIS lookup tables, statutory enumerations, and reference data management",
+                RequiredModule = AppPermissions.ModuleSystem,
+                RequiredAction = AppPermissions.ActionManage,
+                RequiredRoles = new() { "SuperAdmin", "Admin" },
+                PersonaTags = new() { "Admin" },
+                DisplayOrder = 4,
+                Keywords = new() { "lookups", "enums", "reference data", "setmis codes", "tables" }
+            },
+            new()
+            {
+                Id = "nav-admin-meetings",
+                Title = "Committee meetings",
+                Href = "governance/meetings",
+                Icon = "MeetingRoom",
+                Category = "System administration",
+                Description = "Board, MANCO, and Grant Adjudication meeting resolutions and delegations",
+                RequiredModule = AppPermissions.ModuleSystem,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Executive" },
+                PersonaTags = new() { "Admin", "Executive" },
+                DisplayOrder = 5,
+                Keywords = new() { "meetings", "manco", "board", "governance", "resolutions", "delegations" }
+            },
+            new()
+            {
+                Id = "nav-admin-audit",
+                Title = "Audited change log",
+                Href = "audit-logs",
+                Icon = "History",
+                Category = "System administration",
+                Description = "System-wide immutable audited change log, before/after JSON diffs",
+                RequiredModule = AppPermissions.ModuleSystem,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin" },
+                PersonaTags = new() { "Admin" },
+                DisplayOrder = 6,
+                Keywords = new() { "audit", "logs", "forensics", "history", "audited change log", "trail" }
             },
             new()
             {
                 Id = "nav-admin-schema",
-                Title = "Data Dictionary & Schema",
+                Title = "Database schema",
                 Href = "developer/schema",
                 Icon = "MenuBook",
-                Category = "SYSTEM ADMINISTRATION",
-                Description = "Interactive database schema documentation, temporal versioning tables",
+                Category = "System administration",
+                Description = "Interactive database schema documentation and historical version timeline",
                 RequiredModule = AppPermissions.ModuleSystem,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Developer" },
                 PersonaTags = new() { "Admin", "Developer" },
-                DisplayOrder = 87,
-                Keywords = new() { "data dictionary", "schema", "tables", "database", "temporal" }
+                DisplayOrder = 7,
+                Keywords = new() { "data dictionary", "schema", "tables", "database", "history", "versioning" }
             },
             new()
             {
                 Id = "nav-admin-compliance",
-                Title = "UI/UX Compliance HUD",
+                Title = "UI compliance HUD",
                 Href = "developer/compliance-audit",
                 Icon = "Verified",
-                Category = "SYSTEM ADMINISTRATION",
+                Category = "System administration",
                 Description = "Automated compliance auditor for UI-STANDARD.md, WCAG 2.2 AA, and heuristics",
                 RequiredModule = AppPermissions.ModuleSystem,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Developer" },
                 PersonaTags = new() { "Admin", "Developer" },
-                DisplayOrder = 88,
+                DisplayOrder = 8,
                 Keywords = new() { "compliance hud", "ui standard", "wcag", "heuristics", "audit" }
             }
         };

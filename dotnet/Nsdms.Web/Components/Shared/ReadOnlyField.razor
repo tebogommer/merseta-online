@@ -1,60 +1,64 @@
-@namespace Nsdms.Web.Components.Shared
+﻿@namespace Nsdms.Web.Components.Shared
 @using MudBlazor
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
 
-@*
-  UI-STANDARD.md Contract (Section 9.2, Clause 5.2.3, 6.2.2):
-  Component: ReadOnlyField
-  Inputs: Label, Value, ChildContent
-  Renders: A View-mode value as formatted text, never a disabled input.
-*@
-
-<div class="nsdms-readonly-field mb-3">
-    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block font-weight-medium mb-1">
-        @Label
-    </MudText>
-
-    @if (ChildContent != null)
-    {
-        <div class="nsdms-readonly-content">
+<div class="readonly-field nsdms-readonly-field mb-4 @Class">
+    <div class="d-flex justify-space-between align-center mb-1">
+        <span class="text-secondary font-weight-bold text-uppercase" style="font-size: 0.6875rem; letter-spacing: 0.06em;">
+            @Label
+        </span>
+        @if (AllowCopy && !string.IsNullOrWhiteSpace(Value) && Value != "—")
+        {
+            <MudTooltip Text="Copy value">
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                               Size="Size.Small"
+                               Class="pa-0"
+                               Style="font-size: 12px; height: 16px; width: 16px;"
+                               OnClick="CopyValue"
+                               aria-label="@($"Copy {Label}")" />
+            </MudTooltip>
+        }
+    </div>
+    <div class="readonly-value">
+        @if (ChildContent != null)
+        {
             @ChildContent
-        </div>
-    }
-    else if (!string.IsNullOrWhiteSpace(Value))
-    {
-        <div class="d-flex align-center gap-1">
-            @if (!string.IsNullOrWhiteSpace(Icon))
-            {
-                <MudIcon Icon="@Icon" Size="Size.Small" Color="Color.Secondary" Class="mr-1" />
-            }
-            <MudText Typo="Typo.body2" Class="@(IsMonospace ? "font-monospace fw-bold" : "font-weight-medium")">
-                @Value
-            </MudText>
-        </div>
-    }
-    else
-    {
-        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="font-italic">
-            @(EmptyText ?? "—")
-        </MudText>
-    }
+        }
+        else
+        {
+            <div class="d-flex align-center gap-1">
+                @if (!string.IsNullOrWhiteSpace(Icon))
+                {
+                    <MudIcon Icon="@Icon" Size="Size.Small" Color="Color.Secondary" Class="mr-1" />
+                }
+                <div class="@(IsMonospace ? "font-mono font-monospace font-weight-bold" : "")" style="font-size: 0.9375rem; color: var(--text-primary); font-weight: 400; word-break: break-word;">
+                    @(string.IsNullOrWhiteSpace(Value) ? (EmptyText ?? "—") : Value)
+                </div>
+            </div>
+        }
+    </div>
 </div>
 
 @code {
-    [Parameter]
-    public string? Label { get; set; }
+    [Parameter] public string? Label { get; set; } = string.Empty;
+    [Parameter] public string? Value { get; set; } = "—";
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public string? EmptyText { get; set; }
+    [Parameter] public bool IsMonospace { get; set; } = false;
+    [Parameter] public bool AllowCopy { get; set; } = false;
+    [Parameter] public string Class { get; set; } = "";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
 
-    [Parameter]
-    public string? Value { get; set; }
-
-    [Parameter]
-    public string? Icon { get; set; }
-
-    [Parameter]
-    public bool IsMonospace { get; set; } = false;
-
-    [Parameter]
-    public string? EmptyText { get; set; }
-
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
+    private async Task CopyValue()
+    {
+        if (!string.IsNullOrWhiteSpace(Value) && Value != "—")
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", Value);
+            Snackbar.Add($"Copied {Label} to clipboard", Severity.Info, config => {
+                config.VisibleStateDuration = 1500;
+                config.ShowCloseIcon = false;
+            });
+        }
+    }
 }

@@ -1,0 +1,124 @@
+<<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>merSETA NSDMS - Live MoA & Document PDF Simulation Recording</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+        body { background: #121418; color: #f0f2f5; font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 24px; margin: 0; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333a46; padding-bottom: 16px; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .badge { background: #b8860b; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 6px; font-size: 13px; }
+        .player-card { background: #1e222a; border-radius: 12px; overflow: hidden; border: 1px solid #333a46; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        video { width: 100%; max-height: 680px; background: #000; display: block; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #282d37; border-top: 1px solid #333a46; flex-wrap: wrap; gap: 10px; }
+        .btn { background: #374151; color: #fff; border: 1px solid #4b5563; padding: 8px 14px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .btn:hover, .btn.active { background: #b8860b; color: #000; border-color: #b8860b; }
+        .chapters { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .chapter-card { background: #1e222a; border: 1px solid #333a46; border-radius: 8px; padding: 14px; cursor: pointer; transition: all 0.2s; }
+        .chapter-card:hover { border-color: #b8860b; transform: translateY(-2px); }
+        .time { color: #b8860b; font-weight: bold; font-size: 13px; margin-bottom: 4px; }
+        .title { font-weight: 600; font-size: 14px; color: #fff; }
+        .desc { color: #9aa4b2; font-size: 12px; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <span class="badge">merSETA NSDMS</span>
+                <h1 style="margin: 8px 0 4px 0; font-size: 22px;">MoA PDF Simulation & Live Export Video Player</h1>
+                <p style="color: #9aa4b2; font-size: 14px;">E2E Playwright Session & QuestPDF Generation Engine</p>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <a href="/legal/moa-templates/1" target="_blank" class="btn">Open MoA Studio</a>
+                <a href="moa_pdf_simulation_recording.webm" download class="btn">⬇ Download .webm</a>
+                <a href="moa_simulation_demo.gif" download class="btn">⬇ Download .gif</a>
+            </div>
+        </header>
+        <div class="player-card">
+            <video id="videoPlayer" controls autoplay muted loop playsinline>
+                <source src="moa_pdf_simulation_recording.webm" type="video/webm">
+                Your browser does not support the video tag.
+            </video>
+            <div class="toolbar">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span style="font-size: 13px; color: #9aa4b2;">Speed:</span>
+                    <button class="btn" onclick="setSpeed(0.75, this)">0.75x</button>
+                    <button class="btn active" onclick="setSpeed(1.0, this)">1.0x</button>
+                    <button class="btn" onclick="setSpeed(1.5, this)">1.5x</button>
+                    <button class="btn" onclick="setSpeed(2.0, this)">2.0x</button>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn" onclick="restartVideo()">⏮ Restart</button>
+                    <button class="btn" id="loopBtn" onclick="toggleLoop()">🔁 Loop: ON</button>
+                </div>
+            </div>
+        </div>
+        <h3 style="margin-bottom: 12px; font-size: 16px;">Interactive Workflow Chapters (Click to Jump)</h3>
+        <div class="chapters">
+            <div class="chapter-card" onclick="seekTo(0)">
+                <div class="time">⏱ 00:00</div>
+                <div class="title">1. MoA Template Registry</div>
+                <div class="desc">Master list of all legal templates, approval statuses, and version history.</div>
+            </div>
+            <div class="chapter-card" onclick="seekTo(4)">
+                <div class="time">⏱ 00:04</div>
+                <div class="title">2. Policy & Metadata Hub</div>
+                <div class="desc">Financial scheme year, grant categories, effective dates, and signoff actors.</div>
+            </div>
+            <div class="chapter-card" onclick="seekTo(9)">
+                <div class="time">⏱ 00:09</div>
+                <div class="title">3. Clause Section Structure</div>
+                <div class="desc">Ordered legal clauses with drag-and-drop reordering and clause mapping.</div>
+            </div>
+            <div class="chapter-card" onclick="seekTo(15)">
+                <div class="time">⏱ 00:15</div>
+                <div class="title">4. Live PDF Simulation Workspace</div>
+                <div class="desc">Split studio: Scenario selector & token inspector alongside live QuestPDF preview.</div>
+            </div>
+            <div class="chapter-card" onclick="seekTo(22)">
+                <div class="time">⏱ 00:22</div>
+                <div class="title">5. TVET Scenario & Token Overrides</div>
+                <div class="desc">Dynamically switching to TVET college profile and updating custom agreement values.</div>
+            </div>
+            <div class="chapter-card" onclick="seekTo(29)">
+                <div class="time">⏱ 00:29</div>
+                <div class="title">6. Executed Statutory Contract</div>
+                <div class="desc">Workflow timeline, committed budget, and statutory Download MOA (PDF) button.</div>
+            </div>
+        </div>
+        <h3 style="margin: 24px 0 12px 0; font-size: 16px;">Animated Walkthrough</h3>
+        <div style="border-radius: 8px; overflow: hidden; border: 1px solid #333a46; margin-bottom: 24px;">
+            <img src="moa_simulation_demo.gif" style="width: 100%; display: block;" alt="Animated Walkthrough">
+        </div>
+    </div>
+    <script>
+        const v = document.getElementById('videoPlayer');
+        function setSpeed(speed, btn) {
+            v.playbackRate = speed;
+            document.querySelectorAll('.toolbar button').forEach(b => {
+                if (b.innerText.endsWith('x')) b.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+        function seekTo(seconds) {
+            v.currentTime = seconds;
+            v.play();
+        }
+        function restartVideo() {
+            v.currentTime = 0;
+            v.play();
+        }
+        function toggleLoop() {
+            v.loop = !v.loop;
+            const btn = document.getElementById('loopBtn');
+            btn.innerText = v.loop ? '🔁 Loop: ON' : '🔁 Loop: OFF';
+            if (v.loop) btn.classList.add('active'); else btn.classList.remove('active');
+        }
+    </script>
+</body>
+</html>

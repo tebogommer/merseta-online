@@ -32,6 +32,8 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<WspTrainingPlan> WspTrainingPlans { get; }
     DbSet<GrantFundingWindow> GrantFundingWindows { get; }
     DbSet<GrantProjectBudget> GrantProjectBudgets { get; }
+    DbSet<StrategicPriority> StrategicPriorities { get; }
+    DbSet<FundingWindowPriority> FundingWindowPriorities { get; }
     DbSet<AssessorModeratorScope> AssessorModeratorScopes { get; }
     DbSet<LearnerAssessment> LearnerAssessments { get; }
     DbSet<WorkplaceApproval> WorkplaceApprovals { get; }
@@ -143,6 +145,7 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
 
     // Advanced SARS Historical Levy Reconciliation (Area 17)
     DbSet<SarsLevyReconAudit> SarsLevyReconAudits { get; }
+    DbSet<SarsSchemeYearCalculation> SarsSchemeYearCalculations { get; }
 
     // Auxiliary Enterprise Modules (Options A, B, C, D)
     DbSet<BankingDetails> BankingDetails { get; }

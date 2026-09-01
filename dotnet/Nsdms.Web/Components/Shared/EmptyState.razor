@@ -1,34 +1,30 @@
-@namespace Nsdms.Web.Components.Shared
+﻿@namespace Nsdms.Web.Components.Shared
 @using MudBlazor
 
-@*
-  UI-STANDARD.md Contract (Section 9.2, Clause 11.5, 13.2):
-  Component: EmptyState
-  Inputs: Message, Action
-  Renders: Illustration/icon, explanatory line of guidance, and one resolving action.
-*@
-
-<div class="nsdms-empty-state pa-8 my-4 text-center rounded-lg bg-surface border-default" role="region" aria-label="Empty State">
-    <div class="d-inline-flex align-center justify-center rounded-circle bg-light pa-4 mb-3" style="width: 72px; height: 72px;">
-        <MudIcon Icon="@(string.IsNullOrWhiteSpace(Icon) ? Icons.Material.Outlined.FolderOpen : Icon)" 
-                 Color="Color.Secondary" 
-                 Size="Size.Large" />
+<div class="empty-state nsdms-empty-state d-flex flex-column align-center justify-center text-center pa-8 border rounded-lg"
+     style="background-color: var(--surface); border: 1px dashed var(--border-strong); border-radius: var(--radius-lg);"
+     role="region" aria-label="Empty State">
+    <div class="d-flex align-center justify-center mb-3 rounded-circle pa-3" style="background-color: var(--background); width: 56px; height: 56px;">
+        <MudIcon Icon="@(Icon ?? Icons.Material.Filled.Inbox)" Class="text-secondary" Size="Size.Large" />
     </div>
-
-    <MudText Typo="Typo.h6" Class="font-weight-bold text-primary mb-1">
-        @Message
+    <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-1" Style="color: var(--text-primary);">
+        @(Message ?? "No records found")
     </MudText>
-
     @if (!string.IsNullOrWhiteSpace(Description))
     {
-        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4" Style="max-width: 480px; margin: 0 auto;">
+        <MudText Typo="Typo.body2" Class="text-secondary mb-4" Style="max-width: 440px;">
             @Description
         </MudText>
     }
-
-    @if (!string.IsNullOrWhiteSpace(ActionLabel))
+    @if (Action != null)
     {
-        <div class="mt-4">
+        <div class="mt-1">
+            @Action
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(ActionLabel))
+    {
+        <div class="mt-1">
             @if (!string.IsNullOrWhiteSpace(ActionHref))
             {
                 <MudButton Variant="Variant.Filled" 
@@ -52,21 +48,11 @@
 </div>
 
 @code {
-    [Parameter]
-    public string Message { get; set; } = "No records found.";
-
-    [Parameter]
-    public string? Description { get; set; }
-
-    [Parameter]
-    public string? Icon { get; set; }
-
-    [Parameter]
-    public string? ActionLabel { get; set; }
-
-    [Parameter]
-    public string? ActionHref { get; set; }
-
-    [Parameter]
-    public EventCallback OnAction { get; set; }
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public RenderFragment? Action { get; set; }
+    [Parameter] public string? ActionLabel { get; set; }
+    [Parameter] public string? ActionHref { get; set; }
+    [Parameter] public EventCallback OnAction { get; set; }
 }

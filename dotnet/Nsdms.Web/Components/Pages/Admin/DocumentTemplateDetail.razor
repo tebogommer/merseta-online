@@ -4,6 +4,8 @@
 @inject IEnterpriseDocumentTemplateService TemplateService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
 
 <PageTitle>@(_template?.TemplateTitle ?? "Document Template Detail") | merSETA NSDMS</PageTitle>
 
@@ -265,7 +267,7 @@ else
                             else if (_showRawMarkdown)
                             {
                                 <MudPaper Elevation="0" Class="pa-4 rounded-lg mud-background-gray" Style="max-height: 750px; overflow-y: auto;">
-                                    <pre style="white-space: pre-wrap; font-family: 'Segoe UI', sans-serif; font-size: 13px; line-height: 1.6;">@_previewMarkdown</pre>
+                                    <pre class="font-mono text-body2" style="white-space: pre-wrap; line-height: 1.6;">@_previewMarkdown</pre>
                                 </MudPaper>
                             }
                             else if (!string.IsNullOrEmpty(_pdfBase64))
@@ -312,9 +314,6 @@ else
 @code {
     [Parameter]
     public int Id { get; set; }
-
-    [Inject]
-    private IJSRuntime JS { get; set; } = default!;
 
     private DocumentTemplate? _template;
     private bool _loading = true;
@@ -435,7 +434,7 @@ else
         try
         {
             string fileName = $"{_template.TemplateCode}_Simulation_{_selectedScenario}_{DateTime.UtcNow:yyyyMMdd}.pdf";
-            await JS.InvokeVoidAsync("downloadFileFromBase64", fileName, "application/pdf", _pdfBase64);
+            await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", fileName, "application/pdf", _pdfBase64);
             Snackbar.Add("Simulated document PDF downloaded successfully.", Severity.Success);
         }
         catch (Exception ex)

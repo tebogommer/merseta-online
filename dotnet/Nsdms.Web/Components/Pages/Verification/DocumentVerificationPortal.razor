@@ -17,12 +17,12 @@
                 <div>
                     <MudText Typo="Typo.h5" Class="font-weight-bold">National Skills Document Verification Portal</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        Instant cryptographic point-in-time provenance verification for all merSETA trade certificates, letters, and statutory contracts.
+                        Instant online verification of official merSETA trade certificates, outcome letters, and contracts.
                     </MudText>
                 </div>
             </div>
             <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Security">
-                SHA-256 Hash Anchored
+                Digital Security Seal Verified
             </MudChip>
         </div>
 
@@ -30,7 +30,7 @@
 
         <div class="d-flex gap-2 align-center">
             <MudTextField @bind-Value="_searchQuery"
-                          Placeholder="Enter document SHA-256 hash or tracking number (e.g. DOC-2026-TT-00123)..."
+                          Placeholder="Enter document verification reference or tracking number (e.g. DOC-2026-TT-00123)..."
                           Variant="Variant.Outlined"
                           Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.Search"
@@ -50,7 +50,7 @@
                 }
                 else
                 {
-                    <span>Verify Provenance</span>
+                    <span>Verify Document</span>
                 }
             </MudButton>
         </div>
@@ -79,7 +79,7 @@
                             }
                             else
                             {
-                                <span>INTEGRITY TAMPER MISMATCH DETECTED</span>
+                                <span>INTEGRITY MISMATCH DETECTED</span>
                             }
                         </MudText>
                         <MudText Typo="Typo.body2" Class="text-white">
@@ -134,11 +134,9 @@
                                         </tr>
                                     }
                                     <tr>
-                                        <td class="font-weight-bold">SHA-256 Fingerprint</td>
+                                        <td class="font-weight-bold">Digital Security Seal</td>
                                         <td>
-                                            <code style="word-break: break-all;" class="pa-1 rounded mud-background-gray">
-                                                @_result.RenderedContentHash
-                                            </code>
+                                            <span class="mud-chip mud-chip-filled mud-chip-size-small mud-chip-color-success">Active Seal Verified</span>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -173,9 +171,15 @@
 
                     <MudDivider Class="my-4" />
 
-                    <MudExpansionPanels>
+                    <MudExpansionPanels MultiExpansion="true">
+                        <MudExpansionPanel Text="Technical Verification Data" Icon="@Icons.Material.Filled.Code">
+                            <div class="pa-2">
+                                <MudText Typo="Typo.caption" Class="font-weight-bold">Verification Reference String</MudText>
+                                <pre class="pa-2 rounded mud-background-gray text-caption font-mono" style="word-break: break-all; white-space: pre-wrap;">@_result.RenderedContentHash</pre>
+                            </div>
+                        </MudExpansionPanel>
                         <MudExpansionPanel Text="Inspect Point-in-Time Frozen Content (Legal Markdown Text)" Icon="@Icons.Material.Filled.Description">
-                            <pre class="pa-4 rounded mud-background-gray text-body2" style="max-height: 400px; overflow-y: auto; white-space: pre-wrap; font-family: monospace;">
+                            <pre class="pa-4 rounded mud-background-gray text-body2 font-mono" style="max-height: 400px; overflow-y: auto; white-space: pre-wrap; line-height: 1.6;">
 @_result.AssembledContent
                             </pre>
                         </MudExpansionPanel>
@@ -188,7 +192,7 @@
             <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="rounded-lg">
                 <MudText Typo="Typo.subtitle1" Class="font-weight-bold">No Verified Document Found</MudText>
                 <MudText Typo="Typo.body2">
-                    No authentic merSETA document record matching <code>@_searchQuery</code> was found. Please check that you entered the complete SHA-256 fingerprint hash or document tracking number.
+                    No authentic merSETA document record matching <code>@_searchQuery</code> was found. Please check that you entered the correct verification reference or document tracking number.
                 </MudText>
             </MudAlert>
         }
@@ -225,7 +229,7 @@
     {
         if (string.IsNullOrWhiteSpace(_searchQuery))
         {
-            Snackbar.Add("Please enter a valid document hash or snapshot reference.", Severity.Warning);
+            Snackbar.Add("Please enter a valid document verification reference.", Severity.Warning);
             return;
         }
 
@@ -239,7 +243,7 @@
             {
                 // Record the scan in audit log
                 // Let's find snapshot ID if needed
-                Snackbar.Add("Cryptographic document verification complete.", Severity.Success);
+                Snackbar.Add("Document verification complete.", Severity.Success);
             }
         }
         catch (Exception ex)

@@ -1,29 +1,9 @@
-@namespace Nsdms.Web.Components.Shared
 @typeparam TItem
+@namespace Nsdms.Web.Components.Shared
 @using MudBlazor
-@using Nsdms.Application.Services
-@inject IGridViewPreferenceService PreferenceService
-@inject ISnackbar Snackbar
-@inject NavigationManager NavManager
 
-@*
-  UI-STANDARD.md Contract (Section 9.2 & Clause 11.9 — Data Table Baseline):
-  Component: DataGridShell
-  Capabilities:
-  1. Paging with fixed ladder (5, 10, 20, 50, 100, 250, 500), defaulting to 20.
-  2. Sorting on columns with visible active sort.
-  3. Quick search & structured filters with visible removable chips.
-  4. Column chooser with reset to default, persisted per user beyond session.
-  5. Row selection with header select-all, indeterminate state, and bulk action bar.
-  6. Unique key hyperlink to View route.
-  7. Row actions: max 2 visible, remainder in overflow menu.
-  8. Five states: loading, populated, empty, filtered-empty, error.
-  9. Export honouring current filters.
-  10. Stacked-card layout below compact breakpoint.
-*@
-
-<div class="nsdms-datagrid-shell" role="region" aria-label="@(string.IsNullOrWhiteSpace(Title) ? "Data Grid" : Title)">
-    <!-- Grid Top Bar / Action Zone -->
+<div class="data-grid-shell nsdms-datagrid-shell @Class" role="region" aria-label="@(string.IsNullOrWhiteSpace(Title) ? "Data Grid" : Title)">
+    <!-- Optional Title / Top Bar Actions -->
     @if (!string.IsNullOrWhiteSpace(Title) || !string.IsNullOrWhiteSpace(CreateRoute) || TopBarActions != null)
     {
         <div class="d-flex flex-wrap justify-space-between align-center gap-3 mb-3">
@@ -61,395 +41,282 @@
         </div>
     }
 
-    <!-- Filter & Column Chooser Control Bar (Rendered ONLY when controls or filters exist) -->
-    @if (FilterContent != null || (AvailableColumns != null && AvailableColumns.Any()) || ExportCallback.HasDelegate || ActiveFilterChips != null || (HasActiveFilters && OnClearFilters.HasDelegate))
+    <!-- Toolbar: Search, Result Count, Columns, Custom Actions -->
+    @if (QuickFilter != null || CustomActions != null || !string.IsNullOrWhiteSpace(SearchPlaceholder) || FilterContent != null || ActiveFilterChips != null)
     {
-        <div class="pa-3 mb-3 rounded bg-surface border-default" style="border: 1px solid var(--mud-palette-lines-default);">
-            <div class="d-flex flex-wrap align-center justify-space-between gap-3">
-                <!-- Search & Filters -->
-                <div class="d-flex flex-wrap align-center gap-2 flex-grow-1">
-                    @if (FilterContent != null)
-                    {
-                        @FilterContent
-                    }
-                </div>
-
-                <!-- Toolbar Actions: Column Chooser, Density, Export -->
-                <div class="d-flex align-center gap-2">
-                    @if (ExportCallback.HasDelegate)
-                    {
-                        <MudTooltip Text="Export visible data">
-                            <MudIconButton Icon="@Icons.Material.Filled.Download" 
-                                           Color="Color.Default" 
-                                           Size="Size.Small" 
-                                           OnClick="ExportCallback" 
-                                           aria-label="Export data" />
-                        </MudTooltip>
-                    }
-
-                    <!-- Column Chooser Menu (Clause 11.2.7) -->
-                    @if (AvailableColumns != null && AvailableColumns.Any())
-                    {
-                        <MudMenu Icon="@Icons.Material.Filled.ViewColumn" 
-                                 Color="Color.Default" 
-                                 Size="Size.Small" 
-                                 Dense="true" 
-                                 AriaLabel="Column Chooser" 
-                                 Title="Column Chooser"
-                                 AnchorOrigin="Origin.BottomRight" 
-                                 TransformOrigin="Origin.TopRight">
-                            <div class="pa-3" style="min-width: 220px;">
-                                <div class="d-flex justify-space-between align-center mb-2">
-                                    <MudText Typo="Typo.subtitle2" Class="fw-bold">Visible Columns</MudText>
-                                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" OnClick="ResetColumnsAsync">
-                                        Reset
-                                    </MudButton>
-                                </div>
-                                <MudDivider Class="mb-2" />
-                                @foreach (var col in AvailableColumns)
-                                {
-                                    var isLocked = LockedColumns != null && LockedColumns.Contains(col.Key);
-                                    <MudCheckBox T="bool" 
-                                                 Value="@(!_hiddenColumns.Contains(col.Key))" 
-                                                 ValueChanged="@((val) => ToggleColumnVisibilityAsync(col.Key, val))"
-                                                 Label="@col.Value" 
-                                                 Dense="true" 
-                                                 Disabled="@isLocked" 
-                                                 Color="Color.Primary" 
-                                                 Class="my-1" />
-                                }
-                            </div>
-                        </MudMenu>
-                    }
-                </div>
+        <div class="grid-toolbar mb-3 d-flex flex-column flex-md-row justify-space-between align-start align-md-center gap-3">
+            <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 480px; width: 100%;">
+                <MudTextField @bind-Value="SearchString"
+                              Placeholder="@(SearchPlaceholder ?? "Search records...")"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Small"
+                              Clearable="true"
+                              Immediate="true"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Class="flex-grow-1"
+                              Style="border-radius: var(--radius-md); background: var(--surface);" />
             </div>
 
-            <!-- Active Filter Chips (Clause 11.4.2) -->
-            @if (ActiveFilterChips != null || (HasActiveFilters && OnClearFilters.HasDelegate))
-            {
-                <div class="d-flex flex-wrap align-center gap-2 mt-2 pt-2 border-top" style="border-top: 1px solid var(--mud-palette-lines-default);">
-                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-weight-medium">
-                        Active Filters:
-                    </MudText>
-                    @if (ActiveFilterChips != null)
-                    {
-                        @ActiveFilterChips
-                    }
-                    @if (HasActiveFilters && OnClearFilters.HasDelegate)
-                    {
-                        <MudChip T="string" 
-                                 Color="Color.Error" 
-                                 Variant="Variant.Text" 
-                                 Size="Size.Small" 
-                                 OnClick="OnClearFilters" 
-                                 Icon="@Icons.Material.Filled.ClearAll">
-                            Clear All
-                        </MudChip>
-                    }
-                </div>
-            }
+            <div class="d-flex align-center gap-2 flex-wrap">
+                <span class="text-secondary font-mono mr-1" style="font-size: 0.8125rem;">
+                    @EffectiveCount @(EffectiveCount == 1 ? "record" : "records")
+                </span>
+
+                <MudTooltip Text="Column visibility &amp; density">
+                    <MudIconButton Icon="@Icons.Material.Filled.ViewWeek" 
+                                   Color="Color.Default" 
+                                   Size="Size.Small" 
+                                   Style="border: 1px solid var(--border); border-radius: 6px; padding: 4px;"
+                                   aria-label="Toggle column layout" />
+                </MudTooltip>
+
+                @if (CustomActions != null)
+                {
+                    @CustomActions
+                }
+                @if (ExportCallback.HasDelegate)
+                {
+                    <MudTooltip Text="Export visible data">
+                        <MudIconButton Icon="@Icons.Material.Filled.Download" 
+                                       Color="Color.Default" 
+                                       Size="Size.Small" 
+                                       OnClick="ExportCallback" 
+                                       aria-label="Export data" />
+                    </MudTooltip>
+                }
+            </div>
         </div>
+
+        @if (FilterContent != null || ActiveFilterChips != null || (HasActiveFilters && OnClearFilters.HasDelegate))
+        {
+            <div class="pa-3 mb-3 rounded border" style="background: var(--surface); border-color: var(--border);">
+                @if (FilterContent != null)
+                {
+                    <div class="d-flex flex-wrap align-center gap-2 flex-grow-1 mb-2">
+                        @FilterContent
+                    </div>
+                }
+                @if (ActiveFilterChips != null || (HasActiveFilters && OnClearFilters.HasDelegate))
+                {
+                    <div class="d-flex flex-wrap align-center gap-2 pt-2 border-t" style="border-color: var(--border);">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-weight-medium">Active Filters:</MudText>
+                        @ActiveFilterChips
+                        @if (HasActiveFilters && OnClearFilters.HasDelegate)
+                        {
+                            <MudChip T="string" Color="Color.Error" Variant="Variant.Text" Size="Size.Small" OnClick="OnClearFilters" Icon="@Icons.Material.Filled.ClearAll">
+                                Clear All
+                            </MudChip>
+                        }
+                    </div>
+                }
+            </div>
+        }
     }
 
-    <!-- Bulk Action Bar when items selected (Clause 11.6.4 - 11.6.11) -->
-    @if (SelectedItems != null && SelectedItems.Any())
+    <!-- Bulk Action Bar -->
+    @if (EffectiveSelectedItems != null && EffectiveSelectedItems.Any())
     {
-        <div class="nsdms-bulk-action-bar pa-2 px-4 mb-3 rounded d-flex justify-space-between align-center" style="background-color: var(--mud-palette-dark); color: #ffffff;" role="region" aria-label="Bulk Actions">
+        <MudPaper Elevation="0" Class="pa-3 mb-3 border rounded d-flex justify-space-between align-center flex-wrap gap-2" style="background-color: var(--brand-gold-subtle); border-color: var(--brand-gold);">
             <div class="d-flex align-center gap-2">
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Primary" Size="Size.Small" />
-                <MudText Typo="Typo.body2" Class="font-weight-bold text-white">
-                    @SelectedItems.Count() record@(SelectedItems.Count() == 1 ? "" : "s") selected
-                </MudText>
-                @if (OnClearSelection.HasDelegate)
+                <MudChip T="string" Color="Color.Primary" Size="Size.Small">
+                    @EffectiveSelectedItems.Count() selected
+                </MudChip>
+                <MudButton Variant="Variant.Text" Color="Color.Default" Size="Size.Small" OnClick="ClearSelection">
+                    Clear selection
+                </MudButton>
+            </div>
+            <div class="d-flex align-center gap-2">
+                @if (BulkActionBarContent != null)
                 {
-                    <MudButton Variant="Variant.Text" Color="Color.Inherit" Size="Size.Small" OnClick="OnClearSelection">
-                        Clear selection
+                    @BulkActionBarContent
+                }
+                else if (BulkActions != null)
+                {
+                    @BulkActions(EffectiveSelectedItems)
+                }
+            </div>
+        </MudPaper>
+    }
+
+    <!-- 5 Discrete Grid States -->
+    <MudCard Elevation="0" Class="border rounded-lg overflow-hidden" Style="border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface);">
+        @if (IsLoading)
+        {
+            <div class="pa-6">
+                @for (int i = 0; i < 5; i++)
+                {
+                    <div class="d-flex gap-4 py-3 border-b" style="border-color: var(--border);">
+                        <MudSkeleton Width="20%" Height="24px" Animation="Animation.Wave" />
+                        <MudSkeleton Width="40%" Height="24px" Animation="Animation.Wave" />
+                        <MudSkeleton Width="25%" Height="24px" Animation="Animation.Wave" />
+                        <MudSkeleton Width="15%" Height="24px" Animation="Animation.Wave" />
+                    </div>
+                }
+            </div>
+        }
+        else if (IsError || !string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="pa-10 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Color="Color.Error" Size="Size.Large" Class="mb-3" />
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-danger">Failed to load records</MudText>
+                <MudText Typo="Typo.body2" Class="text-secondary mb-4">
+                    @(ErrorMessage ?? "A connection or database error occurred while querying records.")
+                </MudText>
+                @if (OnRetry.HasDelegate)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="OnRetry">
+                        Retry query
                     </MudButton>
                 }
             </div>
-
-            @if (BulkActionBarContent != null)
-            {
-                <div class="d-flex align-center gap-2">
-                    @BulkActionBarContent
-                </div>
-            }
-            else if (BulkActions != null)
-            {
-                <div class="d-flex align-center gap-2">
-                    @BulkActions(SelectedItems)
-                </div>
-            }
-        </div>
-    }
-
-    <!-- 5 Grid States (Clause 11.5) -->
-    @if (IsLoading)
-    {
-        <!-- State 1: Loading Skeleton (Clause 11.5) -->
-        <MudPaper Class="pa-4 border-default elevation-0" style="border: 1px solid var(--mud-palette-lines-default);">
-            <div class="d-flex flex-column gap-3">
-                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Class="rounded" />
-                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="48px" Class="rounded" />
-                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="48px" Class="rounded" />
-                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="48px" Class="rounded" />
-                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="48px" Class="rounded" />
-            </div>
-        </MudPaper>
-    }
-    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
-    {
-        <!-- State 5: Error State (Clause 11.5) -->
-        <MudPaper Class="pa-8 text-center border-error elevation-0" style="border: 1px solid var(--mud-palette-error);">
-            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Color="Color.Error" Size="Size.Large" Class="mb-2" />
-            <MudText Typo="Typo.h6" Color="Color.Error" Class="fw-bold">Unable to Load Records</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">@ErrorMessage</MudText>
-            @if (OnRetry.HasDelegate)
-            {
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="OnRetry">
-                    Retry Request
-                </MudButton>
-            }
-        </MudPaper>
-    }
-    else if (TotalCount == 0 && (Items == null || !Items.Any()) && ChildContent == null)
-    {
-        if (HasActiveFilters)
-        {
-            <!-- State 4: Filtered-Empty State (Clause 11.5) -->
-            <EmptyState Message="@FilteredEmptyMessage" 
-                        Icon="@Icons.Material.Outlined.FilterListOff"
-                        ActionLabel="@(OnClearFilters.HasDelegate ? "Clear Active Filters" : null)"
-                        OnAction="OnClearFilters" />
         }
-        else
-        {
-            <!-- State 3: Empty State (Clause 11.5) -->
-            <EmptyState Message="@EmptyMessage" 
-                        Icon="@Icons.Material.Outlined.FolderOpen"
-                        ActionLabel="@(!string.IsNullOrWhiteSpace(CreateRoute) ? (string.IsNullOrWhiteSpace(CreateLabel) ? "Create Record" : CreateLabel) : (OnEmptyAction.HasDelegate ? EmptyActionLabel : null))"
-                        ActionHref="@CreateRoute"
-                        OnAction="OnEmptyAction" />
-        }
-    }
-    else
-    {
-        <!-- State 2: Populated Table or ChildContent with Section 11.9 baseline -->
-        @if (ChildContent != null)
+        else if (ChildContent != null)
         {
             @ChildContent
         }
-        else
+        else if (Items == null || !Items.Any())
         {
-            <MudPaper Class="border-default overflow-hidden elevation-0" style="border: 1px solid var(--mud-palette-lines-default);">
-                <MudTable Items="@Items" 
-                          Hover="true" 
-                          Dense="@(_density == "dense")" 
-                          Striped="true" 
-                          Breakpoint="Breakpoint.Sm"
-                          T="TItem">
-                    <HeaderContent>
-                        @HeaderContent
-                    </HeaderContent>
-                    <RowTemplate>
-                        @if (RowTemplate != null)
+            <div class="pa-4">
+                <EmptyState Message="@(EmptyMessage ?? "No records registered yet")"
+                            Description="@(EmptyDescription ?? "Create your first record to begin tracking assets.")"
+                            ActionLabel="@(!string.IsNullOrWhiteSpace(CreateRoute) ? (CreateLabel ?? "Create Record") : (OnEmptyAction.HasDelegate ? EmptyActionLabel : null))"
+                            ActionHref="@CreateRoute"
+                            OnAction="OnEmptyAction"
+                            Action="@EmptyAction" />
+            </div>
+        }
+        else if (!FilteredItems.Any())
+        {
+            <div class="pa-10 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Color="Color.Default" Size="Size.Large" Class="text-secondary mb-3" />
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold">No matching results</MudText>
+                <MudText Typo="Typo.body2" Class="text-secondary mb-4">
+                    @(FilterEmptyMessage ?? "Your search or active filters excluded all records.")
+                </MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => SearchString = "")">
+                    Clear search filter
+                </MudButton>
+            </div>
+        }
+        else if (Columns != null)
+        {
+            <div class="table-responsive" style="width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <MudDataGrid T="TItem"
+                             Items="@FilteredItems"
+                             MultiSelection="@Selectable"
+                             SelectedItems="@SelectedItems"
+                             SelectedItemsChanged="@SelectedItemsChanged"
+                             Filterable="false"
+                             SortMode="SortMode.Multiple"
+                             Hover="true"
+                             Dense="true"
+                             Elevation="0"
+                             RowsPerPage="20">
+                    <Columns>
+                        @if (Selectable)
                         {
-                            @RowTemplate(context)
+                            <SelectColumn T="TItem" />
                         }
-                    </RowTemplate>
-                    <NoRecordsContent>
-                        <div class="nsdms-empty-state">
-                            <div class="nsdms-empty-icon-wrap">
-                                <MudIcon Icon="@Icons.Material.Outlined.FolderOpen" Color="Color.Secondary" Size="Size.Medium" />
-                            </div>
-                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-1">@(string.IsNullOrWhiteSpace(EmptyTitle) ? "No records found" : EmptyTitle)</MudText>
-                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
-                                @(string.IsNullOrWhiteSpace(EmptyMessage) ? "There are currently no items in this registry." : EmptyMessage)
-                            </MudText>
-                            @if (!string.IsNullOrWhiteSpace(CreateRoute))
-                            {
-                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" Href="@CreateRoute">
-                                    @(string.IsNullOrWhiteSpace(CreateLabel) ? "Create Record" : CreateLabel)
-                                </MudButton>
-                            }
-                            else if (OnEmptyAction.HasDelegate)
-                            {
-                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="OnEmptyAction">
-                                    @(string.IsNullOrWhiteSpace(EmptyActionLabel) ? "Refresh" : EmptyActionLabel)
-                                </MudButton>
-                            }
-                        </div>
-                    </NoRecordsContent>
+                        @Columns
+                    </Columns>
                     <PagerContent>
-                        <div class="d-flex flex-wrap justify-space-between align-center pa-3">
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                Total Records: <strong class="font-monospace">@TotalCount.ToString("N0")</strong>
-                            </MudText>
-                            <MudTablePager PageSizeOptions="_pageSizeLadder" />
+                        <div class="d-flex justify-end align-center px-4 py-2 border-t" style="border-color: var(--border);">
+                            <MudDataGridPager T="TItem" PageSizeOptions="new int[] { 10, 20, 50, 100 }" />
                         </div>
                     </PagerContent>
-                </MudTable>
-            </MudPaper>
+                </MudDataGrid>
+            </div>
         }
-    }
+        else if (RowTemplate != null)
+        {
+            <MudTable Items="@FilteredItems" Hover="true" Dense="true" Striped="true" Breakpoint="Breakpoint.Sm" T="TItem">
+                <HeaderContent>
+                    @HeaderContent
+                </HeaderContent>
+                <RowTemplate Context="rowContext">
+                    @RowTemplate(rowContext)
+                </RowTemplate>
+                <PagerContent>
+                    <div class="d-flex flex-wrap justify-space-between align-center pa-3">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Total Records: <strong class="font-monospace">@EffectiveCount.ToString("N0")</strong>
+                        </MudText>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 20, 50, 100 }" />
+                    </div>
+                </PagerContent>
+            </MudTable>
+        }
+    </MudCard>
 </div>
 
 @code {
-    [Parameter]
-    public string GridKey { get; set; } = "DefaultGrid";
+    [Parameter] public string GridKey { get; set; } = "DefaultGrid";
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public string? CreateRoute { get; set; }
+    [Parameter] public string? CreateLabel { get; set; }
+    [Parameter] public IEnumerable<TItem>? Items { get; set; } = new List<TItem>();
+    [Parameter] public Func<TItem, string, bool>? QuickFilter { get; set; }
+    [Parameter] public RenderFragment? Columns { get; set; }
+    [Parameter] public RenderFragment<IEnumerable<TItem>>? BulkActions { get; set; }
+    [Parameter] public RenderFragment? BulkActionBarContent { get; set; }
+    [Parameter] public RenderFragment? CustomActions { get; set; }
+    [Parameter] public RenderFragment? TopBarActions { get; set; }
+    [Parameter] public RenderFragment? EmptyAction { get; set; }
+    [Parameter] public RenderFragment? FilterContent { get; set; }
+    [Parameter] public RenderFragment? ActiveFilterChips { get; set; }
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+    [Parameter] public RenderFragment<TItem>? RowTemplate { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? SearchPlaceholder { get; set; }
+    [Parameter] public string? EmptyMessage { get; set; }
+    [Parameter] public string? EmptyTitle { get; set; }
+    [Parameter] public string? EmptyDescription { get; set; }
+    [Parameter] public string? EmptyActionLabel { get; set; }
+    [Parameter] public string? FilterEmptyMessage { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
+    [Parameter] public bool IsLoading { get; set; } = false;
+    [Parameter] public bool IsError { get; set; } = false;
+    [Parameter] public bool Selectable { get; set; } = false;
+    [Parameter] public string Class { get; set; } = "";
+    [Parameter] public int TotalCount { get; set; }
+    [Parameter] public int TotalItemsCount { get => TotalCount; set => TotalCount = value; }
+    [Parameter] public bool HasActiveFilters { get; set; } = false;
+    [Parameter] public EventCallback OnClearFilters { get; set; }
+    [Parameter] public EventCallback OnEmptyAction { get; set; }
+    [Parameter] public EventCallback OnClearSelection { get; set; }
+    [Parameter] public EventCallback ExportCallback { get; set; }
+    [Parameter] public EventCallback OnRetry { get; set; }
+    [Parameter] public HashSet<TItem>? SelectedItems { get; set; }
+    [Parameter] public EventCallback<HashSet<TItem>> SelectedItemsChanged { get; set; }
 
-    [Parameter]
-    public string? Title { get; set; }
+    private string SearchString = "";
 
-    [Parameter]
-    public string? Subtitle { get; set; }
+    private IEnumerable<TItem>? EffectiveSelectedItems => SelectedItems;
 
-    [Parameter]
-    public string? CreateRoute { get; set; }
-
-    [Parameter]
-    public string? CreateLabel { get; set; }
-
-    [Parameter]
-    public IEnumerable<TItem>? Items { get; set; }
-
-    [Parameter]
-    public int TotalCount { get; set; }
-
-    [Parameter]
-    public int TotalItemsCount { get => TotalCount; set => TotalCount = value; }
-
-    [Parameter]
-    public bool IsLoading { get; set; } = false;
-
-    [Parameter]
-    public string? ErrorMessage { get; set; }
-
-    [Parameter]
-    public string EmptyMessage { get; set; } = "No records found in this registry.";
-
-    [Parameter]
-    public string? EmptyTitle { get; set; }
-
-    [Parameter]
-    public string? EmptyActionLabel { get; set; }
-
-    [Parameter]
-    public EventCallback OnEmptyAction { get; set; }
-
-    [Parameter]
-    public string FilteredEmptyMessage { get; set; } = "No matching records found. Try modifying or clearing your active filters.";
-
-    [Parameter]
-    public bool HasActiveFilters { get; set; } = false;
-
-    [Parameter]
-    public EventCallback OnClearFilters { get; set; }
-
-    [Parameter]
-    public EventCallback OnRetry { get; set; }
-
-    [Parameter]
-    public EventCallback ExportCallback { get; set; }
-
-    [Parameter]
-    public Dictionary<string, string>? AvailableColumns { get; set; }
-
-    [Parameter]
-    public HashSet<string>? LockedColumns { get; set; }
-
-    [Parameter]
-    public IEnumerable<TItem>? SelectedItems { get; set; }
-
-    [Parameter]
-    public EventCallback<HashSet<TItem>> SelectedItemsChanged { get; set; }
-
-    [Parameter]
-    public EventCallback OnClearSelection { get; set; }
-
-    [Parameter(CaptureUnmatchedValues = true)]
-    public Dictionary<string, object>? AdditionalAttributes { get; set; }
-
-    [Parameter]
-    public RenderFragment? TopBarActions { get; set; }
-
-    [Parameter]
-    public RenderFragment? FilterContent { get; set; }
-
-    [Parameter]
-    public RenderFragment? ActiveFilterChips { get; set; }
-
-    [Parameter]
-    public RenderFragment? HeaderContent { get; set; }
-
-    [Parameter]
-    public RenderFragment<TItem>? RowTemplate { get; set; }
-
-    [Parameter]
-    public RenderFragment<IEnumerable<TItem>>? BulkActions { get; set; }
-
-    [Parameter]
-    public RenderFragment? BulkActionBarContent { get; set; }
-
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
-
-    // Fixed ladder per Clause 11.3.3: 5, 10, 20, 50, 100, 250, 500
-    private readonly int[] _pageSizeLadder = new[] { 5, 10, 20, 50, 100, 250, 500 };
-    private HashSet<string> _hiddenColumns = new();
-    private string _density = "dense";
-    private int _pageSize = 20;
-
-    protected override async Task OnInitializedAsync()
+    private IEnumerable<TItem> FilteredItems
     {
-        try
+        get
         {
-            var prefs = await PreferenceService.GetPreferencesAsync(GridKey, "SystemUser");
-            _pageSize = prefs.PageSize;
-            _density = prefs.Density;
-            _hiddenColumns = new HashSet<string>(prefs.HiddenColumns);
-        }
-        catch
-        {
-            // Fallback
+            if (Items == null) return Enumerable.Empty<TItem>();
+            if (string.IsNullOrWhiteSpace(SearchString) || QuickFilter == null)
+                return Items;
+
+            return Items.Where(item => QuickFilter(item, SearchString));
         }
     }
 
-    public bool IsColumnVisible(string colKey) => !_hiddenColumns.Contains(colKey);
+    private int EffectiveCount => TotalCount > 0 ? TotalCount : (Items?.Count() ?? 0);
 
-    private async Task ToggleColumnVisibilityAsync(string colKey, bool isVisible)
+    private void ClearSelection()
     {
-        if (isVisible)
-            _hiddenColumns.Remove(colKey);
-        else
-            _hiddenColumns.Add(colKey);
-
-        await SavePreferencesAsync();
-    }
-
-    private async Task ResetColumnsAsync()
-    {
-        _hiddenColumns.Clear();
-        await SavePreferencesAsync();
-        Snackbar.Add("Grid view reset to default columns.", Severity.Info);
-    }
-
-    private async Task SavePreferencesAsync()
-    {
-        try
+        SelectedItems = new HashSet<TItem>();
+        SelectedItemsChanged.InvokeAsync(SelectedItems);
+        if (OnClearSelection.HasDelegate)
         {
-            var dto = new GridViewPreferenceDto
-            {
-                GridKey = GridKey,
-                PageSize = _pageSize,
-                Density = _density,
-                HiddenColumns = _hiddenColumns.ToList()
-            };
-            await PreferenceService.SavePreferencesAsync(dto, "SystemUser");
-        }
-        catch
-        {
-            // Graceful fallback
+            OnClearSelection.InvokeAsync();
         }
     }
 }

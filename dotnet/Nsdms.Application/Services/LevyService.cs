@@ -49,6 +49,11 @@ public interface ILevyService
     Task<ReconciliationResult> ReconcileLevyFileAsync(int levyFileId, string currentUsername = "SYSTEM");
     Task<ReconciliationResult> ReconcileAllLinesAsync(int levyFileId, string currentUsername = "SYSTEM");
     Task<int> ReconcileEmployerLeviesAsync(string sdlNumber, string schemeYear, string currentUsername = "SYSTEM");
+
+    Task<List<SarsLevyDeviationDto>> GetLevyDeviationReportAsync(string? schemeYear = null, string? chamber = null);
+    Task<List<ChamberLevyBreakdownDto>> GetChamberLevyBreakdownAsync(string? schemeYear = null);
+    Task<List<SarsSchemeYearCalculation>> GetSchemeYearCalculationsAsync();
+    Task<SarsSchemeYearCalculation> SaveSchemeYearCalculationAsync(SarsSchemeYearCalculation config, string currentUsername = "SYSTEM");
 }
 
 public class LevyService : ILevyService
@@ -226,7 +231,9 @@ public class LevyService : ILevyService
         decimal qcto = 0m;
         decimal interest = 0m;
         decimal penalty = 0m;
+        string? extractedSic = null;
 
+        // Case 1: Full statutory 8+ column SARS file (SDL, Year, Mand, Disc, Admin, Qcto, Int, Pen, [Total], [SIC])
         if (parts.Length >= 8)
         {
             decimal.TryParse(parts[2], NumberStyles.Any, CultureInfo.InvariantCulture, out mandatory);
@@ -244,35 +251,53 @@ public class LevyService : ILevyService
             {
                 totalAmount = mandatory + discretionary + admin + qcto + interest + penalty;
             }
-        }
-        else if (parts.Length >= 3)
-        {
-            if (decimal.TryParse(parts[2], NumberStyles.Any, CultureInfo.InvariantCulture, out totalAmount))
+
+            if (parts.Length >= 10 && parts[9].Trim().Length == 5 && parts[9].Trim().All(char.IsDigit))
             {
-                var split = CalculateStatutorySplit(totalAmount);
-                mandatory = split.MandatoryGrantAmount;
-                discretionary = split.DiscretionaryGrantAmount;
-                admin = split.AdminLevyAmount;
-                qcto = split.QctoLevyAmount;
+                extractedSic = parts[9].Trim();
             }
         }
+        // Case 2: 4-column format: SDL, SchemeYear, SIC_Code, Amount
+        else if (parts.Length >= 4)
+        {
+            if (parts[2].Trim().Length == 5 && parts[2].Trim().All(char.IsDigit))
+            {
+                extractedSic = parts[2].Trim();
+            }
+            decimal.TryParse(parts[3], NumberStyles.Any, CultureInfo.InvariantCulture, out totalAmount);
+            var split = CalculateStatutorySplit(totalAmount);
+            mandatory = split.MandatoryGrantAmount;
+            discretionary = split.DiscretionaryGrantAmount;
+            admin = split.AdminLevyAmount;
+            qcto = split.QctoLevyAmount;
+        }
+        // Case 3: 3-column format: SDL, SchemeYear, Amount
+        else if (parts.Length == 3)
+        {
+            decimal.TryParse(parts[2], NumberStyles.Any, CultureInfo.InvariantCulture, out totalAmount);
+            var split = CalculateStatutorySplit(totalAmount);
+            mandatory = split.MandatoryGrantAmount;
+            discretionary = split.DiscretionaryGrantAmount;
+            admin = split.AdminLevyAmount;
+            qcto = split.QctoLevyAmount;
+        }
+        // Case 4: 2-column format: SDL, Amount
         else if (parts.Length == 2)
         {
-            if (decimal.TryParse(parts[1], NumberStyles.Any, CultureInfo.InvariantCulture, out totalAmount))
-            {
-                schemeYear = DateTime.UtcNow.Year.ToString();
-                var split = CalculateStatutorySplit(totalAmount);
-                mandatory = split.MandatoryGrantAmount;
-                discretionary = split.DiscretionaryGrantAmount;
-                admin = split.AdminLevyAmount;
-                qcto = split.QctoLevyAmount;
-            }
+            decimal.TryParse(parts[1], NumberStyles.Any, CultureInfo.InvariantCulture, out totalAmount);
+            schemeYear = DateTime.UtcNow.Year.ToString();
+            var split = CalculateStatutorySplit(totalAmount);
+            mandatory = split.MandatoryGrantAmount;
+            discretionary = split.DiscretionaryGrantAmount;
+            admin = split.AdminLevyAmount;
+            qcto = split.QctoLevyAmount;
         }
 
         return new LevyFileLine
         {
             SdlNumber = rawSdl,
             SchemeYear = schemeYear,
+            SicCode = extractedSic,
             MandatoryLevyAmount = mandatory,
             DiscretionaryLevyAmount = discretionary,
             AdminLevyAmount = admin,
@@ -359,6 +384,102 @@ public class LevyService : ILevyService
             line.CreatedBy = currentUsername;
         }
 
+        using var db = await _contextFactory.CreateDbContextAsync();
+
+        // Automated Boundary & SIC Discrepancy Engine (Option C)
+        var allSdlNumbers = parsedLines.Select(l => l.SdlNumber).Distinct().ToList();
+        var organisations = await db.Organisations.Where(o => allSdlNumbers.Contains(o.SdlNumber)).ToListAsync();
+        var distinctSicCodes = parsedLines.Where(l => !string.IsNullOrWhiteSpace(l.SicCode)).Select(l => l.SicCode!).Distinct().ToList();
+        var sicTypes = await db.SicCodeTypes.Where(s => distinctSicCodes.Contains(s.Code)).ToListAsync();
+
+        foreach (var line in parsedLines)
+        {
+            var org = organisations.FirstOrDefault(o => o.SdlNumber == line.SdlNumber);
+            var matchedSic = !string.IsNullOrWhiteSpace(line.SicCode) ? sicTypes.FirstOrDefault(s => s.Code == line.SicCode) : null;
+
+            if (matchedSic != null)
+            {
+                line.ChamberCode = matchedSic.ChamberCode;
+                line.SetaCode = matchedSic.SetaCode;
+
+                // 1. Inter-SETA Out-of-Scope Boundary Detection
+                if (matchedSic.SetaCode != "17")
+                {
+                    line.IsOutOfScopeSeta = true;
+                    db.SarsLevyReconAudits.Add(new SarsLevyReconAudit
+                    {
+                        FinancialYear = line.SchemeYear.Length >= 4 ? line.SchemeYear[..4] : DateTime.UtcNow.Year.ToString(),
+                        SchemeYear = line.SchemeYear,
+                        SdlNumber = line.SdlNumber,
+                        OrganisationId = org?.Id,
+                        TotalSarsLeviesReceived = line.TotalLevyAmount,
+                        TotalCalculatedLeviesExpected = 0m,
+                        VarianceAmount = line.TotalLevyAmount,
+                        DiscrepancyReasonCode = "OutOfScopeSeta",
+                        CounterpartSetaCode = matchedSic.SetaCode,
+                        ActualSarsSicCode = line.SicCode,
+                        ActualSarsChamberCode = matchedSic.ChamberCode,
+                        ExpectedSicCode = org?.SicCode,
+                        ExpectedChamberCode = org?.ChamberCode,
+                        AuditStatusCode = "DiscrepancyFlagged",
+                        AuditNotes = $"SARS monthly levy reported non-merSETA SIC Code '{line.SicCode}' belonging to SETA '{matchedSic.SetaCode}'. Out-of-scope Inter-SETA transfer required.",
+                        AuditorUserId = currentUsername,
+                        ReconciliationDate = DateTime.UtcNow
+                    });
+
+                    if (org != null)
+                    {
+                        var hasActiveTransfer = await db.InterSetaTransfers.AnyAsync(t => t.OrganisationId == org.Id && t.TransferStatusCode == "Initiated");
+                        if (!hasActiveTransfer)
+                        {
+                            db.InterSetaTransfers.Add(new InterSetaTransfer
+                            {
+                                OrganisationId = org.Id,
+                                TransferType = "Outgoing",
+                                OtherSetaCode = matchedSic.SetaCode,
+                                OtherSetaName = matchedSic.Description ?? $"SETA {matchedSic.SetaCode}",
+                                TransferReason = $"Automatic boundary detection: SARS reported non-merSETA SIC Code {line.SicCode} (SETA {matchedSic.SetaCode})",
+                                EffectiveDate = DateTime.UtcNow,
+                                TransferStatusCode = "Initiated",
+                                TransferAmount = line.TotalLevyAmount,
+                                CreatedAt = DateTime.UtcNow,
+                                CreatedBy = currentUsername
+                            });
+                        }
+                    }
+                }
+            }
+            else if (org != null && !string.IsNullOrWhiteSpace(org.ChamberCode))
+            {
+                line.ChamberCode = org.ChamberCode;
+            }
+
+            // 2. SIC Code Discrepancy & Chamber Misallocation Drift Check
+            if (org != null && !string.IsNullOrWhiteSpace(line.SicCode) && !string.IsNullOrWhiteSpace(org.SicCode) && line.SicCode != org.SicCode)
+            {
+                line.HasSicCodeMismatch = true;
+                db.SarsLevyReconAudits.Add(new SarsLevyReconAudit
+                {
+                    FinancialYear = line.SchemeYear.Length >= 4 ? line.SchemeYear[..4] : DateTime.UtcNow.Year.ToString(),
+                    SchemeYear = line.SchemeYear,
+                    SdlNumber = line.SdlNumber,
+                    OrganisationId = org.Id,
+                    TotalSarsLeviesReceived = line.TotalLevyAmount,
+                    TotalCalculatedLeviesExpected = line.TotalLevyAmount,
+                    VarianceAmount = 0m,
+                    DiscrepancyReasonCode = "SicCodeMismatch",
+                    ExpectedSicCode = org.SicCode,
+                    ActualSarsSicCode = line.SicCode,
+                    ExpectedChamberCode = org.ChamberCode,
+                    ActualSarsChamberCode = matchedSic?.ChamberCode,
+                    AuditStatusCode = "DiscrepancyFlagged",
+                    AuditNotes = $"SARS declared SIC Code '{line.SicCode}' (Chamber: {matchedSic?.ChamberCode ?? "Unknown"}) differs from verified master record '{org.SicCode}' (Chamber: {org.ChamberCode}).",
+                    AuditorUserId = currentUsername,
+                    ReconciliationDate = DateTime.UtcNow
+                });
+            }
+        }
+
         var levyFile = new LevyFile
         {
             FileName = fileName,
@@ -372,7 +493,6 @@ public class LevyService : ILevyService
             LineItems = parsedLines
         };
 
-        using var db = await _contextFactory.CreateDbContextAsync();
         db.LevyFiles.Add(levyFile);
         await db.SaveChangesAsync();
 
@@ -680,5 +800,246 @@ public class LevyService : ILevyService
         await db.SaveChangesAsync();
 
         return linesToReconcile.Count;
+    }
+
+    public async Task<List<SarsLevyDeviationDto>> GetLevyDeviationReportAsync(string? schemeYear = null, string? chamber = null)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+
+        var query = db.LevyFileLines.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(schemeYear))
+        {
+            query = query.Where(l => l.SchemeYear == schemeYear);
+        }
+
+        var lines = await query.ToListAsync();
+        var orgs = await db.Organisations.ToListAsync();
+        var orgDict = orgs.Where(o => !string.IsNullOrWhiteSpace(o.SdlNumber))
+                          .ToDictionary(o => o.SdlNumber.Trim().ToUpperInvariant(), o => o, StringComparer.OrdinalIgnoreCase);
+
+        var grouped = lines.GroupBy(l => l.SdlNumber.Trim().ToUpperInvariant()).ToList();
+        var report = new List<SarsLevyDeviationDto>();
+
+        foreach (var grp in grouped)
+        {
+            var sdl = grp.Key;
+            orgDict.TryGetValue(sdl, out var org);
+
+            var orgName = org?.CompanyName ?? "Unregistered Contributor";
+            var chamberCode = org?.ChamberCode ?? "OTHER";
+
+            if (!string.IsNullOrWhiteSpace(chamber) && !chamberCode.Equals(chamber, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var lineList = grp.OrderBy(l => l.CreatedAt).ToList();
+            var amounts = lineList.Select(l => l.TotalLevyAmount > 0 ? l.TotalLevyAmount : (l.MandatoryLevyAmount + l.DiscretionaryLevyAmount + l.AdminLevyAmount + l.QctoLevyAmount + l.InterestAmount + l.PenaltyAmount)).ToList();
+
+            if (amounts.Count == 0) continue;
+
+            decimal total = amounts.Sum();
+            decimal latest = amounts.Last();
+            decimal avg = total / Math.Max(1, amounts.Count);
+
+            // Sample standard deviation
+            decimal variance = 0m;
+            if (amounts.Count > 1)
+            {
+                decimal sumSquares = amounts.Sum(a => (a - avg) * (a - avg));
+                variance = sumSquares / (amounts.Count - 1);
+            }
+            decimal stdDev = (decimal)Math.Sqrt((double)variance);
+            decimal devPct = avg > 0 ? (stdDev / avg) * 100.0m : 0.0m;
+
+            var dto = new SarsLevyDeviationDto
+            {
+                SdlNumber = sdl,
+                OrganisationName = orgName,
+                ChamberCode = chamberCode,
+                SchemeYear = schemeYear ?? (lineList.FirstOrDefault()?.SchemeYear ?? DateTime.UtcNow.Year.ToString()),
+                Month1 = amounts.ElementAtOrDefault(0),
+                Month2 = amounts.ElementAtOrDefault(1),
+                Month3 = amounts.ElementAtOrDefault(2),
+                Month4 = amounts.ElementAtOrDefault(3),
+                Month5 = amounts.ElementAtOrDefault(4),
+                Month6 = amounts.ElementAtOrDefault(5),
+                Month7 = amounts.ElementAtOrDefault(6),
+                Month8 = amounts.ElementAtOrDefault(7),
+                Month9 = amounts.ElementAtOrDefault(8),
+                Month10 = amounts.ElementAtOrDefault(9),
+                Month11 = amounts.ElementAtOrDefault(10),
+                Month12 = amounts.ElementAtOrDefault(11),
+                TotalLevy = total,
+                LatestLevy = latest,
+                AverageMonthlyLevy = Math.Round(avg, 2),
+                StandardDeviation = Math.Round(stdDev, 2),
+                DeviationPercentage = Math.Round(devPct, 2),
+                LevyStatus = (avg >= 40000m && devPct >= 20.0m) ? "Inconsistent" : "Consistent"
+            };
+
+            report.Add(dto);
+        }
+
+        return report.OrderByDescending(r => r.DeviationPercentage).ToList();
+    }
+
+    public async Task<List<ChamberLevyBreakdownDto>> GetChamberLevyBreakdownAsync(string? schemeYear = null)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+
+        var linesQuery = db.LevyFileLines.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(schemeYear))
+        {
+            linesQuery = linesQuery.Where(l => l.SchemeYear == schemeYear);
+        }
+
+        var lines = await linesQuery.ToListAsync();
+        var orgs = await db.Organisations.ToListAsync();
+        var orgDict = orgs.Where(o => !string.IsNullOrWhiteSpace(o.SdlNumber))
+                          .ToDictionary(o => o.SdlNumber.Trim().ToUpperInvariant(), o => o, StringComparer.OrdinalIgnoreCase);
+
+        // Load active Chambers dynamically from the database lookup table (zero hardcoding)
+        var dbChambers = await db.ChamberTypes.Where(c => c.Active).OrderBy(c => c.Name).ToListAsync();
+        
+        var breakdownMap = new Dictionary<string, ChamberLevyBreakdownDto>(StringComparer.OrdinalIgnoreCase);
+        var seenEmployersPerChamber = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var ch in dbChambers)
+        {
+            var code = ch.Code.Trim().ToUpperInvariant();
+            breakdownMap[code] = new ChamberLevyBreakdownDto
+            {
+                ChamberCode = code,
+                ChamberName = ch.Name
+            };
+            seenEmployersPerChamber[code] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        // Always ensure a fallback "OTHER" chamber exists for unallocated or unclassified employers
+        if (!breakdownMap.ContainsKey("OTHER"))
+        {
+            breakdownMap["OTHER"] = new ChamberLevyBreakdownDto
+            {
+                ChamberCode = "OTHER",
+                ChamberName = "Other / Unassigned Sector"
+            };
+            seenEmployersPerChamber["OTHER"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        foreach (var line in lines)
+        {
+            var sdl = line.SdlNumber.Trim().ToUpperInvariant();
+            string chamber = "OTHER";
+            if (orgDict.TryGetValue(sdl, out var org) && !string.IsNullOrWhiteSpace(org.ChamberCode))
+            {
+                var orgChamber = org.ChamberCode.Trim().ToUpperInvariant();
+                if (breakdownMap.ContainsKey(orgChamber))
+                {
+                    chamber = orgChamber;
+                }
+                else
+                {
+                    // Match by partial prefix or canonical name if code was saved with suffix (e.g. AUTO_CHAM vs AUTO)
+                    var matched = breakdownMap.Keys.FirstOrDefault(k => orgChamber.StartsWith(k) || k.StartsWith(orgChamber));
+                    chamber = matched ?? "OTHER";
+                }
+            }
+
+            var dto = breakdownMap[chamber];
+            dto.TotalGrossLevy += line.TotalLevyAmount > 0 ? line.TotalLevyAmount : (line.MandatoryLevyAmount + line.DiscretionaryLevyAmount + line.AdminLevyAmount + line.QctoLevyAmount + line.InterestAmount + line.PenaltyAmount);
+            dto.MandatoryGrantPortion += line.MandatoryLevyAmount;
+            dto.DiscretionaryGrantPortion += line.DiscretionaryLevyAmount;
+            dto.AdminPortion += line.AdminLevyAmount;
+            dto.QctoPortion += line.QctoLevyAmount;
+            dto.InterestAndPenalties += (line.InterestAmount + line.PenaltyAmount);
+
+            seenEmployersPerChamber[chamber].Add(sdl);
+        }
+
+        foreach (var kvp in breakdownMap)
+        {
+            kvp.Value.EmployerCount = seenEmployersPerChamber[kvp.Key].Count;
+        }
+
+        return breakdownMap.Values.OrderByDescending(b => b.TotalGrossLevy).ToList();
+    }
+
+    public async Task<List<SarsSchemeYearCalculation>> GetSchemeYearCalculationsAsync()
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var list = await db.SarsSchemeYearCalculations.OrderByDescending(s => s.SchemeYear).ToListAsync();
+        if (list.Count == 0)
+        {
+            // Seed current defaults
+            var defaultCurr = new SarsSchemeYearCalculation
+            {
+                SchemeYear = DateTime.UtcNow.Year.ToString(),
+                MandatoryPercentage = 20.0m,
+                DiscretionaryPercentage = 49.5m,
+                AdminPercentage = 10.5m,
+                QctoPercentage = 0.5m,
+                TotalPercentage = 80.5m,
+                AllowReturnsMandatory = true,
+                AllowInvoicesMandatory = true,
+                AllowReturnsDiscretionary = true,
+                AllowInvoicesDiscretionary = true,
+                StatusCode = "Active",
+                Notes = "Default Statutory Split for Skills Development Levy Scheme Year."
+            };
+            db.SarsSchemeYearCalculations.Add(defaultCurr);
+            await db.SaveChangesAsync();
+            list.Add(defaultCurr);
+        }
+        return list;
+    }
+
+    public async Task<SarsSchemeYearCalculation> SaveSchemeYearCalculationAsync(SarsSchemeYearCalculation config, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        if (config.Id == 0)
+        {
+            config.CreatedAt = DateTime.UtcNow;
+            config.CreatedBy = currentUsername;
+            db.SarsSchemeYearCalculations.Add(config);
+            await db.SaveChangesAsync();
+            _audit.LogAction(db, "SarsSchemeYearCalculation", config.Id, "Create", currentUsername, null, config);
+            await db.SaveChangesAsync();
+            return config;
+        }
+        else
+        {
+            var existing = await db.SarsSchemeYearCalculations.FindAsync(config.Id);
+            if (existing == null) throw new KeyNotFoundException($"SarsSchemeYearCalculation ID {config.Id} not found.");
+
+            var before = new
+            {
+                existing.SchemeYear,
+                existing.MandatoryPercentage,
+                existing.DiscretionaryPercentage,
+                existing.AdminPercentage,
+                existing.QctoPercentage,
+                existing.StatusCode
+            };
+
+            existing.SchemeYear = config.SchemeYear;
+            existing.MandatoryPercentage = config.MandatoryPercentage;
+            existing.DiscretionaryPercentage = config.DiscretionaryPercentage;
+            existing.AdminPercentage = config.AdminPercentage;
+            existing.QctoPercentage = config.QctoPercentage;
+            existing.TotalPercentage = config.MandatoryPercentage + config.DiscretionaryPercentage + config.AdminPercentage + config.QctoPercentage;
+            existing.AllowReturnsMandatory = config.AllowReturnsMandatory;
+            existing.AllowInvoicesMandatory = config.AllowInvoicesMandatory;
+            existing.AllowReturnsDiscretionary = config.AllowReturnsDiscretionary;
+            existing.AllowInvoicesDiscretionary = config.AllowInvoicesDiscretionary;
+            existing.StatusCode = config.StatusCode;
+            existing.Notes = config.Notes;
+            existing.ModifiedAt = DateTime.UtcNow;
+            existing.ModifiedBy = currentUsername;
+
+            _audit.LogAction(db, "SarsSchemeYearCalculation", existing.Id, "Update", currentUsername, before, existing);
+            await db.SaveChangesAsync();
+            return existing;
+        }
     }
 }

@@ -1,3 +1,4 @@
+@page "/finance/mg-rebates"
 @page "/finance/levy-rebates"
 @inject IFinanceService FinanceService
 @inject NavigationManager Navigation
@@ -6,12 +7,12 @@
 
 <div class="d-flex justify-space-between align-center mb-4">
     <div>
-        <MudText Typo="Typo.h5" Class="font-weight-bold">Mandatory Grant 20% Rebate Payout Engine</MudText>
+        <MudText Typo="Typo.h5" Class="font-weight-bold">Mandatory Grant (MG) 20% Rebate Payout Engine</MudText>
         <MudText Typo="Typo.body2" Color="Color.Secondary">Statutory 20% Skills Development Levy rebate payouts for employers submitting compliant WSP/ATR</MudText>
     </div>
     <div class="d-flex gap-2">
-        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Description" OnClick="@(() => Navigation.NavigateTo("/finance/grants"))">
-            Grant MOAs & Tranches
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Description" OnClick="@(() => Navigation.NavigateTo("/finance/dg-moa"))">
+            Discretionary Grant (DG) MOAs
         </MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Calculate" OnClick="CalculateRebates">
             Calculate FY @_selectedFinYear Rebates
@@ -217,7 +218,7 @@
     private async Task PayoutDisbursement(int id)
     {
         await FinanceService.ProcessMandatoryDisbursementPayoutAsync(id, "finance@merseta.org.za");
-        Snackbar.Add("Mandatory rebate disbursement marked as PAID via EFT release.", Severity.Success);
+        Snackbar.Add("Mandatory grant rebate marked as Disbursed. Remittance advice generated.", Severity.Success);
         await LoadData();
     }
 

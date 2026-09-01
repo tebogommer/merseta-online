@@ -125,6 +125,10 @@ BEGIN
         PhysicalAddress NVARCHAR(500) NULL,
         PostalAddress NVARCHAR(500) NULL,
         IsActive BIT NOT NULL CONSTRAINT DF_Organisation_IsActive DEFAULT 1,
+        IsManualChamberOverride BIT NOT NULL CONSTRAINT DF_Organisation_IsManualChamberOverride DEFAULT 0,
+        ChamberOverrideReason NVARCHAR(500) NULL,
+        ChamberOverrideDate DATETIME2(7) NULL,
+        ChamberOverrideApprovedBy NVARCHAR(100) NULL,
         CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_Organisation_CreatedAt DEFAULT SYSUTCDATETIME(),
         CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_Organisation_CreatedBy DEFAULT N'SYSTEM',
         ModifiedAt DATETIME2(7) NULL,
@@ -133,6 +137,7 @@ BEGIN
     CREATE UNIQUE NONCLUSTERED INDEX UX_Organisation_SdlNumber ON dbo.Organisation (SdlNumber);
     CREATE NONCLUSTERED INDEX IX_Organisation_CompanyName ON dbo.Organisation (CompanyName);
     CREATE NONCLUSTERED INDEX IX_Organisation_Status ON dbo.Organisation (OrganisationStatusCode);
+    CREATE NONCLUSTERED INDEX IX_Organisation_IsManualChamberOverride ON dbo.Organisation (IsManualChamberOverride);
     PRINT 'Created table [dbo].[Organisation].';
 END
 
@@ -443,6 +448,32 @@ BEGIN
     PRINT 'Created table [dbo].[SarsLevyReconAudit].';
 END
 
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'SarsSchemeYearCalculation' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.SarsSchemeYearCalculation (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_SarsSchemeYearCalculation PRIMARY KEY CLUSTERED,
+        SchemeYear NVARCHAR(10) NOT NULL,
+        MandatoryPercentage DECIMAL(18,2) NOT NULL CONSTRAINT DF_SarsCalc_Mandatory DEFAULT 20.0,
+        DiscretionaryPercentage DECIMAL(18,2) NOT NULL CONSTRAINT DF_SarsCalc_Discretionary DEFAULT 49.5,
+        AdminPercentage DECIMAL(18,2) NOT NULL CONSTRAINT DF_SarsCalc_Admin DEFAULT 10.5,
+        QctoPercentage DECIMAL(18,2) NOT NULL CONSTRAINT DF_SarsCalc_Qcto DEFAULT 0.5,
+        TotalPercentage DECIMAL(18,2) NOT NULL CONSTRAINT DF_SarsCalc_Total DEFAULT 80.5,
+        AllowReturnsMandatory BIT NOT NULL CONSTRAINT DF_SarsCalc_RetMandatory DEFAULT 1,
+        AllowInvoicesMandatory BIT NOT NULL CONSTRAINT DF_SarsCalc_InvMandatory DEFAULT 1,
+        AllowReturnsDiscretionary BIT NOT NULL CONSTRAINT DF_SarsCalc_RetDiscretionary DEFAULT 1,
+        AllowInvoicesDiscretionary BIT NOT NULL CONSTRAINT DF_SarsCalc_InvDiscretionary DEFAULT 1,
+        StatusCode NVARCHAR(50) NOT NULL CONSTRAINT DF_SarsCalc_Status DEFAULT N'Active',
+        Notes NVARCHAR(MAX) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_SarsCalc_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_SarsCalc_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_SarsCalc_SchemeYear ON dbo.SarsSchemeYearCalculation (SchemeYear);
+    CREATE NONCLUSTERED INDEX IX_SarsCalc_Status ON dbo.SarsSchemeYearCalculation (StatusCode);
+    PRINT 'Created table [dbo].[SarsSchemeYearCalculation].';
+END
+
 -- 11. Workplace Monitoring & Audits (Area 10)
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'WorkplaceMonitoringSiteVisit' AND schema_id = SCHEMA_ID(N'dbo'))
 BEGIN
@@ -575,18 +606,18 @@ BEGIN
         id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_ContractAddenda PRIMARY KEY CLUSTERED,
         GrantMoaId INT NOT NULL CONSTRAINT FK_Addenda_Moa FOREIGN KEY REFERENCES dbo.GrantMoa(id),
         AddendaNumber NVARCHAR(50) NOT NULL,
-        AddendaTypeCode NVARCHAR(50) NOT NULL CONSTRAINT DF_Addenda_Type DEFAULT N'ValueAndTimeline',
+        VariationTypeCode NVARCHAR(50) NOT NULL CONSTRAINT DF_Addenda_Type DEFAULT N'TimelineExtension',
         OriginalContractValue DECIMAL(18,2) NOT NULL,
         RevisedContractValue DECIMAL(18,2) NOT NULL,
-        ContractValueVariance DECIMAL(18,2) NOT NULL,
         OriginalEndDate DATETIME2(7) NOT NULL,
         RevisedEndDate DATETIME2(7) NOT NULL,
-        MotivationReason NVARCHAR(MAX) NOT NULL,
-        AddendaDocumentPath NVARCHAR(500) NULL,
-        StatusCode NVARCHAR(50) NOT NULL CONSTRAINT DF_Addenda_Status DEFAULT N'SubmittedForReview',
-        ExecutiveApprovalDate DATETIME2(7) NULL,
+        MotivationReason NVARCHAR(1000) NOT NULL,
+        StatusCode NVARCHAR(50) NOT NULL CONSTRAINT DF_Addenda_Status DEFAULT N'Draft',
+        LegalReviewerUserId NVARCHAR(100) NULL,
+        LegalReviewDate DATETIME2(7) NULL,
+        LegalReviewComments NVARCHAR(MAX) NULL,
         ExecutiveApprovedByUserId NVARCHAR(100) NULL,
-        ExecutiveNotes NVARCHAR(500) NULL,
+        ExecutiveApprovalDate DATETIME2(7) NULL,
         CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_Addenda_CreatedAt DEFAULT SYSUTCDATETIME(),
         CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_Addenda_CreatedBy DEFAULT N'SYSTEM',
         ModifiedAt DATETIME2(7) NULL,
@@ -594,6 +625,7 @@ BEGIN
     );
     CREATE UNIQUE NONCLUSTERED INDEX UX_Addenda_Number ON dbo.ContractAddenda (AddendaNumber);
     CREATE NONCLUSTERED INDEX IX_Addenda_Moa ON dbo.ContractAddenda (GrantMoaId);
+    CREATE NONCLUSTERED INDEX IX_Addenda_Status ON dbo.ContractAddenda (StatusCode);
     PRINT 'Created table [dbo].[ContractAddenda].';
 END
 
@@ -849,8 +881,182 @@ BEGIN
         ALTER TABLE dbo.WorkplaceApprovalMentor ADD IsRatioExempt BIT NOT NULL CONSTRAINT DF_WPAMentor_Exempt DEFAULT 0;
     IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WorkplaceApprovalMentor') AND name = 'IsRatioEnforced')
         ALTER TABLE dbo.WorkplaceApprovalMentor ADD IsRatioEnforced BIT NOT NULL CONSTRAINT DF_WPAMentor_Enforced DEFAULT 1;
-    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WorkplaceApprovalMentor') AND name = 'Notes')
-        ALTER TABLE dbo.WorkplaceApprovalMentor ADD Notes NVARCHAR(500) NULL;
+END
+
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantApplication')
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'WspSubmissionId')
+        ALTER TABLE dbo.GrantApplication ADD WspSubmissionId INT NULL;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'IsWspCompliant')
+        ALTER TABLE dbo.GrantApplication ADD IsWspCompliant BIT NOT NULL CONSTRAINT DF_GrantApp_WspCompliant DEFAULT 0;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'IsWspExempt')
+        ALTER TABLE dbo.GrantApplication ADD IsWspExempt BIT NOT NULL CONSTRAINT DF_GrantApp_WspExempt DEFAULT 0;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'WspExemptionReason')
+        ALTER TABLE dbo.GrantApplication ADD WspExemptionReason NVARCHAR(500) NULL;
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GrantApplication_WspSubmission' AND object_id = OBJECT_ID('GrantApplication'))
+        CREATE NONCLUSTERED INDEX IX_GrantApplication_WspSubmission ON dbo.GrantApplication (WspSubmissionId);
+END
+
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantFundingWindow')
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantFundingWindow') AND name = 'Description')
+        ALTER TABLE dbo.GrantFundingWindow ADD Description NVARCHAR(MAX) NULL;
+END
+
+-- 29. Training Committees, Members & WSP Disputes
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'TrainingCommittee' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.TrainingCommittee (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_TrainingCommittee PRIMARY KEY CLUSTERED,
+        OrganisationId INT NOT NULL CONSTRAINT FK_TrainingCommittee_Org FOREIGN KEY REFERENCES dbo.Organisation(id),
+        FinancialYear INT NOT NULL CONSTRAINT DF_TrainingCommittee_Year DEFAULT 2026,
+        CommitteeStatusCode NVARCHAR(50) NOT NULL CONSTRAINT DF_TrainingCommittee_Status DEFAULT N'Active',
+        ConstitutionalQuorumMet BIT NOT NULL CONSTRAINT DF_TrainingCommittee_Quorum DEFAULT 1,
+        LastMeetingDate DATETIME2(7) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_TrainingCommittee_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_TrainingCommittee_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_TrainingCommittee_Org ON dbo.TrainingCommittee (OrganisationId);
+    CREATE NONCLUSTERED INDEX IX_TrainingCommittee_Year ON dbo.TrainingCommittee (FinancialYear);
+    PRINT 'Created table [dbo].[TrainingCommittee].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'TrainingCommitteeMember' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.TrainingCommitteeMember (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_TrainingCommitteeMember PRIMARY KEY CLUSTERED,
+        TrainingCommitteeId INT NOT NULL CONSTRAINT FK_TrainingCommitteeMember_Committee FOREIGN KEY REFERENCES dbo.TrainingCommittee(id) ON DELETE CASCADE,
+        PersonId INT NOT NULL CONSTRAINT FK_TrainingCommitteeMember_Person FOREIGN KEY REFERENCES dbo.Person(id),
+        MemberRoleCode NVARCHAR(50) NOT NULL CONSTRAINT DF_TrainingCommitteeMember_Role DEFAULT N'UnionRepresentative',
+        Constituency NVARCHAR(50) NOT NULL CONSTRAINT DF_TrainingCommitteeMember_Const DEFAULT N'NUMSA',
+        IsActive BIT NOT NULL CONSTRAINT DF_TrainingCommitteeMember_Active DEFAULT 1,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_TrainingCommitteeMember_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_TrainingCommitteeMember_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_TrainingCommitteeMember_Committee ON dbo.TrainingCommitteeMember (TrainingCommitteeId);
+    CREATE NONCLUSTERED INDEX IX_TrainingCommitteeMember_Person ON dbo.TrainingCommitteeMember (PersonId);
+    PRINT 'Created table [dbo].[TrainingCommitteeMember].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'WspDispute' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.WspDispute (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_WspDispute PRIMARY KEY CLUSTERED,
+        OrganisationId INT NOT NULL CONSTRAINT FK_WspDispute_Org FOREIGN KEY REFERENCES dbo.Organisation(id),
+        WspSubmissionId INT NULL CONSTRAINT FK_WspDispute_Wsp FOREIGN KEY REFERENCES dbo.WspSubmission(id),
+        DisputeReferenceNumber NVARCHAR(50) NOT NULL,
+        DisputeReasonCode NVARCHAR(50) NOT NULL CONSTRAINT DF_WspDispute_Reason DEFAULT N'UnionRefusalToSign',
+        Description NVARCHAR(2000) NOT NULL,
+        DisputeStatusCode NVARCHAR(50) NOT NULL CONSTRAINT DF_WspDispute_Status DEFAULT N'Logged',
+        ResolutionDate DATETIME2(7) NULL,
+        ResolutionNotes NVARCHAR(2000) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_WspDispute_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_WspDispute_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_WspDispute_Org ON dbo.WspDispute (OrganisationId);
+    CREATE NONCLUSTERED INDEX IX_WspDispute_Ref ON dbo.WspDispute (DisputeReferenceNumber);
+    CREATE NONCLUSTERED INDEX IX_WspDispute_Status ON dbo.WspDispute (DisputeStatusCode);
+    CREATE NONCLUSTERED INDEX IX_WspDispute_Wsp ON dbo.WspDispute (WspSubmissionId);
+    PRINT 'Created table [dbo].[WspDispute].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'WspSkillsGap' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.WspSkillsGap (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_WspSkillsGap PRIMARY KEY CLUSTERED,
+        OrganisationId INT NOT NULL CONSTRAINT FK_WspSkillsGap_Org FOREIGN KEY REFERENCES dbo.Organisation(id),
+        FinancialYear INT NOT NULL CONSTRAINT DF_WspSkillsGap_Year DEFAULT 2026,
+        OfoCode NVARCHAR(50) NOT NULL CONSTRAINT DF_WspSkillsGap_Ofo DEFAULT N'651202',
+        OccupationTitle NVARCHAR(200) NOT NULL CONSTRAINT DF_WspSkillsGap_Title DEFAULT N'Welder',
+        HardToFillVacanciesCount INT NOT NULL CONSTRAINT DF_WspSkillsGap_Vacancies DEFAULT 0,
+        SkillsGapReason NVARCHAR(1000) NOT NULL CONSTRAINT DF_WspSkillsGap_Reason DEFAULT N'',
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_WspSkillsGap_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_WspSkillsGap_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_WspSkillsGap_Org ON dbo.WspSkillsGap (OrganisationId);
+    CREATE NONCLUSTERED INDEX IX_WspSkillsGap_Year ON dbo.WspSkillsGap (FinancialYear);
+    PRINT 'Created table [dbo].[WspSkillsGap].';
+END
+
+-- 30. DG Project Implementation Plans (PIP) & Payment Claims
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'ProjectImplementationPlan' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.ProjectImplementationPlan (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_ProjectImplementationPlan PRIMARY KEY CLUSTERED,
+        OrganisationId INT NOT NULL CONSTRAINT FK_PIP_Org FOREIGN KEY REFERENCES dbo.Organisation(id),
+        FundingWindowId INT NULL CONSTRAINT FK_PIP_Window FOREIGN KEY REFERENCES dbo.GrantFundingWindow(id),
+        GrantApplicationId INT NULL CONSTRAINT FK_PIP_App FOREIGN KEY REFERENCES dbo.GrantApplication(id),
+        PlanReferenceNumber NVARCHAR(50) NOT NULL,
+        InterventionTypeCode NVARCHAR(50) NOT NULL CONSTRAINT DF_PIP_Intervention DEFAULT N'Learnership',
+        TotalAwardedAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_PIP_TotalAwarded DEFAULT 0.00,
+        RecoverableAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_PIP_Recoverable DEFAULT 0.00,
+        TotalLearnersAwarded INT NOT NULL CONSTRAINT DF_PIP_TotalLearners DEFAULT 0,
+        LearnersWithDisabilityCount INT NOT NULL CONSTRAINT DF_PIP_Disabled DEFAULT 0,
+        StatusCode NVARCHAR(50) NOT NULL CONSTRAINT DF_PIP_Status DEFAULT N'Draft',
+        ContractSignOffDate DATETIME2(7) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_PIP_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_PIP_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_PIP_Org ON dbo.ProjectImplementationPlan (OrganisationId);
+    CREATE NONCLUSTERED INDEX IX_PIP_Window ON dbo.ProjectImplementationPlan (FundingWindowId);
+    CREATE NONCLUSTERED INDEX IX_PIP_App ON dbo.ProjectImplementationPlan (GrantApplicationId);
+    CREATE NONCLUSTERED INDEX IX_PIP_Ref ON dbo.ProjectImplementationPlan (PlanReferenceNumber);
+    CREATE NONCLUSTERED INDEX IX_PIP_Status ON dbo.ProjectImplementationPlan (StatusCode);
+    PRINT 'Created table [dbo].[ProjectImplementationPlan].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'PipLearnerAllocation' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.PipLearnerAllocation (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_PipLearnerAllocation PRIMARY KEY CLUSTERED,
+        ProjectImplementationPlanId INT NOT NULL CONSTRAINT FK_PipAlloc_Plan FOREIGN KEY REFERENCES dbo.ProjectImplementationPlan(id) ON DELETE CASCADE,
+        SaqaQualificationId INT NULL,
+        QualificationTitle NVARCHAR(250) NULL,
+        LearnerCount INT NOT NULL CONSTRAINT DF_PipAlloc_Count DEFAULT 0,
+        UnitCost DECIMAL(18,2) NOT NULL CONSTRAINT DF_PipAlloc_UnitCost DEFAULT 0.00,
+        TotalAllowanceBudget DECIMAL(18,2) NOT NULL CONSTRAINT DF_PipAlloc_Allowance DEFAULT 0.00,
+        TotalTuitionBudget DECIMAL(18,2) NOT NULL CONSTRAINT DF_PipAlloc_Tuition DEFAULT 0.00,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_PipAlloc_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_PipAlloc_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_PipAlloc_Plan ON dbo.PipLearnerAllocation (ProjectImplementationPlanId);
+    PRINT 'Created table [dbo].[PipLearnerAllocation].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'GrantPaymentClaim' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.GrantPaymentClaim (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_GrantPaymentClaim PRIMARY KEY CLUSTERED,
+        ProjectImplementationPlanId INT NOT NULL CONSTRAINT FK_GrantClaim_Plan FOREIGN KEY REFERENCES dbo.ProjectImplementationPlan(id) ON DELETE CASCADE,
+        ClaimNumber NVARCHAR(50) NOT NULL,
+        TrancheNumber INT NOT NULL CONSTRAINT DF_GrantClaim_Tranche DEFAULT 1,
+        ClaimAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_GrantClaim_Amount DEFAULT 0.00,
+        DeliverableDescription NVARCHAR(1000) NOT NULL CONSTRAINT DF_GrantClaim_Deliverable DEFAULT N'',
+        StatusCode NVARCHAR(50) NOT NULL CONSTRAINT DF_GrantClaim_Status DEFAULT N'PendingSubmission',
+        ApprovalDate DATETIME2(7) NULL,
+        ApprovedByUserId NVARCHAR(100) NULL,
+        ErpBatchNumber NVARCHAR(100) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_GrantClaim_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_GrantClaim_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_GrantClaim_Plan ON dbo.GrantPaymentClaim (ProjectImplementationPlanId);
+    CREATE NONCLUSTERED INDEX IX_GrantClaim_Number ON dbo.GrantPaymentClaim (ClaimNumber);
+    CREATE NONCLUSTERED INDEX IX_GrantClaim_Status ON dbo.GrantPaymentClaim (StatusCode);
+    PRINT 'Created table [dbo].[GrantPaymentClaim].';
 END
 
 PRINT 'Complete Idempotent Enterprise DDL Deployment Succeeded!';

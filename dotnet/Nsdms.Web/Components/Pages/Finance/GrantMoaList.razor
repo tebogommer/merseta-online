@@ -1,3 +1,4 @@
+@page "/finance/dg-moa"
 @page "/finance"
 @page "/finance/grants"
 @using Nsdms.Application.Services
@@ -15,23 +16,25 @@
   Clauses: 4.2, 4.3, 4.4, 6.1, 7.2, 8.1, 8.3, 11.1–11.9, 15.2.5
 *@
 
-<EntityHeader Title="Grant MOAs &amp; Tranche Disbursements"
+<PageTitle>Discretionary Grant (DG) MOAs - merSETA NSDMS</PageTitle>
+
+<EntityHeader Title="Discretionary Grant (DG) MOAs &amp; Tranches"
               Subtitle="Memorandum of Agreements, milestone deliverable contracting, and tranche invoice payment matrix"
-              ReferenceKey="T1-FINANCE-MOA"
+              ReferenceKey="T1-FINANCE-DG-MOA"
               Status="Active"
               BreadcrumbItems="@_breadcrumbs">
     <ActionZone>
         <MudButton Variant="Variant.Outlined" 
                    Color="Color.Primary" 
                    StartIcon="@Icons.Material.Filled.Payments" 
-                   OnClick="@(() => Navigation.NavigateTo("/finance/levy-rebates"))">
-            Mandatory Rebates
+                   OnClick="@(() => Navigation.NavigateTo("/finance/mg-rebates"))">
+            Mandatory Grant (MG) Rebates
         </MudButton>
         <MudButton Variant="Variant.Filled" 
                    Color="Color.Primary" 
                    StartIcon="@Icons.Material.Filled.PostAdd" 
-                   OnClick="@(() => Navigation.NavigateTo("/finance/grants/create"))">
-            New Grant MOA
+                   OnClick="@(() => Navigation.NavigateTo("/finance/dg-moa/create"))">
+            New DG MOA Contract
         </MudButton>
     </ActionZone>
 </EntityHeader>
@@ -136,7 +139,7 @@
             <RowTemplate>
                 <!-- Key column is real hyperlink (Clause 11.1) -->
                 <MudTd DataLabel="MOA Number">
-                    <a href="/finance/grants/@context.Id" class="d-flex align-center gap-1 font-monospace fw-bold text-primary text-decoration-none">
+                    <a href="/finance/dg-moa/@context.Id" class="d-flex align-center gap-1 font-monospace fw-bold text-primary text-decoration-none">
                         <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
                         <span>@(string.IsNullOrWhiteSpace(context.MoaNumber) ? $"MOA-{context.Id}" : context.MoaNumber)</span>
                     </a>
@@ -167,12 +170,12 @@
                 </MudTd>
                 <MudTd Style="text-align:right" DataLabel="Actions">
                     <div class="d-flex justify-end gap-1">
-                        <MudTooltip Text="View MOA">
+                        <MudTooltip Text="View DG MOA">
                             <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
                                            Color="Color.Primary" 
                                            Size="Size.Small" 
-                                           OnClick="@(() => Navigation.NavigateTo($"/finance/grants/{context.Id}"))" 
-                                           aria-label="View MOA" />
+                                           OnClick="@(() => Navigation.NavigateTo($"/finance/dg-moa/{context.Id}"))" 
+                                           aria-label="View DG MOA" />
                         </MudTooltip>
                     </div>
                 </MudTd>
@@ -196,7 +199,7 @@
     {
         new BreadcrumbItem("Home", href: "/"),
         new BreadcrumbItem("Finance & Disbursements", href: null, disabled: true),
-        new BreadcrumbItem("Grant MOAs", href: "/finance/grants")
+        new BreadcrumbItem("Discretionary Grant (DG) MOAs", href: "/finance/dg-moa")
     };
 
     protected override async Task OnInitializedAsync()

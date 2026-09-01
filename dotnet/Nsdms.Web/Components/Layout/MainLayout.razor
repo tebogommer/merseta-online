@@ -11,60 +11,54 @@
 @inject IJSRuntime JS
 @inject NavigationManager Nav
 
-<MudThemeProvider Theme="_customTheme" @bind-IsDarkMode="_isDarkMode" />
+<MudThemeProvider @ref="_mudThemeProvider" Theme="_customTheme" @bind-IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
-<MudDialogProvider />
+<MudDialogProvider FullWidth="true" MaxWidth="MaxWidth.Medium" CloseButton="true" />
 <MudSnackbarProvider />
 
 <div class="nsdms-app-shell">
-    <a href="#main-content" class="nsdms-skip-link">Skip to Main Content</a>
+    <!-- Accessible Skip-to-Content Link (WCAG 2.2 AA) -->
+    <a href="#main-content"
+       class="sr-only focus:not-sr-only nsdms-skip-link"
+       style="position: absolute; left: 16px; top: -100px; background: var(--brand-navy-surface); color: var(--text-primary); font-weight: 600; padding: 10px 18px; z-index: 9999; border-radius: 6px; border: 2px solid var(--brand-gold); transition: top 0.2s;"
+       onfocus="this.style.top='16px'"
+       onblur="this.style.top='-100px'">
+        Skip to main content
+    </a>
 
     <MudLayout>
-        <!-- Modernized 56px Enterprise Top Bar -->
-        <MudAppBar Elevation="0" Class="nsdms-top-bar px-4" role="banner" Style="background-color: var(--mud-palette-appbar-background); color: var(--mud-palette-appbar-text);">
+        <!-- Modernized 60px Enterprise Top Bar -->
+        <MudAppBar Elevation="0" Dense="true" Fixed="true" role="banner" Class="app-header-modern px-4" Style="border-bottom: 1px solid var(--border); height: 60px;">
             <MudIconButton Icon="@Icons.Material.Filled.Menu" 
-                           Color="Color.Inherit" 
+                           Color="Color.Default" 
                            Edge="Edge.Start" 
                            OnClick="@((e) => DrawerToggle())" 
-                           aria-label="Toggle navigation sidebar" />
+                           aria-label="Toggle navigation menu" />
 
-            <!-- merSETA Brand & System Identity -->
-            <div class="d-flex align-center gap-2 ml-2">
-                <div class="d-flex align-center justify-center rounded" style="width: 32px; height: 32px; background: var(--mud-palette-primary); color: #ffffff; font-weight: 800; font-size: 0.9rem; letter-spacing: -0.02em;">
-                    mS
-                </div>
-                <div class="d-flex flex-column">
-                    <span class="font-weight-bold" style="font-size: 0.95rem; line-height: 1.2; letter-spacing: -0.01em;">
-                        merSETA NSDMS
-                    </span>
-                    <span class="d-none d-sm-inline" style="font-size: 0.68rem; opacity: 0.75; line-height: 1;">
-                        Enterprise Operations &amp; Governance
-                    </span>
-                </div>
+            <!-- merSETA Brand & System Identity matching exact screenshot -->
+            <div class="d-flex align-center ml-2">
+                <span class="nsdms-brand-title">merSETA</span>
+                <span class="nsdms-brand-divider">|</span>
+                <span class="nsdms-brand-subtitle d-none d-sm-inline">@GetCurrentModuleSubtitle()</span>
             </div>
 
             <MudSpacer />
 
-            <!-- Dynamic Persona Context Switcher (Option C) -->
-            <div class="mr-2">
-                <PersonaSwitcher ActivePersona="@_activePersona" OnPersonaChanged="@HandlePersonaChanged" />
-            </div>
-
-            <!-- Global Universal OmniSearch & Command Palette Launcher -->
-            <div class="d-none d-md-flex align-center px-3 py-1 rounded mr-3" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12); cursor: pointer;" @onclick="OpenCommandPalette" title="Search Everything &amp; Jump (Ctrl + K)">
-                <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" Style="opacity: 0.75; font-size: 1rem;" Class="mr-2" />
-                <span style="font-size: 0.78rem; opacity: 0.75;">Search &amp; jump...</span>
-                <span class="kbd-shortcut ml-3" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.25); color: #ffffff;">Ctrl + K</span>
+            <!-- Global Universal OmniSearch & Command Palette Launcher (Ctrl + K) -->
+            <div class="d-none d-md-flex align-center px-3 py-1 rounded mr-3" style="background: var(--surface-subtle); border: 1px solid var(--border); cursor: pointer;" @onclick="OpenCommandPalette" title="Search Everything &amp; Jump (Ctrl + K)">
+                <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" Style="opacity: 0.75; font-size: 1rem;" Class="mr-2 text-secondary" />
+                <span class="text-secondary" style="font-size: 0.78rem;">Search &amp; jump...</span>
+                <span class="kbd-shortcut ml-3">Ctrl + K</span>
             </div>
 
             <!-- Real-time Notifications Bell with Badge -->
             <MudBadge Content="@_unreadCount" Color="Color.Error" Overlap="true" Visible="@(_unreadCount > 0)" Class="mr-2">
-                <MudMenu Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" AriaLabel="Live Notifications Menu" Title="Live Notifications Menu">
-                    <div class="pa-3" style="min-width: 320px; max-width: 400px;">
+                <MudMenu Icon="@Icons.Material.Filled.Notifications" Color="Color.Default" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" AriaLabel="Live Notifications Menu" Title="Live Notifications Menu">
+                    <div class="pa-3" style="min-width: 320px; max-width: 400px; background: var(--surface);">
                         <div class="d-flex justify-space-between align-center mb-2">
                             <div>
                                 <MudText Typo="Typo.subtitle2" Class="fw-bold" Color="Color.Primary">Operational Notifications</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Real-Time SignalR &amp; In-App Alerts</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Live Notifications</MudText>
                             </div>
                             <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" OnClick="@MarkAllNotificationsReadAsync" Disabled="@(_unreadCount == 0)">
                                 Mark all read
@@ -103,8 +97,8 @@
             </MudBadge>
             
             <!-- Keyboard Shortcuts Helper Menu -->
-            <MudMenu Icon="@Icons.Material.Filled.Keyboard" Color="Color.Inherit" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" AriaLabel="Keyboard Shortcuts Guide" Title="Keyboard Shortcuts Guide" Class="mr-2">
-                <div class="pa-4" style="min-width: 280px;">
+            <MudMenu Icon="@Icons.Material.Filled.Keyboard" Color="Color.Default" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" AriaLabel="Keyboard Shortcuts Guide" Title="Keyboard Shortcuts Guide" Class="mr-2">
+                <div class="pa-4" style="min-width: 280px; background: var(--surface);">
                     <div class="d-flex align-center gap-2 mb-2">
                         <MudIcon Icon="@Icons.Material.Filled.Keyboard" Color="Color.Primary" />
                         <MudText Typo="Typo.subtitle2" Class="fw-bold">Power-User Keybindings</MudText>
@@ -136,41 +130,77 @@
             </MudMenu>
 
             <!-- Theme Toggle -->
-            <MudTooltip Text="@(_isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode")">
+            <MudTooltip Text="@(_isDarkMode ? "Switch to light mode" : "Switch to dark mode")">
                 <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
-                               Color="Color.Inherit"
+                               Color="Color.Default"
+                               Size="Size.Medium"
                                OnClick="@ToggleTheme"
-                               Class="mr-3"
-                               aria-label="Toggle dark mode" />
+                               Class="mr-1"
+                               aria-label="Toggle color theme" />
             </MudTooltip>
 
-            <!-- User Profile Avatar Pill -->
-            <div class="d-flex align-center gap-2 pl-2" style="border-left: 1px solid rgba(255,255,255,0.15);">
-                <MudAvatar Size="Size.Small" Style="background: var(--mud-palette-primary); color: #ffffff; font-weight: 600; font-size: 0.75rem;">
-                    AD
-                </MudAvatar>
-                <div class="d-none d-lg-flex flex-column">
-                    <span style="font-size: 0.8125rem; font-weight: 600; line-height: 1.1;">Admin Officer</span>
-                    <span style="font-size: 0.68rem; opacity: 0.75; line-height: 1;">@_activePersona</span>
-                </div>
-            </div>
+            <!-- User Profile Avatar Pill & Menu matching exact screenshot -->
+            <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" AriaLabel="User Profile &amp; Role Context Menu">
+                <ActivatorContent>
+                    <div class="nsdms-user-pill-btn" role="button" tabindex="0" title="User Profile &amp; Role Context">
+                        <div class="nsdms-user-avatar">
+                            SA
+                        </div>
+                        <div class="d-none d-md-flex flex-column text-left">
+                            <span class="nsdms-user-name">System Administrator</span>
+                            <span class="nsdms-user-role-badge">SUPERADMIN</span>
+                        </div>
+                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" Style="color: #64748B; font-size: 1rem;" />
+                    </div>
+                </ActivatorContent>
+                <ChildContent>
+                    <div class="pa-3" style="min-width: 290px;">
+                        <div class="d-flex align-center gap-3 mb-2">
+                            <div class="nsdms-user-avatar" style="width: 38px; height: 38px; font-size: 0.9rem;">
+                                SA
+                            </div>
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold" Style="color: #0F172A;">System Administrator</MudText>
+                                <span class="nsdms-user-role-badge">SUPERADMIN • ALL ACCESS</span>
+                            </div>
+                        </div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-2">
+                            Signed in as <strong>sysadmin@merseta.org.za</strong>
+                        </MudText>
+                        <MudDivider Class="my-2" />
+                        <MudText Typo="Typo.caption" Class="fw-bold text-secondary mb-1 d-block">ACTIVE ROLE PERSONA</MudText>
+                        <PersonaSwitcher ActivePersona="@_activePersona" OnPersonaChanged="@HandlePersonaChanged" />
+                        <MudDivider Class="my-2" />
+                        <MudMenuItem Icon="@Icons.Material.Filled.Dashboard" Href="/dashboard">Executive Dashboard</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Business" Href="/employers">Organisations &amp; Employers</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Inbox" Href="/tasks">Universal Task Inbox</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Filled.MenuBook" Href="/developer/schema">Data Dictionary &amp; Schema</MudMenuItem>
+                        <MudDivider Class="my-2" />
+                        <MudMenuItem Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error">Sign Out</MudMenuItem>
+                    </div>
+                </ChildContent>
+            </MudMenu>
         </MudAppBar>
 
         <!-- Left Navigation Drawer -->
-        <MudDrawer @bind-Open="_drawerOpen" Elevation="0" ClipMode="DrawerClipMode.Always" role="navigation" aria-label="Main Navigation" Class="border-r" Style="border-right: 1px solid var(--mud-palette-lines-default);">
+        <MudDrawer @bind-Open="_drawerOpen" 
+                   Elevation="0" 
+                   ClipMode="DrawerClipMode.Always" 
+                   Width="280px"
+                   role="navigation" 
+                   aria-label="Main Navigation" 
+                   Style="border-right: 1px solid var(--border);">
             <NavMenu @ref="_navMenuRef" 
                      ActivePersona="@_activePersona" 
                      CurrentUsername="@_currentUsername" 
                      CurrentRoles="@_currentUserRoles" />
         </MudDrawer>
 
-        <!-- Main Content Area -->
-        <MudMainContent role="main">
-            <div class="nsdms-page-container px-4 px-md-6 pt-3 pb-8">
-                <main id="main-content" role="main">
-                    @Body
-                </main>
-            </div>
+        <!-- Main Content Area with Strict Screen Boundary Constraint -->
+        <MudMainContent Class="pt-18 pb-12" Style="min-height: calc(100vh - 60px); min-width: 0; box-sizing: border-box;">
+            <main id="main-content" class="px-4 px-md-8 nsdms-page-container" tabindex="-1" style="outline: none; max-width: 1600px; width: 100%; min-width: 0; margin: 0 auto; box-sizing: border-box;">
+                @Body
+            </main>
         </MudMainContent>
     </MudLayout>
 
@@ -181,6 +211,7 @@
 </div>
 
 @code {
+    private MudThemeProvider _mudThemeProvider = default!;
     private NavMenu? _navMenuRef;
     private AdminCommandPalette? _commandPaletteRef;
     private bool _drawerOpen = true;
@@ -258,7 +289,7 @@
     {
         InvokeAsync(async () =>
         {
-            Snackbar.Add($"⚡ Live SignalR Event: Task '{taskTitle}' assigned to {assignedRole}", Severity.Info);
+            Snackbar.Add($"🔔 New Task Assigned: '{taskTitle}' to {assignedRole}", Severity.Info);
             await RefreshNotificationsAsync();
         });
     }
@@ -267,7 +298,7 @@
     {
         InvokeAsync(async () =>
         {
-            Snackbar.Add($"⚡ Workflow Transition: {entityType} #{entityId} is now '{toState}'", Severity.Success);
+            Snackbar.Add($"📋 Status Update: {entityType} #{entityId} is now '{toState}'", Severity.Success);
             await RefreshNotificationsAsync();
         });
     }
@@ -327,12 +358,12 @@
         {
             try
             {
-                var savedMode = await JS.InvokeAsync<string?>("localStorage.getItem", "nsdms_dark_mode");
-                if (savedMode == "true")
-                {
-                    _isDarkMode = true;
-                    StateHasChanged();
-                }
+                var stored = await JS.InvokeAsync<string?>("localStorage.getItem", "nsdms_dark_mode") 
+                             ?? await JS.InvokeAsync<string?>("localStorage.getItem", "app_theme");
+                _isDarkMode = stored == "true" || stored == "dark" || 
+                              (string.IsNullOrEmpty(stored) && await JS.InvokeAsync<bool>("eval", "window.matchMedia('(prefers-color-scheme: dark)').matches"));
+                await ApplyThemeDomState(_isDarkMode);
+                StateHasChanged();
             }
             catch
             {
@@ -341,10 +372,7 @@
         }
     }
 
-    private void DrawerToggle()
-    {
-        _drawerOpen = !_drawerOpen;
-    }
+    private void DrawerToggle() => _drawerOpen = !_drawerOpen;
 
     private async Task ToggleTheme()
     {
@@ -352,10 +380,49 @@
         try
         {
             await JS.InvokeVoidAsync("localStorage.setItem", "nsdms_dark_mode", _isDarkMode ? "true" : "false");
+            await JS.InvokeVoidAsync("localStorage.setItem", "app_theme", _isDarkMode ? "dark" : "light");
+            await ApplyThemeDomState(_isDarkMode);
         }
         catch
         {
             // Graceful fallback
         }
+    }
+
+    private async Task ApplyThemeDomState(bool isDark)
+    {
+        var theme = isDark ? "dark" : "light";
+        await JS.InvokeVoidAsync("eval", $"document.documentElement.setAttribute('data-theme', '{theme}'); if ('{theme}' === 'dark') document.documentElement.classList.add('mud-theme-dark'); else document.documentElement.classList.remove('mud-theme-dark');");
+    }
+
+    private string GetCurrentModuleSubtitle()
+    {
+        var uri = Nav.Uri.ToLowerInvariant();
+        if (uri.Contains("/task") || uri.Contains("/workflow"))
+            return "Workflow Orchestration & Task Inbox";
+        if (uri.Contains("/moa") || uri.Contains("/legal") || uri.Contains("/verify") || uri.Contains("/document"))
+            return "Legal, MoA & Statutory Document Templates";
+        if (uri.Contains("/wsp") || uri.Contains("/training-committee"))
+            return "Mandatory Grants (MG) & WSP Governance";
+        if (uri.Contains("/grant") || uri.Contains("/dg-") || uri.Contains("/funding-window"))
+            return "Discretionary Grants (DG) & Financial Operations";
+        if (uri.Contains("/finance") || uri.Contains("/levy") || uri.Contains("/inter-seta"))
+            return "Finance, Levies & Disbursements";
+        if (uri.Contains("/tradetest") || uri.Contains("/learner") || uri.Contains("/assessment"))
+            return "Learner Management & Artisan Development";
+        if (uri.Contains("/provider") || uri.Contains("/sdp") || uri.Contains("/curriculum"))
+            return "Skills Development Providers & Curriculum";
+        if (uri.Contains("/monitoring") || uri.Contains("/site-visit") || uri.Contains("/etqa") || uri.Contains("/non-seta"))
+            return "Quality Assurance & ETQA Governance";
+        if (uri.Contains("/employer") || uri.Contains("/organisation") || uri.Contains("/workplace"))
+            return "Organisation & Workplace Registry";
+        if (uri.Contains("/people"))
+            return "People & Demographics (SETMIS)";
+        if (uri.Contains("/report") || uri.Contains("/bi") || uri.Contains("/compliance"))
+            return "Skills Planning, BI & Statutory Submissions";
+        if (uri.Contains("/admin") || uri.Contains("/developer") || uri.Contains("/system"))
+            return "Enterprise Administration & Control Hub";
+
+        return "merSETA National Skills Development Management System";
     }
 }

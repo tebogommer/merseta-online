@@ -8,33 +8,33 @@
     <TitleContent>
         <div class="d-flex align-center gap-2">
             <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Primary" />
-            <MudText Typo="Typo.h6">Clone Workflow Blueprint</MudText>
+            <MudText Typo="Typo.h6">Clone Approval Process Lifecycle</MudText>
         </div>
     </TitleContent>
     <DialogContent>
         <MudForm @ref="_form" @bind-IsValid="_isValid">
             <div class="mb-4">
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    Cloning blueprint: <strong>@SourceDefinition?.Name (@SourceDefinition?.Code)</strong>
+                    Cloning lifecycle: <strong>@SourceDefinition?.Name (@SourceDefinition?.Code)</strong>
                 </MudText>
                 <MudText Typo="Typo.caption" Color="Color.Secondary">
-                    All @(SourceDefinition?.States?.Count ?? 0) states and @(SourceDefinition?.Transitions?.Count ?? 0) transitions will be duplicated into the new blueprint.
+                    All @(SourceDefinition?.States?.Count ?? 0) stages and @(SourceDefinition?.Transitions?.Count ?? 0) transitions will be duplicated into the new lifecycle.
                 </MudText>
             </div>
 
             <MudTextField @bind-Value="_newCode"
-                          Label="New Blueprint Code"
+                          Label="New Process Lifecycle Code"
                           Placeholder="e.g. WSP_V2"
                           Required="true"
-                          RequiredError="New blueprint code is required"
+                          RequiredError="New process code is required"
                           Variant="Variant.Outlined"
                           Class="mb-3" />
 
             <MudTextField @bind-Value="_newName"
-                          Label="New Blueprint Name"
+                          Label="New Process Lifecycle Name"
                           Placeholder="e.g. Workplace Skills Plan Submission (2027 Schema)"
                           Required="true"
-                          RequiredError="New blueprint name is required"
+                          RequiredError="New process name is required"
                           Variant="Variant.Outlined"
                           Class="mb-3" />
         </MudForm>
@@ -53,7 +53,7 @@
             }
             else
             {
-                <span>Clone Blueprint</span>
+                <span>Clone Process Lifecycle</span>
             }
         </MudButton>
     </DialogActions>
@@ -95,12 +95,12 @@
                 "admin@merseta.org.za",
                 "System Administrator");
 
-            Snackbar.Add($"Workflow blueprint '{cloned.Code}' cloned successfully.", Severity.Success);
+            Snackbar.Add($"Approval process lifecycle '{cloned.Code}' cloned successfully.", Severity.Success);
             MudDialog.Close(DialogResult.Ok(cloned));
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error cloning blueprint: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error cloning process lifecycle: {ex.Message}", Severity.Error);
         }
         finally
         {

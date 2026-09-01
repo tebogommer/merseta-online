@@ -1,46 +1,26 @@
-@namespace Nsdms.Web.Components.Shared
+﻿@namespace Nsdms.Web.Components.Shared
 @using MudBlazor
-
-@*
-  UI-STANDARD.md Contract (Section 9.2 & Clause 6.3):
-  Component: FlagBadge
-  Inputs: Flags (collection)
-  Renders: Ordered flags with overflow at 3. Subordinate to status, neutral/warning styles only.
-*@
 
 @if (Flags != null && Flags.Any())
 {
     <div class="d-inline-flex align-center gap-1 nsdms-flag-container" role="group" aria-label="Entity Flags">
         @foreach (var flag in Flags.Take(3))
         {
-            <MudChip T="string" 
-                     Color="Color.Default" 
-                     Variant="Variant.Outlined" 
-                     Size="Size.Small" 
-                     Class="ma-0 font-caption pointer-events-none"
-                     Style="border-style: dashed; cursor: default !important; font-size: 0.75rem;">
+            <span class="border px-2 py-0.5 rounded text-secondary" style="font-size: 0.75rem; background-color: var(--background); border-color: var(--border); pointer-events: none; white-space: nowrap;">
                 @flag
-            </MudChip>
+            </span>
         }
-
         @if (Flags.Count() > 3)
         {
-            var remaining = Flags.Skip(3).ToList();
-            <MudTooltip Text="@string.Join(", ", remaining)">
-                <MudChip T="string" 
-                         Color="Color.Warning" 
-                         Variant="Variant.Outlined" 
-                         Size="Size.Small" 
-                         Class="ma-0 font-caption"
-                         Style="cursor: help !important; font-size: 0.75rem;">
-                    +@(Flags.Count() - 3) more
-                </MudChip>
+            <MudTooltip Text="@string.Join(", ", Flags.Skip(3))">
+                <span class="border px-2 py-0.5 rounded text-secondary cursor-help" style="font-size: 0.75rem; background-color: var(--background); border-color: var(--border); white-space: nowrap;">
+                    +@(Flags.Count() - 3)
+                </span>
             </MudTooltip>
         }
     </div>
 }
 
 @code {
-    [Parameter]
-    public IEnumerable<string>? Flags { get; set; }
+    [Parameter] public IEnumerable<string>? Flags { get; set; }
 }

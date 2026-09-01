@@ -1,115 +1,89 @@
-@namespace Nsdms.Web.Components.Shared
+﻿@namespace Nsdms.Web.Components.Shared
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using MudBlazor
 @inject IWorkflowEngineService WorkflowService
 
-@*
-  UI-STANDARD.md Contract (Section 9.2 & Clause 7.4.3):
-  Component: WorkflowStepper
-  Inputs: States, CurrentState, BlockingStatus, TerminalOutcome, StepOwner, StepDue
-  Renders: The ordered workflow path. Non-interactive.
-  Rules:
-  - Capped at 7 steps.
-  - Current step emphasised; completed steps muted; future steps outlined.
-  - Terminal-negative breaks the path; remaining steps dropped.
-  - Blocking status shown directly on the active step.
-*@
-
-<div class="nsdms-workflow-stepper pa-3 mb-4 rounded-lg bg-surface border-default elevation-1" role="region" aria-label="Workflow Progress">
+<div class="workflow-stepper nsdms-workflow-stepper my-4 pa-4 border rounded-lg" style="background: var(--surface); border-color: var(--border);">
     @if (_loading)
     {
         <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-2" />
     }
-    else if (_steps.Any())
+    else if (DisplayStates.Any())
     {
         <!-- Horizontal Stepper for Medium/Expanded Screens -->
-        <div class="d-none d-md-flex align-center justify-space-between position-relative px-4 py-2">
-            @for (int i = 0; i < _displayedSteps.Count; i++)
+        <div class="d-none d-md-flex align-center justify-space-between position-relative px-2 py-2">
+            @for (int i = 0; i < DisplayStates.Count; i++)
             {
-                var step = _displayedSteps[i];
-                var isCompleted = step.StepOrder < _currentStepOrder && !IsTerminalNegative;
-                var isCurrent = step.StepOrder == _currentStepOrder;
-                var isFuture = step.StepOrder > _currentStepOrder && !IsTerminalNegative;
+                var stepIndex = i;
+                var stepName = DisplayStates[i];
+                var isCurrent = stepName.Equals(CurrentState, StringComparison.OrdinalIgnoreCase);
+                var isCompleted = CurrentIndex > stepIndex && !IsTerminalNegative;
+                var isFuture = CurrentIndex < stepIndex && !IsTerminalNegative;
                 var isTerminatedHere = IsTerminalNegative && isCurrent;
 
-                <div class="d-flex flex-column align-center text-center nsdms-step-item" style="flex: 1; position: relative; z-index: 2;">
-                    <!-- Step Indicator Icon / Circle -->
-                    <div class="d-flex align-center justify-center rounded-circle mb-1 transition-all @(isTerminatedHere ? "bg-error text-white" : isCurrent ? "bg-primary text-white elevation-2" : isCompleted ? "bg-success text-white" : "bg-surface border-default text-secondary")"
-                         style="width: 34px; height: 34px; border: 2px solid @(isTerminatedHere ? "var(--mud-palette-error)" : isCurrent ? "var(--mud-palette-primary)" : isCompleted ? "var(--mud-palette-success)" : "var(--mud-palette-lines-default)");">
-                        @if (isTerminatedHere)
+                <div class="step-item d-flex align-center gap-2 flex-grow-1 @(isCurrent ? "current-step" : "")">
+                    <div class="step-badge d-flex align-center justify-center font-weight-bold"
+                         style="width: 32px; height: 32px; border-radius: 50%; @GetBadgeStyle(isCurrent, isCompleted, isFuture, isTerminatedHere)">
+                        @if (isCompleted)
                         {
-                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
-                        }
-                        else if (isCompleted)
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
-                        }
-                        else
-                        {
-                            <span class="font-weight-bold" style="font-size: 0.85rem;">@(i + 1)</span>
-                        }
-                    </div>
-
-                    <!-- Step Label -->
-                    <MudText Typo="Typo.caption" Class="@(isCurrent ? "font-weight-bold text-primary" : isCompleted ? "text-secondary font-weight-medium" : "text-disabled")">
-                        @step.StateName
-                    </MudText>
-
-                    <!-- Active Step Metadata / Blocking Status (Clause 7.4.3.7) -->
-                    @if (isCurrent)
-                    {
-                        @if (!string.IsNullOrWhiteSpace(BlockingStatus))
-                        {
-                            <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled" Class="ma-0 mt-1" Style="font-size: 0.65rem;">
-                                ⏸ @BlockingStatus
-                            </MudChip>
+                            <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Inherit" />
                         }
                         else if (isTerminatedHere)
                         {
-                            <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" Class="ma-0 mt-1" Style="font-size: 0.65rem;">
-                                ✖ @(TerminalOutcome ?? "Terminated")
-                            </MudChip>
+                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" Color="Color.Inherit" />
                         }
-                        else if (!string.IsNullOrWhiteSpace(StepOwner))
+                        else
                         {
-                            <span class="text-secondary" style="font-size: 0.65rem;">Held by: @StepOwner</span>
+                            <span>@(stepIndex + 1)</span>
                         }
+                    </div>
+
+                    <div class="step-label">
+                        <MudText Typo="Typo.body2" Class="@(isCurrent ? "font-weight-bold text-primary" : isCompleted ? "text-muted font-weight-medium" : "text-muted")">
+                            @stepName
+                        </MudText>
+                        @if (isCurrent && !string.IsNullOrWhiteSpace(BlockingStatus))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Warning" Class="d-block font-weight-bold">
+                                ⚠️ @BlockingStatus
+                            </MudText>
+                        }
+                    </div>
+
+                    @if (stepIndex < DisplayStates.Count - 1 && !isTerminatedHere)
+                    {
+                        <div class="step-connector flex-grow-1 d-none d-md-block" style="height: 2px; background: @(isCompleted ? "var(--status-success)" : "var(--border)"); min-width: 24px;"></div>
                     }
                 </div>
-
-                @if (i < _displayedSteps.Count - 1 && !isTerminatedHere)
-                {
-                    <!-- Connector Line between Steps -->
-                    <div class="flex-grow-1" style="height: 2px; background-color: @(step.StepOrder < _currentStepOrder ? "var(--mud-palette-success)" : "var(--mud-palette-lines-default)"); margin-top: -24px; z-index: 1;"></div>
-                }
             }
         </div>
 
-        <!-- Vertical Stepper for Compact Mobile Viewports (Clause 4.6.2.5) -->
+        <!-- Vertical Stepper for Compact Mobile Viewports -->
         <div class="d-flex d-md-none flex-column gap-2 py-1">
-            @for (int i = 0; i < _displayedSteps.Count; i++)
+            @for (int i = 0; i < DisplayStates.Count; i++)
             {
-                var step = _displayedSteps[i];
-                var isCompleted = step.StepOrder < _currentStepOrder && !IsTerminalNegative;
-                var isCurrent = step.StepOrder == _currentStepOrder;
+                var stepIndex = i;
+                var stepName = DisplayStates[i];
+                var isCurrent = stepName.Equals(CurrentState, StringComparison.OrdinalIgnoreCase);
+                var isCompleted = CurrentIndex > stepIndex && !IsTerminalNegative;
                 var isTerminatedHere = IsTerminalNegative && isCurrent;
 
-                <div class="d-flex align-start gap-3 pa-2 rounded @(isCurrent ? "bg-primary-subtle border-primary" : "")">
-                    <div class="d-flex align-center justify-center rounded-circle mt-1 @(isTerminatedHere ? "bg-error text-white" : isCurrent ? "bg-primary text-white" : isCompleted ? "bg-success text-white" : "bg-surface border-default text-secondary")"
-                         style="width: 26px; height: 26px; min-width: 26px; font-size: 0.75rem;">
-                        @if (isTerminatedHere) { <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" /> }
-                        else if (isCompleted) { <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" /> }
-                        else { <span>@(i + 1)</span> }
+                <div class="d-flex align-start gap-3 pa-2 rounded @(isCurrent ? "border" : "")" style="@(isCurrent ? "background-color: var(--brand-gold-subtle); border-color: var(--brand-gold);" : "")">
+                    <div class="step-badge d-flex align-center justify-center font-weight-bold"
+                         style="width: 26px; height: 26px; min-width: 26px; border-radius: 50%; font-size: 0.75rem; @GetBadgeStyle(isCurrent, isCompleted, false, isTerminatedHere)">
+                        @if (isCompleted) { <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" /> }
+                        else if (isTerminatedHere) { <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" /> }
+                        else { <span>@(stepIndex + 1)</span> }
                     </div>
                     <div>
                         <MudText Typo="Typo.body2" Class="@(isCurrent ? "font-weight-bold text-primary" : "text-secondary")">
-                            @step.StateName
+                            @stepName
                         </MudText>
                         @if (isCurrent && !string.IsNullOrWhiteSpace(BlockingStatus))
                         {
                             <MudChip T="string" Color="Color.Warning" Size="Size.Small" Class="mt-1">
-                                ⏸ @BlockingStatus
+                                ⚠️ @BlockingStatus
                             </MudChip>
                         }
                     </div>
@@ -120,54 +94,61 @@
 </div>
 
 @code {
-    [Parameter]
-    public List<WorkflowState>? States { get; set; }
+    [Parameter] public List<string>? StringStates { get; set; }
+    [Parameter] public List<WorkflowState>? WorkflowStates { get; set; }
+    [Parameter] public object? States { get; set; }
+    [Parameter] public string? CurrentState { get; set; }
+    [Parameter] public string? BlockingStatus { get; set; }
+    [Parameter] public string? TerminalOutcome { get; set; }
+    [Parameter] public string? StepOwner { get; set; }
+    [Parameter] public DateTime? StepDue { get; set; }
+    [Parameter] public string? ProcessCode { get; set; }
+    [Parameter] public int EntityId { get; set; }
 
-    [Parameter]
-    public string? CurrentState { get; set; }
-
-    [Parameter]
-    public string? BlockingStatus { get; set; }
-
-    [Parameter]
-    public string? TerminalOutcome { get; set; }
-
-    [Parameter]
-    public string? StepOwner { get; set; }
-
-    [Parameter]
-    public DateTime? StepDue { get; set; }
-
-    [Parameter]
-    public string? ProcessCode { get; set; }
-
-    [Parameter]
-    public int EntityId { get; set; }
-
-    private bool _loading = true;
-    private List<WorkflowState> _steps = new();
-    private List<WorkflowState> _displayedSteps = new();
-    private int _currentStepOrder = 1;
+    private bool _loading = false;
+    private List<string> _stateList = new();
 
     private bool IsTerminalNegative => 
         !string.IsNullOrWhiteSpace(TerminalOutcome) || 
         (!string.IsNullOrWhiteSpace(CurrentState) && (CurrentState.Contains("Reject", StringComparison.OrdinalIgnoreCase) || CurrentState.Contains("Decline", StringComparison.OrdinalIgnoreCase) || CurrentState.Contains("Withdraw", StringComparison.OrdinalIgnoreCase)));
 
+    private int CurrentIndex => _stateList.FindIndex(s => s.Equals(CurrentState, StringComparison.OrdinalIgnoreCase));
+
+    private List<string> DisplayStates
+    {
+        get
+        {
+            if (IsTerminalNegative && CurrentIndex >= 0)
+                return _stateList.Take(CurrentIndex + 1).ToList();
+            return _stateList.Take(7).ToList();
+        }
+    }
+
     protected override async Task OnParametersSetAsync()
     {
-        if (States != null && States.Any())
+        if (States is List<string> sl)
         {
-            _steps = States.OrderBy(s => s.StepOrder).ToList();
-            CalculateDisplaySteps();
+            _stateList = sl;
+            _loading = false;
+        }
+        else if (States is List<WorkflowState> wl)
+        {
+            _stateList = wl.OrderBy(s => s.StepOrder).Select(s => s.StateName).ToList();
+            _loading = false;
+        }
+        else if (StringStates != null && StringStates.Any())
+        {
+            _stateList = StringStates;
+            _loading = false;
+        }
+        else if (WorkflowStates != null && WorkflowStates.Any())
+        {
+            _stateList = WorkflowStates.OrderBy(s => s.StepOrder).Select(s => s.StateName).ToList();
             _loading = false;
         }
         else if (!string.IsNullOrWhiteSpace(ProcessCode) && EntityId > 0)
         {
             await LoadFromServiceAsync();
-        }
-        else
-        {
-            _loading = false;
         }
     }
 
@@ -177,26 +158,23 @@
         try
         {
             var inst = await WorkflowService.GetInstanceByEntityAsync(ProcessCode!, EntityId);
-            _steps = await WorkflowService.GetWorkflowDefinitionStatesAsync(ProcessCode!);
-            _steps = _steps.OrderBy(s => s.StepOrder).ToList();
+            var raw = await WorkflowService.GetWorkflowDefinitionStatesAsync(ProcessCode!);
+            var sorted = raw.OrderBy(s => s.StepOrder).ToList();
+            _stateList = sorted.Select(s => s.StateName).ToList();
 
             if (inst != null)
             {
                 CurrentState = inst.CurrentWorkflowState?.StateName;
-                _currentStepOrder = inst.CurrentWorkflowState?.StepOrder ?? 1;
             }
-            else if (_steps.Any())
+            else if (sorted.Any())
             {
-                var initial = _steps.FirstOrDefault(s => s.IsInitial) ?? _steps.First();
+                var initial = sorted.FirstOrDefault(s => s.IsInitial) ?? sorted.First();
                 CurrentState = initial.StateName;
-                _currentStepOrder = initial.StepOrder;
             }
-
-            CalculateDisplaySteps();
         }
         catch
         {
-            _steps.Clear();
+            _stateList.Clear();
         }
         finally
         {
@@ -204,26 +182,11 @@
         }
     }
 
-    private void CalculateDisplaySteps()
+    private string GetBadgeStyle(bool isCurrent, bool isCompleted, bool isFuture, bool isTerminatedHere)
     {
-        if (!string.IsNullOrWhiteSpace(CurrentState))
-        {
-            var curr = _steps.FirstOrDefault(s => s.StateName.Equals(CurrentState, StringComparison.OrdinalIgnoreCase));
-            if (curr != null)
-            {
-                _currentStepOrder = curr.StepOrder;
-            }
-        }
-
-        // Clause 7.4.3.6: Terminal-negative states break the path and drop remaining steps
-        if (IsTerminalNegative)
-        {
-            _displayedSteps = _steps.Where(s => s.StepOrder <= _currentStepOrder).Take(7).ToList();
-        }
-        else
-        {
-            // Cap at 7 steps (Clause 7.4.3.1)
-            _displayedSteps = _steps.Take(7).ToList();
-        }
+        if (isCompleted) return "background-color: var(--status-success); color: #ffffff;";
+        if (isTerminatedHere) return "background-color: var(--status-danger); color: #ffffff;";
+        if (isCurrent) return "background-color: var(--brand-navy); color: #ffffff;";
+        return "background-color: var(--surface-subtle); color: var(--text-disabled); border: 1px solid var(--border);";
     }
 }

@@ -500,10 +500,188 @@ public static class SampleDataSeeder
         }
 
         // ==========================================
-        // 5. SEED GRANT FUNDING WINDOWS & APPLICATIONS
+        // 4b. SEED TRAINING COMMITTEES & WSP DISPUTES
         // ==========================================
+        if (!await db.TrainingCommittees.AnyAsync())
+        {
+            var persons = await db.People.Take(4).ToListAsync();
+
+            if (orgToyotaDb != null && persons.Count >= 2)
+            {
+                var committeeToyota = new TrainingCommittee
+                {
+                    OrganisationId = orgToyotaDb.Id,
+                    FinancialYear = 2026,
+                    CommitteeStatusCode = "Active",
+                    ConstitutionalQuorumMet = true,
+                    LastMeetingDate = DateTime.UtcNow.AddDays(-14)
+                };
+
+                committeeToyota.Members.Add(new TrainingCommitteeMember
+                {
+                    PersonId = persons[0].Id,
+                    MemberRoleCode = "UnionRepresentative",
+                    Constituency = "NUMSA",
+                    IsActive = true
+                });
+
+                committeeToyota.Members.Add(new TrainingCommitteeMember
+                {
+                    PersonId = persons[1].Id,
+                    MemberRoleCode = "EmployerRepresentative",
+                    Constituency = "Management",
+                    IsActive = true
+                });
+
+                db.TrainingCommittees.Add(committeeToyota);
+            }
+
+            if (orgSasolDb != null && persons.Count >= 4)
+            {
+                var committeeSasol = new TrainingCommittee
+                {
+                    OrganisationId = orgSasolDb.Id,
+                    FinancialYear = 2026,
+                    CommitteeStatusCode = "Active",
+                    ConstitutionalQuorumMet = true,
+                    LastMeetingDate = DateTime.UtcNow.AddDays(-28)
+                };
+
+                committeeSasol.Members.Add(new TrainingCommitteeMember
+                {
+                    PersonId = persons[2].Id,
+                    MemberRoleCode = "UnionRepresentative",
+                    Constituency = "CEPPWAWU",
+                    IsActive = true
+                });
+
+                committeeSasol.Members.Add(new TrainingCommitteeMember
+                {
+                    PersonId = persons[3].Id,
+                    MemberRoleCode = "EmployerRepresentative",
+                    Constituency = "Management",
+                    IsActive = true
+                });
+
+                db.TrainingCommittees.Add(committeeSasol);
+            }
+
+            await db.SaveChangesAsync();
+        }
+
+        if (!await db.WspDisputes.AnyAsync())
+        {
+            var wspToyotaDb = await db.WspSubmissions.FirstOrDefaultAsync(w => w.OrganisationId == (orgToyotaDb != null ? orgToyotaDb.Id : 0));
+
+            if (orgToyotaDb != null)
+            {
+                db.WspDisputes.Add(new WspDispute
+                {
+                    OrganisationId = orgToyotaDb.Id,
+                    WspSubmissionId = wspToyotaDb?.Id,
+                    DisputeReferenceNumber = "DSP-2026-0042",
+                    DisputeReasonCode = "UnionRefusalToSign",
+                    Description = "NUMSA shop steward dispute regarding consultation over EV battery assembly training plan targets.",
+                    DisputeStatusCode = "InvestigationInProgress",
+                    CreatedAt = DateTime.UtcNow.AddDays(-10)
+                });
+            }
+
+            if (orgSasolDb != null)
+            {
+                db.WspDisputes.Add(new WspDispute
+                {
+                    OrganisationId = orgSasolDb.Id,
+                    DisputeReferenceNumber = "DSP-2026-0089",
+                    DisputeReasonCode = "ConsultationFailure",
+                    Description = "Failure to convene required consultative committee meeting prior to final WSP submission deadline.",
+                    DisputeStatusCode = "Resolved",
+                    ResolutionDate = DateTime.UtcNow.AddDays(-3),
+                    ResolutionNotes = "Mediation concluded with consensus skills plan signatures and updated training schedule.",
+                    CreatedAt = DateTime.UtcNow.AddDays(-20)
+                });
+            }
+
+            await db.SaveChangesAsync();
+        }
+
+        // ==========================================
+        // 5. SEED STRATEGIC PRIORITIES & FUNDING WINDOWS
+        // ==========================================
+        if (!await db.StrategicPriorities.AnyAsync())
+        {
+            var spGreen = new StrategicPriority
+            {
+                Code = "SP-GREEN-01",
+                Name = "Green Economy, EV & Battery Technologies",
+                Description = "Developing specialized skills in electric vehicle powertrains, lithium-ion battery manufacturing, solar-PV microgrid integration, and industrial circular economy.",
+                NsdpOutcomeCode = "NSDP-OUTCOME-1",
+                NsdpOutcomeDescription = "Outcome 1: Identify and increase production of occupations in high demand",
+                SipCategory = "SIP 8: Green Energy Transmission",
+                TargetSector = "Automotive & Clean Energy",
+                IsActive = true
+            };
+
+            var sp4IR = new StrategicPriority
+            {
+                Code = "SP-4IR-02",
+                Name = "Digital Transformation, Robotics & 4IR Automation",
+                Description = "Upskilling the engineering workforce in robotic welding, PLC automation, digital twin simulations, CNC precision machining, and IoT industrial telemetry.",
+                NsdpOutcomeCode = "NSDP-OUTCOME-2",
+                NsdpOutcomeDescription = "Outcome 2: Linking education and the workplace with modern technical infrastructure",
+                SipCategory = "SIP 15: Communication & Digital Infrastructure",
+                TargetSector = "Metal & Engineering",
+                IsActive = true
+            };
+
+            var spArtisan = new StrategicPriority
+            {
+                Code = "SP-ARTISAN-03",
+                Name = "National Artisan Development & Apprenticeship Acceleration",
+                Description = "Rapid development of Red Seal certified artisans across foundational trades (Millwright, Electrician, Fitter and Turner, Boilermaker, Automotive Motor Mechanic).",
+                NsdpOutcomeCode = "NSDP-OUTCOME-1",
+                NsdpOutcomeDescription = "Outcome 1: Increase production of certified artisans to reach national targets",
+                SipCategory = "SIP 2: Durban-Free State-Gauteng Logistics Corridor",
+                TargetSector = "All Sectors",
+                IsActive = true
+            };
+
+            var spSmme = new StrategicPriority
+            {
+                Code = "SP-SMME-04",
+                Name = "SMME Incubation & Rural Engineering Development",
+                Description = "Empowering small, medium, micro-enterprises and community cooperatives through subsidized artisan apprenticeships, toolkits, and incubation vouchers.",
+                NsdpOutcomeCode = "NSDP-OUTCOME-5",
+                NsdpOutcomeDescription = "Outcome 5: Support entrepreneurship and cooperative development across rural corridors",
+                SipCategory = "SIP 11: Agri-Logistics and Rural Infrastructure",
+                TargetSector = "Plastics & Metal Fabrication",
+                IsActive = true
+            };
+
+            var spBursary = new StrategicPriority
+            {
+                Code = "SP-BURSARY-05",
+                Name = "High-End Engineering Bursaries & Applied R&D",
+                Description = "Full bursary funding for BEng/BSc Mechatronics, Metallurgy, Materials Science, and Aeronautical Engineering students at public universities.",
+                NsdpOutcomeCode = "NSDP-OUTCOME-4",
+                NsdpOutcomeDescription = "Outcome 4: Increase access for high-level occupations in high demand",
+                SipCategory = "SIP 14: Higher Education Infrastructure",
+                TargetSector = "All Sectors",
+                IsActive = true
+            };
+
+            db.StrategicPriorities.AddRange(spGreen, sp4IR, spArtisan, spSmme, spBursary);
+            await db.SaveChangesAsync();
+        }
+
         if (!await db.GrantFundingWindows.AnyAsync())
         {
+            var spList = await db.StrategicPriorities.ToListAsync();
+            var spGreenDb = spList.First(s => s.Code == "SP-GREEN-01");
+            var sp4IRDb = spList.First(s => s.Code == "SP-4IR-02");
+            var spArtisanDb = spList.First(s => s.Code == "SP-ARTISAN-03");
+            var spSmmeDb = spList.First(s => s.Code == "SP-SMME-04");
+
             var windowDG = new GrantFundingWindow
             {
                 FinYear = 2026,
@@ -518,10 +696,59 @@ public static class SampleDataSeeder
             db.GrantFundingWindows.Add(windowDG);
             await db.SaveChangesAsync();
 
+            var fwp1 = new FundingWindowPriority
+            {
+                FundingWindowId = windowDG.Id,
+                StrategicPriorityId = spGreenDb.Id,
+                AllocatedBudget = 15000000m,
+                TargetBeneficiaries = 200,
+                MinScoreThreshold = 70.00m,
+                IsRingFenced = true,
+                IsActive = true
+            };
+
+            var fwp2 = new FundingWindowPriority
+            {
+                FundingWindowId = windowDG.Id,
+                StrategicPriorityId = sp4IRDb.Id,
+                AllocatedBudget = 15000000m,
+                TargetBeneficiaries = 180,
+                MinScoreThreshold = 65.00m,
+                IsRingFenced = false,
+                IsActive = true
+            };
+
+            var fwp3 = new FundingWindowPriority
+            {
+                FundingWindowId = windowDG.Id,
+                StrategicPriorityId = spArtisanDb.Id,
+                AllocatedBudget = 10000000m,
+                TargetBeneficiaries = 150,
+                MinScoreThreshold = 65.00m,
+                IsRingFenced = true,
+                IsActive = true
+            };
+
+            var fwp4 = new FundingWindowPriority
+            {
+                FundingWindowId = windowDG.Id,
+                StrategicPriorityId = spSmmeDb.Id,
+                AllocatedBudget = 5000000m,
+                TargetBeneficiaries = 100,
+                MinScoreThreshold = 60.00m,
+                IsRingFenced = false,
+                IsActive = true
+            };
+
+            db.FundingWindowPriorities.AddRange(fwp1, fwp2, fwp3, fwp4);
+            await db.SaveChangesAsync();
+
             var dgToyota = new GrantApplication
             {
                 OrganisationId = orgToyotaDb.Id,
                 FundingWindowId = windowDG.Id,
+                StrategicPriorityId = spGreenDb.Id,
+                FundingWindowPriorityId = fwp1.Id,
                 ApplicationNumber = "DG-2026-TOYOTA-01",
                 GrantTypeCode = "Discretionary",
                 StatusCode = "Approved",
@@ -535,6 +762,8 @@ public static class SampleDataSeeder
             {
                 OrganisationId = orgSasolDb.Id,
                 FundingWindowId = windowDG.Id,
+                StrategicPriorityId = spArtisanDb.Id,
+                FundingWindowPriorityId = fwp3.Id,
                 ApplicationNumber = "DG-2026-SASOL-01",
                 GrantTypeCode = "Discretionary",
                 StatusCode = "UnderReview",
@@ -550,6 +779,7 @@ public static class SampleDataSeeder
             var budgetToyota1 = new GrantProjectBudget
             {
                 GrantApplicationId = dgToyota.Id,
+                StrategicPriorityId = spGreenDb.Id,
                 ExpenseCategory = "Learner Stipends",
                 Description = "Monthly stipends for 50 apprentices for 12 months",
                 UnitCost = 7500m,
@@ -560,6 +790,7 @@ public static class SampleDataSeeder
             var budgetToyota2 = new GrantProjectBudget
             {
                 GrantApplicationId = dgToyota.Id,
+                StrategicPriorityId = spGreenDb.Id,
                 ExpenseCategory = "Institutional Training",
                 Description = "Accredited TVET College tuition and trade test fees",
                 UnitCost = 60000m,
@@ -569,6 +800,134 @@ public static class SampleDataSeeder
 
             db.GrantProjectBudgets.AddRange(budgetToyota1, budgetToyota2);
             await db.SaveChangesAsync();
+        }
+
+        // ==========================================
+        // 5b. SEED DG PROJECT IMPLEMENTATION PLANS (PIP)
+        // ==========================================
+        if (!await db.ProjectImplementationPlans.AnyAsync())
+        {
+            var dgToyotaDb = await db.GrantApplications.FirstOrDefaultAsync(g => g.OrganisationId == orgToyotaDb.Id);
+            var dgSasolDb = await db.GrantApplications.FirstOrDefaultAsync(g => g.OrganisationId == orgSasolDb.Id);
+            var windowDb = await db.GrantFundingWindows.FirstOrDefaultAsync();
+
+            var pipToyota = new ProjectImplementationPlan
+            {
+                OrganisationId = orgToyotaDb.Id,
+                FundingWindowId = windowDb?.Id,
+                GrantApplicationId = dgToyotaDb?.Id,
+                PlanReferenceNumber = "PIP-2026-TOYOTA-01",
+                InterventionTypeCode = "Apprenticeship",
+                TotalAwardedAmount = 7500000.00m,
+                RecoverableAmount = 0.00m,
+                TotalLearnersAwarded = 50,
+                LearnersWithDisabilityCount = 5,
+                StatusCode = "ActiveContractsSigned",
+                ContractSignOffDate = DateTime.UtcNow.AddDays(-30)
+            };
+
+            pipToyota.Allocations.Add(new PipLearnerAllocation
+            {
+                QualificationTitle = "Automotive Motor Mechanic (NQF 4)",
+                LearnerCount = 30,
+                UnitCost = 150000.00m,
+                TotalAllowanceBudget = 2700000.00m,
+                TotalTuitionBudget = 1800000.00m
+            });
+
+            pipToyota.Allocations.Add(new PipLearnerAllocation
+            {
+                QualificationTitle = "Electric Vehicle Technician (NQF 5)",
+                LearnerCount = 20,
+                UnitCost = 150000.00m,
+                TotalAllowanceBudget = 1800000.00m,
+                TotalTuitionBudget = 1200000.00m
+            });
+
+            pipToyota.Claims.Add(new GrantPaymentClaim
+            {
+                ClaimNumber = "CLM-2026-001",
+                TrancheNumber = 1,
+                ClaimAmount = 2250000.00m,
+                DeliverableDescription = "Tranche 1: Learner registration, induction and workplace placement sign-offs.",
+                StatusCode = "ApprovedForPayment",
+                ApprovalDate = DateTime.UtcNow.AddDays(-15),
+                ApprovedByUserId = "FinanceManager",
+                ErpBatchNumber = "GP-BATCH-2026-0612"
+            });
+
+            var pipSasol = new ProjectImplementationPlan
+            {
+                OrganisationId = orgSasolDb.Id,
+                FundingWindowId = windowDb?.Id,
+                GrantApplicationId = dgSasolDb?.Id,
+                PlanReferenceNumber = "PIP-2026-SASOL-02",
+                InterventionTypeCode = "Learnership",
+                TotalAwardedAmount = 5400000.00m,
+                RecoverableAmount = 0.00m,
+                TotalLearnersAwarded = 40,
+                LearnersWithDisabilityCount = 3,
+                StatusCode = "Draft",
+                ContractSignOffDate = null
+            };
+
+            pipSasol.Allocations.Add(new PipLearnerAllocation
+            {
+                QualificationTitle = "Chemical Plant Operations (NQF 4)",
+                LearnerCount = 40,
+                UnitCost = 135000.00m,
+                TotalAllowanceBudget = 3240000.00m,
+                TotalTuitionBudget = 2160000.00m
+            });
+
+            db.ProjectImplementationPlans.AddRange(pipToyota, pipSasol);
+            await db.SaveChangesAsync();
+        }
+
+        // ==========================================
+        // 5c. SEED CONTRACT ADDENDAS & VARIATIONS
+        // ==========================================
+        if (!await db.ContractAddendas.AnyAsync())
+        {
+            var moaToyota = await db.GrantMoas.FirstOrDefaultAsync(m => m.GrantApplication != null && m.GrantApplication.OrganisationId == (orgToyotaDb != null ? orgToyotaDb.Id : 0));
+            if (moaToyota != null)
+            {
+                var addenda1 = new ContractAddenda
+                {
+                    GrantMoaId = moaToyota.Id,
+                    AddendaNumber = "ADD-2026-TOYOTA-01",
+                    VariationTypeCode = "TimelineExtension",
+                    OriginalContractValue = moaToyota.TotalContractValue,
+                    RevisedContractValue = moaToyota.TotalContractValue,
+                    OriginalEndDate = DateTime.UtcNow.AddMonths(6),
+                    RevisedEndDate = DateTime.UtcNow.AddMonths(12),
+                    MotivationReason = "Extension requested to accommodate expanded EV battery testing modules without budget increment.",
+                    StatusCode = "SubmittedForReview",
+                    CreatedAt = DateTime.UtcNow.AddDays(-7),
+                    CreatedBy = "SDFManager"
+                };
+
+                var addenda2 = new ContractAddenda
+                {
+                    GrantMoaId = moaToyota.Id,
+                    AddendaNumber = "ADD-2026-TOYOTA-02",
+                    VariationTypeCode = "BudgetReallocation",
+                    OriginalContractValue = moaToyota.TotalContractValue,
+                    RevisedContractValue = moaToyota.TotalContractValue + 500000.00m,
+                    OriginalEndDate = DateTime.UtcNow.AddMonths(6),
+                    RevisedEndDate = DateTime.UtcNow.AddMonths(6),
+                    MotivationReason = "Additional funding approved for high-voltage PPE and specialized tooling.",
+                    StatusCode = "LegalApproved",
+                    LegalReviewerUserId = "LegalOfficer",
+                    LegalReviewDate = DateTime.UtcNow.AddDays(-2),
+                    LegalReviewComments = "Statutory compliance verified against PFMA guidelines.",
+                    CreatedAt = DateTime.UtcNow.AddDays(-14),
+                    CreatedBy = "SDFManager"
+                };
+
+                db.ContractAddendas.AddRange(addenda1, addenda2);
+                await db.SaveChangesAsync();
+            }
         }
 
         // ==========================================

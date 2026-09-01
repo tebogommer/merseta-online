@@ -5,6 +5,8 @@
 @inject IMoaTemplateEngineService TemplateService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
 
 <PageTitle>@(_isNew ? "New MoA Template | merSETA Legal" : $"{_template?.TemplateCode} | merSETA Legal")</PageTitle>
 
@@ -62,58 +64,62 @@ else
         </MudCard>
 
         <!-- Master-Detail Tabs -->
-        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary" ActivePanelIndexChanged="OnTabChanged">
             <!-- Tab 1: General & Policy Metadata -->
-            <MudTabPanel Text="Policy &amp; General Metadata" Icon="@Icons.Material.Filled.Tune">
-                <MudGrid>
-                    <MudItem xs="12" md="6">
-                        <MudTextField @bind-Value="_template.TemplateCode" Label="Template Code" Variant="Variant.Outlined" Required="true" HelperText="Unique code identifier, e.g. DG-STD-2026" />
-                    </MudItem>
-                    <MudItem xs="12" md="6">
-                        <MudTextField @bind-Value="_template.TemplateTitle" Label="Template Title" Variant="Variant.Outlined" Required="true" HelperText="Human-readable legal contract title" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6" md="4">
-                        <MudNumericField @bind-Value="_template.FinancialYear" Label="Financial Year" Variant="Variant.Outlined" Min="2020" Max="2035" Required="true" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6" md="4">
-                        <MudSelect T="string" @bind-Value="_template.GrantTypeCode" Label="Grant Type" Variant="Variant.Outlined">
-                            <MudSelectItem Value="@("DiscretionaryGrant")">Discretionary Grant</MudSelectItem>
-                            <MudSelectItem Value="@("SpecialProject")">Special Project</MudSelectItem>
-                            <MudSelectItem Value="@("Bursary")">Bursary Scheme</MudSelectItem>
-                            <MudSelectItem Value="@("Candidacy")">Candidacy Support</MudSelectItem>
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" sm="6" md="4">
-                        <MudSelect T="string" @bind-Value="_template.LegalEntityType" Label="Target Entity Type" Variant="Variant.Outlined">
-                            <MudSelectItem Value="@("All")">All Legal Entities</MudSelectItem>
-                            <MudSelectItem Value="@("Employer")">Private Employers</MudSelectItem>
-                            <MudSelectItem Value="@("TVET")">TVET Colleges</MudSelectItem>
-                            <MudSelectItem Value="@("University")">Universities / HET</MudSelectItem>
-                            <MudSelectItem Value="@("NGO")">NGOs / Community Orgs</MudSelectItem>
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" sm="6" md="4">
-                        <MudTextField @bind-Value="_template.VersionNumber" Label="Policy Version" Variant="Variant.Outlined" HelperText="Semantic version, e.g. 1.0.0" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6" md="4">
-                        <MudDatePicker @bind-Date="_effectiveFromDate" Label="Effective From Date" Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6" md="4">
-                        <MudDatePicker @bind-Date="_effectiveToDate" Label="Effective Sunset Date" Variant="Variant.Outlined" Clearable="true" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6" md="4">
-                        <MudSwitch @bind-Value="_template.IsActive" Label="Active for Contract Generation" Color="Color.Primary" />
-                    </MudItem>
-                    @if (!string.IsNullOrWhiteSpace(_template.ApprovedBy))
-                    {
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudTextField @bind-Value="_template.ApprovedBy" Label="Approved By" Variant="Variant.Outlined" ReadOnly="true" />
-                        </MudItem>
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudTextField Value="@(_template.ApprovedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "")" Label="Approved At" Variant="Variant.Outlined" ReadOnly="true" />
-                        </MudItem>
-                    }
-                </MudGrid>
+            <MudTabPanel Text="Policy & General Metadata" Icon="@Icons.Material.Filled.Tune">
+                <MudCard Elevation="0">
+                    <MudCardContent>
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudTextField @bind-Value="_template.TemplateCode" Label="Template Code" Variant="Variant.Outlined" Required="true" HelperText="Unique code identifier, e.g. DG-STD-2026" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudTextField @bind-Value="_template.TemplateTitle" Label="Template Title" Variant="Variant.Outlined" Required="true" HelperText="Human-readable legal contract title" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudNumericField @bind-Value="_template.FinancialYear" Label="Financial Year" Variant="Variant.Outlined" Min="2020" Max="2035" Required="true" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudSelect T="string" @bind-Value="_template.GrantTypeCode" Label="Grant Type" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("DiscretionaryGrant")">Discretionary Grant</MudSelectItem>
+                                    <MudSelectItem Value="@("SpecialProject")">Special Project</MudSelectItem>
+                                    <MudSelectItem Value="@("Bursary")">Bursary Scheme</MudSelectItem>
+                                    <MudSelectItem Value="@("Candidacy")">Candidacy Support</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudSelect T="string" @bind-Value="_template.LegalEntityType" Label="Target Entity Type" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("All")">All Legal Entities</MudSelectItem>
+                                    <MudSelectItem Value="@("Employer")">Private Employers</MudSelectItem>
+                                    <MudSelectItem Value="@("TVET")">TVET Colleges</MudSelectItem>
+                                    <MudSelectItem Value="@("University")">Universities / HET</MudSelectItem>
+                                    <MudSelectItem Value="@("NGO")">NGOs / Community Orgs</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudTextField @bind-Value="_template.VersionNumber" Label="Policy Version" Variant="Variant.Outlined" HelperText="Semantic version, e.g. 1.0.0" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudDatePicker @bind-Date="_effectiveFromDate" Label="Effective From Date" Variant="Variant.Outlined" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudDatePicker @bind-Date="_effectiveToDate" Label="Effective Sunset Date" Variant="Variant.Outlined" Clearable="true" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudSwitch @bind-Value="_template.IsActive" Label="Active for Contract Generation" Color="Color.Primary" />
+                            </MudItem>
+                            @if (!string.IsNullOrWhiteSpace(_template.ApprovedBy))
+                            {
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField @bind-Value="_template.ApprovedBy" Label="Approved By" Variant="Variant.Outlined" ReadOnly="true" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Value="@(_template.ApprovedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "")" Label="Approved At" Variant="Variant.Outlined" ReadOnly="true" />
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
             </MudTabPanel>
 
             <!-- Tab 2: Clause Composition & Section Ordering -->
@@ -186,7 +192,7 @@ else
             </MudTabPanel>
 
             <!-- Tab 3: Live Document Preview -->
-            <MudTabPanel Text="Live Simulation &amp; PDF Export" Icon="@Icons.Material.Filled.PictureAsPdf">
+            <MudTabPanel Text="Live Simulation & PDF Export" Icon="@Icons.Material.Filled.PictureAsPdf">
                 <MudGrid>
                     <!-- Left Column: Scenario & Token Inspector -->
                     <MudItem xs="12" md="4">
@@ -279,7 +285,7 @@ else
                                 else if (_showRawMarkdown)
                                 {
                                     <MudPaper Elevation="0" Class="pa-4 rounded-lg mud-background-gray" Style="max-height: 750px; overflow-y: auto;">
-                                        <pre style="white-space: pre-wrap; font-family: 'Segoe UI', sans-serif; font-size: 13px; line-height: 1.6;">@(_previewContent ?? "Generating document preview...")</pre>
+                                        <pre class="font-mono text-body2" style="white-space: pre-wrap; line-height: 1.6;">@(_previewContent ?? "Generating document preview...")</pre>
                                     </MudPaper>
                                 }
                                 else if (!string.IsNullOrEmpty(_pdfBase64))
@@ -339,14 +345,13 @@ else
 @code {
     [Parameter] public int Id { get; set; }
 
-    [Inject] private IJSRuntime JS { get; set; } = default!;
-
     private MoaTemplate? _template;
     private bool _isLoading = true;
     private bool _isNew = false;
     private bool _generatingPdf = false;
     private bool _showRawMarkdown = false;
     private bool _includeWatermark = true;
+    private int _activeTabIndex = 0;
 
     private DateTime? _effectiveFromDate = DateTime.Today;
     private DateTime? _effectiveToDate = DateTime.Today.AddYears(1);
@@ -408,6 +413,15 @@ else
     {
         await GenerateLivePreviewAsync();
         Snackbar.Add("MoA Simulation PDF updated with current scenario tokens.", Severity.Info);
+    }
+
+    private async Task OnTabChanged(int index)
+    {
+        _activeTabIndex = index;
+        if (index == 2 && string.IsNullOrEmpty(_pdfBase64))
+        {
+            await GenerateLivePreviewAsync();
+        }
     }
 
     private async Task LoadTemplateAsync()
@@ -607,7 +621,7 @@ else
         try
         {
             string fileName = $"{_template.TemplateCode}_MoA_Simulation_{_selectedScenario}_{DateTime.UtcNow:yyyyMMdd}.pdf";
-            await JS.InvokeVoidAsync("downloadFileFromBase64", fileName, "application/pdf", _pdfBase64);
+            await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", fileName, "application/pdf", _pdfBase64);
             Snackbar.Add("Simulated MoA agreement PDF downloaded successfully.", Severity.Success);
         }
         catch (Exception ex)

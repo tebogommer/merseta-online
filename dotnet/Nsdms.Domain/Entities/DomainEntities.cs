@@ -203,6 +203,31 @@ public class LevyFileLine : BaseEntity
     /// </summary>
     public bool IsReconciled { get; set; } = false;
 
+    /// <summary>
+    /// Declared 5-digit SIC code reported in the SARS monthly submission.
+    /// </summary>
+    public string? SicCode { get; set; }
+
+    /// <summary>
+    /// Resolved merSETA Chamber Code based on statutory SIC mapping (AUTO, METAL, MOTOR, NEW_TYRE, PLASTICS, OTHER).
+    /// </summary>
+    public string? ChamberCode { get; set; }
+
+    /// <summary>
+    /// Resolved statutory SETA code (SETA 17 for merSETA, or other SETA code for out-of-scope files).
+    /// </summary>
+    public string SetaCode { get; set; } = "17";
+
+    /// <summary>
+    /// Indicates whether this levy transaction belongs to a non-merSETA industry requiring Inter-SETA transfer.
+    /// </summary>
+    public bool IsOutOfScopeSeta { get; set; } = false;
+
+    /// <summary>
+    /// Indicates whether the declared SARS SIC code differs from the employer's verified master profile.
+    /// </summary>
+    public bool HasSicCodeMismatch { get; set; } = false;
+
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public string? OrganisationName { get; set; }
 
@@ -240,6 +265,26 @@ public class GrantApplication : BaseEntity
     /// Navigational reference to the open funding window.
     /// </summary>
     public GrantFundingWindow? FundingWindow { get; set; }
+
+    /// <summary>
+    /// Optional foreign key referencing the primary StrategicPriority theme addressed by this application.
+    /// </summary>
+    public int? StrategicPriorityId { get; set; }
+
+    /// <summary>
+    /// Navigational reference to the primary StrategicPriority.
+    /// </summary>
+    public StrategicPriority? StrategicPriority { get; set; }
+
+    /// <summary>
+    /// Optional foreign key referencing the specific FundingWindowPriority allocation envelope.
+    /// </summary>
+    public int? FundingWindowPriorityId { get; set; }
+
+    /// <summary>
+    /// Navigational reference to the window's strategic priority allocation.
+    /// </summary>
+    public FundingWindowPriority? FundingWindowPriority { get; set; }
 
     /// <summary>
     /// Unique grant application reference tracking number (e.g. DG-2026-0001).

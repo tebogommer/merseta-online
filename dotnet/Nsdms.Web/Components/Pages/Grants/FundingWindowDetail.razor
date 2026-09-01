@@ -1,0 +1,730 @@
+@page "/dg-funding-windows/{id:int}"
+@page "/dg-funding-windows/{id:int}/edit"
+@page "/dg-funding-windows/create"
+@page "/grants/windows/{id:int}"
+@page "/grants/windows/{id:int}/edit"
+@page "/grants/windows/create"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IGrantService GrantService
+@inject ILookupService LookupService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
+
+<PageTitle>@(Id == 0 ? "Open New DG Funding Window" : _window.WindowName) - merSETA NSDMS</PageTitle>
+
+<!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
+<MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3 bg-surface" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+    <div class="d-flex align-center gap-3">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="BackToList"
+                   aria-label="Back to Discretionary Grant Funding Windows">
+            Back to DG Windows
+        </MudButton>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
+            <MudIcon Icon="@Icons.Material.Filled.EventNote" Size="Size.Small" />
+        </MudAvatar>
+        <div>
+            <div class="d-flex align-center gap-2">
+                <MudText Typo="Typo.h5" Class="fw-bold">
+                    @(Id == 0 ? "Open New DG Funding Window" : _window.WindowName)
+                </MudText>
+                @if (Id > 0)
+                {
+                    <MudChip T="string" Color="@GetStatusColor()" Size="Size.Small" Variant="Variant.Filled">
+                        @_window.StatusDisplay
+                    </MudChip>
+                }
+            </div>
+            @if (Id > 0)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Scheme Year: <strong>@_window.FinYear</strong> | 
+                    Type: <strong>@(!string.IsNullOrWhiteSpace(_window.GrantTypeCode) ? _window.GrantTypeCode : "PIVOTAL")</strong> | 
+                    Budget: <strong>@_window.TotalAvailableBudget.ToString("C")</strong> | 
+                    Applications: <strong>@(_window.Applications?.Count ?? 0)</strong>
+                </MudText>
+            }
+        </div>
+    </div>
+    <div class="d-flex align-center gap-2">
+        @if (Id > 0 && _window.IsActive && _window.ClosingDate >= DateTime.UtcNow)
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Warning"
+                       StartIcon="@Icons.Material.Filled.Lock"
+                       OnClick="CloseWindowEarly"
+                       aria-label="Close Window Early">
+                Close Window Early
+            </MudButton>
+        }
+        @if (Id > 0 && (_window.Applications == null || !_window.Applications.Any()))
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="DeleteWindow"
+                       aria-label="Delete Window">
+                Delete
+            </MudButton>
+        }
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   StartIcon="@Icons.Material.Filled.Cancel"
+                   OnClick="BackToList"
+                   aria-label="Cancel">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="SaveWindow"
+                   Disabled="_isSaving"
+                   aria-label="Save Window">
+            @(_isSaving ? "Saving..." : (Id == 0 ? "Gazette & Open Window" : "Save Changes"))
+        </MudButton>
+    </div>
+</MudPaper>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
+    }
+    else
+    {
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" @bind-ActivePanelIndex="_activeTabIndex">
+            <!-- TAB 1: Window Configuration -->
+            <MudTabPanel Text="Window Configuration" Icon="@Icons.Material.Filled.Settings">
+                <MudForm @ref="_form" @bind-IsValid="_isValid" Class="pa-4">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" lg="8">
+                            <MudCard Outlined="true" Class="pa-4 mb-4">
+                                <MudText Typo="Typo.h6" Class="fw-bold mb-3">Gazetted Funding Cycle Details</MudText>
+                                <MudGrid>
+                                    <MudItem xs="12" md="4">
+                                        <MudNumericField T="int"
+                                                         Label="Financial Scheme Year"
+                                                         Required="true"
+                                                         RequiredError="Financial year is required"
+                                                         @bind-Value="_window.FinYear"
+                                                         Variant="Variant.Outlined"
+                                                         Min="2020"
+                                                         Max="2040" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="8">
+                                        <MudSelect T="string" Label="Grant Funding Programme Type" Required="true" @bind-Value="_window.GrantTypeCode" Variant="Variant.Outlined">
+                                            @foreach (var gt in _grantTypes)
+                                            {
+                                                <MudSelectItem Value="@gt.Code">@gt.Name (@gt.Code)</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudTextField T="string"
+                                                       Label="Window Title / Gazette Announcement"
+                                                       Required="true"
+                                                       RequiredError="Window name is mandatory"
+                                                       @bind-Value="_window.WindowName"
+                                                       Variant="Variant.Outlined"
+                                                       Placeholder="e.g. 2026/27 Discretionary Grant Funding Window 1 (PIVOTAL &amp; Apprenticeships)" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudDatePicker Label="Opening Date"
+                                                       Required="true"
+                                                       @bind-Date="_openDate"
+                                                       Variant="Variant.Outlined"
+                                                       DateFormat="yyyy-MM-dd" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudDatePicker Label="Hard Closing Deadline"
+                                                       Required="true"
+                                                       @bind-Date="_closeDate"
+                                                       Variant="Variant.Outlined"
+                                                       DateFormat="yyyy-MM-dd" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudNumericField T="decimal"
+                                                         Label="Total Discretionary Budget Allocation (ZAR)"
+                                                         Required="true"
+                                                         @bind-Value="_window.TotalAvailableBudget"
+                                                         Variant="Variant.Outlined"
+                                                         Format="N2"
+                                                         Min="0" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <div class="pt-2">
+                                            <MudSwitch T="bool" @bind-Value="_window.IsActive" Color="Color.Success" Label="Window Operational Status (Active &amp; Open)" />
+                                        </div>
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudTextField T="string"
+                                                       Label="Gazette Notice Reference / Policy Guidelines"
+                                                       Lines="3"
+                                                       @bind-Value="_window.Description"
+                                                       Variant="Variant.Outlined"
+                                                       Placeholder="Enter official Government Gazette notice numbers, priority focus sectors, or specific policy criteria for this window..." />
+                                    </MudItem>
+                                </MudGrid>
+                            </MudCard>
+                        </MudItem>
+
+                        <!-- Right Column: Summary & Governance -->
+                        <MudItem xs="12" lg="4">
+                            <MudCard Outlined="true" Class="pa-4 mb-4">
+                                <MudText Typo="Typo.h6" Class="fw-bold mb-3">Window Status &amp; Metrics</MudText>
+                                <div class="d-flex flex-column gap-3">
+                                    <div class="d-flex justify-space-between align-center">
+                                        <MudText Typo="Typo.body2">Current State:</MudText>
+                                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor()" Variant="Variant.Filled">
+                                            @_window.StatusDisplay
+                                        </MudChip>
+                                    </div>
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.body2">Available Budget:</MudText>
+                                        <MudText Typo="Typo.body2" Class="fw-bold text-success">@_window.TotalAvailableBudget.ToString("C")</MudText>
+                                    </div>
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.body2">Applications Lodged:</MudText>
+                                        <MudText Typo="Typo.body2" Class="fw-bold">@(_window.Applications?.Count ?? 0)</MudText>
+                                    </div>
+                                    <MudDivider />
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.caption">Created At:</MudText>
+                                        <MudText Typo="Typo.caption">@(_window.CreatedAt > DateTime.MinValue ? _window.CreatedAt.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                    </div>
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.caption">Created By:</MudText>
+                                        <MudText Typo="Typo.caption">@(!string.IsNullOrWhiteSpace(_window.CreatedBy) ? _window.CreatedBy : "-")</MudText>
+                                    </div>
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.caption">Modified At:</MudText>
+                                        <MudText Typo="Typo.caption">@(_window.ModifiedAt.HasValue ? _window.ModifiedAt.Value.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                    </div>
+                                </div>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </MudTabPanel>
+
+            <!-- TAB 2: Strategic Themes & Priorities -->
+            @if (Id > 0)
+            {
+                <MudTabPanel Text="Strategic Themes &amp; Priorities" Icon="@Icons.Material.Filled.Stars" BadgeData="@(_window.StrategicPriorities?.Count(p => p.IsActive) ?? 0)" BadgeColor="Color.Secondary">
+                    <div class="pa-4">
+                        <!-- Envelopes Summary -->
+                        <MudGrid Class="mb-4">
+                            <MudItem xs="12" md="3">
+                                <MudCard Outlined="true" Class="pa-4 text-center">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Window Budget</MudText>
+                                    <MudText Typo="Typo.h6" Class="fw-bold text-primary">@_window.TotalAvailableBudget.ToString("C")</MudText>
+                                </MudCard>
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudCard Outlined="true" Class="pa-4 text-center">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Allocated to Themes</MudText>
+                                    <MudText Typo="Typo.h6" Class="fw-bold text-success">@(_window.StrategicPriorities?.Where(p => p.IsActive).Sum(p => p.AllocatedBudget).ToString("C") ?? "R 0.00")</MudText>
+                                </MudCard>
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudCard Outlined="true" Class="pa-4 text-center">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Unallocated Buffer</MudText>
+                                    @{
+                                        var allocatedThemesTotal = _window.StrategicPriorities?.Where(p => p.IsActive).Sum(p => p.AllocatedBudget) ?? 0m;
+                                        var unallocatedBuffer = Math.Max(0, _window.TotalAvailableBudget - allocatedThemesTotal);
+                                    }
+                                    <MudText Typo="Typo.h6" Class="fw-bold text-warning">@unallocatedBuffer.ToString("C")</MudText>
+                                </MudCard>
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudCard Outlined="true" Class="pa-4 text-center">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Target Beneficiaries</MudText>
+                                    <MudText Typo="Typo.h6" Class="fw-bold text-info">@(_window.StrategicPriorities?.Where(p => p.IsActive).Sum(p => p.TargetBeneficiaries) ?? 0) Learners</MudText>
+                                </MudCard>
+                            </MudItem>
+                        </MudGrid>
+
+                        <!-- Add Theme to Window Card -->
+                        <MudCard Outlined="true" Class="pa-4 mb-4 bg-light">
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold mb-3 d-flex align-center gap-2">
+                                <MudIcon Icon="@Icons.Material.Filled.AddCircleOutline" Color="Color.Primary" />
+                                Assign Strategic Priority / Theme to this Window
+                            </MudText>
+                            <MudGrid>
+                                <MudItem xs="12" md="5">
+                                    <MudSelect T="int" Label="Strategic Theme / Key Focus Area"
+                                               Variant="Variant.Outlined"
+                                               @bind-Value="_newPriorityId"
+                                               ToStringFunc="@(id => FormatStrategicPriority(id))">
+                                        <MudSelectItem Value="0">-- Select Strategic Priority --</MudSelectItem>
+                                        @foreach (var sp in _allStrategicPriorities.Where(s => !_window.StrategicPriorities.Any(wp => wp.IsActive && wp.StrategicPriorityId == s.Id)))
+                                        {
+                                            <MudSelectItem Value="@sp.Id">@sp.Code - @sp.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="3">
+                                    <MudNumericField T="decimal"
+                                                     Label="Sub-Budget Envelope (ZAR)"
+                                                     Variant="Variant.Outlined"
+                                                     @bind-Value="_newAllocatedBudget"
+                                                     Format="N2"
+                                                     Min="0" />
+                                </MudItem>
+                                <MudItem xs="12" md="2">
+                                    <MudNumericField T="int"
+                                                     Label="Target Beneficiaries"
+                                                     Variant="Variant.Outlined"
+                                                     @bind-Value="_newTargetBeneficiaries"
+                                                     Min="0" />
+                                </MudItem>
+                                <MudItem xs="12" md="2">
+                                    <MudNumericField T="decimal"
+                                                     Label="Min Score (%)"
+                                                     Variant="Variant.Outlined"
+                                                     @bind-Value="_newMinScore"
+                                                     Min="0"
+                                                     Max="100" />
+                                </MudItem>
+                                <MudItem xs="12" md="8">
+                                    <div class="d-flex align-center gap-4">
+                                        <MudSwitch T="bool" @bind-Value="_newIsRingFenced" Color="Color.Warning" Label="Ring-Fenced Allocation (Requires Board Approval for Virement)" />
+                                    </div>
+                                </MudItem>
+                                <MudItem xs="12" md="4" Class="d-flex justify-end align-center">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               StartIcon="@Icons.Material.Filled.Add"
+                                               OnClick="AddThemeToWindow"
+                                               Disabled="_isAddingTheme || _newPriorityId == 0">
+                                        @(_isAddingTheme ? "Assigning..." : "Assign Theme")
+                                    </MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </MudCard>
+
+                        <!-- Strategic Priorities Table -->
+                        @if (_window.StrategicPriorities != null && _window.StrategicPriorities.Any(p => p.IsActive))
+                        {
+                            <MudTable Items="@_window.StrategicPriorities.Where(p => p.IsActive)" Hover="true" Dense="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>Priority Code</MudTh>
+                                    <MudTh>Strategic Theme</MudTh>
+                                    <MudTh>NSDP III Outcome &amp; SIP Category</MudTh>
+                                    <MudTh>Sub-Budget Envelope</MudTh>
+                                    <MudTh>Target Learners</MudTh>
+                                    <MudTh>Min Passing Score</MudTh>
+                                    <MudTh>Ring-Fence</MudTh>
+                                    <MudTh Style="text-align:right">Action</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Class="font-monospace">
+                                            @(context.StrategicPriority?.Code ?? "SP-THEME")
+                                        </MudChip>
+                                    </MudTd>
+                                    <MudTd>
+                                        <div class="fw-bold">@(context.StrategicPriority?.Name ?? "Strategic Theme")</div>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@(context.StrategicPriority?.TargetSector ?? "All Sectors")</MudText>
+                                    </MudTd>
+                                    <MudTd>
+                                        <div class="small fw-semibold">@(context.StrategicPriority?.NsdpOutcomeCode ?? "NSDP Outcome")</div>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@(context.StrategicPriority?.SipCategory ?? "Standard SIP")</MudText>
+                                    </MudTd>
+                                    <MudTd Class="fw-bold text-success">@context.AllocatedBudget.ToString("C")</MudTd>
+                                    <MudTd Class="fw-bold">@context.TargetBeneficiaries</MudTd>
+                                    <MudTd>@context.MinScoreThreshold.ToString("F1")%</MudTd>
+                                    <MudTd>
+                                        @if (context.IsRingFenced)
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled">Ring-Fenced</MudChip>
+                                        }
+                                        else
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">Flexible</MudChip>
+                                        }
+                                    </MudTd>
+                                    <MudTd Style="text-align:right">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Color="Color.Error"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => RemoveThemeFromWindow(context.Id))"
+                                                       Title="Remove Theme from Window" />
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        }
+                        else
+                        {
+                            <MudAlert Severity="Severity.Info" Class="pa-4 text-center">
+                                No strategic priority themes assigned to this funding window yet. Use the form above to assign priorities.
+                            </MudAlert>
+                        }
+                    </div>
+                </MudTabPanel>
+
+                <!-- TAB 3: Applications Lodged -->
+                <MudTabPanel Text="Applications Lodged" Icon="@Icons.Material.Filled.Assignment" BadgeData="@(_window.Applications?.Count ?? 0)" BadgeColor="Color.Primary">
+                    <div class="pa-4">
+                        @if (_window.Applications != null && _window.Applications.Any())
+                        {
+                            <MudTable Items="@_window.Applications" Hover="true" Dense="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>Application No</MudTh>
+                                    <MudTh>Organisation</MudTh>
+                                    <MudTh>Strategic Theme</MudTh>
+                                    <MudTh>Project Title</MudTh>
+                                    <MudTh>Requested Amount</MudTh>
+                                    <MudTh>Approved Amount</MudTh>
+                                    <MudTh>Status</MudTh>
+                                    <MudTh Style="text-align:right">Action</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>
+                                        <a href="/dg-grants/@context.Id" class="fw-bold text-primary font-monospace text-decoration-none">
+                                            @context.ApplicationNumber
+                                        </a>
+                                    </MudTd>
+                                    <MudTd>@(context.Organisation?.CompanyName ?? "Unlinked Organisation")</MudTd>
+                                    <MudTd>
+                                        @if (context.StrategicPriority != null)
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Filled">
+                                                @context.StrategicPriority.Code - @context.StrategicPriority.Name
+                                            </MudChip>
+                                        }
+                                        else
+                                        {
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">General Discretionary</MudText>
+                                        }
+                                    </MudTd>
+                                    <MudTd><strong>@context.ProjectTitle</strong></MudTd>
+                                    <MudTd Class="fw-bold">@context.RequestedAmount.ToString("C")</MudTd>
+                                    <MudTd Class="fw-bold text-success">@((context.ApprovedAmount ?? 0m).ToString("C"))</MudTd>
+                                    <MudTd>
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">@context.StatusCode</MudChip>
+                                    </MudTd>
+                                    <MudTd Style="text-align:right">
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInNew" Href="@($"/dg-grants/{context.Id}")">
+                                            Open DG Application
+                                        </MudButton>
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        }
+                        else
+                        {
+                            <MudAlert Severity="Severity.Info" Class="pa-4 text-center">
+                                No applications have been submitted against this funding window yet.
+                            </MudAlert>
+                        }
+                    </div>
+                </MudTabPanel>
+
+                <!-- TAB 4: Budget & Allocation Metrics -->
+                <MudTabPanel Text="Budget Metrics" Icon="@Icons.Material.Filled.PieChart">
+                    <div class="pa-4">
+                        @if (_summary != null)
+                        {
+                            <MudGrid>
+                                <MudItem xs="12" md="3">
+                                    <MudCard Outlined="true" Class="pa-4 text-center border-primary" Style="border: 2px solid var(--mud-palette-primary);">
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Total Gazetted Budget</MudText>
+                                        <MudText Typo="Typo.h5" Class="fw-bold text-primary">@_summary.TotalAvailableBudget.ToString("C")</MudText>
+                                    </MudCard>
+                                </MudItem>
+                                <MudItem xs="12" md="3">
+                                    <MudCard Outlined="true" Class="pa-4 text-center border-info" Style="border: 2px solid var(--mud-palette-info);">
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Total Requested</MudText>
+                                        <MudText Typo="Typo.h5" Class="fw-bold text-info">@_summary.TotalRequestedAmount.ToString("C")</MudText>
+                                    </MudCard>
+                                </MudItem>
+                                <MudItem xs="12" md="3">
+                                    <MudCard Outlined="true" Class="pa-4 text-center border-success" Style="border: 2px solid var(--mud-palette-success);">
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Approved Allocation</MudText>
+                                        <MudText Typo="Typo.h5" Class="fw-bold text-success">@_summary.TotalApprovedAmount.ToString("C")</MudText>
+                                    </MudCard>
+                                </MudItem>
+                                <MudItem xs="12" md="3">
+                                    <MudCard Outlined="true" Class="pa-4 text-center border-warning" Style="border: 2px solid var(--mud-palette-warning);">
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Remaining Balance</MudText>
+                                        <MudText Typo="Typo.h5" Class="fw-bold text-warning">@_summary.RemainingBudget.ToString("C")</MudText>
+                                    </MudCard>
+                                </MudItem>
+                            </MudGrid>
+
+                            <MudCard Outlined="true" Class="pa-6 mt-4">
+                                <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">Budget Utilization</MudText>
+                                @{
+                                    var percent = _summary.TotalAvailableBudget > 0 
+                                        ? Math.Min(100, (int)((_summary.TotalApprovedAmount / _summary.TotalAvailableBudget) * 100)) 
+                                        : 0;
+                                }
+                                <MudProgressLinear Color="Color.Success" Value="@percent" Size="Size.Large" Class="my-3" />
+                                <div class="d-flex justify-space-between">
+                                    <MudText Typo="Typo.body2">@percent% Allocated</MudText>
+                                    <MudText Typo="Typo.body2">@_summary.RemainingBudget.ToString("C") Unallocated</MudText>
+                                </div>
+                            </MudCard>
+                        }
+                    </div>
+                </MudTabPanel>
+
+                <!-- TAB 5: Evidence Vault -->
+                <MudTabPanel Text="Gazette Documents" Icon="@Icons.Material.Filled.FolderZip">
+                    <DocumentVault TargetEntityName="GrantFundingWindow" TargetEntityId="@Id" />
+                </MudTabPanel>
+            }
+        </MudTabs>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private GrantFundingWindow _window = new();
+    private FundingWindowSummaryDto? _summary;
+    private MudForm? _form;
+    private bool _isValid;
+    private bool _loading = true;
+    private bool _isSaving = false;
+    private int _activeTabIndex = 0;
+
+    private List<LookupItemDto> _grantTypes = new();
+    private List<StrategicPriority> _allStrategicPriorities = new();
+    private DateTime? _openDate;
+    private DateTime? _closeDate;
+
+    // Add Theme form state
+    private int _newPriorityId = 0;
+    private decimal _newAllocatedBudget = 5000000m;
+    private int _newTargetBeneficiaries = 50;
+    private decimal _newMinScore = 65.00m;
+    private bool _newIsRingFenced = false;
+    private bool _isAddingTheme = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _grantTypes = await LookupService.GetLookupItemsAsync("GrantTypeType");
+        _allStrategicPriorities = await GrantService.GetStrategicPrioritiesAsync(activeOnly: true);
+
+        if (Id > 0)
+        {
+            await LoadWindowData();
+        }
+        else
+        {
+            _window = new GrantFundingWindow
+            {
+                FinYear = DateTime.UtcNow.Year,
+                WindowName = $"{DateTime.UtcNow.Year}/{DateTime.UtcNow.Year + 1} Discretionary Grant Funding Window",
+                GrantTypeCode = "PIVOTAL",
+                OpeningDate = DateTime.UtcNow.Date,
+                ClosingDate = DateTime.UtcNow.Date.AddMonths(2),
+                TotalAvailableBudget = 25000000m,
+                IsActive = true
+            };
+            _openDate = _window.OpeningDate;
+            _closeDate = _window.ClosingDate;
+        }
+
+        _loading = false;
+    }
+
+    private async Task LoadWindowData()
+    {
+        var w = await GrantService.GetFundingWindowByIdAsync(Id);
+        if (w != null)
+        {
+            _window = w;
+            _openDate = _window.OpeningDate;
+            _closeDate = _window.ClosingDate;
+            _summary = await GrantService.GetFundingWindowSummaryAsync(Id);
+        }
+        else
+        {
+            Snackbar.Add("Discretionary Grant Funding Window not found.", Severity.Error);
+            NavManager.NavigateTo("/dg-funding-windows");
+        }
+    }
+
+    private string FormatStrategicPriority(int id)
+    {
+        if (id == 0) return "-- Select Strategic Priority --";
+        var sp = _allStrategicPriorities.FirstOrDefault(s => s.Id == id);
+        return sp != null ? $"{sp.Code} - {sp.Name} ({sp.NsdpOutcomeCode})" : "Strategic Priority";
+    }
+
+    private async Task AddThemeToWindow()
+    {
+        if (_newPriorityId == 0)
+        {
+            Snackbar.Add("Please select a Strategic Priority theme.", Severity.Warning);
+            return;
+        }
+
+        if (_newAllocatedBudget <= 0)
+        {
+            Snackbar.Add("Sub-budget allocation must be greater than zero.", Severity.Warning);
+            return;
+        }
+
+        _isAddingTheme = true;
+        try
+        {
+            var item = new FundingWindowPriority
+            {
+                FundingWindowId = Id,
+                StrategicPriorityId = _newPriorityId,
+                AllocatedBudget = _newAllocatedBudget,
+                TargetBeneficiaries = _newTargetBeneficiaries,
+                MinScoreThreshold = _newMinScore,
+                IsRingFenced = _newIsRingFenced,
+                IsActive = true
+            };
+
+            await GrantService.AddWindowPriorityAsync(item, "AdminUser");
+            Snackbar.Add("Strategic Priority theme assigned to funding window successfully.", Severity.Success);
+            _newPriorityId = 0;
+            _newAllocatedBudget = 5000000m;
+            _newTargetBeneficiaries = 50;
+            await LoadWindowData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _isAddingTheme = false;
+        }
+    }
+
+    private async Task RemoveThemeFromWindow(int windowPriorityId)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Remove Theme Allocation",
+            "Are you sure you want to remove this Strategic Theme allocation from the funding window?",
+            yesText: "Remove", cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            try
+            {
+                var success = await GrantService.RemoveWindowPriorityAsync(windowPriorityId, "AdminUser");
+                if (success)
+                {
+                    Snackbar.Add("Strategic Theme removed from window successfully.", Severity.Success);
+                    await LoadWindowData();
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+
+    private async Task SaveWindow()
+    {
+        if (_form != null)
+        {
+            await _form.Validate();
+            if (!_isValid) return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            if (_openDate.HasValue) _window.OpeningDate = _openDate.Value;
+            if (_closeDate.HasValue) _window.ClosingDate = _closeDate.Value;
+
+            if (_window.ClosingDate < _window.OpeningDate)
+            {
+                Snackbar.Add("Closing deadline cannot be earlier than opening date.", Severity.Warning);
+                return;
+            }
+
+            if (Id == 0)
+            {
+                var created = await GrantService.CreateFundingWindowAsync(_window, "AdminUser");
+                Snackbar.Add($"Funding window '{created.WindowName}' gazetted and opened successfully.", Severity.Success);
+                NavManager.NavigateTo($"/dg-funding-windows/{created.Id}");
+            }
+            else
+            {
+                var updated = await GrantService.UpdateFundingWindowAsync(_window, "AdminUser");
+                Snackbar.Add($"Funding window '{updated.WindowName}' updated successfully.", Severity.Success);
+                await LoadWindowData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving funding window: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task CloseWindowEarly()
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Close Funding Window Early",
+            $"Are you sure you want to close '{_window.WindowName}' early? No further applications will be accepted.",
+            yesText: "Close Window", cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            var success = await GrantService.CloseFundingWindowAsync(Id, "AdminUser");
+            if (success)
+            {
+                Snackbar.Add("Funding window closed successfully.", Severity.Success);
+                await LoadWindowData();
+            }
+        }
+    }
+
+    private async Task DeleteWindow()
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Delete Funding Window",
+            $"Are you sure you want to delete '{_window.WindowName}'?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            try
+            {
+                var success = await GrantService.DeleteFundingWindowAsync(Id, "AdminUser");
+                if (success)
+                {
+                    Snackbar.Add("Funding window deleted successfully.", Severity.Success);
+                    NavManager.NavigateTo("/dg-funding-windows");
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+
+    private void BackToList() => NavManager.NavigateTo("/dg-funding-windows");
+
+    private Color GetStatusColor() => !_window.IsActive 
+        ? Color.Error 
+        : (DateTime.UtcNow < _window.OpeningDate 
+            ? Color.Warning 
+            : (DateTime.UtcNow > _window.ClosingDate ? Color.Dark : Color.Success));
+}

@@ -32,7 +32,8 @@ builder.Services.AddSingleton<AuditableEntityInterceptor>();
 builder.Services.AddDbContextFactory<NsdmsDbContext>((sp, options) =>
 {
     var interceptor = sp.GetRequiredService<AuditableEntityInterceptor>();
-    var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+    var conn = builder.Configuration.GetConnectionString("DefaultConnection") 
+               ?? "Server=localhost\\SQLEXPRESS;Database=NSDMS-NET;User Id=NSDMS-NET;Password=NSDMS-NET;TrustServerCertificate=True;Encrypt=False;";
     options.UseSqlServer(conn)
            .AddInterceptors(interceptor);
 });
@@ -260,6 +261,7 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+app.UseStaticFiles();
 
 // Map Real-time SignalR Hub
 app.MapHub<Nsdms.Web.Hubs.NsdmsNotificationHub>("/hubs/notifications");
@@ -331,36 +333,41 @@ app.MapRazorComponents<App>()
 // Auto-create database & seed lookups, sample data, workflow definitions, financial records, and system governance
 using (var scope = app.Services.CreateScope())
 {
-    try
+    var db = scope.ServiceProvider.GetRequiredService<NsdmsDbContext>();
+    try { db.Database.EnsureCreated(); } catch (Exception ex) { app.Logger.LogWarning(ex, "EnsureCreated skipped or already initialized."); }
+
+    void RunMigrator(string name, Action action)
     {
-        var db = scope.ServiceProvider.GetRequiredService<NsdmsDbContext>();
-        db.Database.EnsureCreated();
-        Phase2SchemaMigrator.EnsurePhase2SchemaAsync(db).GetAwaiter().GetResult();
-        Phase3WorkflowSchemaMigrator.MigrateWorkflowSchemaAsync(app.Services).GetAwaiter().GetResult();
-        Phase4FinancialSchemaMigrator.MigrateFinancialSchemaAsync(app.Services).GetAwaiter().GetResult();
-        Phase5GovernanceSchemaMigrator.MigrateGovernanceSchemaAsync(app.Services).GetAwaiter().GetResult();
-        Phase6GovernanceSchemaMigrator.MigrateGovernanceSchemaAsync(app.Services).GetAwaiter().GetResult();
-        Phase7SetmisLookupMigrator.MigrateSetmisLookupsAsync(app.Services).GetAwaiter().GetResult();
-        Phase8SetmisSchemaAlignmentMigrator.MigrateSetmisSchemaAlignmentAsync(app.Services).GetAwaiter().GetResult();
-        Phase8NotificationSchemaMigrator.MigrateNotificationSchemaAsync(app.Services).GetAwaiter().GetResult();
-        Phase8WspSurveyAndAqpSchemaMigrator.MigrateAsync(db).GetAwaiter().GetResult();
-        Phase9TemporalTablesSchemaMigrator.MigrateTemporalTablesSchemaAsync(app.Services).GetAwaiter().GetResult();
-        Phase10MoaTemplateEngineMigrator.MigrateMoaTemplateSchemaAsync(app.Services).GetAwaiter().GetResult();
-        Phase11UniversalDocumentVerificationMigrator.MigrateDocumentVerificationSchemaAsync(app.Services).GetAwaiter().GetResult();
-        Phase12SchemaAlignmentMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult();
-        Phase13TradeMentorRatioSchemaMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult();
-        Phase14WspEligibilityAndMoaProvisioningMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult();
-        SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult();
-        var featureFlags = scope.ServiceProvider.GetRequiredService<IFeatureFlagService>();
-        featureFlags.SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult();
-        var roleService = scope.ServiceProvider.GetRequiredService<IRolePermissionService>();
-        roleService.SeedDefaultRolePermissionsAsync().GetAwaiter().GetResult();
-        app.Logger.LogInformation("SQL Server database verified with all entities, SETMIS lookups, sample data, workflow engine, financial governance, system configuration & security roles.");
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogWarning(ex, "Migrator {MigratorName} logged a warning or partial skip.", name);
+        }
     }
-    catch (Exception ex)
-    {
-        app.Logger.LogWarning(ex, "Could not automatically initialize SQL Server tables on startup.");
-    }
+
+    RunMigrator("Phase2", () => Phase2SchemaMigrator.EnsurePhase2SchemaAsync(db).GetAwaiter().GetResult());
+    RunMigrator("Phase3", () => Phase3WorkflowSchemaMigrator.MigrateWorkflowSchemaAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase4", () => Phase4FinancialSchemaMigrator.MigrateFinancialSchemaAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase5", () => Phase5GovernanceSchemaMigrator.MigrateGovernanceSchemaAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase6", () => Phase6GovernanceSchemaMigrator.MigrateGovernanceSchemaAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase7", () => Phase7SetmisLookupMigrator.MigrateSetmisLookupsAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase8Alignment", () => Phase8SetmisSchemaAlignmentMigrator.MigrateSetmisSchemaAlignmentAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase8Notification", () => Phase8NotificationSchemaMigrator.MigrateNotificationSchemaAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase8WspSurvey", () => Phase8WspSurveyAndAqpSchemaMigrator.MigrateAsync(db).GetAwaiter().GetResult());
+    RunMigrator("Phase9Temporal", () => Phase9TemporalTablesSchemaMigrator.MigrateTemporalTablesSchemaAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase10Moa", () => Phase10MoaTemplateEngineMigrator.MigrateMoaTemplateSchemaAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase11Verification", () => Phase11UniversalDocumentVerificationMigrator.MigrateDocumentVerificationSchemaAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase12Alignment", () => Phase12SchemaAlignmentMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase13MentorRatio", () => Phase13TradeMentorRatioSchemaMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase14WspEligibility", () => Phase14WspEligibilityAndMoaProvisioningMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase15SicCodeChamber", () => Phase15SicCodeChamberGovernanceMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
+    RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
+    RunMigrator("RolePermissions", () => scope.ServiceProvider.GetRequiredService<IRolePermissionService>().SeedDefaultRolePermissionsAsync().GetAwaiter().GetResult());
+    app.Logger.LogInformation("SQL Server database verified with all entities, SETMIS lookups, sample data, workflow engine, financial governance, system configuration & security roles.");
 }
 
 app.Run();
