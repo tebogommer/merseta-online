@@ -315,8 +315,32 @@ public class FinanceService : IFinanceService
             var exists = await context.MandatoryGrantDisbursements.AnyAsync(d => d.WspSubmissionId == wsp.Id);
             if (!exists)
             {
-                var grossLevy = wsp.PlannedTrainingBudget * 5.0m;
-                var rebate = wsp.PlannedTrainingBudget * 0.20m;
+                var sdl = wsp.Organisation?.SdlNumber?.Trim().ToUpperInvariant();
+                var finYearStr = finYear.ToString();
+
+                var levyLines = !string.IsNullOrEmpty(sdl)
+                    ? await context.LevyFileLines
+                        .Where(l => l.SdlNumber == sdl && (l.SchemeYear == finYearStr || l.SchemeYear.StartsWith(finYearStr)))
+                        .ToListAsync()
+                    : new List<LevyFileLine>();
+
+                decimal grossLevy = 0m;
+                decimal rebate = 0m;
+                string comments = string.Empty;
+
+                if (levyLines.Count > 0)
+                {
+                    grossLevy = levyLines.Sum(l => l.TotalLevyAmount > 0 ? l.TotalLevyAmount : (l.MandatoryLevyAmount * 5.0m));
+                    rebate = levyLines.Sum(l => l.MandatoryLevyAmount > 0 ? l.MandatoryLevyAmount : Math.Round(l.TotalLevyAmount * 0.20m, 2));
+                    comments = $"Calculated based on statutory 20% Mandatory Grant rebate entitlement from {levyLines.Count} reconciled SARS levy line(s) for scheme year {finYear}.";
+                }
+                else
+                {
+                    grossLevy = wsp.PlannedTrainingBudget * 5.0m;
+                    rebate = wsp.PlannedTrainingBudget * 0.20m;
+                    comments = $"Provisional calculation based on submitted WSP baseline (no SARS levy files ingested for SDL {sdl}).";
+                }
+
                 var org = wsp.Organisation;
 
                 var disb = new MandatoryGrantDisbursement
@@ -330,7 +354,7 @@ public class FinanceService : IFinanceService
                     CalculatedRebateAmount = rebate,
                     DisbursementStatusCode = "Calculated",
                     BankAccountSnapshot = org != null ? $"{org.BankName} - Acc {org.BankAccountNumber} - Branch {org.BankBranchCode}" : "Banking verified on file",
-                    Comments = "Calculated based on 20% statutory levy rebate entitlement.",
+                    Comments = comments,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = userId
                 };

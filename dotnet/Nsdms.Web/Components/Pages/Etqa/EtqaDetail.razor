@@ -8,6 +8,9 @@
 @inject LookupService LookupService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IAssessorReRegistrationService ReRegService
+@inject IPdfDocumentService PdfService
+@inject IJSRuntime JsRuntime
 @rendermode InteractiveServer
 
 <!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
@@ -30,6 +33,27 @@
     <div class="d-flex align-center gap-2">
         @if (Id > 0)
         {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Info"
+                       StartIcon="@Icons.Material.Filled.WorkspacePremium"
+                       OnClick="DownloadCertificate"
+                       aria-label="Download Certificate of Registration">
+                Certificate (PDF)
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.WorkspacePremium"
+                       Href="/etqa/scope-extensions"
+                       aria-label="Apply for Extension of Scope">
+                Extension of Scope
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Success"
+                       StartIcon="@Icons.Material.Filled.Autorenew"
+                       OnClick="RenewAccreditation"
+                       aria-label="Renew 3-Year Practitioner Accreditation">
+                3-Year Re-Registration
+            </MudButton>
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Error"
                        StartIcon="@Icons.Material.Filled.Delete"
@@ -414,6 +438,85 @@
                     </NoRecordsContent>
                 </MudTable>
             </MudTabPanel>
+
+            <!-- TAB 4: 3-Year Re-Registration & CPD Portfolio -->
+            <MudTabPanel Text="3-Year Re-Registration & CPD" Icon="@Icons.Material.Filled.HistoryEdu">
+                <MudCard Elevation="2" Class="pa-4 mb-4">
+                    <div class="d-flex justify-space-between align-center mb-4">
+                        <div>
+                            <MudText Typo="Typo.h6">Statutory 3-Year Re-Registration Standing</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                SAQA &amp; QCTO mandated 3-year practitioner renewal with continuous professional development (CPD) requirements.
+                            </MudText>
+                        </div>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Launch"
+                                   Href="@($"/etqa/assessors/{Id}/re-register")">
+                            Open 3-Year Re-Registration Wizard
+                        </MudButton>
+                    </div>
+
+                    @if (_renewalStatus != null)
+                    {
+                        <MudGrid Class="mb-4">
+                            <MudItem xs="12" md="3">
+                                <MudField Label="Validity Status" Variant="Variant.Outlined">
+                                    <MudChip T="string" Color="@(_renewalStatus.IsDueForRenewal ? Color.Warning : Color.Success)" Size="Size.Small">
+                                        @(_renewalStatus.IsDueForRenewal ? "Renewal Due" : "Compliant")
+                                    </MudChip>
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudField Label="Days Until Expiry" Variant="Variant.Outlined">
+                                    <span class="font-weight-bold @(_renewalStatus.DaysRemaining <= 180 ? "text-error" : "text-success")">
+                                        @_renewalStatus.DaysRemaining Days
+                                    </span>
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudField Label="Registration Expiry" Variant="Variant.Outlined">
+                                    @_renewalStatus.RegistrationEndDate.ToString("yyyy-MM-dd")
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudField Label="Active Scopes" Variant="Variant.Outlined">
+                                    @_renewalStatus.ActiveScopeCount Scope Units
+                                </MudField>
+                            </MudItem>
+                        </MudGrid>
+                    }
+
+                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-2">Past Re-Registration Applications</MudText>
+                    <MudTable Items="_reRegApplications" Dense="true" Hover="true" Elevation="1">
+                        <HeaderContent>
+                            <MudTh>Reference</MudTh>
+                            <MudTh>Type</MudTh>
+                            <MudTh>Previous Expiry</MudTh>
+                            <MudTh>New Expiry</MudTh>
+                            <MudTh>CPD Points</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh>Decision Number</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd><span class="font-mono font-weight-bold">@context.ApplicationReferenceNumber</span></MudTd>
+                            <MudTd>@context.ApplicationTypeCode</MudTd>
+                            <MudTd>@context.CurrentExpirationDate.ToString("yyyy-MM-dd")</MudTd>
+                            <MudTd><span class="text-success font-weight-bold">@context.ProposedNewExpirationDate.ToString("yyyy-MM-dd")</span></MudTd>
+                            <MudTd>@context.CpdPointsAccumulated pts</MudTd>
+                            <MudTd>
+                                <MudChip T="string" Size="Size.Small" Color="@(context.ReviewStatusCode == "Approved" ? Color.Success : Color.Info)">
+                                    @context.ReviewStatusCode
+                                </MudChip>
+                            </MudTd>
+                            <MudTd>@(context.CommitteeDecisionNumber ?? "-")</MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <MudText Color="Color.Secondary" Class="pa-4 text-center">No past re-registration applications recorded.</MudText>
+                        </NoRecordsContent>
+                    </MudTable>
+                </MudCard>
+            </MudTabPanel>
         </MudTabs>
     }
 </MudContainer>
@@ -432,6 +535,8 @@
 
     private List<AssessorModeratorScope> _scopes = new();
     private List<LearnerAssessment> _assessments = new();
+    private AssessorRenewalStatusDto? _renewalStatus;
+    private List<AssessorReRegistrationApplication> _reRegApplications = new();
 
     private DateTime? _startDate;
     private DateTime? _endDate;
@@ -501,6 +606,15 @@
             _endDate = a.EndDate;
             _scopes = await EtqaService.GetScopesAsync(Id);
             _assessments = await EtqaService.GetLearnerAssessmentsAsync(Id);
+            try
+            {
+                _renewalStatus = await ReRegService.GetAssessorRenewalStatusAsync(Id);
+                _reRegApplications = await ReRegService.GetApplicationsForAssessorAsync(Id);
+            }
+            catch
+            {
+                // Non-fatal if newly created or offline
+            }
         }
         else
         {
@@ -577,6 +691,26 @@
     private void BackToList()
     {
         NavManager.NavigateTo("/etqa");
+    }
+
+    private void RenewAccreditation()
+    {
+        NavManager.NavigateTo($"/etqa/assessors/{Id}/re-register");
+    }
+
+    private async Task DownloadCertificate()
+    {
+        try
+        {
+            var bytes = await PdfService.GenerateAssessorRegistrationCertificatePdfAsync(_assessor);
+            var base64 = Convert.ToBase64String(bytes);
+            await JsRuntime.InvokeVoidAsync("downloadFileFromBytes", $"Certificate_Assessor_{_assessor.RegistrationNumber}.pdf", "application/pdf", base64);
+            Snackbar.Add("Certificate of Registration generated successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating certificate: {ex.Message}", Severity.Error);
+        }
     }
 
     // Scopes Management

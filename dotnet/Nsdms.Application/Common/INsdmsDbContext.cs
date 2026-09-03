@@ -158,6 +158,8 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<SdpExtensionOfScope> SdpExtensionOfScopes { get; }
     DbSet<SdpReAccreditationApplication> SdpReAccreditationApplications { get; }
     DbSet<AssessorExtensionOfScope> AssessorExtensionOfScopes { get; }
+    DbSet<StatutorySubmissionBatch> StatutorySubmissionBatches { get; }
+    DbSet<StatutoryBatchFile> StatutoryBatchFiles { get; }
 
     // Lookups in `lookup` schema
     DbSet<GenderType> GenderTypes { get; }
@@ -227,6 +229,23 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<AqpPartner> AqpPartners { get; }
     DbSet<AqpQualificationScope> AqpQualificationScopes { get; }
     DbSet<AqpLearnerAssessment> AqpLearnerAssessments { get; }
+
+    // Phase 3: Core Statutory Workflows
+    DbSet<WspSignoffAttestation> WspSignoffAttestations { get; }
+    DbSet<CompanyLearnerChangeRequest> CompanyLearnerChangeRequests { get; }
+    DbSet<ErpPaymentBatchHeader> ErpPaymentBatchHeaders { get; }
+    DbSet<ErpPaymentBatchEntry> ErpPaymentBatchEntries { get; }
+
+    // Phase 4: ETQA Assessor 3-Year Re-registration & CPD
+    DbSet<AssessorReRegistrationApplication> AssessorReRegistrationApplications { get; }
+    DbSet<AssessorCpdActivity> AssessorCpdActivities { get; }
+
+    // Phase 5: Artisan Development & NAMB Batch Governance
+    DbSet<NambSubmissionBatch> NambSubmissionBatches { get; }
+
+    // Phase 7: SDP Campus Infrastructure & Assessor Linking
+    DbSet<TrainingProviderCampus> TrainingProviderCampuses { get; }
+    DbSet<TrainingProviderAssessorLink> TrainingProviderAssessorLinks { get; }
 
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
     ValueTask<object?> FindAsync(Type entityType, params object?[]? keyValues);

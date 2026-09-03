@@ -137,4 +137,14 @@ public class TrainingProvider : BaseEntity
     /// Standalone SAQA unit standards accredited for delivery by this provider.
     /// </summary>
     public ICollection<TrainingProviderUnitStandard> UnitStandards { get; set; } = new List<TrainingProviderUnitStandard>();
+
+    /// <summary>
+    /// Physical delivery campuses and satellite training sites.
+    /// </summary>
+    public ICollection<TrainingProviderCampus> Campuses { get; set; } = new List<TrainingProviderCampus>();
+
+    /// <summary>
+    /// Registered assessors and moderators linked to this provider.
+    /// </summary>
+    public ICollection<TrainingProviderAssessorLink> AssessorLinks { get; set; } = new List<TrainingProviderAssessorLink>();
 }

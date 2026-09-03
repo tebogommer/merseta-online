@@ -1,6 +1,6 @@
 -- ===========================================================================
 -- MerSETA NSDMS — SQL Server MS_Description Extended Properties Synchronizer
--- Generated: 2026-09-01 22:05:00 UTC
+-- Generated: 2026-09-03 09:21:49 UTC
 -- Target Engine: Microsoft SQL Server Express (localhost / NSDMS-NET)
 -- ===========================================================================
 
@@ -905,9 +905,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AqpLearnerAssessment' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpLearnerAssessment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpLearnerAssessment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpLearnerAssessment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpLearnerAssessment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AqpLearnerAssessment' AND c.name = N'EisaExamSession')
 BEGIN
@@ -975,9 +975,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AqpLearnerAssessment' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpLearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpLearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpLearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpLearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AqpLearnerAssessment' AND c.name = N'ModifiedBy')
 BEGIN
@@ -989,9 +989,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AqpLearnerAssessment' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpLearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpLearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpLearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpLearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AqpLearnerAssessment' AND c.name = N'PersonId')
 BEGIN
@@ -1186,9 +1186,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AqpPartner' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpPartner', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpPartner', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpPartner', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpPartner', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AqpPartner' AND c.name = N'Email')
 BEGIN
@@ -1228,9 +1228,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AqpPartner' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpPartner', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpPartner', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpPartner', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpPartner', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AqpPartner' AND c.name = N'ModifiedBy')
 BEGIN
@@ -1242,9 +1242,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AqpPartner' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpPartner', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpPartner', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpPartner', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpPartner', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AqpPartner' AND c.name = N'PhoneNumber')
 BEGIN
@@ -1411,9 +1411,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AqpQualificationScope' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpQualificationScope', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpQualificationScope', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpQualificationScope', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpQualificationScope', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AqpQualificationScope' AND c.name = N'CurriculumCode')
 BEGIN
@@ -1453,9 +1453,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AqpQualificationScope' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpQualificationScope', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpQualificationScope', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpQualificationScope', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpQualificationScope', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AqpQualificationScope' AND c.name = N'ModifiedBy')
 BEGIN
@@ -1467,9 +1467,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AqpQualificationScope' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpQualificationScope', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpQualificationScope', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpQualificationScope', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AqpQualificationScope', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AqpQualificationScope' AND c.name = N'NqfLevel')
 BEGIN
@@ -1566,9 +1566,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ArplExperienceDetail' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplExperienceDetail', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplExperienceDetail', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplExperienceDetail', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplExperienceDetail', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ArplExperienceDetail' AND c.name = N'DutiesDescription')
 BEGIN
@@ -1664,9 +1664,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ArplExperienceDetail' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplExperienceDetail', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplExperienceDetail', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplExperienceDetail', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplExperienceDetail', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ArplExperienceDetail' AND c.name = N'ModifiedBy')
 BEGIN
@@ -1678,9 +1678,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ArplExperienceDetail' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplExperienceDetail', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplExperienceDetail', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplExperienceDetail', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplExperienceDetail', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ArplExperienceDetail' AND c.name = N'StartDate')
 BEGIN
@@ -1763,9 +1763,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ArplTradeTestInformation' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTradeTestInformation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTradeTestInformation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTradeTestInformation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTradeTestInformation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ArplTradeTestInformation' AND c.name = N'CurrentEmployerName')
 BEGIN
@@ -1833,9 +1833,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ArplTradeTestInformation' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTradeTestInformation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTradeTestInformation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTradeTestInformation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTradeTestInformation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ArplTradeTestInformation' AND c.name = N'ModifiedBy')
 BEGIN
@@ -1847,9 +1847,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ArplTradeTestInformation' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTradeTestInformation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTradeTestInformation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTradeTestInformation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTradeTestInformation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ArplTradeTestInformation' AND c.name = N'PortfolioAssessmentDate')
 BEGIN
@@ -2044,9 +2044,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ArplTrainingDetail' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTrainingDetail', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTrainingDetail', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTrainingDetail', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTrainingDetail', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ArplTrainingDetail' AND c.name = N'InstitutionName')
 BEGIN
@@ -2086,9 +2086,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ArplTrainingDetail' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTrainingDetail', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTrainingDetail', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTrainingDetail', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTrainingDetail', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ArplTrainingDetail' AND c.name = N'ModifiedBy')
 BEGIN
@@ -2100,9 +2100,192 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ArplTrainingDetail' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTrainingDetail', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTrainingDetail', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTrainingDetail', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ArplTrainingDetail', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+
+-- Table: dbo.AssessorCpdActivity
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorCpdActivity')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'dbo' AND t.name = N'AssessorCpdActivity'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Individual Continuous Professional Development (CPD) activity logged in support of practitioner renewal.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Individual Continuous Professional Development (CPD) activity logged in support of practitioner renewal.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'Id')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'Id'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'Id';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'Id';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'ActivityCategory')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'ActivityCategory'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Activity category code (IndustryPractice, SetaWorkshop, PeerModeration, CourseAttendance, Mentorship).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'ActivityCategory';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Activity category code (IndustryPractice, SetaWorkshop, PeerModeration, CourseAttendance, Mentorship).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'ActivityCategory';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'ActivityDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'ActivityDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Date when the CPD activity was undertaken.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'ActivityDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Date when the CPD activity was undertaken.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'ActivityDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'ActivityTitle')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'ActivityTitle'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Title or description of the training, moderation workshop, or industry practice.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'ActivityTitle';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Title or description of the training, moderation workshop, or industry practice.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'ActivityTitle';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'AssessorReRegistrationApplicationId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'AssessorReRegistrationApplicationId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent renewal application.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'AssessorReRegistrationApplicationId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent renewal application.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'AssessorReRegistrationApplicationId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'CreatedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'CreatedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'CreatedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'CreatedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'EvidenceDocumentRef')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'EvidenceDocumentRef'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Supporting certificate or document file reference.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'EvidenceDocumentRef';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Supporting certificate or document file reference.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'EvidenceDocumentRef';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'ModifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'ModifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'ModifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'ModifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'PointsApproved')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'PointsApproved'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Number of CPD points officially accredited by the ETQA evaluator.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'PointsApproved';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Number of CPD points officially accredited by the ETQA evaluator.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'PointsApproved';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'PointsClaimed')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorCpdActivity' AND c.name = N'PointsClaimed'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Number of CPD points claimed by the applicant.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'PointsClaimed';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Number of CPD points claimed by the applicant.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorCpdActivity', @level2type=N'COLUMN', @level2name=N'PointsClaimed';
 END
 
 -- Table: dbo.AssessorExtensionOfScope
@@ -2438,9 +2621,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AssessorModeratorApplication' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorModeratorApplication' AND c.name = N'ExpiryDate')
 BEGIN
@@ -2466,9 +2649,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AssessorModeratorApplication' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorModeratorApplication' AND c.name = N'ModifiedBy')
 BEGIN
@@ -2480,9 +2663,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AssessorModeratorApplication' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorModeratorApplication' AND c.name = N'PersonId')
 BEGIN
@@ -2579,9 +2762,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AssessorModeratorScope' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorScope', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorScope', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorScope', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorScope', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorModeratorScope' AND c.name = N'EtqaAssessorId')
 BEGIN
@@ -2621,9 +2804,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AssessorModeratorScope' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorScope', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorScope', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorScope', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorScope', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorModeratorScope' AND c.name = N'ModifiedBy')
 BEGIN
@@ -2635,9 +2818,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AssessorModeratorScope' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorScope', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorScope', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorScope', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorScope', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorModeratorScope' AND c.name = N'QualificationTitle')
 BEGIN
@@ -2680,6 +2863,287 @@ BEGIN
         EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'SAQA Registered Qualification ID code.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorScope', @level2type=N'COLUMN', @level2name=N'SaqaQualificationId';
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'SAQA Registered Qualification ID code.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorModeratorScope', @level2type=N'COLUMN', @level2name=N'SaqaQualificationId';
+END
+
+-- Table: dbo.AssessorReRegistrationApplication
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Represents a statutory 3-year re-registration or scope extension application for ETQA registered Assessors and Moderators.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Represents a statutory 3-year re-registration or scope extension application for ETQA registered Assessors and Moderators.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'Id')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'Id'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'Id';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'Id';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'AdjudicatedByUserId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'AdjudicatedByUserId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User ID of the ETQA manager or committee secretary who adjudicated the application.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'AdjudicatedByUserId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User ID of the ETQA manager or committee secretary who adjudicated the application.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'AdjudicatedByUserId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'AdjudicationDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'AdjudicationDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Timestamp when the ETQA committee completed adjudication.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'AdjudicationDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Timestamp when the ETQA committee completed adjudication.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'AdjudicationDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'AdjudicationNotes')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'AdjudicationNotes'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Adjudication committee feedback or justification notes.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'AdjudicationNotes';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Adjudication committee feedback or justification notes.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'AdjudicationNotes';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'ApplicationReferenceNumber')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'ApplicationReferenceNumber'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Statutory application tracking reference (e.g. REG-2026-ASS-0042).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'ApplicationReferenceNumber';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Statutory application tracking reference (e.g. REG-2026-ASS-0042).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'ApplicationReferenceNumber';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'ApplicationTypeCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'ApplicationTypeCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Application type code (e.g. ReRegistration, ScopeExtension, InitialRegistration).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'ApplicationTypeCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Application type code (e.g. ReRegistration, ScopeExtension, InitialRegistration).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'ApplicationTypeCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'CommitteeDecisionNumber')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'CommitteeDecisionNumber'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Official ETQA Committee Decision Number approving the 3-year re-registration.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'CommitteeDecisionNumber';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Official ETQA Committee Decision Number approving the 3-year re-registration.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'CommitteeDecisionNumber';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'CpdPointsAccumulated')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'CpdPointsAccumulated'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Cumulative CPD points accumulated for this renewal cycle (statutory target >= 30 points).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'CpdPointsAccumulated';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Cumulative CPD points accumulated for this renewal cycle (statutory target >= 30 points).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'CpdPointsAccumulated';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'CpdPortfolioSummary')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'CpdPortfolioSummary'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Detailed narrative summary of continuous professional development and workplace practice.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'CpdPortfolioSummary';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Detailed narrative summary of continuous professional development and workplace practice.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'CpdPortfolioSummary';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'CreatedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'CreatedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'CreatedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'CreatedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'CurrentExpirationDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'CurrentExpirationDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Practitioner expiration date prior to renewal.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'CurrentExpirationDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Practitioner expiration date prior to renewal.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'CurrentExpirationDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'DigitalSecuritySeal')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'DigitalSecuritySeal'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Immutable SHA-256 digital security seal certifying renewal approval and certificate issuance.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'DigitalSecuritySeal';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Immutable SHA-256 digital security seal certifying renewal approval and certificate issuance.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'DigitalSecuritySeal';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'EtqaAssessorId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'EtqaAssessorId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent EtqaAssessor record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'EtqaAssessorId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent EtqaAssessor record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'EtqaAssessorId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'ModifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'ModifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'ModifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'ModifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'ProposedNewExpirationDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'ProposedNewExpirationDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Proposed 3-year extended expiration date upon approval.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'ProposedNewExpirationDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Proposed 3-year extended expiration date upon approval.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'ProposedNewExpirationDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'ReviewStatusCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'ReviewStatusCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Current adjudication review status (Draft, Submitted, CommitteeReview, Approved, Rejected, AdditionalInfoRequired).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'ReviewStatusCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Current adjudication review status (Draft, Submitted, CommitteeReview, Approved, Rejected, AdditionalInfoRequired).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'ReviewStatusCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'ScopeConfirmationJson')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'AssessorReRegistrationApplication' AND c.name = N'ScopeConfirmationJson'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'JSON serialized snapshot of confirmed renewal scopes and requested new unit standards.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'ScopeConfirmationJson';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'JSON serialized snapshot of confirmed renewal scopes and requested new unit standards.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AssessorReRegistrationApplication', @level2type=N'COLUMN', @level2name=N'ScopeConfirmationJson';
 END
 
 -- Table: dbo.AuditLog
@@ -2762,9 +3226,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AuditLog' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AuditLog' AND c.name = N'EntityName')
 BEGIN
@@ -2804,9 +3268,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AuditLog' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AuditLog' AND c.name = N'ModifiedBy')
 BEGIN
@@ -2818,9 +3282,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AuditLog' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AuditLog' AND c.name = N'RecordId')
 BEGIN
@@ -2832,9 +3296,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'AuditLog' AND c.name = N'RecordId'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Primary key integer identifier of the target record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'RecordId';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Primary key identifier of the target record (64-bit integer supporting high-volume entities).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'RecordId';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Primary key integer identifier of the target record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'RecordId';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Primary key identifier of the target record (64-bit integer supporting high-volume entities).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'AuditLog', @level2type=N'COLUMN', @level2name=N'RecordId';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'AuditLog' AND c.name = N'Timestamp')
 BEGIN
@@ -3605,9 +4069,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CompanyLearner' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearner', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearner', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearner', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearner', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearner' AND c.name = N'CumulativeSpend')
 BEGIN
@@ -3829,9 +4293,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CompanyLearner' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearner', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearner', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearner', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearner', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearner' AND c.name = N'ModifiedBy')
 BEGIN
@@ -3843,9 +4307,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CompanyLearner' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearner', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearner', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearner', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearner', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearner' AND c.name = N'NonNqfInterventionCode')
 BEGIN
@@ -4086,6 +4550,245 @@ BEGIN
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Geographic intervention area classification (references lookup.UrbanRuralType: 01 Urban, 02 Rural, 98 Unknown).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearner', @level2type=N'COLUMN', @level2name=N'UrbanRuralId';
 END
 
+-- Table: dbo.CompanyLearnerChangeRequest
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Formal change request for amending an active registered CompanyLearner contract or demographic details.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Formal change request for amending an active registered CompanyLearner contract or demographic details.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'Id')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'Id'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'Id';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'Id';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ApprovalDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ApprovalDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ApprovalDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ApprovalDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ApprovalDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ApprovalDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ApprovedByUserId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ApprovedByUserId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ApprovedByUserId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ApprovedByUserId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ApprovedByUserId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ApprovedByUserId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ChangeStatusCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ChangeStatusCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Status code: Pending, Approved, Rejected.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ChangeStatusCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Status code: Pending, Approved, Rejected.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ChangeStatusCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ChangeTypeCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ChangeTypeCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Type of amendment: DemographicCorrection, QualificationAmendment, ProviderChange, ContractDateExtension, StipendAdjustment.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ChangeTypeCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Type of amendment: DemographicCorrection, QualificationAmendment, ProviderChange, ContractDateExtension, StipendAdjustment.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ChangeTypeCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'CompanyLearnerId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'CompanyLearnerId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'CompanyLearnerId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'CompanyLearnerId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'CreatedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'CreatedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'CreatedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'CreatedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'CurrentValuesSnapshotJson')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'CurrentValuesSnapshotJson'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Serialized JSON snapshot of the learner record state prior to amendment.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'CurrentValuesSnapshotJson';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Serialized JSON snapshot of the learner record state prior to amendment.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'CurrentValuesSnapshotJson';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'JustificationReason')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'JustificationReason'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Applicant or employer justification for the requested changes.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'JustificationReason';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Applicant or employer justification for the requested changes.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'JustificationReason';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ModifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ModifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ModifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ModifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'RequestedValuesJson')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'RequestedValuesJson'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Serialized JSON containing the proposed field values.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'RequestedValuesJson';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Serialized JSON containing the proposed field values.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'RequestedValuesJson';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ReviewDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ReviewDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ReviewDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ReviewDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ReviewDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ReviewDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ReviewedByUserId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ReviewedByUserId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ReviewedByUserId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ReviewedByUserId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ReviewedByUserId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ReviewedByUserId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ReviewerComments')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'CompanyLearnerChangeRequest' AND c.name = N'ReviewerComments'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ReviewerComments.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ReviewerComments';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ReviewerComments.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerChangeRequest', @level2type=N'COLUMN', @level2name=N'ReviewerComments';
+END
+
 -- Table: dbo.CompanyLearnerLostTime
 IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerLostTime')
 BEGIN
@@ -4194,9 +4897,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CompanyLearnerLostTime' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerLostTime', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerLostTime', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerLostTime', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerLostTime', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerLostTime' AND c.name = N'DaysLost')
 BEGIN
@@ -4264,9 +4967,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CompanyLearnerLostTime' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerLostTime', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerLostTime', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerLostTime', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerLostTime', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerLostTime' AND c.name = N'ModifiedBy')
 BEGIN
@@ -4278,9 +4981,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CompanyLearnerLostTime' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerLostTime', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerLostTime', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerLostTime', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerLostTime', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerLostTime' AND c.name = N'OriginalContractEndDate')
 BEGIN
@@ -4433,9 +5136,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CompanyLearnerTermination' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTermination', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTermination', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTermination', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTermination', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerTermination' AND c.name = N'DisputeLogged')
 BEGIN
@@ -4475,9 +5178,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CompanyLearnerTermination' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTermination', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTermination', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTermination', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTermination', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerTermination' AND c.name = N'ModifiedBy')
 BEGIN
@@ -4489,9 +5192,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CompanyLearnerTermination' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTermination', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTermination', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTermination', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTermination', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerTermination' AND c.name = N'SettlementNotes')
 BEGIN
@@ -4658,9 +5361,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CompanyLearnerTransfer' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTransfer', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTransfer', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTransfer', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTransfer', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerTransfer' AND c.name = N'EffectiveDate')
 BEGIN
@@ -4700,9 +5403,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CompanyLearnerTransfer' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerTransfer' AND c.name = N'ModifiedBy')
 BEGIN
@@ -4714,9 +5417,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CompanyLearnerTransfer' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CompanyLearnerTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CompanyLearnerTransfer' AND c.name = N'ToOrganisationId')
 BEGIN
@@ -5572,9 +6275,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CurriculumWorkingGroupMember' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CurriculumWorkingGroupMember', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CurriculumWorkingGroupMember', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CurriculumWorkingGroupMember', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CurriculumWorkingGroupMember', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CurriculumWorkingGroupMember' AND c.name = N'EmailAddress')
 BEGIN
@@ -5628,9 +6331,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CurriculumWorkingGroupMember' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CurriculumWorkingGroupMember', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CurriculumWorkingGroupMember', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CurriculumWorkingGroupMember', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CurriculumWorkingGroupMember', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CurriculumWorkingGroupMember' AND c.name = N'ModifiedBy')
 BEGIN
@@ -5642,9 +6345,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'CurriculumWorkingGroupMember' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CurriculumWorkingGroupMember', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CurriculumWorkingGroupMember', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CurriculumWorkingGroupMember', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'CurriculumWorkingGroupMember', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'CurriculumWorkingGroupMember' AND c.name = N'OrganisationRepresented')
 BEGIN
@@ -5783,9 +6486,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'DocumentCategoryCode')
 BEGIN
@@ -5867,9 +6570,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'ModifiedBy')
 BEGIN
@@ -5881,9 +6584,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'OriginalFileName')
 BEGIN
@@ -6064,9 +6767,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentClause' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentClause', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentClause', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentClause', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentClause', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentClause' AND c.name = N'IsActive')
 BEGIN
@@ -6106,9 +6809,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentClause' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentClause', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentClause', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentClause', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentClause', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentClause' AND c.name = N'ModifiedBy')
 BEGIN
@@ -6120,9 +6823,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentClause' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentClause', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentClause', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentClause', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentClause', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 
 -- Table: dbo.DocumentMetadata
@@ -6191,9 +6894,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentMetadata' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentMetadata', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentMetadata', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentMetadata', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentMetadata', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentMetadata' AND c.name = N'DocumentTypeCode')
 BEGIN
@@ -6275,9 +6978,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentMetadata' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentMetadata', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentMetadata', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentMetadata', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentMetadata', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentMetadata' AND c.name = N'ModifiedBy')
 BEGIN
@@ -6289,9 +6992,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentMetadata' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentMetadata', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentMetadata', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentMetadata', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentMetadata', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentMetadata' AND c.name = N'Sha256Hash')
 BEGIN
@@ -6458,9 +7161,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentRequirementRule' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentRequirementRule', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentRequirementRule', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentRequirementRule', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentRequirementRule', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentRequirementRule' AND c.name = N'Description')
 BEGIN
@@ -6528,9 +7231,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentRequirementRule' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentRequirementRule', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentRequirementRule', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentRequirementRule', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentRequirementRule', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentRequirementRule' AND c.name = N'ModifiedBy')
 BEGIN
@@ -6542,9 +7245,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentRequirementRule' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentRequirementRule', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentRequirementRule', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentRequirementRule', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentRequirementRule', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentRequirementRule' AND c.name = N'RequiredAtStateId')
 BEGIN
@@ -6627,9 +7330,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentSnapshot' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentSnapshot', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentSnapshot', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentSnapshot', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentSnapshot', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentSnapshot' AND c.name = N'DocumentSnapshotNumber')
 BEGIN
@@ -6739,9 +7442,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentSnapshot' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentSnapshot' AND c.name = N'ModifiedBy')
 BEGIN
@@ -6753,9 +7456,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentSnapshot' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentSnapshot' AND c.name = N'PdfStorageUri')
 BEGIN
@@ -7062,9 +7765,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentTemplate' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplate', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplate', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplate', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplate', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentTemplate' AND c.name = N'DocumentCategory')
 BEGIN
@@ -7188,9 +7891,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentTemplate' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentTemplate' AND c.name = N'ModifiedBy')
 BEGIN
@@ -7202,9 +7905,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentTemplate' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentTemplate' AND c.name = N'TargetEntityType')
 BEGIN
@@ -7329,9 +8032,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentTemplateSection' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplateSection', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplateSection', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplateSection', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplateSection', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentTemplateSection' AND c.name = N'DocumentClauseId')
 BEGIN
@@ -7385,9 +8088,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentTemplateSection' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentTemplateSection' AND c.name = N'ModifiedBy')
 BEGIN
@@ -7399,9 +8102,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'DocumentTemplateSection' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentTemplateSection' AND c.name = N'SectionNumber')
 BEGIN
@@ -7526,9 +8229,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'EisaAssessmentEntry' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EisaAssessmentEntry', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EisaAssessmentEntry', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EisaAssessmentEntry', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EisaAssessmentEntry', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'EisaAssessmentEntry' AND c.name = N'EisaAssessmentDate')
 BEGIN
@@ -7568,9 +8271,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'EisaAssessmentEntry' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EisaAssessmentEntry', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EisaAssessmentEntry', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EisaAssessmentEntry', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EisaAssessmentEntry', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'EisaAssessmentEntry' AND c.name = N'ModifiedBy')
 BEGIN
@@ -7582,9 +8285,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'EisaAssessmentEntry' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EisaAssessmentEntry', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EisaAssessmentEntry', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EisaAssessmentEntry', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EisaAssessmentEntry', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'EisaAssessmentEntry' AND c.name = N'PercentageScore')
 BEGIN
@@ -7671,6 +8374,470 @@ BEGIN
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for TotalScorePossible.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EisaAssessmentEntry', @level2type=N'COLUMN', @level2name=N'TotalScorePossible';
 END
 
+-- Table: dbo.ErpPaymentBatchEntry
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Individual line item voucher within an ERP payment batch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Individual line item voucher within an ERP payment batch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'Id')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'Id'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'Id';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'Id';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'BankAccountNumber')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'BankAccountNumber'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for BankAccountNumber.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'BankAccountNumber';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for BankAccountNumber.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'BankAccountNumber';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'BankBranchCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'BankBranchCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for BankBranchCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'BankBranchCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for BankBranchCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'BankBranchCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'CreatedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'CreatedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'CreatedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'CreatedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'EftReferenceNumber')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'EftReferenceNumber'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for EftReferenceNumber.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'EftReferenceNumber';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for EftReferenceNumber.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'EftReferenceNumber';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'EntryStatusCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'EntryStatusCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for EntryStatusCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'EntryStatusCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for EntryStatusCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'EntryStatusCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'ErpPaymentBatchHeaderId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'ErpPaymentBatchHeaderId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'ErpPaymentBatchHeaderId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'ErpPaymentBatchHeaderId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'GrantPaymentClaimId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'GrantPaymentClaimId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'GrantPaymentClaimId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'GrantPaymentClaimId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'MandatoryGrantDisbursementId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'MandatoryGrantDisbursementId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for MandatoryGrantDisbursementId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'MandatoryGrantDisbursementId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for MandatoryGrantDisbursementId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'MandatoryGrantDisbursementId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'ModifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'ModifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'ModifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'ModifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'OrganisationId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'OrganisationId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'OrganisationId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'OrganisationId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'PaymentAmount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'PaymentAmount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for PaymentAmount.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'PaymentAmount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for PaymentAmount.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'PaymentAmount';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'PaymentDescription')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'PaymentDescription'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for PaymentDescription.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'PaymentDescription';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for PaymentDescription.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'PaymentDescription';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'PaymentVoucherNumber')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'PaymentVoucherNumber'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for PaymentVoucherNumber.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'PaymentVoucherNumber';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for PaymentVoucherNumber.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'PaymentVoucherNumber';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'VendorNumber')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchEntry' AND c.name = N'VendorNumber'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for VendorNumber.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'VendorNumber';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for VendorNumber.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchEntry', @level2type=N'COLUMN', @level2name=N'VendorNumber';
+END
+
+-- Table: dbo.ErpPaymentBatchHeader
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'ERP Payment Batch Header for staging mandatory/discretionary grant disbursements to Dynamics GP / Sage.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'ERP Payment Batch Header for staging mandatory/discretionary grant disbursements to Dynamics GP / Sage.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'Id')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'Id'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'Id';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'Id';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'ApprovalComments')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'ApprovalComments'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ApprovalComments.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'ApprovalComments';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ApprovalComments.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'ApprovalComments';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'BatchNumber')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'BatchNumber'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Financial transaction batch grouping reference.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'BatchNumber';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Financial transaction batch grouping reference.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'BatchNumber';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'BatchStatusCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'BatchStatusCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for BatchStatusCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'BatchStatusCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for BatchStatusCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'BatchStatusCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'BatchTypeCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'BatchTypeCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for BatchTypeCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'BatchTypeCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for BatchTypeCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'BatchTypeCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'CreatedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'CreatedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'CreatedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'CreatedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'ExportFileName')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'ExportFileName'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ExportFileName.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'ExportFileName';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ExportFileName.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'ExportFileName';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'ExportedByUserId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'ExportedByUserId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ExportedByUserId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'ExportedByUserId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ExportedByUserId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'ExportedByUserId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'ExportedDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'ExportedDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ExportedDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'ExportedDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ExportedDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'ExportedDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'ItemCount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'ItemCount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ItemCount.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'ItemCount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ItemCount.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'ItemCount';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'ModifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'ModifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'ModifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'ModifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'TotalAmount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ErpPaymentBatchHeader' AND c.name = N'TotalAmount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for TotalAmount.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'TotalAmount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for TotalAmount.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ErpPaymentBatchHeader', @level2type=N'COLUMN', @level2name=N'TotalAmount';
+END
+
 -- Table: dbo.EtqaAssessor
 IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'EtqaAssessor')
 BEGIN
@@ -7723,9 +8890,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'EtqaAssessor' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EtqaAssessor', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EtqaAssessor', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EtqaAssessor', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EtqaAssessor', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'EtqaAssessor' AND c.name = N'DesignationStructureStatusId')
 BEGIN
@@ -7835,9 +9002,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'EtqaAssessor' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EtqaAssessor', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EtqaAssessor', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EtqaAssessor', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EtqaAssessor', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'EtqaAssessor' AND c.name = N'ModifiedBy')
 BEGIN
@@ -7849,9 +9016,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'EtqaAssessor' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EtqaAssessor', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EtqaAssessor', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EtqaAssessor', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'EtqaAssessor', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'EtqaAssessor' AND c.name = N'PersonId')
 BEGIN
@@ -8173,9 +9340,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'FundingWindowPriority' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'FundingWindowPriority', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'FundingWindowPriority', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'FundingWindowPriority', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'FundingWindowPriority', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'FundingWindowPriority' AND c.name = N'FundingWindowId')
 BEGIN
@@ -8243,9 +9410,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'FundingWindowPriority' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'FundingWindowPriority', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'FundingWindowPriority', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'FundingWindowPriority', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'FundingWindowPriority', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'FundingWindowPriority' AND c.name = N'ModifiedBy')
 BEGIN
@@ -8257,9 +9424,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'FundingWindowPriority' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'FundingWindowPriority', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'FundingWindowPriority', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'FundingWindowPriority', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'FundingWindowPriority', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'FundingWindowPriority' AND c.name = N'StrategicPriorityId')
 BEGIN
@@ -8398,9 +9565,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantApplication' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantApplication' AND c.name = N'FundingWindowId')
 BEGIN
@@ -8482,9 +9649,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantApplication' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantApplication' AND c.name = N'ModifiedBy')
 BEGIN
@@ -8496,9 +9663,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantApplication' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantApplication' AND c.name = N'OrganisationId')
 BEGIN
@@ -8651,9 +9818,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantFundingWindow' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantFundingWindow', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantFundingWindow', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantFundingWindow', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantFundingWindow', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantFundingWindow' AND c.name = N'Description')
 BEGIN
@@ -8721,9 +9888,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantFundingWindow' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantFundingWindow', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantFundingWindow', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantFundingWindow', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantFundingWindow', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantFundingWindow' AND c.name = N'ModifiedBy')
 BEGIN
@@ -8735,9 +9902,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantFundingWindow' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantFundingWindow', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantFundingWindow', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantFundingWindow', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantFundingWindow', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantFundingWindow' AND c.name = N'OpeningDate')
 BEGIN
@@ -8862,9 +10029,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantMoa' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoa', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoa', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoa', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoa', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantMoa' AND c.name = N'GrantApplicationId')
 BEGIN
@@ -8932,9 +10099,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantMoa' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoa', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoa', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoa', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoa', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantMoa' AND c.name = N'ModifiedBy')
 BEGIN
@@ -8946,9 +10113,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantMoa' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoa', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoa', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoa', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoa', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantMoa' AND c.name = N'SignoffDateEmployer')
 BEGIN
@@ -9073,9 +10240,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantMoaMilestone' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoaMilestone', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoaMilestone', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoaMilestone', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoaMilestone', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantMoaMilestone' AND c.name = N'DeliverableRequirement')
 BEGIN
@@ -9171,9 +10338,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantMoaMilestone' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoaMilestone', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoaMilestone', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoaMilestone', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoaMilestone', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantMoaMilestone' AND c.name = N'ModifiedBy')
 BEGIN
@@ -9185,9 +10352,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantMoaMilestone' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoaMilestone', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoaMilestone', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoaMilestone', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantMoaMilestone', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantMoaMilestone' AND c.name = N'TargetDueDate')
 BEGIN
@@ -9330,6 +10497,34 @@ BEGIN
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ApprovedByUserId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'ApprovedByUserId';
 END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'CfoApprovedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'CfoApprovedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for CfoApprovedBy.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'CfoApprovedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for CfoApprovedBy.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'CfoApprovedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'CfoApprovedDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'CfoApprovedDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for CfoApprovedDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'CfoApprovedDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for CfoApprovedDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'CfoApprovedDate';
+END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'ClaimAmount')
 BEGIN
     IF NOT EXISTS (
@@ -9358,6 +10553,34 @@ BEGIN
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ClaimNumber.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'ClaimNumber';
 END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'CloVerifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'CloVerifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for CloVerifiedBy.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'CloVerifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for CloVerifiedBy.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'CloVerifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'CloVerifiedDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'CloVerifiedDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for CloVerifiedDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'CloVerifiedDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for CloVerifiedDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'CloVerifiedDate';
+END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'CreatedAt')
 BEGIN
     IF NOT EXISTS (
@@ -9382,9 +10605,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'DeliverableDescription')
 BEGIN
@@ -9414,6 +10637,48 @@ BEGIN
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ErpBatchNumber.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'ErpBatchNumber';
 END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'FinanceOfficerApprovedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'FinanceOfficerApprovedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for FinanceOfficerApprovedBy.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'FinanceOfficerApprovedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for FinanceOfficerApprovedBy.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'FinanceOfficerApprovedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'FinanceOfficerApprovedDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'FinanceOfficerApprovedDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for FinanceOfficerApprovedDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'FinanceOfficerApprovedDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for FinanceOfficerApprovedDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'FinanceOfficerApprovedDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'GrantMoaMilestoneId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'GrantMoaMilestoneId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'GrantMoaMilestoneId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'GrantMoaMilestoneId';
+END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'ModifiedAt')
 BEGIN
     IF NOT EXISTS (
@@ -9424,9 +10689,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'ModifiedBy')
 BEGIN
@@ -9438,9 +10703,23 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'PaymentVoucherNumber')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'PaymentVoucherNumber'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for PaymentVoucherNumber.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'PaymentVoucherNumber';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for PaymentVoucherNumber.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'PaymentVoucherNumber';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'ProjectImplementationPlanId')
 BEGIN
@@ -9455,6 +10734,20 @@ BEGIN
         EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'ProjectImplementationPlanId';
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'ProjectImplementationPlanId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'RequiresCfoApproval')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'RequiresCfoApproval'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RequiresCfoApproval.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'RequiresCfoApproval';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RequiresCfoApproval.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantPaymentClaim', @level2type=N'COLUMN', @level2name=N'RequiresCfoApproval';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantPaymentClaim' AND c.name = N'StatusCode')
 BEGIN
@@ -9537,9 +10830,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantProjectBudget' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantProjectBudget', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantProjectBudget', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantProjectBudget', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantProjectBudget', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantProjectBudget' AND c.name = N'Description')
 BEGIN
@@ -9593,9 +10886,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantProjectBudget' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantProjectBudget', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantProjectBudget', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantProjectBudget', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantProjectBudget', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantProjectBudget' AND c.name = N'ModifiedBy')
 BEGIN
@@ -9607,9 +10900,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantProjectBudget' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantProjectBudget', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantProjectBudget', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantProjectBudget', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantProjectBudget', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantProjectBudget' AND c.name = N'Quantity')
 BEGIN
@@ -9790,9 +11083,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantTranchePayment' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantTranchePayment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantTranchePayment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantTranchePayment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantTranchePayment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantTranchePayment' AND c.name = N'FinanceApprovalDate')
 BEGIN
@@ -9888,9 +11181,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantTranchePayment' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantTranchePayment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantTranchePayment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantTranchePayment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantTranchePayment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantTranchePayment' AND c.name = N'ModifiedBy')
 BEGIN
@@ -9902,9 +11195,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'GrantTranchePayment' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantTranchePayment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantTranchePayment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantTranchePayment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'GrantTranchePayment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'GrantTranchePayment' AND c.name = N'PaymentDate')
 BEGIN
@@ -10015,9 +11308,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'InterSetaTransfer' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'InterSetaTransfer', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'InterSetaTransfer', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'InterSetaTransfer', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'InterSetaTransfer', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'InterSetaTransfer' AND c.name = N'DhetReferenceNumber')
 BEGIN
@@ -10057,9 +11350,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'InterSetaTransfer' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'InterSetaTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'InterSetaTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'InterSetaTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'InterSetaTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'InterSetaTransfer' AND c.name = N'ModifiedBy')
 BEGIN
@@ -10071,9 +11364,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'InterSetaTransfer' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'InterSetaTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'InterSetaTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'InterSetaTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'InterSetaTransfer', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'InterSetaTransfer' AND c.name = N'OrganisationId')
 BEGIN
@@ -10324,9 +11617,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LearnerAssessment' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerAssessment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerAssessment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerAssessment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerAssessment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LearnerAssessment' AND c.name = N'CumulativeSpend')
 BEGIN
@@ -10464,9 +11757,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LearnerAssessment' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LearnerAssessment' AND c.name = N'ModifiedBy')
 BEGIN
@@ -10478,9 +11771,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LearnerAssessment' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerAssessment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LearnerAssessment' AND c.name = N'NonNqfInterventionCode')
 BEGIN
@@ -10745,9 +12038,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LearnerTradeTest' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTest', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTest', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTest', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTest', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LearnerTradeTest' AND c.name = N'ModeratorEtqaId')
 BEGIN
@@ -10801,9 +12094,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LearnerTradeTest' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTest', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTest', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTest', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTest', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LearnerTradeTest' AND c.name = N'ModifiedBy')
 BEGIN
@@ -10815,9 +12108,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LearnerTradeTest' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTest', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTest', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTest', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTest', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LearnerTradeTest' AND c.name = N'QualificationId')
 BEGIN
@@ -11222,9 +12515,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LearnerTradeTestApplication' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LearnerTradeTestApplication' AND c.name = N'DesignatedTradeLevel')
 BEGIN
@@ -11292,9 +12585,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LearnerTradeTestApplication' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LearnerTradeTestApplication' AND c.name = N'ModifiedBy')
 BEGIN
@@ -11306,9 +12599,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LearnerTradeTestApplication' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LearnerTradeTestApplication' AND c.name = N'NambApprovalDate')
 BEGIN
@@ -11351,6 +12644,20 @@ BEGIN
         EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Serial number allocated by the National Artisan Moderation Body (NAMB).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'NambSerialNumber';
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Serial number allocated by the National Artisan Moderation Body (NAMB).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'NambSerialNumber';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LearnerTradeTestApplication' AND c.name = N'NambSubmissionBatchId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'LearnerTradeTestApplication' AND c.name = N'NambSubmissionBatchId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent NAMB submission batch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'NambSubmissionBatchId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent NAMB submission batch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LearnerTradeTestApplication', @level2type=N'COLUMN', @level2name=N'NambSubmissionBatchId';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LearnerTradeTestApplication' AND c.name = N'NambSubmissionDate')
 BEGIN
@@ -11545,9 +12852,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LevyFile' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFile', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFile', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFile', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFile', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LevyFile' AND c.name = N'FileName')
 BEGIN
@@ -11615,9 +12922,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LevyFile' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFile', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFile', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFile', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFile', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LevyFile' AND c.name = N'ModifiedBy')
 BEGIN
@@ -11629,9 +12936,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LevyFile' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFile', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFile', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFile', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFile', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LevyFile' AND c.name = N'TotalAmount')
 BEGIN
@@ -11742,9 +13049,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LevyFileLine' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFileLine', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFileLine', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFileLine', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFileLine', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LevyFileLine' AND c.name = N'DiscretionaryLevyAmount')
 BEGIN
@@ -11854,9 +13161,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LevyFileLine' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFileLine', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFileLine', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFileLine', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFileLine', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LevyFileLine' AND c.name = N'ModifiedBy')
 BEGIN
@@ -11868,9 +13175,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'LevyFileLine' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFileLine', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFileLine', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFileLine', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'LevyFileLine', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'LevyFileLine' AND c.name = N'PenaltyAmount')
 BEGIN
@@ -12079,9 +13386,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MandatoryGrantDisbursement' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MandatoryGrantDisbursement', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MandatoryGrantDisbursement', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MandatoryGrantDisbursement', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MandatoryGrantDisbursement', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'MandatoryGrantDisbursement' AND c.name = N'DisbursementReference')
 BEGIN
@@ -12163,9 +13470,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MandatoryGrantDisbursement' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MandatoryGrantDisbursement', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MandatoryGrantDisbursement', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MandatoryGrantDisbursement', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MandatoryGrantDisbursement', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'MandatoryGrantDisbursement' AND c.name = N'ModifiedBy')
 BEGIN
@@ -12177,9 +13484,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MandatoryGrantDisbursement' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MandatoryGrantDisbursement', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MandatoryGrantDisbursement', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MandatoryGrantDisbursement', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MandatoryGrantDisbursement', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'MandatoryGrantDisbursement' AND c.name = N'OrganisationId')
 BEGIN
@@ -12332,9 +13639,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MoaClause' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaClause', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaClause', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaClause', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaClause', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'MoaClause' AND c.name = N'IsActive')
 BEGIN
@@ -12374,9 +13681,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MoaClause' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaClause', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaClause', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaClause', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaClause', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'MoaClause' AND c.name = N'ModifiedBy')
 BEGIN
@@ -12388,9 +13695,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MoaClause' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaClause', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaClause', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaClause', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaClause', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 
 -- Table: dbo.MoaExecutionSnapshot
@@ -12445,9 +13752,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MoaExecutionSnapshot' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaExecutionSnapshot', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaExecutionSnapshot', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaExecutionSnapshot', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaExecutionSnapshot', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'MoaExecutionSnapshot' AND c.name = N'FrozenAt')
 BEGIN
@@ -12501,9 +13808,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MoaExecutionSnapshot' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaExecutionSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaExecutionSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaExecutionSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaExecutionSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'MoaExecutionSnapshot' AND c.name = N'ModifiedBy')
 BEGIN
@@ -12515,9 +13822,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MoaExecutionSnapshot' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaExecutionSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaExecutionSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaExecutionSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaExecutionSnapshot', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'MoaExecutionSnapshot' AND c.name = N'PdfStorageUri')
 BEGIN
@@ -12698,9 +14005,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MoaTemplate' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplate', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplate', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplate', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplate', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'MoaTemplate' AND c.name = N'EffectiveFrom')
 BEGIN
@@ -12796,9 +14103,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MoaTemplate' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'MoaTemplate' AND c.name = N'ModifiedBy')
 BEGIN
@@ -12810,9 +14117,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MoaTemplate' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplate', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'MoaTemplate' AND c.name = N'TemplateCode')
 BEGIN
@@ -12923,9 +14230,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MoaTemplateSection' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplateSection', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplateSection', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplateSection', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplateSection', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'MoaTemplateSection' AND c.name = N'IsMandatory')
 BEGIN
@@ -12979,9 +14286,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MoaTemplateSection' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'MoaTemplateSection' AND c.name = N'ModifiedBy')
 BEGIN
@@ -12993,9 +14300,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'MoaTemplateSection' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'MoaTemplateSection', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'MoaTemplateSection' AND c.name = N'SectionNumber')
 BEGIN
@@ -13092,9 +14399,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'NambDecisionHistory' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambDecisionHistory', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambDecisionHistory', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambDecisionHistory', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambDecisionHistory', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambDecisionHistory' AND c.name = N'DecisionDate')
 BEGIN
@@ -13162,9 +14469,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'NambDecisionHistory' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambDecisionHistory', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambDecisionHistory', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambDecisionHistory', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambDecisionHistory', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambDecisionHistory' AND c.name = N'ModifiedBy')
 BEGIN
@@ -13176,9 +14483,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'NambDecisionHistory' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambDecisionHistory', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambDecisionHistory', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambDecisionHistory', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambDecisionHistory', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambDecisionHistory' AND c.name = N'NambBatchReference')
 BEGIN
@@ -13221,6 +14528,231 @@ BEGIN
         EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for NambOfficialUserId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambDecisionHistory', @level2type=N'COLUMN', @level2name=N'NambOfficialUserId';
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for NambOfficialUserId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambDecisionHistory', @level2type=N'COLUMN', @level2name=N'NambOfficialUserId';
+END
+
+-- Table: dbo.NambSubmissionBatch
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Represents a formal National Artisan Moderation Body (NAMB) moderation and serial allocation submission batch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Represents a formal National Artisan Moderation Body (NAMB) moderation and serial allocation submission batch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'Id')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'Id'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'Id';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'Id';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'AdjudicationDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'AdjudicationDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Date when NAMB concluded adjudication and serial assignment.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'AdjudicationDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Date when NAMB concluded adjudication and serial assignment.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'AdjudicationDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'ApprovedCandidates')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'ApprovedCandidates'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Total candidates approved with NAMB serial allocation.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'ApprovedCandidates';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Total candidates approved with NAMB serial allocation.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'ApprovedCandidates';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'BatchDescription')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'BatchDescription'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Submission cycle or intake description.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'BatchDescription';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Submission cycle or intake description.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'BatchDescription';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'BatchReferenceNumber')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'BatchReferenceNumber'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Unique statutory batch reference (e.g. NAMB-2026-B001).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'BatchReferenceNumber';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Unique statutory batch reference (e.g. NAMB-2026-B001).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'BatchReferenceNumber';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'CreatedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'CreatedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'CreatedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'CreatedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'DigitalSecuritySeal')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'DigitalSecuritySeal'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Cryptographic SHA-256 seal anchoring candidate records and allocated serials.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'DigitalSecuritySeal';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Cryptographic SHA-256 seal anchoring candidate records and allocated serials.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'DigitalSecuritySeal';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'ModifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'ModifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'ModifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'ModifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'NambModeratorNotes')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'NambModeratorNotes'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Official NAMB moderator or committee notes.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'NambModeratorNotes';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Official NAMB moderator or committee notes.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'NambModeratorNotes';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'RejectedCandidates')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'RejectedCandidates'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Total candidates queried or rejected by NAMB moderation.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'RejectedCandidates';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Total candidates queried or rejected by NAMB moderation.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'RejectedCandidates';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'Status')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'Status'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Batch processing status (Draft, SubmittedToNamb, Approved, PartiallyApproved, Rejected).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'Status';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Batch processing status (Draft, SubmittedToNamb, Approved, PartiallyApproved, Rejected).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'Status';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'SubmissionDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'SubmissionDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Date when the batch was submitted to NAMB.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'SubmissionDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Date when the batch was submitted to NAMB.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'SubmissionDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'TotalCandidates')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'NambSubmissionBatch' AND c.name = N'TotalCandidates'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Total number of trade test candidates included in the batch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'TotalCandidates';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Total number of trade test candidates included in the batch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NambSubmissionBatch', @level2type=N'COLUMN', @level2name=N'TotalCandidates';
 END
 
 -- Table: dbo.NonSetaCompany
@@ -13303,9 +14835,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'NonSetaCompany' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaCompany', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaCompany', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaCompany', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaCompany', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NonSetaCompany' AND c.name = N'Email')
 BEGIN
@@ -13345,9 +14877,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'NonSetaCompany' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaCompany', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaCompany', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaCompany', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaCompany', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NonSetaCompany' AND c.name = N'ModifiedBy')
 BEGIN
@@ -13359,9 +14891,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'NonSetaCompany' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaCompany', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaCompany', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaCompany', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaCompany', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NonSetaCompany' AND c.name = N'PhoneNumber')
 BEGIN
@@ -13500,9 +15032,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'NonSetaQualificationsCompletion' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaQualificationsCompletion', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaQualificationsCompletion', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaQualificationsCompletion', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaQualificationsCompletion', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NonSetaQualificationsCompletion' AND c.name = N'EndorsedByUserId')
 BEGIN
@@ -13570,9 +15102,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'NonSetaQualificationsCompletion' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaQualificationsCompletion', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaQualificationsCompletion', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaQualificationsCompletion', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaQualificationsCompletion', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NonSetaQualificationsCompletion' AND c.name = N'ModifiedBy')
 BEGIN
@@ -13584,9 +15116,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'NonSetaQualificationsCompletion' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaQualificationsCompletion', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaQualificationsCompletion', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaQualificationsCompletion', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'NonSetaQualificationsCompletion', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'NonSetaQualificationsCompletion' AND c.name = N'NonSetaCompanyId')
 BEGIN
@@ -13935,9 +15467,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'Organisation' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'Organisation' AND c.name = N'CustomMentorRatioCap')
 BEGIN
@@ -14075,9 +15607,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'Organisation' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'Organisation' AND c.name = N'ModifiedBy')
 BEGIN
@@ -14089,9 +15621,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'Organisation' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'Organisation' AND c.name = N'OrganisationStatusCode')
 BEGIN
@@ -14412,9 +15944,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'OrganisationContact' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationContact', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationContact', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationContact', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationContact', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'OrganisationContact' AND c.name = N'Designation')
 BEGIN
@@ -14468,9 +16000,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'OrganisationContact' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationContact', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationContact', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationContact', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationContact', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'OrganisationContact' AND c.name = N'ModifiedBy')
 BEGIN
@@ -14482,9 +16014,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'OrganisationContact' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationContact', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationContact', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationContact', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationContact', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'OrganisationContact' AND c.name = N'OrganisationId')
 BEGIN
@@ -14609,9 +16141,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'OrganisationSite' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationSite', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationSite', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationSite', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationSite', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'OrganisationSite' AND c.name = N'Email')
 BEGIN
@@ -14707,9 +16239,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'OrganisationSite' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationSite', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationSite', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationSite', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationSite', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'OrganisationSite' AND c.name = N'ModifiedBy')
 BEGIN
@@ -14721,9 +16253,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'OrganisationSite' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationSite', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationSite', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationSite', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'OrganisationSite', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'OrganisationSite' AND c.name = N'OrganisationId')
 BEGIN
@@ -14988,9 +16520,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'Person' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Person', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Person', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Person', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Person', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'Person' AND c.name = N'DateOfBirth')
 BEGIN
@@ -15226,9 +16758,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'Person' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Person', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Person', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Person', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Person', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'Person' AND c.name = N'ModifiedBy')
 BEGIN
@@ -15240,9 +16772,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'Person' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Person', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Person', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Person', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Person', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'Person' AND c.name = N'NationalityCode')
 BEGIN
@@ -15605,9 +17137,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'PipLearnerAllocation' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'PipLearnerAllocation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'PipLearnerAllocation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'PipLearnerAllocation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'PipLearnerAllocation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'PipLearnerAllocation' AND c.name = N'LearnerCount')
 BEGIN
@@ -15633,9 +17165,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'PipLearnerAllocation' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'PipLearnerAllocation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'PipLearnerAllocation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'PipLearnerAllocation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'PipLearnerAllocation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'PipLearnerAllocation' AND c.name = N'ModifiedBy')
 BEGIN
@@ -15647,9 +17179,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'PipLearnerAllocation' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'PipLearnerAllocation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'PipLearnerAllocation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'PipLearnerAllocation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'PipLearnerAllocation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'PipLearnerAllocation' AND c.name = N'ProjectImplementationPlanId')
 BEGIN
@@ -15802,9 +17334,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ProjectImplementationPlan' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ProjectImplementationPlan' AND c.name = N'FundingWindowId')
 BEGIN
@@ -15833,6 +17365,20 @@ BEGIN
         EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'GrantApplicationId';
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'GrantApplicationId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ProjectImplementationPlan' AND c.name = N'GrantMoaId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'ProjectImplementationPlan' AND c.name = N'GrantMoaId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'GrantMoaId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'GrantMoaId';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ProjectImplementationPlan' AND c.name = N'InterventionTypeCode')
 BEGIN
@@ -15872,9 +17418,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ProjectImplementationPlan' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ProjectImplementationPlan' AND c.name = N'ModifiedBy')
 BEGIN
@@ -15886,9 +17432,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ProjectImplementationPlan' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ProjectImplementationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ProjectImplementationPlan' AND c.name = N'OrganisationId')
 BEGIN
@@ -16055,9 +17601,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'QualificationsCurriculumDevelopment' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'QualificationsCurriculumDevelopment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'QualificationsCurriculumDevelopment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'QualificationsCurriculumDevelopment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'QualificationsCurriculumDevelopment', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'QualificationsCurriculumDevelopment' AND c.name = N'DevelopmentQualityPartner')
 BEGIN
@@ -16139,9 +17685,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'QualificationsCurriculumDevelopment' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'QualificationsCurriculumDevelopment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'QualificationsCurriculumDevelopment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'QualificationsCurriculumDevelopment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'QualificationsCurriculumDevelopment', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'QualificationsCurriculumDevelopment' AND c.name = N'ModifiedBy')
 BEGIN
@@ -16153,9 +17699,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'QualificationsCurriculumDevelopment' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'QualificationsCurriculumDevelopment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'QualificationsCurriculumDevelopment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'QualificationsCurriculumDevelopment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'QualificationsCurriculumDevelopment', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'QualificationsCurriculumDevelopment' AND c.name = N'NationalDevelopmentPlanChecked')
 BEGIN
@@ -16504,9 +18050,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ReviewCommitteeMeeting' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeeting', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeeting', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeeting', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeeting', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ReviewCommitteeMeeting' AND c.name = N'FromDateTime')
 BEGIN
@@ -16560,9 +18106,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ReviewCommitteeMeeting' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeeting', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeeting', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeeting', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeeting', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ReviewCommitteeMeeting' AND c.name = N'ModifiedBy')
 BEGIN
@@ -16574,9 +18120,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ReviewCommitteeMeeting' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeeting', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeeting', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeeting', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeeting', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ReviewCommitteeMeeting' AND c.name = N'QuorumReached')
 BEGIN
@@ -16715,9 +18261,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ReviewCommitteeMeetingAgenda' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingAgenda', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingAgenda', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingAgenda', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingAgenda', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ReviewCommitteeMeetingAgenda' AND c.name = N'DecisionCode')
 BEGIN
@@ -16785,9 +18331,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ReviewCommitteeMeetingAgenda' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingAgenda', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingAgenda', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingAgenda', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingAgenda', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ReviewCommitteeMeetingAgenda' AND c.name = N'ModifiedBy')
 BEGIN
@@ -16799,9 +18345,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ReviewCommitteeMeetingAgenda' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingAgenda', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingAgenda', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingAgenda', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingAgenda', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ReviewCommitteeMeetingAgenda' AND c.name = N'ReviewCommitteeMeetingId')
 BEGIN
@@ -16954,9 +18500,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ReviewCommitteeMeetingMember' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingMember', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingMember', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingMember', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingMember', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ReviewCommitteeMeetingMember' AND c.name = N'ModifiedAt')
 BEGIN
@@ -16968,9 +18514,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ReviewCommitteeMeetingMember' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingMember', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingMember', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingMember', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingMember', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ReviewCommitteeMeetingMember' AND c.name = N'ModifiedBy')
 BEGIN
@@ -16982,9 +18528,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'ReviewCommitteeMeetingMember' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingMember', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingMember', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingMember', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'ReviewCommitteeMeetingMember', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'ReviewCommitteeMeetingMember' AND c.name = N'PersonId')
 BEGIN
@@ -17221,9 +18767,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SarsLevyReconAudit' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsLevyReconAudit', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsLevyReconAudit', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsLevyReconAudit', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsLevyReconAudit', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SarsLevyReconAudit' AND c.name = N'DiscrepancyReasonCode')
 BEGIN
@@ -17291,9 +18837,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SarsLevyReconAudit' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsLevyReconAudit', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsLevyReconAudit', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsLevyReconAudit', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsLevyReconAudit', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SarsLevyReconAudit' AND c.name = N'ModifiedBy')
 BEGIN
@@ -17305,9 +18851,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SarsLevyReconAudit' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsLevyReconAudit', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsLevyReconAudit', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsLevyReconAudit', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsLevyReconAudit', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SarsLevyReconAudit' AND c.name = N'OrganisationId')
 BEGIN
@@ -17530,9 +19076,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SarsSchemeYearCalculation' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsSchemeYearCalculation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsSchemeYearCalculation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsSchemeYearCalculation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsSchemeYearCalculation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SarsSchemeYearCalculation' AND c.name = N'DiscretionaryPercentage')
 BEGIN
@@ -17572,9 +19118,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SarsSchemeYearCalculation' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsSchemeYearCalculation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsSchemeYearCalculation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsSchemeYearCalculation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsSchemeYearCalculation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SarsSchemeYearCalculation' AND c.name = N'ModifiedBy')
 BEGIN
@@ -17586,9 +19132,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SarsSchemeYearCalculation' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsSchemeYearCalculation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsSchemeYearCalculation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsSchemeYearCalculation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SarsSchemeYearCalculation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SarsSchemeYearCalculation' AND c.name = N'Notes')
 BEGIN
@@ -18655,9 +20201,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SdpScopeExtensionApplication' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SdpScopeExtensionApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SdpScopeExtensionApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SdpScopeExtensionApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SdpScopeExtensionApplication', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SdpScopeExtensionApplication' AND c.name = N'ModifiedAt')
 BEGIN
@@ -18669,9 +20215,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SdpScopeExtensionApplication' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SdpScopeExtensionApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SdpScopeExtensionApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SdpScopeExtensionApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SdpScopeExtensionApplication', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SdpScopeExtensionApplication' AND c.name = N'ModifiedBy')
 BEGIN
@@ -18683,9 +20229,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SdpScopeExtensionApplication' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SdpScopeExtensionApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SdpScopeExtensionApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SdpScopeExtensionApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SdpScopeExtensionApplication', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SdpScopeExtensionApplication' AND c.name = N'QualificationTitle')
 BEGIN
@@ -18824,9 +20370,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SkillsRegistration' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SkillsRegistration', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SkillsRegistration', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SkillsRegistration', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SkillsRegistration', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SkillsRegistration' AND c.name = N'Credits')
 BEGIN
@@ -18880,9 +20426,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SkillsRegistration' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SkillsRegistration', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SkillsRegistration', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SkillsRegistration', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SkillsRegistration', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SkillsRegistration' AND c.name = N'ModifiedBy')
 BEGIN
@@ -18894,9 +20440,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SkillsRegistration' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SkillsRegistration', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SkillsRegistration', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SkillsRegistration', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SkillsRegistration', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SkillsRegistration' AND c.name = N'NonNqfIntervCode')
 BEGIN
@@ -19091,9 +20637,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'StatementOfResults' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatementOfResults', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatementOfResults', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatementOfResults', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatementOfResults', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatementOfResults' AND c.name = N'DateIssued')
 BEGIN
@@ -19133,9 +20679,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'StatementOfResults' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatementOfResults', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatementOfResults', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatementOfResults', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatementOfResults', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatementOfResults' AND c.name = N'ModifiedBy')
 BEGIN
@@ -19147,9 +20693,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'StatementOfResults' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatementOfResults', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatementOfResults', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatementOfResults', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatementOfResults', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatementOfResults' AND c.name = N'PersonId')
 BEGIN
@@ -19236,6 +20782,512 @@ BEGIN
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for TotalCreditsCertified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatementOfResults', @level2type=N'COLUMN', @level2name=N'TotalCreditsCertified';
 END
 
+-- Table: dbo.StatutoryBatchFile
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Individual fixed-width data file generated within a statutory batch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Individual fixed-width data file generated within a statutory batch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'Id')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'Id'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'Id';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'Id';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'ChecksumSha256')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'ChecksumSha256'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'SHA-256 digital security seal of this individual file.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'ChecksumSha256';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'SHA-256 digital security seal of this individual file.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'ChecksumSha256';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'CreatedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'CreatedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'CreatedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'CreatedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'FileCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'FileCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Statutory file code (e.g. "100", "200", "304", "400", "401", "500", "501", "502", "503", "505", "506" for SETMIS, or "21", "24", "25", "26", "27", "28", "29", "30" for NLRD).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'FileCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Statutory file code (e.g. "100", "200", "304", "400", "401", "500", "501", "502", "503", "505", "506" for SETMIS, or "21", "24", "25", "26", "27", "28", "29", "30" for NLRD).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'FileCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'FileContent')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'FileContent'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Extracted fixed-width text content or storage path reference.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'FileContent';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Extracted fixed-width text content or storage path reference.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'FileContent';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'FileName')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'FileName'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Generated file name (e.g. MERS_0006_100_v001_20260902.dat or MERS21260902.dat).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'FileName';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Generated file name (e.g. MERS_0006_100_v001_20260902.dat or MERS21260902.dat).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'FileName';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'FileSizeBytes')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'FileSizeBytes'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'File size in bytes.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'FileSizeBytes';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'File size in bytes.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'FileSizeBytes';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'FileTitle')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'FileTitle'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Statutory file title / description (e.g. "Provider File 100", "Learner Enrolment File 500").', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'FileTitle';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Statutory file title / description (e.g. "Provider File 100", "Learner Enrolment File 500").', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'FileTitle';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'ModifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'ModifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'ModifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'ModifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'RecordCount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'RecordCount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Number of lines / records extracted in this file.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'RecordCount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Number of lines / records extracted in this file.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'RecordCount';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'RecordLength')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'RecordLength'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fixed-width record length in characters (per specification).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'RecordLength';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Fixed-width record length in characters (per specification).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'RecordLength';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'StatusCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'StatusCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'File status ("Extracted", "Empty", "Failed").', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'StatusCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'File status ("Extracted", "Empty", "Failed").', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'StatusCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'StatutorySubmissionBatchId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'StatutorySubmissionBatchId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent StatutorySubmissionBatch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'StatutorySubmissionBatchId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent StatutorySubmissionBatch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'StatutorySubmissionBatchId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'ValidationErrorsCount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutoryBatchFile' AND c.name = N'ValidationErrorsCount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Number of validation discrepancies recorded for this file.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'ValidationErrorsCount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Number of validation discrepancies recorded for this file.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutoryBatchFile', @level2type=N'COLUMN', @level2name=N'ValidationErrorsCount';
+END
+
+-- Table: dbo.StatutorySubmissionBatch
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Represents a statutory submission batch run for DHET SETMIS or SAQA NLRD.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Represents a statutory submission batch run for DHET SETMIS or SAQA NLRD.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'Id')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'Id'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'Id';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'Id';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'ArchiveFileName')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'ArchiveFileName'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Name of the generated zip archive package (e.g. SETMIS_MERS_0006_20260902.zip).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'ArchiveFileName';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Name of the generated zip archive package (e.g. SETMIS_MERS_0006_20260902.zip).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'ArchiveFileName';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'ArchiveStorageUri')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'ArchiveStorageUri'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'File storage URI or relative path to the archived package.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'ArchiveStorageUri';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'File storage URI or relative path to the archived package.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'ArchiveStorageUri';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'BatchNumber')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'BatchNumber'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Unique business reference for the statutory batch (e.g. SETMIS-2026-Q1-001).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'BatchNumber';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Unique business reference for the statutory batch (e.g. SETMIS-2026-Q1-001).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'BatchNumber';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'BatchType')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'BatchType'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Type of statutory submission ("SETMIS" or "NLRD").', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'BatchType';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Type of statutory submission ("SETMIS" or "NLRD").', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'BatchType';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'Comments')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'Comments'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data steward notes, audit remarks, or DHET transmission acknowledgements.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'Comments';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Data steward notes, audit remarks, or DHET transmission acknowledgements.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'Comments';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'CreatedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'CreatedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'CreatedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'CreatedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'DigitalSecuritySeal')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'DigitalSecuritySeal'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'SHA-256 digital security seal / checksum of the combined extract package.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'DigitalSecuritySeal';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'SHA-256 digital security seal / checksum of the combined extract package.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'DigitalSecuritySeal';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'ExtractionDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'ExtractionDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Timestamp when data extraction was initiated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'ExtractionDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Timestamp when data extraction was initiated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'ExtractionDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'FatalErrorsCount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'FatalErrorsCount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Number of fatal blocking validation errors detected before extraction.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'FatalErrorsCount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Number of fatal blocking validation errors detected before extraction.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'FatalErrorsCount';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'ModifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'ModifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'ModifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'ModifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'StatusCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'StatusCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Batch status code ("Draft", "Validated", "Extracted", "Submitted", "Accepted", "Rejected").', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'StatusCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Batch status code ("Draft", "Validated", "Extracted", "Submitted", "Accepted", "Rejected").', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'StatusCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'SubmissionQuarter')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'SubmissionQuarter'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Quarterly submission cycle (1, 2, 3, 4, or null for annual/ad-hoc).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'SubmissionQuarter';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Quarterly submission cycle (1, 2, 3, 4, or null for annual/ad-hoc).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'SubmissionQuarter';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'SubmissionYear')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'SubmissionYear'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Scheme / Financial submission year (e.g. 2026).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'SubmissionYear';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Scheme / Financial submission year (e.g. 2026).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'SubmissionYear';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'TotalRecords')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'TotalRecords'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Total records across all generated files in this batch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'TotalRecords';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Total records across all generated files in this batch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'TotalRecords';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'WarningsCount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'StatutorySubmissionBatch' AND c.name = N'WarningsCount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Number of non-blocking warning anomalies detected.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'WarningsCount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Number of non-blocking warning anomalies detected.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StatutorySubmissionBatch', @level2type=N'COLUMN', @level2name=N'WarningsCount';
+END
+
 -- Table: dbo.StrategicPriority
 IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StrategicPriority')
 BEGIN
@@ -19302,9 +21354,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'StrategicPriority' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StrategicPriority', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StrategicPriority', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StrategicPriority', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StrategicPriority', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StrategicPriority' AND c.name = N'Description')
 BEGIN
@@ -19344,9 +21396,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'StrategicPriority' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StrategicPriority' AND c.name = N'ModifiedBy')
 BEGIN
@@ -19358,9 +21410,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'StrategicPriority' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'StrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'StrategicPriority' AND c.name = N'Name')
 BEGIN
@@ -19541,9 +21593,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SummativeAssessmentReport' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentReport', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentReport', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentReport', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentReport', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SummativeAssessmentReport' AND c.name = N'ExternalModeratorApprovalDate')
 BEGIN
@@ -19653,9 +21705,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SummativeAssessmentReport' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentReport', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentReport', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentReport', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentReport', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SummativeAssessmentReport' AND c.name = N'ModifiedBy')
 BEGIN
@@ -19667,9 +21719,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SummativeAssessmentReport' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentReport', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentReport', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentReport', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentReport', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SummativeAssessmentReport' AND c.name = N'NqfLevel')
 BEGIN
@@ -19906,9 +21958,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SummativeAssessmentUnitStandard' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentUnitStandard', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentUnitStandard', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentUnitStandard', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentUnitStandard', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SummativeAssessmentUnitStandard' AND c.name = N'Credits')
 BEGIN
@@ -19976,9 +22028,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SummativeAssessmentUnitStandard' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SummativeAssessmentUnitStandard' AND c.name = N'ModifiedBy')
 BEGIN
@@ -19990,9 +22042,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SummativeAssessmentUnitStandard' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SummativeAssessmentUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SummativeAssessmentUnitStandard' AND c.name = N'NqfLevel')
 BEGIN
@@ -20145,9 +22197,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SystemConfig' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemConfig', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemConfig', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemConfig', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemConfig', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SystemConfig' AND c.name = N'DataType')
 BEGIN
@@ -20215,9 +22267,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SystemConfig' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemConfig', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemConfig', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemConfig', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemConfig', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SystemConfig' AND c.name = N'ModifiedBy')
 BEGIN
@@ -20229,9 +22281,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SystemConfig' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemConfig', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemConfig', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemConfig', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemConfig', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 
 -- Table: dbo.SystemFeatureFlag
@@ -20286,9 +22338,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SystemFeatureFlag' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemFeatureFlag', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemFeatureFlag', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemFeatureFlag', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemFeatureFlag', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SystemFeatureFlag' AND c.name = N'Description')
 BEGIN
@@ -20384,9 +22436,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SystemFeatureFlag' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemFeatureFlag', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemFeatureFlag', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemFeatureFlag', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemFeatureFlag', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SystemFeatureFlag' AND c.name = N'ModifiedBy')
 BEGIN
@@ -20398,9 +22450,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SystemFeatureFlag' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemFeatureFlag', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemFeatureFlag', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemFeatureFlag', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemFeatureFlag', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 
 -- Table: dbo.SystemNotification
@@ -20469,9 +22521,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SystemNotification' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemNotification', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemNotification', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemNotification', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemNotification', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SystemNotification' AND c.name = N'IsRead')
 BEGIN
@@ -20511,9 +22563,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SystemNotification' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemNotification', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemNotification', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemNotification', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemNotification', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SystemNotification' AND c.name = N'ModifiedBy')
 BEGIN
@@ -20525,9 +22577,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'SystemNotification' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemNotification', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemNotification', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemNotification', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SystemNotification', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'SystemNotification' AND c.name = N'NotificationType')
 BEGIN
@@ -20666,9 +22718,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TradeMentorRatioPolicy' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeMentorRatioPolicy', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeMentorRatioPolicy', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeMentorRatioPolicy', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeMentorRatioPolicy', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TradeMentorRatioPolicy' AND c.name = N'EnforceStrictly')
 BEGIN
@@ -20736,9 +22788,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TradeMentorRatioPolicy' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeMentorRatioPolicy', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeMentorRatioPolicy', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeMentorRatioPolicy', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeMentorRatioPolicy', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TradeMentorRatioPolicy' AND c.name = N'ModifiedBy')
 BEGIN
@@ -20750,9 +22802,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TradeMentorRatioPolicy' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeMentorRatioPolicy', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeMentorRatioPolicy', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeMentorRatioPolicy', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeMentorRatioPolicy', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TradeMentorRatioPolicy' AND c.name = N'Notes')
 BEGIN
@@ -20905,9 +22957,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TradeTestTask' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeTestTask', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeTestTask', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeTestTask', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeTestTask', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TradeTestTask' AND c.name = N'IsCompetent')
 BEGIN
@@ -20961,9 +23013,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TradeTestTask' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeTestTask', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeTestTask', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeTestTask', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeTestTask', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TradeTestTask' AND c.name = N'ModifiedBy')
 BEGIN
@@ -20975,9 +23027,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TradeTestTask' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeTestTask', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeTestTask', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeTestTask', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TradeTestTask', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TradeTestTask' AND c.name = N'PassPercentage')
 BEGIN
@@ -21144,9 +23196,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingCommittee' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommittee', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommittee', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommittee', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommittee', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingCommittee' AND c.name = N'FinancialYear')
 BEGIN
@@ -21186,9 +23238,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingCommittee' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommittee', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommittee', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommittee', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommittee', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingCommittee' AND c.name = N'ModifiedBy')
 BEGIN
@@ -21200,9 +23252,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingCommittee' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommittee', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommittee', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommittee', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommittee', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingCommittee' AND c.name = N'OrganisationId')
 BEGIN
@@ -21285,9 +23337,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingCommitteeMember' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommitteeMember', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommitteeMember', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommitteeMember', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommitteeMember', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingCommitteeMember' AND c.name = N'IsActive')
 BEGIN
@@ -21327,9 +23379,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingCommitteeMember' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommitteeMember', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommitteeMember', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommitteeMember', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommitteeMember', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingCommitteeMember' AND c.name = N'ModifiedBy')
 BEGIN
@@ -21341,9 +23393,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingCommitteeMember' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommitteeMember', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommitteeMember', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommitteeMember', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingCommitteeMember', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingCommitteeMember' AND c.name = N'PersonId')
 BEGIN
@@ -21482,9 +23534,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingProvider' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProvider', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProvider', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProvider', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProvider', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProvider' AND c.name = N'EtqaDecisionNumber')
 BEGIN
@@ -21580,9 +23632,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingProvider' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProvider', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProvider', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProvider', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProvider', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProvider' AND c.name = N'ModifiedBy')
 BEGIN
@@ -21594,9 +23646,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingProvider' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProvider', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProvider', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProvider', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProvider', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProvider' AND c.name = N'OrganisationId')
 BEGIN
@@ -21739,6 +23791,470 @@ BEGIN
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Corporate website URL.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProvider', @level2type=N'COLUMN', @level2name=N'WebsiteUrl';
 END
 
+-- Table: dbo.TrainingProviderAssessorLink
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Relational binding between an accredited ETQA Assessor/Moderator and an SDP delivery campus.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Relational binding between an accredited ETQA Assessor/Moderator and an SDP delivery campus.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'Id')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'Id'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'Id';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'Id';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'CreatedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'CreatedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'CreatedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'CreatedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'EndDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'EndDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for EndDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'EndDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for EndDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'EndDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'EtqaAssessorId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'EtqaAssessorId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'EtqaAssessorId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'EtqaAssessorId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'ModifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'ModifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'ModifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'ModifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'RoleTypeCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'RoleTypeCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Role type: Assessor, Moderator, LeadAssessor', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'RoleTypeCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Role type: Assessor, Moderator, LeadAssessor', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'RoleTypeCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'StartDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'StartDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for StartDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'StartDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for StartDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'StartDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'Status')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'Status'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Status: Active, Terminated, PendingVerification', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'Status';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Status: Active, Terminated, PendingVerification', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'Status';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'TrainingProviderCampusId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'TrainingProviderCampusId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'TrainingProviderCampusId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'TrainingProviderCampusId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'TrainingProviderId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'TrainingProviderId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'TrainingProviderId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'TrainingProviderId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'VerificationNotes')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderAssessorLink' AND c.name = N'VerificationNotes'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for VerificationNotes.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'VerificationNotes';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for VerificationNotes.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderAssessorLink', @level2type=N'COLUMN', @level2name=N'VerificationNotes';
+END
+
+-- Table: dbo.TrainingProviderCampus
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Physical training site or delivery campus belonging to an accredited Skills Development Provider (SDP).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Physical training site or delivery campus belonging to an accredited Skills Development Provider (SDP).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'Id')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'Id'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'Id';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'Id';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'CampusCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'CampusCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for CampusCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'CampusCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for CampusCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'CampusCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'CampusName')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'CampusName'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for CampusName.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'CampusName';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for CampusName.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'CampusName';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'City')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'City'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for City.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'City';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for City.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'City';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'ContactEmail')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'ContactEmail'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ContactEmail.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'ContactEmail';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ContactEmail.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'ContactEmail';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'ContactPersonName')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'ContactPersonName'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ContactPersonName.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'ContactPersonName';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ContactPersonName.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'ContactPersonName';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'ContactPhone')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'ContactPhone'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ContactPhone.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'ContactPhone';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ContactPhone.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'ContactPhone';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'CreatedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'CreatedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'CreatedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'CreatedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'IsPrimarySite')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'IsPrimarySite'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for IsPrimarySite.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'IsPrimarySite';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for IsPrimarySite.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'IsPrimarySite';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'ModifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'ModifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'ModifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'ModifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'PhysicalAddressLine1')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'PhysicalAddressLine1'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for PhysicalAddressLine1.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'PhysicalAddressLine1';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for PhysicalAddressLine1.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'PhysicalAddressLine1';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'PhysicalAddressLine2')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'PhysicalAddressLine2'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for PhysicalAddressLine2.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'PhysicalAddressLine2';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for PhysicalAddressLine2.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'PhysicalAddressLine2';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'PostalCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'PostalCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for PostalCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'PostalCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for PostalCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'PostalCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'ProvinceCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'ProvinceCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ProvinceCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'ProvinceCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ProvinceCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'ProvinceCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'Status')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'Status'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Current lifecycle state code in the workflow engine.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'Status';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Current lifecycle state code in the workflow engine.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'Status';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'TrainingProviderId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'TrainingProviderCampus' AND c.name = N'TrainingProviderId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'TrainingProviderId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderCampus', @level2type=N'COLUMN', @level2name=N'TrainingProviderId';
+END
+
 -- Table: dbo.TrainingProviderQualification
 IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderQualification')
 BEGIN
@@ -21805,9 +24321,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingProviderQualification' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderQualification', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderQualification', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderQualification', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderQualification', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderQualification' AND c.name = N'ExpiryDate')
 BEGIN
@@ -21833,9 +24349,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingProviderQualification' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderQualification', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderQualification', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderQualification', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderQualification', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderQualification' AND c.name = N'ModifiedBy')
 BEGIN
@@ -21847,9 +24363,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingProviderQualification' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderQualification', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderQualification', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderQualification', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderQualification', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderQualification' AND c.name = N'NqfLevel')
 BEGIN
@@ -21960,9 +24476,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingProviderUnitStandard' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderUnitStandard', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderUnitStandard', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderUnitStandard', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderUnitStandard', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderUnitStandard' AND c.name = N'Credits')
 BEGIN
@@ -21988,9 +24504,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingProviderUnitStandard' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderUnitStandard' AND c.name = N'ModifiedBy')
 BEGIN
@@ -22002,9 +24518,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'TrainingProviderUnitStandard' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'TrainingProviderUnitStandard', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'TrainingProviderUnitStandard' AND c.name = N'NqfLevel')
 BEGIN
@@ -22129,9 +24645,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'Visit' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Visit', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Visit', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Visit', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Visit', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'Visit' AND c.name = N'Location')
 BEGIN
@@ -22157,9 +24673,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'Visit' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Visit', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Visit', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Visit', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Visit', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'Visit' AND c.name = N'ModifiedBy')
 BEGIN
@@ -22171,9 +24687,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'Visit' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Visit', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Visit', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Visit', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Visit', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'Visit' AND c.name = N'OrganisationId')
 BEGIN
@@ -22340,9 +24856,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowDefinition' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowDefinition', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowDefinition', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowDefinition', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowDefinition', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowDefinition' AND c.name = N'IsActive')
 BEGIN
@@ -22382,9 +24898,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowDefinition' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowDefinition', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowDefinition', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowDefinition', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowDefinition', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowDefinition' AND c.name = N'ModifiedBy')
 BEGIN
@@ -22396,9 +24912,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowDefinition' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowDefinition', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowDefinition', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowDefinition', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowDefinition', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowDefinition' AND c.name = N'Name')
 BEGIN
@@ -22776,9 +25292,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowHistory' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowHistory', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowHistory', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowHistory', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowHistory', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowHistory' AND c.name = N'FromStateId')
 BEGIN
@@ -22804,9 +25320,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowHistory' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowHistory', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowHistory', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowHistory', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowHistory', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowHistory' AND c.name = N'ModifiedBy')
 BEGIN
@@ -22818,9 +25334,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowHistory' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowHistory', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowHistory', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowHistory', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowHistory', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowHistory' AND c.name = N'ToStateId')
 BEGIN
@@ -22917,9 +25433,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowInstance' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowInstance', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowInstance', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowInstance', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowInstance', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowInstance' AND c.name = N'CurrentWorkflowStateId')
 BEGIN
@@ -23043,9 +25559,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowInstance' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowInstance', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowInstance', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowInstance', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowInstance', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowInstance' AND c.name = N'ModifiedBy')
 BEGIN
@@ -23057,9 +25573,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowInstance' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowInstance', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowInstance', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowInstance', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowInstance', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowInstance' AND c.name = N'WorkflowDefinitionId')
 BEGIN
@@ -23128,9 +25644,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowNotification' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowNotification', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowNotification', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowNotification', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowNotification', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowNotification' AND c.name = N'CreatedDate')
 BEGIN
@@ -23184,9 +25700,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowNotification' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowNotification', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowNotification', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowNotification', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowNotification', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowNotification' AND c.name = N'ModifiedBy')
 BEGIN
@@ -23198,9 +25714,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowNotification' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowNotification', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowNotification', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowNotification', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowNotification', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowNotification' AND c.name = N'ReadDate')
 BEGIN
@@ -23578,9 +26094,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowState' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowState', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowState', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowState', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowState', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowState' AND c.name = N'IsInitial')
 BEGIN
@@ -23620,9 +26136,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowState' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowState', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowState', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowState', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowState', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowState' AND c.name = N'ModifiedBy')
 BEGIN
@@ -23634,9 +26150,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowState' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowState', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowState', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowState', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowState', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowState' AND c.name = N'StateCode')
 BEGIN
@@ -23817,9 +26333,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowTask' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTask', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTask', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTask', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTask', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowTask' AND c.name = N'DueDate')
 BEGIN
@@ -23845,9 +26361,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowTask' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTask', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTask', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTask', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTask', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowTask' AND c.name = N'ModifiedBy')
 BEGIN
@@ -23859,9 +26375,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowTask' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTask', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTask', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTask', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTask', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowTask' AND c.name = N'Priority')
 BEGIN
@@ -24225,9 +26741,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowTransition' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTransition', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTransition', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTransition', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTransition', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowTransition' AND c.name = N'FromStateId')
 BEGIN
@@ -24253,9 +26769,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowTransition' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTransition', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTransition', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTransition', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTransition', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowTransition' AND c.name = N'ModifiedBy')
 BEGIN
@@ -24267,9 +26783,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkflowTransition' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTransition', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTransition', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTransition', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkflowTransition', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkflowTransition' AND c.name = N'NewEntityStatusCode')
 BEGIN
@@ -24464,9 +26980,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceApproval' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApproval', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApproval', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApproval', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApproval', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceApproval' AND c.name = N'CustomTradeRatio')
 BEGIN
@@ -24562,9 +27078,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceApproval' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApproval', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApproval', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApproval', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApproval', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceApproval' AND c.name = N'ModifiedBy')
 BEGIN
@@ -24576,9 +27092,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceApproval' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApproval', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApproval', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApproval', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApproval', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceApproval' AND c.name = N'OrganisationId')
 BEGIN
@@ -24731,9 +27247,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceApprovalMentor' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalMentor', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalMentor', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalMentor', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalMentor', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceApprovalMentor' AND c.name = N'Designation')
 BEGIN
@@ -24829,9 +27345,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceApprovalMentor' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalMentor', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalMentor', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalMentor', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalMentor', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceApprovalMentor' AND c.name = N'ModifiedBy')
 BEGIN
@@ -24843,9 +27359,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceApprovalMentor' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalMentor', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalMentor', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalMentor', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalMentor', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceApprovalMentor' AND c.name = N'Notes')
 BEGIN
@@ -24984,9 +27500,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceApprovalToolList' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalToolList', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalToolList', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalToolList', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalToolList', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceApprovalToolList' AND c.name = N'ModifiedAt')
 BEGIN
@@ -24998,9 +27514,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceApprovalToolList' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalToolList', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalToolList', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalToolList', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalToolList', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceApprovalToolList' AND c.name = N'ModifiedBy')
 BEGIN
@@ -25012,9 +27528,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceApprovalToolList' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalToolList', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalToolList', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalToolList', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceApprovalToolList', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceApprovalToolList' AND c.name = N'Remarks')
 BEGIN
@@ -25139,9 +27655,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringActionPlan' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringActionPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringActionPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringActionPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringActionPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringActionPlan' AND c.name = N'Criteria')
 BEGIN
@@ -25181,9 +27697,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringActionPlan' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringActionPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringActionPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringActionPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringActionPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringActionPlan' AND c.name = N'ModifiedBy')
 BEGIN
@@ -25195,9 +27711,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringActionPlan' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringActionPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringActionPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringActionPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringActionPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringActionPlan' AND c.name = N'ResolutionDate')
 BEGIN
@@ -25392,9 +27908,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringComplianceSurvey' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringComplianceSurvey', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringComplianceSurvey', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringComplianceSurvey', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringComplianceSurvey', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringComplianceSurvey' AND c.name = N'ModifiedAt')
 BEGIN
@@ -25406,9 +27922,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringComplianceSurvey' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringComplianceSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringComplianceSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringComplianceSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringComplianceSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringComplianceSurvey' AND c.name = N'ModifiedBy')
 BEGIN
@@ -25420,9 +27936,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringComplianceSurvey' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringComplianceSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringComplianceSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringComplianceSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringComplianceSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringComplianceSurvey' AND c.name = N'NonComplianceRisk')
 BEGIN
@@ -25561,9 +28077,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringLearnerSurvey' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringLearnerSurvey', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringLearnerSurvey', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringLearnerSurvey', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringLearnerSurvey', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringLearnerSurvey' AND c.name = N'ExposedToFullCurriculum')
 BEGIN
@@ -25645,9 +28161,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringLearnerSurvey' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringLearnerSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringLearnerSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringLearnerSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringLearnerSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringLearnerSurvey' AND c.name = N'ModifiedBy')
 BEGIN
@@ -25659,9 +28175,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringLearnerSurvey' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringLearnerSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringLearnerSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringLearnerSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringLearnerSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringLearnerSurvey' AND c.name = N'ReceivedToolbox')
 BEGIN
@@ -25772,9 +28288,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringMitigationPlan' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringMitigationPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringMitigationPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringMitigationPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringMitigationPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringMitigationPlan' AND c.name = N'IdentifiedRisk')
 BEGIN
@@ -25814,9 +28330,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringMitigationPlan' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringMitigationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringMitigationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringMitigationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringMitigationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringMitigationPlan' AND c.name = N'ModifiedBy')
 BEGIN
@@ -25828,9 +28344,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringMitigationPlan' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringMitigationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringMitigationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringMitigationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringMitigationPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringMitigationPlan' AND c.name = N'ReviewerNotes')
 BEGIN
@@ -26025,9 +28541,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringSiteVisit' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringSiteVisit', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringSiteVisit', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringSiteVisit', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringSiteVisit', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringSiteVisit' AND c.name = N'CrmUserId')
 BEGIN
@@ -26053,9 +28569,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringSiteVisit' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringSiteVisit', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringSiteVisit', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringSiteVisit', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringSiteVisit', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringSiteVisit' AND c.name = N'ModifiedBy')
 BEGIN
@@ -26067,9 +28583,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WorkplaceMonitoringSiteVisit' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringSiteVisit', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringSiteVisit', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringSiteVisit', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringSiteVisit', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WorkplaceMonitoringSiteVisit' AND c.name = N'MonitoringDate')
 BEGIN
@@ -26264,9 +28780,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspDispute' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspDispute', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspDispute', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspDispute', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspDispute', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspDispute' AND c.name = N'Description')
 BEGIN
@@ -26334,9 +28850,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspDispute' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspDispute', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspDispute', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspDispute', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspDispute', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspDispute' AND c.name = N'ModifiedBy')
 BEGIN
@@ -26348,9 +28864,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspDispute' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspDispute', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspDispute', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspDispute', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspDispute', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspDispute' AND c.name = N'OrganisationId')
 BEGIN
@@ -26461,9 +28977,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspEmploymentSummary' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspEmploymentSummary', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspEmploymentSummary', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspEmploymentSummary', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspEmploymentSummary', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspEmploymentSummary' AND c.name = N'DisabledCount')
 BEGIN
@@ -26601,9 +29117,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspEmploymentSummary' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspEmploymentSummary', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspEmploymentSummary', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspEmploymentSummary', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspEmploymentSummary', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspEmploymentSummary' AND c.name = N'ModifiedBy')
 BEGIN
@@ -26615,9 +29131,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspEmploymentSummary' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspEmploymentSummary', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspEmploymentSummary', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspEmploymentSummary', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspEmploymentSummary', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspEmploymentSummary' AND c.name = N'OccupationalCategory')
 BEGIN
@@ -26676,6 +29192,301 @@ BEGIN
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent WspSubmission.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspEmploymentSummary', @level2type=N'COLUMN', @level2name=N'WspSubmissionId';
 END
 
+-- Table: dbo.WspSignoffAttestation
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Cryptographically sealed attestation for WSP/ATR multi-party sign-off (SDF, Labour Union, CEO).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Cryptographically sealed attestation for WSP/ATR multi-party sign-off (SDF, Labour Union, CEO).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'Id')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'Id'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'Id';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'Id';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'AttestationStatement')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'AttestationStatement'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for AttestationStatement.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'AttestationStatement';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for AttestationStatement.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'AttestationStatement';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'AttestationStatusCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'AttestationStatusCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for AttestationStatusCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'AttestationStatusCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for AttestationStatusCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'AttestationStatusCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'CreatedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'CreatedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'CreatedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'CreatedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'DigitalSecuritySeal')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'DigitalSecuritySeal'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for DigitalSecuritySeal.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'DigitalSecuritySeal';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for DigitalSecuritySeal.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'DigitalSecuritySeal';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'DisputeLogged')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'DisputeLogged'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for DisputeLogged.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'DisputeLogged';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for DisputeLogged.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'DisputeLogged';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'ModifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'ModifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'ModifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'ModifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'OtpToken')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'OtpToken'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for OtpToken.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'OtpToken';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for OtpToken.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'OtpToken';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'OtpVerifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'OtpVerifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for OtpVerifiedAt.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'OtpVerifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for OtpVerifiedAt.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'OtpVerifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'SignerEmail')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'SignerEmail'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for SignerEmail.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'SignerEmail';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for SignerEmail.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'SignerEmail';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'SignerFullName')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'SignerFullName'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for SignerFullName.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'SignerFullName';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for SignerFullName.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'SignerFullName';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'SignerNotes')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'SignerNotes'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for SignerNotes.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'SignerNotes';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for SignerNotes.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'SignerNotes';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'SignerRoleCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'SignerRoleCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for SignerRoleCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'SignerRoleCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for SignerRoleCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'SignerRoleCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'SignerRsaId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'SignerRsaId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for SignerRsaId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'SignerRsaId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for SignerRsaId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'SignerRsaId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'SignoffDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'SignoffDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for SignoffDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'SignoffDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for SignoffDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'SignoffDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'UnionName')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'UnionName'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for UnionName.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'UnionName';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for UnionName.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'UnionName';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'WspDisputeId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'WspDisputeId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'WspDisputeId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'WspDisputeId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'WspSubmissionId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSignoffAttestation' AND c.name = N'WspSubmissionId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'WspSubmissionId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key relational reference to parent entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSignoffAttestation', @level2type=N'COLUMN', @level2name=N'WspSubmissionId';
+END
+
 -- Table: dbo.WspSkillsGap
 IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSkillsGap')
 BEGIN
@@ -26728,9 +29539,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspSkillsGap' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSkillsGap', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSkillsGap', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSkillsGap', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSkillsGap', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSkillsGap' AND c.name = N'FinancialYear')
 BEGIN
@@ -26770,9 +29581,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspSkillsGap' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSkillsGap' AND c.name = N'ModifiedBy')
 BEGIN
@@ -26784,9 +29595,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspSkillsGap' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSkillsGap' AND c.name = N'OccupationTitle')
 BEGIN
@@ -26925,9 +29736,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspStrategicPriority' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicPriority', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicPriority', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicPriority', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicPriority', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspStrategicPriority' AND c.name = N'IsAlignedWithNsdp')
 BEGIN
@@ -26953,9 +29764,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspStrategicPriority' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspStrategicPriority' AND c.name = N'ModifiedBy')
 BEGIN
@@ -26967,9 +29778,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspStrategicPriority' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicPriority', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspStrategicPriority' AND c.name = N'PriorityCode')
 BEGIN
@@ -27080,9 +29891,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspStrategicSkillsGap' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicSkillsGap', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicSkillsGap', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicSkillsGap', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicSkillsGap', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspStrategicSkillsGap' AND c.name = N'EstimatedBudget')
 BEGIN
@@ -27122,9 +29933,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspStrategicSkillsGap' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspStrategicSkillsGap' AND c.name = N'ModifiedBy')
 BEGIN
@@ -27136,9 +29947,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspStrategicSkillsGap' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspStrategicSkillsGap', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspStrategicSkillsGap' AND c.name = N'OccupationTitle')
 BEGIN
@@ -27267,6 +30078,20 @@ BEGIN
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'Id';
 END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'CompletedSignoffCount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'CompletedSignoffCount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Total count of completed, OTP-verified signatory attestations recorded.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'CompletedSignoffCount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Total count of completed, OTP-verified signatory attestations recorded.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'CompletedSignoffCount';
+END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'CreatedAt')
 BEGIN
     IF NOT EXISTS (
@@ -27291,9 +30116,23 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'DisputeLogged')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'DisputeLogged'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Flag indicating whether a formal labour dispute has been lodged against this submission.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'DisputeLogged';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Flag indicating whether a formal labour dispute has been lodged against this submission.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'DisputeLogged';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'EmployeeCount')
 BEGIN
@@ -27323,6 +30162,20 @@ BEGIN
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Statutory financial/scheme year for this submission (e.g. 2026).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'FinYear';
 END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'IsSignoffQuorumMet')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'IsSignoffQuorumMet'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Indicates whether the constitutional sign-off quorum has been satisfied.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'IsSignoffQuorumMet';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Indicates whether the constitutional sign-off quorum has been satisfied.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'IsSignoffQuorumMet';
+END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'ModifiedAt')
 BEGIN
     IF NOT EXISTS (
@@ -27333,9 +30186,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'ModifiedBy')
 BEGIN
@@ -27347,9 +30200,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'OrganisationId')
 BEGIN
@@ -27392,6 +30245,34 @@ BEGIN
         EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Unique statutory WSP submission reference tracking number.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'ReferenceNumber';
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Unique statutory WSP submission reference tracking number.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'ReferenceNumber';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'RequiredSignoffCount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'RequiredSignoffCount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RequiredSignoffCount.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'RequiredSignoffCount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RequiredSignoffCount.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'RequiredSignoffCount';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'SignoffDigitalSecuritySeal')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'SignoffDigitalSecuritySeal'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'SHA-256 digital security seal certifying completion of all requisite multi-party attestations.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'SignoffDigitalSecuritySeal';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'SHA-256 digital security seal certifying completion of all requisite multi-party attestations.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspSubmission', @level2type=N'COLUMN', @level2name=N'SignoffDigitalSecuritySeal';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspSubmission' AND c.name = N'SubmissionDate')
 BEGIN
@@ -27474,9 +30355,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspTrainingImpactSurvey' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingImpactSurvey', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingImpactSurvey', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingImpactSurvey', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingImpactSurvey', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspTrainingImpactSurvey' AND c.name = N'EvidenceDocumentUrl')
 BEGIN
@@ -27502,9 +30383,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspTrainingImpactSurvey' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingImpactSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingImpactSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingImpactSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingImpactSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspTrainingImpactSurvey' AND c.name = N'ModifiedBy')
 BEGIN
@@ -27516,9 +30397,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspTrainingImpactSurvey' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingImpactSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingImpactSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingImpactSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingImpactSurvey', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspTrainingImpactSurvey' AND c.name = N'QualitativeImpactNotes')
 BEGIN
@@ -27657,9 +30538,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspTrainingPlan' AND c.name = N'CreatedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingPlan', @level2type=N'COLUMN', @level2name=N'CreatedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspTrainingPlan' AND c.name = N'EstimatedCost')
 BEGIN
@@ -27685,9 +30566,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspTrainingPlan' AND c.name = N'ModifiedAt'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last modified.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingPlan', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspTrainingPlan' AND c.name = N'ModifiedBy')
 BEGIN
@@ -27699,9 +30580,9 @@ BEGIN
         WHERE ep.name = N'MS_Description'
           AND s.name = N'dbo' AND t.name = N'WspTrainingPlan' AND c.name = N'ModifiedBy'
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspTrainingPlan', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspTrainingPlan' AND c.name = N'NqfLevel')
 BEGIN

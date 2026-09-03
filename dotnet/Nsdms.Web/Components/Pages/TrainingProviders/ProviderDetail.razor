@@ -6,6 +6,7 @@
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
 @inject ITrainingProviderService ProviderService
+@inject ISdpCampusService CampusService
 @inject IOrganisationService OrgService
 @inject IPersonService PersonService
 @inject IBrandAssetService BrandAssetService
@@ -51,12 +52,31 @@
                 @(_provider.ProviderStatusCode ?? "Accredited")
             </MudChip>
 
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Error"
-                       StartIcon="@Icons.Material.Filled.Delete"
-                       OnClick="DeleteProvider"
-                       aria-label="Delete Training Provider">
-                Delete
+            <MudMenu Label="Provider Services"
+                     StartIcon="@Icons.Material.Filled.Bolt"
+                     EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                     Color="Color.Default"
+                     Variant="Variant.Outlined"
+                     Dense="true"
+                     aria-label="Provider Services Menu">
+                <MudMenuItem Icon="@Icons.Material.Filled.WorkspacePremium" Href="@($"/etqa/scope-extensions?providerId={Id}")">
+                    Apply for Scope Extension
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.MenuBook" Href="@($"/curriculum/courseware?providerId={Id}")">
+                    Request Courseware Package
+                </MudMenuItem>
+                <MudDivider Class="my-1" />
+                <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error" OnClick="DeleteProvider">
+                    Delete Provider
+                </MudMenuItem>
+            </MudMenu>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Autorenew"
+                       OnClick="RenewProviderAccreditation"
+                       aria-label="Renew Provider Accreditation">
+                Renew Accreditation
             </MudButton>
         }
         <MudButton Variant="Variant.Outlined"
@@ -77,7 +97,7 @@
     </div>
 </MudPaper>
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
+<div>
     @if (Id > 0)
     {
         <!-- Visual Workflow Step Tracker -->
@@ -426,12 +446,77 @@
                 }
             </MudTabPanel>
 
-            <!-- TAB 5: Registered Assessors & Moderators -->
+            <!-- TAB 5: Delivery Campuses & Physical Sites -->
+            <MudTabPanel Text="Delivery Campuses &amp; Sites" Icon="@Icons.Material.Filled.LocationOn" Disabled="Id == 0">
+                <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
+                    <div>
+                        <MudText Typo="Typo.h6">Accredited Delivery Campuses &amp; Physical Sites</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Approved satellite facilities and training delivery centres belonging to this provider</MudText>
+                    </div>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.AddLocation"
+                               OnClick="OpenAddCampusDialog">
+                        Add Campus Site
+                    </MudButton>
+                </div>
+
+                @if (_loadingCampuses)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+                }
+                else
+                {
+                    <MudTable Items="_campuses" Hover="true" Dense="true" Striped="true" Elevation="1">
+                        <HeaderContent>
+                            <MudTh>Campus Name</MudTh>
+                            <MudTh>Code</MudTh>
+                            <MudTh>Location (City / Province)</MudTh>
+                            <MudTh>Contact Person</MudTh>
+                            <MudTh>Type</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh Style="text-align:right">Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Name"><strong>@context.CampusName</strong></MudTd>
+                            <MudTd DataLabel="Code"><span class="font-mono">@context.CampusCode</span></MudTd>
+                            <MudTd DataLabel="Location">@context.City, @context.ProvinceCode</MudTd>
+                            <MudTd DataLabel="Contact">@context.ContactPersonName (@context.ContactPhone)</MudTd>
+                            <MudTd DataLabel="Type">
+                                @if (context.IsPrimarySite)
+                                {
+                                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">Main Campus</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">Satellite</MudChip>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="Status">
+                                <MudChip T="string" Color="@(context.Status == "Active" ? Color.Success : Color.Warning)" Size="Size.Small" Variant="Variant.Filled">
+                                    @context.Status
+                                </MudChip>
+                            </MudTd>
+                            <MudTd Style="text-align:right" DataLabel="Actions">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteCampus(context.Id))" aria-label="Delete Campus" />
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No physical delivery campuses configured for this provider.</MudText>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                }
+            </MudTabPanel>
+
+            <!-- TAB 6: Registered Assessors & Moderators -->
             <MudTabPanel Text="Assessors &amp; Moderators" Icon="@Icons.Material.Filled.Badge" Disabled="Id == 0">
                 <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
                     <div>
                         <MudText Typo="Typo.h6">Registered Assessors &amp; Moderators</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Accredited practitioners conducting formative and summative evaluations</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Accredited practitioners linked to this SDP and its delivery campuses</MudText>
                     </div>
                 </div>
 
@@ -591,7 +676,7 @@
             }
         </MudTabs>
     }
-</MudContainer>
+</div>
 
 <!-- ADD QUALIFICATION DIALOG -->
 <MudDialog @bind-Visible="_addQualificationOpen">
@@ -654,12 +739,52 @@
     </DialogActions>
 </MudDialog>
 
+<!-- Add Campus Dialog -->
+<MudDialog @bind-IsVisible="_addCampusOpen" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add Delivery Campus / Physical Site</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" md="8">
+                <MudTextField @bind-Value="_newCampus.CampusName" Label="Campus Name" Variant="Variant.Outlined" Required="true" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField @bind-Value="_newCampus.CampusCode" Label="Campus Code" Variant="Variant.Outlined" Placeholder="Auto-generated if blank" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newCampus.PhysicalAddressLine1" Label="Physical Address" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField @bind-Value="_newCampus.City" Label="City / Town" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField @bind-Value="_newCampus.ProvinceCode" Label="Province Code" Variant="Variant.Outlined" Placeholder="e.g. GP, KZN, WC" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newCampus.ContactPersonName" Label="Site Contact Person" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newCampus.ContactPhone" Label="Site Telephone" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudCheckBox @bind-Value="_newCampus.IsPrimarySite" Label="Set as Primary / Main Campus" Color="Color.Primary" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _addCampusOpen = false)">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveCampus">Save Delivery Campus</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     [Parameter] public int Id { get; set; }
 
     private TrainingProvider _provider = new();
     private List<TrainingProviderQualification> _qualifications = new();
     private List<TrainingProviderUnitStandard> _unitStandards = new();
+    private List<TrainingProviderCampus> _campuses = new();
     private List<Organisation> _organisations = new();
     private List<Person> _people = new();
     private List<LookupItemDto> _providerTypes = new();
@@ -671,12 +796,16 @@
     private List<ProviderEmployerDto> _employers = new();
     private List<ProviderAuditVisitDto> _audits = new();
 
+    private bool _loadingCampuses = false;
     private bool _loadingLearners = false;
     private bool _loadingAssessors = false;
     private bool _loadingEmployers = false;
     private bool _loadingAudits = false;
 
     // In-tab Modals
+    private bool _addCampusOpen = false;
+    private TrainingProviderCampus _newCampus = new();
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
     private bool _addQualificationOpen = false;
     private TrainingProviderQualification _newQualification = new();
 
@@ -743,10 +872,14 @@
             _logoDataUri = await BrandAssetService.GetLogoDataUriAsync(Id, "TrainingProvider");
 
             // Load 360-Degree Relational Collections
+            _loadingCampuses = true;
             _loadingLearners = true;
             _loadingAssessors = true;
             _loadingEmployers = true;
             _loadingAudits = true;
+
+            _campuses = await CampusService.GetCampusesByProviderAsync(Id);
+            _loadingCampuses = false;
 
             _enrolledLearners = await ProviderService.GetEnrolledLearnersAsync(Id);
             _loadingLearners = false;
@@ -820,6 +953,23 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Error deleting provider: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RenewProviderAccreditation()
+    {
+        try
+        {
+            _provider.AccreditationEndDate = DateTime.Today.AddYears(5);
+            _provider.ProviderStatusCode = "Accredited";
+            _provider.IsActive = true;
+            await ProviderService.SaveAsync(_provider, "Admin");
+            Snackbar.Add($"SDP '{_provider.AccreditationNumber}' accreditation successfully renewed for 5 years until {_provider.AccreditationEndDate:yyyy-MM-dd}.", Severity.Success);
+            await LoadProviderData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error renewing provider accreditation: {ex.Message}", Severity.Error);
         }
     }
 
@@ -948,6 +1098,55 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Error removing unit standard: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OpenAddCampusDialog()
+    {
+        _newCampus = new TrainingProviderCampus
+        {
+            TrainingProviderId = Id,
+            Status = "Active"
+        };
+        _addCampusOpen = true;
+    }
+
+    private async Task SaveCampus()
+    {
+        if (string.IsNullOrWhiteSpace(_newCampus.CampusName))
+        {
+            Snackbar.Add("Campus Name is required.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _newCampus.TrainingProviderId = Id;
+            await CampusService.AddCampusAsync(_newCampus, "Admin");
+            Snackbar.Add($"Delivery campus '{_newCampus.CampusName}' added successfully.", Severity.Success);
+            _addCampusOpen = false;
+            _campuses = await CampusService.GetCampusesByProviderAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding campus: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteCampus(int campusId)
+    {
+        try
+        {
+            var ok = await CampusService.DeleteCampusAsync(campusId, "Admin");
+            if (ok)
+            {
+                Snackbar.Add("Delivery campus deleted successfully.", Severity.Success);
+                _campuses = await CampusService.GetCampusesByProviderAsync(Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting campus: {ex.Message}", Severity.Error);
         }
     }
 

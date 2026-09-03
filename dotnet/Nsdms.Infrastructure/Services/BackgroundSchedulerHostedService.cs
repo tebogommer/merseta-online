@@ -39,6 +39,14 @@ public class BackgroundSchedulerHostedService : BackgroundService
                         _logger.LogInformation("Background Scheduler: Executing active scheduled maintenance cycle...");
                         var levyService = scope.ServiceProvider.GetRequiredService<LevyService>();
                         var configService = scope.ServiceProvider.GetRequiredService<ISystemConfigurationService>();
+                        var statutoryScheduler = scope.ServiceProvider.GetService<IStatutorySchedulerService>();
+
+                        if (statutoryScheduler != null)
+                        {
+                            // Trigger statutory checks
+                            await statutoryScheduler.ExecuteWspDeadlineMonitorJobAsync("SYSTEM_SCHEDULER", stoppingToken);
+                            await statutoryScheduler.ExecuteSetmisMonthlyDeltaJobAsync("SYSTEM_SCHEDULER", stoppingToken);
+                        }
 
                         // Automated SLA Task check and maintenance logic
                         var lastRun = DateTime.UtcNow;

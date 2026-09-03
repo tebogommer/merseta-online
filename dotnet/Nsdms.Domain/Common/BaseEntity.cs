@@ -27,14 +27,14 @@ public interface IAuditableEntity
 }
 
 /// <summary>
-/// Abstract base entity class providing auto-generated primary key and audit metadata.
+/// Abstract base entity class providing auto-generated primary key of specified type and audit metadata.
 /// </summary>
-public abstract class BaseEntity : IAuditableEntity
+public abstract class BaseEntity<TKey> : IAuditableEntity
 {
     /// <summary>
-    /// Auto-generated integer primary key identifier.
+    /// Auto-generated primary key identifier.
     /// </summary>
-    public int Id { get; set; }
+    public TKey Id { get; set; } = default!;
 
     /// <summary>
     /// UTC timestamp when the record was initially created.
@@ -55,6 +55,20 @@ public abstract class BaseEntity : IAuditableEntity
     /// Username or system process that last modified the record.
     /// </summary>
     public string? ModifiedBy { get; set; }
+}
+
+/// <summary>
+/// Default abstract base entity class providing 32-bit auto-generated integer primary key.
+/// </summary>
+public abstract class BaseEntity : BaseEntity<int>
+{
+}
+
+/// <summary>
+/// Abstract base entity class providing 64-bit auto-generated BIGINT primary key for high-volume entities.
+/// </summary>
+public abstract class BaseLongEntity : BaseEntity<long>
+{
 }
 
 /// <summary>

@@ -81,12 +81,64 @@ When user's prompt is NOT in English:
 
 ---
 
-## 🛡️ MerSETA Statutory Nomenclature & Terminology Governance
+### 🛡️ MerSETA Statutory Nomenclature & Terminology Governance
 1. **Discretionary Grants (DG) vs Mandatory Grants (MG)**: Never use the word "Grant" in isolation. Always qualify as "Discretionary Grant (DG)" (PIVOTAL strategic allocations / MoAs) or "Mandatory Grant (MG)" (20% WSP/ATR levy rebates).
 2. **Contracting via MoA**: The legal contracting instrument for Discretionary Grants is the **Memorandum of Agreement (MoA)**, never generic "Contracts".
 3. **Skills Development Providers (SDP)**: Refer to accredited training institutions as **Skills Development Providers (SDPs)** per QCTO statutory guidelines.
 4. **Artisan Mentorship Ratios**: Enforce NAMB / QCTO artisan mentor-to-apprentice ratios via `IMentorRatioPolicyEngine`, respecting trade-specific caps.
 5. **Governance & PFMA Controls**: Adhere to Delegation of Financial Authority (DOFA), Segregation of Duties (Maker-Checker), and non-repudiation audit logging for all approval gates.
+
+---
+
+### 🛡️ Multi-Tenancy Query Filter Resilience Invariant
+1. In `NsdmsDbContext`, always initialize `_tenantProvider` with a guaranteed non-null fallback:
+   `_tenantProvider = tenantProvider ?? new DefaultTenantProvider(null, isAdmin: true);`
+2. Never perform direct null navigation on `_tenantProvider` inside EF Core query filters. Use `_tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || entity.OrganisationId == _tenantProvider.CurrentOrganisationId` with explicit spacing around ` == `.
+3. For background services, bulk batch syncs, and system-level reconciliations, explicitly append `.IgnoreQueryFilters()` when cross-tenant aggregation is required.
+
+---
+
+### 🛡️ High-Volume Primary Key & Audit Invariant
+1. Entities expected to exceed $2.14 \times 10^9$ rows (`LevyFileLine`, `WspTrainingPlan`, and `AuditLog`) must inherit `BaseLongEntity` (`Id` of type `long` / `BIGINT`).
+2. `AuditLog.RecordId` and `IAuditService.LogActionAsync(..., long recordId, ...)` must use `long` to ensure compatibility with both standard `int` and high-volume `long` entities.
+
+---
+
+### 🛡️ Automated Test Isolation & SQL Server Probing Guardrail
+1. Unit and integration tests must never attempt live socket/pipe connections to local SQL Server instances without explicit opt-in environment variables (e.g. `ENABLE_LIVE_SQL_SYNC == "true"`).
+2. Any test that modifies process-level environment flags (e.g. `ENABLE_EF_TEMPORAL_TABLES`) must implement `IDisposable` and clear the flag in `Dispose()` to avoid corrupting subsequent tests executed by the test host.
+
+---
+
+### 🛡️ Statutory DHET SETMIS & SAQA NLRD Flat-File Extract Invariant
+1. **DHET SETMIS Positional Record Lengths**:
+   All 11 statutory flat files must strictly match exact character widths without delimiters:
+   - File 100 (Provider): 799
+   - File 200 (Provider Accreditation): 796
+   - File 304 (Non-NQF Registration): 328
+   - File 400 (Person Demographics): 845
+   - File 401 (Assessor / Moderator): 187
+   - File 500 (Learnership Enrolment): 258
+   - File 501 (Qualification Enrolment): 411
+   - File 502 (Non-NQF Enrolment): 273
+   - File 503 (Unit Standard Assessment): 407
+   - File 505 (Apprenticeship Enrolment): 206
+   - File 506 (Internship Enrolment): 185
+2. **SAQA NLRD Edu.Dex Invariant**:
+   - Supplier Code is always fixed at `599` (MerSETA).
+   - All files must be prepended with a statutory `HEADER599` record padded to the exact file record length:
+     - File 21: 847
+     - File 24: 135
+     - File 25: 791
+     - File 26: 157
+     - File 27: 119
+     - File 28: 143
+     - File 29: 161
+     - File 30: 171
+3. **Double-Write & Digital Security Seal**:
+   Every batch generation must compute a SHA-256 digital security seal over the batch archive, record snapshots in `StatutorySubmissionBatch`, and write to `audit_logs`.
+
+
 
 
 

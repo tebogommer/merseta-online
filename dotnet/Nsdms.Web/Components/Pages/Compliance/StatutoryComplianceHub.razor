@@ -1,335 +1,524 @@
 @page "/compliance/statutory"
+@page "/statutory/extracts"
 @page "/admin/submissions"
 @using Microsoft.AspNetCore.Components.Authorization
+@using Nsdms.Application.Common
+@using Nsdms.Application.Services
 @using Nsdms.Application.Validation
+@using Nsdms.Domain.Entities
+@inject ISetmisExtractService SetmisExtractService
+@inject INlrdExtractService NlrdExtractService
+@inject IStatutorySchedulerService SchedulerService
 @inject IStatutoryValidationService ValidationService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
-<PageTitle>Statutory Compliance & Pre-Submission Engine | merSETA NSDMS</PageTitle>
+@*
+  UI-STANDARD.md Archetype: A2 (Statutory Work Queue & Submission Hub)
+  Clauses: 4.2, 4.3, 4.4, 5.1, 7.4.2, 8.3, 9.2, 10, 11.9
+*@
 
-<div class="statutory-hub-container">
-    <!-- Top Action Bar -->
-    <div class="d-flex justify-space-between align-center mb-6 pa-4 rounded-lg mud-paper-elevation-1 bg-surface sticky-top-header">
-        <div class="d-flex align-center gap-3">
-            <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Color="Color.Primary" Size="Size.Large" />
-            <div>
-                <MudText Typo="Typo.h5" Class="font-weight-bold">Statutory Pre-Submission Audit Engine</MudText>
-                <MudText Typo="Typo.caption" Color="Color.Secondary">
-                    Automated DHET SETMIS (Files 100-505) and SAQA NLRD (Files 21-30 / Edu.Dex) statutory validation
-                </MudText>
-            </div>
-        </div>
-        <div class="d-flex align-center gap-3">
+<PageTitle>Statutory Reporting & Extraction Hub | merSETA NSDMS</PageTitle>
+
+<main id="main-content" style="max-width: 1600px; margin: 0 auto;">
+    <!-- Shared Entity Header -->
+    <EntityHeader Title="Statutory Reporting & Extraction Hub"
+                  Subtitle="Official DHET SETMIS (Files 100 to 506) and SAQA NLRD Edu.Dex (Files 21 to 30) statutory flat-file engines, batch packages, automated schedulers, and pre-submission audits."
+                  ReferenceKey="STATUTORY-HUB"
+                  Status="Active"
+                  BreadcrumbItems="@_breadcrumbs">
+        <ActionZone>
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Refresh"
-                       OnClick="RunActiveAuditAsync"
-                       Disabled="@_isLoading">
-                @(_isLoading ? "Auditing Database..." : "Run Audit Scan")
+                       OnClick="RefreshAllAsync"
+                       Disabled="@(_isLoading || _isExtracting)">
+                @(_isLoading ? "Auditing database..." : "Refresh data")
             </MudButton>
-        </div>
-    </div>
+        </ActionZone>
+    </EntityHeader>
 
-    <!-- Main Content Tabs -->
-    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Surface" @bind-ActivePanelIndex="_activeTabIndex">
-        <!-- Tab 1: DHET SETMIS -->
-        <MudTabPanel Text="DHET SETMIS (Files 100 - 505)" Icon="@Icons.Material.Filled.AccountBalance">
-            @if (_setmisReport != null)
-            {
-                <div class="mb-6">
-                    <!-- Metrics Row -->
-                    <MudGrid Class="mb-6">
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudPaper Class="pa-4 text-center rounded-lg border-solid mud-border-primary" Elevation="0">
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Total Records Evaluated</MudText>
-                                <MudText Typo="Typo.h4" Class="font-weight-bold mt-1">@_setmisReport.TotalRecordsAudited.ToString("N0")</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Primary">Across 7 Core Submissions</MudText>
-                            </MudPaper>
-                        </MudItem>
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudPaper Class="pa-4 text-center rounded-lg border-solid mud-border-success" Elevation="0">
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">100% Compliant Records</MudText>
-                                <MudText Typo="Typo.h4" Color="Color.Success" Class="font-weight-bold mt-1">@_setmisReport.CompliantRecordsCount.ToString("N0")</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Success">Ready for Extraction</MudText>
-                            </MudPaper>
-                        </MudItem>
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudPaper Class="pa-4 text-center rounded-lg border-solid mud-border-error" Elevation="0">
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Fatal Blocking Errors</MudText>
-                                <MudText Typo="Typo.h4" Color="Color.Error" Class="font-weight-bold mt-1">@_setmisReport.FatalErrorsCount.ToString("N0")</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Error">Will cause DHET file rejection</MudText>
-                            </MudPaper>
-                        </MudItem>
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudPaper Class="pa-4 text-center rounded-lg border-solid mud-border-warning" Elevation="0">
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Statutory Health Score</MudText>
-                                <MudText Typo="Typo.h4" Color="@(_setmisReport.CompliancePercentage >= 95 ? Color.Success : Color.Warning)" Class="font-weight-bold mt-1">
-                                    @_setmisReport.CompliancePercentage%
-                                </MudText>
-                                <MudProgressLinear Color="@(_setmisReport.CompliancePercentage >= 95 ? Color.Success : Color.Warning)"
-                                                   Value="@((double)_setmisReport.CompliancePercentage)"
-                                                   Class="mt-2" />
-                            </MudPaper>
-                        </MudItem>
-                    </MudGrid>
-
-                    <!-- File Breakdown Chips -->
-                    <MudPaper Class="pa-4 mb-6 rounded-lg" Elevation="1">
-                        <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-2">Record Count Breakdown by SETMIS Flat File</MudText>
-                        <div class="d-flex flex-wrap gap-2">
-                            @foreach (var kvp in _setmisReport.FileCounts)
-                            {
-                                <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">
-                                    @kvp.Key: <strong>@kvp.Value</strong> records
-                                </MudChip>
-                            }
-                        </div>
-                    </MudPaper>
-
-                    <!-- Validation Errors DataGrid -->
-                    <MudText Typo="Typo.h6" Class="font-weight-bold mb-3">
-                        Quarantine Audit Log (@_setmisReport.Errors.Count Issues Found)
-                    </MudText>
-
-                    @if (_setmisReport.Errors.Count == 0)
-                    {
-                        <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="rounded-lg">
-                            🎉 100% SETMIS Compliance Verified! No fatal schema, referential, or demographic validation errors detected.
-                        </MudAlert>
-                    }
-                    else
-                    {
-                        <MudTable Items="@_setmisReport.Errors"
-                                  Dense="true"
-                                  Hover="true"
-                                  Striped="true"
-                                  Bordered="true"
-                                  Filter="new Func<StatutoryValidationError, bool>(FilterErrorItem)">
-                            <ToolBarContent>
-                                <MudText Typo="Typo.h6">Validation Issues</MudText>
-                                <MudSpacer />
-                                <MudTextField @bind-Value="_searchString"
-                                              Placeholder="Search rule code, field, or entity..."
-                                              Adornment="Adornment.Start"
-                                              AdornmentIcon="@Icons.Material.Filled.Search"
-                                              IconSize="Size.Medium"
-                                              Class="mt-0"
-                                              Clearable="true" />
-                            </ToolBarContent>
-                            <HeaderContent>
-                                <MudTh>Severity</MudTh>
-                                <MudTh>File & Rule</MudTh>
-                                <MudTh>Affected Entity / Record</MudTh>
-                                <MudTh>Field Name</MudTh>
-                                <MudTh>Error Message</MudTh>
-                                <MudTh>Remediation Action</MudTh>
-                                <MudTh>Action</MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="Severity">
-                                    <MudChip T="string" Color="@(context.Severity == StatutoryValidationSeverity.Fatal ? Color.Error : Color.Warning)"
-                                             Size="Size.Small"
-                                             Variant="Variant.Filled">
-                                        @context.Severity
-                                    </MudChip>
-                                </MudTd>
-                                <MudTd DataLabel="File & Rule">
-                                    <div><strong>@context.FileIdentifier</strong></div>
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.RuleCode</MudText>
-                                </MudTd>
-                                <MudTd DataLabel="Affected Record">
-                                    <div><strong>@context.EntityName</strong></div>
-                                    <MudText Typo="Typo.caption">@context.RecordDescriptor</MudText>
-                                </MudTd>
-                                <MudTd DataLabel="Field Name">
-                                    <code>@context.FieldName</code>
-                                </MudTd>
-                                <MudTd DataLabel="Error Message">
-                                    <MudText Typo="Typo.body2" Color="Color.Error">@context.Message</MudText>
-                                </MudTd>
-                                <MudTd DataLabel="Remediation">
-                                    <MudText Typo="Typo.caption">@context.Remediation</MudText>
-                                </MudTd>
-                                <MudTd DataLabel="Action">
-                                    <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
-                                                   Color="Color.Primary"
-                                                   Size="Size.Small"
-                                                   Title="Drill-down to record"
-                                                   OnClick="@(() => NavigateToEntity(context.EntityName, context.RecordId))" />
-                                </MudTd>
-                            </RowTemplate>
-                            <PagerContent>
-                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
-                            </PagerContent>
-                        </MudTable>
-                    }
+    <!-- Main Navigation Tabs -->
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Surface" @bind-ActivePanelIndex="_activeTabIndex" Class="mt-4">
+        
+        <!-- ================================================================= -->
+        <!-- Tab 1: DHET SETMIS Flat-File Extractions (Files 100 - 506)        -->
+        <!-- ================================================================= -->
+        <MudTabPanel Text="DHET SETMIS (Files 100 - 506)" Icon="@Icons.Material.Filled.AccountBalance">
+            <!-- Action / Summary Banner -->
+            <MudPaper Class="pa-4 mb-6 rounded-lg bg-surface border-solid mud-border-primary" Elevation="1">
+                <div class="d-flex flex-wrap justify-space-between align-center gap-4">
+                    <div>
+                        <MudText Typo="Typo.h6" Class="font-weight-bold">DHET SETMIS Standard Flat-File Extracts</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Fixed-width positional text files formatted according to the Department of Higher Education and Training specifications.
+                        </MudText>
+                    </div>
+                    <div class="d-flex align-center gap-3">
+                        <MudSelect T="int" Label="Scheme year" @bind-Value="_selectedFinancialYear" Dense="true" Margin="Margin.Dense" Style="width: 140px;">
+                            <MudSelectItem Value="2026">2026</MudSelectItem>
+                            <MudSelectItem Value="2025">2025</MudSelectItem>
+                            <MudSelectItem Value="2024">2024</MudSelectItem>
+                        </MudSelect>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Archive"
+                                   OnClick="GenerateAndDownloadSetmisBatchAsync"
+                                   Disabled="@_isExtracting">
+                            @(_isExtracting ? "Generating package..." : "Download complete SETMIS package (.zip)")
+                        </MudButton>
+                    </div>
                 </div>
-            }
+            </MudPaper>
+
+            <!-- SETMIS Files DataGrid -->
+            <MudTable Items="@_setmisFiles" Dense="true" Hover="true" Striped="true" Bordered="true" Elevation="1" Class="rounded-lg">
+                <ToolBarContent>
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Mandatory DHET Submission Files (11 Files)</MudText>
+                    <MudSpacer />
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Total estimated records: <strong>@_setmisFiles.Sum(f => f.EstimatedRecordCount).ToString("N0")</strong>
+                    </MudText>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>File code</MudTh>
+                    <MudTh>File title & description</MudTh>
+                    <MudTh>Record width</MudTh>
+                    <MudTh>Estimated records</MudTh>
+                    <MudTh>Statutory filename pattern</MudTh>
+                    <MudTh Class="text-right">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="File code">
+                        <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled" Class="font-mono">
+                            File @context.FileCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Title & Description">
+                        <MudText Typo="Typo.body2" Class="font-weight-bold">@context.FileTitle</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Description</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Record width">
+                        <span class="font-mono">@context.RecordLength chars</span>
+                    </MudTd>
+                    <MudTd DataLabel="Estimated records">
+                        <strong>@context.EstimatedRecordCount.ToString("N0")</strong>
+                    </MudTd>
+                    <MudTd DataLabel="Filename pattern">
+                        <code class="font-mono text-secondary" style="font-size: 0.8rem;">@context.ExpectedFileNamePattern</code>
+                    </MudTd>
+                    <MudTd DataLabel="Actions" Class="text-right">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Download"
+                                   OnClick="@(() => DownloadSingleSetmisFile(context.FileCode))">
+                            Download .dat
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
         </MudTabPanel>
 
-        <!-- Tab 2: SAQA NLRD -->
+        <!-- ================================================================= -->
+        <!-- Tab 2: SAQA NLRD Edu.Dex Extractions (Files 21 - 30)              -->
+        <!-- ================================================================= -->
         <MudTabPanel Text="SAQA NLRD (Files 21 - 30 / Edu.Dex)" Icon="@Icons.Material.Filled.School">
-            @if (_nlrdReport != null)
-            {
-                <div class="mb-6">
-                    <!-- Metrics Row -->
-                    <MudGrid Class="mb-6">
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudPaper Class="pa-4 text-center rounded-lg border-solid mud-border-primary" Elevation="0">
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Total Records Evaluated</MudText>
-                                <MudText Typo="Typo.h4" Class="font-weight-bold mt-1">@_nlrdReport.TotalRecordsAudited.ToString("N0")</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Primary">Across 10 SAQA Files</MudText>
-                            </MudPaper>
-                        </MudItem>
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudPaper Class="pa-4 text-center rounded-lg border-solid mud-border-success" Elevation="0">
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">100% Compliant Records</MudText>
-                                <MudText Typo="Typo.h4" Color="Color.Success" Class="font-weight-bold mt-1">@_nlrdReport.CompliantRecordsCount.ToString("N0")</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Success">Edu.Dex Validated</MudText>
-                            </MudPaper>
-                        </MudItem>
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudPaper Class="pa-4 text-center rounded-lg border-solid mud-border-error" Elevation="0">
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Fatal Blocking Errors</MudText>
-                                <MudText Typo="Typo.h4" Color="Color.Error" Class="font-weight-bold mt-1">@_nlrdReport.FatalErrorsCount.ToString("N0")</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Error">Edu.Dex load rejections</MudText>
-                            </MudPaper>
-                        </MudItem>
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudPaper Class="pa-4 text-center rounded-lg border-solid mud-border-warning" Elevation="0">
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">SAQA Health Score</MudText>
-                                <MudText Typo="Typo.h4" Color="@(_nlrdReport.CompliancePercentage >= 95 ? Color.Success : Color.Warning)" Class="font-weight-bold mt-1">
-                                    @_nlrdReport.CompliancePercentage%
-                                </MudText>
-                                <MudProgressLinear Color="@(_nlrdReport.CompliancePercentage >= 95 ? Color.Success : Color.Warning)"
-                                                   Value="@((double)_nlrdReport.CompliancePercentage)"
-                                                   Class="mt-2" />
-                            </MudPaper>
-                        </MudItem>
-                    </MudGrid>
-
-                    <!-- File Breakdown Chips -->
-                    <MudPaper Class="pa-4 mb-6 rounded-lg" Elevation="1">
-                        <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-2">Record Count Breakdown by SAQA NLRD File</MudText>
-                        <div class="d-flex flex-wrap gap-2">
-                            @foreach (var kvp in _nlrdReport.FileCounts)
-                            {
-                                <MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined" Size="Size.Small">
-                                    @kvp.Key: <strong>@kvp.Value</strong> records
-                                </MudChip>
-                            }
+            <!-- Action / Summary Banner -->
+            <MudPaper Class="pa-4 mb-6 rounded-lg bg-surface border-solid mud-border-secondary" Elevation="1">
+                <div class="d-flex flex-wrap justify-space-between align-center gap-4">
+                    <div>
+                        <div class="d-flex align-center gap-2">
+                            <MudText Typo="Typo.h6" Class="font-weight-bold">SAQA NLRD Edu.Dex Load Specification Extracts</MudText>
+                            <MudChip T="string" Color="Color.Secondary" Size="Size.Small" Variant="Variant.Outlined">Supplier ID: 599</MudChip>
                         </div>
-                    </MudPaper>
-
-                    <!-- Validation Errors DataGrid -->
-                    <MudText Typo="Typo.h6" Class="font-weight-bold mb-3">
-                        Edu.Dex Simulation Audit Log (@_nlrdReport.Errors.Count Issues Found)
-                    </MudText>
-
-                    @if (_nlrdReport.Errors.Count == 0)
-                    {
-                        <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="rounded-lg">
-                            🎉 100% SAQA NLRD Edu.Dex Compliance Verified! No fatal schema, referential, or demographic validation errors detected.
-                        </MudAlert>
-                    }
-                    else
-                    {
-                        <MudTable Items="@_nlrdReport.Errors"
-                                  Dense="true"
-                                  Hover="true"
-                                  Striped="true"
-                                  Bordered="true"
-                                  Filter="new Func<StatutoryValidationError, bool>(FilterErrorItem)">
-                            <ToolBarContent>
-                                <MudText Typo="Typo.h6">Validation Issues</MudText>
-                                <MudSpacer />
-                                <MudTextField @bind-Value="_searchString"
-                                              Placeholder="Search rule code, field, or entity..."
-                                              Adornment="Adornment.Start"
-                                              AdornmentIcon="@Icons.Material.Filled.Search"
-                                              IconSize="Size.Medium"
-                                              Class="mt-0"
-                                              Clearable="true" />
-                            </ToolBarContent>
-                            <HeaderContent>
-                                <MudTh>Severity</MudTh>
-                                <MudTh>File & Rule</MudTh>
-                                <MudTh>Affected Entity / Record</MudTh>
-                                <MudTh>Field Name</MudTh>
-                                <MudTh>Error Message</MudTh>
-                                <MudTh>Remediation Action</MudTh>
-                                <MudTh>Action</MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="Severity">
-                                    <MudChip T="string" Color="@(context.Severity == StatutoryValidationSeverity.Fatal ? Color.Error : Color.Warning)"
-                                             Size="Size.Small"
-                                             Variant="Variant.Filled">
-                                        @context.Severity
-                                    </MudChip>
-                                </MudTd>
-                                <MudTd DataLabel="File & Rule">
-                                    <div><strong>@context.FileIdentifier</strong></div>
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.RuleCode</MudText>
-                                </MudTd>
-                                <MudTd DataLabel="Affected Record">
-                                    <div><strong>@context.EntityName</strong></div>
-                                    <MudText Typo="Typo.caption">@context.RecordDescriptor</MudText>
-                                </MudTd>
-                                <MudTd DataLabel="Field Name">
-                                    <code>@context.FieldName</code>
-                                </MudTd>
-                                <MudTd DataLabel="Error Message">
-                                    <MudText Typo="Typo.body2" Color="Color.Error">@context.Message</MudText>
-                                </MudTd>
-                                <MudTd DataLabel="Remediation">
-                                    <MudText Typo="Typo.caption">@context.Remediation</MudText>
-                                </MudTd>
-                                <MudTd DataLabel="Action">
-                                    <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
-                                                   Color="Color.Primary"
-                                                   Size="Size.Small"
-                                                   Title="Drill-down to record"
-                                                   OnClick="@(() => NavigateToEntity(context.EntityName, context.RecordId))" />
-                                </MudTd>
-                            </RowTemplate>
-                            <PagerContent>
-                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
-                            </PagerContent>
-                        </MudTable>
-                    }
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Prepend standard SAQA 1-line header (HEADER + 599 + description + record count + padding) for seamless Edu.Dex compliance.
+                        </MudText>
+                    </div>
+                    <div class="d-flex align-center gap-3">
+                        <MudSelect T="int" Label="Scheme year" @bind-Value="_selectedFinancialYear" Dense="true" Margin="Margin.Dense" Style="width: 140px;">
+                            <MudSelectItem Value="2026">2026</MudSelectItem>
+                            <MudSelectItem Value="2025">2025</MudSelectItem>
+                            <MudSelectItem Value="2024">2024</MudSelectItem>
+                        </MudSelect>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Secondary"
+                                   StartIcon="@Icons.Material.Filled.Archive"
+                                   OnClick="GenerateAndDownloadNlrdBatchAsync"
+                                   Disabled="@_isExtracting">
+                            @(_isExtracting ? "Generating package..." : "Download complete NLRD package (.zip)")
+                        </MudButton>
+                    </div>
                 </div>
+            </MudPaper>
+
+            <!-- NLRD Files DataGrid -->
+            <MudTable Items="@_nlrdFiles" Dense="true" Hover="true" Striped="true" Bordered="true" Elevation="1" Class="rounded-lg">
+                <ToolBarContent>
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">SAQA Edu.Dex Submission Files (8 Files)</MudText>
+                    <MudSpacer />
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Total estimated records: <strong>@_nlrdFiles.Sum(f => f.EstimatedRecordCount).ToString("N0")</strong>
+                    </MudText>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>File number</MudTh>
+                    <MudTh>File title & description</MudTh>
+                    <MudTh>Record width</MudTh>
+                    <MudTh>Estimated records</MudTh>
+                    <MudTh>Statutory filename pattern</MudTh>
+                    <MudTh Class="text-right">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="File number">
+                        <MudChip T="string" Color="Color.Secondary" Size="Size.Small" Variant="Variant.Filled" Class="font-mono">
+                            File @context.FileCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Title & Description">
+                        <MudText Typo="Typo.body2" Class="font-weight-bold">@context.FileTitle</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Description</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Record width">
+                        <span class="font-mono">@context.RecordLength chars</span>
+                    </MudTd>
+                    <MudTd DataLabel="Estimated records">
+                        <strong>@context.EstimatedRecordCount.ToString("N0")</strong>
+                    </MudTd>
+                    <MudTd DataLabel="Filename pattern">
+                        <code class="font-mono text-secondary" style="font-size: 0.8rem;">@context.ExpectedFileNamePattern</code>
+                    </MudTd>
+                    <MudTd DataLabel="Actions" Class="text-right">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Secondary"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Download"
+                                   OnClick="@(() => DownloadSingleNlrdFile(context.FileCode))">
+                            Download .dat
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+
+        <!-- ================================================================= -->
+        <!-- Tab 3: Statutory Submission Batches & Audit Trail                 -->
+        <!-- ================================================================= -->
+        <MudTabPanel Text="Submission Batch History" Icon="@Icons.Material.Filled.History">
+            <MudTable Items="@_submissionBatches" Dense="true" Hover="true" Striped="true" Bordered="true" Elevation="1" Class="rounded-lg">
+                <ToolBarContent>
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Extracted Statutory Submission Batches</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_batchSearch"
+                                  Placeholder="Search batch number or standard..."
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Small"
+                                  Dense="true"
+                                  Class="mt-0"
+                                  Clearable="true" />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Batch number</MudTh>
+                    <MudTh>Standard</MudTh>
+                    <MudTh>Scheme year</MudTh>
+                    <MudTh>Total records</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Digital security seal</MudTh>
+                    <MudTh>Extraction timestamp</MudTh>
+                    <MudTh Class="text-right">Archive package</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Batch number">
+                        <span class="font-mono font-weight-bold">@context.BatchNumber</span>
+                    </MudTd>
+                    <MudTd DataLabel="Standard">
+                        <MudChip T="string" Color="@(context.BatchType == "SETMIS" ? Color.Primary : Color.Secondary)" Size="Size.Small" Variant="Variant.Outlined">
+                            @context.BatchType
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Scheme year">@context.SubmissionYear</MudTd>
+                    <MudTd DataLabel="Total records"><strong>@context.TotalRecords.ToString("N0")</strong></MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">
+                            @context.StatusCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Digital security seal">
+                        <MudTooltip Text="@context.DigitalSecuritySeal" Placement="Placement.Top">
+                            <span class="font-mono text-secondary" style="font-size: 0.75rem;">
+                                @(context.DigitalSecuritySeal?.Length > 16 ? $"{context.DigitalSecuritySeal[..16]}..." : context.DigitalSecuritySeal)
+                            </span>
+                        </MudTooltip>
+                    </MudTd>
+                    <MudTd DataLabel="Timestamp">
+                        @context.ExtractionDate.ToString("yyyy-MM-dd HH:mm")
+                    </MudTd>
+                    <MudTd DataLabel="Archive package" Class="text-right">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.FolderZip"
+                                   OnClick="@(() => DownloadBatchArchive(context.Id))">
+                            Download .zip
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <div class="pa-6 text-center">
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No statutory submission batches generated yet. Click "Download complete package" to create an audited batch.</MudText>
+                    </div>
+                </NoRecordsContent>
+            </MudTable>
+        </MudTabPanel>
+
+        <!-- ================================================================= -->
+        <!-- Tab 4: Automated Statutory Schedulers                             -->
+        <!-- ================================================================= -->
+        <MudTabPanel Text="Automated Schedulers" Icon="@Icons.Material.Filled.Schedule">
+            <MudPaper Class="pa-4 mb-6 rounded-lg bg-surface border-solid mud-border-info" Elevation="1">
+                <div class="d-flex align-center gap-3">
+                    <MudIcon Icon="@Icons.Material.Filled.AutoMode" Color="Color.Info" Size="Size.Large" />
+                    <div>
+                        <MudText Typo="Typo.h6" Class="font-weight-bold">Automated Statutory Background Tasks</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Scheduled reconciliation, cut-off deadline monitoring, and monthly delta extract preparation running automatically via ASP.NET Core Hosted Services.
+                        </MudText>
+                    </div>
+                </div>
+            </MudPaper>
+
+            <MudGrid>
+                @foreach (var job in _scheduledJobs)
+                {
+                    <MudItem xs="12" md="4">
+                        <MudCard Elevation="2" Class="rounded-lg d-flex flex-column" Style="height: 100%;">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <div class="d-flex justify-space-between align-center mb-1">
+                                        <MudChip T="string" Color="@(job.IsEnabled ? Color.Success : Color.Default)" Size="Size.Small" Variant="Variant.Filled">
+                                            @(job.IsEnabled ? "Active schedule" : "Disabled")
+                                        </MudChip>
+                                        <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined" Class="font-mono">
+                                            @job.JobKey
+                                        </MudChip>
+                                    </div>
+                                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">@job.JobName</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@job.ScheduleDescription</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent Class="flex-grow-1">
+                                <MudText Typo="Typo.body2" Class="mb-4">@job.Description</MudText>
+
+                                <MudDivider Class="my-2" />
+
+                                <div class="mb-2">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Last run status:</MudText>
+                                    <div>
+                                        <MudChip T="string" Color="@(job.LastStatus == "Success" ? Color.Success : Color.Warning)" Size="Size.Small" Variant="Variant.Text">
+                                            @job.LastStatus
+                                        </MudChip>
+                                        <span class="text-secondary" style="font-size: 0.75rem;">
+                                            @(job.LastRunTime?.ToString("yyyy-MM-dd HH:mm") ?? "Never")
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="mb-2">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Next scheduled run:</MudText>
+                                    <MudText Typo="Typo.body2" Class="font-mono font-weight-bold">
+                                        @(job.NextRunTime?.ToString("yyyy-MM-dd HH:mm") ?? "Scheduled") SAST
+                                    </MudText>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(job.LastExecutionSummary))
+                                {
+                                    <div class="pa-2 rounded bg-surface border-solid mud-border-lines-default mt-2">
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Execution report:</MudText>
+                                        <MudText Typo="Typo.caption" Class="d-block text-truncate">@job.LastExecutionSummary</MudText>
+                                    </div>
+                                }
+                            </MudCardContent>
+                            <MudCardActions Class="pa-4 pt-0">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           FullWidth="true"
+                                           StartIcon="@Icons.Material.Filled.PlayArrow"
+                                           OnClick="@(() => TriggerJobImmediateAsync(job.JobKey))"
+                                           Disabled="@_isTriggeringJob">
+                                    @(_isTriggeringJob ? "Executing job..." : "Trigger immediate run")
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudTabPanel>
+
+        <!-- ================================================================= -->
+        <!-- Tab 5: Pre-Submission Compliance Audit                            -->
+        <!-- ================================================================= -->
+        <MudTabPanel Text="Pre-Submission Audit Log" Icon="@Icons.Material.Filled.FactCheck">
+            @if (_setmisReport != null && _nlrdReport != null)
+            {
+                <MudGrid Class="mb-6">
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudPaper Class="pa-4 text-center rounded-lg border-solid mud-border-primary" Elevation="0">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Total Records Evaluated</MudText>
+                            <MudText Typo="Typo.h4" Class="font-weight-bold mt-1">@((_setmisReport.TotalRecordsAudited + _nlrdReport.TotalRecordsAudited).ToString("N0"))</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Primary">Across 19 Statutory Specifications</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudPaper Class="pa-4 text-center rounded-lg border-solid mud-border-success" Elevation="0">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Compliant Records</MudText>
+                            <MudText Typo="Typo.h4" Color="Color.Success" Class="font-weight-bold mt-1">@((_setmisReport.CompliantRecordsCount + _nlrdReport.CompliantRecordsCount).ToString("N0"))</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Success">Ready for submission</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudPaper Class="pa-4 text-center rounded-lg border-solid mud-border-error" Elevation="0">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Blocking Issues</MudText>
+                            <MudText Typo="Typo.h4" Color="Color.Error" Class="font-weight-bold mt-1">@((_setmisReport.FatalErrorsCount + _nlrdReport.FatalErrorsCount).ToString("N0"))</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Error">Quarantine count</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudPaper Class="pa-4 text-center rounded-lg border-solid mud-border-warning" Elevation="0">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Average Compliance Score</MudText>
+                            <MudText Typo="Typo.h4" Color="Color.Success" Class="font-weight-bold mt-1">
+                                @(((_setmisReport.CompliancePercentage + _nlrdReport.CompliancePercentage) / 2m).ToString("F1"))%
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Success">Statutory audit health</MudText>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+
+                <MudTable Items="@_allValidationErrors" Dense="true" Hover="true" Striped="true" Bordered="true" Filter="new Func<StatutoryValidationError, bool>(FilterErrorItem)">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Validation Quarantine Issues</MudText>
+                        <MudSpacer />
+                        <MudTextField @bind-Value="_auditSearch"
+                                      Placeholder="Search rule code, field, or entity..."
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Search"
+                                      IconSize="Size.Medium"
+                                      Class="mt-0"
+                                      Clearable="true" />
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Severity</MudTh>
+                        <MudTh>File & rule</MudTh>
+                        <MudTh>Affected entity</MudTh>
+                        <MudTh>Field name</MudTh>
+                        <MudTh>Error message</MudTh>
+                        <MudTh>Remediation action</MudTh>
+                        <MudTh>Action</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Severity">
+                            <MudChip T="string" Color="@(context.Severity == StatutoryValidationSeverity.Fatal ? Color.Error : Color.Warning)"
+                                     Size="Size.Small"
+                                     Variant="Variant.Filled">
+                                @context.Severity
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="File & rule">
+                            <div><strong>@context.FileIdentifier</strong></div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@context.RuleCode</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Affected entity">
+                            <div><strong>@context.EntityName</strong></div>
+                            <MudText Typo="Typo.caption">@context.RecordDescriptor</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Field name">
+                            <code>@context.FieldName</code>
+                        </MudTd>
+                        <MudTd DataLabel="Error message">
+                            <MudText Typo="Typo.body2" Color="Color.Error">@context.Message</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Remediation">
+                            <MudText Typo="Typo.caption">@context.Remediation</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Action">
+                            <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           Title="Drill-down to record"
+                                           OnClick="@(() => NavigateToEntity(context.EntityName, context.RecordId))" />
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-6 text-center">
+                            <MudText Typo="Typo.body2" Color="Color.Success">🎉 No validation issues detected! Database is 100% compliant with statutory specifications.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+                    </PagerContent>
+                </MudTable>
             }
         </MudTabPanel>
+
     </MudTabs>
-</div>
+</main>
 
 @code {
     private bool _isLoading = false;
+    private bool _isExtracting = false;
+    private bool _isTriggeringJob = false;
     private int _activeTabIndex = 0;
-    private string _searchString = string.Empty;
+    private int _selectedFinancialYear = 2026;
+    private string _batchSearch = string.Empty;
+    private string _auditSearch = string.Empty;
+
+    private List<StatutoryBatchFileSummary> _setmisFiles = new();
+    private List<StatutoryBatchFileSummary> _nlrdFiles = new();
+    private List<StatutorySubmissionBatch> _submissionBatches = new();
+    private List<StatutoryJobStatusDto> _scheduledJobs = new();
+
     private StatutoryValidationReport? _setmisReport;
     private StatutoryValidationReport? _nlrdReport;
+    private List<StatutoryValidationError> _allValidationErrors = new();
+
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new("Home", href: "/", icon: Icons.Material.Filled.Home),
+        new("Legal, compliance & BI", href: "/compliance/statutory", icon: Icons.Material.Filled.Gavel),
+        new("Statutory reporting & extraction hub", href: null, disabled: true)
+    };
 
     protected override async Task OnInitializedAsync()
     {
-        await RunActiveAuditAsync();
+        await RefreshAllAsync();
     }
 
-    private async Task RunActiveAuditAsync()
+    private async Task RefreshAllAsync()
     {
         try
         {
             _isLoading = true;
+            _setmisFiles = await SetmisExtractService.GetSetmisFileDescriptorsAsync();
+            _nlrdFiles = await NlrdExtractService.GetNlrdFileDescriptorsAsync();
+            _submissionBatches = await SetmisExtractService.GetSetmisBatchesAsync();
+            var nlrdBatches = await NlrdExtractService.GetNlrdBatchesAsync();
+            _submissionBatches.AddRange(nlrdBatches);
+            _submissionBatches = _submissionBatches.OrderByDescending(b => b.ExtractionDate).ToList();
+
+            _scheduledJobs = await SchedulerService.GetJobStatusesAsync();
+
             _setmisReport = await ValidationService.ValidateSetmisSubmissionBatchAsync();
             _nlrdReport = await ValidationService.ValidateNlrdSubmissionBatchAsync();
-            Snackbar.Add("Statutory Pre-Submission Audit scan completed successfully.", Severity.Success);
+
+            _allValidationErrors = new List<StatutoryValidationError>();
+            if (_setmisReport?.Errors != null) _allValidationErrors.AddRange(_setmisReport.Errors);
+            if (_nlrdReport?.Errors != null) _allValidationErrors.AddRange(_nlrdReport.Errors);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Validation scan error: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error loading statutory data: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -337,14 +526,102 @@
         }
     }
 
+    private async Task GenerateAndDownloadSetmisBatchAsync()
+    {
+        try
+        {
+            _isExtracting = true;
+            Snackbar.Add("Generating full SETMIS batch package across 11 files with SHA-256 digital security seals...", Severity.Info);
+            var batch = await SetmisExtractService.GenerateFullSetmisBatchAsync(_selectedFinancialYear);
+            Snackbar.Add($"SETMIS batch #{batch.BatchNumber} created successfully ({batch.TotalRecords} records).", Severity.Success);
+            
+            // Trigger browser download
+            Navigation.NavigateTo($"/api/statutory/batches/{batch.Id}/download", forceLoad: true);
+            await RefreshAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to generate SETMIS batch: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isExtracting = false;
+        }
+    }
+
+    private async Task GenerateAndDownloadNlrdBatchAsync()
+    {
+        try
+        {
+            _isExtracting = true;
+            Snackbar.Add("Generating full SAQA NLRD batch package across 8 files with standard SAQA headers...", Severity.Info);
+            var batch = await NlrdExtractService.GenerateFullNlrdBatchAsync(_selectedFinancialYear);
+            Snackbar.Add($"NLRD batch #{batch.BatchNumber} created successfully ({batch.TotalRecords} records).", Severity.Success);
+            
+            // Trigger browser download
+            Navigation.NavigateTo($"/api/statutory/batches/{batch.Id}/download", forceLoad: true);
+            await RefreshAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to generate NLRD batch: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isExtracting = false;
+        }
+    }
+
+    private void DownloadSingleSetmisFile(string fileCode)
+    {
+        Navigation.NavigateTo($"/api/statutory/setmis/files/{fileCode}", forceLoad: true);
+    }
+
+    private void DownloadSingleNlrdFile(string fileCode)
+    {
+        Navigation.NavigateTo($"/api/statutory/nlrd/files/{fileCode}", forceLoad: true);
+    }
+
+    private void DownloadBatchArchive(int batchId)
+    {
+        Navigation.NavigateTo($"/api/statutory/batches/{batchId}/download", forceLoad: true);
+    }
+
+    private async Task TriggerJobImmediateAsync(string jobKey)
+    {
+        try
+        {
+            _isTriggeringJob = true;
+            Snackbar.Add($"Triggering immediate execution of scheduled job {jobKey}...", Severity.Info);
+            var result = await SchedulerService.TriggerJobAsync(jobKey, "User_Admin");
+            if (result.Success)
+            {
+                Snackbar.Add($"Scheduled job completed: {result.Summary}", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"Job execution failed: {result.ErrorMessage}", Severity.Error);
+            }
+            _scheduledJobs = await SchedulerService.GetJobStatusesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to execute scheduled job: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isTriggeringJob = false;
+        }
+    }
+
     private bool FilterErrorItem(StatutoryValidationError item)
     {
-        if (string.IsNullOrWhiteSpace(_searchString)) return true;
-        if (item.RuleCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
-        if (item.FieldName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
-        if (item.EntityName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
-        if (item.Message.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
-        if (item.FileIdentifier.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (string.IsNullOrWhiteSpace(_auditSearch)) return true;
+        if (item.RuleCode.Contains(_auditSearch, StringComparison.OrdinalIgnoreCase)) return true;
+        if (item.FieldName.Contains(_auditSearch, StringComparison.OrdinalIgnoreCase)) return true;
+        if (item.EntityName.Contains(_auditSearch, StringComparison.OrdinalIgnoreCase)) return true;
+        if (item.Message.Contains(_auditSearch, StringComparison.OrdinalIgnoreCase)) return true;
+        if (item.FileIdentifier.Contains(_auditSearch, StringComparison.OrdinalIgnoreCase)) return true;
         return false;
     }
 

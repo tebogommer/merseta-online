@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 using Nsdms.Domain.Common;
 
 namespace Nsdms.Domain.Entities;
@@ -36,6 +36,12 @@ public class LearnerTradeTestApplication : BaseEntity
     public string? AssessmentCenterName { get; set; }
     public DateTime? AssessmentDate { get; set; }
     public TimeSpan? ScheduledStartTime { get; set; }
+
+    /// <summary>
+    /// Foreign key referencing the parent NAMB submission batch.
+    /// </summary>
+    public int? NambSubmissionBatchId { get; set; }
+    public NambSubmissionBatch? NambSubmissionBatch { get; set; }
 
     /// <summary>
     /// Serial number allocated by the National Artisan Moderation Body (NAMB).

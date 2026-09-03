@@ -1,0 +1,442 @@
+@using MudBlazor
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject IWspSignoffService SignoffService
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<MudCard Elevation="2" Class="rounded-lg mb-4">
+    <MudCardHeader Class="pb-2">
+        <CardHeaderAvatar>
+            <MudAvatar Color="@(_status?.IsQuorumMet == true ? Color.Success : (_status?.DisputeLogged == true ? Color.Error : Color.Warning))" Variant="Variant.Filled">
+                <MudIcon Icon="@(_status?.IsQuorumMet == true ? Icons.Material.Filled.VerifiedUser : (_status?.DisputeLogged == true ? Icons.Material.Filled.Gavel : Icons.Material.Filled.Draw))" />
+            </MudAvatar>
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+            <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+                <div>
+                    <MudText Typo="Typo.h6">Tripartite Digital Sign-Off Quorum</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Statutory WSP/ATR Multi-Party Attestation (@(_status?.IsSmallEmployer == true ? "Bipartite Quorum (<50 Staff)" : "Tripartite Quorum (>=50 Staff)"))
+                    </MudText>
+                </div>
+                <div>
+                    @if (_status?.DisputeLogged == true)
+                    {
+                        <MudChip T="string" Color="Color.Error" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Warning">
+                            Labour Dispute Lodged
+                        </MudChip>
+                    }
+                    else if (_status?.IsQuorumMet == true)
+                    {
+                        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.CheckCircle">
+                            Quorum Achieved (@_status.CompletedSignaturesCount / @_status.RequiredSignaturesCount)
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Warning" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.HourglassEmpty">
+                            Sign-Off In Progress (@(_status?.CompletedSignaturesCount ?? 0) / @(_status?.RequiredSignaturesCount ?? 2))
+                        </MudChip>
+                    }
+                </div>
+            </div>
+        </CardHeaderContent>
+    </MudCardHeader>
+
+    <MudCardContent>
+        @if (_loading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+        }
+        else if (_status != null)
+        {
+            @if (_status.DisputeLogged)
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4" Icon="@Icons.Material.Filled.ReportProblem">
+                    A formal labour dispute has been lodged regarding this submission. Quorum sign-off is halted pending dispute resolution by the merSETA Executive Committee or DHET mediator.
+                </MudAlert>
+            }
+
+            @if (_status.IsQuorumMet && !string.IsNullOrEmpty(_status.SignoffDigitalSecuritySeal))
+            {
+                <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Class="mb-4" Icon="@Icons.Material.Filled.Security">
+                    <strong>Digital Security Seal:</strong> <span class="font-monospace">@_status.SignoffDigitalSecuritySeal</span>
+                </MudAlert>
+            }
+
+            <MudGrid Spacing="3">
+                <!-- 1. PRIMARY SDF SIGN-OFF CARD -->
+                <MudItem xs="12" md="4">
+                    <MudPaper Outlined="true" Class="pa-4 rounded-lg h-100 d-flex flex-column justify-space-between">
+                        <div>
+                            <div class="d-flex align-center justify-space-between mb-2">
+                                <MudText Typo="Typo.subtitle1" Class="fw-bold">1. Primary SDF</MudText>
+                                @if (HasAttestation("PrimarySdf"))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Success">Signed</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Default">Pending</MudChip>
+                                }
+                            </div>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                                Skills Development Facilitator appointed by the employer to compile the WSP/ATR.
+                            </MudText>
+                            @if (GetAttestation("PrimarySdf") is { } sdfAtt)
+                            {
+                                <MudText Typo="Typo.caption" Class="d-block"><strong>Signatory:</strong> @sdfAtt.SignerFullName</MudText>
+                                <MudText Typo="Typo.caption" Class="d-block"><strong>Date:</strong> @sdfAtt.SignoffDate.ToString("yyyy-MM-dd HH:mm") UTC</MudText>
+                                <MudText Typo="Typo.caption" Class="d-block font-monospace text-truncate" Style="max-width: 200px;">
+                                    <strong>Seal:</strong> @sdfAtt.DigitalSecuritySeal.Substring(0, Math.Min(16, sdfAtt.DigitalSecuritySeal.Length))...
+                                </MudText>
+                            }
+                        </div>
+
+                        @if (!HasAttestation("PrimarySdf") && !_status.DisputeLogged)
+                        {
+                            <div class="mt-4">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Draw" OnClick="@(() => OpenSignoffModal("PrimarySdf", "Skills Development Facilitator"))">
+                                    Sign as SDF
+                                </MudButton>
+                            </div>
+                        }
+                    </MudPaper>
+                </MudItem>
+
+                <!-- 2. LABOUR UNION / EMPLOYEE REP SIGN-OFF CARD -->
+                <MudItem xs="12" md="4">
+                    <MudPaper Outlined="true" Class="pa-4 rounded-lg h-100 d-flex flex-column justify-space-between">
+                        <div>
+                            <div class="d-flex align-center justify-space-between mb-2">
+                                <MudText Typo="Typo.subtitle1" Class="fw-bold">2. Labour Representative</MudText>
+                                @if (_status.IsSmallEmployer)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Info">Exempt (&lt;50 staff)</MudChip>
+                                }
+                                else if (HasAttestation("LabourUnionRep"))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Success">Signed</MudChip>
+                                }
+                                else if (_status.DisputeLogged)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Error">Disputed</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Default">Pending</MudChip>
+                                }
+                            </div>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                                Mandated trade union or joint employee training committee representative (e.g. NUMSA, Solidarity).
+                            </MudText>
+                            @if (GetAttestation("LabourUnionRep") is { } unionAtt)
+                            {
+                                <MudText Typo="Typo.caption" Class="d-block"><strong>Signatory:</strong> @unionAtt.SignerFullName (@(unionAtt.UnionName ?? "Union"))</MudText>
+                                <MudText Typo="Typo.caption" Class="d-block"><strong>Date:</strong> @unionAtt.SignoffDate.ToString("yyyy-MM-dd HH:mm") UTC</MudText>
+                            }
+                        </div>
+
+                        @if (!_status.IsSmallEmployer && !HasAttestation("LabourUnionRep") && !_status.DisputeLogged)
+                        {
+                            <div class="mt-4 d-flex flex-column gap-2">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Draw" OnClick="@(() => OpenSignoffModal("LabourUnionRep", "Labour Union Representative"))">
+                                    Sign as Union Rep
+                                </MudButton>
+                                <MudButton Variant="Variant.Text" Color="Color.Error" FullWidth="true" StartIcon="@Icons.Material.Filled.Gavel" OnClick="OpenDisputeModal">
+                                    Lodge Labour Dispute
+                                </MudButton>
+                            </div>
+                        }
+                    </MudPaper>
+                </MudItem>
+
+                <!-- 3. CEO / MANAGING DIRECTOR SIGN-OFF CARD -->
+                <MudItem xs="12" md="4">
+                    <MudPaper Outlined="true" Class="pa-4 rounded-lg h-100 d-flex flex-column justify-space-between">
+                        <div>
+                            <div class="d-flex align-center justify-space-between mb-2">
+                                <MudText Typo="Typo.subtitle1" Class="fw-bold">3. CEO / Accounting Authority</MudText>
+                                @if (HasAttestation("CeoManagingDirector"))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Success">Signed</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Default">Pending</MudChip>
+                                }
+                            </div>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                                Executive Managing Director or Chief Executive Officer legally certifying expenditure.
+                            </MudText>
+                            @if (GetAttestation("CeoManagingDirector") is { } ceoAtt)
+                            {
+                                <MudText Typo="Typo.caption" Class="d-block"><strong>Signatory:</strong> @ceoAtt.SignerFullName</MudText>
+                                <MudText Typo="Typo.caption" Class="d-block"><strong>Date:</strong> @ceoAtt.SignoffDate.ToString("yyyy-MM-dd HH:mm") UTC</MudText>
+                            }
+                        </div>
+
+                        @if (!HasAttestation("CeoManagingDirector") && !_status.DisputeLogged)
+                        {
+                            <div class="mt-4">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Draw" OnClick="@(() => OpenSignoffModal("CeoManagingDirector", "CEO / Managing Director"))">
+                                    Sign as CEO
+                                </MudButton>
+                            </div>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+    </MudCardContent>
+</MudCard>
+
+<!-- Signoff Execution Modal -->
+<MudDialog @bind-Visible="_showSignoffModal" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Fingerprint" Class="mr-2" />
+            Digital Attestation: @_modalRoleTitle
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            Enter your signatory details and complete the OTP challenge to execute non-repudiation cryptographic sign-off for submission <strong>@_status?.ReferenceNumber</strong>.
+        </MudText>
+
+        <MudGrid Spacing="2">
+            <MudItem xs="12" sm="6">
+                <MudTextField T="string" Label="Full Legal Name" @bind-Value="_signerName" Required="true" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="string" Label="Email Address" @bind-Value="_signerEmail" Required="true" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="string" Label="RSA National ID / Passport" @bind-Value="_signerRsaId" Variant="Variant.Outlined" />
+            </MudItem>
+            @if (_selectedRoleCode == "LabourUnionRep")
+            {
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" Label="Trade Union / Constituency" @bind-Value="_unionName" Variant="Variant.Outlined" Placeholder="e.g. NUMSA, Solidarity" />
+                </MudItem>
+            }
+            <MudItem xs="12">
+                <div class="d-flex align-center gap-2">
+                    <MudTextField T="string" Label="6-Digit OTP Token" @bind-Value="_enteredOtp" Variant="Variant.Outlined" Placeholder="e.g. 492810" />
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="GenerateOtp" Disabled="_isGeneratingOtp">
+                        @(_isGeneratingOtp ? "Sending..." : "Request OTP")
+                    </MudButton>
+                </div>
+            </MudItem>
+            <MudItem xs="12">
+                <MudCheckBox T="bool" @bind-Value="_attestationAccepted" Color="Color.Primary">
+                    <MudText Typo="Typo.body2">
+                        I legally confirm that the skills plan and training figures were compiled following genuine consultation with employees and union representatives per the Skills Development Act.
+                    </MudText>
+                </MudCheckBox>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => _showSignoffModal = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Check" OnClick="SubmitSignoff" Disabled="!_attestationAccepted || string.IsNullOrWhiteSpace(_signerName) || _isSubmitting">
+            @(_isSubmitting ? "Sealing..." : "Confirm & Seal Signature")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- Dispute Lodgement Modal -->
+<MudDialog @bind-Visible="_showDisputeModal" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Error">
+            <MudIcon Icon="@Icons.Material.Filled.Gavel" Class="mr-2" />
+            Lodge Formal Labour Dispute
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Lodging a formal dispute halts mandatory grant processing and triggers statutory merSETA mediation under Regulation 4(4) of the Grant Regulations.
+        </MudText>
+        <MudGrid Spacing="2">
+            <MudItem xs="12" sm="6">
+                <MudTextField T="string" Label="Union Representative Name" @bind-Value="_disputeRepName" Required="true" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="string" Label="Dispute Grounds" @bind-Value="_disputeReasonCode" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("UnionRefusalToSign")">Trade Union Refusal to Sign</MudSelectItem>
+                    <MudSelectItem Value="@("ConsultationFailure")">Failure of Meaningful Joint Consultation</MudSelectItem>
+                    <MudSelectItem Value="@("SkillsPlanOmission")">Omission of Critical Production Skills</MudSelectItem>
+                    <MudSelectItem Value="@("FinancialDisagreement")">Dispute over Allocated Training Budget</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Detailed Reasons & Mediation Statement" @bind-Value="_disputeNotes" Lines="4" Variant="Variant.Outlined" Required="true" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => _showDisputeModal = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Warning" OnClick="SubmitDispute" Disabled="string.IsNullOrWhiteSpace(_disputeNotes) || _isSubmitting">
+            @(_isSubmitting ? "Lodging..." : "Lodge Formal Dispute")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter]
+    public int WspSubmissionId { get; set; }
+
+    [Parameter]
+    public EventCallback OnQuorumChanged { get; set; }
+
+    private WspQuorumStatusDto? _status;
+    private bool _loading = true;
+    private bool _isSubmitting = false;
+    private bool _isGeneratingOtp = false;
+
+    // Modal state
+    private bool _showSignoffModal = false;
+    private bool _showDisputeModal = false;
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    private string _selectedRoleCode = "PrimarySdf";
+    private string _modalRoleTitle = "SDF";
+    private string _signerName = string.Empty;
+    private string _signerEmail = string.Empty;
+    private string? _signerRsaId;
+    private string? _unionName;
+    private string _enteredOtp = string.Empty;
+    private bool _attestationAccepted = false;
+
+    // Dispute state
+    private string _disputeRepName = string.Empty;
+    private string _disputeReasonCode = "ConsultationFailure";
+    private string _disputeNotes = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadQuorumStatus();
+    }
+
+    private async Task LoadQuorumStatus()
+    {
+        _loading = true;
+        try
+        {
+            _status = await SignoffService.GetQuorumStatusAsync(WspSubmissionId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading quorum status: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private bool HasAttestation(string roleCode) =>
+        _status?.Attestations.Any(a => a.SignerRoleCode == roleCode && a.AttestationStatusCode == "SignedOff" && !a.DisputeLogged) ?? false;
+
+    private WspSignoffAttestation? GetAttestation(string roleCode) =>
+        _status?.Attestations.FirstOrDefault(a => a.SignerRoleCode == roleCode && a.AttestationStatusCode == "SignedOff" && !a.DisputeLogged);
+
+    private void OpenSignoffModal(string roleCode, string title)
+    {
+        _selectedRoleCode = roleCode;
+        _modalRoleTitle = title;
+        _enteredOtp = string.Empty;
+        _attestationAccepted = false;
+        _showSignoffModal = true;
+    }
+
+    private void OpenDisputeModal()
+    {
+        _showDisputeModal = true;
+    }
+
+    private async Task GenerateOtp()
+    {
+        if (string.IsNullOrWhiteSpace(_signerEmail))
+        {
+            Snackbar.Add("Please enter a valid email address to receive your OTP token.", Severity.Warning);
+            return;
+        }
+
+        _isGeneratingOtp = true;
+        try
+        {
+            string otp = await SignoffService.RequestSignoffOtpAsync(WspSubmissionId, _selectedRoleCode, _signerEmail, "PortalUser");
+            _enteredOtp = otp; // Pre-populate in simulation
+            Snackbar.Add($"One-Time PIN generated: {otp}. Dispatched to {_signerEmail}.", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error requesting OTP: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isGeneratingOtp = false;
+        }
+    }
+
+    private async Task SubmitSignoff()
+    {
+        _isSubmitting = true;
+        try
+        {
+            var attestation = await SignoffService.RecordSignoffAttestationAsync(new WspSignoffRequest
+            {
+                WspSubmissionId = WspSubmissionId,
+                SignerRoleCode = _selectedRoleCode,
+                SignerFullName = _signerName,
+                SignerEmail = _signerEmail,
+                SignerRsaId = _signerRsaId,
+                UnionName = _unionName,
+                OtpToken = _enteredOtp
+            }, "PortalUser");
+
+            Snackbar.Add($"Digital attestation sealed successfully! Digital Security Seal: {attestation.DigitalSecuritySeal.Substring(0, 16)}...", Severity.Success);
+            _showSignoffModal = false;
+            await LoadQuorumStatus();
+            await OnQuorumChanged.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error executing sign-off: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task SubmitDispute()
+    {
+        _isSubmitting = true;
+        try
+        {
+            var dispute = await SignoffService.LodgeSignoffDisputeAsync(new WspDisputeLodgementRequest
+            {
+                WspSubmissionId = WspSubmissionId,
+                DisputeReasonCode = _disputeReasonCode,
+                Description = _disputeNotes,
+                UnionRepresentativeName = _disputeRepName
+            }, "UnionUser");
+
+            Snackbar.Add($"Formal dispute {dispute.DisputeReferenceNumber} lodged. WSP status transitioned to Disputed.", Severity.Error);
+            _showDisputeModal = false;
+            await LoadQuorumStatus();
+            await OnQuorumChanged.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error lodging dispute: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

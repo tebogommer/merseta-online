@@ -1,4 +1,4 @@
-﻿using Nsdms.Domain.Common;
+using Nsdms.Domain.Common;
 
 namespace Nsdms.Domain.Entities;
 
@@ -15,6 +15,9 @@ public class ProjectImplementationPlan : BaseEntity
 
     public int? GrantApplicationId { get; set; }
     public GrantApplication? GrantApplication { get; set; }
+
+    public int? GrantMoaId { get; set; }
+    public GrantMoa? GrantMoa { get; set; }
 
     public string PlanReferenceNumber { get; set; } = string.Empty;
     public string InterventionTypeCode { get; set; } = "Learnership"; // Learnership, Apprenticeship, SkillsProgramme, Bursary, Internship
@@ -55,11 +58,27 @@ public class GrantPaymentClaim : BaseEntity
     public int ProjectImplementationPlanId { get; set; }
     public ProjectImplementationPlan? ProjectImplementationPlan { get; set; }
 
+    public int? GrantMoaMilestoneId { get; set; }
+    public GrantMoaMilestone? GrantMoaMilestone { get; set; }
+
     public string ClaimNumber { get; set; } = string.Empty;
+    public string? PaymentVoucherNumber { get; set; }
     public int TrancheNumber { get; set; } = 1; // 1, 2, 3, 4
     public decimal ClaimAmount { get; set; } = 0m;
     public string DeliverableDescription { get; set; } = string.Empty;
-    public string StatusCode { get; set; } = "PendingSubmission"; // PendingSubmission, AssessorVerified, ApprovedForPayment, Paid, Rejected
+    public string StatusCode { get; set; } = "PendingSubmission"; // PendingSubmission, CloVerified, FinanceApproved, CfoApproved, Paid, Rejected
+    
+    // Multi-tier DOFA Approval Attestation Chain
+    public string? CloVerifiedBy { get; set; }
+    public DateTime? CloVerifiedDate { get; set; }
+
+    public string? FinanceOfficerApprovedBy { get; set; }
+    public DateTime? FinanceOfficerApprovedDate { get; set; }
+
+    public bool RequiresCfoApproval { get; set; } = false;
+    public string? CfoApprovedBy { get; set; }
+    public DateTime? CfoApprovedDate { get; set; }
+
     public DateTime? ApprovalDate { get; set; }
     public string? ApprovedByUserId { get; set; }
     public string? ErpBatchNumber { get; set; }

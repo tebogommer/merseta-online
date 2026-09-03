@@ -496,13 +496,23 @@ public class NavigationMenuService : INavigationMenuService
     {
         return new List<OmnisearchResultItemDto>
         {
-            new() { Id = "act-new-org", Title = "Create Organisation / Employer", Href = "employers", Icon = "Business", Category = "Quick Actions", Description = "Register a new levy or non-levy paying organisation", ItemType = "QuickAction" },
-            new() { Id = "act-new-wsp", Title = "Submit WSP / ATR Application", Href = "wsp", Icon = "Assignment", Category = "Quick Actions", Description = "Initiate a Workplace Skills Plan submission cycle", ItemType = "QuickAction" },
-            new() { Id = "act-new-dg", Title = "Apply for Discretionary Grant (DG)", Href = "grants", Icon = "AccountBalanceWallet", Category = "Quick Actions", Description = "Submit a discretionary grant funding application window", ItemType = "QuickAction" },
-            new() { Id = "act-new-learner", Title = "Register New Learner", Href = "learners", Icon = "School", Category = "Quick Actions", Description = "Enrol a learner with RSA ID validation and contract", ItemType = "QuickAction" },
+            new() { Id = "act-new-org", Title = "Create Organisation / Employer", Href = "employers/create", Icon = "Business", Category = "Quick Actions", Description = "Register a new levy or non-levy paying organisation", ItemType = "QuickAction" },
+            new() { Id = "act-new-wsp", Title = "Submit WSP / ATR Application", Href = "wsp/create", Icon = "Assignment", Category = "Quick Actions", Description = "Initiate a Workplace Skills Plan submission cycle", ItemType = "QuickAction" },
+            new() { Id = "act-wsp-extension", Title = "Request WSP / ATR Deadline Extension", Href = "wsp/extension-request", Icon = "EventBusy", Category = "Quick Actions", Description = "Submit a statutory motivation for extending the 30 April WSP deadline", ItemType = "QuickAction" },
+            new() { Id = "act-new-dg", Title = "Apply for Discretionary Grant (DG)", Href = "grants/create", Icon = "AccountBalanceWallet", Category = "Quick Actions", Description = "Submit a discretionary grant funding application window", ItemType = "QuickAction" },
+            new() { Id = "act-new-learner", Title = "Register New Learner / Apprentice", Href = "learners/create", Icon = "School", Category = "Quick Actions", Description = "Enrol a learner with RSA ID validation and contract", ItemType = "QuickAction" },
+            new() { Id = "act-learner-signoff", Title = "Learner OTP Sign-off Portal", Href = "signoff/learner", Icon = "Draw", Category = "Quick Actions", Description = "Electronic tripartite agreement execution via digital OTP token", ItemType = "QuickAction" },
+            new() { Id = "act-new-tradetest", Title = "Apply for Artisan Trade Test (26D)", Href = "tradetests/create", Icon = "FactCheck", Category = "Quick Actions", Description = "Contracted apprentice summative assessment booking", ItemType = "QuickAction" },
+            new() { Id = "act-new-arpl", Title = "Apply for Section 28 ARPL Evaluation", Href = "tradetests/create?type=arpl", Icon = "Handyman", Category = "Quick Actions", Description = "Artisan Recognition of Prior Learning portfolio submission", ItemType = "QuickAction" },
+            new() { Id = "act-new-wpa", Title = "Apply for Workplace Approval", Href = "workplace-approvals/create", Icon = "DomainAdd", Category = "Quick Actions", Description = "Register training workshop site and artisan mentor ratios", ItemType = "QuickAction" },
+            new() { Id = "act-new-assessor-mod", Title = "Register as Assessor / Moderator", Href = "etqa/create", Icon = "VerifiedUser", Category = "Quick Actions", Description = "Submit new ETQA practitioner accreditation application", ItemType = "QuickAction" },
+            new() { Id = "act-new-sdp", Title = "Apply for Training Provider (SDP) Accreditation", Href = "sdp/create", Icon = "AccountBalance", Category = "Quick Actions", Description = "Submit primary or secondary training provider accreditation", ItemType = "QuickAction" },
+            new() { Id = "act-courseware", Title = "Request Training Courseware", Href = "curriculum/courseware", Icon = "MenuBook", Category = "Quick Actions", Description = "Request official MerSETA learning modules and curriculum materials", ItemType = "QuickAction" },
             new() { Id = "act-schedule-visit", Title = "Schedule Employer Monitoring Visit", Href = "monitoring", Icon = "FactCheck", Category = "Quick Actions", Description = "Plan an on-site workplace verification with designated contact person", ItemType = "QuickAction" },
             new() { Id = "act-sars-recon", Title = "Run SARS Levy Reconciliation Audit", Href = "finance/levy-audits", Icon = "Calculate", Category = "Quick Actions", Description = "Audit SARS levy monthly file against DHET distribution", ItemType = "QuickAction" },
-            new() { Id = "act-verify-doc", Title = "Verify Document Authenticity", Href = "verify", Icon = "VerifiedUser", Category = "Quick Actions", Description = "Verify cryptographic certificate or MoA hash", ItemType = "QuickAction" }
+            new() { Id = "act-inter-seta", Title = "Initiate Inter-SETA Transfer", Href = "inter-seta-transfers", Icon = "SwapHoriz", Category = "Quick Actions", Description = "Transfer organisation across SETAs due to business scope shift", ItemType = "QuickAction" },
+            new() { Id = "act-banking-details", Title = "Submit / Verify Banking Details", Href = "finance/banking-details", Icon = "AccountBalance", Category = "Quick Actions", Description = "Upload verified bank confirmation letter for GP vendor sync", ItemType = "QuickAction" },
+            new() { Id = "act-verify-doc", Title = "Verify Document Authenticity", Href = "verify", Icon = "VerifiedUser", Category = "Quick Actions", Description = "Verify cryptographic certificate or MoA digital security seal", ItemType = "QuickAction" }
         };
     }
 
@@ -666,6 +676,21 @@ public class NavigationMenuService : INavigationMenuService
             },
             new()
             {
+                Id = "nav-wsp-extension",
+                Title = "Deadline extensions",
+                Href = "wsp/extension-request",
+                Icon = "EventBusy",
+                Category = "Grants, levies & finance",
+                Description = "Statutory 30 April WSP/ATR deadline extension requests and motivations",
+                RequiredModule = AppPermissions.ModuleWsp,
+                RequiredAction = AppPermissions.ActionEdit,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "CLO" },
+                PersonaTags = new() { "Admin", "SDF", "CLO" },
+                DisplayOrder = 3,
+                Keywords = new() { "extension", "deadline extension", "wsp extension", "late filing", "postponement" }
+            },
+            new()
+            {
                 Id = "nav-grants",
                 Title = "Discretionary grants",
                 Href = "grants",
@@ -738,6 +763,21 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "Admin", "Finance" },
                 DisplayOrder = 7,
                 Keywords = new() { "moa", "tranches", "disbursements", "erp", "gp", "payments", "dg" }
+            },
+            new()
+            {
+                Id = "nav-dg-claims",
+                Title = "DG claims & tranche invoicing",
+                Href = "finance/dg-claims",
+                Icon = "ReceiptLong",
+                Category = "Grants, levies & finance",
+                Description = "Discretionary Grant tranche claims, multi-tier DOFA approval, and ERP payment batches",
+                RequiredModule = AppPermissions.ModuleFinance,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Finance", "CLO", "Executive" },
+                PersonaTags = new() { "Admin", "Finance", "CLO", "Executive" },
+                DisplayOrder = 8,
+                Keywords = new() { "claims", "invoices", "tranches", "dofa", "cfo", "vouchers", "erp", "sage", "gp" }
             },
             new()
             {
@@ -863,6 +903,21 @@ public class NavigationMenuService : INavigationMenuService
             },
             new()
             {
+                Id = "nav-learner-signoff",
+                Title = "OTP digital sign-off",
+                Href = "signoff/learner",
+                Icon = "Draw",
+                Category = "Learner & artisan development",
+                Description = "Paperless digital execution of tripartite learnership agreements via SMS/Email OTP",
+                RequiredModule = AppPermissions.ModuleLearners,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "SDP", "CLO" },
+                PersonaTags = new() { "All", "Admin", "SDF", "SDP", "CLO" },
+                DisplayOrder = 2,
+                Keywords = new() { "otp", "sign-off", "digital signature", "paperless", "tripartite", "token" }
+            },
+            new()
+            {
                 Id = "nav-tradetests",
                 Title = "Trade tests & ARPL",
                 Href = "tradetests",
@@ -875,6 +930,21 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "Admin", "Assessor", "SDP", "CLO" },
                 DisplayOrder = 2,
                 Keywords = new() { "trade tests", "arpl", "artisans", "red seal", "certification" }
+            },
+            new()
+            {
+                Id = "nav-namb-queue",
+                Title = "NAMB staging & serials",
+                Href = "artisans/namb-queue",
+                Icon = "WorkspacePremium",
+                Category = "Learner & artisan development",
+                Description = "National Artisan Moderation Body batch staging, candidate moderation, and serial issuance",
+                RequiredModule = AppPermissions.ModuleLearners,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "CLO" },
+                PersonaTags = new() { "Admin", "Assessor", "CLO" },
+                DisplayOrder = 3,
+                Keywords = new() { "namb", "artisan serials", "moderation batch", "red seal" }
             },
             new()
             {
@@ -997,6 +1067,21 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "Admin", "SDP", "CLO" },
                 DisplayOrder = 5,
                 Keywords = new() { "non-seta", "articulations", "cross-seta", "verifications" }
+            },
+            new()
+            {
+                Id = "nav-courseware",
+                Title = "Courseware distribution",
+                Href = "curriculum/courseware",
+                Icon = "MenuBook",
+                Category = "Quality assurance & ETQA",
+                Description = "Request and download official MerSETA-developed curriculum modules and learning material",
+                RequiredModule = AppPermissions.ModuleEtqa,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "SDP", "Assessor" },
+                PersonaTags = new() { "Admin", "SDP", "Assessor" },
+                DisplayOrder = 6,
+                Keywords = new() { "courseware", "learning materials", "modules", "curriculum", "books", "guides" }
             },
 
             // 6. Legal, compliance & BI

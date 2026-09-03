@@ -7,6 +7,7 @@ using Nsdms.Application.Services;
 using Nsdms.Domain.Entities;
 using Nsdms.Infrastructure.Data;
 using Nsdms.Infrastructure.Interceptors;
+using Nsdms.Infrastructure.Services;
 using Nsdms.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,6 +40,10 @@ builder.Services.AddDbContextFactory<NsdmsDbContext>((sp, options) =>
 });
 builder.Services.AddScoped<NsdmsDbContext>(sp => sp.GetRequiredService<IDbContextFactory<NsdmsDbContext>>().CreateDbContext());
 
+// Multi-Tenancy Provider
+builder.Services.AddScoped<ITenantProvider, DefaultTenantProvider>();
+builder.Services.AddScoped<DefaultTenantProvider>(sp => (DefaultTenantProvider)sp.GetRequiredService<ITenantProvider>());
+
 // Interface registration
 builder.Services.AddScoped<INsdmsDbContext>(sp => sp.GetRequiredService<NsdmsDbContext>());
 builder.Services.AddSingleton<INsdmsDbContextFactory, NsdmsDbContextFactory>();
@@ -70,6 +75,10 @@ builder.Services.AddScoped<LookupService>(sp => (LookupService)sp.GetRequiredSer
 
 builder.Services.AddScoped<ITrainingProviderService, TrainingProviderService>();
 builder.Services.AddScoped<TrainingProviderService>(sp => (TrainingProviderService)sp.GetRequiredService<ITrainingProviderService>());
+
+// Phase 7: SDP Campus Infrastructure & Assessor Linking
+builder.Services.AddScoped<ISdpCampusService, SdpCampusService>();
+builder.Services.AddScoped<SdpCampusService>(sp => (SdpCampusService)sp.GetRequiredService<ISdpCampusService>());
 
 builder.Services.AddScoped<IWspService, WspService>();
 builder.Services.AddScoped<WspService>(sp => (WspService)sp.GetRequiredService<IWspService>());
@@ -163,6 +172,10 @@ builder.Services.AddScoped<TrainingCommitteeAndDisputeService>(sp => (TrainingCo
 builder.Services.AddScoped<ITradeTestAndArplService, TradeTestAndArplService>();
 builder.Services.AddScoped<TradeTestAndArplService>(sp => (TradeTestAndArplService)sp.GetRequiredService<ITradeTestAndArplService>());
 
+// Phase 5: Artisan Development & NAMB Batch Governance
+builder.Services.AddScoped<INambBatchService, NambBatchService>();
+builder.Services.AddScoped<NambBatchService>(sp => (NambBatchService)sp.GetRequiredService<INambBatchService>());
+
 // Summative Assessment Reports & Moderation (Area 14)
 builder.Services.AddScoped<ISummativeAssessmentAndModerationService, SummativeAssessmentAndModerationService>();
 builder.Services.AddScoped<SummativeAssessmentAndModerationService>(sp => (SummativeAssessmentAndModerationService)sp.GetRequiredService<ISummativeAssessmentAndModerationService>());
@@ -200,9 +213,34 @@ builder.Services.AddScoped<WspSurveyService>(sp => (WspSurveyService)sp.GetRequi
 builder.Services.AddScoped<Nsdms.Application.Validation.IStatutoryValidationService, StatutoryValidationService>();
 builder.Services.AddScoped<StatutoryValidationService>(sp => (StatutoryValidationService)sp.GetRequiredService<Nsdms.Application.Validation.IStatutoryValidationService>());
 
+// Production Statutory Extract Generation Engines (DHET SETMIS & SAQA NLRD Edu.Dex)
+builder.Services.AddScoped<ISetmisExtractService, SetmisExtractService>();
+builder.Services.AddScoped<SetmisExtractService>(sp => (SetmisExtractService)sp.GetRequiredService<ISetmisExtractService>());
+
+builder.Services.AddScoped<INlrdExtractService, NlrdExtractService>();
+builder.Services.AddScoped<NlrdExtractService>(sp => (NlrdExtractService)sp.GetRequiredService<INlrdExtractService>());
+
+// Automated Statutory Schedulers & Background Jobs
+builder.Services.AddScoped<IStatutorySchedulerService, StatutorySchedulerService>();
+builder.Services.AddScoped<StatutorySchedulerService>(sp => (StatutorySchedulerService)sp.GetRequiredService<IStatutorySchedulerService>());
+
 // AQP Quality Partner & EISA Assessment Service
 builder.Services.AddScoped<IAqpPartnerService, AqpPartnerService>();
 builder.Services.AddScoped<AqpPartnerService>(sp => (AqpPartnerService)sp.GetRequiredService<IAqpPartnerService>());
+
+// Phase 3: Core Statutory Workflow Services
+builder.Services.AddScoped<IWspSignoffService, WspSignoffService>();
+builder.Services.AddScoped<WspSignoffService>(sp => (WspSignoffService)sp.GetRequiredService<IWspSignoffService>());
+
+builder.Services.AddScoped<ILearnerLifecycleService, LearnerLifecycleService>();
+builder.Services.AddScoped<LearnerLifecycleService>(sp => (LearnerLifecycleService)sp.GetRequiredService<ILearnerLifecycleService>());
+
+builder.Services.AddScoped<IDiscretionaryGrantClaimService, DiscretionaryGrantClaimService>();
+builder.Services.AddScoped<DiscretionaryGrantClaimService>(sp => (DiscretionaryGrantClaimService)sp.GetRequiredService<IDiscretionaryGrantClaimService>());
+
+// Phase 4: ETQA Assessor 3-Year Re-registration & CPD Service
+builder.Services.AddScoped<IAssessorReRegistrationService, AssessorReRegistrationService>();
+builder.Services.AddScoped<AssessorReRegistrationService>(sp => (AssessorReRegistrationService)sp.GetRequiredService<IAssessorReRegistrationService>());
 
 // Brand Asset Service
 builder.Services.AddScoped<IBrandAssetService, Nsdms.Infrastructure.Services.BrandAssetService>();
@@ -291,6 +329,37 @@ app.MapGet("/api/documents/remittance/{id:int}/pdf", async (int id, IPdfDocument
     return Results.File(bytes, "application/pdf", $"Mandatory_Rebate_Remittance_{id}.pdf");
 });
 
+// Statutory Flat-File and Batch Zip Package Download Endpoints
+app.MapGet("/api/statutory/setmis/files/{fileCode}", async (string fileCode, ISetmisExtractService setmis) =>
+{
+    var res = await setmis.ExtractSetmisFileAsync(fileCode);
+    return Results.File(res.ContentBytes, "text/plain", res.FileName);
+});
+
+app.MapGet("/api/statutory/nlrd/files/{fileCode}", async (string fileCode, INlrdExtractService nlrd) =>
+{
+    var res = await nlrd.ExtractNlrdFileAsync(fileCode);
+    return Results.File(res.ContentBytes, "text/plain", res.FileName);
+});
+
+app.MapGet("/api/statutory/batches/{id:int}/download", async (int id, ISetmisExtractService setmis, INlrdExtractService nlrd, INsdmsDbContextFactory dbFactory) =>
+{
+    using var db = await dbFactory.CreateDbContextAsync();
+    var b = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(db.StatutorySubmissionBatches, x => x.Id == id);
+    if (b == null) return Results.NotFound();
+
+    if (b.BatchType == "SETMIS")
+    {
+        var zip = await setmis.DownloadSetmisBatchArchiveAsync(id);
+        return Results.File(zip.ZipBytes, "application/zip", zip.ArchiveFileName);
+    }
+    else
+    {
+        var zip = await nlrd.DownloadNlrdBatchArchiveAsync(id);
+        return Results.File(zip.ZipBytes, "application/zip", zip.ArchiveFileName);
+    }
+});
+
 app.MapGet("/api/documents/templates/{id:int}/simulation-pdf", async (int id, IEnterpriseDocumentTemplateService templateService, string? scenario, HttpContext context) =>
 {
     var profiles = templateService.GetDefaultScenarioTokenProfiles();
@@ -364,6 +433,12 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase13MentorRatio", () => Phase13TradeMentorRatioSchemaMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase14WspEligibility", () => Phase14WspEligibilityAndMoaProvisioningMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase15SicCodeChamber", () => Phase15SicCodeChamberGovernanceMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase16PhysicalConstraintsAndBigInt", () => Phase16PhysicalConstraintsAndBigIntMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase17StatutoryBatch", () => Phase17StatutoryBatchMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase18CoreStatutoryWorkflows", () => Phase18CoreStatutoryWorkflowsMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase19EtqaReRegistration", () => Phase19EtqaReRegistrationMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase20NambBatch", () => Phase20NambBatchMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase21SdpCampus", () => Phase21SdpCampusMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
     RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
     RunMigrator("RolePermissions", () => scope.ServiceProvider.GetRequiredService<IRolePermissionService>().SeedDefaultRolePermissionsAsync().GetAwaiter().GetResult());

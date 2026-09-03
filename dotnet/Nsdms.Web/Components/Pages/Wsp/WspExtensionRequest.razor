@@ -1,0 +1,304 @@
+@page "/wsp/extension-request"
+@using Nsdms.Application.Common
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IWspService WspService
+@inject IOrganisationService OrgService
+@inject IAuditService AuditService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A4 (Form / Submission Flow - Statutory Deadline Extension Request)
+  Clauses: 4.2, 4.3, 6.1, 7.2, 8.1, 8.3, 11.1–11.9, 15.2.5
+*@
+
+<PageTitle>WSP Deadline Extension Request - NSDMS</PageTitle>
+
+<EntityHeader Title="WSP &amp; Mandatory Grant Deadline Extension Application"
+              Subtitle="Statutory motivation to extend the mandatory 30 April WSP/ATR submission deadline per SETA Grant Regulations"
+              ReferenceKey="A4-WSP-EXT"
+              Status="Filing Open"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="@(() => NavManager.NavigateTo("/wsp"))"
+                   aria-label="Back to WSP Submissions">
+            Back to WSP
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Send"
+                   OnClick="SubmitExtensionRequest"
+                   Disabled="_isSubmitting"
+                   aria-label="Submit Extension Application">
+            @(_isSubmitting ? "Submitting Request..." : "Submit Extension Request")
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-0 mt-4">
+    @if (_isSuccess)
+    {
+        <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mb-6 rounded-lg">
+            <MudText Typo="Typo.h6" Class="fw-bold">Extension Application Lodged Successfully!</MudText>
+            <MudText Typo="Typo.body2">
+                Your statutory extension request for <strong>@_selectedOrgName</strong> has been submitted under reference
+                <strong>@_generatedReference</strong>. The MerSETA Client Services Committee and Chief Executive Officer will review your application.
+            </MudText>
+            <div class="mt-4">
+                <MudButton Variant="Variant.Outlined" Color="Color.Surface" OnClick="@(() => NavManager.NavigateTo("/wsp"))">
+                    Return to WSP &amp; Mandatory Grants Hub
+                </MudButton>
+            </div>
+        </MudAlert>
+    }
+
+    <MudCard Elevation="2" Class="rounded-lg mb-6">
+        <MudCardHeader Class="pb-2">
+            <CardHeaderAvatar>
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                    <MudIcon Icon="@Icons.Material.Filled.EventBusy" />
+                </MudAvatar>
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Statutory Extension Motivation</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Sections 4(2) of the Sector Education and Training Authorities (SETA) Grant Regulations mandate submissions by 30 April. Extensions are granted only under exceptional circumstances.
+                </MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudForm @ref="_form" @bind-IsValid="_isValid">
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="int"
+                                   Label="Host Employer / Organisation"
+                                   Required="true"
+                                   RequiredError="Please select the employer applying for extension"
+                                   @bind-Value="_selectedOrgId"
+                                   Variant="Variant.Outlined"
+                                   ToStringFunc="@(id => _organisations.FirstOrDefault(o => o.Id == id)?.CompanyName ?? "Select Organisation")">
+                            @foreach (var org in _organisations)
+                            {
+                                <MudSelectItem Value="@org.Id">@org.CompanyName (@org.SdlNumber)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="int"
+                                   Label="Statutory Scheme Year"
+                                   Required="true"
+                                   @bind-Value="_schemeYear"
+                                   Variant="Variant.Outlined">
+                            <MudSelectItem Value="@(2026)">2026/2027 Scheme Year</MudSelectItem>
+                            <MudSelectItem Value="@(2025)">2025/2026 Scheme Year</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="string"
+                                   Label="Primary Grounds / Reason for Extension"
+                                   Required="true"
+                                   RequiredError="Grounds for extension must be specified"
+                                   @bind-Value="_extensionReason"
+                                   Variant="Variant.Outlined">
+                            <MudSelectItem Value="@("BusinessRescue")">Business Rescue / Formal Financial Distress</MudSelectItem>
+                            <MudSelectItem Value="@("TechnicalOutage")">Severe ICT / Network Infrastructure Interruption</MudSelectItem>
+                            <MudSelectItem Value="@("NaturalDisaster")">Natural Disaster / Force Majeure Event</MudSelectItem>
+                            <MudSelectItem Value="@("IndustrialAction")">Protracted Industrial Action / Strike</MudSelectItem>
+                            <MudSelectItem Value="@("OwnershipRestructure")">Recent Corporate Restructuring / Merger</MudSelectItem>
+                            <MudSelectItem Value="@("OtherExceptional")">Other Statutory Exceptional Circumstance</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker Label="Requested Extension Date (Max 31 May)"
+                                       Required="true"
+                                       @bind-Date="_requestedDate"
+                                       MinDate="DateTime.Today"
+                                       MaxDate="@(new DateTime(DateTime.Today.Year, 5, 31))"
+                                       Variant="Variant.Outlined"
+                                       DateFormat="yyyy-MM-dd" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudTextField T="string"
+                                      Label="Comprehensive Motivation &amp; Justification"
+                                      Required="true"
+                                      RequiredError="Detailed statutory motivation is required"
+                                      @bind-Value="_motivation"
+                                      Lines="5"
+                                      Variant="Variant.Outlined"
+                                      Placeholder="Detail the factual circumstances that prevented submission before 30 April and provide evidence of remedial steps taken..." />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudDivider Class="my-3" />
+                        <MudText Typo="Typo.subtitle2" Class="fw-bold mb-2">
+                            <MudIcon Icon="@Icons.Material.Filled.AttachFile" Size="Size.Small" Class="mr-1 align-text-bottom" />
+                            Statutory Supporting Evidence Upload
+                        </MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-3">
+                            Attach formal motivation on company letterhead, board resolutions, or official third-party proof (e.g. Business Rescue appointment letter, Telkom/ISP outage logs).
+                        </MudText>
+                        <MudFileUpload T="IBrowserFile" OnFilesChanged="HandleFileSelected" Accept=".pdf,.docx,.png,.jpg">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.CloudUpload">
+                                    Upload Supporting Affidavit / Evidence
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                        @if (!string.IsNullOrWhiteSpace(_uploadedFileName))
+                        {
+                            <div class="d-flex align-center gap-2 mt-2">
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                                <MudText Typo="Typo.body2"><strong>@_uploadedFileName</strong> (@_uploadedFileSize KB)</MudText>
+                            </div>
+                        }
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudCheckBox T="bool"
+                                     @bind-Value="_declarationAccepted"
+                                     Required="true"
+                                     Color="Color.Primary"
+                                     Class="mt-2">
+                            <span style="font-size: 0.85rem;">
+                                I solemnly declare that the information provided herein is truthful and complete in terms of the Skills Development Act 97 of 1998, and that false declarations may result in forfeiture of mandatory grant eligibility.
+                            </span>
+                        </MudCheckBox>
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        </MudCardContent>
+        <MudCardActions Class="pa-4 d-flex justify-end gap-2 bg-surface">
+            <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="@(() => NavManager.NavigateTo("/wsp"))">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Send"
+                       OnClick="SubmitExtensionRequest"
+                       Disabled="@(!_declarationAccepted || _isSubmitting)">
+                @(_isSubmitting ? "Lodging..." : "Submit Application")
+            </MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private MudForm _form = null!;
+    private bool _isValid;
+    private bool _isSubmitting;
+    private bool _isSuccess;
+    private bool _declarationAccepted;
+
+    private int _selectedOrgId;
+    private string _selectedOrgName = string.Empty;
+    private int _schemeYear = 2026;
+    private string _extensionReason = "BusinessRescue";
+    private DateTime? _requestedDate = new DateTime(DateTime.Today.Year, 5, 15);
+    private string _motivation = string.Empty;
+    private string? _uploadedFileName;
+    private long _uploadedFileSize;
+    private string _generatedReference = string.Empty;
+
+    private List<Organisation> _organisations = new();
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("WSP & Mandatory Grants", href: "/wsp"),
+        new BreadcrumbItem("Deadline Extension Request", href: "/wsp/extension-request", disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var orgs = await OrgService.GetAllAsync();
+            _organisations = orgs.OrderBy(o => o.CompanyName).ToList();
+            if (_organisations.Any())
+            {
+                _selectedOrgId = _organisations.First().Id;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading organisations: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            _uploadedFileName = file.Name;
+            _uploadedFileSize = file.Size / 1024;
+            Snackbar.Add($"Attached evidence: {file.Name}", Severity.Info);
+        }
+    }
+
+    private async Task SubmitExtensionRequest()
+    {
+        if (!_declarationAccepted)
+        {
+            Snackbar.Add("You must accept the statutory compliance declaration before submitting.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_motivation))
+        {
+            Snackbar.Add("Please provide a detailed motivation for the extension request.", Severity.Warning);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var org = _organisations.FirstOrDefault(o => o.Id == _selectedOrgId);
+            _selectedOrgName = org?.CompanyName ?? "Organisation";
+            _generatedReference = $"EXT-{_schemeYear}-{DateTime.UtcNow:MMdd}-{_selectedOrgId:D3}";
+
+            // Perform double-write audit logging
+            await AuditService.LogAsync(
+                "WspExtensionRequest",
+                _selectedOrgId,
+                "SubmitDeadlineExtension",
+                "SDF_USER",
+                System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    Reference = _generatedReference,
+                    OrganisationId = _selectedOrgId,
+                    OrganisationName = _selectedOrgName,
+                    SchemeYear = _schemeYear,
+                    Reason = _extensionReason,
+                    RequestedDate = _requestedDate,
+                    Motivation = _motivation,
+                    EvidenceFile = _uploadedFileName
+                }));
+
+            _isSuccess = true;
+            Snackbar.Add($"Extension application {_generatedReference} submitted successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Submission failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

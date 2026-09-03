@@ -1,4 +1,4 @@
-﻿@namespace Nsdms.Web.Components.Shared
+@namespace Nsdms.Web.Components.Shared
 @using MudBlazor
 
 <div class="entity-header nsdms-page-header mb-6" role="region" aria-label="Page Header">
@@ -19,7 +19,7 @@
                         @EffectiveReference
                     </span>
                 }
-                @if (!string.IsNullOrWhiteSpace(Status))
+                @if (ShouldShowStatus)
                 {
                     <StatusBadge Status="@Status" Size="Size.Medium" />
                 }
@@ -81,6 +81,23 @@
                 EffectiveReference.StartsWith("A3-", StringComparison.OrdinalIgnoreCase) ||
                 EffectiveReference.StartsWith("A4-", StringComparison.OrdinalIgnoreCase) ||
                 EffectiveReference.StartsWith("A5-", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    private bool ShouldShowStatus
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Status)) return false;
+            if (!string.IsNullOrWhiteSpace(EffectiveReference) &&
+                (EffectiveReference.StartsWith("T1-", StringComparison.OrdinalIgnoreCase) ||
+                 EffectiveReference.StartsWith("T2-", StringComparison.OrdinalIgnoreCase) ||
+                 EffectiveReference.StartsWith("A1-", StringComparison.OrdinalIgnoreCase) ||
+                 EffectiveReference.StartsWith("A2-", StringComparison.OrdinalIgnoreCase)))
             {
                 return false;
             }

@@ -1,0 +1,532 @@
+﻿@page "/etqa/assessors/{AssessorId:int}/re-register"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Common.Interfaces
+@inject IAssessorReRegistrationService ReRegService
+@inject IEtqaService EtqaService
+@inject IPdfDocumentService PdfService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IJSRuntime JsRuntime
+@rendermode InteractiveServer
+
+<MudPaper Elevation="1" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+    <div class="d-flex align-center gap-3">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="GoBack">
+            Back to Practitioner Profile
+        </MudButton>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        <div>
+            <MudBreadcrumbs Items="_breadcrumbs" Separator=">" Class="pa-0 ma-0" />
+            <MudText Typo="Typo.h6" Class="font-weight-bold">
+                Assessor / Moderator 3-Year Re-Registration Wizard
+            </MudText>
+        </div>
+    </div>
+    <div class="d-flex align-center gap-2">
+        <MudChip T="string" Color="@GetStatusColor(_renewalStatus?.CurrentStatusCode)" Variant="Variant.Filled" Size="Size.Small">
+            @(_renewalStatus?.CurrentStatusCode ?? "Active")
+        </MudChip>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="GoBack">
+            Cancel
+        </MudButton>
+    </div>
+</MudPaper>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
+    }
+    else if (_renewalStatus == null)
+    {
+        <MudAlert Severity="Severity.Error">Practitioner with ID @AssessorId was not found.</MudAlert>
+    }
+    else
+    {
+        <MudCard Elevation="2" Class="mb-6">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.WorkspacePremium" />
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">@_renewalStatus.PractitionerName (@_renewalStatus.RegistrationNumber)</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Designation: @_renewalStatus.Designation • Valid until: @_renewalStatus.RegistrationEndDate.ToString("dd MMMM yyyy")
+                        @if (_renewalStatus.DaysRemaining <= 180)
+                        {
+                            <span class="text-error font-weight-bold ml-2">(@_renewalStatus.DaysRemaining days remaining - Renewal Due)</span>
+                        }
+                        else
+                        {
+                            <span class="text-success font-weight-bold ml-2">(@_renewalStatus.DaysRemaining days remaining)</span>
+                        }
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+        </MudCard>
+
+        @if (_currentApplication == null)
+        {
+            <!-- Initiation Card -->
+            <MudCard Elevation="2" Class="pa-6 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.HistoryEdu" Size="Size.Large" Color="Color.Primary" Class="mb-4" />
+                <MudText Typo="Typo.h5" Class="font-weight-bold mb-2">Initiate 3-Year Statutory Re-Registration</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-6" Style="max-width: 700px; margin: 0 auto;">
+                    In accordance with SAQA and QCTO ETQA regulations, assessors and moderators must renew their registration every three years.
+                    The re-registration process requires documenting Continuous Professional Development (CPD) activities ($\ge$ 30 points),
+                    confirming qualification scopes, and obtaining ETQA Committee ratification.
+                </MudText>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.PlayArrow"
+                           OnClick="StartNewApplication"
+                           Disabled="_isProcessing">
+                    @(_isProcessing ? "Initiating..." : "Start 3-Year Re-Registration Application")
+                </MudButton>
+            </MudCard>
+        }
+        else
+        {
+            <!-- Multi-step Stepper -->
+            <MudCard Elevation="2" Class="pa-4">
+                <MudStepper ActiveStep="@_activeStep" Linear="false" Color="Color.Primary" Class="mb-6">
+                    <MudStep Title="Practitioner Standing" Icon="@Icons.Material.Filled.Badge">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Step 1: Practitioner Registration Standing & Validity</MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="4">
+                                <MudField Label="Application Reference" Variant="Variant.Outlined">
+                                    <span class="font-mono font-weight-bold">@_currentApplication.ApplicationReferenceNumber</span>
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudField Label="Current Expiry Date" Variant="Variant.Outlined">
+                                    @_currentApplication.CurrentExpirationDate.ToString("yyyy-MM-dd")
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudField Label="Proposed Extended Expiry" Variant="Variant.Outlined">
+                                    <span class="text-success font-weight-bold">@_currentApplication.ProposedNewExpirationDate.ToString("yyyy-MM-dd") (+3 Years)</span>
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="Portfolio & Professional Practice Summary"
+                                              Lines="3"
+                                              Variant="Variant.Outlined"
+                                              HelperText="Describe assessment experience, industry engagements, and learner moderation conducted during the cycle."
+                                              @bind-Value="_currentApplication.CpdPortfolioSummary" />
+                            </MudItem>
+                        </MudGrid>
+                        <div class="d-flex justify-end mt-4">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _activeStep = 1">
+                                Next: CPD Activities
+                            </MudButton>
+                        </div>
+                    </MudStep>
+
+                    <MudStep Title="CPD Portfolio" Icon="@Icons.Material.Filled.TrendingUp">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-2">Step 2: Continuous Professional Development (CPD) Portfolio</MudText>
+                        <MudAlert Severity="@(_currentApplication.CpdPointsAccumulated >= 30 ? Severity.Success : Severity.Warning)" Class="mb-4">
+                            <strong>CPD Target: 30 Points</strong> • Current Accumulated: <strong>@_currentApplication.CpdPointsAccumulated / 30 Points</strong>
+                            @if (_currentApplication.CpdPointsAccumulated >= 30)
+                            {
+                                <span> - Statutory CPD criteria satisfied for renewal.</span>
+                            }
+                            else
+                            {
+                                <span> - @(30 - _currentApplication.CpdPointsAccumulated) more points required to meet statutory benchmark.</span>
+                            }
+                        </MudAlert>
+
+                        <MudProgressLinear Color="@(_currentApplication.CpdPointsAccumulated >= 30 ? Color.Success : Color.Warning)"
+                                           Value="@Math.Min(100, (_currentApplication.CpdPointsAccumulated * 100) / 30)"
+                                           Class="mb-6"
+                                           Rounded="true"
+                                           Size="Size.Large">
+                            <MudText Typo="Typo.caption">@_currentApplication.CpdPointsAccumulated / 30 Points</MudText>
+                        </MudProgressLinear>
+
+                        <!-- Log New CPD Activity -->
+                        <MudPaper Elevation="1" Class="pa-4 mb-4 rounded-lg">
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-3">Add CPD Activity / Industry Practice</MudText>
+                            <MudGrid>
+                                <MudItem xs="12" md="4">
+                                    <MudTextField T="string" Label="Activity Description" @bind-Value="_newCpdTitle" Variant="Variant.Outlined" Required="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="3">
+                                    <MudSelect T="string" Label="Activity Category" @bind-Value="_newCpdCategory" Variant="Variant.Outlined">
+                                        <MudSelectItem Value="@("IndustryPractice")">Industry Workplace Practice (10 pts)</MudSelectItem>
+                                        <MudSelectItem Value="@("SetaWorkshop")">merSETA Assessor Workshop (5 pts)</MudSelectItem>
+                                        <MudSelectItem Value="@("PeerModeration")">Peer Moderation Panel (5 pts)</MudSelectItem>
+                                        <MudSelectItem Value="@("CourseAttendance")">Technical Refresher Course (10 pts)</MudSelectItem>
+                                        <MudSelectItem Value="@("Mentorship")">Apprentice Mentorship (5 pts)</MudSelectItem>
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="2">
+                                    <MudNumericField T="int" Label="Points Claimed" @bind-Value="_newCpdPoints" Variant="Variant.Outlined" Min="1" Max="20" />
+                                </MudItem>
+                                <MudItem xs="12" md="3" Class="d-flex align-center">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="AddCpdActivity" Disabled="_isProcessing">
+                                        Log Activity
+                                    </MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </MudPaper>
+
+                        <!-- Logged Activities Table -->
+                        <MudTable Items="_currentApplication.CpdActivities" Dense="true" Hover="true" Elevation="1" Class="mb-4">
+                            <HeaderContent>
+                                <MudTh>Date</MudTh>
+                                <MudTh>Activity Title</MudTh>
+                                <MudTh>Category</MudTh>
+                                <MudTh>Points Claimed</MudTh>
+                                <MudTh>Points Approved</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd>@context.ActivityDate.ToString("yyyy-MM-dd")</MudTd>
+                                <MudTd class="font-weight-medium">@context.ActivityTitle</MudTd>
+                                <MudTd><MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@context.ActivityCategory</MudChip></MudTd>
+                                <MudTd>@context.PointsClaimed</MudTd>
+                                <MudTd><span class="text-success font-weight-bold">@context.PointsApproved</span></MudTd>
+                            </RowTemplate>
+                            <NoRecordsContent>
+                                <MudText Color="Color.Secondary" Class="pa-4 text-center">No CPD activities logged yet.</MudText>
+                            </NoRecordsContent>
+                        </MudTable>
+
+                        <div class="d-flex justify-space-between mt-4">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="() => _activeStep = 0">
+                                Previous
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _activeStep = 2">
+                                Next: Scope & Declaration
+                            </MudButton>
+                        </div>
+                    </MudStep>
+
+                    <MudStep Title="Scope & Declaration" Icon="@Icons.Material.Filled.FactCheck">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Step 3: Scope Renewal & Statutory Declarations</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                            Confirm the registered qualification and unit standard assessment scopes to be renewed for this 3-year term.
+                        </MudText>
+
+                        <MudPaper Elevation="1" Class="pa-4 mb-4">
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-2">Registered Scope Confirmation</MudText>
+                            <MudCheckBox T="bool" @bind-Value="_confirmAllScopes" Label="Confirm renewal of all existing registered assessment scopes and unit standards" Color="Color.Primary" />
+                            <MudCheckBox T="bool" @bind-Value="_acceptCodeOfConduct" Label="I certify compliance with the merSETA Code of Conduct for Registered Assessors and Moderators" Color="Color.Primary" />
+                            <MudCheckBox T="bool" @bind-Value="_acceptPopia" Label="I acknowledge and consent to the processing of practitioner credentials under POPIA" Color="Color.Primary" />
+                        </MudPaper>
+
+                        @if (_currentApplication.ReviewStatusCode == "Draft")
+                        {
+                            <div class="d-flex justify-space-between mt-4">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="() => _activeStep = 1">
+                                    Previous
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Success"
+                                           StartIcon="@Icons.Material.Filled.Send"
+                                           OnClick="SubmitForReview"
+                                           Disabled="@(!_confirmAllScopes || !_acceptCodeOfConduct || !_acceptPopia || _isProcessing)">
+                                    @(_isProcessing ? "Submitting..." : "Submit Application for ETQA Review")
+                                </MudButton>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="d-flex justify-end mt-4">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _activeStep = 3">
+                                    Next: ETQA Adjudication
+                                </MudButton>
+                            </div>
+                        }
+                    </MudStep>
+
+                    <MudStep Title="ETQA Adjudication" Icon="@Icons.Material.Filled.Gavel">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Step 4: ETQA Committee Adjudication & Ratification</MudText>
+
+                        @if (_currentApplication.ReviewStatusCode == "CommitteeReview")
+                        {
+                            <MudCard Elevation="2" Class="pa-4 mb-4">
+                                <MudText Typo="Typo.subtitle2" Class="font-weight-bold text-primary mb-3">ETQA Committee Decision Gate</MudText>
+                                <MudGrid>
+                                    <MudItem xs="12" md="6">
+                                        <MudTextField T="string"
+                                                      Label="Committee Decision Number"
+                                                      Variant="Variant.Outlined"
+                                                      Required="true"
+                                                      @bind-Value="_committeeDecisionNumber"
+                                                      HelperText="Official ETQA Committee ratification reference (e.g. ETQA-COM-2026-084)." />
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudTextField T="string"
+                                                      Label="Adjudication Committee Notes"
+                                                      Variant="Variant.Outlined"
+                                                      Lines="2"
+                                                      @bind-Value="_adjudicationNotes" />
+                                    </MudItem>
+                                </MudGrid>
+                                <div class="d-flex gap-3 mt-4">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               StartIcon="@Icons.Material.Filled.CheckCircle"
+                                               OnClick="() => Adjudicate(true)"
+                                               Disabled="@(string.IsNullOrWhiteSpace(_committeeDecisionNumber) || _isProcessing)">
+                                        Approve 3-Year Re-Registration
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Error"
+                                               StartIcon="@Icons.Material.Filled.Cancel"
+                                               OnClick="() => Adjudicate(false)"
+                                               Disabled="_isProcessing">
+                                        Reject Application
+                                    </MudButton>
+                                </div>
+                            </MudCard>
+                        }
+                        else if (_currentApplication.ReviewStatusCode == "Approved")
+                        {
+                            <MudAlert Severity="Severity.Success" Class="mb-4">
+                                <strong>Re-Registration Approved!</strong><br />
+                                Committee Decision: <strong>@_currentApplication.CommitteeDecisionNumber</strong><br />
+                                New Expiry Date: <strong>@_currentApplication.ProposedNewExpirationDate.ToString("dd MMMM yyyy")</strong><br />
+                                Digital Security Seal: <code class="font-mono">@_currentApplication.DigitalSecuritySeal</code>
+                            </MudAlert>
+
+                            <div class="d-flex gap-3 mt-4">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.Download"
+                                           OnClick="DownloadCertificate">
+                                    Download Certificate of Registration (QuestPDF)
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="GoBack">
+                                    Return to Practitioner Profile
+                                </MudButton>
+                            </div>
+                        }
+                        else if (_currentApplication.ReviewStatusCode == "Rejected")
+                        {
+                            <MudAlert Severity="Severity.Error" Class="mb-4">
+                                <strong>Re-Registration Rejected.</strong><br />
+                                Reason / Notes: @_currentApplication.AdjudicationNotes
+                            </MudAlert>
+                        }
+                    </MudStep>
+                </MudStepper>
+            </MudCard>
+        }
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public int AssessorId { get; set; }
+
+    private bool _loading = true;
+    private bool _isProcessing = false;
+    private int _activeStep = 0;
+    private AssessorRenewalStatusDto? _renewalStatus;
+    private AssessorReRegistrationApplication? _currentApplication;
+
+    // CPD Entry Fields
+    private string _newCpdTitle = string.Empty;
+    private string _newCpdCategory = "IndustryPractice";
+    private int _newCpdPoints = 5;
+
+    // Declarations
+    private bool _confirmAllScopes = true;
+    private bool _acceptCodeOfConduct = true;
+    private bool _acceptPopia = true;
+
+    // Adjudication
+    private string _committeeDecisionNumber = "ETQA-COM-2026-084";
+    private string _adjudicationNotes = "CPD portfolio reviewed and compliant. Registration extended by 3 years.";
+
+    private List<BreadcrumbItem> _breadcrumbs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _breadcrumbs = new List<BreadcrumbItem>
+        {
+            new("ETQA Registry", "/etqa"),
+            new("Practitioner", $"/etqa/assessors/{AssessorId}"),
+            new("3-Year Re-Registration", null, disabled: true)
+        };
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        try
+        {
+            _renewalStatus = await ReRegService.GetAssessorRenewalStatusAsync(AssessorId);
+            var apps = await ReRegService.GetApplicationsForAssessorAsync(AssessorId);
+            _currentApplication = apps.FirstOrDefault(a => a.ReviewStatusCode != "Rejected");
+            if (_currentApplication != null)
+            {
+                if (_currentApplication.ReviewStatusCode == "Approved") _activeStep = 3;
+                else if (_currentApplication.ReviewStatusCode == "CommitteeReview") _activeStep = 3;
+                else if (_currentApplication.CpdActivities.Count > 0) _activeStep = 1;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading renewal status: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task StartNewApplication()
+    {
+        _isProcessing = true;
+        try
+        {
+            _currentApplication = await ReRegService.InitiateReRegistrationApplicationAsync(new InitiateReRegistrationRequest
+            {
+                EtqaAssessorId = AssessorId,
+                CpdPortfolioSummary = "Active industry assessment experience and compliance with merSETA assessor criteria."
+            });
+            Snackbar.Add($"Re-registration application {_currentApplication.ApplicationReferenceNumber} initiated.", Severity.Success);
+            _activeStep = 1;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error initiating application: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task AddCpdActivity()
+    {
+        if (string.IsNullOrWhiteSpace(_newCpdTitle) || _currentApplication == null)
+            return;
+
+        _isProcessing = true;
+        try
+        {
+            var act = await ReRegService.LogCpdActivityAsync(new LogCpdActivityRequest
+            {
+                ApplicationId = _currentApplication.Id,
+                ActivityTitle = _newCpdTitle,
+                ActivityCategory = _newCpdCategory,
+                PointsClaimed = _newCpdPoints
+            });
+            _currentApplication.CpdActivities.Add(act);
+            _currentApplication.CpdPointsAccumulated += act.PointsApproved;
+            _newCpdTitle = string.Empty;
+            Snackbar.Add($"Logged {act.PointsApproved} CPD points for '{act.ActivityTitle}'.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding CPD activity: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task SubmitForReview()
+    {
+        if (_currentApplication == null) return;
+        _isProcessing = true;
+        try
+        {
+            _currentApplication = await ReRegService.SubmitApplicationForReviewAsync(_currentApplication.Id);
+            Snackbar.Add("Application submitted for ETQA Committee Review.", Severity.Success);
+            _activeStep = 3;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error submitting application: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task Adjudicate(bool approved)
+    {
+        if (_currentApplication == null) return;
+        _isProcessing = true;
+        try
+        {
+            _currentApplication = await ReRegService.AdjudicateApplicationAsync(new AdjudicateReRegistrationRequest
+            {
+                ApplicationId = _currentApplication.Id,
+                Approved = approved,
+                CommitteeDecisionNumber = _committeeDecisionNumber,
+                AdjudicationNotes = _adjudicationNotes
+            });
+
+            if (approved)
+            {
+                Snackbar.Add($"Application approved! 3-year registration issued until {_currentApplication.ProposedNewExpirationDate:yyyy-MM-dd}.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Application rejected by ETQA Committee.", Severity.Warning);
+            }
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adjudicating application: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task DownloadCertificate()
+    {
+        try
+        {
+            var assessor = await EtqaService.GetAssessorByIdAsync(AssessorId);
+            if (assessor == null)
+            {
+                Snackbar.Add("Assessor not found.", Severity.Error);
+                return;
+            }
+            var bytes = await PdfService.GenerateAssessorRegistrationCertificatePdfAsync(assessor);
+            var base64 = Convert.ToBase64String(bytes);
+            await JsRuntime.InvokeVoidAsync("downloadFileFromBytes", $"Certificate_Assessor_{assessor.RegistrationNumber}.pdf", "application/pdf", base64);
+            Snackbar.Add("Certificate of Registration generated successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating certificate: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo($"/etqa/assessors/{AssessorId}");
+    }
+
+    private Color GetStatusColor(string? status) => status?.ToUpperInvariant() switch
+    {
+        "ACTIVE" or "REGISTERED" => Color.Success,
+        "PENDINGRENEWAL" => Color.Warning,
+        "SUSPENDED" or "EXPIRED" => Color.Error,
+        _ => Color.Default
+    };
+}

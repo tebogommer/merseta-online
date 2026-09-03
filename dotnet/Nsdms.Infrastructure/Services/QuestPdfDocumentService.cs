@@ -1134,6 +1134,185 @@ public class QuestPdfDocumentService : IPdfDocumentService
         return document.GeneratePdf();
     }
 
+    public async Task<byte[]> GenerateTripartiteAgreementPdfAsync(CompanyLearner learner)
+    {
+        var setaName = await _config.GetValueAsync("General.SetaName", "Manufacturing, Engineering and Related Services SETA (merSETA)");
+        var contractNum = !string.IsNullOrEmpty(learner.LearnerContractNumber) ? learner.LearnerContractNumber : $"LRN-{learner.Id:D5}";
+        var baseUrl = await _config.GetValueAsync("System.BaseUrl", "https://nsdms.merseta.org.za");
+        var verifyUrl = $"{baseUrl.TrimEnd('/')}/verify/contract/{contractNum}";
+        var qrBytes = GenerateQrBytes(verifyUrl);
+
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(1.5f, Unit.Centimetre);
+                page.PageColor(Colors.White);
+                page.DefaultTextStyle(x => x.FontSize(9.5f).FontFamily("Arial"));
+
+                page.Header().Column(col =>
+                {
+                    col.Item().Row(r =>
+                    {
+                        r.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("REPUBLIC OF SOUTH AFRICA").Bold().FontSize(12).FontColor(Colors.Grey.Darken3);
+                            c.Item().Text(setaName).FontSize(10).FontColor(Colors.Blue.Darken3);
+                            c.Item().Text("STATUTORY TRIPARTITE LEARNERSHIP AGREEMENT").Bold().FontSize(14).FontColor(Colors.Black);
+                            c.Item().Text("In accordance with Section 17 of the Skills Development Act (Act No. 97 of 1998)").Italic().FontSize(8).FontColor(Colors.Grey.Darken2);
+                        });
+                        r.ConstantItem(60).Height(60).Image(qrBytes);
+                    });
+                    col.Item().PaddingTop(5).LineHorizontal(1.5f).LineColor(Colors.Blue.Darken2);
+                });
+
+                page.Content().PaddingVertical(10).Column(col =>
+                {
+                    col.Spacing(8);
+
+                    // Section 1: Learner Details
+                    col.Item().Background(Colors.Grey.Lighten3).Padding(4).Text("SECTION 1: LEARNER PARTICULARS").Bold().FontSize(10).FontColor(Colors.Blue.Darken4);
+                    col.Item().Row(r =>
+                    {
+                        r.RelativeItem().Text($"Full Legal Name: {learner.Person?.FullName ?? "Learner"}");
+                        r.RelativeItem().Text($"Identity / Passport: {learner.Person?.RsaIdNumber ?? learner.Person?.PassportNumber ?? "N/A"}");
+                    });
+                    col.Item().Row(r =>
+                    {
+                        r.RelativeItem().Text($"Email: {learner.Person?.Email ?? "N/A"}");
+                        r.RelativeItem().Text($"Mobile: {learner.Person?.CellNumber ?? "N/A"}");
+                    });
+
+                    // Section 2: Employer Details
+                    col.Item().PaddingTop(4).Background(Colors.Grey.Lighten3).Padding(4).Text("SECTION 2: HOST EMPLOYER PARTICULARS").Bold().FontSize(10).FontColor(Colors.Blue.Darken4);
+                    col.Item().Row(r =>
+                    {
+                        r.RelativeItem().Text($"Employer Name: {learner.Organisation?.CompanyName ?? "Host Employer"}");
+                        r.RelativeItem().Text($"SDL Number: {learner.Organisation?.SdlNumber ?? "N/A"}");
+                    });
+
+                    // Section 3: Training Provider
+                    col.Item().PaddingTop(4).Background(Colors.Grey.Lighten3).Padding(4).Text("SECTION 3: ACCREDITED SKILLS DEVELOPMENT PROVIDER (SDP)").Bold().FontSize(10).FontColor(Colors.Blue.Darken4);
+                    col.Item().Row(r =>
+                    {
+                        r.RelativeItem().Text($"SDP Institution: {learner.TrainingProvider?.ProviderName ?? "Accredited Training Institution"}");
+                        r.RelativeItem().Text($"Accreditation No: {learner.TrainingProvider?.AccreditationNumber ?? "ETQA/17/SDP"}");
+                    });
+
+                    // Section 4: Learning Programme
+                    col.Item().PaddingTop(4).Background(Colors.Grey.Lighten3).Padding(4).Text("SECTION 4: QUALIFICATION & STATUTORY CONTRACT DETAILS").Bold().FontSize(10).FontColor(Colors.Blue.Darken4);
+                    col.Item().Row(r =>
+                    {
+                        r.RelativeItem().Text($"Qualification Title: {learner.QualificationTitle}").Bold();
+                        r.RelativeItem().Text($"OFO Code: {learner.OfoCode ?? "N/A"}");
+                    });
+                    col.Item().Row(r =>
+                    {
+                        r.RelativeItem().Text($"Commencement Date: {learner.RegistrationDate.ToString("yyyy-MM-dd")}");
+                        r.RelativeItem().Text($"Expected Completion Date: {learner.ExpectedCompletionDate?.ToString("yyyy-MM-dd") ?? "N/A"}");
+                    });
+                    col.Item().Text($"Contract Reference: {contractNum} • SETMIS File 500 Compliant").FontFamily("Courier New").FontSize(8.5f);
+
+                    // Section 5: Tripartite Execution & Digital Seal
+                    col.Item().PaddingTop(8).Background(Colors.Grey.Lighten4).Padding(8).Column(c =>
+                    {
+                        c.Item().Text("TRIPARTITE ATTESTATION & DIGITAL SECURITY SEAL").Bold().FontSize(9.5f).FontColor(Colors.Blue.Darken3);
+                        c.Item().Text("This agreement has been digitally concluded through authenticated OTP verification. The employer agrees to provide practical workplace experience and pay the statutory allowance; the learner agrees to observe workplace rules and complete curricula; the SDP undertakes theoretical instruction.").FontSize(7.5f);
+                        c.Item().PaddingTop(5).Row(r =>
+                        {
+                            r.RelativeItem().Text("Learner Signatory: [Digitally Verified via OTP]").FontSize(8);
+                            r.RelativeItem().Text("Employer Signatory: [Digitally Executed]").FontSize(8);
+                            r.RelativeItem().Text("merSETA Registrar: [Approved & Sealed]").FontSize(8);
+                        });
+                    });
+                });
+
+                page.Footer().Row(r =>
+                {
+                    r.RelativeItem().Text($"merSETA NSDMS Tripartite Contract Engine • Ref: {contractNum}").FontSize(7.5f).FontColor(Colors.Grey.Medium);
+                    r.RelativeItem().AlignRight().Text("Official Government Contract • Legally Binding").FontSize(7.5f).FontColor(Colors.Grey.Medium);
+                });
+            });
+        });
+
+        return document.GeneratePdf();
+    }
+
+    public async Task<byte[]> GenerateAssessorRegistrationCertificatePdfAsync(EtqaAssessor assessor)
+    {
+        var setaName = await _config.GetValueAsync("General.SetaName", "Manufacturing, Engineering and Related Services SETA (merSETA)");
+        var certNum = assessor.RegistrationNumber;
+        var baseUrl = await _config.GetValueAsync("System.BaseUrl", "https://nsdms.merseta.org.za");
+        var verifyUrl = $"{baseUrl.TrimEnd('/')}/verify/assessor/{certNum}";
+        var qrBytes = GenerateQrBytes(verifyUrl);
+
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4.Landscape());
+                page.Margin(2, Unit.Centimetre);
+                page.PageColor(Colors.White);
+                page.DefaultTextStyle(x => x.FontSize(11).FontFamily("Arial"));
+
+                page.Header().Column(col =>
+                {
+                    col.Item().AlignCenter().Text("REPUBLIC OF SOUTH AFRICA").Bold().FontSize(15).FontColor(Colors.Grey.Darken3);
+                    col.Item().AlignCenter().Text(setaName).FontSize(13).FontColor(Colors.Blue.Darken3);
+                    col.Item().AlignCenter().Text($"EDUCATION & TRAINING QUALITY ASSURANCE (ETQA ID: {assessor.EtqaId})").FontSize(10).FontColor(Colors.Grey.Darken2);
+                    col.Item().AlignCenter().Text($"CERTIFICATE OF REGISTRATION: {assessor.EtqaRole.ToUpperInvariant()}").Bold().FontSize(18).FontColor(Colors.Black);
+                    col.Item().PaddingTop(4).LineHorizontal(2).LineColor(Colors.Blue.Darken2);
+                });
+
+                page.Content().PaddingVertical(15).Column(col =>
+                {
+                    col.Spacing(10);
+
+                    col.Item().AlignCenter().Text("This is to certify that").Italic().FontSize(12);
+                    col.Item().AlignCenter().Text(assessor.Person?.FullName ?? "Assessor / Moderator").Bold().FontSize(22).FontColor(Colors.Blue.Darken4);
+                    col.Item().AlignCenter().Text($"National ID / Passport: {assessor.Person?.RsaIdNumber ?? assessor.Person?.PassportNumber ?? "N/A"}").FontSize(11);
+
+                    col.Item().AlignCenter().Text($"is officially registered with merSETA ETQA as an accredited").FontSize(12);
+                    col.Item().AlignCenter().Text($"{assessor.EtqaRole.ToUpperInvariant()} (Registration No: {assessor.RegistrationNumber})").Bold().FontSize(15).FontColor(Colors.Green.Darken3);
+
+                    col.Item().AlignCenter().Text($"Validity Period: {assessor.StartDate:dd MMMM yyyy} to {assessor.EndDate:dd MMMM yyyy} (3-Year Statutory Cycle)").FontSize(11);
+                    if (!string.IsNullOrEmpty(assessor.EtqeDecisionNumber))
+                    {
+                        col.Item().AlignCenter().Text($"ETQA Committee Decision Number: {assessor.EtqeDecisionNumber}").FontSize(10).FontColor(Colors.Grey.Darken2);
+                    }
+
+                    col.Item().PaddingTop(10).Row(row =>
+                    {
+                        row.RelativeItem(3).Column(c =>
+                        {
+                            c.Item().Text($"Registered Scope Units: {assessor.Scopes.Count} Qualifications / Unit Standards").Bold().FontSize(10);
+                            c.Item().Text("SETMIS File 401 Compliant Registration").FontSize(9).FontColor(Colors.Grey.Darken2);
+                            c.Item().Text($"Certificate Reference: CERT-{assessor.RegistrationNumber}").FontSize(9).FontColor(Colors.Grey.Darken2);
+                        });
+
+                        row.RelativeItem(2).AlignCenter().Column(c =>
+                        {
+                            c.Item().Width(50).Height(50).Image(qrBytes);
+                            c.Item().AlignCenter().Text("Scan to Verify Scope").FontSize(7.5f).FontColor(Colors.Blue.Darken2);
+                        });
+
+                        row.RelativeItem(3).AlignRight().Column(c =>
+                        {
+                            c.Item().Text("Senior ETQA Manager").Bold().FontSize(10);
+                            c.Item().PaddingTop(20).LineHorizontal(1).LineColor(Colors.Grey.Darken1);
+                            c.Item().AlignCenter().Text("Quality Assurance & ETQA Division").FontSize(9);
+                        });
+                    });
+                });
+
+                page.Footer().AlignCenter().Text("Official Government Credential • Issued under SAQA & QCTO Statutory Regulations • merSETA NSDMS").FontSize(8).FontColor(Colors.Grey.Medium);
+            });
+        });
+
+        return document.GeneratePdf();
+    }
+
     private byte[] GenerateQrBytes(string verifyUrl)
     {
         if (_verificationService != null)

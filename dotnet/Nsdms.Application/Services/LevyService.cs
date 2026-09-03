@@ -42,10 +42,10 @@ public interface ILevyService
 
     Task<List<LevyFileLine>> GetLineItemsAsync(int levyFileId, string? sdlSearch = null);
     Task<LevyFileLine> AddLineItemAsync(LevyFileLine line, string currentUsername = "SYSTEM");
-    Task<bool> RemoveLineItemAsync(int lineId, string currentUsername = "SYSTEM");
+    Task<bool> RemoveLineItemAsync(long lineId, string currentUsername = "SYSTEM");
 
-    Task<bool> ReconcileLevyLineAsync(int levyFileLineId, string currentUsername = "SYSTEM");
-    Task<bool> ReconcileLineItemAsync(int lineId, string currentUsername = "SYSTEM");
+    Task<bool> ReconcileLevyLineAsync(long levyFileLineId, string currentUsername = "SYSTEM");
+    Task<bool> ReconcileLineItemAsync(long lineId, string currentUsername = "SYSTEM");
     Task<ReconciliationResult> ReconcileLevyFileAsync(int levyFileId, string currentUsername = "SYSTEM");
     Task<ReconciliationResult> ReconcileAllLinesAsync(int levyFileId, string currentUsername = "SYSTEM");
     Task<int> ReconcileEmployerLeviesAsync(string sdlNumber, string schemeYear, string currentUsername = "SYSTEM");
@@ -646,7 +646,7 @@ public class LevyService : ILevyService
         return line;
     }
 
-    public async Task<bool> RemoveLineItemAsync(int lineId, string currentUsername = "SYSTEM")
+    public async Task<bool> RemoveLineItemAsync(long lineId, string currentUsername = "SYSTEM")
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var line = await db.LevyFileLines.FindAsync(lineId);
@@ -669,12 +669,12 @@ public class LevyService : ILevyService
         return true;
     }
 
-    public async Task<bool> ReconcileLineItemAsync(int lineId, string currentUsername = "SYSTEM")
+    public async Task<bool> ReconcileLineItemAsync(long lineId, string currentUsername = "SYSTEM")
     {
         return await ReconcileLevyLineAsync(lineId, currentUsername);
     }
 
-    public async Task<bool> ReconcileLevyLineAsync(int levyFileLineId, string currentUsername = "SYSTEM")
+    public async Task<bool> ReconcileLevyLineAsync(long levyFileLineId, string currentUsername = "SYSTEM")
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var line = await db.LevyFileLines.FindAsync(levyFileLineId);

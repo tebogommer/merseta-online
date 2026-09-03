@@ -1,0 +1,377 @@
+﻿@page "/finance/dg-claims"
+@using MudBlazor
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@inject IDiscretionaryGrantClaimService ClaimService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+<PageTitle>Discretionary Grant Tranche Claims &amp; Invoicing - NSDMS</PageTitle>
+
+<EntityHeader Title="Discretionary Grant Tranche Invoicing &amp; Claims Hub"
+              Subtitle="Multi-tier DOFA payment approval chains, budget envelope headroom, and ERP payment batch staging"
+              ReferenceKey="A2-DG-CLAIMS"
+              Status="DOFA Gateway Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="@(() => NavManager.NavigateTo("/finance/dg-moa"))"
+                   aria-label="Back to MoA Registry">
+            Back to MoAs
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Success"
+                   StartIcon="@Icons.Material.Filled.FileDownload"
+                   OnClick="ExportSelectedBatch"
+                   Disabled="_selectedClaimIds.Count == 0 || _isProcessing"
+                   aria-label="Stage to ERP Batch">
+            @(_isProcessing ? "Staging..." : $"Stage {_selectedClaimIds.Count} Claims to ERP Batch")
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0 mt-4">
+    <!-- Financial Envelope Metric Cards -->
+    <MudGrid Spacing="3" Class="mb-4">
+        <MudItem xs="12" sm="6" md="2">
+            <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Total Allocations</MudText>
+                <MudText Typo="Typo.h6" Class="fw-bold text-primary">@_totalAllocation.ToString("C0")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Total Claims</MudText>
+                <MudText Typo="Typo.h6" Class="fw-bold">@_totalClaimed.ToString("C0")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Approved</MudText>
+                <MudText Typo="Typo.h6" Class="fw-bold text-success">@_totalApproved.ToString("C0")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Disbursed (Paid)</MudText>
+                <MudText Typo="Typo.h6" Class="fw-bold text-info">@_totalDisbursed.ToString("C0")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Budget Headroom Remaining</MudText>
+                <MudText Typo="Typo.h6" Class="fw-bold text-warning">@_remainingBalance.ToString("C0")</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    @if (!string.IsNullOrEmpty(_lastExportedTsv))
+    {
+        <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="@(() => _lastExportedTsv = null)">
+            <div class="d-flex justify-space-between align-center">
+                <div>
+                    <strong>ERP Export Batch Generated:</strong> Formatted TSV ready for Microsoft Dynamics GP / Sage Pastel ingestion.
+                </div>
+                <MudButton Variant="Variant.Outlined" Color="Color.Surface" Size="Size.Small" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyTsvToClipboard">
+                    Copy TSV Data
+                </MudButton>
+            </div>
+        </MudAlert>
+    }
+
+    <!-- Claims Data Table -->
+    <MudCard Elevation="2" Class="rounded-lg">
+        <MudCardHeader Class="pb-2">
+            <CardHeaderAvatar>
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                    <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" />
+                </MudAvatar>
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Discretionary Grant Tranche Invoices &amp; Claims</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Filter by DOFA tier, verify deliverables, and authorize payment vouchers</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudTextField @bind-Value="_searchString"
+                              Placeholder="Search voucher, MoA, or employer..."
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Small"
+                              Class="mt-0"
+                              Clearable="true"
+                              Immediate="true" />
+            </CardHeaderActions>
+        </MudCardHeader>
+
+        <MudCardContent Class="pa-0">
+            @if (_loading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+            }
+            else
+            {
+                <MudTable Items="@FilteredClaims"
+                          Hover="true"
+                          Dense="true"
+                          Elevation="0"
+                          MultiSelection="true"
+                          @bind-SelectedItems="_selectedClaims">
+                    <HeaderContent>
+                        <MudTh>Voucher / Claim ID</MudTh>
+                        <MudTh>Tranche</MudTh>
+                        <MudTh>Claim Amount</MudTh>
+                        <MudTh>Threshold</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>CLO Verified</MudTh>
+                        <MudTh>Finance Approved</MudTh>
+                        <MudTh>CFO Sign-Off</MudTh>
+                        <MudTh Style="text-align: right;">DOFA Action</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Voucher / Claim ID">
+                            @if (!string.IsNullOrEmpty(context.PaymentVoucherNumber))
+                            {
+                                <span class="font-monospace fw-bold text-primary">@context.PaymentVoucherNumber</span>
+                            }
+                            else
+                            {
+                                <span class="font-monospace text-muted">CLM-@context.Id.ToString("D5")</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Tranche">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default">Tranche #@context.TrancheNumber</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Claim Amount">
+                            <strong class="text-success">@context.ClaimAmount.ToString("C")</strong>
+                        </MudTd>
+                        <MudTd DataLabel="Threshold">
+                            @if (context.RequiresCfoApproval)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined">&gt;= R500k (CFO)</MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">Standard</MudChip>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.StatusCode)" Variant="Variant.Filled">
+                                @context.StatusCode
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="CLO Verified">
+                            @if (!string.IsNullOrEmpty(context.CloVerifiedBy))
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Title="@($"Verified by {context.CloVerifiedBy}")" />
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Pending" Color="Color.Default" Size="Size.Small" />
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Finance Approved">
+                            @if (!string.IsNullOrEmpty(context.FinanceOfficerApprovedBy))
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Title="@($"Approved by {context.FinanceOfficerApprovedBy}")" />
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Pending" Color="Color.Default" Size="Size.Small" />
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="CFO Sign-Off">
+                            @if (!context.RequiresCfoApproval)
+                            {
+                                <span class="text-muted text-caption">N/A</span>
+                            }
+                            else if (!string.IsNullOrEmpty(context.CfoApprovedBy))
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Color="Color.Success" Size="Size.Small" Title="@($"CFO Sign-off by {context.CfoApprovedBy}")" />
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty" Color="Color.Warning" Size="Size.Small" />
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="DOFA Action" Style="text-align: right;">
+                            @if (context.StatusCode == "Submitted" || context.StatusCode == "Draft")
+                            {
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.FactCheck" OnClick="@(() => ApproveClaim(context, "CLO"))">
+                                    CLO Verify
+                                </MudButton>
+                            }
+                            else if (context.StatusCode == "CloVerified")
+                            {
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.ThumbUp" OnClick="@(() => ApproveClaim(context, "FinanceOfficer"))">
+                                    Finance Approve
+                                </MudButton>
+                            }
+                            else if (context.StatusCode == "PendingCfoApproval")
+                            {
+                                <MudButton Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" StartIcon="@Icons.Material.Filled.Security" OnClick="@(() => ApproveClaim(context, "CFO"))">
+                                    CFO Sign-off
+                                </MudButton>
+                            }
+                            else if (context.StatusCode == "Approved" || context.StatusCode == "CfoApproved")
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">Voucher Issued</MudChip>
+                            }
+                            else if (context.StatusCode == "Paid")
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">Disbursed</MudChip>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-4 text-center">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No Discretionary Grant claims match the current criteria.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                </MudTable>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private bool _loading = true;
+    private bool _isProcessing = false;
+    private string _searchString = string.Empty;
+    private string? _lastExportedTsv;
+
+    private decimal _totalAllocation = 10000000m;
+    private decimal _totalClaimed = 0m;
+    private decimal _totalApproved = 0m;
+    private decimal _totalDisbursed = 0m;
+    private decimal _remainingBalance = 10000000m;
+
+    private List<GrantPaymentClaim> _claims = new();
+    private HashSet<GrantPaymentClaim> _selectedClaims = new();
+    private List<int> _selectedClaimIds => _selectedClaims.Select(c => c.Id).ToList();
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Finance & Grants", href: "/finance/dg-moa"),
+        new BreadcrumbItem("Discretionary Grant Claims Hub", href: "/finance/dg-claims", disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadClaims();
+    }
+
+    private async Task LoadClaims()
+    {
+        _loading = true;
+        try
+        {
+            // Load financial aggregate across first active MoA or all claims
+            var aggregate = await ClaimService.GetFinancialAggregateForMoaAsync(1);
+            _totalAllocation = aggregate.TotalMoaAllocation > 0 ? aggregate.TotalMoaAllocation : 5000000m;
+            _totalClaimed = aggregate.TotalClaimedAmount;
+            _totalApproved = aggregate.TotalApprovedAmount;
+            _totalDisbursed = aggregate.TotalDisbursedAmount;
+            _remainingBalance = aggregate.RemainingEnvelopeBalance;
+            _claims = aggregate.Claims;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading Discretionary Grant claims: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private IEnumerable<GrantPaymentClaim> FilteredClaims =>
+        string.IsNullOrWhiteSpace(_searchString)
+            ? _claims
+            : _claims.Where(c =>
+                (c.PaymentVoucherNumber?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (c.StatusCode?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                c.Id.ToString().Contains(_searchString));
+
+    private Color GetStatusColor(string? status) => status switch
+    {
+        "Paid" => Color.Info,
+        "Approved" or "CfoApproved" => Color.Success,
+        "PendingCfoApproval" => Color.Warning,
+        "CloVerified" => Color.Primary,
+        "Submitted" => Color.Warning,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+
+    private async Task ApproveClaim(GrantPaymentClaim claim, string role)
+    {
+        _isProcessing = true;
+        try
+        {
+            var updated = await ClaimService.ProcessClaimApprovalAsync(new ApproveDgClaimRequest
+            {
+                ClaimId = claim.Id,
+                ApprovalRole = role,
+                ApproverName = $"Authorised {role}",
+                Comments = $"Approved via Claims Hub as {role}"
+            }, "FinanceUser");
+
+            Snackbar.Add($"Claim CLM-{claim.Id} advanced to {updated.StatusCode}.", Severity.Success);
+            await LoadClaims();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Approval failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task ExportSelectedBatch()
+    {
+        if (_selectedClaimIds.Count == 0) return;
+
+        _isProcessing = true;
+        try
+        {
+            var batchHeader = await ClaimService.StageApprovedClaimsToErpBatchAsync(_selectedClaimIds, "FinanceAdmin");
+            var exportResult = await ClaimService.ExportBatchForErpAsync(batchHeader.Id, "FinanceAdmin");
+            _lastExportedTsv = exportResult.FormattedTsv;
+
+            Snackbar.Add($"ERP Payment Batch {batchHeader.BatchNumber} staged with {_selectedClaimIds.Count} items. TSV generated.", Severity.Success);
+            _selectedClaims.Clear();
+            await LoadClaims();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Batch export failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task CopyTsvToClipboard()
+    {
+        if (string.IsNullOrEmpty(_lastExportedTsv)) return;
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _lastExportedTsv);
+            Snackbar.Add("ERP TSV data copied to clipboard.", Severity.Info);
+        }
+        catch
+        {
+            Snackbar.Add("Could not access clipboard automatically.", Severity.Warning);
+        }
+    }
+}

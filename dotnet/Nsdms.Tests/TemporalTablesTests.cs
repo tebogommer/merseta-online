@@ -9,8 +9,18 @@ using Xunit;
 
 namespace Nsdms.Tests;
 
-public class TemporalTablesTests
+public class TemporalTablesTests : IDisposable
 {
+    public TemporalTablesTests()
+    {
+        Environment.SetEnvironmentVariable("ENABLE_EF_TEMPORAL_TABLES", "true");
+    }
+
+    public void Dispose()
+    {
+        Environment.SetEnvironmentVariable("ENABLE_EF_TEMPORAL_TABLES", null);
+    }
+
     private static NsdmsDbContext CreateContext()
     {
         Environment.SetEnvironmentVariable("ENABLE_EF_TEMPORAL_TABLES", "true");

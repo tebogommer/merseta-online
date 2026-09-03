@@ -130,3 +130,131 @@ Every page must pass all 16 items before being declared complete:
 4. **Artisan Mentorship Ratios**: Enforce NAMB / QCTO artisan mentor-to-apprentice ratios via `IMentorRatioPolicyEngine`, respecting trade-specific caps.
 5. **Governance & PFMA Controls**: Adhere to Delegation of Financial Authority (DOFA), Segregation of Duties (Maker-Checker), and non-repudiation audit logging for all approval gates.
 
+---
+
+### 🛡️ Multi-Tenancy Query Filter Resilience Invariant
+1. In `NsdmsDbContext`, always initialize `_tenantProvider` with a guaranteed non-null fallback:
+   `_tenantProvider = tenantProvider ?? new DefaultTenantProvider(null, isAdmin: true);`
+2. Never perform direct null navigation on `_tenantProvider` inside EF Core query filters. Use `_tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || entity.OrganisationId == _tenantProvider.CurrentOrganisationId` with explicit spacing around ` == `.
+3. For background services, bulk batch syncs, and system-level reconciliations, explicitly append `.IgnoreQueryFilters()` when cross-tenant aggregation is required.
+
+---
+
+### 🛡️ High-Volume Primary Key & Audit Invariant
+1. Entities expected to exceed $2.14 \times 10^9$ rows (`LevyFileLine`, `WspTrainingPlan`, and `AuditLog`) must inherit `BaseLongEntity` (`Id` of type `long` / `BIGINT`).
+2. `AuditLog.RecordId` and `IAuditService.LogActionAsync(..., long recordId, ...)` must use `long` to ensure compatibility with both standard `int` and high-volume `long` entities.
+
+---
+
+### 🛡️ Automated Test Isolation & SQL Server Probing Guardrail
+1. Unit and integration tests must never attempt live socket/pipe connections to local SQL Server instances without explicit opt-in environment variables (e.g. `ENABLE_LIVE_SQL_SYNC == "true"`).
+2. Any test that modifies process-level environment flags (e.g. `ENABLE_EF_TEMPORAL_TABLES`) must implement `IDisposable` and clear the flag in `Dispose()` to avoid corrupting subsequent tests executed by the test host.
+
+---
+
+### 🛡️ Statutory DHET SETMIS & SAQA NLRD Flat-File Extract Invariant
+1. **DHET SETMIS Positional Record Lengths**:
+   All 11 statutory flat files must strictly match exact character widths without delimiters:
+   - File 100 (Provider): 799
+   - File 200 (Provider Accreditation): 796
+   - File 304 (Non-NQF Registration): 328
+   - File 400 (Person Demographics): 845
+   - File 401 (Assessor / Moderator): 187
+   - File 500 (Learnership Enrolment): 258
+   - File 501 (Qualification Enrolment): 411
+   - File 502 (Non-NQF Enrolment): 273
+   - File 503 (Unit Standard Assessment): 407
+   - File 505 (Apprenticeship Enrolment): 206
+   - File 506 (Internship Enrolment): 185
+2. **SAQA NLRD Edu.Dex Invariant**:
+   - Supplier Code is always fixed at `599` (MerSETA).
+   - All files must be prepended with a statutory `HEADER599` record padded to the exact file record length:
+     - File 21: 847
+     - File 24: 135
+     - File 25: 791
+     - File 26: 157
+     - File 27: 119
+     - File 28: 143
+     - File 29: 161
+     - File 30: 171
+3. **Double-Write & Digital Security Seal**:
+   Every batch generation must compute a SHA-256 digital security seal over the batch archive, record snapshots in `StatutorySubmissionBatch`, and write to `audit_logs`.
+
+---
+
+### 🛡️ Culture-Invariant ERP & Flat-File Formatting Invariant
+1. In all financial exports, flat-file extracts, and ERP batch generation routines (Dynamics GP, Sage Pastel, SARS, SETMIS, NLRD), always format decimal and currency values with explicit `CultureInfo.InvariantCulture` (`value.ToString("F2", CultureInfo.InvariantCulture)`).
+2. Never rely on default `ToString("F2")` without culture parameters on Windows hosts where the OS culture may be set to South Africa (`en-ZA`) or European locales that output comma `,` decimal separators instead of dot `.`.
+
+---
+
+### 🛡️ WSP Multi-Party Quorum & Dispute Governance Invariant
+1. **Quorum Logic by Employer Size**:
+   - Small employers (< 50 staff): Bipartite Quorum requiring 2 digital attestations (Primary SDF + CEO / Accounting Authority).
+   - Medium/large employers ($\ge$ 50 staff): Tripartite Quorum requiring 3 digital attestations (Primary SDF + Mandated Labour Union Representative + CEO / Accounting Authority).
+2. **Dispute Precedence**:
+   - When a trade union representative lodges a formal labour dispute (`WspDispute`), the submission must transition to `Disputed` and subsequent sign-offs must be blocked until executive mediation is concluded.
+3. **Non-Repudiation Security Seal**:
+   - Every individual sign-off attestation must record an immutable SHA-256 digital security seal combining signer metadata, timestamp, and OTP challenge.
+
+---
+
+### 🛡️ DOFA Discretionary Grant Claim & Payment Voucher Serialization Invariant
+1. **Budget Envelope Protection**:
+   - Every Discretionary Grant tranche claim submission must validate remaining headroom against the parent MoA and PIP total awarded amount (`TotalAwardedAmount - TotalClaimedAmount`). Over-claims must be blocked with explicit domain exceptions.
+2. **Delegation of Financial Authority (DOFA) Chains**:
+   - Tier 1: Client Liaison Officer (CLO) milestone deliverable inspection (`CloVerified`).
+   - Tier 2: Finance Officer banking & tax compliance approval (`Approved` for standard claims).
+   - Tier 3: Mandatory Chief Financial Officer (CFO) sign-off for claims $\ge$ R500,000 (`PendingCfoApproval` -> `CfoApproved`).
+3. **Serialized Payment Vouchers**:
+   - Every approved claim must generate a unique, non-repudiable payment voucher in the format `PV-{yyyy}-DG-{id:D5}` prior to staging into ERP payment batches (`ErpPaymentBatchHeader` / `ErpPaymentBatchEntry`).
+
+---
+
+### 🛡️ ETQA Assessor 3-Year Re-registration & CPD Governance Standard
+1. **Strict 3-Year Statutory Validity Cycle**:
+   - In accordance with SAQA and QCTO ETQA regulations, Assessor and Moderator registration periods must strictly be 3-year cycles (`StartDate` to `StartDate.AddYears(3)`). Never set 5-year expirations.
+2. **Continuous Professional Development (CPD) Threshold**:
+   - Re-registration applications (`AssessorReRegistrationApplication`) require practitioners to record CPD activities (`AssessorCpdActivity`) meeting a minimum statutory threshold of $\ge 30$ points across accredited categories (`IndustryPractice`, `SetaWorkshop`, `PeerModeration`, `CourseAttendance`, `Mentorship`).
+3. **Committee Ratification & Digital Security Seal**:
+   - Re-registration requires an official ETQA Committee Decision Number, non-repudiation audit snapshot in `audit_logs`, and an immutable SHA-256 digital security seal certifying the Certificate of Registration.
+
+---
+
+### 🛡️ QuestPDF Statutory Contract & Dynamic QR Verification Invariant
+1. **Dynamic Verification QR Codes**:
+   - All statutory PDF documents (Tripartite Learnership Agreements, Assessor Certificates of Registration, Trade Test Certificates, WSP Outcome Letters) must render dynamic high-resolution QR codes linking to `/verify/{type}/{reference}` using `IDocumentVerificationService`.
+2. **Visual Government Layout Standards**:
+   - Must include Republic of South Africa and official merSETA header branding, clear tabular sections for statutory entities (Learner, Employer, SDP), and immutable cryptographic hash stamps in footers.
+### 🛡️ UI Button Hierarchy, Anti-Stacking & Spacing Governance Invariant
+1. **Single Primary Action Rule**: Exactly one filled primary action button per page/header. Secondary actions must be outlined/text or grouped inside a `MudMenu` (e.g. *Services*, *More Actions*).
+2. **Zero Rainbow Button Stacks**: Never stack full-width chunky buttons using arbitrary semantic status colors (Success, Warning, Info) for navigation. Use clean `MudList` Action Rails with monochrome icons, sentence-case labels, brief context subtext, and chevron indicators.
+3. **AppShell Padding Invariant**: Never put `Class="pa-*"`, `Class="pt-*"`, or `Class="py-*"` directly on `<MudMainContent>`. Always wrap content inside `<MudMainContent><div class="pa-4 pa-md-6"><main id="main-content">@Body</main></div></MudMainContent>`.
+4. **No Double Container Nesting**: Detail views must not place `<MudContainer MaxWidth="...">` inside `MainLayout`'s `<main>` container; horizontal alignment is governed uniformly by the shell.
+5. **List Status Badge Exclusion**: `EntityHeader` on List (`A1`/`T1`) pages must never render a record `StatusBadge`.
+
+---
+
+### 🛡️ Artisan Practical Assessment 70% Threshold & NAMB Batch Governance
+1. **Compulsory Practical Threshold**:
+   - In accordance with NAMB and QCTO artisan assessment regulations, candidate competency requires achieving $\ge 70\%$ overall average score across evaluated practical tasks and passing all compulsory safety/tolerance items.
+2. **Batch Staging & Serial Anchoring**:
+   - Competent candidates must be staged into official `NambSubmissionBatch` records anchored by a 64-character SHA-256 digital security seal before official NAMB moderation and serial certificate generation (`CERT-NAMB-{yyyy}-{id:D5}`).
+
+---
+
+### 🛡️ SARS Monthly SDL Ingestion & Statutory Ratio Split Standard
+1. **Four-Part Statutory Levy Allocation**:
+   - SARS electronic levy schedule imports must enforce statutory allocations: 20% Mandatory Grant pool, 49.5% Discretionary Grant pool, 10.5% merSETA Admin pool, and 0.5% QCTO levy.
+2. **Automated Inter-SETA Boundary Detection**:
+   - Ingestion must evaluate reported SIC codes against `SicCodeType.SetaCode`. Any non-merSETA (SETA != 17) levy line item must automatically create a `SarsLevyReconAudit` discrepancy and initiate an `InterSetaTransfer`.
+
+---
+
+### 🛡️ SDP Delivery Campus & Practitioner Linking Governance
+1. **Primary Campus Exclusivity**:
+   - Each accredited Skills Development Provider must maintain exactly one primary delivery site (`IsPrimarySite = true`). Marking a campus as primary automatically cascades other campuses of that provider to satellite standing.
+2. **Accredited Assessor/Moderator Relational Integrity**:
+   - Links between SDP delivery sites and accredited practitioners (`TrainingProviderAssessorLink`) must be unique per active role and capture start/termination dates with non-repudiation audit logs.
+
+

@@ -5,7 +5,7 @@ namespace Nsdms.Domain.Entities;
 /// <summary>
 /// Immutable operational audit trail recording entity mutations, actor identity, timestamps, and JSON snapshots.
 /// </summary>
-public class AuditLog : BaseEntity
+public class AuditLog : BaseLongEntity
 {
     /// <summary>
     /// Name of the target domain entity modified (e.g. Organisation, CompanyLearner, GrantMoa).
@@ -13,9 +13,9 @@ public class AuditLog : BaseEntity
     public string EntityName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Primary key integer identifier of the target record.
+    /// Primary key identifier of the target record (64-bit integer supporting high-volume entities).
     /// </summary>
-    public int RecordId { get; set; }
+    public long RecordId { get; set; }
 
     /// <summary>
     /// Specific CRUD or workflow action executed (e.g. Created, Updated, Deleted, StatusChanged, Disbursed).

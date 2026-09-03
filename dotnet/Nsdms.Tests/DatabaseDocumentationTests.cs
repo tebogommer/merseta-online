@@ -152,14 +152,19 @@ public class DatabaseDocumentationTests
     [Fact]
     public async Task SyncExtendedProperties_DirectlyToSqlServerExpress_IfAvailable()
     {
+        if (!string.Equals(Environment.GetEnvironmentVariable("ENABLE_LIVE_SQL_SYNC"), "true", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
         var connectionStrings = new[]
         {
-            "Server=localhost\\SQLEXPRESS;Database=NSDMS-NET;User Id=NSDMS-NET;Password=NSDMS-NET;TrustServerCertificate=True;Encrypt=False;",
-            "Server=.\\SQLEXPRESS;Database=NSDMS-NET;User Id=NSDMS-NET;Password=NSDMS-NET;TrustServerCertificate=True;Encrypt=False;",
-            "Server=localhost;Database=NSDMS-NET;User Id=NSDMS-NET;Password=NSDMS-NET;TrustServerCertificate=True;Encrypt=False;",
-            "Server=localhost\\SQLEXPRESS;Database=NSDMS-NET;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False;",
-            "Server=.\\SQLEXPRESS;Database=NSDMS-NET;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False;",
-            "Server=(localdb)\\mssqllocaldb;Database=NSDMS-NET;Trusted_Connection=True;TrustServerCertificate=True;"
+            "Server=localhost\\SQLEXPRESS;Database=NSDMS-NET;User Id=NSDMS-NET;Password=NSDMS-NET;TrustServerCertificate=True;Encrypt=False;Connect Timeout=2;",
+            "Server=.\\SQLEXPRESS;Database=NSDMS-NET;User Id=NSDMS-NET;Password=NSDMS-NET;TrustServerCertificate=True;Encrypt=False;Connect Timeout=2;",
+            "Server=localhost;Database=NSDMS-NET;User Id=NSDMS-NET;Password=NSDMS-NET;TrustServerCertificate=True;Encrypt=False;Connect Timeout=2;",
+            "Server=localhost\\SQLEXPRESS;Database=NSDMS-NET;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False;Connect Timeout=2;",
+            "Server=.\\SQLEXPRESS;Database=NSDMS-NET;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False;Connect Timeout=2;",
+            "Server=(localdb)\\mssqllocaldb;Database=NSDMS-NET;Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=2;"
         };
 
         var factory = new TestDbContextFactory("DocScriptTest_Sql_" + Guid.NewGuid());

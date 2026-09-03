@@ -59,6 +59,40 @@ public class WspSubmission : BaseEntity
     /// Planned learning interventions and beneficiary targets.
     /// </summary>
     public ICollection<WspTrainingPlan> TrainingPlans { get; set; } = new List<WspTrainingPlan>();
+
+    #region Multi-Party Quorum Signoff Attributes (UI-04 & BE-05)
+
+    /// <summary>
+    /// Indicates whether the constitutional sign-off quorum has been satisfied.
+    /// </summary>
+    public bool IsSignoffQuorumMet { get; set; } = false;
+
+    /// <summary>
+    /// Minimum required distinct signatory roles needed to meet statutory quorum (2 for < 50 staff, 3 for >= 50 staff).
+    /// </summary>
+    public int RequiredSignoffCount { get; set; } = 2;
+
+    /// <summary>
+    /// Total count of completed, OTP-verified signatory attestations recorded.
+    /// </summary>
+    public int CompletedSignoffCount { get; set; } = 0;
+
+    /// <summary>
+    /// SHA-256 digital security seal certifying completion of all requisite multi-party attestations.
+    /// </summary>
+    public string? SignoffDigitalSecuritySeal { get; set; }
+
+    /// <summary>
+    /// Flag indicating whether a formal labour dispute has been lodged against this submission.
+    /// </summary>
+    public bool DisputeLogged { get; set; } = false;
+
+    /// <summary>
+    /// Formal sign-off attestations executed by Primary SDF, Labour Union Rep, and CEO.
+    /// </summary>
+    public ICollection<WspSignoffAttestation> SignoffAttestations { get; set; } = new List<WspSignoffAttestation>();
+
+    #endregion
 }
 
 /// <summary>
@@ -141,7 +175,7 @@ public class LevyFile : BaseEntity
 /// <summary>
 /// Individual employer monthly SARS levy transaction breakdown.
 /// </summary>
-public class LevyFileLine : BaseEntity
+public class LevyFileLine : BaseLongEntity
 {
     /// <summary>
     /// Foreign key referencing the parent LevyFile batch.
@@ -446,4 +480,9 @@ public class EtqaAssessor : BaseEntity
     /// Learner assessment evaluations conducted by this assessor.
     /// </summary>
     public ICollection<LearnerAssessment> Assessments { get; set; } = new List<LearnerAssessment>();
+
+    /// <summary>
+    /// Statutory 3-year re-registration and scope extension applications.
+    /// </summary>
+    public ICollection<AssessorReRegistrationApplication> ReRegistrationApplications { get; set; } = new List<AssessorReRegistrationApplication>();
 }

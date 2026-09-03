@@ -31,6 +31,10 @@ public interface IPdfDocumentService
     // Dynamic Live Simulation PDF Generation
     Task<byte[]> GenerateSimulatedDocumentTemplatePdfAsync(DocumentTemplate template, Dictionary<string, string> tokens, bool includeWatermark = true);
     Task<byte[]> GenerateSimulatedMoaTemplatePdfAsync(MoaTemplate template, Dictionary<string, string> tokens, bool includeWatermark = true);
+
+    // Phase 4: Statutory Contract & Certificate Templates
+    Task<byte[]> GenerateTripartiteAgreementPdfAsync(CompanyLearner learner);
+    Task<byte[]> GenerateAssessorRegistrationCertificatePdfAsync(EtqaAssessor assessor);
 }
 
 public class ErpDisbursementResult
@@ -52,20 +56,4 @@ public interface IErpIntegrationService
     Task<bool> SyncVendorDetailsAsync(int organisationId, string currentUsername = "SYSTEM");
     Task<bool> VerifyBankingDetailsAsync(int organisationId, string currentUsername = "SYSTEM");
     string GetActiveProviderName();
-}
-
-public interface ILearnerLifecycleService
-{
-    Task<CompanyLearnerTransfer> RequestTransferAsync(CompanyLearnerTransfer transfer, string currentUsername = "SYSTEM");
-    Task<CompanyLearnerTransfer> ApproveTransferAsync(int transferId, string comments, string currentUsername = "SYSTEM");
-    Task<CompanyLearnerTransfer> RejectTransferAsync(int transferId, string reason, string currentUsername = "SYSTEM");
-    Task<List<CompanyLearnerTransfer>> GetTransfersByLearnerAsync(int companyLearnerId);
-
-    Task<CompanyLearnerLostTime> RecordLostTimeAsync(CompanyLearnerLostTime lostTime, string currentUsername = "SYSTEM");
-    Task<CompanyLearnerLostTime> ApproveLostTimeAsync(int lostTimeId, string comments, string currentUsername = "SYSTEM");
-    Task<List<CompanyLearnerLostTime>> GetLostTimeByLearnerAsync(int companyLearnerId);
-
-    Task<CompanyLearnerTermination> RequestTerminationAsync(CompanyLearnerTermination termination, string currentUsername = "SYSTEM");
-    Task<CompanyLearnerTermination> ApproveTerminationAsync(int terminationId, string comments, string currentUsername = "SYSTEM");
-    Task<List<CompanyLearnerTermination>> GetTerminationsByLearnerAsync(int companyLearnerId);
 }

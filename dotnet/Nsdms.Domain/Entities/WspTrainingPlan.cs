@@ -5,7 +5,7 @@ namespace Nsdms.Domain.Entities;
 /// <summary>
 /// Planned learning and development interventions submitted in the annual Workplace Skills Plan.
 /// </summary>
-public class WspTrainingPlan : BaseEntity
+public class WspTrainingPlan : BaseLongEntity
 {
     /// <summary>
     /// Foreign key referencing the parent WspSubmission.

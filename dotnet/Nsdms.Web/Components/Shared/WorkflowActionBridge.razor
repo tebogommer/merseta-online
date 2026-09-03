@@ -63,12 +63,25 @@
             }
             else if (!_instance.IsCompleted && _availableTransitions.Any())
             {
-                @foreach (var transition in _availableTransitions.OrderByDescending(t => !t.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) && !t.ActionName.Contains("Decline", StringComparison.OrdinalIgnoreCase)))
+                var sortedTransitions = _availableTransitions
+                    .OrderByDescending(t => !t.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) && !t.ActionName.Contains("Decline", StringComparison.OrdinalIgnoreCase))
+                    .ThenByDescending(t => t.ActionName.Contains("Approve", StringComparison.OrdinalIgnoreCase) || t.ActionName.Contains("Recommend", StringComparison.OrdinalIgnoreCase) || t.ActionName.Contains("Submit", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                var hasAssignedPrimary = false;
+
+                @foreach (var transition in sortedTransitions)
                 {
                     var isReject = transition.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) || transition.ActionName.Contains("Decline", StringComparison.OrdinalIgnoreCase);
                     var icon = GetTransitionIcon(transition);
-                    <MudButton Variant="@(isReject ? Variant.Outlined : Variant.Filled)"
-                               Color="@(isReject ? Color.Error : Color.Primary)"
+                    var isPrimary = !isReject && !hasAssignedPrimary;
+                    if (isPrimary)
+                    {
+                        hasAssignedPrimary = true;
+                    }
+
+                    <MudButton Variant="@(isPrimary ? Variant.Filled : Variant.Outlined)"
+                               Color="@(isReject ? Color.Error : (isPrimary ? Color.Primary : Color.Default))"
                                Size="Size.Medium"
                                StartIcon="@icon"
                                Disabled="@_isProcessing"

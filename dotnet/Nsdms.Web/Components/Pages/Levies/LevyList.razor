@@ -28,7 +28,15 @@
 @if (_showImportDialog)
 {
     <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
-        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Import Monthly SARS SDL Levy File</MudText>
+        <div class="d-flex justify-space-between align-center mb-3">
+            <div>
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Electronic SARS Monthly SDL File Importer & Recon Engine</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Ingest official SARS fixed-width or delimited levy schedule files with automated 20% Mandatory & 49.5% Discretionary split</MudText>
+            </div>
+            <MudButton Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small" StartIcon="@Icons.Material.Filled.ContentPaste" OnClick="LoadSampleSarsData">
+                Load Sample SARS Stream
+            </MudButton>
+        </div>
         <MudGrid>
             <MudItem xs="12" md="6">
                 <MudTextField T="string" Label="SARS Data File Name" Required="true" @bind-Value="_newFile.FileName" Variant="Variant.Outlined" Placeholder="e.g. SARS_SDL_2026_M04.dat" />
@@ -36,18 +44,51 @@
             <MudItem xs="12" md="6">
                 <MudTextField T="string" Label="SARS Transmission Reference" @bind-Value="_newFile.FileRef" Variant="Variant.Outlined" Placeholder="e.g. SARS-202604-01" />
             </MudItem>
-            <MudItem xs="12" md="4">
-                <MudDatePicker Label="Import Date" @bind-Date="_importDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+            <MudItem xs="12">
+                <MudTextField T="string"
+                              Label="Raw SARS File Content (Paste text, CSV, or fixed-width lines)"
+                              Lines="5"
+                              Variant="Variant.Outlined"
+                              @bind-Value="_rawFileContent"
+                              TextChanged="OnRawContentChanged"
+                              Placeholder="SDL_NO|SCHEME_YEAR|TOTAL_AMOUNT|MANDATORY|DISCRETIONARY|ADMIN|INTEREST|PENALTY|SIC_CODE" />
             </MudItem>
-            <MudItem xs="12" md="4">
-                <MudNumericField T="int" Label="Initial Record Count" @bind-Value="_newFile.TotalRecords" Variant="Variant.Outlined" Min="0" />
-            </MudItem>
-            <MudItem xs="12" md="4">
-                <MudNumericField T="decimal" Label="Total File Value (ZAR)" @bind-Value="_newFile.TotalAmount" Variant="Variant.Outlined" Format="N2" Min="0" />
-            </MudItem>
-            <MudItem xs="12" Class="d-flex justify-end gap-2">
+
+            @if (_parsedPreviewLines.Any())
+            {
+                <MudItem xs="12">
+                    <MudPaper Elevation="0" Class="pa-3 rounded-lg border-dashed" Style="background-color: var(--mud-palette-background-grey);">
+                        <div class="d-flex justify-space-between align-center mb-2">
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold text-primary">Pre-Ingestion Statutory Split Preview (@_parsedPreviewLines.Count Line Items)</MudText>
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Valid Syntax</MudChip>
+                        </div>
+                        <MudGrid Spacing="2">
+                            <MudItem xs="6" md="3">
+                                <MudText Typo="Typo.caption">Total SARS Collection</MudText>
+                                <MudText Typo="Typo.body2" Class="font-weight-bold text-success">@(_parsedPreviewLines.Sum(l => l.TotalLevyAmount).ToString("C"))</MudText>
+                            </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudText Typo="Typo.caption">20% Mandatory Pool</MudText>
+                                <MudText Typo="Typo.body2" Class="font-weight-bold">@(_parsedPreviewLines.Sum(l => l.MandatoryLevyAmount).ToString("C"))</MudText>
+                            </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudText Typo="Typo.caption">49.5% Discretionary Pool</MudText>
+                                <MudText Typo="Typo.body2" Class="font-weight-bold">@(_parsedPreviewLines.Sum(l => l.DiscretionaryLevyAmount).ToString("C"))</MudText>
+                            </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudText Typo="Typo.caption">10.5% Admin Pool</MudText>
+                                <MudText Typo="Typo.body2" Class="font-weight-bold">@(_parsedPreviewLines.Sum(l => l.AdminLevyAmount).ToString("C"))</MudText>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                </MudItem>
+            }
+
+            <MudItem xs="12" Class="d-flex justify-end gap-2 mt-2">
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="@(() => _showImportDialog = false)">Cancel</MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Check" OnClick="SubmitImportBatch">Confirm Batch Import</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Check" OnClick="SubmitImportBatch" Disabled="_isImporting">
+                    @(_isImporting ? "Processing Recon..." : "Commit Ingestion & Reconcile")
+                </MudButton>
             </MudItem>
         </MudGrid>
     </MudCard>
@@ -204,18 +245,51 @@
         NavManager.NavigateTo($"/levies/{id}");
     }
 
+    private string _rawFileContent = string.Empty;
+    private List<LevyFileLine> _parsedPreviewLines = new();
+    private bool _isImporting = false;
+
     private void OpenImportBatch()
     {
         _newFile = new LevyFile
         {
             FileName = $"SARS_SDL_{DateTime.UtcNow:yyyyMM}_BATCH.dat",
             FileRef = $"SARS-{DateTime.UtcNow:yyyyMM}-{new Random().Next(1000, 9999)}",
-            StatusCode = "IMPORTED",
-            TotalRecords = 1,
-            TotalAmount = 750000m
+            StatusCode = "IMPORTED"
         };
         _importDate = DateTime.Today;
+        _rawFileContent = string.Empty;
+        _parsedPreviewLines.Clear();
         _showImportDialog = true;
+    }
+
+    private void LoadSampleSarsData()
+    {
+        var year = DateTime.UtcNow.Year.ToString();
+        _rawFileContent = $"# merSETA Official Monthly SDL SARS Test Schedule\r\n" +
+            $"L102938475|{year}|150000.00|30000.00|74250.00|15750.00|0.00|0.00|35100\r\n" +
+            $"L293847561|{year}|250000.00|50000.00|123750.00|26250.00|1250.00|500.00|35200\r\n" +
+            $"L384756192|{year}|420000.00|84000.00|207900.00|44100.00|0.00|0.00|35300\r\n" +
+            $"L475619283|{year}|80000.00|16000.00|39600.00|8400.00|0.00|0.00|35400";
+        OnRawContentChanged(_rawFileContent);
+    }
+
+    private void OnRawContentChanged(string content)
+    {
+        _rawFileContent = content;
+        try
+        {
+            _parsedPreviewLines = LevyService.ParseSarsFileContent(content);
+            if (_parsedPreviewLines.Any())
+            {
+                _newFile.TotalRecords = _parsedPreviewLines.Count;
+                _newFile.TotalAmount = _parsedPreviewLines.Sum(l => l.TotalLevyAmount);
+            }
+        }
+        catch
+        {
+            _parsedPreviewLines.Clear();
+        }
     }
 
     private async Task SubmitImportBatch()
@@ -227,11 +301,22 @@
         }
 
         _newFile.ImportDate = _importDate ?? DateTime.UtcNow;
+        _isImporting = true;
 
         try
         {
-            var saved = await LevyService.CreateAsync(_newFile, "Admin");
-            Snackbar.Add($"SARS Levy File '{saved.FileName}' imported successfully.", Severity.Success);
+            LevyFile saved;
+            if (!string.IsNullOrWhiteSpace(_rawFileContent) && _parsedPreviewLines.Any())
+            {
+                saved = await LevyService.ImportLevyFileAsync(_newFile.FileName, _rawFileContent, "Admin");
+                Snackbar.Add($"SARS Levy File '{saved.FileName}' imported and reconciled with {_parsedPreviewLines.Count} line items.", Severity.Success);
+            }
+            else
+            {
+                saved = await LevyService.CreateAsync(_newFile, "Admin");
+                Snackbar.Add($"SARS Levy File '{saved.FileName}' created successfully.", Severity.Success);
+            }
+
             _showImportDialog = false;
             await LoadData();
             NavManager.NavigateTo($"/levies/{saved.Id}");
@@ -239,6 +324,10 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Error importing batch: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isImporting = false;
         }
     }
 

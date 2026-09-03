@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-01 22:05:00 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 171
+> **Generated:** 2026-09-03 09:21:49 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 182
 
 ---
 
@@ -21,13 +21,16 @@
 | `dbo` | [`ArplExperienceDetail`](#arplexperiencedetail) | `ArplExperienceDetail` | 12 | `Id` | Historical work experience item claimed under ARPL. |
 | `dbo` | [`ArplTradeTestInformation`](#arpltradetestinformation) | `ArplTradeTestInformation` | 17 | `Id` | Artisan Recognition of Prior Learning (ARPL) Portfolio Assessment record. |
 | `dbo` | [`ArplTrainingDetail`](#arpltrainingdetail) | `ArplTrainingDetail` | 10 | `Id` | Prior formal or non-formal training modules completed by an ARPL candidate. |
+| `dbo` | [`AssessorCpdActivity`](#assessorcpdactivity) | `AssessorCpdActivity` | 12 | `Id` | Individual Continuous Professional Development (CPD) activity logged in support of practitioner renewal. |
 | `dbo` | [`AssessorExtensionOfScope`](#assessorextensionofscope) | `AssessorExtensionOfScope` | 16 | `Id` | System entity for AssessorExtensionOfScope data governance. |
 | `dbo` | [`AssessorModeratorApplication`](#assessormoderatorapplication) | `AssessorModeratorApplication` | 12 | `Id` | Assessor and Moderator Accreditation Application. |
 | `dbo` | [`AssessorModeratorScope`](#assessormoderatorscope) | `AssessorModeratorScope` | 10 | `Id` | Specific SAQA qualification registration scope granted to an ETQA Assessor or Moderator. |
+| `dbo` | [`AssessorReRegistrationApplication`](#assessorreregistrationapplication) | `AssessorReRegistrationApplication` | 19 | `Id` | Represents a statutory 3-year re-registration or scope extension application for ETQA registered Assessors and Moderators. |
 | `dbo` | [`AuditLog`](#auditlog) | `AuditLog` | 11 | `Id` | Immutable operational audit trail recording entity mutations, actor identity, timestamps, and JSON snapshots. |
 | `dbo` | [`BankingDetails`](#bankingdetails) | `BankingDetails` | 34 | `Id` | System entity for BankingDetails data governance. |
 | `dbo` | [`BankingDetailsAudit`](#bankingdetailsaudit) | `BankingDetailsAudit` | 8 | `Id` | System entity for BankingDetailsAudit data governance. |
 | `dbo` | [`CompanyLearner`](#companylearner) | `CompanyLearner` | 43 | `Id` | Represents a learner registration agreement linked to an employer organisation, training provider, and MerSETA learning programme, capturing all statutory fields for SETMIS Files 500, 501, 502, and 506. |
+| `dbo` | [`CompanyLearnerChangeRequest`](#companylearnerchangerequest) | `CompanyLearnerChangeRequest` | 16 | `Id` | Formal change request for amending an active registered CompanyLearner contract or demographic details. |
 | `dbo` | [`CompanyLearnerLostTime`](#companylearnerlosttime) | `CompanyLearnerLostTime` | 16 | `Id` | Tracks suspended or lost training time and recalculates revised contract end dates. |
 | `dbo` | [`CompanyLearnerTermination`](#companylearnertermination) | `CompanyLearnerTermination` | 15 | `Id` | Manages formal bilateral or unilateral cancellation of learner contracts. |
 | `dbo` | [`CompanyLearnerTransfer`](#companylearnertransfer) | `CompanyLearnerTransfer` | 15 | `Id` | Tracks transfer of an active learner contract from one employer to another. |
@@ -43,6 +46,8 @@
 | `dbo` | [`DocumentTemplate`](#documenttemplate) | `DocumentTemplate` | 20 | `Id` | Universal enterprise document template for statutory letters, certificates, agreements, and notices. |
 | `dbo` | [`DocumentTemplateSection`](#documenttemplatesection) | `DocumentTemplateSection` | 12 | `Id` | Ordered section mapping a reusable clause to a document template. |
 | `dbo` | [`EisaAssessmentEntry`](#eisaassessmententry) | `EisaAssessmentEntry` | 15 | `Id` | External Integrated Summative Assessment (EISA) exam entry for QCTO occupational qualifications. |
+| `dbo` | [`ErpPaymentBatchEntry`](#erppaymentbatchentry) | `ErpPaymentBatchEntry` | 17 | `Id` | Individual line item voucher within an ERP payment batch. |
+| `dbo` | [`ErpPaymentBatchHeader`](#erppaymentbatchheader) | `ErpPaymentBatchHeader` | 14 | `Id` | ERP Payment Batch Header for staging mandatory/discretionary grant disbursements to Dynamics GP / Sage. |
 | `dbo` | [`EtqaAssessor`](#etqaassessor) | `EtqaAssessor` | 17 | `Id` | Registered ETQA Assessors and Moderators with approved qualification scopes, capturing all statutory fields required for SETMIS File 401 (Person Designation) reporting. |
 | `dbo` | [`FinancialApprovalThreshold`](#financialapprovalthreshold) | `FinancialApprovalThreshold` | 12 | `Id` | Represents a tiered financial delegation limit (DoA) enforcing role-based threshold caps on grants and disbursements. |
 | `dbo` | [`FundingWindowPriority`](#fundingwindowpriority) | `FundingWindowPriority` | 12 | `Id` | Gazetted Strategic Priority sub-budget envelope and beneficiary quota allocated to a Discretionary Grant Funding Window. |
@@ -50,13 +55,13 @@
 | `dbo` | [`GrantFundingWindow`](#grantfundingwindow) | `GrantFundingWindow` | 13 | `Id` | Gazette-announced Discretionary Grant funding window opening and allocation cycle. |
 | `dbo` | [`GrantMoa`](#grantmoa) | `GrantMoa` | 16 | `Id` | Memorandum of Agreement (MOA) for approved Discretionary Grants. |
 | `dbo` | [`GrantMoaMilestone`](#grantmoamilestone) | `GrantMoaMilestone` | 17 | `Id` | Delivery milestones linked to MOA tranches. |
-| `dbo` | [`GrantPaymentClaim`](#grantpaymentclaim) | `GrantPaymentClaim` | 14 | `Id` | Milestone-based Payment Claim against a Project Implementation Plan. |
+| `dbo` | [`GrantPaymentClaim`](#grantpaymentclaim) | `GrantPaymentClaim` | 23 | `Id` | Milestone-based Payment Claim against a Project Implementation Plan. |
 | `dbo` | [`GrantProjectBudget`](#grantprojectbudget) | `GrantProjectBudget` | 12 | `Id` | Detailed cost item and financial budget breakdown submitted in a Discretionary Grant application. |
 | `dbo` | [`GrantTranchePayment`](#granttranchepayment) | `GrantTranchePayment` | 19 | `Id` | Tranche Invoices and Payment Requisitions. |
 | `dbo` | [`InterSetaTransfer`](#intersetatransfer) | `InterSetaTransfer` | 16 | `Id` | Inter-SETA Transfer of employer registration and levy funds between SETAs. |
 | `dbo` | [`LearnerAssessment`](#learnerassessment) | `LearnerAssessment` | 30 | `Id` | Formative and summative learning programme unit standard assessment evaluations, capturing all statutory fields required for SETMIS File 503 (Unit Standard Enrolment) reporting. |
 | `dbo` | [`LearnerTradeTest`](#learnertradetest) | `LearnerTradeTest` | 28 | `Id` | Trade test final competency evaluation and artisan certification attempt records (ARPL & standard), fully normalized with statutory columns required for SETMIS File 505 (Trade Test) reporting. |
-| `dbo` | [`LearnerTradeTestApplication`](#learnertradetestapplication) | `LearnerTradeTestApplication` | 32 | `Id` | Artisan Trade Test Application and Assessment Record (Section 26D / Section 28 ARPL / Apprenticeships). |
+| `dbo` | [`LearnerTradeTestApplication`](#learnertradetestapplication) | `LearnerTradeTestApplication` | 33 | `Id` | Artisan Trade Test Application and Assessment Record (Section 26D / Section 28 ARPL / Apprenticeships). |
 | `dbo` | [`LevyFile`](#levyfile) | `LevyFile` | 11 | `Id` | Monthly SARS Skills Development Levy file import batches. |
 | `dbo` | [`LevyFileLine`](#levyfileline) | `LevyFileLine` | 21 | `Id` | Individual employer monthly SARS levy transaction breakdown. |
 | `dbo` | [`MandatoryGrantDisbursement`](#mandatorygrantdisbursement) | `MandatoryGrantDisbursement` | 17 | `Id` | Mandatory Grant 20% Rebate Payouts for compliant employers submitting WSP/ATR. |
@@ -65,6 +70,7 @@
 | `dbo` | [`MoaTemplate`](#moatemplate) | `MoaTemplate` | 17 | `Id` | Master legal template defining an MoA contract structure for a specific financial year and grant policy. |
 | `dbo` | [`MoaTemplateSection`](#moatemplatesection) | `MoaTemplateSection` | 12 | `Id` | Ordered section mapping a reusable clause into a specific MoA template with custom numbering and conditions. |
 | `dbo` | [`NambDecisionHistory`](#nambdecisionhistory) | `NambDecisionHistory` | 12 | `Id` | National Artisan Moderation Body (NAMB) adjudication trace and serial assignment log. |
+| `dbo` | [`NambSubmissionBatch`](#nambsubmissionbatch) | `NambSubmissionBatch` | 15 | `Id` | Represents a formal National Artisan Moderation Body (NAMB) moderation and serial allocation submission batch. |
 | `dbo` | [`NonSetaCompany`](#nonsetacompany) | `NonSetaCompany` | 13 | `Id` | Non-SETA External Employer / Organisation registered with other Quality Councils / SETAs. |
 | `dbo` | [`NonSetaQualificationsCompletion`](#nonsetaqualificationscompletion) | `NonSetaQualificationsCompletion` | 19 | `Id` | Cross-SETA Qualification & TVET College Achievement Verification for merSETA articulation. |
 | `dbo` | [`Organisation`](#organisation) | `Organisation` | 44 | `Id` | Registered employer, host workplace, or skills development entity under MerSETA jurisdiction, fully normalized with statutory columns required for SETMIS File 100 and File 200 reporting. |
@@ -72,7 +78,7 @@
 | `dbo` | [`OrganisationSite`](#organisationsite) | `OrganisationSite` | 25 | `Id` | Operational branch facility, plant, or training site belonging to an Employer Organisation, supporting multi-site mapping and GPS geolocation for SETMIS File 200 reporting. |
 | `dbo` | [`Person`](#person) | `Person` | 47 | `Id` | Core demographic profile storing individual identity, SA ID/Passport, Washington Group functioning, POPIA compliance, educational background, and contact details for SETMIS statutory reporting. |
 | `dbo` | [`PipLearnerAllocation`](#piplearnerallocation) | `PipLearnerAllocation` | 12 | `Id` | Breakdown of awarded learner interventions and allowance budgets in a PIP. |
-| `dbo` | [`ProjectImplementationPlan`](#projectimplementationplan) | `ProjectImplementationPlan` | 16 | `Id` | Discretionary Grant Project Implementation Plan (PIP) and contracting governance. |
+| `dbo` | [`ProjectImplementationPlan`](#projectimplementationplan) | `ProjectImplementationPlan` | 17 | `Id` | Discretionary Grant Project Implementation Plan (PIP) and contracting governance. |
 | `dbo` | [`QualificationsCurriculumDevelopment`](#qualificationscurriculumdevelopment) | `QualificationsCurriculumDevelopment` | 31 | `Id` | Qualifications Curriculum Development (QCD) Application for QCTO Occupational Qualifications and Realignment. |
 | `dbo` | [`ReviewCommitteeMeeting`](#reviewcommitteemeeting) | `ReviewCommitteeMeeting` | 15 | `Id` | Executive & ETQA Review Committee / MANCO Governance Meeting. |
 | `dbo` | [`ReviewCommitteeMeetingAgenda`](#reviewcommitteemeetingagenda) | `ReviewCommitteeMeetingAgenda` | 16 | `Id` | Specific agenda item submitted for committee adjudication or voting resolution. |
@@ -86,6 +92,8 @@
 | `dbo` | [`SdpScopeExtensionApplication`](#sdpscopeextensionapplication) | `SdpScopeExtensionApplication` | 12 | `Id` | Skills Development Provider (SDP) Scope Extension Application. |
 | `dbo` | [`SkillsRegistration`](#skillsregistration) | `SkillsRegistration` | 17 | `Id` | Skills Programme / Part-Qualification Curriculum Registration, capturing all statutory fields required for SETMIS File 304 (Non NQF Intervention) reporting. |
 | `dbo` | [`StatementOfResults`](#statementofresults) | `StatementOfResults` | 14 | `Id` | Formal merSETA Statement of Results (SOR) document record with cryptographic tamper-proof hash. |
+| `dbo` | [`StatutoryBatchFile`](#statutorybatchfile) | `StatutoryBatchFile` | 16 | `Id` | Individual fixed-width data file generated within a statutory batch. |
+| `dbo` | [`StatutorySubmissionBatch`](#statutorysubmissionbatch) | `StatutorySubmissionBatch` | 18 | `Id` | Represents a statutory submission batch run for DHET SETMIS or SAQA NLRD. |
 | `dbo` | [`StrategicPriority`](#strategicpriority) | `StrategicPriority` | 13 | `Id` | Statutory Strategic Priorities, Key Focus Areas, and Sector Skills Plan (SSP) Themes mapped to National Skills Development Plan (NSDP III) Outcomes and Strategic Infrastructure Projects (SIPs). |
 | `dbo` | [`SummativeAssessmentReport`](#summativeassessmentreport) | `SummativeAssessmentReport` | 26 | `Id` | Comprehensive Summative Assessment Report capturing unit standard credits, EISA exams, and moderation outcomes. |
 | `dbo` | [`SummativeAssessmentUnitStandard`](#summativeassessmentunitstandard) | `SummativeAssessmentUnitStandard` | 16 | `Id` | Unit Standard credit assessment and moderation outcome line item. |
@@ -97,6 +105,8 @@
 | `dbo` | [`TrainingCommittee`](#trainingcommittee) | `TrainingCommittee` | 10 | `Id` | Employer Workplace Training Committee constituted per statutory merSETA guidelines. |
 | `dbo` | [`TrainingCommitteeMember`](#trainingcommitteemember) | `TrainingCommitteeMember` | 10 | `Id` | Individual Union and Employer representatives on a Training Committee. |
 | `dbo` | [`TrainingProvider`](#trainingprovider) | `TrainingProvider` | 25 | `Id` | Accredited Skills Development Provider (SDP) offering registered occupational qualifications and skills programmes, capturing all statutory fields required for SETMIS File 100 reporting. |
+| `dbo` | [`TrainingProviderAssessorLink`](#trainingproviderassessorlink) | `TrainingProviderAssessorLink` | 13 | `Id` | Relational binding between an accredited ETQA Assessor/Moderator and an SDP delivery campus. |
+| `dbo` | [`TrainingProviderCampus`](#trainingprovidercampus) | `TrainingProviderCampus` | 18 | `Id` | Physical training site or delivery campus belonging to an accredited Skills Development Provider (SDP). |
 | `dbo` | [`TrainingProviderQualification`](#trainingproviderqualification) | `TrainingProviderQualification` | 11 | `Id` | Registered SAQA qualification delivery scope accredited to a Training Provider. |
 | `dbo` | [`TrainingProviderUnitStandard`](#trainingproviderunitstandard) | `TrainingProviderUnitStandard` | 10 | `Id` | Registered SAQA unit standard accredited for delivery by a Training Provider. |
 | `dbo` | [`Visit`](#visit) | `Visit` | 14 | `Id` | On-site monitoring, workplace inspection, and employer liaison visits scheduled and executed by MerSETA staff. |
@@ -120,10 +130,11 @@
 | `dbo` | [`WorkplaceMonitoringSiteVisit`](#workplacemonitoringsitevisit) | `WorkplaceMonitoringSiteVisit` | 21 | `Id` | Comprehensive Workplace Monitoring and Quality Assurance Site Visit. |
 | `dbo` | [`WspDispute`](#wspdispute) | `WspDispute` | 13 | `Id` | Dispute logged regarding Workplace Skills Plan (WSP) approval or committee sign-off. |
 | `dbo` | [`WspEmploymentSummary`](#wspemploymentsummary) | `WspEmploymentSummary` | 18 | `Id` | Employment profile demographic breakdown by occupational category (SETMIS Form 500). |
+| `dbo` | [`WspSignoffAttestation`](#wspsignoffattestation) | `WspSignoffAttestation` | 20 | `Id` | Cryptographically sealed attestation for WSP/ATR multi-party sign-off (SDF, Labour Union, CEO). |
 | `dbo` | [`WspSkillsGap`](#wspskillsgap) | `WspSkillsGap` | 11 | `Id` | Critical and Scarce Skills Gap identified during WSP compilation. |
 | `dbo` | [`WspStrategicPriority`](#wspstrategicpriority) | `WspStrategicPriority` | 11 | `Id` | Strategic priorities and alignment with National Skills Development Plan (NSDP) goals in WSP submissions. |
 | `dbo` | [`WspStrategicSkillsGap`](#wspstrategicskillsgap) | `WspStrategicSkillsGap` | 15 | `Id` | Captures identified organizational skills gaps, root causes, and targeted interventions for WSP/ATR submissions. |
-| `dbo` | [`WspSubmission`](#wspsubmission) | `WspSubmission` | 12 | `Id` | Mandatory Grant Workplace Skills Plan (WSP) and Annual Training Report (ATR) submissions. |
+| `dbo` | [`WspSubmission`](#wspsubmission) | `WspSubmission` | 17 | `Id` | Mandatory Grant Workplace Skills Plan (WSP) and Annual Training Report (ATR) submissions. |
 | `dbo` | [`WspTrainingImpactSurvey`](#wsptrainingimpactsurvey) | `WspTrainingImpactSurvey` | 11 | `Id` | Qualitative training impact questionnaire evaluating the business effectiveness of previous year training. |
 | `dbo` | [`WspTrainingPlan`](#wsptrainingplan) | `WspTrainingPlan` | 10 | `Id` | Planned learning and development interventions submitted in the annual Workplace Skills Plan. |
 | `lookup` | [`AbetBandType`](#abetbandtype) | `AbetBandType` | 8 | `Code` | NLRD Adult Basic Education and Training Band classifications (Field: ABET_BAND_ID - 1 to 5). |
@@ -393,13 +404,13 @@
 | `CertificateNumber` | `nvarchar(max)` | NULL |  | Domain property for CertificateNumber. |
 | `CompanyLearnerId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `EisaExamSession` | `nvarchar(100)` | **NOT NULL** |  | Domain property for EisaExamSession. |
 | `FinalOverallPercentage` | `decimal(18,2)` | **NOT NULL** |  | Domain property for FinalOverallPercentage. |
 | `ModerationStatusCode` | `nvarchar(max)` | **NOT NULL** |  | Domain property for ModerationStatusCode. |
 | `ModeratorComments` | `nvarchar(max)` | NULL |  | Domain property for ModeratorComments. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PersonId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `PracticalScorePercentage` | `decimal(18,2)` | NULL |  | Domain property for PracticalScorePercentage. |
 | `ResultStatusCode` | `nvarchar(max)` | **NOT NULL** |  | Domain property for ResultStatusCode. |
@@ -441,11 +452,11 @@
 | `AqpName` | `nvarchar(200)` | **NOT NULL** |  | Domain property for AqpName. |
 | `ContactPersonId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Email` | `nvarchar(max)` | NULL |  | Primary email address. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active and operational. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PhoneNumber` | `nvarchar(max)` | NULL |  | Primary contact telephone number. |
 | `PhysicalAddress` | `nvarchar(max)` | NULL |  | Domain property for PhysicalAddress. |
 | `PostalCode` | `nvarchar(max)` | NULL |  | Domain property for PostalCode. |
@@ -482,11 +493,11 @@
 | `AqpPartnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `AssessmentModel` | `nvarchar(max)` | **NOT NULL** |  | Domain property for AssessmentModel. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `CurriculumCode` | `nvarchar(max)` | NULL |  | Domain property for CurriculumCode. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active and operational. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NqfLevel` | `int` | **NOT NULL** |  | Domain property for NqfLevel. |
 | `QualificationTitle` | `nvarchar(250)` | **NOT NULL** |  | Domain property for QualificationTitle. |
 | `SaqaQualificationId` | `nvarchar(max)` | NULL |  | Domain property for SaqaQualificationId. |
@@ -517,15 +528,15 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DutiesDescription` | `nvarchar(max)` | **NOT NULL** |  | Domain property for DutiesDescription. |
 | `EmployerName` | `nvarchar(200)` | **NOT NULL** |  | Domain property for EmployerName. |
 | `EndDate` | `datetime2` | NULL |  | Domain property for EndDate. |
 | `EvidenceDocumentName` | `nvarchar(max)` | NULL |  | Domain property for EvidenceDocumentName. |
 | `JobTitle` | `nvarchar(150)` | **NOT NULL** |  | Domain property for JobTitle. |
 | `LearnerTradeTestApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `StartDate` | `datetime2` | **NOT NULL** |  | Domain property for StartDate. |
 
 #### Foreign Key Constraints
@@ -555,13 +566,13 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ArplRecommendation` | `nvarchar(100)` | **NOT NULL** |  | Domain property for ArplRecommendation. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `CurrentEmployerName` | `nvarchar(max)` | NULL |  | Domain property for CurrentEmployerName. |
 | `EmployerContactPersonName` | `nvarchar(max)` | NULL |  | Domain property for EmployerContactPersonName. |
 | `EmployerContactPhone` | `nvarchar(max)` | NULL |  | Domain property for EmployerContactPhone. |
 | `LearnerTradeTestApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PortfolioAssessmentDate` | `datetime2` | NULL |  | Domain property for PortfolioAssessmentDate. |
 | `PortfolioAssessorUserId` | `nvarchar(max)` | NULL |  | Domain property for PortfolioAssessorUserId. |
 | `PortfolioOfEvidenceVerified` | `bit` | **NOT NULL** |  | Domain property for PortfolioOfEvidenceVerified. |
@@ -599,11 +610,11 @@
 | `CompletionDate` | `datetime2` | NULL |  | Domain property for CompletionDate. |
 | `CourseOrModuleTitle` | `nvarchar(200)` | **NOT NULL** |  | Domain property for CourseOrModuleTitle. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `InstitutionName` | `nvarchar(200)` | **NOT NULL** |  | Domain property for InstitutionName. |
 | `LearnerTradeTestApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 
 #### Foreign Key Constraints
 
@@ -616,6 +627,44 @@
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
 | `IX_ArplTrainingDetail_LearnerTradeTestApplicationId` | `LearnerTradeTestApplicationId` | No |
+
+---
+
+### <a id="assessorcpdactivity"></a> `dbo.AssessorCpdActivity`
+
+**Description:** Individual Continuous Professional Development (CPD) activity logged in support of practitioner renewal.  
+**CLR Model:** `Nsdms.Domain.Entities.AssessorCpdActivity`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ActivityCategory` | `nvarchar(50)` | **NOT NULL** |  | Activity category code (IndustryPractice, SetaWorkshop, PeerModeration, CourseAttendance, Mentorship). |
+| `ActivityDate` | `datetime2` | **NOT NULL** |  | Date when the CPD activity was undertaken. |
+| `ActivityTitle` | `nvarchar(200)` | **NOT NULL** |  | Title or description of the training, moderation workshop, or industry practice. |
+| `AssessorReRegistrationApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent renewal application. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `EvidenceDocumentRef` | `nvarchar(250)` | NULL |  | Supporting certificate or document file reference. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PointsApproved` | `int` | **NOT NULL** |  | Number of CPD points officially accredited by the ETQA evaluator. |
+| `PointsClaimed` | `int` | **NOT NULL** |  | Number of CPD points claimed by the applicant. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_AssessorCpdActivity_AssessorReRegistrationApplication_AssessorReRegistrationApplicationId` | `AssessorReRegistrationApplicationId` | `dbo.AssessorReRegistrationApplication` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AssessorCpdActivity_ActivityCategory` | `ActivityCategory` | No |
+| `IX_AssessorCpdActivity_AssessorReRegistrationApplicationId` | `AssessorReRegistrationApplicationId` | No |
 
 ---
 
@@ -676,10 +725,10 @@
 | `ApplicationTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for ApplicationTypeCode. |
 | `CertificateNumber` | `nvarchar(50)` | NULL |  | Domain property for CertificateNumber. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `ExpiryDate` | `datetime2` | NULL |  | Domain property for ExpiryDate. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `ReviewCommitteeMeetingAgendaId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `StatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current lifecycle state code in the workflow engine. |
@@ -713,11 +762,11 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `EtqaAssessorId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent EtqaAssessor. |
 | `ExpiryDate` | `datetime2` | NULL |  | Validity expiration date of this qualification scope. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `QualificationTitle` | `nvarchar(200)` | **NOT NULL** |  | Title of the registered qualification in scope. |
 | `RegistrationStatusCode` | `nvarchar(15)` | NULL |  | Registration status of this specific scope (e.g. Registered, Expired, Suspended). |
 | `SaqaQualificationId` | `int` | **NOT NULL** |  | SAQA Registered Qualification ID code. |
@@ -738,6 +787,52 @@
 
 ---
 
+### <a id="assessorreregistrationapplication"></a> `dbo.AssessorReRegistrationApplication`
+
+**Description:** Represents a statutory 3-year re-registration or scope extension application for ETQA registered Assessors and Moderators.  
+**CLR Model:** `Nsdms.Domain.Entities.AssessorReRegistrationApplication`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AdjudicatedByUserId` | `nvarchar(max)` | NULL |  | User ID of the ETQA manager or committee secretary who adjudicated the application. |
+| `AdjudicationDate` | `datetime2` | NULL |  | Timestamp when the ETQA committee completed adjudication. |
+| `AdjudicationNotes` | `nvarchar(max)` | NULL |  | Adjudication committee feedback or justification notes. |
+| `ApplicationReferenceNumber` | `nvarchar(50)` | **NOT NULL** |  | Statutory application tracking reference (e.g. REG-2026-ASS-0042). |
+| `ApplicationTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Application type code (e.g. ReRegistration, ScopeExtension, InitialRegistration). |
+| `CommitteeDecisionNumber` | `nvarchar(50)` | NULL |  | Official ETQA Committee Decision Number approving the 3-year re-registration. |
+| `CpdPointsAccumulated` | `int` | **NOT NULL** |  | Cumulative CPD points accumulated for this renewal cycle (statutory target >= 30 points). |
+| `CpdPortfolioSummary` | `nvarchar(max)` | NULL |  | Detailed narrative summary of continuous professional development and workplace practice. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `CurrentExpirationDate` | `datetime2` | **NOT NULL** |  | Practitioner expiration date prior to renewal. |
+| `DigitalSecuritySeal` | `nvarchar(64)` | NULL |  | Immutable SHA-256 digital security seal certifying renewal approval and certificate issuance. |
+| `EtqaAssessorId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent EtqaAssessor record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `ProposedNewExpirationDate` | `datetime2` | **NOT NULL** |  | Proposed 3-year extended expiration date upon approval. |
+| `ReviewStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current adjudication review status (Draft, Submitted, CommitteeReview, Approved, Rejected, AdditionalInfoRequired). |
+| `ScopeConfirmationJson` | `nvarchar(max)` | **NOT NULL** |  | JSON serialized snapshot of confirmed renewal scopes and requested new unit standards. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_AssessorReRegistrationApplication_EtqaAssessor_EtqaAssessorId` | `EtqaAssessorId` | `dbo.EtqaAssessor` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AssessorReRegistrationApplication_ApplicationReferenceNumber` | `ApplicationReferenceNumber` | ✅ Yes |
+| `IX_AssessorReRegistrationApplication_EtqaAssessorId` | `EtqaAssessorId` | No |
+| `IX_AssessorReRegistrationApplication_ReviewStatusCode` | `ReviewStatusCode` | No |
+
+---
+
 ### <a id="auditlog"></a> `dbo.AuditLog`
 
 **Description:** Immutable operational audit trail recording entity mutations, actor identity, timestamps, and JSON snapshots.  
@@ -748,16 +843,16 @@
 
 | Column | SQL Store Type | Nullable | Key | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `Id` | `bigint` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ActionName` | `nvarchar(50)` | **NOT NULL** |  | Specific CRUD or workflow action executed (e.g. Created, Updated, Deleted, StatusChanged, Disbursed). |
 | `Actor` | `nvarchar(100)` | **NOT NULL** |  | Username, email, or system process identity of the actor performing the action. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `EntityName` | `nvarchar(100)` | **NOT NULL** |  | Name of the target domain entity modified (e.g. Organisation, CompanyLearner, GrantMoa). |
 | `MetadataJson` | `nvarchar(max)` | NULL |  | Structured JSON payload capturing before/after state snapshots and contextual metadata. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
-| `RecordId` | `int` | **NOT NULL** |  | Primary key integer identifier of the target record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `RecordId` | `bigint` | **NOT NULL** |  | Primary key identifier of the target record (64-bit integer supporting high-volume entities). |
 | `Timestamp` | `datetime2` | **NOT NULL** |  | Exact UTC timestamp when the audit event occurred. |
 
 #### Performance Indexes
@@ -883,7 +978,7 @@
 | `CommencementDate` | `datetime2` | NULL |  | Commencement start date of training in the workplace / provider. |
 | `CompletionDate` | `datetime2` | NULL |  | Actual completion or certification signoff date. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `CumulativeSpend` | `decimal(18,2)` | **NOT NULL** |  | Cumulative Discretionary Grant / Levy stipend funding disbursed to date in ZAR. |
 | `EconomicStatusId` | `nvarchar(10)` | NULL |  | Learner economic employment standing code (references lookup.EconomicStatusType: 01 Employed 18.1, 02 Unemployed 18.2, 03 Student). |
 | `EnrolmentStatusCode` | `nvarchar(50)` | NULL |  | Legacy enrolment status code mapping. |
@@ -899,8 +994,8 @@
 | `LearnerContractNumber` | `nvarchar(50)` | NULL |  | Unique MerSETA-generated learner agreement / contract registration number. |
 | `LearnershipId` | `nvarchar(50)` | NULL |  | Registered SAQA Learnership ID Code (e.g. 18Q180026241203) for SETMIS File 500 and 501. |
 | `LearningProgrammeTypeCode` | `nvarchar(50)` | NULL |  | Classification code of the learning programme (references lookup.LearningProgrammeType: 01 Apprenticeship, 02 Learnership, 03 Skills Programme, 04 Internship, 05 Bursary). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NonNqfInterventionCode` | `nvarchar(50)` | NULL |  | Registered Non-NQF Skills Programme or Course Code for SETMIS File 502 (references SkillsRegistration.CourseCode). |
 | `NqfLevel` | `int` | NULL |  | National Qualifications Framework (NQF) level descriptor (e.g. 2, 3, 4, 5). |
 | `OfoCode` | `nvarchar(20)` | NULL |  | DHET Organising Framework for Occupations statutory code (references lookup.OfoCodeType, e.g. 264202 Editor, 651202 Welder). |
@@ -951,6 +1046,48 @@
 
 ---
 
+### <a id="companylearnerchangerequest"></a> `dbo.CompanyLearnerChangeRequest`
+
+**Description:** Formal change request for amending an active registered CompanyLearner contract or demographic details.  
+**CLR Model:** `Nsdms.Domain.Entities.CompanyLearnerChangeRequest`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ApprovalDate` | `datetime2` | NULL |  | Domain property for ApprovalDate. |
+| `ApprovedByUserId` | `nvarchar(max)` | NULL |  | Domain property for ApprovedByUserId. |
+| `ChangeStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Status code: Pending, Approved, Rejected. |
+| `ChangeTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Type of amendment: DemographicCorrection, QualificationAmendment, ProviderChange, ContractDateExtension, StipendAdjustment. |
+| `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `CurrentValuesSnapshotJson` | `nvarchar(max)` | **NOT NULL** |  | Serialized JSON snapshot of the learner record state prior to amendment. |
+| `JustificationReason` | `nvarchar(max)` | **NOT NULL** |  | Applicant or employer justification for the requested changes. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `RequestedValuesJson` | `nvarchar(max)` | **NOT NULL** |  | Serialized JSON containing the proposed field values. |
+| `ReviewDate` | `datetime2` | NULL |  | Domain property for ReviewDate. |
+| `ReviewedByUserId` | `nvarchar(max)` | NULL |  | Domain property for ReviewedByUserId. |
+| `ReviewerComments` | `nvarchar(max)` | NULL |  | Domain property for ReviewerComments. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_CompanyLearnerChangeRequest_CompanyLearner_CompanyLearnerId` | `CompanyLearnerId` | `dbo.CompanyLearner` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_CompanyLearnerChangeRequest_ChangeStatusCode` | `ChangeStatusCode` | No |
+| `IX_CompanyLearnerChangeRequest_CompanyLearnerId` | `CompanyLearnerId` | No |
+
+---
+
 ### <a id="companylearnerlosttime"></a> `dbo.CompanyLearnerLostTime`
 
 **Description:** Tracks suspended or lost training time and recalculates revised contract end dates.  
@@ -967,13 +1104,13 @@
 | `ApprovedByUserId` | `nvarchar(100)` | NULL |  | User identifier of the approving MerSETA official. |
 | `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the affected CompanyLearner record. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DaysLost` | `int` | **NOT NULL** |  | Total cumulative days lost during this interruption period. |
 | `EndDate` | `datetime2` | **NOT NULL** |  | Date when the training interruption ended. |
 | `LostTimeReasonCode` | `nvarchar(50)` | **NOT NULL** |  | Categorized reason code for training interruption (e.g. MaternityLeave, MedicalLeave, Suspension, WorkplaceShutdown). |
 | `LostTimeStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current approval status code for the time extension request (Pending, Approved, Rejected). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OriginalContractEndDate` | `datetime2` | **NOT NULL** |  | Original contractual completion date prior to lost time extension. |
 | `RevisedContractEndDate` | `datetime2` | **NOT NULL** |  | Revised contractual completion date extended by the lost days. |
 | `StartDate` | `datetime2` | **NOT NULL** |  | Date when the training interruption commenced. |
@@ -1009,11 +1146,11 @@
 | `ApprovedByUserId` | `nvarchar(100)` | NULL |  | User identifier of the authorized MerSETA official approving the cancellation. |
 | `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the terminated CompanyLearner record. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DisputeLogged` | `bit` | **NOT NULL** |  | Indicates whether a formal labour dispute or CCMA conciliation is lodged. |
 | `EffectiveDate` | `datetime2` | **NOT NULL** |  | Official date on which the learner agreement was terminated. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `SettlementNotes` | `nvarchar(2000)` | NULL |  | Detailed settlement notes, mutual release terms, or disciplinary minutes. |
 | `TerminationReasonCode` | `nvarchar(50)` | **NOT NULL** |  | Statutory contract cancellation reason code (e.g. Deceased, Absconded, DismissedForMisconduct, MutualCancellation, MedicalIncapacity). |
 | `TerminationStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current cancellation approval status code (Pending, Approved, Rejected). |
@@ -1050,11 +1187,11 @@
 | `ApprovedByUserId` | `nvarchar(100)` | NULL |  | User identifier of the approving MerSETA official. |
 | `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the active CompanyLearner record. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `EffectiveDate` | `datetime2` | **NOT NULL** |  | Effective operational start date at the new employer. |
 | `FromOrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the releasing employer Organisation. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `ToOrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the receiving employer Organisation. |
 | `TransferDate` | `datetime2` | **NOT NULL** |  | Date when the transfer request was formally initiated. |
 | `TransferReasonCode` | `nvarchar(50)` | **NOT NULL** |  | Transfer rationale code (e.g. CompanyDownsized, MutualAgreement, Relocation, DisputeResolution). |
@@ -1220,12 +1357,12 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `EmailAddress` | `nvarchar(max)` | **NOT NULL** |  | Domain property for EmailAddress. |
 | `IsConfirmedAttendee` | `bit` | **NOT NULL** |  | Domain property for IsConfirmedAttendee. |
 | `MemberName` | `nvarchar(150)` | **NOT NULL** |  | Domain property for MemberName. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationRepresented` | `nvarchar(200)` | **NOT NULL** |  | Domain property for OrganisationRepresented. |
 | `PersonId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `PhoneNumber` | `nvarchar(max)` | **NOT NULL** |  | Primary contact telephone number. |
@@ -1260,14 +1397,14 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ContentType` | `nvarchar(100)` | **NOT NULL** |  | MIME content type (e.g. application/pdf, image/png). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DocumentCategoryCode` | `nvarchar(50)` | NULL |  | Document categorization code (e.g. ID_DOCUMENT, QUALIFICATION_CERT, SITE_PHOTO, BANK_CONFIRMATION, SIGNED_MOA). |
 | `FileHashSha256` | `nvarchar(100)` | NULL |  | Cryptographic SHA-256 integrity hash for document tampering verification. |
 | `FileName` | `nvarchar(255)` | **NOT NULL** |  | Stored sanitized file name. |
 | `FileSizeBytes` | `bigint` | **NOT NULL** |  | File size in bytes. |
 | `IsArchived` | `bit` | **NOT NULL** |  | Indicates whether the document has been archived or soft-deleted. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OriginalFileName` | `nvarchar(255)` | **NOT NULL** |  | Original file name as uploaded by the user. |
 | `StoragePath` | `nvarchar(500)` | **NOT NULL** |  | Relative or absolute storage path URI. |
 | `StorageProvider` | `nvarchar(50)` | **NOT NULL** |  | Storage provider engine (e.g. Local, AzureBlob, Database). |
@@ -1300,11 +1437,11 @@
 | `ClauseContent` | `nvarchar(max)` | **NOT NULL** |  | Rich Markdown content containing dynamic evaluation tokens (e.g. {{RecipientName}}, {{CertificateNumber}}, {{IssuedDate}}). |
 | `ClauseTitle` | `nvarchar(200)` | **NOT NULL** |  | Human-readable title of the clause. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `IsActive` | `bit` | **NOT NULL** |  | Whether this clause is active for inclusion. |
 | `IsMandatory` | `bit` | **NOT NULL** |  | Indicates if this clause is legally mandatory across all template variants. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 
 #### Performance Indexes
 
@@ -1329,14 +1466,14 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ContentType` | `nvarchar(100)` | **NOT NULL** |  | MIME content type (e.g. application/pdf, image/png). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DocumentTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Document taxonomy type code (e.g. RSA_ID, PROOF_OF_BANKING, ACCREDITATION_CERT, TOOL_LIST_EVIDENCE, WSP_SIGNOFF). |
 | `DocumentTypeName` | `nvarchar(150)` | **NOT NULL** |  | Display name of the document category. |
 | `FileName` | `nvarchar(255)` | **NOT NULL** |  | Original file name of uploaded evidence. |
 | `FileSizeBytes` | `bigint` | **NOT NULL** |  | File size in bytes. |
 | `IsVerified` | `bit` | **NOT NULL** |  | Indicates whether the document has been verified by an authorized officer. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `Sha256Hash` | `nvarchar(100)` | **NOT NULL** |  | Cryptographic SHA-256 digital fingerprint hash for audit tampering protection. |
 | `StorageUri` | `nvarchar(500)` | **NOT NULL** |  | Storage blob URI or relative storage path. |
 | `TargetEntityId` | `int` | **NOT NULL** |  | Primary key integer value of the target entity record. |
@@ -1368,13 +1505,13 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Description` | `nvarchar(300)` | **NOT NULL** |  | Descriptive requirement context and guidelines. |
 | `DocumentTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Required document type code. |
 | `DocumentTypeName` | `nvarchar(150)` | **NOT NULL** |  | Display name of the required document. |
 | `IsMandatory` | `bit` | **NOT NULL** |  | Indicates whether this document is strictly mandatory to advance. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `RequiredAtStateId` | `int` | **NOT NULL** |  | Foreign key referencing the WorkflowState where this document must be verified before proceeding. |
 | `WorkflowProcessCode` | `nvarchar(50)` | **NOT NULL** |  | Workflow process code (e.g. PROVIDER, WSP, DG, WPAPP, LRN, TRADETEST). |
 
@@ -1399,7 +1536,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DocumentSnapshotNumber` | `nvarchar(50)` | **NOT NULL** |  | Unique public tracking and verification reference (e.g. DOC-2026-TT-00123, DOC-2026-WSP-98765). |
 | `DocumentTemplateId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the DocumentTemplate used at issuance. |
 | `DocumentTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Document type classification code (e.g. TradeTestCertificate, WspApprovalLetter, AccreditationCertificate, RemittanceAdvice). |
@@ -1407,8 +1544,8 @@
 | `IssuedAt` | `datetime2` | **NOT NULL** |  | Official date and time when the document was frozen and issued. |
 | `IssuedBy` | `nvarchar(100)` | **NOT NULL** |  | Username or system process that authorized and issued the document. |
 | `LastVerifiedAt` | `datetime2` | NULL |  | Timestamp of the most recent verification lookup. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PdfStorageUri` | `nvarchar(500)` | NULL |  | Storage location URI of the signed PDF artifact. |
 | `RecipientIdentifier` | `nvarchar(50)` | **NOT NULL** |  | Recipient primary identifier (e.g. RSA ID Number, SDL Number, Accreditation Number). |
 | `RecipientName` | `nvarchar(200)` | **NOT NULL** |  | Full legal name of the recipient individual or organisation. |
@@ -1459,7 +1596,7 @@
 | `ApprovedAt` | `datetime2` | NULL |  | Timestamp when governance approval was executed. |
 | `ApprovedBy` | `nvarchar(100)` | NULL |  | Governance/legal officer who approved this template. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DocumentCategory` | `nvarchar(50)` | **NOT NULL** |  | Document category (e.g. MandatoryGrant, DiscretionaryGrant, TradeTest, EtqaAccreditation, LearnerContract, FinanceAudit). |
 | `DocumentTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Specific document type classification code (e.g. WspApprovalLetter, WspRejectionLetter, TradeTestCertificate, StatementOfResults, AccreditationCertificate). |
 | `EffectiveFrom` | `datetime2` | **NOT NULL** |  | Effective starting date for this template version. |
@@ -1468,8 +1605,8 @@
 | `FooterDisclaimerText` | `nvarchar(500)` | NULL |  | Statutory footer disclaimer text. |
 | `HeaderBannerUrl` | `nvarchar(500)` | NULL |  | Optional custom header branding banner URL or resource path. |
 | `IsActive` | `bit` | **NOT NULL** |  | Whether this template is active for new document generation. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `TargetEntityType` | `nvarchar(50)` | **NOT NULL** |  | Target entity legal classification filter (e.g. All, Employer, Provider, Learner, Assessor). |
 | `TemplateCode` | `nvarchar(50)` | **NOT NULL** |  | Unique template identifier code (e.g. WSP-APPROVAL-STD, TRADE-CERT-STD, ETQA-ACCRED-STD). |
 | `TemplateTitle` | `nvarchar(200)` | **NOT NULL** |  | Human-readable title of the document template. |
@@ -1498,12 +1635,12 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ConditionRuleJson` | `nvarchar(max)` | NULL |  | Optional conditional inclusion rule expression in JSON format. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DocumentClauseId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the assigned DocumentClause. |
 | `DocumentTemplateId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent DocumentTemplate. |
 | `IsMandatory` | `bit` | **NOT NULL** |  | Whether this section is mandatory for this template. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `SectionNumber` | `nvarchar(30)` | **NOT NULL** |  | Custom section number or bullet label (e.g. "1.0", "Clause 4", "Annexure A"). |
 | `SectionTitle` | `nvarchar(200)` | **NOT NULL** |  | Section heading title override. |
 | `SequenceOrder` | `int` | **NOT NULL** |  | Sorting sequence order within the document layout. |
@@ -1539,11 +1676,11 @@
 | `AssessmentPaperCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for AssessmentPaperCode. |
 | `CompetencyStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for CompetencyStatusCode. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `EisaAssessmentDate` | `datetime2` | **NOT NULL** |  | Domain property for EisaAssessmentDate. |
 | `EisaCenterName` | `nvarchar(200)` | **NOT NULL** |  | Domain property for EisaCenterName. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PercentageScore` | `decimal(18,2)` | **NOT NULL** |  | Domain property for PercentageScore. |
 | `QctoModerationReferenceNumber` | `nvarchar(max)` | NULL |  | Domain property for QctoModerationReferenceNumber. |
 | `QctoSignOffDate` | `datetime2` | NULL |  | Domain property for QctoSignOffDate. |
@@ -1566,6 +1703,87 @@
 
 ---
 
+### <a id="erppaymentbatchentry"></a> `dbo.ErpPaymentBatchEntry`
+
+**Description:** Individual line item voucher within an ERP payment batch.  
+**CLR Model:** `Nsdms.Domain.Entities.ErpPaymentBatchEntry`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `BankAccountNumber` | `nvarchar(max)` | **NOT NULL** |  | Domain property for BankAccountNumber. |
+| `BankBranchCode` | `nvarchar(max)` | **NOT NULL** |  | Domain property for BankBranchCode. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `EftReferenceNumber` | `nvarchar(max)` | NULL |  | Domain property for EftReferenceNumber. |
+| `EntryStatusCode` | `nvarchar(max)` | **NOT NULL** |  | Domain property for EntryStatusCode. |
+| `ErpPaymentBatchHeaderId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `GrantPaymentClaimId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `MandatoryGrantDisbursementId` | `int` | NULL |  | Domain property for MandatoryGrantDisbursementId. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `PaymentAmount` | `decimal(18,2)` | **NOT NULL** |  | Domain property for PaymentAmount. |
+| `PaymentDescription` | `nvarchar(max)` | **NOT NULL** |  | Domain property for PaymentDescription. |
+| `PaymentVoucherNumber` | `nvarchar(100)` | **NOT NULL** |  | Domain property for PaymentVoucherNumber. |
+| `VendorNumber` | `nvarchar(max)` | **NOT NULL** |  | Domain property for VendorNumber. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_ErpPaymentBatchEntry_ErpPaymentBatchHeader_ErpPaymentBatchHeaderId` | `ErpPaymentBatchHeaderId` | `dbo.ErpPaymentBatchHeader` | `Cascade` |
+| `FK_ErpPaymentBatchEntry_GrantPaymentClaim_GrantPaymentClaimId` | `GrantPaymentClaimId` | `dbo.GrantPaymentClaim` | `ClientSetNull` |
+| `FK_ErpPaymentBatchEntry_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ErpPaymentBatchEntry_ErpPaymentBatchHeaderId` | `ErpPaymentBatchHeaderId` | No |
+| `IX_ErpPaymentBatchEntry_GrantPaymentClaimId` | `GrantPaymentClaimId` | No |
+| `IX_ErpPaymentBatchEntry_OrganisationId` | `OrganisationId` | No |
+| `IX_ErpPaymentBatchEntry_PaymentVoucherNumber` | `PaymentVoucherNumber` | No |
+
+---
+
+### <a id="erppaymentbatchheader"></a> `dbo.ErpPaymentBatchHeader`
+
+**Description:** ERP Payment Batch Header for staging mandatory/discretionary grant disbursements to Dynamics GP / Sage.  
+**CLR Model:** `Nsdms.Domain.Entities.ErpPaymentBatchHeader`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ApprovalComments` | `nvarchar(max)` | NULL |  | Domain property for ApprovalComments. |
+| `BatchNumber` | `nvarchar(100)` | **NOT NULL** |  | Financial transaction batch grouping reference. |
+| `BatchStatusCode` | `nvarchar(max)` | **NOT NULL** |  | Domain property for BatchStatusCode. |
+| `BatchTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for BatchTypeCode. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ExportFileName` | `nvarchar(max)` | NULL |  | Domain property for ExportFileName. |
+| `ExportedByUserId` | `nvarchar(max)` | NULL |  | Domain property for ExportedByUserId. |
+| `ExportedDate` | `datetime2` | NULL |  | Domain property for ExportedDate. |
+| `ItemCount` | `int` | **NOT NULL** |  | Domain property for ItemCount. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `TotalAmount` | `decimal(18,2)` | **NOT NULL** |  | Domain property for TotalAmount. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ErpPaymentBatchHeader_BatchNumber` | `BatchNumber` | ✅ Yes |
+| `IX_ErpPaymentBatchHeader_BatchStatusCode` | `BatchStatusCode` | No |
+
+---
+
 ### <a id="etqaassessor"></a> `dbo.EtqaAssessor`
 
 **Description:** Registered ETQA Assessors and Moderators with approved qualification scopes, capturing all statutory fields required for SETMIS File 401 (Person Designation) reporting.  
@@ -1578,7 +1796,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DesignationStructureStatusId` | `nvarchar(10)` | **NOT NULL** |  | Practitioner registration standing code (references lookup.DesignationStructureStatusType: 01 Registered, 02 Deregistered, 03 Suspended). |
 | `DesignationTypeId` | `nvarchar(10)` | **NOT NULL** |  | Practitioner designation type code (references lookup.DesignationType: 01 Assessor, 02 Moderator). |
 | `EndDate` | `datetime2` | **NOT NULL** |  | Registration validity expiration date (SETMIS File 401). |
@@ -1586,8 +1804,8 @@
 | `EtqaRole` | `nvarchar(50)` | **NOT NULL** |  | ETQA role classification (Assessor, Moderator, Both). |
 | `EtqeDecisionNumber` | `nvarchar(50)` | NULL |  | ETQA Committee decision number approving registration scope (SETMIS File 401). |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the assessor registration is currently active. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the assessor's demographic Person record. |
 | `RegistrationNumber` | `nvarchar(50)` | **NOT NULL** |  | MerSETA ETQA assessor or moderator registration number (SETMIS File 401). |
 | `RegistrationStatusCode` | `nvarchar(15)` | NULL |  | Current registration lifecycle status code (e.g. Active, PendingRenewal, Suspended, Expired). |
@@ -1653,13 +1871,13 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `AllocatedBudget` | `decimal(18,2)` | **NOT NULL** |  | Monetary sub-budget allocation envelope dedicated to this theme in ZAR. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `FundingWindowId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent GrantFundingWindow. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this theme allocation is active within the funding window. |
 | `IsRingFenced` | `bit` | **NOT NULL** |  | If true, funds under this priority cannot be vired or reallocated to other themes without MANCO approval. |
 | `MinScoreThreshold` | `decimal(18,2)` | **NOT NULL** |  | Minimum technical evaluation score threshold required for approval under this theme (e.g. 65.00%). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `StrategicPriorityId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the StrategicPriority theme. |
 | `TargetBeneficiaries` | `int` | **NOT NULL** |  | Target number of learners/beneficiaries planned for this strategic priority. |
 
@@ -1697,14 +1915,14 @@
 | `ApplicationStatusCode` | `nvarchar(15)` | NULL |  | Current workflow review and adjudication status code. |
 | `ApprovedAmount` | `decimal(18,2)` | NULL |  | Final grant funding amount approved by the MerSETA adjudication committee in ZAR. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `FundingWindowId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the open GrantFundingWindow. |
 | `FundingWindowPriorityId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the specific FundingWindowPriority allocation envelope. |
 | `GrantTypeCode` | `nvarchar(15)` | NULL |  | Discretionary grant funding type code (e.g. PIVOTAL, NON_PIVOTAL, BURSARY, APPRENTICESHIP). |
 | `IsWspCompliant` | `bit` | **NOT NULL** |  | Indicates whether the applicant has an approved, compliant WSP/ATR on file for the scheme year. |
 | `IsWspExempt` | `bit` | **NOT NULL** |  | Indicates whether the applicant is legally exempt from WSP submission (e.g. Non-Levy Payer, Public TVET, NGO, Community Trust). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the applying Employer Organisation. |
 | `ProjectTitle` | `nvarchar(300)` | **NOT NULL** |  | Descriptive title of the skills development project. |
 | `RequestedAmount` | `decimal(18,2)` | **NOT NULL** |  | Total grant funding amount requested by the applicant in ZAR. |
@@ -1749,13 +1967,13 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ClosingDate` | `datetime2` | **NOT NULL** |  | Hard deadline closing date and time after which no new applications are accepted. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Description` | `nvarchar(max)` | NULL |  | Optional gazette reference or policy notice circular reference. |
 | `FinYear` | `int` | **NOT NULL** |  | Financial scheme year for this funding allocation window (e.g. 2026). |
 | `GrantTypeCode` | `nvarchar(15)` | NULL |  | Grant funding type code (e.g. PIVOTAL, APPRENTICESHIP, SKILLS_PROGRAMME, BURSARY). |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this funding window is active and accepting submissions. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OpeningDate` | `datetime2` | **NOT NULL** |  | Official window opening date and time for employer application submissions. |
 | `TotalAvailableBudget` | `decimal(18,2)` | **NOT NULL** |  | Total aggregate discretionary budget allocated to this funding window in ZAR. |
 | `WindowName` | `nvarchar(200)` | **NOT NULL** |  | Descriptive window name (e.g. 2026/27 Discretionary Grant Funding Window 1). |
@@ -1784,13 +2002,13 @@
 | `ContractEndDate` | `datetime2` | **NOT NULL** |  | Contractual project completion and closeout deadline. |
 | `ContractStartDate` | `datetime2` | **NOT NULL** |  | Contractual project commencement date. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `GrantApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the originating Discretionary Grant application. |
 | `MoaNumber` | `nvarchar(100)` | **NOT NULL** |  | Unique MerSETA MOA legal contract reference number (e.g. MOA-2026-DG-001). |
 | `MoaStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Lifecycle contract state code (e.g. Draft, Pending Signature, Active, Terminated, Completed). |
 | `MoaTemplateId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the active MoaTemplate version applied to this agreement. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `SignoffDateEmployer` | `datetime2` | NULL |  | Date when the employer authorized signatory signed the contract. |
 | `SignoffDateSeta` | `datetime2` | NULL |  | Date when the MerSETA CEO / delegated authority executed the agreement. |
 | `SignoffDocumentUri` | `nvarchar(500)` | NULL |  | Digital storage URI of the executed bilateral MOA legal document. |
@@ -1827,15 +2045,15 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DeliverableRequirement` | `nvarchar(1000)` | NULL |  | Mandatory physical or digital evidence deliverables required for tranche release. |
 | `GrantMoaId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent GrantMoa contract. |
 | `MilestoneDescription` | `nvarchar(max)` | NULL |  | Detailed description of delivery expectations. |
 | `MilestoneNumber` | `int` | **NOT NULL** |  | Sequential milestone sequence index (e.g. 1, 2, 3, 4). |
 | `MilestoneStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Milestone verification and disbursement state code (e.g. Pending, Submitted, Verified, Approved, Paid). |
 | `MilestoneTitle` | `nvarchar(200)` | **NOT NULL** |  | Descriptive milestone title (e.g. Inception & Learner Contracting, Midterm Progress, Final Assessment & Closeout). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `TargetDueDate` | `datetime2` | **NOT NULL** |  | Target due date for milestone deliverable submission. |
 | `TrancheAmount` | `decimal(18,2)` | **NOT NULL** |  | Calculated tranche disbursement payout amount in ZAR. |
 | `TranchePercentage` | `decimal(5,2)` | **NOT NULL** |  | Deliverable payment allocation percentage (e.g. 30%, 40%, 30%). |
@@ -1871,15 +2089,24 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ApprovalDate` | `datetime2` | NULL |  | Domain property for ApprovalDate. |
 | `ApprovedByUserId` | `nvarchar(100)` | NULL |  | Domain property for ApprovedByUserId. |
+| `CfoApprovedBy` | `nvarchar(max)` | NULL |  | Domain property for CfoApprovedBy. |
+| `CfoApprovedDate` | `datetime2` | NULL |  | Domain property for CfoApprovedDate. |
 | `ClaimAmount` | `decimal(18,2)` | **NOT NULL** |  | Domain property for ClaimAmount. |
 | `ClaimNumber` | `nvarchar(50)` | **NOT NULL** |  | Domain property for ClaimNumber. |
+| `CloVerifiedBy` | `nvarchar(max)` | NULL |  | Domain property for CloVerifiedBy. |
+| `CloVerifiedDate` | `datetime2` | NULL |  | Domain property for CloVerifiedDate. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DeliverableDescription` | `nvarchar(1000)` | **NOT NULL** |  | Domain property for DeliverableDescription. |
 | `ErpBatchNumber` | `nvarchar(100)` | NULL |  | Domain property for ErpBatchNumber. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `FinanceOfficerApprovedBy` | `nvarchar(max)` | NULL |  | Domain property for FinanceOfficerApprovedBy. |
+| `FinanceOfficerApprovedDate` | `datetime2` | NULL |  | Domain property for FinanceOfficerApprovedDate. |
+| `GrantMoaMilestoneId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PaymentVoucherNumber` | `nvarchar(max)` | NULL |  | Domain property for PaymentVoucherNumber. |
 | `ProjectImplementationPlanId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `RequiresCfoApproval` | `bit` | **NOT NULL** |  | Domain property for RequiresCfoApproval. |
 | `StatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current lifecycle state code in the workflow engine. |
 | `TrancheNumber` | `int` | **NOT NULL** |  | Domain property for TrancheNumber. |
 
@@ -1887,6 +2114,7 @@
 
 | Constraint Name | Foreign Columns | Principal Table | Delete Rule |
 | :--- | :--- | :--- | :--- |
+| `FK_GrantPaymentClaim_GrantMoaMilestone_GrantMoaMilestoneId` | `GrantMoaMilestoneId` | `dbo.GrantMoaMilestone` | `ClientSetNull` |
 | `FK_GrantPaymentClaim_ProjectImplementationPlan_ProjectImplementationPlanId` | `ProjectImplementationPlanId` | `dbo.ProjectImplementationPlan` | `Cascade` |
 
 #### Performance Indexes
@@ -1911,12 +2139,12 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Description` | `nvarchar(500)` | NULL |  | Detailed specification and cost justification. |
 | `ExpenseCategory` | `nvarchar(100)` | **NOT NULL** |  | Expense classification category (e.g. TUITION, STIPEND, PPE_SAFETY, LEARNER_ALLOWANCE, ASSESSMENTS). |
 | `GrantApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent GrantApplication. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `Quantity` | `int` | **NOT NULL** |  | Total number of beneficiary or item units budgeted. |
 | `StrategicPriorityId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the specific StrategicPriority theme this line item finances. |
 | `TotalCost` | `decimal(18,2)` | **NOT NULL** |  | Total aggregate line item cost (UnitCost * Quantity) in ZAR. |
@@ -1956,15 +2184,15 @@
 | `BatchNumber` | `nvarchar(100)` | NULL |  | Bank disbursement batch grouping reference identifier. |
 | `ClaimedAmount` | `decimal(18,2)` | **NOT NULL** |  | Gross claimed invoice monetary value in ZAR. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `FinanceApprovalDate` | `datetime2` | NULL |  | Date and time of finance dual-authorization signoff. |
 | `FinanceApproverUserId` | `nvarchar(max)` | NULL |  | User identifier of the finance manager who authorized payment. |
 | `GrantApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the originating GrantApplication. |
 | `GrantMoaMilestoneId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent GrantMoaMilestone. |
 | `InvoiceDate` | `datetime2` | **NOT NULL** |  | Official date on the submitted tax invoice. |
 | `InvoiceNumber` | `nvarchar(100)` | **NOT NULL** |  | Employer or provider Tax Invoice reference number. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PaymentDate` | `datetime2` | NULL |  | Date when the bank EFT transaction cleared. |
 | `PaymentReferenceNumber` | `nvarchar(100)` | **NOT NULL** |  | Internal financial voucher reference tracking number. |
 | `PaymentStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Payout workflow state code (e.g. Draft, Submitted, Finance Approved, Batch Scheduled, Paid, Rejected). |
@@ -2000,11 +2228,11 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `Comments` | `nvarchar(1000)` | NULL |  | Legal comments and audit trail notes. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DhetReferenceNumber` | `nvarchar(100)` | NULL |  | Department of Higher Education & Training (DHET) gazetted approval number. |
 | `EffectiveDate` | `datetime2` | **NOT NULL** |  | Effective gazetted date of transfer. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the migrating Employer Organisation. |
 | `OtherSetaCode` | `nvarchar(50)` | **NOT NULL** |  | Acronym/Code of counterpart SETA (e.g. CHIETA, EWSETA, TETA, SERVICES, W&RSETA). |
 | `OtherSetaName` | `nvarchar(150)` | **NOT NULL** |  | Full statutory title of counterpart SETA. |
@@ -2048,7 +2276,7 @@
 | `CompanyLearnerId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the parent CompanyLearner agreement. |
 | `CompetencyStatusCode` | `nvarchar(15)` | NULL |  | Competency outcome code (e.g. COMPETENT, NOT_YET_COMPETENT). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `CumulativeSpend` | `decimal(18,2)` | **NOT NULL** |  | Cumulative funding disbursed for this unit standard intervention. |
 | `EconomicStatusId` | `nvarchar(10)` | **NOT NULL** |  | Learner economic employment standing code (references lookup.EconomicStatusType). |
 | `EnrolmentStatusId` | `nvarchar(10)` | **NOT NULL** |  | Statutory enrolment assessment status code (references lookup.EnrolmentStatusType: 01 Enrolled, 02 Achieved, 03 Certificated, 04 Terminated). |
@@ -2058,8 +2286,8 @@
 | `FundingId` | `nvarchar(10)` | **NOT NULL** |  | Funding vehicle identifier (references lookup.FundingType: 01 SETA Funded, 02 Employer, 03 NSF). |
 | `ModerationDate` | `datetime2` | NULL |  | Date when assessment moderation review was finalized. |
 | `ModeratorPersonId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the internal/external moderator Person. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NonNqfInterventionCode` | `nvarchar(50)` | NULL |  | Non-NQF Skills Programme / Course Code if applicable. |
 | `OfoCode` | `nvarchar(20)` | NULL |  | DHET Organising Framework for Occupations statutory code (references lookup.OfoCodeType). |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the host Employer Organisation or provider. |
@@ -2118,12 +2346,12 @@
 | `CertificateIssueDate` | `datetime2` | NULL |  | Date when the artisan qualification certificate was issued. |
 | `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the registered CompanyLearner contract. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `ModeratorEtqaId` | `nvarchar(10)` | NULL |  | Submitting ETQA ID of the registered Moderator (default 17). |
 | `ModeratorPersonId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the verifying moderator Person. |
 | `ModeratorRegistrationNumber` | `nvarchar(50)` | NULL |  | Registered ETQA Moderator / NAMB Verifier registration number (SETMIS File 505). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `QualificationId` | `nvarchar(50)` | NULL |  | SAQA Qualification ID or OFO Trade Code corresponding to the trade test (SETMIS File 505). |
 | `Remarks` | `nvarchar(max)` | NULL |  | Assessment feedback and examiner moderation remarks. |
 | `ResultStatusCode` | `nvarchar(50)` | NULL |  | Legacy assessment outcome status code (e.g. Scheduled, Competent, NotYetCompetent, Absent). |
@@ -2187,16 +2415,17 @@
 | `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `CompetencyStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Assessment outcome: Competent, NotYetCompetent, Absent, Deferred |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DesignatedTradeLevel` | `nvarchar(max)` | NULL |  | Domain property for DesignatedTradeLevel. |
 | `LearnerReadinessDate` | `datetime2` | NULL |  | Domain property for LearnerReadinessDate. |
 | `ModeratorName` | `nvarchar(max)` | NULL |  | Domain property for ModeratorName. |
 | `ModeratorRegistrationNumber` | `nvarchar(max)` | NULL |  | Domain property for ModeratorRegistrationNumber. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NambApprovalDate` | `datetime2` | NULL |  | Domain property for NambApprovalDate. |
 | `NambDecisionStatusCode` | `nvarchar(max)` | **NOT NULL** |  | Domain property for NambDecisionStatusCode. |
 | `NambSerialNumber` | `nvarchar(100)` | NULL |  | Serial number allocated by the National Artisan Moderation Body (NAMB). |
+| `NambSubmissionBatchId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the parent NAMB submission batch. |
 | `NambSubmissionDate` | `datetime2` | NULL |  | Domain property for NambSubmissionDate. |
 | `Notes` | `nvarchar(max)` | NULL |  | Domain property for Notes. |
 | `OrganisationId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
@@ -2213,6 +2442,7 @@
 | Constraint Name | Foreign Columns | Principal Table | Delete Rule |
 | :--- | :--- | :--- | :--- |
 | `FK_LearnerTradeTestApplication_CompanyLearner_CompanyLearnerId` | `CompanyLearnerId` | `dbo.CompanyLearner` | `Restrict` |
+| `FK_LearnerTradeTestApplication_NambSubmissionBatch_NambSubmissionBatchId` | `NambSubmissionBatchId` | `dbo.NambSubmissionBatch` | `ClientSetNull` |
 | `FK_LearnerTradeTestApplication_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `SetNull` |
 | `FK_LearnerTradeTestApplication_Person_PersonId` | `PersonId` | `dbo.Person` | `Restrict` |
 | `FK_LearnerTradeTestApplication_TrainingProvider_TrainingProviderId` | `TrainingProviderId` | `dbo.TrainingProvider` | `SetNull` |
@@ -2242,13 +2472,13 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `FileName` | `nvarchar(255)` | **NOT NULL** |  | Original file name uploaded from SARS levy distribution feed. |
 | `FileRef` | `nvarchar(100)` | **NOT NULL** |  | Internal unique batch reference identifier. |
 | `ImportDate` | `datetime2` | **NOT NULL** |  | Timestamp when the levy file was ingested into the system. |
 | `ImportStatusCode` | `nvarchar(15)` | NULL |  | Processing status code (e.g. Uploaded, Processed, Reconciled, Error). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `TotalAmount` | `decimal(18,2)` | **NOT NULL** |  | Aggregate monetary value of all levy allocations in this file in ZAR. |
 | `TotalRecords` | `int` | **NOT NULL** |  | Total count of line items contained in the levy file. |
 
@@ -2272,11 +2502,11 @@
 
 | Column | SQL Store Type | Nullable | Key | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `Id` | `bigint` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `AdminLevyAmount` | `decimal(18,2)` | **NOT NULL** |  | 10.5% MerSETA administration levy portion in ZAR. |
 | `ChamberCode` | `nvarchar(20)` | NULL |  | Resolved merSETA Chamber Code based on statutory SIC mapping (AUTO, METAL, MOTOR, NEW_TYRE, PLASTICS, OTHER). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DiscretionaryLevyAmount` | `decimal(18,2)` | **NOT NULL** |  | 49.5% Discretionary Grant portion allocated to sector skills funding in ZAR. |
 | `HasSicCodeMismatch` | `bit` | **NOT NULL** |  | Indicates whether the declared SARS SIC code differs from the employer's verified master profile. |
 | `InterestAmount` | `decimal(18,2)` | **NOT NULL** |  | SARS penalty interest charged on late levy payments in ZAR. |
@@ -2284,8 +2514,8 @@
 | `IsReconciled` | `bit` | **NOT NULL** |  | Indicates whether this levy line has been matched and reconciled to an employer ledger. |
 | `LevyFileId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent LevyFile batch. |
 | `MandatoryLevyAmount` | `decimal(18,2)` | **NOT NULL** |  | 20% Mandatory Grant portion reserved for compliant employer rebates in ZAR. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PenaltyAmount` | `decimal(18,2)` | **NOT NULL** |  | Statutory penalty fees charged on late levy submissions in ZAR. |
 | `QctoLevyAmount` | `decimal(18,2)` | **NOT NULL** |  | 0.5% Quality Council for Trades and Occupations (QCTO) levy portion in ZAR. |
 | `SchemeYear` | `nvarchar(10)` | **NOT NULL** |  | Scheme year or payment month reference (e.g. 2026-04). |
@@ -2330,14 +2560,14 @@
 | `CalculatedRebateAmount` | `decimal(18,2)` | **NOT NULL** |  | Statutory 20% Mandatory Grant rebate amount calculated in ZAR. |
 | `Comments` | `nvarchar(1000)` | NULL |  | Governance remarks and reconciliation ledger comments. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DisbursementReference` | `nvarchar(100)` | **NOT NULL** |  | Unique mandatory grant disbursement voucher reference number. |
 | `DisbursementStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Payout processing state code (e.g. Calculated, Approved, Paid, On Hold). |
 | `FinYear` | `int` | **NOT NULL** |  | Financial scheme year for the rebate calculation. |
 | `LeviesReceivedAmount` | `decimal(18,2)` | **NOT NULL** |  | Total SARS levy received for this employer during the period in ZAR. |
 | `LevyPeriod` | `nvarchar(max)` | NULL |  | Scheme month or quarterly levy distribution period (e.g. 2026-Q1). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the receiving Employer Organisation. |
 | `PaymentDate` | `datetime2` | NULL |  | Date when the rebate EFT payment cleared. |
 | `WspSubmissionId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the compliant WspSubmission. |
@@ -2376,11 +2606,11 @@
 | `ClauseContent` | `nvarchar(max)` | **NOT NULL** |  | Rich Markdown content of the clause containing dynamic tokens (e.g. {{OrganisationName}}, {{TotalContractValue}}). |
 | `ClauseTitle` | `nvarchar(200)` | **NOT NULL** |  | Human-readable title of the legal clause. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the clause is active in the clause library. |
 | `IsMandatory` | `bit` | **NOT NULL** |  | Indicates if this clause is legally mandatory across all template variants. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 
 #### Performance Indexes
 
@@ -2404,12 +2634,12 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `FrozenAt` | `datetime2` | **NOT NULL** |  | Timestamp when this snapshot was frozen and issued. |
 | `GrantMoaId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the issued GrantMoa contract. |
 | `MoaTemplateId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the MoaTemplate version applied at the moment of issuance. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PdfStorageUri` | `nvarchar(500)` | NULL |  | Immutable digital storage URI of the generated signed PDF document. |
 | `RenderedContent` | `nvarchar(max)` | **NOT NULL** |  | Fully assembled legal text in Markdown/Text format with all tokens interpolated. |
 | `RenderedContentHash` | `nvarchar(100)` | **NOT NULL** |  | Cryptographic SHA-256 digital fingerprint hash of the assembled document content. |
@@ -2450,15 +2680,15 @@
 | `ApprovedAt` | `datetime2` | NULL |  | Timestamp when governance approval was executed. |
 | `ApprovedBy` | `nvarchar(100)` | NULL |  | Username of the governance/legal officer who approved this template. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `EffectiveFrom` | `datetime2` | **NOT NULL** |  | Effective starting date for this template version. |
 | `EffectiveTo` | `datetime2` | NULL |  | Optional expiration / sunset date for this template version. |
 | `FinancialYear` | `int` | **NOT NULL** |  | Financial year the template is effective for (e.g. 2026). |
 | `GrantTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Statutory Grant Type code (e.g. DiscretionaryGrant, SpecialProject, Bursary, Candidacy). |
 | `IsActive` | `bit` | **NOT NULL** |  | Whether this template is active for new contract issuances. |
 | `LegalEntityType` | `nvarchar(50)` | **NOT NULL** |  | Target legal entity type filter (e.g. Employer, TVET, University, NGO, All). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `TemplateCode` | `nvarchar(100)` | **NOT NULL** |  | Unique administrative template code identifier (e.g. DG-STD-2026, SP-TVET-2026). |
 | `TemplateTitle` | `nvarchar(200)` | **NOT NULL** |  | Descriptive name of the MoA template. |
 | `VersionNumber` | `nvarchar(20)` | **NOT NULL** |  | Semantic version of the template policy (e.g. 1.0.0, 1.2.0, 2.0.0). |
@@ -2486,12 +2716,12 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ConditionRuleJson` | `nvarchar(1000)` | NULL |  | Optional conditional inclusion rule expression in JSON format. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `IsMandatory` | `bit` | **NOT NULL** |  | Whether this section is mandatory for this specific template. |
 | `MoaClauseId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the assigned MoaClause. |
 | `MoaTemplateId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent MoaTemplate. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `SectionNumber` | `nvarchar(50)` | **NOT NULL** |  | Custom section number label in the generated contract (e.g. "1.0", "2.1", "Schedule A"). |
 | `SectionTitle` | `nvarchar(200)` | **NOT NULL** |  | Section heading title override. |
 | `SequenceOrder` | `int` | **NOT NULL** |  | Sorting sequence order within the document layout (e.g. 10, 20, 30). |
@@ -2525,13 +2755,13 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DecisionDate` | `datetime2` | **NOT NULL** |  | Domain property for DecisionDate. |
 | `DecisionNotes` | `nvarchar(max)` | NULL |  | Domain property for DecisionNotes. |
 | `DecisionStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for DecisionStatusCode. |
 | `LearnerTradeTestApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NambBatchReference` | `nvarchar(max)` | NULL |  | Domain property for NambBatchReference. |
 | `NambOfficerName` | `nvarchar(150)` | **NOT NULL** |  | Domain property for NambOfficerName. |
 | `NambOfficialUserId` | `nvarchar(max)` | NULL |  | Domain property for NambOfficialUserId. |
@@ -2551,6 +2781,41 @@
 
 ---
 
+### <a id="nambsubmissionbatch"></a> `dbo.NambSubmissionBatch`
+
+**Description:** Represents a formal National Artisan Moderation Body (NAMB) moderation and serial allocation submission batch.  
+**CLR Model:** `Nsdms.Domain.Entities.NambSubmissionBatch`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AdjudicationDate` | `datetime2` | NULL |  | Date when NAMB concluded adjudication and serial assignment. |
+| `ApprovedCandidates` | `int` | **NOT NULL** |  | Total candidates approved with NAMB serial allocation. |
+| `BatchDescription` | `nvarchar(250)` | **NOT NULL** |  | Submission cycle or intake description. |
+| `BatchReferenceNumber` | `nvarchar(50)` | **NOT NULL** |  | Unique statutory batch reference (e.g. NAMB-2026-B001). |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DigitalSecuritySeal` | `nvarchar(64)` | NULL |  | Cryptographic SHA-256 seal anchoring candidate records and allocated serials. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `NambModeratorNotes` | `nvarchar(max)` | NULL |  | Official NAMB moderator or committee notes. |
+| `RejectedCandidates` | `int` | **NOT NULL** |  | Total candidates queried or rejected by NAMB moderation. |
+| `Status` | `nvarchar(50)` | **NOT NULL** |  | Batch processing status (Draft, SubmittedToNamb, Approved, PartiallyApproved, Rejected). |
+| `SubmissionDate` | `datetime2` | **NOT NULL** |  | Date when the batch was submitted to NAMB. |
+| `TotalCandidates` | `int` | **NOT NULL** |  | Total number of trade test candidates included in the batch. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_NambSubmissionBatch_BatchReferenceNumber` | `BatchReferenceNumber` | ✅ Yes |
+| `IX_NambSubmissionBatch_Status` | `Status` | No |
+
+---
+
 ### <a id="nonsetacompany"></a> `dbo.NonSetaCompany`
 
 **Description:** Non-SETA External Employer / Organisation registered with other Quality Councils / SETAs.  
@@ -2565,11 +2830,11 @@
 | `CompanyName` | `nvarchar(200)` | **NOT NULL** |  | Domain property for CompanyName. |
 | `CompanyRegistrationNumber` | `nvarchar(max)` | NULL |  | Domain property for CompanyRegistrationNumber. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Email` | `nvarchar(max)` | **NOT NULL** |  | Primary email address. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active and operational. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PhoneNumber` | `nvarchar(max)` | **NOT NULL** |  | Primary contact telephone number. |
 | `PhysicalAddress` | `nvarchar(max)` | NULL |  | Domain property for PhysicalAddress. |
 | `PrimarySetaCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for PrimarySetaCode. |
@@ -2599,13 +2864,13 @@
 | `AchievementDate` | `datetime2` | **NOT NULL** |  | Domain property for AchievementDate. |
 | `CompanyLearnerId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `EndorsedByUserId` | `nvarchar(max)` | NULL |  | Domain property for EndorsedByUserId. |
 | `EndorsementDate` | `datetime2` | NULL |  | Domain property for EndorsementDate. |
 | `EndorsementNotes` | `nvarchar(max)` | NULL |  | Domain property for EndorsementNotes. |
 | `ExternalCertificateNumber` | `nvarchar(100)` | **NOT NULL** |  | Domain property for ExternalCertificateNumber. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NonSetaCompanyId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `NqfLevel` | `int` | **NOT NULL** |  | Domain property for NqfLevel. |
 | `OriginatingSetaCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for OriginatingSetaCode. |
@@ -2658,7 +2923,7 @@
 | `CompanySizeCode` | `nvarchar(15)` | NULL |  | Enterprise size classification code (references lookup.CompanySizeType: MICRO, SMALL, MEDIUM, LARGE). |
 | `CountryCode` | `nvarchar(10)` | **NOT NULL** |  | Sovereign country lookup code (references lookup.CountryType, default ZA). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `CustomMentorRatioCap` | `int` | NULL |  | Optional enterprise-wide uniform mentor capacity cap override (e.g. 5 learners per mentor across all site workshops). |
 | `FaxNumber` | `nvarchar(50)` | NULL |  | Facsimile transmission number. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the organisation is currently active. |
@@ -2668,8 +2933,8 @@
 | `LogoDocumentId` | `int` | NULL |  | Foreign key referencing the organisation high-DPI brand logo in DocumentMetadata vault. |
 | `MainSdlNumber` | `nvarchar(20)` | NULL |  | Parent or holding company Main SDL number for enterprise site networks (SETMIS File 200). |
 | `MentorRatioExemptionReason` | `nvarchar(500)` | NULL |  | Statutory or executive justification when the organisation is granted an exemption from mentor ratios (e.g. State-Owned Enterprise Training Academy). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationStatusCode` | `nvarchar(15)` | NULL |  | Current operational registration status code (references lookup.StatusType: ACTIVE, INACTIVE, SUSPENDED). |
 | `OrganisationTypeCode` | `nvarchar(15)` | NULL |  | Legal organisation constitution type code (references lookup.OrganisationType: PTY_LTD, CC, PUBLIC_ENTITY, NGO_NPO). |
 | `PhoneNumber` | `nvarchar(50)` | NULL |  | Primary telephone switchboard number. |
@@ -2729,12 +2994,12 @@
 | `ContactType` | `nvarchar(max)` | **NOT NULL** |  | Alias property exposing ContactTypeCode. |
 | `ContactTypeCode` | `nvarchar(15)` | NULL |  | Contact role classification code (e.g. Primary, SDF, Secondary, Financial, HR, TrainingManager). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Designation` | `nvarchar(max)` | NULL |  | Job title or professional designation within the enterprise. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this contact link is currently active. |
 | `IsPrimary` | `bit` | **NOT NULL** |  | Indicates whether this individual is the primary designated contact for official notices. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent Employer Organisation. |
 | `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the individual Person demographic profile. |
 
@@ -2771,15 +3036,15 @@
 | `ContactPersonId` | `int` | NULL | 🔗 **FK** | Alias property referencing PrimaryContactPersonId. |
 | `CountryCode` | `nvarchar(10)` | **NOT NULL** |  | Country code of site location (references lookup.CountryType, default ZA). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Email` | `nvarchar(150)` | NULL |  | Direct site general email address. |
 | `FaxNumber` | `nvarchar(50)` | NULL |  | Direct site fax number. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this site is actively operating. |
 | `IsHeadOffice` | `bit` | **NOT NULL** |  | Indicates whether this facility is the corporate head office. |
 | `Latitude` | `decimal(18,2)` | NULL |  | Decimal GPS Latitude coordinate (e.g. -26.204100). |
 | `Longitude` | `decimal(18,2)` | NULL |  | Decimal GPS Longitude coordinate (e.g. 28.047300). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent Employer Organisation. |
 | `PhoneNumber` | `nvarchar(50)` | NULL |  | Direct site telephone number. |
 | `PhysicalAddress` | `nvarchar(500)` | NULL |  | Physical street address of the facility. |
@@ -2829,7 +3094,7 @@
 | `CitizenStatusCode` | `nvarchar(max)` | NULL |  | Citizen status lookup code (references lookup.CitizenStatusType: SA, PR, D, O, U). |
 | `CommunicatingRatingId` | `nvarchar(10)` | NULL |  | Washington Group Communication functional difficulty rating (references lookup.CommunicatingRatingType: 01 None to 06 Cannot determine). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DateOfBirth` | `datetime2` | NULL |  | Date of birth (auto-derived from RSA ID when available). |
 | `DisabilityCode` | `nvarchar(15)` | NULL |  | Legacy disability classification lookup code (references lookup.DisabilityType). |
 | `Email` | `nvarchar(150)` | NULL |  | Primary email contact address. |
@@ -2846,8 +3111,8 @@
 | `LastSchoolEmisNumber` | `nvarchar(50)` | NULL |  | Department of Basic Education EMIS (Education Management Information System) School Registration Number. |
 | `LastSchoolYear` | `nvarchar(10)` | NULL |  | Year in which individual exited / matriculated from last school attended (YYYY format). |
 | `MiddleName` | `nvarchar(100)` | NULL |  | Middle or secondary given name(s). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NationalityCode` | `nvarchar(15)` | NULL |  | Country nationality lookup code (references lookup.NationalityType: SA, SDC, NAM, ZIM, etc.). |
 | `PassportNumber` | `nvarchar(50)` | NULL |  | Foreign passport number or alternate identification number for non-South African citizens. |
 | `PhoneNumber` | `nvarchar(30)` | NULL |  | Primary telephone contact number. |
@@ -2902,10 +3167,10 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `LearnerCount` | `int` | **NOT NULL** |  | Domain property for LearnerCount. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `ProjectImplementationPlanId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `QualificationTitle` | `nvarchar(250)` | NULL |  | Domain property for QualificationTitle. |
 | `SaqaQualificationId` | `int` | NULL |  | Domain property for SaqaQualificationId. |
@@ -2940,13 +3205,14 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ContractSignOffDate` | `datetime2` | NULL |  | Domain property for ContractSignOffDate. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `FundingWindowId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `GrantApplicationId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `GrantMoaId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `InterventionTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for InterventionTypeCode. |
 | `LearnersWithDisabilityCount` | `int` | **NOT NULL** |  | Domain property for LearnersWithDisabilityCount. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `PlanReferenceNumber` | `nvarchar(50)` | **NOT NULL** |  | Domain property for PlanReferenceNumber. |
 | `RecoverableAmount` | `decimal(18,2)` | **NOT NULL** |  | Domain property for RecoverableAmount. |
@@ -2960,6 +3226,7 @@
 | :--- | :--- | :--- | :--- |
 | `FK_ProjectImplementationPlan_GrantFundingWindow_FundingWindowId` | `FundingWindowId` | `dbo.GrantFundingWindow` | `Restrict` |
 | `FK_ProjectImplementationPlan_GrantApplication_GrantApplicationId` | `GrantApplicationId` | `dbo.GrantApplication` | `Restrict` |
+| `FK_ProjectImplementationPlan_GrantMoa_GrantMoaId` | `GrantMoaId` | `dbo.GrantMoa` | `ClientSetNull` |
 | `FK_ProjectImplementationPlan_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `Restrict` |
 
 #### Performance Indexes
@@ -2986,14 +3253,14 @@
 | `ApplicationNumber` | `nvarchar(50)` | **NOT NULL** |  | Domain property for ApplicationNumber. |
 | `AssessmentQualityPartner` | `nvarchar(max)` | **NOT NULL** |  | Domain property for AssessmentQualityPartner. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DevelopmentQualityPartner` | `nvarchar(max)` | **NOT NULL** |  | Domain property for DevelopmentQualityPartner. |
 | `DevelopmentTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Development type: NewDevelopment, ReAlignment, CurriculumReview |
 | `IndustrialPolicyActionPlanChecked` | `bit` | **NOT NULL** |  | Domain property for IndustrialPolicyActionPlanChecked. |
 | `IndustrialPolicyActionPlanEvidence` | `nvarchar(max)` | NULL |  | Domain property for IndustrialPolicyActionPlanEvidence. |
 | `IndustryDemandJustification` | `nvarchar(max)` | NULL |  | Domain property for IndustryDemandJustification. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NationalDevelopmentPlanChecked` | `bit` | **NOT NULL** |  | Domain property for NationalDevelopmentPlanChecked. |
 | `NationalDevelopmentPlanEvidence` | `nvarchar(max)` | NULL |  | Domain property for NationalDevelopmentPlanEvidence. |
 | `NewGrowthPlanChecked` | `bit` | **NOT NULL** |  | Domain property for NewGrowthPlanChecked. |
@@ -3044,12 +3311,12 @@
 | `AdditionalInfo` | `nvarchar(2000)` | NULL |  | Domain property for AdditionalInfo. |
 | `ChairpersonUserId` | `nvarchar(100)` | NULL |  | Domain property for ChairpersonUserId. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `FromDateTime` | `datetime2` | **NOT NULL** |  | Domain property for FromDateTime. |
 | `MeetingNumber` | `nvarchar(50)` | **NOT NULL** |  | Domain property for MeetingNumber. |
 | `MeetingTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for MeetingTypeCode. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `QuorumReached` | `bit` | **NOT NULL** |  | Domain property for QuorumReached. |
 | `StatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current lifecycle state code in the workflow engine. |
 | `Title` | `nvarchar(300)` | **NOT NULL** |  | Domain property for Title. |
@@ -3079,13 +3346,13 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `AbstainCount` | `int` | **NOT NULL** |  | Domain property for AbstainCount. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DecisionCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for DecisionCode. |
 | `DecisionNotes` | `nvarchar(2000)` | NULL |  | Domain property for DecisionNotes. |
 | `Description` | `nvarchar(2000)` | NULL |  | Detailed description and contextual notes. |
 | `ItemNumber` | `int` | **NOT NULL** |  | Domain property for ItemNumber. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `ReviewCommitteeMeetingId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `TargetEntityId` | `int` | NULL |  | Domain property for TargetEntityId. |
 | `TargetEntityName` | `nvarchar(100)` | NULL |  | Domain property for TargetEntityName. |
@@ -3121,9 +3388,9 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `Attended` | `bit` | **NOT NULL** |  | Domain property for Attended. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `ReviewCommitteeMeetingId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `RoleInMeeting` | `nvarchar(50)` | **NOT NULL** |  | Domain property for RoleInMeeting. |
@@ -3166,13 +3433,13 @@
 | `ClawbackSettledDate` | `datetime2` | NULL |  | Domain property for ClawbackSettledDate. |
 | `CounterpartSetaCode` | `nvarchar(max)` | NULL |  | Domain property for CounterpartSetaCode. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DiscrepancyReasonCode` | `nvarchar(50)` | **NOT NULL** |  | Discrepancy Category: ExactMatch, Underpayment, Overpayment, ChamberMisallocation, SicCodeMismatch, OutOfScopeSeta, SchemeYearMismatch |
 | `ExpectedChamberCode` | `nvarchar(max)` | NULL |  | Domain property for ExpectedChamberCode. |
 | `ExpectedSicCode` | `nvarchar(max)` | NULL |  | Domain property for ExpectedSicCode. |
 | `FinancialYear` | `nvarchar(10)` | **NOT NULL** |  | Domain property for FinancialYear. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `ReconciliationDate` | `datetime2` | **NOT NULL** |  | Domain property for ReconciliationDate. |
 | `SchemeYear` | `nvarchar(max)` | **NOT NULL** |  | Domain property for SchemeYear. |
@@ -3215,11 +3482,11 @@
 | `AllowReturnsDiscretionary` | `bit` | **NOT NULL** |  | Domain property for AllowReturnsDiscretionary. |
 | `AllowReturnsMandatory` | `bit` | **NOT NULL** |  | Domain property for AllowReturnsMandatory. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DiscretionaryPercentage` | `decimal(18,2)` | **NOT NULL** |  | Domain property for DiscretionaryPercentage. |
 | `MandatoryPercentage` | `decimal(18,2)` | **NOT NULL** |  | Domain property for MandatoryPercentage. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `Notes` | `nvarchar(max)` | NULL |  | Domain property for Notes. |
 | `QctoPercentage` | `decimal(18,2)` | **NOT NULL** |  | Domain property for QctoPercentage. |
 | `SchemeYear` | `nvarchar(10)` | **NOT NULL** |  | Domain property for SchemeYear. |
@@ -3416,9 +3683,9 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ApplicationNumber` | `nvarchar(50)` | **NOT NULL** |  | Domain property for ApplicationNumber. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `QualificationTitle` | `nvarchar(250)` | NULL |  | Domain property for QualificationTitle. |
 | `RecommendationNotes` | `nvarchar(2000)` | NULL |  | Domain property for RecommendationNotes. |
 | `ReviewCommitteeMeetingAgendaId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
@@ -3454,12 +3721,12 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Credits` | `int` | **NOT NULL** |  | Domain property for Credits. |
 | `EtqaId` | `nvarchar(10)` | **NOT NULL** |  | Submitting ETQA ID (references lookup.SetaType, default 17 for merSETA). |
 | `LearningProgrammeTypeId` | `nvarchar(10)` | **NOT NULL** |  | Statutory Learning Programme Type code (references lookup.LearningProgrammeType, default 03 Skills Programme). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NonNqfIntervCode` | `nvarchar(50)` | **NOT NULL** |  | Statutory Non-NQF Intervention Code (SETMIS File 304). |
 | `NonNqfIntervName` | `nvarchar(200)` | **NOT NULL** |  | Statutory Non-NQF Intervention descriptive title. |
 | `NonNqfIntervStatusId` | `nvarchar(10)` | **NOT NULL** |  | Statutory Registration Status (references lookup.NonNqfInterventionStatusType: 01 Registered, 02 Approved, 03 Concluded). |
@@ -3498,11 +3765,11 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DateIssued` | `datetime2` | **NOT NULL** |  | Domain property for DateIssued. |
 | `IssuedByUserId` | `nvarchar(100)` | **NOT NULL** |  | Domain property for IssuedByUserId. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `QrVerificationUrl` | `nvarchar(max)` | NULL |  | Domain property for QrVerificationUrl. |
 | `SorSerialNumber` | `nvarchar(100)` | **NOT NULL** |  | Domain property for SorSerialNumber. |
@@ -3529,6 +3796,90 @@
 
 ---
 
+### <a id="statutorybatchfile"></a> `dbo.StatutoryBatchFile`
+
+**Description:** Individual fixed-width data file generated within a statutory batch.  
+**CLR Model:** `Nsdms.Domain.Entities.StatutoryBatchFile`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ChecksumSha256` | `nvarchar(128)` | NULL |  | SHA-256 digital security seal of this individual file. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `FileCode` | `nvarchar(10)` | **NOT NULL** |  | Statutory file code (e.g. "100", "200", "304", "400", "401", "500", "501", "502", "503", "505", "506" for SETMIS, or "21", "24", "25", "26", "27", "28", "29", "30" for NLRD). |
+| `FileContent` | `nvarchar(max)` | NULL |  | Extracted fixed-width text content or storage path reference. |
+| `FileName` | `nvarchar(255)` | **NOT NULL** |  | Generated file name (e.g. MERS_0006_100_v001_20260902.dat or MERS21260902.dat). |
+| `FileSizeBytes` | `bigint` | **NOT NULL** |  | File size in bytes. |
+| `FileTitle` | `nvarchar(150)` | **NOT NULL** |  | Statutory file title / description (e.g. "Provider File 100", "Learner Enrolment File 500"). |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `RecordCount` | `int` | **NOT NULL** |  | Number of lines / records extracted in this file. |
+| `RecordLength` | `int` | **NOT NULL** |  | Fixed-width record length in characters (per specification). |
+| `StatusCode` | `nvarchar(50)` | **NOT NULL** |  | File status ("Extracted", "Empty", "Failed"). |
+| `StatutorySubmissionBatchId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent StatutorySubmissionBatch. |
+| `ValidationErrorsCount` | `int` | **NOT NULL** |  | Number of validation discrepancies recorded for this file. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_StatutoryBatchFile_StatutorySubmissionBatch_StatutorySubmissionBatchId` | `StatutorySubmissionBatchId` | `dbo.StatutorySubmissionBatch` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_StatutoryBatchFile_FileCode` | `FileCode` | No |
+| `IX_StatutoryBatchFile_StatusCode` | `StatusCode` | No |
+| `IX_StatutoryBatchFile_StatutorySubmissionBatchId` | `StatutorySubmissionBatchId` | No |
+
+---
+
+### <a id="statutorysubmissionbatch"></a> `dbo.StatutorySubmissionBatch`
+
+**Description:** Represents a statutory submission batch run for DHET SETMIS or SAQA NLRD.  
+**CLR Model:** `Nsdms.Domain.Entities.StatutorySubmissionBatch`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ArchiveFileName` | `nvarchar(255)` | NULL |  | Name of the generated zip archive package (e.g. SETMIS_MERS_0006_20260902.zip). |
+| `ArchiveStorageUri` | `nvarchar(500)` | NULL |  | File storage URI or relative path to the archived package. |
+| `BatchNumber` | `nvarchar(100)` | **NOT NULL** |  | Unique business reference for the statutory batch (e.g. SETMIS-2026-Q1-001). |
+| `BatchType` | `nvarchar(20)` | **NOT NULL** |  | Type of statutory submission ("SETMIS" or "NLRD"). |
+| `Comments` | `nvarchar(max)` | NULL |  | Data steward notes, audit remarks, or DHET transmission acknowledgements. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DigitalSecuritySeal` | `nvarchar(128)` | NULL |  | SHA-256 digital security seal / checksum of the combined extract package. |
+| `ExtractionDate` | `datetime2` | **NOT NULL** |  | Timestamp when data extraction was initiated. |
+| `FatalErrorsCount` | `int` | **NOT NULL** |  | Number of fatal blocking validation errors detected before extraction. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `StatusCode` | `nvarchar(50)` | **NOT NULL** |  | Batch status code ("Draft", "Validated", "Extracted", "Submitted", "Accepted", "Rejected"). |
+| `SubmissionQuarter` | `int` | NULL |  | Quarterly submission cycle (1, 2, 3, 4, or null for annual/ad-hoc). |
+| `SubmissionYear` | `int` | **NOT NULL** |  | Scheme / Financial submission year (e.g. 2026). |
+| `TotalRecords` | `int` | **NOT NULL** |  | Total records across all generated files in this batch. |
+| `WarningsCount` | `int` | **NOT NULL** |  | Number of non-blocking warning anomalies detected. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_StatutorySubmissionBatch_BatchNumber` | `BatchNumber` | ✅ Yes |
+| `IX_StatutorySubmissionBatch_BatchType` | `BatchType` | No |
+| `IX_StatutorySubmissionBatch_ExtractionDate` | `ExtractionDate` | No |
+| `IX_StatutorySubmissionBatch_StatusCode` | `StatusCode` | No |
+| `IX_StatutorySubmissionBatch_SubmissionYear` | `SubmissionYear` | No |
+
+---
+
 ### <a id="strategicpriority"></a> `dbo.StrategicPriority`
 
 **Description:** Statutory Strategic Priorities, Key Focus Areas, and Sector Skills Plan (SSP) Themes mapped to National Skills Development Plan (NSDP III) Outcomes and Strategic Infrastructure Projects (SIPs).  
@@ -3542,11 +3893,11 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `Code` | `nvarchar(50)` | **NOT NULL** |  | Unique strategic priority identification code (e.g. SP-GREEN-01, SP-4IR-02, SP-ARTISAN-03). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Description` | `nvarchar(1000)` | NULL |  | Detailed description and statutory objective of this focus area. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this strategic theme is active for allocation in new funding windows. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `Name` | `nvarchar(200)` | **NOT NULL** |  | Display title / name of the record. |
 | `NsdpOutcomeCode` | `nvarchar(50)` | **NOT NULL** |  | National Skills Development Plan (NSDP III) Outcome reference (e.g. Outcome 1, Outcome 2, Outcome 5). |
 | `NsdpOutcomeDescription` | `nvarchar(500)` | **NOT NULL** |  | Full description of the NSDP Outcome goal. |
@@ -3579,7 +3930,7 @@
 | `AssessorRegistrationNumber` | `nvarchar(max)` | NULL |  | Domain property for AssessorRegistrationNumber. |
 | `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `ExternalModeratorApprovalDate` | `datetime2` | NULL |  | Domain property for ExternalModeratorApprovalDate. |
 | `ExternalModeratorComments` | `nvarchar(max)` | NULL |  | Domain property for ExternalModeratorComments. |
 | `ExternalModeratorUserId` | `nvarchar(max)` | NULL |  | Domain property for ExternalModeratorUserId. |
@@ -3587,8 +3938,8 @@
 | `InternalModeratorRegistrationNumber` | `nvarchar(max)` | NULL |  | Domain property for InternalModeratorRegistrationNumber. |
 | `InterventionTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for InterventionTypeCode. |
 | `ModerationDate` | `datetime2` | NULL |  | Domain property for ModerationDate. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NqfLevel` | `int` | **NOT NULL** |  | Domain property for NqfLevel. |
 | `OrganisationId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
@@ -3637,13 +3988,13 @@
 | `AssessorComments` | `nvarchar(max)` | NULL |  | Domain property for AssessorComments. |
 | `CompetencyStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for CompetencyStatusCode. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Credits` | `int` | **NOT NULL** |  | Domain property for Credits. |
 | `IsModerated` | `bit` | **NOT NULL** |  | Domain property for IsModerated. |
 | `ModerationOutcome` | `nvarchar(50)` | **NOT NULL** |  | Domain property for ModerationOutcome. |
 | `ModeratorComments` | `nvarchar(max)` | NULL |  | Domain property for ModeratorComments. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NqfLevel` | `int` | **NOT NULL** |  | Domain property for NqfLevel. |
 | `SummativeAssessmentReportId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `UnitStandardCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for UnitStandardCode. |
@@ -3679,13 +4030,13 @@
 | `ConfigKey` | `nvarchar(150)` | **NOT NULL** |  | Unique configuration hierarchical key (e.g. General:AppVersion, Storage:LocalPath, Integrations:DynamicsGp:Endpoint). |
 | `ConfigValue` | `nvarchar(max)` | NULL |  | Current configured runtime value. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DataType` | `nvarchar(30)` | **NOT NULL** |  | Data type encoding (e.g. String, Boolean, Integer, Decimal, Json). |
 | `Description` | `nvarchar(500)` | NULL |  | Descriptive explanation and operational purpose of this configuration setting. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this configuration override is active. |
 | `IsEncrypted` | `bit` | **NOT NULL** |  | Indicates whether the stored configuration value is encrypted with AES-256. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 
 #### Performance Indexes
 
@@ -3709,15 +4060,15 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Description` | `nvarchar(500)` | NULL |  | Business explanation and functional scope of the feature toggle. |
 | `FeatureCategory` | `nvarchar(50)` | **NOT NULL** |  | Feature flag module grouping category (e.g. Integrations, Storage, Scheduler, Workflow, Compliance). |
 | `FeatureKey` | `nvarchar(150)` | **NOT NULL** |  | Unique feature flag key identifier (e.g. Integrations.DynamicsGp, Features.TradeTestOnlineBooking). |
 | `FeatureName` | `nvarchar(150)` | **NOT NULL** |  | Human-readable display name of the feature flag. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the feature flag definition is active. |
 | `IsEnabled` | `bit` | **NOT NULL** |  | State toggle (true = active, false = disabled/simulated fallback). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 
 #### Performance Indexes
 
@@ -3742,11 +4093,11 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ActionUrl` | `nvarchar(300)` | NULL |  | Domain property for ActionUrl. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `IsRead` | `bit` | **NOT NULL** |  | Domain property for IsRead. |
 | `Message` | `nvarchar(1000)` | **NOT NULL** |  | Domain property for Message. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NotificationType` | `nvarchar(50)` | **NOT NULL** |  | Domain property for NotificationType. |
 | `ReadAt` | `datetime2` | NULL |  | Domain property for ReadAt. |
 | `RecipientRole` | `nvarchar(100)` | NULL |  | Domain property for RecipientRole. |
@@ -3777,13 +4128,13 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `EnforceStrictly` | `bit` | **NOT NULL** |  | Indicates whether this trade enforces strict blocking on excess learner enrollments or advisory warnings only. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the trade policy is active. |
 | `MaxAllowedRatio` | `int` | **NOT NULL** |  | Maximum permissible ratio under special dispensation / approval (e.g. 6). |
 | `MinExperienceYearsRequired` | `int` | **NOT NULL** |  | Minimum post-apprenticeship / post-trade test verified years of experience required to mentor in this trade. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `Notes` | `nvarchar(500)` | NULL |  | Regulatory notes, gazette references, or curriculum guidelines. |
 | `SaqaQualificationId` | `int` | NULL |  | SAQA Registered Qualification ID code associated with this trade. |
 | `StandardRatio` | `int` | **NOT NULL** |  | Standard statutory ratio of learners per qualified artisan mentor (e.g. 4 for 1:4). |
@@ -3815,12 +4166,12 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `AssessorComments` | `nvarchar(max)` | NULL |  | Domain property for AssessorComments. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `IsCompetent` | `bit` | **NOT NULL** |  | Domain property for IsCompetent. |
 | `LearnerTradeTestApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `MarksObtained` | `decimal(18,2)` | **NOT NULL** |  | Domain property for MarksObtained. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PassPercentage` | `decimal(18,2)` | **NOT NULL** |  | Domain property for PassPercentage. |
 | `PercentageAchieved` | `decimal(18,2)` | **NOT NULL** |  | Domain property for PercentageAchieved. |
 | `TaskDescription` | `nvarchar(max)` | NULL |  | Domain property for TaskDescription. |
@@ -3857,11 +4208,11 @@
 | `CommitteeStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for CommitteeStatusCode. |
 | `ConstitutionalQuorumMet` | `bit` | **NOT NULL** |  | Domain property for ConstitutionalQuorumMet. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `FinancialYear` | `int` | **NOT NULL** |  | Domain property for FinancialYear. |
 | `LastMeetingDate` | `datetime2` | NULL |  | Domain property for LastMeetingDate. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 
 #### Foreign Key Constraints
@@ -3893,11 +4244,11 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `Constituency` | `nvarchar(100)` | **NOT NULL** |  | Domain property for Constituency. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active and operational. |
 | `MemberRoleCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for MemberRoleCode. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `TrainingCommitteeId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 
@@ -3933,15 +4284,15 @@
 | `AccreditationStartDate` | `datetime2` | NULL |  | Start date of current ETQA accreditation cycle. |
 | `BrandColorHex` | `nvarchar(max)` | NULL |  | Primary brand color in HEX format (e.g. #865300). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `EtqaDecisionNumber` | `nvarchar(50)` | NULL |  | MerSETA ETQA committee decision minute reference number (SETMIS File 100). |
 | `EtqaId` | `nvarchar(10)` | NULL |  | Submitting ETQA / SETA Identifier (references lookup.SetaType, default 17 for merSETA). |
 | `FaxNumber` | `nvarchar(50)` | NULL |  | Facsimile transmission contact number. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the provider is active for new learner enrolments. |
 | `LogoDocumentId` | `int` | NULL |  | Foreign key referencing the high-resolution brand logo DocumentMetadata. |
 | `MaxLearnerCapacity` | `int` | NULL |  | Maximum concurrent learner enrolment capacity authorized for facilities. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent legal Organisation. |
 | `PrimaryContactPersonId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the SDP principal or training director. |
 | `ProviderClassId` | `nvarchar(10)` | NULL |  | Provider institutional class code (references lookup.ProviderClassType: 01 Public TVET, 02 Private, 03 University, 04 NGO/CBO). |
@@ -3976,6 +4327,92 @@
 
 ---
 
+### <a id="trainingproviderassessorlink"></a> `dbo.TrainingProviderAssessorLink`
+
+**Description:** Relational binding between an accredited ETQA Assessor/Moderator and an SDP delivery campus.  
+**CLR Model:** `Nsdms.Domain.Entities.TrainingProviderAssessorLink`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `EndDate` | `datetime2` | NULL |  | Domain property for EndDate. |
+| `EtqaAssessorId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `RoleTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Role type: Assessor, Moderator, LeadAssessor |
+| `StartDate` | `datetime2` | **NOT NULL** |  | Domain property for StartDate. |
+| `Status` | `nvarchar(50)` | **NOT NULL** |  | Status: Active, Terminated, PendingVerification |
+| `TrainingProviderCampusId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `TrainingProviderId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `VerificationNotes` | `nvarchar(max)` | NULL |  | Domain property for VerificationNotes. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_TrainingProviderAssessorLink_EtqaAssessor_EtqaAssessorId` | `EtqaAssessorId` | `dbo.EtqaAssessor` | `Cascade` |
+| `FK_TrainingProviderAssessorLink_TrainingProviderCampus_TrainingProviderCampusId` | `TrainingProviderCampusId` | `dbo.TrainingProviderCampus` | `NoAction` |
+| `FK_TrainingProviderAssessorLink_TrainingProvider_TrainingProviderId` | `TrainingProviderId` | `dbo.TrainingProvider` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_TrainingProviderAssessorLink_EtqaAssessorId` | `EtqaAssessorId` | No |
+| `IX_TrainingProviderAssessorLink_TrainingProviderCampusId` | `TrainingProviderCampusId` | No |
+| `IX_TrainingProviderAssessorLink_TrainingProviderId` | `TrainingProviderId` | No |
+
+---
+
+### <a id="trainingprovidercampus"></a> `dbo.TrainingProviderCampus`
+
+**Description:** Physical training site or delivery campus belonging to an accredited Skills Development Provider (SDP).  
+**CLR Model:** `Nsdms.Domain.Entities.TrainingProviderCampus`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CampusCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for CampusCode. |
+| `CampusName` | `nvarchar(150)` | **NOT NULL** |  | Domain property for CampusName. |
+| `City` | `nvarchar(max)` | NULL |  | Domain property for City. |
+| `ContactEmail` | `nvarchar(max)` | NULL |  | Domain property for ContactEmail. |
+| `ContactPersonName` | `nvarchar(max)` | NULL |  | Domain property for ContactPersonName. |
+| `ContactPhone` | `nvarchar(max)` | NULL |  | Domain property for ContactPhone. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `IsPrimarySite` | `bit` | **NOT NULL** |  | Domain property for IsPrimarySite. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PhysicalAddressLine1` | `nvarchar(max)` | NULL |  | Domain property for PhysicalAddressLine1. |
+| `PhysicalAddressLine2` | `nvarchar(max)` | NULL |  | Domain property for PhysicalAddressLine2. |
+| `PostalCode` | `nvarchar(max)` | NULL |  | Domain property for PostalCode. |
+| `ProvinceCode` | `nvarchar(max)` | NULL |  | Domain property for ProvinceCode. |
+| `Status` | `nvarchar(50)` | **NOT NULL** |  | Current lifecycle state code in the workflow engine. |
+| `TrainingProviderId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_TrainingProviderCampus_TrainingProvider_TrainingProviderId` | `TrainingProviderId` | `dbo.TrainingProvider` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_TrainingProviderCampus_CampusCode` | `CampusCode` | No |
+| `IX_TrainingProviderCampus_TrainingProviderId` | `TrainingProviderId` | No |
+
+---
+
 ### <a id="trainingproviderqualification"></a> `dbo.TrainingProviderQualification`
 
 **Description:** Registered SAQA qualification delivery scope accredited to a Training Provider.  
@@ -3989,10 +4426,10 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `AccreditationStatusCode` | `nvarchar(15)` | NULL |  | Accreditation standing code for this specific qualification scope. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `ExpiryDate` | `datetime2` | NULL |  | Scope expiration date. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NqfLevel` | `int` | NULL |  | National Qualifications Framework (NQF) level descriptor (e.g. 2, 3, 4, 5). |
 | `QualificationTitle` | `nvarchar(200)` | **NOT NULL** |  | Official title of the registered qualification. |
 | `SaqaQualificationId` | `int` | **NOT NULL** |  | SAQA Registered Qualification ID code. |
@@ -4026,10 +4463,10 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Credits` | `int` | **NOT NULL** |  | SAQA credit value assigned to the unit standard. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NqfLevel` | `int` | NULL |  | National Qualifications Framework (NQF) level descriptor. |
 | `TrainingProviderId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent TrainingProvider. |
 | `UnitStandardId` | `int` | **NOT NULL** |  | SAQA Registered Unit Standard ID number. |
@@ -4063,10 +4500,10 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ContactPersonId` | `int` | **NOT NULL** | 🔗 **FK** | Mandatory foreign key referencing the employer's designated Contact Person attending the visit. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Location` | `nvarchar(300)` | NULL |  | Physical location, facility branch, or site address where the visit was held. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the host or inspected Employer Organisation. |
 | `OutcomeNotes` | `nvarchar(max)` | NULL |  | Official findings, remediation recommendations, and outcome notes recorded by the visiting officer. |
 | `Purpose` | `nvarchar(max)` | NULL |  | Detailed statutory or operational purpose for conducting the visit. |
@@ -4106,11 +4543,11 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `Code` | `nvarchar(50)` | **NOT NULL** |  | Unique process blueprint code (e.g. PROVIDER, WSP, DG, WPAPP, LRN, TRADETEST). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the workflow definition is active. |
 | `KeyFieldName` | `nvarchar(50)` | **NOT NULL** |  | Primary key property name on the target domain entity (default: Id). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `Name` | `nvarchar(150)` | **NOT NULL** |  | Display name of the workflow business process. |
 | `TargetEntityName` | `nvarchar(100)` | **NOT NULL** |  | Target domain entity managed by this workflow machine (e.g. Organisation, WspSubmission, GrantApplication). |
 
@@ -4168,10 +4605,10 @@
 | `ActorUserId` | `nvarchar(100)` | **NOT NULL** |  | User identifier of the actor who triggered the transition. |
 | `Comments` | `nvarchar(1000)` | NULL |  | Mandatory or optional decision justification comments recorded by the actor. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `FromStateId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the state prior to transition. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `ToStateId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the destination state. |
 | `WorkflowInstanceId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent WorkflowInstance. |
 
@@ -4205,7 +4642,7 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CompletedDate` | `datetime2` | NULL |  | Timestamp when the workflow reached a terminal state. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `CurrentWorkflowStateId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the current active WorkflowState. |
 | `EntityId` | `int` | **NOT NULL** |  | Primary key integer value of the target entity record. |
 | `EntityReferenceNumber` | `nvarchar(100)` | **NOT NULL** |  | Business reference number of the target record (e.g. WSP-2026-001). |
@@ -4214,8 +4651,8 @@
 | `InitiatorName` | `nvarchar(150)` | **NOT NULL** |  | Full display name of the initiating user. |
 | `InitiatorUserId` | `nvarchar(100)` | **NOT NULL** |  | User identifier who initiated the workflow lifecycle. |
 | `IsCompleted` | `bit` | **NOT NULL** |  | Indicates whether the workflow instance is closed. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `WorkflowDefinitionId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent WorkflowDefinition. |
 
 #### Foreign Key Constraints
@@ -4248,12 +4685,12 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `CreatedDate` | `datetime2` | **NOT NULL** |  | Timestamp when the notification was created. |
 | `IsRead` | `bit` | **NOT NULL** |  | Indicates whether the recipient has viewed the notification. |
 | `MessageHtml` | `nvarchar(max)` | **NOT NULL** |  | HTML / rich message body. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `ReadDate` | `datetime2` | NULL |  | Timestamp when the recipient marked the alert as read. |
 | `RecipientUserId` | `nvarchar(100)` | **NOT NULL** |  | User identifier of the notification recipient. |
 | `TargetRoute` | `nvarchar(250)` | **NOT NULL** |  | Navigation target route for the notification click action. |
@@ -4318,11 +4755,11 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `AllowedGroupRole` | `nvarchar(100)` | NULL |  | User group / role authorized to act on this stage (e.g. CLO, RegionManager, ReviewCommittee, QA_Manager, CEO, Admin). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `IsInitial` | `bit` | **NOT NULL** |  | Indicates whether this is the entry state for newly initiated instances. |
 | `IsTerminal` | `bit` | **NOT NULL** |  | Indicates whether this is a terminal end state (Approved / Rejected / Cancelled). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `StateCode` | `nvarchar(50)` | **NOT NULL** |  | Machine code representing the state (e.g. DRAFT, REVIEW, APPROVED, REJECTED). |
 | `StateName` | `nvarchar(100)` | **NOT NULL** |  | Human-readable name of the lifecycle state. |
 | `StepOrder` | `int` | **NOT NULL** |  | Sequence order index for UI stepper rendering. |
@@ -4360,10 +4797,10 @@
 | `ClaimedDate` | `datetime2` | NULL |  | Timestamp when the user claimed ownership of the task. |
 | `CompletedDate` | `datetime2` | NULL |  | Timestamp when the task was finalized. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DueDate` | `datetime2` | **NOT NULL** |  | Target completion deadline based on SLA governance. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `Priority` | `nvarchar(20)` | **NOT NULL** |  | Task urgency level (e.g. Low, Normal, High, Urgent). |
 | `TargetRoute` | `nvarchar(250)` | **NOT NULL** |  | Stacked master-detail deep link route (e.g. /wsp/1, /employers/10). |
 | `TaskDescription` | `nvarchar(500)` | **NOT NULL** |  | Detailed instructions and checklist requirements. |
@@ -4429,10 +4866,10 @@
 | `ButtonColor` | `nvarchar(50)` | NULL |  | Hex color code for the UI Action button (e.g. #1e40af, #16a34a, #dc2626). |
 | `ButtonIcon` | `nvarchar(50)` | NULL |  | Material icon identifier for the UI Action button. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `FromStateId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the originating WorkflowState. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NewEntityStatusCode` | `nvarchar(50)` | NULL |  | Status code automatically pushed to the parent entity upon transition execution. |
 | `RequiredPermission` | `nvarchar(100)` | NULL |  | CASL permission or policy claim required to execute this transition. |
 | `RequiresComments` | `bit` | **NOT NULL** |  | Indicates whether the user must provide justification comments when executing this transition. |
@@ -4474,15 +4911,15 @@
 | `AssessorPersonId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the MerSETA officer / assessor who performed the inspection. |
 | `ContactPersonId` | `int` | NULL | 🔗 **FK** | Mandatory Foreign key referencing the designated Employer Contact Person present during the workplace visit/approval. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `CustomTradeRatio` | `int` | NULL |  | Custom site-specific learner-to-mentor ratio override (e.g. 3 for 1:3), overriding the standard trade policy. |
 | `ExpiryDate` | `datetime2` | NULL |  | Validity expiration date of the workplace approval certificate. |
 | `InspectionDate` | `datetime2` | NULL |  | Date when the physical on-site audit inspection occurred. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the workplace approval is currently active. |
 | `IsRatioEnforced` | `bit` | NULL |  | Explicit mentor ratio enforcement override for this workplace approval (null = inherit Org/Global, true = enforce, false = exempt). |
 | `MentorRatioExemptionNotes` | `nvarchar(500)` | NULL |  | Exemption justification or special dispensation notes for this workplace approval. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the host Employer Organisation. |
 | `OrganisationSiteId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the specific branch or plant site approved. |
 | `QualificationTitle` | `nvarchar(250)` | **NOT NULL** |  | Title of the registered qualification approved for on-site hosting. |
@@ -4526,15 +4963,15 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ArtisanTradeNumber` | `nvarchar(50)` | NULL |  | Red Seal Artisan Trade Certificate serial number. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Designation` | `nvarchar(100)` | **NOT NULL** |  | Enterprise job title / role designation (e.g. Master Artisan, Lead Fitter, Foreman). |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the mentor is actively mentoring learners at this site. |
 | `IsCertifiedArtisan` | `bit` | **NOT NULL** |  | Indicates whether the mentor is certified as a qualified Red Seal artisan. |
 | `IsRatioEnforced` | `bit` | **NOT NULL** |  | Indicates whether ratio enforcement is active for this mentor. |
 | `IsRatioExempt` | `bit` | **NOT NULL** |  | Indicates whether this mentor is exempt from statutory ratio enforcement. |
 | `MaxLearnerCapacity` | `int` | NULL |  | Optional custom maximum apprentice supervision capacity for this specific mentor (overrides trade baseline). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `Notes` | `nvarchar(500)` | NULL |  | Specific notes or special conditions regarding this mentor's capacity. |
 | `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the mentor's demographic Person record. |
 | `WorkplaceApprovalId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent WorkplaceApproval. |
@@ -4573,9 +5010,9 @@
 | `AvailableQuantity` | `int` | **NOT NULL** |  | Actual operational quantity verified during the on-site physical inspection. |
 | `Category` | `nvarchar(50)` | NULL |  | Tool category classification (e.g. Mechanical, Electrical, Welding, Safety, PPE). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `Remarks` | `nvarchar(250)` | NULL |  | Auditor remarks on equipment condition, calibration, or servicing status. |
 | `RequiredQuantity` | `int` | **NOT NULL** |  | Minimum required quantity specified in the trade training curriculum regulations. |
 | `ToolName` | `nvarchar(150)` | **NOT NULL** |  | Name / description of the required tool, machinery, or PPE safety item. |
@@ -4608,11 +5045,11 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ActionRequired` | `nvarchar(2000)` | **NOT NULL** |  | Domain property for ActionRequired. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Criteria` | `nvarchar(500)` | **NOT NULL** |  | Domain property for Criteria. |
 | `IsAtRisk` | `bit` | **NOT NULL** |  | Domain property for IsAtRisk. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `ResolutionDate` | `datetime2` | NULL |  | Domain property for ResolutionDate. |
 | `ResolutionNotes` | `nvarchar(2000)` | NULL |  | Domain property for ResolutionNotes. |
 | `ResponsiblePersonName` | `nvarchar(150)` | **NOT NULL** |  | Domain property for ResponsiblePersonName. |
@@ -4653,9 +5090,9 @@
 | `Category` | `nvarchar(max)` | **NOT NULL** |  | Domain property for Category. |
 | `Comments` | `nvarchar(1000)` | NULL |  | Domain property for Comments. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NonComplianceRisk` | `bit` | **NOT NULL** |  | Domain property for NonComplianceRisk. |
 | `QuestionNumber` | `int` | **NOT NULL** |  | Domain property for QuestionNumber. |
 | `QuestionText` | `nvarchar(500)` | **NOT NULL** |  | Domain property for QuestionText. |
@@ -4691,14 +5128,14 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CompanyLearnerId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `ExposedToFullCurriculum` | `bit` | **NOT NULL** |  | Domain property for ExposedToFullCurriculum. |
 | `HasQualifiedMentor` | `bit` | **NOT NULL** |  | Domain property for HasQualifiedMentor. |
 | `HasRequiredPPE` | `bit` | **NOT NULL** |  | Domain property for HasRequiredPPE. |
 | `LearnerComments` | `nvarchar(2000)` | NULL |  | Domain property for LearnerComments. |
 | `LearnerName` | `nvarchar(150)` | **NOT NULL** |  | Domain property for LearnerName. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `ReceivedToolbox` | `bit` | **NOT NULL** |  | Domain property for ReceivedToolbox. |
 | `ReceivesStipendWage` | `bit` | **NOT NULL** |  | Domain property for ReceivesStipendWage. |
 | `SatisfiedWithTraining` | `bit` | **NOT NULL** |  | Domain property for SatisfiedWithTraining. |
@@ -4732,11 +5169,11 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `IdentifiedRisk` | `nvarchar(500)` | **NOT NULL** |  | Domain property for IdentifiedRisk. |
 | `MitigationSteps` | `nvarchar(2000)` | **NOT NULL** |  | Domain property for MitigationSteps. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `ReviewerNotes` | `nvarchar(2000)` | NULL |  | Domain property for ReviewerNotes. |
 | `StatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current lifecycle state code in the workflow engine. |
 | `TargetResolutionDate` | `datetime2` | **NOT NULL** |  | Domain property for TargetResolutionDate. |
@@ -4777,10 +5214,10 @@
 | `CloUserId` | `nvarchar(100)` | NULL |  | Domain property for CloUserId. |
 | `ContactPersonId` | `int` | **NOT NULL** | 🔗 **FK** | Mandatory Contact Person at the employer site during the visit. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `CrmUserId` | `nvarchar(100)` | NULL |  | Domain property for CrmUserId. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `MonitoringDate` | `datetime2` | **NOT NULL** |  | Domain property for MonitoringDate. |
 | `MonitoringStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for MonitoringStatusCode. |
 | `NonComplianceApprovalDate` | `datetime2` | NULL |  | Domain property for NonComplianceApprovalDate. |
@@ -4823,13 +5260,13 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Description` | `nvarchar(2000)` | **NOT NULL** |  | Detailed description and contextual notes. |
 | `DisputeReasonCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for DisputeReasonCode. |
 | `DisputeReferenceNumber` | `nvarchar(50)` | **NOT NULL** |  | Domain property for DisputeReferenceNumber. |
 | `DisputeStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for DisputeStatusCode. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `ResolutionDate` | `datetime2` | NULL |  | Domain property for ResolutionDate. |
 | `ResolutionNotes` | `nvarchar(2000)` | NULL |  | Domain property for ResolutionNotes. |
@@ -4864,7 +5301,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DisabledCount` | `int` | **NOT NULL** |  | Total headcount of employees declared with disabilities. |
 | `FemaleAfrican` | `int` | **NOT NULL** |  | Headcount of African female employees in this occupational level. |
 | `FemaleColoured` | `int` | **NOT NULL** |  | Headcount of Coloured female employees. |
@@ -4874,8 +5311,8 @@
 | `MaleColoured` | `int` | **NOT NULL** |  | Headcount of Coloured male employees. |
 | `MaleIndian` | `int` | **NOT NULL** |  | Headcount of Indian male employees. |
 | `MaleWhite` | `int` | **NOT NULL** |  | Headcount of White male employees. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OccupationalCategory` | `nvarchar(100)` | NULL |  | Major occupational level title (e.g. Managers, Professionals, Technicians, Clerical, Artisans, Elementary). |
 | `OfoCode` | `nvarchar(20)` | NULL |  | Organising Framework for Occupations (OFO) 6-digit classification code. |
 | `TotalEmployees` | `int` | **NOT NULL** |  | Total headcount sum of all employees in this category. |
@@ -4896,6 +5333,54 @@
 
 ---
 
+### <a id="wspsignoffattestation"></a> `dbo.WspSignoffAttestation`
+
+**Description:** Cryptographically sealed attestation for WSP/ATR multi-party sign-off (SDF, Labour Union, CEO).  
+**CLR Model:** `Nsdms.Domain.Entities.WspSignoffAttestation`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AttestationStatement` | `nvarchar(max)` | **NOT NULL** |  | Domain property for AttestationStatement. |
+| `AttestationStatusCode` | `nvarchar(max)` | **NOT NULL** |  | Domain property for AttestationStatusCode. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DigitalSecuritySeal` | `nvarchar(128)` | **NOT NULL** |  | Domain property for DigitalSecuritySeal. |
+| `DisputeLogged` | `bit` | **NOT NULL** |  | Domain property for DisputeLogged. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `OtpToken` | `nvarchar(max)` | NULL |  | Domain property for OtpToken. |
+| `OtpVerifiedAt` | `datetime2` | NULL |  | Domain property for OtpVerifiedAt. |
+| `SignerEmail` | `nvarchar(200)` | **NOT NULL** |  | Domain property for SignerEmail. |
+| `SignerFullName` | `nvarchar(250)` | **NOT NULL** |  | Domain property for SignerFullName. |
+| `SignerNotes` | `nvarchar(max)` | NULL |  | Domain property for SignerNotes. |
+| `SignerRoleCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for SignerRoleCode. |
+| `SignerRsaId` | `nvarchar(max)` | NULL |  | Domain property for SignerRsaId. |
+| `SignoffDate` | `datetime2` | **NOT NULL** |  | Domain property for SignoffDate. |
+| `UnionName` | `nvarchar(max)` | NULL |  | Domain property for UnionName. |
+| `WspDisputeId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `WspSubmissionId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_WspSignoffAttestation_WspDispute_WspDisputeId` | `WspDisputeId` | `dbo.WspDispute` | `ClientSetNull` |
+| `FK_WspSignoffAttestation_WspSubmission_WspSubmissionId` | `WspSubmissionId` | `dbo.WspSubmission` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_WspSignoffAttestation_AttestationStatusCode` | `AttestationStatusCode` | No |
+| `IX_WspSignoffAttestation_SignerRoleCode` | `SignerRoleCode` | No |
+| `IX_WspSignoffAttestation_WspSubmissionId` | `WspSubmissionId` | No |
+
+---
+
 ### <a id="wspskillsgap"></a> `dbo.WspSkillsGap`
 
 **Description:** Critical and Scarce Skills Gap identified during WSP compilation.  
@@ -4908,11 +5393,11 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `FinancialYear` | `int` | **NOT NULL** |  | Domain property for FinancialYear. |
 | `HardToFillVacanciesCount` | `int` | **NOT NULL** |  | Domain property for HardToFillVacanciesCount. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OccupationTitle` | `nvarchar(200)` | **NOT NULL** |  | Domain property for OccupationTitle. |
 | `OfoCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for OfoCode. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
@@ -4948,10 +5433,10 @@
 | `AlignmentDescription` | `nvarchar(max)` | **NOT NULL** |  | Domain property for AlignmentDescription. |
 | `AllocatedBudget` | `decimal(18,2)` | **NOT NULL** |  | Domain property for AllocatedBudget. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `IsAlignedWithNsdp` | `bit` | **NOT NULL** |  | Domain property for IsAlignedWithNsdp. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PriorityCode` | `nvarchar(100)` | **NOT NULL** |  | Domain property for PriorityCode. |
 | `StrategicObjective` | `nvarchar(max)` | **NOT NULL** |  | Domain property for StrategicObjective. |
 | `WspId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
@@ -4983,11 +5468,11 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CauseOfGap` | `nvarchar(max)` | NULL |  | Domain property for CauseOfGap. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `EstimatedBudget` | `decimal(18,2)` | **NOT NULL** |  | Domain property for EstimatedBudget. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active and operational. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OccupationTitle` | `nvarchar(150)` | **NOT NULL** |  | Domain property for OccupationTitle. |
 | `OfoCode` | `nvarchar(max)` | NULL |  | Domain property for OfoCode. |
 | `PlannedIntervention` | `nvarchar(max)` | NULL |  | Domain property for PlannedIntervention. |
@@ -5022,15 +5507,20 @@
 | Column | SQL Store Type | Nullable | Key | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CompletedSignoffCount` | `int` | **NOT NULL** |  | Total count of completed, OTP-verified signatory attestations recorded. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DisputeLogged` | `bit` | **NOT NULL** |  | Flag indicating whether a formal labour dispute has been lodged against this submission. |
 | `EmployeeCount` | `int` | **NOT NULL** |  | Total headcount of employees declared in the organisation profile. |
 | `FinYear` | `int` | **NOT NULL** |  | Statutory financial/scheme year for this submission (e.g. 2026). |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `IsSignoffQuorumMet` | `bit` | **NOT NULL** |  | Indicates whether the constitutional sign-off quorum has been satisfied. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the submitting Employer Organisation. |
 | `PlannedTrainingBudget` | `decimal(18,2)` | **NOT NULL** |  | Total aggregate training budget planned for the upcoming financial year in ZAR. |
 | `ReferenceNumber` | `nvarchar(50)` | **NOT NULL** |  | Unique statutory WSP submission reference tracking number. |
+| `RequiredSignoffCount` | `int` | **NOT NULL** |  | Domain property for RequiredSignoffCount. |
+| `SignoffDigitalSecuritySeal` | `nvarchar(max)` | NULL |  | SHA-256 digital security seal certifying completion of all requisite multi-party attestations. |
 | `SubmissionDate` | `datetime2` | NULL |  | Official date and time when the submission was locked and signed off. |
 | `WspApprovalStatusCode` | `nvarchar(15)` | NULL |  | Current workflow review and approval status code (e.g. Draft, Submitted, Approved, Rejected). |
 
@@ -5063,10 +5553,10 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `EvidenceDocumentUrl` | `nvarchar(max)` | NULL |  | Domain property for EvidenceDocumentUrl. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `QualitativeImpactNotes` | `nvarchar(max)` | NULL |  | Domain property for QualitativeImpactNotes. |
 | `QuestionText` | `nvarchar(max)` | **NOT NULL** |  | Domain property for QuestionText. |
 | `RatingScore` | `int` | **NOT NULL** |  | Domain property for RatingScore. |
@@ -5097,13 +5587,13 @@
 
 | Column | SQL Store Type | Nullable | Key | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `Id` | `bigint` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `BeneficiaryCount` | `int` | **NOT NULL** |  | Total number of planned employee / unemployed beneficiaries. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `EstimatedCost` | `decimal(18,2)` | **NOT NULL** |  | Total estimated investment cost budgeted for delivery in ZAR. |
-| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
-| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NqfLevel` | `int` | NULL |  | Targeted National Qualifications Framework (NQF) level descriptor. |
 | `ProgrammeTypeCode` | `nvarchar(15)` | NULL |  | Learning programme type code (e.g. Learnership, Apprenticeship, SkillsProgramme, ShortCourse). |
 | `WspSubmissionId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent WspSubmission. |

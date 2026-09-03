@@ -7,11 +7,11 @@ namespace Nsdms.Application.Services;
 
 public interface IAuditService
 {
-    Task LogActionAsync(string entityName, int recordId, string actionName, string actor, object? beforeState = null, object? afterState = null);
-    Task LogAsync(string entityName, int recordId, string actionName, string actor, object? afterState = null);
-    Task LogAsync(string entityName, int recordId, string actionName, string description, string actor, object? afterState = null);
-    void LogAction(INsdmsDbContext db, string entityName, int recordId, string actionName, string actor, object? beforeState = null, object? afterState = null);
-    Task LogActionAsync(INsdmsDbContext db, string entityName, int recordId, string actionName, string actor, object? beforeState = null, object? afterState = null);
+    Task LogActionAsync(string entityName, long recordId, string actionName, string actor, object? beforeState = null, object? afterState = null);
+    Task LogAsync(string entityName, long recordId, string actionName, string actor, object? afterState = null);
+    Task LogAsync(string entityName, long recordId, string actionName, string description, string actor, object? afterState = null);
+    void LogAction(INsdmsDbContext db, string entityName, long recordId, string actionName, string actor, object? beforeState = null, object? afterState = null);
+    Task LogActionAsync(INsdmsDbContext db, string entityName, long recordId, string actionName, string actor, object? beforeState = null, object? afterState = null);
 }
 
 public class AuditService : IAuditService
@@ -30,24 +30,24 @@ public class AuditService : IAuditService
         _contextFactory = contextFactory;
     }
 
-    public async Task LogActionAsync(string entityName, int recordId, string actionName, string actor, object? beforeState = null, object? afterState = null)
+    public async Task LogActionAsync(string entityName, long recordId, string actionName, string actor, object? beforeState = null, object? afterState = null)
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         LogAction(db, entityName, recordId, actionName, actor, beforeState, afterState);
         await db.SaveChangesAsync();
     }
 
-    public Task LogAsync(string entityName, int recordId, string actionName, string actor, object? afterState = null)
+    public Task LogAsync(string entityName, long recordId, string actionName, string actor, object? afterState = null)
     {
         return LogActionAsync(entityName, recordId, actionName, actor, null, afterState);
     }
 
-    public Task LogAsync(string entityName, int recordId, string actionName, string description, string actor, object? afterState = null)
+    public Task LogAsync(string entityName, long recordId, string actionName, string description, string actor, object? afterState = null)
     {
         return LogActionAsync(entityName, recordId, actionName, actor, null, new { description, data = afterState });
     }
 
-    public void LogAction(INsdmsDbContext db, string entityName, int recordId, string actionName, string actor, object? beforeState = null, object? afterState = null)
+    public void LogAction(INsdmsDbContext db, string entityName, long recordId, string actionName, string actor, object? beforeState = null, object? afterState = null)
     {
         var metadata = new
         {
@@ -132,7 +132,7 @@ public class AuditService : IAuditService
         }
     }
 
-    public Task LogActionAsync(INsdmsDbContext db, string entityName, int recordId, string actionName, string actor, object? beforeState = null, object? afterState = null)
+    public Task LogActionAsync(INsdmsDbContext db, string entityName, long recordId, string actionName, string actor, object? beforeState = null, object? afterState = null)
     {
         LogAction(db, entityName, recordId, actionName, actor, beforeState, afterState);
         return Task.CompletedTask;

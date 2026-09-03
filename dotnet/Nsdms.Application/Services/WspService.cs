@@ -29,7 +29,7 @@ public interface IWspService
     Task<WspTrainingPlan> AddTrainingPlanAsync(int submissionId, WspTrainingPlan plan, string currentUsername = "SYSTEM");
     Task<List<WspTrainingPlan>> GetTrainingPlansAsync(int submissionId);
     Task<decimal> RecalculateTrainingPlanBudgetAsync(int submissionId);
-    Task<bool> RemoveTrainingPlanAsync(int planId, string currentUsername = "SYSTEM");
+    Task<bool> RemoveTrainingPlanAsync(long planId, string currentUsername = "SYSTEM");
 
     Task<decimal> CalculateMandatoryGrantClaimAsync(int wspSubmissionId);
     decimal CalculateMandatoryGrant(decimal totalLevyPaid);
@@ -415,7 +415,7 @@ public class WspService : IWspService
         return totalBudget;
     }
 
-    public async Task<bool> RemoveTrainingPlanAsync(int planId, string currentUsername = "SYSTEM")
+    public async Task<bool> RemoveTrainingPlanAsync(long planId, string currentUsername = "SYSTEM")
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var plan = await db.WspTrainingPlans.FindAsync(planId);

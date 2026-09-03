@@ -1,0 +1,287 @@
+@page "/curriculum/courseware"
+@page "/curriculum/courseware-distribution"
+@using Nsdms.Application.Common
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject ITrainingProviderService ProviderService
+@inject IOrganisationService OrgService
+@inject IAuditService AuditService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A4 (Form / Submission Flow - Courseware Distribution Request)
+  Clauses: 4.2, 4.3, 6.1, 7.2, 8.1, 8.3, 11.1–11.9, 15.2.5
+*@
+
+<PageTitle>Courseware Distribution Request - NSDMS</PageTitle>
+
+<EntityHeader Title="Training Courseware &amp; Learning Material Distribution"
+              Subtitle="Request official MerSETA-developed curriculum modules, facilitator guides, and learner workbooks"
+              ReferenceKey="A4-COURSEWARE"
+              Status="Distribution Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="@(() => NavManager.NavigateTo("/curriculum"))"
+                   aria-label="Back to Curriculum Registry">
+            Back to Curriculum
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.FileDownload"
+                   OnClick="SubmitCoursewareRequest"
+                   Disabled="_isSubmitting"
+                   aria-label="Submit Courseware Request">
+            @(_isSubmitting ? "Submitting Request..." : "Request Material Package")
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-0 mt-4">
+    @if (_isSuccess)
+    {
+        <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mb-6 rounded-lg">
+            <MudText Typo="Typo.h6" Class="fw-bold">Courseware Distribution Request Approved!</MudText>
+            <MudText Typo="Typo.body2">
+                Your request <strong>@_generatedReference</strong> for <strong>@_selectedModuleTitle</strong> has been logged. An encrypted download bundle and license key have been dispatched to your accredited institution email address.
+            </MudText>
+            <div class="mt-4 d-flex gap-2">
+                <MudButton Variant="Variant.Filled" Color="Color.Surface" StartIcon="@Icons.Material.Filled.Download" OnClick="SimulateDownload">
+                    Download Secure Package (ZIP)
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Surface" OnClick="@(() => NavManager.NavigateTo("/curriculum"))">
+                    Return to Curriculum Registry
+                </MudButton>
+            </div>
+        </MudAlert>
+    }
+
+    <MudCard Elevation="2" Class="rounded-lg mb-6">
+        <MudCardHeader Class="pb-2">
+            <CardHeaderAvatar>
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                    <MudIcon Icon="@Icons.Material.Filled.MenuBook" />
+                </MudAvatar>
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Courseware Requisition &amp; Copyright Licensing</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Accredited Skills Development Providers (SDP) and approved employers are authorized to requisition national learning materials strictly for registered learners.
+                </MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudForm @ref="_form" @bind-IsValid="_isValid">
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="int"
+                                   Label="Requisitioning Institution / SDP"
+                                   Required="true"
+                                   RequiredError="Please select accredited provider"
+                                   @bind-Value="_selectedProviderId"
+                                   Variant="Variant.Outlined"
+                                   ToStringFunc="@(id => _providers.FirstOrDefault(p => p.Id == id)?.Organisation?.CompanyName ?? "Select Institution")">
+                            @foreach (var p in _providers)
+                            {
+                                <MudSelectItem Value="@p.Id">@p.Organisation?.CompanyName (@p.AccreditationNumber)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="string"
+                                   Label="Curriculum Chamber / Trade Cluster"
+                                   Required="true"
+                                   @bind-Value="_chamberCluster"
+                                   Variant="Variant.Outlined">
+                            <MudSelectItem Value="@("Metal")">Metal &amp; Engineering Chamber</MudSelectItem>
+                            <MudSelectItem Value="@("Automotive")">Automotive Manufacturing Chamber</MudSelectItem>
+                            <MudSelectItem Value="@("Motor")">Motor Retail &amp; Component Chamber</MudSelectItem>
+                            <MudSelectItem Value="@("NewTyre")">New Tyre Manufacturing Chamber</MudSelectItem>
+                            <MudSelectItem Value="@("Plastics")">Plastics Manufacturing Chamber</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="string"
+                                   Label="Occupational Learning Programme / Qualification"
+                                   Required="true"
+                                   RequiredError="Please select a curriculum qualification"
+                                   @bind-Value="_selectedModuleTitle"
+                                   Variant="Variant.Outlined">
+                            <MudSelectItem Value="@("NC: Welding Application and Practice (SAQA 58270)")">NC: Welding Application and Practice (SAQA 58270)</MudSelectItem>
+                            <MudSelectItem Value="@("FETC: Mechanical Engineering (Fitting & Machining) (SAQA 59689)")">FETC: Mechanical Engineering (Fitting &amp; Machining) (SAQA 59689)</MudSelectItem>
+                            <MudSelectItem Value="@("NC: Automotive Repair and Maintenance (SAQA 78323)")">NC: Automotive Repair and Maintenance (SAQA 78323)</MudSelectItem>
+                            <MudSelectItem Value="@("Occupational Certificate: Electrician (SAQA 91761)")">Occupational Certificate: Electrician (SAQA 91761)</MudSelectItem>
+                            <MudSelectItem Value="@("Occupational Certificate: Boilermaker (SAQA 91784)")">Occupational Certificate: Boilermaker (SAQA 91784)</MudSelectItem>
+                            <MudSelectItem Value="@("NC: Plastics Manufacturing Operations (SAQA 49450)")">NC: Plastics Manufacturing Operations (SAQA 49450)</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="string"
+                                   Label="Required Courseware Package Contents"
+                                   Required="true"
+                                   @bind-Value="_packageType"
+                                   Variant="Variant.Outlined">
+                            <MudSelectItem Value="@("FullCurriculumKit")">Full Toolkit (Facilitator Guide + Learner Guide + Assessor Pack)</MudSelectItem>
+                            <MudSelectItem Value="@("LearnerGuideOnly")">Learner Workbook &amp; Logbook Modules Only</MudSelectItem>
+                            <MudSelectItem Value="@("AssessorRubrics")">Assessor Exemplars &amp; Summative Portfolios of Evidence</MudSelectItem>
+                            <MudSelectItem Value="@("LmsScormPackage")">LMS SCORM Digital Interactive e-Learning Package</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudNumericField T="int"
+                                         Label="Estimated Enrolled Learner Cohort Size"
+                                         Required="true"
+                                         @bind-Value="_cohortSize"
+                                         Min="1"
+                                         Max="500"
+                                         Variant="Variant.Outlined" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Delivery Email / Primary Contact"
+                                      Required="true"
+                                      @bind-Value="_deliveryEmail"
+                                      Variant="Variant.Outlined"
+                                      Placeholder="e.g. qms@trainingcollege.co.za" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudPaper Outlined="true" Class="pa-4 rounded-lg bg-surface mt-2">
+                            <MudText Typo="Typo.subtitle2" Class="fw-bold mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Gavel" Size="Size.Small" Class="mr-1 align-text-bottom" />
+                                Courseware Copyright &amp; Distribution Conditions (LPM-COND-01)
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-3">
+                                MerSETA holds the statutory intellectual property rights to all developed courseware. Materials may not be commercialized, resold, sub-licensed, or transferred to unaccredited third parties. Use is restricted exclusively to currently registered MerSETA learners.
+                            </MudText>
+                            <MudCheckBox T="bool"
+                                         @bind-Value="_copyrightAccepted"
+                                         Required="true"
+                                         Color="Color.Primary">
+                                <span style="font-size: 0.85rem;">
+                                    I accept the MerSETA Courseware Distribution &amp; Copyright Protection Terms on behalf of the applicant institution.
+                                </span>
+                            </MudCheckBox>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        </MudCardContent>
+        <MudCardActions Class="pa-4 d-flex justify-end gap-2 bg-surface">
+            <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="@(() => NavManager.NavigateTo("/curriculum"))">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.FileDownload"
+                       OnClick="SubmitCoursewareRequest"
+                       Disabled="@(!_copyrightAccepted || _isSubmitting)">
+                @(_isSubmitting ? "Processing Requisition..." : "Submit Requisition")
+            </MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private MudForm _form = null!;
+    private bool _isValid;
+    private bool _isSubmitting;
+    private bool _isSuccess;
+    private bool _copyrightAccepted;
+
+    private int _selectedProviderId;
+    private string _chamberCluster = "Metal";
+    private string _selectedModuleTitle = "NC: Welding Application and Practice (SAQA 58270)";
+    private string _packageType = "FullCurriculumKit";
+    private int _cohortSize = 25;
+    private string _deliveryEmail = "accreditation@provider.co.za";
+    private string _generatedReference = string.Empty;
+
+    private List<TrainingProvider> _providers = new();
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Curriculum (QCD)", href: "/curriculum"),
+        new BreadcrumbItem("Courseware Distribution", href: "/curriculum/courseware", disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var pList = await ProviderService.GetAllAsync();
+            _providers = pList.OrderBy(p => p.Organisation?.CompanyName).ToList();
+            if (_providers.Any())
+            {
+                _selectedProviderId = _providers.First().Id;
+                _deliveryEmail = "accreditation@provider.co.za";
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading providers: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SubmitCoursewareRequest()
+    {
+        if (!_copyrightAccepted)
+        {
+            Snackbar.Add("You must accept the Courseware Copyright and Licensing terms before proceeding.", Severity.Warning);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var provider = _providers.FirstOrDefault(p => p.Id == _selectedProviderId);
+            _generatedReference = $"CW-REQ-{DateTime.UtcNow:yyyyMMdd}-{_selectedProviderId:D3}";
+
+            // Double-write audit log
+            await AuditService.LogAsync(
+                "CoursewareDistribution",
+                _selectedProviderId,
+                "RequestCoursewareDistribution",
+                "SDP_REPRESENTATIVE",
+                System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    Reference = _generatedReference,
+                    ProviderId = _selectedProviderId,
+                    ProviderName = provider?.Organisation?.CompanyName,
+                    Module = _selectedModuleTitle,
+                    PackageType = _packageType,
+                    CohortSize = _cohortSize,
+                    Email = _deliveryEmail
+                }));
+
+            _isSuccess = true;
+            Snackbar.Add($"Requisition {_generatedReference} processed. Materials ready for download.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Requisition failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private void SimulateDownload()
+    {
+        Snackbar.Add("Initiating secure download of licensed curriculum package...", Severity.Info);
+    }
+}

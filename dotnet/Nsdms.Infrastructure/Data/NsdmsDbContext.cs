@@ -1,16 +1,29 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Nsdms.Application.Common;
 using Nsdms.Domain.Common;
 using Nsdms.Domain.Entities;
 using Nsdms.Domain.Lookups;
+using Nsdms.Infrastructure.Services;
 
 namespace Nsdms.Infrastructure.Data;
 
 public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, int>, INsdmsDbContext
 {
-    public NsdmsDbContext(DbContextOptions<NsdmsDbContext> options) : base(options) { }
+    private readonly ITenantProvider _tenantProvider;
+
+    [ActivatorUtilitiesConstructor]
+    public NsdmsDbContext(DbContextOptions<NsdmsDbContext> options) : base(options)
+    {
+        _tenantProvider = new DefaultTenantProvider(null, isAdmin: true);
+    }
+
+    public NsdmsDbContext(DbContextOptions<NsdmsDbContext> options, ITenantProvider? tenantProvider) : base(options)
+    {
+        _tenantProvider = tenantProvider ?? new DefaultTenantProvider(null, isAdmin: true);
+    }
 
     public DbSet<Organisation> Organisations => Set<Organisation>();
     public DbSet<Person> People => Set<Person>();
@@ -163,6 +176,25 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<SdpExtensionOfScope> SdpExtensionOfScopes => Set<SdpExtensionOfScope>();
     public DbSet<SdpReAccreditationApplication> SdpReAccreditationApplications => Set<SdpReAccreditationApplication>();
     public DbSet<AssessorExtensionOfScope> AssessorExtensionOfScopes => Set<AssessorExtensionOfScope>();
+    public DbSet<StatutorySubmissionBatch> StatutorySubmissionBatches => Set<StatutorySubmissionBatch>();
+    public DbSet<StatutoryBatchFile> StatutoryBatchFiles => Set<StatutoryBatchFile>();
+
+    // Phase 3: Core Statutory Workflows
+    public DbSet<WspSignoffAttestation> WspSignoffAttestations => Set<WspSignoffAttestation>();
+    public DbSet<CompanyLearnerChangeRequest> CompanyLearnerChangeRequests => Set<CompanyLearnerChangeRequest>();
+    public DbSet<ErpPaymentBatchHeader> ErpPaymentBatchHeaders => Set<ErpPaymentBatchHeader>();
+    public DbSet<ErpPaymentBatchEntry> ErpPaymentBatchEntries => Set<ErpPaymentBatchEntry>();
+
+    // Phase 4: ETQA Assessor 3-Year Re-registration & CPD
+    public DbSet<AssessorReRegistrationApplication> AssessorReRegistrationApplications => Set<AssessorReRegistrationApplication>();
+    public DbSet<AssessorCpdActivity> AssessorCpdActivities => Set<AssessorCpdActivity>();
+
+    // Phase 5: Artisan Development & NAMB Batch Governance
+    public DbSet<NambSubmissionBatch> NambSubmissionBatches => Set<NambSubmissionBatch>();
+
+    // Phase 7: SDP Campus Infrastructure & Assessor Linking
+    public DbSet<TrainingProviderCampus> TrainingProviderCampuses => Set<TrainingProviderCampus>();
+    public DbSet<TrainingProviderAssessorLink> TrainingProviderAssessorLinks => Set<TrainingProviderAssessorLink>();
 
     // Lookups in `lookup` schema
     public DbSet<GenderType> GenderTypes => Set<GenderType>();
@@ -492,6 +524,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(w => w.FinYear);
             entity.HasIndex(w => w.ReferenceNumber);
             entity.HasIndex(w => w.WspApprovalStatusCode);
+
+            entity.HasQueryFilter(w => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || w.OrganisationId == _tenantProvider.CurrentOrganisationId);
         });
 
         // LevyFile & LevyFileLine
@@ -581,6 +615,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(g => g.WspSubmissionId);
             entity.HasIndex(g => g.ApplicationNumber);
             entity.HasIndex(g => g.ApplicationStatusCode);
+
+            entity.HasQueryFilter(g => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || g.OrganisationId == _tenantProvider.CurrentOrganisationId);
         });
 
         // EtqaAssessor
@@ -939,6 +975,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(w => w.ApprovalStatusCode);
             entity.HasIndex(w => w.TradeCode);
             entity.HasIndex(w => w.IsRatioEnforced);
+
+            entity.HasQueryFilter(w => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || w.OrganisationId == _tenantProvider.CurrentOrganisationId);
         });
 
         // WorkplaceApprovalMentor
@@ -1555,6 +1593,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(d => d.OrganisationId);
             entity.HasIndex(d => d.DisbursementReference).IsUnique();
             entity.HasIndex(d => d.DisbursementStatusCode);
+
+            entity.HasQueryFilter(d => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || d.OrganisationId == _tenantProvider.CurrentOrganisationId);
         });
 
         modelBuilder.Entity<InterSetaTransfer>(entity =>
@@ -2521,6 +2561,44 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(a => a.StatusCode);
         });
 
+        modelBuilder.Entity<StatutorySubmissionBatch>(entity =>
+        {
+            entity.ToTable("StatutorySubmissionBatch");
+            entity.HasKey(b => b.Id);
+            entity.Property(b => b.BatchType).HasMaxLength(20).IsRequired();
+            entity.Property(b => b.BatchNumber).HasMaxLength(100).IsRequired();
+            entity.Property(b => b.StatusCode).HasMaxLength(50).IsRequired();
+            entity.Property(b => b.DigitalSecuritySeal).HasMaxLength(128);
+            entity.Property(b => b.ArchiveFileName).HasMaxLength(255);
+            entity.Property(b => b.ArchiveStorageUri).HasMaxLength(500);
+
+            entity.HasIndex(b => b.BatchNumber).IsUnique();
+            entity.HasIndex(b => b.BatchType);
+            entity.HasIndex(b => b.SubmissionYear);
+            entity.HasIndex(b => b.StatusCode);
+            entity.HasIndex(b => b.ExtractionDate);
+
+            entity.HasMany(b => b.Files)
+                .WithOne(f => f.Batch)
+                .HasForeignKey(f => f.StatutorySubmissionBatchId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<StatutoryBatchFile>(entity =>
+        {
+            entity.ToTable("StatutoryBatchFile");
+            entity.HasKey(f => f.Id);
+            entity.Property(f => f.FileCode).HasMaxLength(10).IsRequired();
+            entity.Property(f => f.FileTitle).HasMaxLength(150).IsRequired();
+            entity.Property(f => f.FileName).HasMaxLength(255).IsRequired();
+            entity.Property(f => f.StatusCode).HasMaxLength(50).IsRequired();
+            entity.Property(f => f.ChecksumSha256).HasMaxLength(128);
+
+            entity.HasIndex(f => f.StatutorySubmissionBatchId);
+            entity.HasIndex(f => f.FileCode);
+            entity.HasIndex(f => f.StatusCode);
+        });
+
 
         // Configure BaseLookupType with Code (varchar 50) as Key in `lookup` schema
         ConfigureLookup<GenderType>(modelBuilder, "GenderType");
@@ -2636,6 +2714,141 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(a => a.AqpPartnerId);
             entity.HasIndex(a => a.CompanyLearnerId);
             entity.HasIndex(a => a.PersonId);
+        });
+
+        modelBuilder.Entity<WspSignoffAttestation>(entity =>
+        {
+            entity.ToTable("WspSignoffAttestation");
+            entity.Property(w => w.SignerRoleCode).HasMaxLength(50).IsRequired();
+            entity.Property(w => w.SignerFullName).HasMaxLength(250).IsRequired();
+            entity.Property(w => w.SignerEmail).HasMaxLength(200).IsRequired();
+            entity.Property(w => w.DigitalSecuritySeal).HasMaxLength(128).IsRequired();
+            entity.HasIndex(w => w.WspSubmissionId);
+            entity.HasIndex(w => w.SignerRoleCode);
+            entity.HasIndex(w => w.AttestationStatusCode);
+        });
+
+        modelBuilder.Entity<CompanyLearnerChangeRequest>(entity =>
+        {
+            entity.ToTable("CompanyLearnerChangeRequest");
+            entity.Property(c => c.ChangeTypeCode).HasMaxLength(50).IsRequired();
+            entity.Property(c => c.ChangeStatusCode).HasMaxLength(50).IsRequired();
+            entity.HasIndex(c => c.CompanyLearnerId);
+            entity.HasIndex(c => c.ChangeStatusCode);
+        });
+
+        modelBuilder.Entity<ErpPaymentBatchHeader>(entity =>
+        {
+            entity.ToTable("ErpPaymentBatchHeader");
+            entity.Property(e => e.BatchNumber).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.BatchTypeCode).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
+            entity.HasIndex(e => e.BatchNumber).IsUnique();
+            entity.HasIndex(e => e.BatchStatusCode);
+        });
+
+        modelBuilder.Entity<ErpPaymentBatchEntry>(entity =>
+        {
+            entity.ToTable("ErpPaymentBatchEntry");
+            entity.Property(e => e.PaymentVoucherNumber).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.PaymentAmount).HasPrecision(18, 2);
+            entity.HasIndex(e => e.ErpPaymentBatchHeaderId);
+            entity.HasIndex(e => e.GrantPaymentClaimId);
+            entity.HasIndex(e => e.OrganisationId);
+            entity.HasIndex(e => e.PaymentVoucherNumber);
+        });
+
+        // AssessorReRegistrationApplication
+        modelBuilder.Entity<AssessorReRegistrationApplication>(entity =>
+        {
+            entity.ToTable("AssessorReRegistrationApplication");
+            entity.Property(a => a.ApplicationReferenceNumber).HasMaxLength(50).IsRequired();
+            entity.Property(a => a.ApplicationTypeCode).HasMaxLength(50).IsRequired();
+            entity.Property(a => a.ReviewStatusCode).HasMaxLength(50).IsRequired();
+            entity.Property(a => a.CommitteeDecisionNumber).HasMaxLength(50);
+            entity.Property(a => a.DigitalSecuritySeal).HasMaxLength(64);
+
+            entity.HasOne(a => a.EtqaAssessor)
+                  .WithMany(ass => ass.ReRegistrationApplications)
+                  .HasForeignKey(a => a.EtqaAssessorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(a => a.EtqaAssessorId);
+            entity.HasIndex(a => a.ReviewStatusCode);
+            entity.HasIndex(a => a.ApplicationReferenceNumber).IsUnique();
+        });
+
+        // AssessorCpdActivity
+        modelBuilder.Entity<AssessorCpdActivity>(entity =>
+        {
+            entity.ToTable("AssessorCpdActivity");
+            entity.Property(c => c.ActivityTitle).HasMaxLength(200).IsRequired();
+            entity.Property(c => c.ActivityCategory).HasMaxLength(50).IsRequired();
+            entity.Property(c => c.EvidenceDocumentRef).HasMaxLength(250);
+
+            entity.HasOne(c => c.Application)
+                  .WithMany(a => a.CpdActivities)
+                  .HasForeignKey(c => c.AssessorReRegistrationApplicationId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(c => c.AssessorReRegistrationApplicationId);
+            entity.HasIndex(c => c.ActivityCategory);
+        });
+
+        // NambSubmissionBatch
+        modelBuilder.Entity<NambSubmissionBatch>(entity =>
+        {
+            entity.ToTable("NambSubmissionBatch");
+            entity.Property(b => b.BatchReferenceNumber).HasMaxLength(50).IsRequired();
+            entity.Property(b => b.BatchDescription).HasMaxLength(250).IsRequired();
+            entity.Property(b => b.Status).HasMaxLength(50).IsRequired();
+            entity.Property(b => b.DigitalSecuritySeal).HasMaxLength(64);
+
+            entity.HasIndex(b => b.BatchReferenceNumber).IsUnique();
+            entity.HasIndex(b => b.Status);
+        });
+
+        // Phase 7: TrainingProviderCampus & TrainingProviderAssessorLink
+        modelBuilder.Entity<TrainingProviderCampus>(entity =>
+        {
+            entity.ToTable("TrainingProviderCampus");
+            entity.Property(c => c.CampusName).HasMaxLength(150).IsRequired();
+            entity.Property(c => c.CampusCode).HasMaxLength(50).IsRequired();
+            entity.Property(c => c.Status).HasMaxLength(50).IsRequired();
+
+            entity.HasOne(c => c.TrainingProvider)
+                  .WithMany(p => p.Campuses)
+                  .HasForeignKey(c => c.TrainingProviderId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(c => c.TrainingProviderId);
+            entity.HasIndex(c => c.CampusCode);
+        });
+
+        modelBuilder.Entity<TrainingProviderAssessorLink>(entity =>
+        {
+            entity.ToTable("TrainingProviderAssessorLink");
+            entity.Property(l => l.RoleTypeCode).HasMaxLength(50).IsRequired();
+            entity.Property(l => l.Status).HasMaxLength(50).IsRequired();
+
+            entity.HasOne(l => l.TrainingProvider)
+                  .WithMany(p => p.AssessorLinks)
+                  .HasForeignKey(l => l.TrainingProviderId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(l => l.TrainingProviderCampus)
+                  .WithMany(c => c.LinkedAssessors)
+                  .HasForeignKey(l => l.TrainingProviderCampusId)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(l => l.EtqaAssessor)
+                  .WithMany()
+                  .HasForeignKey(l => l.EtqaAssessorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(l => l.TrainingProviderId);
+            entity.HasIndex(l => l.TrainingProviderCampusId);
+            entity.HasIndex(l => l.EtqaAssessorId);
         });
 
         // Seed all lookups

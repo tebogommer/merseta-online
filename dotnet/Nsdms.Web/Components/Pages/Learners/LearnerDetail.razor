@@ -8,17 +8,21 @@
 @using Nsdms.Web.Components.Shared
 @rendermode InteractiveServer
 @inject ILearnerService LearnerService
+@inject ILearnerLifecycleService LifecycleService
 @inject IPersonService PersonService
 @inject IOrganisationService OrganisationService
 @inject ITrainingProviderService ProviderService
 @inject LookupService LookupService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject Nsdms.Application.Common.Interfaces.IPdfDocumentService PdfService
+@inject IJSRuntime JsRuntime
 
 <PageTitle>@(IsNew ? "New Learner Registration" : $"Learner {_learner.LearnerContractNumber}") - NSDMS</PageTitle>
 
 <!-- STICKY TOP BAR -->
-<MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg bg-surface d-flex flex-wrap justify-space-between align-center gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+<MudPaper Elevation="0" Class="sticky-top pa-4 mb-4 rounded-lg bg-surface border-default d-flex flex-wrap justify-space-between align-center gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10; border: 1px solid var(--mud-palette-lines-default);">
     <div class="d-flex align-center gap-3">
         <MudButton Variant="Variant.Text"
                    StartIcon="@Icons.Material.Filled.ArrowBack"
@@ -45,9 +49,39 @@
                 @(_learner.EnrolmentStatusCode ?? "Registered")
             </MudChip>
 
-            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="DeleteAsync" aria-label="Delete Learner Agreement">
-                Delete
-            </MudButton>
+            <MudMenu Label="Learner Lifecycle"
+                     StartIcon="@Icons.Material.Filled.Bolt"
+                     EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                     Color="Color.Default"
+                     Variant="Variant.Outlined"
+                     Dense="true"
+                     aria-label="Learner Lifecycle Actions">
+                <MudMenuItem Icon="@Icons.Material.Filled.Draw" OnClick="@(() => Navigation.NavigateTo($"/signoff/learner/{_learner.LearnerContractNumber ?? "LRN-" + Id}"))">
+                    OTP Digital Sign-off
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.FactCheck" OnClick="@(() => Navigation.NavigateTo($"/tradetests/create?learnerId={Id}"))">
+                    Apply for Trade Test (26D)
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.SwapHoriz" OnClick="@(() => OpenLifecycleDialog("Transfer"))">
+                    Transfer Provider / Employer
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Update" OnClick="@(() => OpenLifecycleDialog("LostTime"))">
+                    Record Lost Time / Extension
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.CancelPresentation" OnClick="@(() => OpenLifecycleDialog("Termination"))">
+                    Request Agreement Termination
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.EditNote" OnClick="@(() => OpenLifecycleDialog("ChangeRequest"))">
+                    Submit Contract Amendment
+                </MudMenuItem>
+                <MudDivider Class="my-1" />
+                <MudMenuItem Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="DownloadAgreementPdf">
+                    Download Tripartite Agreement (PDF)
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error" OnClick="DeleteAsync">
+                    Delete Learner Agreement
+                </MudMenuItem>
+            </MudMenu>
         }
 
         <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Navigation.NavigateTo("/learners"))" aria-label="Cancel and Return">
@@ -577,9 +611,119 @@ else
             }
         </MudTabPanel>
 
-        <!-- TAB 8: EVIDENCE VAULT & WORKFLOW -->
+        <!-- TAB 8: LIFECYCLE & AMENDMENTS -->
         @if (!IsNew)
         {
+            <MudTabPanel Text="Lifecycle &amp; Amendments" Icon="@Icons.Material.Filled.SwapHoriz">
+                <MudCard Elevation="2" Class="mb-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Statutory Lifecycle History</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Inter-employer transfers, lost-time extensions, cancellations, and change requests</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface">
+                            <MudTabPanel Text="Transfers" Icon="@Icons.Material.Filled.SwapHoriz" BadgeData="@_transfers.Count">
+                                <MudTable Items="@_transfers" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                    <HeaderContent>
+                                        <MudTh>Transfer Date</MudTh>
+                                        <MudTh>From Employer</MudTh>
+                                        <MudTh>To Employer</MudTh>
+                                        <MudTh>Reason</MudTh>
+                                        <MudTh>Status</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="Transfer Date">@context.TransferDate.ToString("yyyy-MM-dd")</MudTd>
+                                        <MudTd DataLabel="From Employer">@(context.FromOrganisation?.CompanyName ?? "N/A")</MudTd>
+                                        <MudTd DataLabel="To Employer">@(context.ToOrganisation?.CompanyName ?? "N/A")</MudTd>
+                                        <MudTd DataLabel="Reason">@context.TransferReasonCode</MudTd>
+                                        <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small" Color="@(context.TransferStatusCode == "Approved" ? Color.Success : Color.Warning)">@context.TransferStatusCode</MudChip></MudTd>
+                                    </RowTemplate>
+                                    <NoRecordsContent>
+                                        <MudText Typo="Typo.body2" Class="pa-3 text-center">No transfers recorded for this learner agreement.</MudText>
+                                    </NoRecordsContent>
+                                </MudTable>
+                            </MudTabPanel>
+                            
+                            <MudTabPanel Text="Lost Time &amp; Extensions" Icon="@Icons.Material.Filled.Update" BadgeData="@_lostTimes.Count">
+                                <MudTable Items="@_lostTimes" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                    <HeaderContent>
+                                        <MudTh>Period</MudTh>
+                                        <MudTh>Days Lost</MudTh>
+                                        <MudTh>Revised End Date</MudTh>
+                                        <MudTh>Reason</MudTh>
+                                        <MudTh>Status</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="Period">@context.StartDate.ToString("yyyy-MM-dd") to @context.EndDate.ToString("yyyy-MM-dd")</MudTd>
+                                        <MudTd DataLabel="Days Lost">@context.DaysLost</MudTd>
+                                        <MudTd DataLabel="Revised End Date">@context.RevisedContractEndDate.ToString("yyyy-MM-dd")</MudTd>
+                                        <MudTd DataLabel="Reason">@context.LostTimeReasonCode</MudTd>
+                                        <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small" Color="@(context.LostTimeStatusCode == "Approved" ? Color.Success : Color.Warning)">@context.LostTimeStatusCode</MudChip></MudTd>
+                                    </RowTemplate>
+                                    <NoRecordsContent>
+                                        <MudText Typo="Typo.body2" Class="pa-3 text-center">No lost time logged for this learner.</MudText>
+                                    </NoRecordsContent>
+                                </MudTable>
+                            </MudTabPanel>
+
+                            <MudTabPanel Text="Terminations" Icon="@Icons.Material.Filled.Cancel" BadgeData="@_terminations.Count">
+                                <MudTable Items="@_terminations" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                    <HeaderContent>
+                                        <MudTh>Effective Date</MudTh>
+                                        <MudTh>Reason</MudTh>
+                                        <MudTh>Dispute Logged</MudTh>
+                                        <MudTh>Union Rep</MudTh>
+                                        <MudTh>Status</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="Effective Date">@context.EffectiveDate.ToString("yyyy-MM-dd")</MudTd>
+                                        <MudTd DataLabel="Reason">@context.TerminationReasonCode</MudTd>
+                                        <MudTd DataLabel="Dispute Logged">
+                                            @if (context.DisputeLogged)
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Error">CCMA/Dispute</MudChip>
+                                            }
+                                            else
+                                            {
+                                                <span>None</span>
+                                            }
+                                        </MudTd>
+                                        <MudTd DataLabel="Union Rep">@(context.UnionRepresentativeName ?? "None")</MudTd>
+                                        <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small" Color="Color.Error">@context.TerminationStatusCode</MudChip></MudTd>
+                                    </RowTemplate>
+                                    <NoRecordsContent>
+                                        <MudText Typo="Typo.body2" Class="pa-3 text-center">No termination requests logged.</MudText>
+                                    </NoRecordsContent>
+                                </MudTable>
+                            </MudTabPanel>
+
+                            <MudTabPanel Text="Contract Change Requests" Icon="@Icons.Material.Filled.EditNote" BadgeData="@_changeRequests.Count">
+                                <MudTable Items="@_changeRequests" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                    <HeaderContent>
+                                        <MudTh>Requested Date</MudTh>
+                                        <MudTh>Change Type</MudTh>
+                                        <MudTh>Justification</MudTh>
+                                        <MudTh>Status</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="Requested Date">@context.CreatedAt.ToString("yyyy-MM-dd")</MudTd>
+                                        <MudTd DataLabel="Change Type">@context.ChangeTypeCode</MudTd>
+                                        <MudTd DataLabel="Justification">@context.JustificationReason</MudTd>
+                                        <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small" Color="@(context.ChangeStatusCode == "Approved" ? Color.Success : Color.Info)">@context.ChangeStatusCode</MudChip></MudTd>
+                                    </RowTemplate>
+                                    <NoRecordsContent>
+                                        <MudText Typo="Typo.body2" Class="pa-3 text-center">No contract change requests logged.</MudText>
+                                    </NoRecordsContent>
+                                </MudTable>
+                            </MudTabPanel>
+                        </MudTabs>
+                    </MudCardContent>
+                </MudCard>
+            </MudTabPanel>
+
+            <!-- TAB 9: EVIDENCE VAULT & WORKFLOW -->
             <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
                 <DocumentVault TargetEntityName="CompanyLearner" TargetEntityId="@Id" />
             </MudTabPanel>
@@ -688,6 +832,12 @@ else
     private List<LearnerTradeTest> _tradeTests = new();
     private List<LearnerStipendDto> _stipends = new();
 
+    // Lifecycle History Collections
+    private List<CompanyLearnerTransfer> _transfers = new();
+    private List<CompanyLearnerLostTime> _lostTimes = new();
+    private List<CompanyLearnerTermination> _terminations = new();
+    private List<CompanyLearnerChangeRequest> _changeRequests = new();
+
     private bool _loadingEnrolments = false;
     private bool _loadingEmployers = false;
     private bool _loadingProviders = false;
@@ -755,6 +905,7 @@ else
             _learner = l;
             _person = l.Person ?? await PersonService.GetByIdAsync(l.PersonId) ?? new Person();
             _tradeTests = await LearnerService.GetTradeTestsForLearnerAsync(Id);
+            await LoadLifecycleHistory();
 
             if (_learner.PersonId > 0)
             {
@@ -896,6 +1047,39 @@ else
         return LoadLearnerData();
     }
 
+    private async Task LoadLifecycleHistory()
+    {
+        if (Id <= 0) return;
+        try
+        {
+            _transfers = await LifecycleService.GetTransfersForLearnerAsync(Id);
+            _lostTimes = await LifecycleService.GetLostTimesForLearnerAsync(Id);
+            _terminations = await LifecycleService.GetTerminationsForLearnerAsync(Id);
+            _changeRequests = await LifecycleService.GetChangeRequestsForLearnerAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading lifecycle history: {ex.Message}");
+        }
+    }
+
+    private async Task OpenLifecycleDialog(string actionType)
+    {
+        var parameters = new DialogParameters<LearnerLifecycleActionDialog>
+        {
+            { x => x.CompanyLearnerId, Id },
+            { x => x.ActionType, actionType }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<LearnerLifecycleActionDialog>("Learner Amendment", parameters, options);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled)
+        {
+            await LoadLearnerData();
+            await LoadLifecycleHistory();
+        }
+    }
+
     // Trade Test Handlers
     private void OpenScheduleTradeTestDialog()
     {
@@ -965,6 +1149,22 @@ else
         catch (Exception ex)
         {
             Snackbar.Add($"Error recording outcome: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DownloadAgreementPdf()
+    {
+        try
+        {
+            var bytes = await PdfService.GenerateTripartiteAgreementPdfAsync(_learner);
+            var base64 = Convert.ToBase64String(bytes);
+            var filename = $"Tripartite_Agreement_{_learner.LearnerContractNumber ?? "LRN-" + Id}.pdf";
+            await JsRuntime.InvokeVoidAsync("downloadFileFromBytes", filename, "application/pdf", base64);
+            Snackbar.Add("Tripartite Learnership Agreement generated successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating agreement: {ex.Message}", Severity.Error);
         }
     }
 

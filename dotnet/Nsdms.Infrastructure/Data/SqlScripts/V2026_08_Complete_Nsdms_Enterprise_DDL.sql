@@ -18,9 +18,9 @@ END
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'audit_logs' AND schema_id = SCHEMA_ID(N'dbo'))
 BEGIN
     CREATE TABLE dbo.audit_logs (
-        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_audit_logs PRIMARY KEY CLUSTERED,
+        id BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_audit_logs PRIMARY KEY CLUSTERED,
         entity_name NVARCHAR(100) NOT NULL,
-        record_id INT NOT NULL,
+        record_id BIGINT NOT NULL,
         action_name NVARCHAR(100) NOT NULL,
         actor NVARCHAR(100) NOT NULL,
         timestamp DATETIME2(7) NOT NULL CONSTRAINT DF_audit_logs_timestamp DEFAULT SYSUTCDATETIME(),

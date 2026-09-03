@@ -44,23 +44,46 @@
     <div class="d-flex align-center gap-2">
         @if (Id > 0)
         {
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Info"
-                       StartIcon="@Icons.Material.Filled.PhotoCamera"
-                       OnClick="@(() => _showLogoDialog = true)"
-                       aria-label="Update Corporate Logo">
-                Brand Logo
-            </MudButton>
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Error"
-                       StartIcon="@Icons.Material.Filled.Delete"
-                       OnClick="DeleteEmployer"
-                       aria-label="Delete Employer Record">
-                Delete
-            </MudButton>
+            <MudMenu Label="Launch Service"
+                     StartIcon="@Icons.Material.Filled.Bolt"
+                     EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                     Color="Color.Default"
+                     Variant="Variant.Outlined"
+                     Dense="true"
+                     aria-label="Launch Statutory Services">
+                <MudMenuItem Icon="@Icons.Material.Filled.Badge" OnClick="@(() => NavManager.NavigateTo($"/employers/sdf?orgId={Id}"))">
+                    Appoint SDF Facilitator
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Handyman" OnClick="@(() => NavManager.NavigateTo($"/workplace-approvals/create?organisationId={Id}"))">
+                    Apply for Workplace Approval
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.EventAvailable" OnClick="@(() => NavManager.NavigateTo($"/monitoring?organisationId={Id}"))">
+                    Schedule Monitoring Visit
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Assignment" OnClick="@(() => NavManager.NavigateTo($"/wsp/create?organisationId={Id}"))">
+                    Submit Annual WSP / ATR
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.AccountBalanceWallet" OnClick="@(() => NavManager.NavigateTo($"/grants/create?organisationId={Id}"))">
+                    Apply for Discretionary Grant
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.SwapHoriz" OnClick="@(() => NavManager.NavigateTo($"/inter-seta-transfers?organisationId={Id}"))">
+                    Initiate Inter-SETA Transfer
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.AccountBalance" OnClick="@(() => NavManager.NavigateTo($"/finance/banking-details?organisationId={Id}"))">
+                    Manage Banking Details
+                </MudMenuItem>
+                <MudDivider Class="my-1" />
+                <MudMenuItem Icon="@Icons.Material.Filled.PhotoCamera" OnClick="@(() => _showLogoDialog = true)">
+                    Update Brand Logo
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error" OnClick="DeleteEmployer">
+                    Delete Employer
+                </MudMenuItem>
+            </MudMenu>
         }
         <MudButton Variant="Variant.Outlined"
                    Color="Color.Secondary"
+                   StartIcon="@Icons.Material.Filled.Cancel"
                    OnClick="BackToList"
                    aria-label="Cancel and Return to List">
             Cancel
@@ -76,7 +99,7 @@
     </div>
 </MudPaper>
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
+<div>
     @if (_loading)
     {
         <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
@@ -768,9 +791,19 @@
                                     </MudAvatar>
                                 </CardHeaderAvatar>
                                 <CardHeaderContent>
-                                    <MudText Typo="Typo.h6">WSP & Mandatory Grant Submissions</MudText>
+                                    <MudText Typo="Typo.h6">WSP &amp; Mandatory Grant Submissions</MudText>
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">Annual Workplace Skills Plans and Training Reports</MudText>
                                 </CardHeaderContent>
+                                <CardHeaderActions>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.PostAdd"
+                                               Href="@($"/wsp/create?organisationId={Id}")"
+                                               aria-label="Submit New WSP / ATR">
+                                        Submit WSP
+                                    </MudButton>
+                                </CardHeaderActions>
                             </MudCardHeader>
                             <MudCardContent>
                                 <MudTable Items="_organisation.WspSubmissions" Hover="true" Dense="true">
@@ -840,12 +873,17 @@
             <MudTabPanel Text="Grants & MoAs" Icon="@Icons.Material.Filled.MonetizationOn">
                 <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
                     <div>
-                        <MudText Typo="Typo.h6">Discretionary Grants (DG) & Memoranda of Agreement (MoA)</MudText>
+                        <MudText Typo="Typo.h6">Discretionary Grants (DG) &amp; Memoranda of Agreement (MoA)</MudText>
                         <MudText Typo="Typo.caption" Color="Color.Secondary">Project funding applications, approved bilateral MoAs, tranches, and claims</MudText>
                     </div>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AccountBalanceWallet" Href="/finance/grant-moas" aria-label="Open Grant MOA Hub">
-                        Finance MOA Hub
-                    </MudButton>
+                    <div class="d-flex gap-2">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PostAdd" Href="@($"/grants/create?organisationId={Id}")" aria-label="Apply for Discretionary Grant">
+                            Apply for DG Window
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AccountBalanceWallet" Href="/finance/grant-moas" aria-label="Open Grant MOA Hub">
+                            Finance MOA Hub
+                        </MudButton>
+                    </div>
                 </div>
 
                 @if (_loadingGrants)
@@ -901,9 +939,14 @@
                         <MudText Typo="Typo.h6">Workplace Site Approvals (WPA)</MudText>
                         <MudText Typo="Typo.caption" Color="Color.Secondary">Host workplace site inspections, approved trades, qualified artisan mentors, and tooling</MudText>
                     </div>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Engineering" Href="/workplace-approvals" aria-label="Open Workplace Approval Hub">
-                        WPA Hub
-                    </MudButton>
+                    <div class="d-flex gap-2">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="@($"/workplace-approvals/create?organisationId={Id}")" aria-label="Apply for Workplace Approval">
+                            Apply for Workplace Approval
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Engineering" Href="/workplace-approvals" aria-label="Open Workplace Approval Hub">
+                            WPA Hub
+                        </MudButton>
+                    </div>
                 </div>
 
                 @if (_loadingWpas)
@@ -1057,7 +1100,7 @@
             }
         </MudTabs>
     }
-</MudContainer>
+</div>
 
 <!-- Brand Logo Dialog -->
 <MudDialog @bind-Visible="_showLogoDialog">

@@ -165,6 +165,78 @@ public class FinanceServiceTests
     }
 
     [Fact]
+    public async Task CalculateMandatoryGrantRebates_ShouldCalculateFromReconciledLevyFileLines_WhenAvailable()
+    {
+        // Arrange
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var financeService = new FinanceService(factory);
+
+        using (var ctx = factory.CreateDbContext())
+        {
+            var org = new Organisation { CompanyName = "Toyota SA", SdlNumber = "L999888777" };
+            ctx.Organisations.Add(org);
+            await ctx.SaveChangesAsync();
+
+            var wsp = new WspSubmission
+            {
+                OrganisationId = org.Id,
+                FinYear = 2026,
+                ReferenceNumber = "WSP-2026-TOYOTA",
+                PlannedTrainingBudget = 2000000m,
+                StatusCode = "Approved"
+            };
+            ctx.WspSubmissions.Add(wsp);
+
+            // Add actual SARS LevyFileLines for this employer
+            var levyFile = new LevyFile
+            {
+                FileName = "SARS_2026_04.txt",
+                FileRef = "SARS-2026-04-001",
+                ImportStatusCode = "PROCESSED"
+            };
+            ctx.LevyFiles.Add(levyFile);
+            await ctx.SaveChangesAsync();
+
+            var line1 = new LevyFileLine
+            {
+                LevyFileId = levyFile.Id,
+                SdlNumber = "L999888777",
+                SchemeYear = "2026",
+                TotalLevyAmount = 600000m,
+                MandatoryLevyAmount = 120000m, // 20%
+                DiscretionaryLevyAmount = 297000m,
+                AdminLevyAmount = 63000m,
+                QctoLevyAmount = 3000m
+            };
+            var line2 = new LevyFileLine
+            {
+                LevyFileId = levyFile.Id,
+                SdlNumber = "L999888777",
+                SchemeYear = "2026",
+                TotalLevyAmount = 400000m,
+                MandatoryLevyAmount = 80000m, // 20%
+                DiscretionaryLevyAmount = 198000m,
+                AdminLevyAmount = 42000m,
+                QctoLevyAmount = 2000m
+            };
+            ctx.LevyFileLines.AddRange(line1, line2);
+            await ctx.SaveChangesAsync();
+        }
+
+        // Act
+        var count = await financeService.CalculateMandatoryGrantRebatesAsync(2026, "finance@merseta.org.za");
+
+        // Assert
+        Assert.Equal(1, count);
+        var disbursements = await financeService.GetMandatoryDisbursementsAsync(2026);
+        Assert.Single(disbursements);
+        // Rebate should be 120,000 + 80,000 = 200,000 from SARS levies (not from planned budget 2M)
+        Assert.Equal(200000m, disbursements[0].CalculatedRebateAmount);
+        Assert.Equal(1000000m, disbursements[0].LeviesReceivedAmount);
+        Assert.Contains("reconciled SARS levy line(s)", disbursements[0].Comments);
+    }
+
+    [Fact]
     public async Task SaveAndApproveInterSetaTransfer_ShouldUpdateStatus()
     {
         // Arrange
