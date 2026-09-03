@@ -23,6 +23,7 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<WspSubmission> WspSubmissions { get; }
     DbSet<LevyFile> LevyFiles { get; }
     DbSet<LevyFileLine> LevyFileLines { get; }
+    DbSet<SarsLevyStaging> SarsLevyStagings { get; }
     DbSet<GrantApplication> GrantApplications { get; }
     DbSet<EtqaAssessor> EtqaAssessors { get; }
     DbSet<TrainingProvider> TrainingProviders { get; }

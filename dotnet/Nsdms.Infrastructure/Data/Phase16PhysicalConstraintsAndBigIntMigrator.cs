@@ -35,7 +35,7 @@ public static class Phase16PhysicalConstraintsAndBigIntMigrator
                 if (File.Exists(scriptPath10))
                 {
                     var sql10 = await File.ReadAllTextAsync(scriptPath10);
-                    await context.Database.ExecuteSqlRawAsync(sql10);
+                    await SqlBatchRunner.ExecuteBatchesAsync(context, sql10, logger);
                     logger?.LogInformation("Executed V2026_10_Promote_High_Volume_PKs_To_BigInt.sql successfully.");
                 }
 
@@ -53,7 +53,7 @@ public static class Phase16PhysicalConstraintsAndBigIntMigrator
                 if (File.Exists(scriptPath11))
                 {
                     var sql11 = await File.ReadAllTextAsync(scriptPath11);
-                    await context.Database.ExecuteSqlRawAsync(sql11);
+                    await SqlBatchRunner.ExecuteBatchesAsync(context, sql11, logger);
                     logger?.LogInformation("Executed V2026_11_Add_Physical_Foreign_Key_Constraints.sql successfully.");
                 }
             }

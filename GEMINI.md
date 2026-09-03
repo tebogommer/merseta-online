@@ -251,10 +251,30 @@ Every page must pass all 16 items before being declared complete:
 
 ---
 
-### 🛡️ SDP Delivery Campus & Practitioner Linking Governance
-1. **Primary Campus Exclusivity**:
-   - Each accredited Skills Development Provider must maintain exactly one primary delivery site (`IsPrimarySite = true`). Marking a campus as primary automatically cascades other campuses of that provider to satellite standing.
-2. **Accredited Assessor/Moderator Relational Integrity**:
-   - Links between SDP delivery sites and accredited practitioners (`TrainingProviderAssessorLink`) must be unique per active role and capture start/termination dates with non-repudiation audit logs.
+---
 
+### 🛡️ SARS Monthly Levy Reactive Streaming & SqlBulkCopy Staging Standard
+1. **Constant Memory Streaming & Digital Security Seal**:
+   - Monthly SARS levy files (often exceeding 100,000 lines) must never be loaded into memory via monolithic string splitting or buffers. Ingestion must use `ISarsLevyStreamingPipeline` with line-by-line `StreamReader` streaming and on-the-fly cryptographic SHA-256 Digital Security Seal calculation.
+2. **Trailer Control & Truncation Safeguard**:
+   - Every file with a `TRAILER` or `CONTROL` record must enforce exact equality between parsed data record counts and gross monetary totals against declared trailer controls ($\le$ R0.05 tolerance). Any mismatch must abort the batch to prevent silent file truncation.
+3. **High-Speed Staging & Partitioned Querying**:
+   - Raw records must be flushed to `SarsLevyStaging` in micro-batches using `SqlBulkCopy` (`ISarsBulkStagingWriter`). Entity lookups (e.g. `Organisations`, `SicCodeTypes`) must be partitioned in chunks $\le 1500$ to strictly adhere to SQL Server's 2,100 parameter limit.
+4. **Idempotency & Non-Repudiation**:
+   - Re-importing a file with an identical Digital Security Seal must be blocked to prevent duplicate financial allocations. Batch promotion must record an audited change log entry in `audit_logs`.
+5. **Streaming In-Line Pre-Flight Gatekeeper & Zero-Tolerance Policy**:
+   - Before any staging records (`SarsLevyStaging`) or financial ledger records (`LevyFile`) are written, the raw file stream must pass pre-flight compliance inspection via `ISarsCompliancePreProcessor`.
+   - Structural encoding, statutory SDL number regex (`^L\d{9}$`), 5-digit SIC codes, non-negative monetary values, duplicate Digital Security Seals, and trailer control reconciliations must be 100% compliant.
+   - Any compliance violation must immediately throw `SarsComplianceException`, aborting ingestion with zero database modifications and returning a line-by-line forensic diagnostic log.
 
+---
+
+### 🛡️ SQL Script Batch Execution & SSMS "GO" Invariant
+1. **Batch Splitting Required**: When executing T-SQL scripts containing SSMS `GO` separators via ADO.NET or EF Core `ExecuteSqlRawAsync`, ALWAYS use `SqlBatchRunner.ExecuteBatchesAsync` to split commands on `^\s*GO\s*$`. Direct execution of scripts containing `GO` causes TDS protocol syntax exceptions (`Incorrect syntax near 'GO'`).
+2. **Idempotency**: All DDL migration clauses must guard table and column creation with `IF NOT EXISTS` or `INFORMATION_SCHEMA` checks.
+
+---
+
+### 🛡️ High-Volume Primary Key Type Alignment Invariant
+1. **BIGINT Primary Key Integrity**: Entities inheriting `BaseLongEntity` (`LevyFileLine`, `WspTrainingPlan`, `AuditLog`) MUST map to underlying SQL Server columns defined as `BIGINT IDENTITY(1,1)`.
+2. **Type Cast Protection**: Mismatches where the physical SQL Server column is `INT` while the C# domain property is `long` cause runtime ADO.NET `InvalidCastException: Unable to cast Int32 to Int64` during query iteration.

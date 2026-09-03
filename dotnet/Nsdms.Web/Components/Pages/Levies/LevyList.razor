@@ -1,5 +1,7 @@
 @page "/levies"
 @inject ILevyService LevyService
+@inject ISarsLevyStreamingPipeline StreamingPipeline
+@inject ISarsCompliancePreProcessor CompliancePreProcessor
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @rendermode InteractiveServer
@@ -54,13 +56,78 @@
                               Placeholder="SDL_NO|SCHEME_YEAR|TOTAL_AMOUNT|MANDATORY|DISCRETIONARY|ADMIN|INTEREST|PENALTY|SIC_CODE" />
             </MudItem>
 
+            @if (_complianceReport != null)
+            {
+                <MudItem xs="12">
+                    @if (_complianceReport.IsCompliant)
+                    {
+                        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Class="mb-3">
+                            <div class="d-flex justify-space-between align-center">
+                                <div>
+                                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold">
+                                        <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Small" Class="mr-1" />
+                                        Streaming In-Line Pre-Flight Gatekeeper: 100% Compliant
+                                    </MudText>
+                                    <MudText Typo="Typo.caption">
+                                        All @_complianceReport.ValidDataRowCount records validated against statutory SDL regex (^L\d{9}$), SIC taxonomy, non-repudiation Digital Security Seal, and trailer controls. Ready for zero-risk staging.
+                                    </MudText>
+                                </div>
+                                <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Gatekeeper Approved</MudChip>
+                            </div>
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-3">
+                            <div class="d-flex justify-space-between align-center">
+                                <div>
+                                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold">
+                                        <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" Class="mr-1" />
+                                        Pre-Ingestion Gatekeeper Rejection: @_complianceReport.ErrorCount Compliance Violation(s) Detected
+                                    </MudText>
+                                    <MudText Typo="Typo.caption">
+                                        File rejected by the Pre-Flight Gatekeeper. Only 100% compliant files can be loaded to protect the financial ledger. Please review the diagnostic log below.
+                                    </MudText>
+                                </div>
+                                <MudChip T="string" Color="Color.Dark" Size="Size.Small" Variant="Variant.Filled">Zero Database Writes</MudChip>
+                            </div>
+                        </MudAlert>
+
+                        <MudTable Items="@_complianceReport.Errors.Take(15)" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.None" Class="mb-3 border rounded">
+                            <HeaderContent>
+                                <MudTh Style="width: 70px;">Line</MudTh>
+                                <MudTh Style="width: 140px;">SDL Number</MudTh>
+                                <MudTh Style="width: 180px;">Violation Code</MudTh>
+                                <MudTh>Diagnostic Details</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Line"><strong>#@context.LineNumber</strong></MudTd>
+                                <MudTd DataLabel="SDL Number" Class="font-monospace">@(context.SdlNumber ?? "-")</MudTd>
+                                <MudTd DataLabel="Violation Code">
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined">@context.IssueCode</MudChip>
+                                </MudTd>
+                                <MudTd DataLabel="Diagnostic Details">
+                                    <MudText Typo="Typo.body2">@context.Description</MudText>
+                                    @if (!string.IsNullOrWhiteSpace(context.RawSnippet))
+                                    {
+                                        <MudText Typo="Typo.caption" Class="font-monospace text-muted">Snippet: @context.RawSnippet</MudText>
+                                    }
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudItem>
+            }
+
             @if (_parsedPreviewLines.Any())
             {
                 <MudItem xs="12">
                     <MudPaper Elevation="0" Class="pa-3 rounded-lg border-dashed" Style="background-color: var(--mud-palette-background-grey);">
                         <div class="d-flex justify-space-between align-center mb-2">
                             <MudText Typo="Typo.subtitle2" Class="font-weight-bold text-primary">Pre-Ingestion Statutory Split Preview (@_parsedPreviewLines.Count Line Items)</MudText>
-                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Valid Syntax</MudChip>
+                            <MudChip T="string" Color="@(_complianceReport != null && !_complianceReport.IsCompliant ? Color.Error : Color.Success)" Size="Size.Small" Variant="Variant.Filled">
+                                @(_complianceReport != null && !_complianceReport.IsCompliant ? "Blocked" : "Valid Syntax")
+                            </MudChip>
                         </div>
                         <MudGrid Spacing="2">
                             <MudItem xs="6" md="3">
@@ -86,7 +153,12 @@
 
             <MudItem xs="12" Class="d-flex justify-end gap-2 mt-2">
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="@(() => _showImportDialog = false)">Cancel</MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Check" OnClick="SubmitImportBatch" Disabled="_isImporting">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Success"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Check"
+                           OnClick="SubmitImportBatch"
+                           Disabled="@(_isImporting || (_complianceReport != null && !_complianceReport.IsCompliant))">
                     @(_isImporting ? "Processing Recon..." : "Commit Ingestion & Reconcile")
                 </MudButton>
             </MudItem>
@@ -131,6 +203,8 @@
             <HeaderContent>
                 <MudTh>File Name</MudTh>
                 <MudTh>SARS File Reference</MudTh>
+                <MudTh>Security Seal</MudTh>
+                <MudTh>Trailer Control</MudTh>
                 <MudTh>Import Date</MudTh>
                 <MudTh>Records</MudTh>
                 <MudTh>Total Levy Value</MudTh>
@@ -146,6 +220,21 @@
                 </MudTd>
                 <MudTd DataLabel="File Reference">
                     <MudText Typo="Typo.body2" Class="font-monospace">@context.FileRef</MudText>
+                </MudTd>
+                <MudTd DataLabel="Security Seal">
+                    <MudText Typo="Typo.caption" Class="font-monospace text-truncate" Style="max-width: 120px;" Title="@context.DigitalSecuritySeal">
+                        @(!string.IsNullOrEmpty(context.DigitalSecuritySeal) ? context.DigitalSecuritySeal[..Math.Min(10, context.DigitalSecuritySeal.Length)] + "..." : "Legacy")
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Trailer Control">
+                    @if (context.IsControlValidated)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Validated</MudChip>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">-</MudText>
+                    }
                 </MudTd>
                 <MudTd DataLabel="Import Date">
                     <MudText Typo="Typo.body2">@context.ImportDate.ToString("yyyy-MM-dd HH:mm")</MudText>
@@ -248,6 +337,7 @@
     private string _rawFileContent = string.Empty;
     private List<LevyFileLine> _parsedPreviewLines = new();
     private bool _isImporting = false;
+    private SarsComplianceReport? _complianceReport;
 
     private void OpenImportBatch()
     {
@@ -260,21 +350,23 @@
         _importDate = DateTime.Today;
         _rawFileContent = string.Empty;
         _parsedPreviewLines.Clear();
+        _complianceReport = null;
         _showImportDialog = true;
     }
 
-    private void LoadSampleSarsData()
+    private async Task LoadSampleSarsData()
     {
         var year = DateTime.UtcNow.Year.ToString();
         _rawFileContent = $"# merSETA Official Monthly SDL SARS Test Schedule\r\n" +
             $"L102938475|{year}|150000.00|30000.00|74250.00|15750.00|0.00|0.00|35100\r\n" +
             $"L293847561|{year}|250000.00|50000.00|123750.00|26250.00|1250.00|500.00|35200\r\n" +
             $"L384756192|{year}|420000.00|84000.00|207900.00|44100.00|0.00|0.00|35300\r\n" +
-            $"L475619283|{year}|80000.00|16000.00|39600.00|8400.00|0.00|0.00|35400";
-        OnRawContentChanged(_rawFileContent);
+            $"L475619283|{year}|80000.00|16000.00|39600.00|8400.00|0.00|0.00|35400\r\n" +
+            $"TRAILER|4|900000.00";
+        await OnRawContentChanged(_rawFileContent);
     }
 
-    private void OnRawContentChanged(string content)
+    private async Task OnRawContentChanged(string content)
     {
         _rawFileContent = content;
         try
@@ -289,6 +381,15 @@
         catch
         {
             _parsedPreviewLines.Clear();
+        }
+
+        if (!string.IsNullOrWhiteSpace(content))
+        {
+            _complianceReport = await CompliancePreProcessor.ValidateContentAsync(content, _newFile.FileName);
+        }
+        else
+        {
+            _complianceReport = null;
         }
     }
 
@@ -305,21 +406,34 @@
 
         try
         {
-            LevyFile saved;
             if (!string.IsNullOrWhiteSpace(_rawFileContent) && _parsedPreviewLines.Any())
             {
-                saved = await LevyService.ImportLevyFileAsync(_newFile.FileName, _rawFileContent, "Admin");
-                Snackbar.Add($"SARS Levy File '{saved.FileName}' imported and reconciled with {_parsedPreviewLines.Count} line items.", Severity.Success);
+                var bytes = System.Text.Encoding.UTF8.GetBytes(_rawFileContent);
+                using var stream = new MemoryStream(bytes);
+                var streamResult = await StreamingPipeline.ProcessSarsStreamAsync(stream, _newFile.FileName, "Admin");
+                Snackbar.Add($"SARS Levy File '{streamResult.FileName}' streamed via Option A Pipeline ({streamResult.TotalRecords} records, {streamResult.TotalAmount:C}) in {streamResult.ProcessingDurationMs} ms.", Severity.Success);
+                if (streamResult.OutOfScopeCount > 0)
+                {
+                    Snackbar.Add($"Identified {streamResult.OutOfScopeCount} out-of-scope Inter-SETA line(s). Transfers initiated automatically.", Severity.Warning);
+                }
+                _showImportDialog = false;
+                await LoadData();
+                NavManager.NavigateTo($"/levies/{streamResult.LevyFileId}");
+                return;
             }
             else
             {
-                saved = await LevyService.CreateAsync(_newFile, "Admin");
+                var saved = await LevyService.CreateAsync(_newFile, "Admin");
                 Snackbar.Add($"SARS Levy File '{saved.FileName}' created successfully.", Severity.Success);
+                _showImportDialog = false;
+                await LoadData();
+                NavManager.NavigateTo($"/levies/{saved.Id}");
             }
-
-            _showImportDialog = false;
-            await LoadData();
-            NavManager.NavigateTo($"/levies/{saved.Id}");
+        }
+        catch (SarsComplianceException cex)
+        {
+            _complianceReport = cex.Report;
+            Snackbar.Add($"Pre-Ingestion Gatekeeper Rejection: {cex.Message}", Severity.Error);
         }
         catch (Exception ex)
         {

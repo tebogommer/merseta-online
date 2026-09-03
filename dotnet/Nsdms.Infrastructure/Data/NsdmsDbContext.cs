@@ -33,6 +33,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<WspSubmission> WspSubmissions => Set<WspSubmission>();
     public DbSet<LevyFile> LevyFiles => Set<LevyFile>();
     public DbSet<LevyFileLine> LevyFileLines => Set<LevyFileLine>();
+    public DbSet<SarsLevyStaging> SarsLevyStagings => Set<SarsLevyStaging>();
     public DbSet<GrantApplication> GrantApplications => Set<GrantApplication>();
     public DbSet<EtqaAssessor> EtqaAssessors => Set<EtqaAssessor>();
     public DbSet<TrainingProvider> TrainingProviders => Set<TrainingProvider>();
@@ -528,18 +529,21 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasQueryFilter(w => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || w.OrganisationId == _tenantProvider.CurrentOrganisationId);
         });
 
-        // LevyFile & LevyFileLine
+        // LevyFile & LevyFileLine & SarsLevyStaging
         modelBuilder.Entity<LevyFile>(entity =>
         {
             entity.ToTable("LevyFile");
             entity.Property(l => l.FileName).HasMaxLength(255).IsRequired();
             entity.Property(l => l.FileRef).HasMaxLength(100);
-            entity.Property(l => l.ImportStatusCode).HasMaxLength(15);
+            entity.Property(l => l.ImportStatusCode).HasMaxLength(25);
+            entity.Property(l => l.DigitalSecuritySeal).HasMaxLength(64);
             entity.Property(l => l.TotalAmount).HasPrecision(18, 2);
+            entity.Property(l => l.ControlTotalAmount).HasPrecision(18, 2);
 
             entity.HasIndex(l => l.FileRef);
             entity.HasIndex(l => l.ImportDate);
             entity.HasIndex(l => l.ImportStatusCode);
+            entity.HasIndex(l => l.DigitalSecuritySeal);
         });
 
         modelBuilder.Entity<LevyFileLine>(entity =>
@@ -550,8 +554,10 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(l => l.MandatoryLevyAmount).HasPrecision(18, 2);
             entity.Property(l => l.DiscretionaryLevyAmount).HasPrecision(18, 2);
             entity.Property(l => l.AdminLevyAmount).HasPrecision(18, 2);
+            entity.Property(l => l.QctoLevyAmount).HasPrecision(18, 2);
             entity.Property(l => l.InterestAmount).HasPrecision(18, 2);
             entity.Property(l => l.PenaltyAmount).HasPrecision(18, 2);
+            entity.Property(l => l.TotalLevyAmount).HasPrecision(18, 2);
             entity.Property(l => l.SicCode).HasMaxLength(20);
             entity.Property(l => l.ChamberCode).HasMaxLength(20);
             entity.Property(l => l.SetaCode).HasMaxLength(10).HasDefaultValue("17");
@@ -568,6 +574,34 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(l => l.SetaCode);
             entity.HasIndex(l => l.IsOutOfScopeSeta);
             entity.HasIndex(l => l.HasSicCodeMismatch);
+        });
+
+        modelBuilder.Entity<SarsLevyStaging>(entity =>
+        {
+            entity.ToTable("SarsLevyStaging");
+            entity.Property(s => s.BatchIdentifier).HasMaxLength(100).IsRequired();
+            entity.Property(s => s.SdlNumber).HasMaxLength(20).IsRequired();
+            entity.Property(s => s.SchemeYear).HasMaxLength(10);
+            entity.Property(s => s.SicCode).HasMaxLength(20);
+            entity.Property(s => s.ChamberCode).HasMaxLength(20);
+            entity.Property(s => s.SetaCode).HasMaxLength(10).HasDefaultValue("17");
+            entity.Property(s => s.RawRecord).HasMaxLength(1000);
+            entity.Property(s => s.StagingStatus).HasMaxLength(25).HasDefaultValue("Pending");
+            entity.Property(s => s.ValidationMessage).HasMaxLength(500);
+
+            entity.Property(s => s.MandatoryLevyAmount).HasPrecision(18, 2);
+            entity.Property(s => s.DiscretionaryLevyAmount).HasPrecision(18, 2);
+            entity.Property(s => s.AdminLevyAmount).HasPrecision(18, 2);
+            entity.Property(s => s.QctoLevyAmount).HasPrecision(18, 2);
+            entity.Property(s => s.InterestAmount).HasPrecision(18, 2);
+            entity.Property(s => s.PenaltyAmount).HasPrecision(18, 2);
+            entity.Property(s => s.TotalLevyAmount).HasPrecision(18, 2);
+
+            entity.HasIndex(s => s.BatchIdentifier);
+            entity.HasIndex(s => s.SdlNumber);
+            entity.HasIndex(s => s.SicCode);
+            entity.HasIndex(s => s.StagingStatus);
+            entity.HasIndex(s => s.IsOutOfScopeSeta);
         });
 
         // GrantApplication

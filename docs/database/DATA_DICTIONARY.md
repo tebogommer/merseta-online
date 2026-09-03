@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-03 09:21:49 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 182
+> **Generated:** 2026-09-03 20:06:12 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 183
 
 ---
 
@@ -62,7 +62,7 @@
 | `dbo` | [`LearnerAssessment`](#learnerassessment) | `LearnerAssessment` | 30 | `Id` | Formative and summative learning programme unit standard assessment evaluations, capturing all statutory fields required for SETMIS File 503 (Unit Standard Enrolment) reporting. |
 | `dbo` | [`LearnerTradeTest`](#learnertradetest) | `LearnerTradeTest` | 28 | `Id` | Trade test final competency evaluation and artisan certification attempt records (ARPL & standard), fully normalized with statutory columns required for SETMIS File 505 (Trade Test) reporting. |
 | `dbo` | [`LearnerTradeTestApplication`](#learnertradetestapplication) | `LearnerTradeTestApplication` | 33 | `Id` | Artisan Trade Test Application and Assessment Record (Section 26D / Section 28 ARPL / Apprenticeships). |
-| `dbo` | [`LevyFile`](#levyfile) | `LevyFile` | 11 | `Id` | Monthly SARS Skills Development Levy file import batches. |
+| `dbo` | [`LevyFile`](#levyfile) | `LevyFile` | 16 | `Id` | Monthly SARS Skills Development Levy file import batches. |
 | `dbo` | [`LevyFileLine`](#levyfileline) | `LevyFileLine` | 21 | `Id` | Individual employer monthly SARS levy transaction breakdown. |
 | `dbo` | [`MandatoryGrantDisbursement`](#mandatorygrantdisbursement) | `MandatoryGrantDisbursement` | 17 | `Id` | Mandatory Grant 20% Rebate Payouts for compliant employers submitting WSP/ATR. |
 | `dbo` | [`MoaClause`](#moaclause) | `MoaClause` | 11 | `Id` | Reusable atomic legal clause in the MerSETA clause library. |
@@ -84,6 +84,7 @@
 | `dbo` | [`ReviewCommitteeMeetingAgenda`](#reviewcommitteemeetingagenda) | `ReviewCommitteeMeetingAgenda` | 16 | `Id` | Specific agenda item submitted for committee adjudication or voting resolution. |
 | `dbo` | [`ReviewCommitteeMeetingMember`](#reviewcommitteemeetingmember) | `ReviewCommitteeMeetingMember` | 9 | `Id` | Committee attendee / voting member. |
 | `dbo` | [`SarsLevyReconAudit`](#sarslevyreconaudit) | `SarsLevyReconAudit` | 26 | `Id` | Advanced SARS Monthly SDL Levy Reconciliation Audit and Discrepancy Tracking. |
+| `dbo` | [`SarsLevyStaging`](#sarslevystaging) | `SarsLevyStaging` | 25 | `Id` | Staging entity for high-speed bulk ingestion of raw monthly SARS Skills Development Levy transactions. Serves as the landing table for streaming SqlBulkCopy before promotion into the production financial ledger. |
 | `dbo` | [`SarsSchemeYearCalculation`](#sarsschemeyearcalculation) | `SarsSchemeYearCalculation` | 17 | `Id` | System entity for SarsSchemeYearCalculation data governance. |
 | `dbo` | [`SdfAppointmentHistory`](#sdfappointmenthistory) | `SdfAppointmentHistory` | 7 | `Id` | System entity for SdfAppointmentHistory data governance. |
 | `dbo` | [`SdfCompany`](#sdfcompany) | `SdfCompany` | 21 | `Id` | System entity for SdfCompany data governance. |
@@ -2471,14 +2472,19 @@
 | Column | SQL Store Type | Nullable | Key | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ControlRecordCount` | `int` | NULL |  | Stated record count from file trailer record for control reconciliation. |
+| `ControlTotalAmount` | `decimal(18,2)` | NULL |  | Stated total Rand value from file trailer record for control reconciliation. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DigitalSecuritySeal` | `nvarchar(64)` | NULL |  | Cryptographic Digital Security Seal (SHA-256 hash) for file verification and non-repudiation. |
 | `FileName` | `nvarchar(255)` | **NOT NULL** |  | Original file name uploaded from SARS levy distribution feed. |
 | `FileRef` | `nvarchar(100)` | **NOT NULL** |  | Internal unique batch reference identifier. |
 | `ImportDate` | `datetime2` | **NOT NULL** |  | Timestamp when the levy file was ingested into the system. |
-| `ImportStatusCode` | `nvarchar(15)` | NULL |  | Processing status code (e.g. Uploaded, Processed, Reconciled, Error). |
+| `ImportStatusCode` | `nvarchar(25)` | NULL |  | Processing status code (e.g. Uploaded, Processed, Reconciled, Error). |
+| `IsControlValidated` | `bit` | **NOT NULL** |  | Indicates whether line counts and gross Rand totals perfectly matched the file trailer control totals. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `ProcessingDurationMs` | `bigint` | NULL |  | Ingestion and reconciliation processing duration in milliseconds. |
 | `TotalAmount` | `decimal(18,2)` | **NOT NULL** |  | Aggregate monetary value of all levy allocations in this file in ZAR. |
 | `TotalRecords` | `int` | **NOT NULL** |  | Total count of line items contained in the levy file. |
 
@@ -2486,6 +2492,7 @@
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
+| `IX_LevyFile_DigitalSecuritySeal` | `DigitalSecuritySeal` | No |
 | `IX_LevyFile_FileRef` | `FileRef` | No |
 | `IX_LevyFile_ImportDate` | `ImportDate` | No |
 | `IX_LevyFile_ImportStatusCode` | `ImportStatusCode` | No |
@@ -3462,6 +3469,54 @@
 | `IX_SarsLevyReconAudit_DiscrepancyReasonCode` | `DiscrepancyReasonCode` | No |
 | `IX_SarsLevyReconAudit_FinancialYear` | `FinancialYear` | No |
 | `IX_SarsLevyReconAudit_SdlNumber` | `SdlNumber` | No |
+
+---
+
+### <a id="sarslevystaging"></a> `dbo.SarsLevyStaging`
+
+**Description:** Staging entity for high-speed bulk ingestion of raw monthly SARS Skills Development Levy transactions. Serves as the landing table for streaming SqlBulkCopy before promotion into the production financial ledger.  
+**CLR Model:** `Nsdms.Domain.Entities.SarsLevyStaging`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `bigint` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AdminLevyAmount` | `decimal(18,2)` | **NOT NULL** |  | 10.5% merSETA administration levy portion in ZAR. |
+| `BatchIdentifier` | `nvarchar(100)` | **NOT NULL** |  | Unique ingestion batch tracking identifier (e.g. SARS-STAGING-20260903-ABC123). |
+| `ChamberCode` | `nvarchar(20)` | NULL |  | Resolved merSETA Chamber Code (AUTO, METAL, MOTOR, NEW_TYRE, PLASTICS, OTHER). |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DiscretionaryLevyAmount` | `decimal(18,2)` | **NOT NULL** |  | 49.5% Discretionary Grant portion in ZAR. |
+| `HasSicCodeMismatch` | `bit` | **NOT NULL** |  | Indicates whether the declared SARS SIC code differs from the employer's master verified record. |
+| `InterestAmount` | `decimal(18,2)` | **NOT NULL** |  | Statutory interest on late payments in ZAR. |
+| `IsOutOfScopeSeta` | `bit` | **NOT NULL** |  | Indicates whether this transaction belongs to a non-merSETA industry requiring Inter-SETA transfer. |
+| `LineNumber` | `int` | **NOT NULL** |  | Sequential line number in the source SARS text file (1-indexed). |
+| `MandatoryLevyAmount` | `decimal(18,2)` | **NOT NULL** |  | 20% Mandatory Grant portion in ZAR. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PenaltyAmount` | `decimal(18,2)` | **NOT NULL** |  | Statutory penalty fee on late payments in ZAR. |
+| `PromotedLevyFileId` | `int` | NULL |  | Foreign key referencing the promoted LevyFile once batch promotion completes. |
+| `QctoLevyAmount` | `decimal(18,2)` | **NOT NULL** |  | 0.5% Quality Council for Trades and Occupations (QCTO) levy portion in ZAR. |
+| `RawRecord` | `nvarchar(1000)` | NULL |  | Raw unparsed line content retained for forensic audit and diagnostic inspection. |
+| `SchemeYear` | `nvarchar(10)` | **NOT NULL** |  | Levy scheme year or accounting period (e.g. 2026). |
+| `SdlNumber` | `nvarchar(20)` | **NOT NULL** |  | Employer SARS Skills Development Levy registration reference (e.g. L123456789). |
+| `SetaCode` | `nvarchar(10)` | **NOT NULL** |  | Statutory SETA code (SETA 17 for merSETA, or other SETA code for out-of-scope records). |
+| `SicCode` | `nvarchar(20)` | NULL |  | Declared 5-digit Standard Industrial Classification (SIC) code reported in the SARS schedule. |
+| `StagingStatus` | `nvarchar(25)` | **NOT NULL** |  | Staging lifecycle status: Pending, Validated, Promoted, Rejected. |
+| `TotalLevyAmount` | `decimal(18,2)` | **NOT NULL** |  | Total gross levy amount in ZAR. |
+| `ValidationMessage` | `nvarchar(500)` | NULL |  | Optional diagnostic message or reason for rejection. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_SarsLevyStaging_BatchIdentifier` | `BatchIdentifier` | No |
+| `IX_SarsLevyStaging_IsOutOfScopeSeta` | `IsOutOfScopeSeta` | No |
+| `IX_SarsLevyStaging_SdlNumber` | `SdlNumber` | No |
+| `IX_SarsLevyStaging_SicCode` | `SicCode` | No |
+| `IX_SarsLevyStaging_StagingStatus` | `StagingStatus` | No |
 
 ---
 

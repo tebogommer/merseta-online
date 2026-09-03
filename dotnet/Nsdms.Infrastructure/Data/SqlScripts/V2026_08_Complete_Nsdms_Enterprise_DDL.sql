@@ -1059,5 +1059,105 @@ BEGIN
     PRINT 'Created table [dbo].[GrantPaymentClaim].';
 END
 
+-- 44. Option A: SARS Monthly Skills Development Levy Ingestion, Staging & Ledger
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'LevyFile' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.LevyFile (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_LevyFile PRIMARY KEY CLUSTERED,
+        FileName NVARCHAR(255) NOT NULL,
+        FileRef NVARCHAR(100) NOT NULL CONSTRAINT DF_LevyFile_FileRef DEFAULT N'',
+        ImportDate DATETIME2(7) NOT NULL CONSTRAINT DF_LevyFile_ImportDate DEFAULT SYSUTCDATETIME(),
+        TotalRecords INT NOT NULL CONSTRAINT DF_LevyFile_TotalRecords DEFAULT 0,
+        TotalAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_LevyFile_TotalAmount DEFAULT 0.00,
+        ImportStatusCode NVARCHAR(25) NOT NULL CONSTRAINT DF_LevyFile_StatusCode DEFAULT N'Imported',
+        DigitalSecuritySeal NVARCHAR(64) NULL,
+        ControlRecordCount INT NULL,
+        ControlTotalAmount DECIMAL(18,2) NULL,
+        IsControlValidated BIT NOT NULL CONSTRAINT DF_LevyFile_IsControlValidated DEFAULT 0,
+        ProcessingDurationMs BIGINT NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_LevyFile_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_LevyFile_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_LevyFile_FileRef ON dbo.LevyFile (FileRef);
+    CREATE NONCLUSTERED INDEX IX_LevyFile_ImportDate ON dbo.LevyFile (ImportDate);
+    CREATE NONCLUSTERED INDEX IX_LevyFile_ImportStatusCode ON dbo.LevyFile (ImportStatusCode);
+    CREATE NONCLUSTERED INDEX IX_LevyFile_DigitalSecuritySeal ON dbo.LevyFile (DigitalSecuritySeal);
+    PRINT 'Created table [dbo].[LevyFile].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'LevyFileLine' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.LevyFileLine (
+        id BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_LevyFileLine PRIMARY KEY CLUSTERED,
+        LevyFileId INT NOT NULL CONSTRAINT FK_LevyFileLine_LevyFile FOREIGN KEY REFERENCES dbo.LevyFile(id) ON DELETE CASCADE,
+        SdlNumber NVARCHAR(20) NOT NULL,
+        SchemeYear NVARCHAR(10) NOT NULL CONSTRAINT DF_LevyFileLine_SchemeYear DEFAULT N'',
+        MandatoryLevyAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_LevyFileLine_Mandatory DEFAULT 0.00,
+        DiscretionaryLevyAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_LevyFileLine_Discretionary DEFAULT 0.00,
+        AdminLevyAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_LevyFileLine_Admin DEFAULT 0.00,
+        QctoLevyAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_LevyFileLine_Qcto DEFAULT 0.00,
+        InterestAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_LevyFileLine_Interest DEFAULT 0.00,
+        PenaltyAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_LevyFileLine_Penalty DEFAULT 0.00,
+        TotalLevyAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_LevyFileLine_Total DEFAULT 0.00,
+        IsReconciled BIT NOT NULL CONSTRAINT DF_LevyFileLine_IsReconciled DEFAULT 0,
+        SicCode NVARCHAR(20) NULL,
+        ChamberCode NVARCHAR(20) NULL,
+        SetaCode NVARCHAR(10) NOT NULL CONSTRAINT DF_LevyFileLine_SetaCode DEFAULT N'17',
+        IsOutOfScopeSeta BIT NOT NULL CONSTRAINT DF_LevyFileLine_IsOutOfScope DEFAULT 0,
+        HasSicCodeMismatch BIT NOT NULL CONSTRAINT DF_LevyFileLine_HasSicMismatch DEFAULT 0,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_LevyFileLine_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_LevyFileLine_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_LevyFileLine_LevyFileId ON dbo.LevyFileLine (LevyFileId);
+    CREATE NONCLUSTERED INDEX IX_LevyFileLine_SdlNumber ON dbo.LevyFileLine (SdlNumber);
+    CREATE NONCLUSTERED INDEX IX_LevyFileLine_SicCode ON dbo.LevyFileLine (SicCode);
+    CREATE NONCLUSTERED INDEX IX_LevyFileLine_ChamberCode ON dbo.LevyFileLine (ChamberCode);
+    CREATE NONCLUSTERED INDEX IX_LevyFileLine_SetaCode ON dbo.LevyFileLine (SetaCode);
+    CREATE NONCLUSTERED INDEX IX_LevyFileLine_IsOutOfScopeSeta ON dbo.LevyFileLine (IsOutOfScopeSeta);
+    CREATE NONCLUSTERED INDEX IX_LevyFileLine_HasSicCodeMismatch ON dbo.LevyFileLine (HasSicCodeMismatch);
+    PRINT 'Created table [dbo].[LevyFileLine].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'SarsLevyStaging' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.SarsLevyStaging (
+        id BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_SarsLevyStaging PRIMARY KEY CLUSTERED,
+        BatchIdentifier NVARCHAR(100) NOT NULL,
+        LineNumber INT NOT NULL,
+        RawRecord NVARCHAR(1000) NULL,
+        SdlNumber NVARCHAR(20) NOT NULL,
+        SchemeYear NVARCHAR(10) NULL,
+        SicCode NVARCHAR(20) NULL,
+        ChamberCode NVARCHAR(20) NULL,
+        SetaCode NVARCHAR(10) NOT NULL CONSTRAINT DF_SarsLevyStaging_Seta DEFAULT N'17',
+        MandatoryLevyAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_SarsLevyStaging_Mandatory DEFAULT 0.00,
+        DiscretionaryLevyAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_SarsLevyStaging_Discretionary DEFAULT 0.00,
+        AdminLevyAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_SarsLevyStaging_Admin DEFAULT 0.00,
+        QctoLevyAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_SarsLevyStaging_Qcto DEFAULT 0.00,
+        InterestAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_SarsLevyStaging_Interest DEFAULT 0.00,
+        PenaltyAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_SarsLevyStaging_Penalty DEFAULT 0.00,
+        TotalLevyAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_SarsLevyStaging_Total DEFAULT 0.00,
+        IsOutOfScopeSeta BIT NOT NULL CONSTRAINT DF_SarsLevyStaging_OutOfScope DEFAULT 0,
+        HasSicCodeMismatch BIT NOT NULL CONSTRAINT DF_SarsLevyStaging_SicMismatch DEFAULT 0,
+        StagingStatus NVARCHAR(25) NOT NULL CONSTRAINT DF_SarsLevyStaging_Status DEFAULT N'Pending',
+        ValidationMessage NVARCHAR(500) NULL,
+        PromotedLevyFileId INT NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_SarsLevyStaging_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_SarsLevyStaging_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_SarsLevyStaging_Batch ON dbo.SarsLevyStaging (BatchIdentifier);
+    CREATE NONCLUSTERED INDEX IX_SarsLevyStaging_Sdl ON dbo.SarsLevyStaging (SdlNumber);
+    CREATE NONCLUSTERED INDEX IX_SarsLevyStaging_Sic ON dbo.SarsLevyStaging (SicCode);
+    CREATE NONCLUSTERED INDEX IX_SarsLevyStaging_Status ON dbo.SarsLevyStaging (StagingStatus);
+    CREATE NONCLUSTERED INDEX IX_SarsLevyStaging_OutOfScope ON dbo.SarsLevyStaging (IsOutOfScopeSeta);
+    PRINT 'Created table [dbo].[SarsLevyStaging].';
+END
+
 PRINT 'Complete Idempotent Enterprise DDL Deployment Succeeded!';
 

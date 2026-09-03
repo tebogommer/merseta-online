@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -35,7 +35,7 @@ public static class Phase20NambBatchMigrator
                 if (File.Exists(scriptPath))
                 {
                     var sql = await File.ReadAllTextAsync(scriptPath);
-                    await context.Database.ExecuteSqlRawAsync(sql);
+                    await SqlBatchRunner.ExecuteBatchesAsync(context, sql, logger);
                     logger?.LogInformation("Executed V2026_15_Phase5_Namb_Batch.sql successfully.");
                 }
             }

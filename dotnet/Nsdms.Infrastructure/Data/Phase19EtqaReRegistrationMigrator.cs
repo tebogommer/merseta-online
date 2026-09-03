@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -35,7 +35,7 @@ public static class Phase19EtqaReRegistrationMigrator
                 if (File.Exists(scriptPath))
                 {
                     var sql = await File.ReadAllTextAsync(scriptPath);
-                    await context.Database.ExecuteSqlRawAsync(sql);
+                    await SqlBatchRunner.ExecuteBatchesAsync(context, sql, logger);
                     logger?.LogInformation("Executed V2026_14_Phase4_Etqa_ReRegistration.sql successfully.");
                 }
             }

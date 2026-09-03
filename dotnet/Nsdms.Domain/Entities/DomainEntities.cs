@@ -131,6 +131,31 @@ public class LevyFile : BaseEntity
     public string? ImportStatusCode { get; set; }
 
     /// <summary>
+    /// Cryptographic Digital Security Seal (SHA-256 hash) for file verification and non-repudiation.
+    /// </summary>
+    public string? DigitalSecuritySeal { get; set; }
+
+    /// <summary>
+    /// Stated record count from file trailer record for control reconciliation.
+    /// </summary>
+    public int? ControlRecordCount { get; set; }
+
+    /// <summary>
+    /// Stated total Rand value from file trailer record for control reconciliation.
+    /// </summary>
+    public decimal? ControlTotalAmount { get; set; }
+
+    /// <summary>
+    /// Indicates whether line counts and gross Rand totals perfectly matched the file trailer control totals.
+    /// </summary>
+    public bool IsControlValidated { get; set; } = false;
+
+    /// <summary>
+    /// Ingestion and reconciliation processing duration in milliseconds.
+    /// </summary>
+    public long? ProcessingDurationMs { get; set; }
+
+    /// <summary>
     /// Individual employer levy transactions in this file.
     /// </summary>
     public ICollection<LevyFileLine> LineItems { get; set; } = new List<LevyFileLine>();

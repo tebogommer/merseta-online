@@ -192,6 +192,14 @@ builder.Services.AddScoped<NonSetaVerificationService>(sp => (NonSetaVerificatio
 builder.Services.AddScoped<ISarsLevyReconAuditService, SarsLevyReconAuditService>();
 builder.Services.AddScoped<SarsLevyReconAuditService>(sp => (SarsLevyReconAuditService)sp.GetRequiredService<ISarsLevyReconAuditService>());
 
+// Option A: Reactive Streaming Pipeline & SqlBulkCopy Staging Table Architecture
+builder.Services.AddScoped<ISarsBulkStagingWriter, SarsBulkStagingWriter>();
+builder.Services.AddScoped<SarsBulkStagingWriter>(sp => (SarsBulkStagingWriter)sp.GetRequiredService<ISarsBulkStagingWriter>());
+builder.Services.AddScoped<ISarsCompliancePreProcessor, SarsCompliancePreProcessor>();
+builder.Services.AddScoped<SarsCompliancePreProcessor>(sp => (SarsCompliancePreProcessor)sp.GetRequiredService<ISarsCompliancePreProcessor>());
+builder.Services.AddScoped<ISarsLevyStreamingPipeline, SarsLevyStreamingPipeline>();
+builder.Services.AddScoped<SarsLevyStreamingPipeline>(sp => (SarsLevyStreamingPipeline)sp.GetRequiredService<ISarsLevyStreamingPipeline>());
+
 // Auxiliary Enterprise Services (Options A, B, C, D)
 builder.Services.AddScoped<IBankingDetailsService, BankingDetailsService>();
 builder.Services.AddScoped<BankingDetailsService>(sp => (BankingDetailsService)sp.GetRequiredService<IBankingDetailsService>());
@@ -439,6 +447,7 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase19EtqaReRegistration", () => Phase19EtqaReRegistrationMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase20NambBatch", () => Phase20NambBatchMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase21SdpCampus", () => Phase21SdpCampusMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase22SarsLevyStreamingStaging", () => Phase22SarsLevyStreamingStagingMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
     RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
     RunMigrator("RolePermissions", () => scope.ServiceProvider.GetRequiredService<IRolePermissionService>().SeedDefaultRolePermissionsAsync().GetAwaiter().GetResult());

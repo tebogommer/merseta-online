@@ -189,7 +189,10 @@ public class LevyService : ILevyService
                 if (parts[0].Equals("SDL", StringComparison.OrdinalIgnoreCase) ||
                     parts[0].Equals("SdlNumber", StringComparison.OrdinalIgnoreCase) ||
                     parts[0].Equals("SDL_NO", StringComparison.OrdinalIgnoreCase) ||
-                    parts[0].Equals("REF_NO", StringComparison.OrdinalIgnoreCase))
+                    parts[0].Equals("REF_NO", StringComparison.OrdinalIgnoreCase) ||
+                    parts[0].Equals("TRAILER", StringComparison.OrdinalIgnoreCase) ||
+                    parts[0].Equals("CONTROL", StringComparison.OrdinalIgnoreCase) ||
+                    parts[0].Equals("EOF", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -384,11 +387,29 @@ public class LevyService : ILevyService
             line.CreatedBy = currentUsername;
         }
 
+        // Compute non-repudiation Digital Security Seal (SHA-256)
+        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        var hashBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(fileContent));
+        var digitalSecuritySeal = BitConverter.ToString(hashBytes).Replace("-", string.Empty).ToLowerInvariant();
+
         using var db = await _contextFactory.CreateDbContextAsync();
 
-        // Automated Boundary & SIC Discrepancy Engine (Option C)
+        if (await db.LevyFiles.AnyAsync(f => f.DigitalSecuritySeal == digitalSecuritySeal && f.ImportStatusCode == "Imported"))
+        {
+            throw new InvalidOperationException($"Duplicate SARS levy file rejected. A batch with Digital Security Seal '{digitalSecuritySeal}' has already been processed.");
+        }
+
+        // Automated Boundary & SIC Discrepancy Engine with chunked queries to prevent SQL 2,100 parameter limit
         var allSdlNumbers = parsedLines.Select(l => l.SdlNumber).Distinct().ToList();
-        var organisations = await db.Organisations.Where(o => allSdlNumbers.Contains(o.SdlNumber)).ToListAsync();
+        var organisations = new List<Organisation>();
+        const int chunkSize = 1500;
+        for (int i = 0; i < allSdlNumbers.Count; i += chunkSize)
+        {
+            var sdlChunk = allSdlNumbers.Skip(i).Take(chunkSize).ToList();
+            var matchedOrgs = await db.Organisations.Where(o => sdlChunk.Contains(o.SdlNumber)).ToListAsync();
+            organisations.AddRange(matchedOrgs);
+        }
+
         var distinctSicCodes = parsedLines.Where(l => !string.IsNullOrWhiteSpace(l.SicCode)).Select(l => l.SicCode!).Distinct().ToList();
         var sicTypes = await db.SicCodeTypes.Where(s => distinctSicCodes.Contains(s.Code)).ToListAsync();
 
@@ -488,6 +509,7 @@ public class LevyService : ILevyService
             TotalRecords = parsedLines.Count,
             TotalAmount = parsedLines.Sum(l => l.TotalLevyAmount > 0 ? l.TotalLevyAmount : (l.MandatoryLevyAmount + l.DiscretionaryLevyAmount + l.AdminLevyAmount + l.QctoLevyAmount + l.InterestAmount + l.PenaltyAmount)),
             ImportStatusCode = "Imported",
+            DigitalSecuritySeal = digitalSecuritySeal,
             CreatedAt = DateTime.UtcNow,
             CreatedBy = currentUsername,
             LineItems = parsedLines
@@ -500,6 +522,7 @@ public class LevyService : ILevyService
         {
             levyFile.FileName,
             levyFile.FileRef,
+            levyFile.DigitalSecuritySeal,
             levyFile.TotalRecords,
             levyFile.TotalAmount
         });

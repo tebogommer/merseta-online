@@ -33,7 +33,7 @@ public static class Phase17StatutoryBatchMigrator
                 if (File.Exists(scriptPath))
                 {
                     var sql = await File.ReadAllTextAsync(scriptPath);
-                    await context.Database.ExecuteSqlRawAsync(sql);
+                    await SqlBatchRunner.ExecuteBatchesAsync(context, sql, logger);
                     logger?.LogInformation("Executed V2026_12_Add_Statutory_Batch_Tables.sql successfully.");
                 }
             }

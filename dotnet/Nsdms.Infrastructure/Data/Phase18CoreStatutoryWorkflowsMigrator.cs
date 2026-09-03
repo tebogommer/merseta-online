@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -36,7 +36,7 @@ public static class Phase18CoreStatutoryWorkflowsMigrator
                 if (File.Exists(scriptPath))
                 {
                     var sql = await File.ReadAllTextAsync(scriptPath);
-                    await context.Database.ExecuteSqlRawAsync(sql);
+                    await SqlBatchRunner.ExecuteBatchesAsync(context, sql, logger);
                     logger?.LogInformation("Executed V2026_13_Phase3_Core_Statutory_Workflows.sql successfully.");
                 }
             }
