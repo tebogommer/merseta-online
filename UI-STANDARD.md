@@ -3,9 +3,9 @@
 | Field | Value |
 | --- | --- |
 | Document ID | ICT-STD-UI-001 |
-| Version | 0.6 (draft) |
+| Version | 0.7 (draft) |
 | Status | Draft |
-| Supersedes | 0.5.1 |
+| Supersedes | 0.6 |
 | Applies to | All web applications, regardless of framework or rendering model |
 | Owner | ICT Division |
 | Audience | Developers and AI coding agents |
@@ -136,6 +136,9 @@ The page header must be rendered by the shared `EntityHeader` or `PageHeader` co
 - **A3 — Entity detail.** Content is grouped in cards by subject, not by database table. A detail page must be read-only by default. Where the entity has many facets, tabs may be used, and the tab set must be identical for every status of that entity — tabs must not appear and disappear as status changes; irrelevant tabs are shown empty with an explanatory line.
 - **A4 — Form / wizard.** One column for the primary flow. A wizard must show step position ("Step 3 of 6"), must allow return to completed steps, and must persist a draft on step change.
 - **A5 — Dashboard.** Read-only. A dashboard must not contain workflow transition buttons; a tile links to a filtered list, and the action is taken there. Stat cards on a dashboard must follow section 4.4.
+
+#### 4.3.1 View and Edit Mode Separation Invariant
+A single component or route must never blend View and Edit states by default. Navigating to `/{entity}/{id}` must render strictly read-only elements (`<ReadOnlyField>`). Editable inputs (`<MudTextField>`), dropdowns, and Save buttons are prohibited on `/{entity}/{id}`. Mutation forms must live at `/{entity}/{id}/edit` or `/{entity}/create` wrapped in `<FormShell>`. Hand-rolled headers using `<MudPaper>` instead of `<EntityHeader>` are prohibited.
 
 ### 4.4 Stat cards
 
