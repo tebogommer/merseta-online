@@ -52,14 +52,17 @@ def main():
         with open(design_md_path, 'r', encoding='utf-8', errors='ignore') as f:
             content = f.read()
             # Match approved exceptions listed under Wizard Exceptions
-            m = re.search(r'### Wizard Exceptions\s*\n(.*?)(?=\n###|\n##|\Z)', content, re.DOTALL)
+            m = re.search(r'### Wizard Exceptions\s*\n(.*?)(?=\n---|(?:\n#+)|\Z)', content, re.DOTALL)
             if m:
                 for line in m.group(1).splitlines():
                     line = line.strip()
                     if line.startswith("-") or line.startswith("*"):
-                        fn = line.lstrip("-* ").split()[0].strip('`"\'')
-                        if fn.endswith(".razor"):
-                            exceptions.add(fn)
+                        parts = line.lstrip("-* ").split()
+                        if parts:
+                            fn = parts[0].strip('`"\'')
+                            if fn.endswith(".razor"):
+                                exceptions.add(fn)
+
 
     all_errors = []
     for root, _, files in os.walk(components_dir):

@@ -24,6 +24,7 @@
 - **Unique key links:** The unique key/identifier column is a real hyperlink (`<MudLink>`) to the record's View route.
 - **Sentence Case:** All labels, headers, buttons, and messages use standard sentence case.
 - **Responsive Layout:** Page content bounded by `<main id="main-content" style="max-width: 1600px; ...">`. Multi-column grids enclosed in overflow scroll wrappers.
+- **Enterprise Multi-Step Wizards:** Before proposing any multi-step UI, read `DESIGN.md` → Section 10 and run the Wizards checklist. All multi-step flows MUST use `<WizardShell>` with standard footer layout, shared field definitions, review step with jump links, and pass build guard `[NSDMS0001]`.
 <!-- UI-STANDARD-RULES:END -->
 
 ## 16-Point UI Standard Compliance Checklist

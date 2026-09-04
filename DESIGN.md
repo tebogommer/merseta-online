@@ -1,4 +1,4 @@
-# MerSETA NSDMS Enterprise Design System & Architecture Specification
+# MerSETA NSDMS Enterprise Design System & Architecture Specification (v1.2)
 
 ## 1. Executive Design Philosophy & Paradigm Shift
 
@@ -203,6 +203,17 @@ $$\text{WORK} \longrightarrow \text{CONTEXT} \longrightarrow \text{DECISION} \lo
 ### 10.3 Build-Time Guard ([NSDMS0001])
 Direct usage of raw library stepper components (`MudStepper`, `MudStep`) outside `Components/Shared/Wizard` is prohibited and halts build execution with diagnostic `[NSDMS0001]`.
 
+### 10.4 Approved Step Structure for Existing Wizards
+| Flow / Wizard | Canonical Steps | Review Step Content |
+| :--- | :--- | :--- |
+| **Assessor Re-Registration Wizard** (`AssessorReRegistrationWizard.razor`) | 1. Verification of Profile<br>2. Unit Standards Selection<br>3. Continuous Professional Development (CPD)<br>4. Declaration & Review | Read-only profile cards, unit standard code chips, CPD points summary against 30-point statutory threshold, POPIA compliance checkbox, legal declaration, and per-step "Edit" jump buttons. |
+
 ### Wizard Exceptions
 None. All multi-step flows strictly adhere to WizardShell.
 
+---
+
+## 11. Revision History & Changelog
+- **v1.2 (2026-09-04)**: Installed Enterprise Multi-Step Wizard Standard (Section 10). Implemented shared components (`WizardShell`, `WizardStepper`, `WizardStep`, `WizardReviewStep`), build-time guard `[NSDMS0001]`, rebuilt `AssessorReRegistrationWizard` with zero raw stepper tags, added bUnit parity tests and automated discovery tests.
+- **v1.1**: Added SARS Monthly Levy Reactive Streaming & SqlBulkCopy Staging Standard.
+- **v1.0**: Initial baseline enterprise design system.
