@@ -1,0 +1,39 @@
+@namespace Nsdms.Web.Components.Shared.Forms
+@using MudBlazor
+
+<fieldset class="nsdms-boolean-group pa-3 rounded-lg border-0 mb-4"
+          style="background: var(--surface); border: 1px solid var(--border);">
+    @if (!string.IsNullOrWhiteSpace(Legend))
+    {
+        <legend class="text-subtitle2 font-weight-bold text-primary px-1 mb-2">
+            @Legend
+            @if (Required)
+            {
+                <span class="text-danger" aria-hidden="true">*</span>
+            }
+        </legend>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Description))
+    {
+        <p class="text-body2 text-secondary mb-3 px-1">@Description</p>
+    }
+
+    <div class="d-flex flex-column gap-2">
+        @ChildContent
+    </div>
+</fieldset>
+
+@code {
+    [Parameter]
+    public string? Legend { get; set; }
+
+    [Parameter]
+    public string? Description { get; set; }
+
+    [Parameter]
+    public bool Required { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

@@ -1,0 +1,55 @@
+@namespace Nsdms.Web.Components.Shared.Forms
+@using MudBlazor
+
+<div class="nsdms-form-field mb-3 d-flex flex-column h-100" role="group" aria-labelledby="@FieldLabelId">
+    @if (!string.IsNullOrWhiteSpace(Label))
+    {
+        <label id="@FieldLabelId" class="d-flex align-center gap-1 text-body2 font-weight-medium text-primary mb-1">
+            <span>@Label</span>
+            @if (Required)
+            {
+                <span class="text-danger" aria-hidden="true">*</span>
+                <span class="visually-hidden">(required)</span>
+            }
+        </label>
+    }
+
+    <div class="nsdms-form-field-control flex-grow-1">
+        @ChildContent
+    </div>
+
+    <div class="nsdms-form-field-helper d-flex align-center mt-1" style="min-height: 1.25rem;">
+        @if (!string.IsNullOrWhiteSpace(ErrorText))
+        {
+            <span class="text-caption text-danger d-flex align-center gap-1" role="alert">
+                <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                @ErrorText
+            </span>
+        }
+        else if (!string.IsNullOrWhiteSpace(HelperText))
+        {
+            <span class="text-caption text-secondary">
+                @HelperText
+            </span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter]
+    public bool Required { get; set; }
+
+    [Parameter]
+    public string? HelperText { get; set; }
+
+    [Parameter]
+    public string? ErrorText { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private readonly string FieldLabelId = $"field-label-{Guid.NewGuid():N}";
+}

@@ -1,0 +1,246 @@
+@namespace Nsdms.Web.Components.Shared.Forms
+@using MudBlazor
+@using Nsdms.Domain.Entities
+
+@if (Section == "ApplicationType" || Section == "All")
+{
+    <div class="nsdms-section-app-type mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
+                           Label="Application type"
+                           Value="@ApplicationTypeCode"
+                           ValueChanged="OnApplicationTypeCodeChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly">
+                    <MudSelectItem Value="@("StandardReRegistration")">Standard 3-year re-registration</MudSelectItem>
+                    <MudSelectItem Value="@("ScopeExtensionRenewal")">Scope extension and renewal</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Current registration number"
+                              Value="@RegistrationNumber"
+                              ReadOnly="true"
+                              Variant="Variant.Outlined"
+                              Class="font-mono" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Standing" || Section == "All")
+{
+    <div class="nsdms-section-standing mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Current expiration date"
+                              Value="@CurrentExpirationDateText"
+                              ReadOnly="true"
+                              Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Proposed expiration date"
+                              Value="@ProposedExpirationDateText"
+                              ReadOnly="true"
+                              Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string"
+                              Label="Practice summary"
+                              Lines="3"
+                              Variant="Variant.Outlined"
+                              HelperText="Summary of assessment and moderation experience"
+                              Value="@CpdPortfolioSummary"
+                              ValueChanged="OnCpdPortfolioSummaryChanged"
+                              Required="true"
+                              ReadOnly="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Cpd" || Section == "All")
+{
+    <div class="nsdms-section-cpd mb-4">
+        <FormRow>
+            <MudItem xs="12" md="5">
+                <MudTextField T="string"
+                              Label="Activity title"
+                              Value="@NewCpdTitle"
+                              ValueChanged="OnNewCpdTitleChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect T="string"
+                           Label="Activity category"
+                           Value="@NewCpdCategory"
+                           ValueChanged="OnNewCpdCategoryChanged"
+                           Variant="Variant.Outlined"
+                           Disabled="@IsReadOnly">
+                    <MudSelectItem Value="@("IndustryPractice")">Industry workplace practice (10 pts)</MudSelectItem>
+                    <MudSelectItem Value="@("SetaWorkshop")">merSETA assessor workshop (5 pts)</MudSelectItem>
+                    <MudSelectItem Value="@("PeerModeration")">Peer moderation panel (5 pts)</MudSelectItem>
+                    <MudSelectItem Value="@("CourseAttendance")">Technical refresher course (10 pts)</MudSelectItem>
+                    <MudSelectItem Value="@("Mentorship")">Apprentice mentorship (5 pts)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudNumericField T="int"
+                                 Label="Points claimed"
+                                 Value="@NewCpdPoints"
+                                 ValueChanged="OnNewCpdPointsChanged"
+                                 Variant="Variant.Outlined"
+                                 Min="1"
+                                 Max="20"
+                                 Disabled="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Declarations" || Section == "All")
+{
+    <div class="nsdms-section-declarations mb-4">
+        <BooleanGroup Legend="Statutory attestations"
+                      Description="Confirm statutory declarations required for practitioner renewal"
+                      Required="true">
+            <MudCheckBox T="bool"
+                         Value="@ConfirmAllScopes"
+                         ValueChanged="OnConfirmAllScopesChanged"
+                         Label="Confirm renewal of registered assessment scopes"
+                         Color="Color.Primary"
+                         Disabled="@IsReadOnly" />
+            <MudCheckBox T="bool"
+                         Value="@AcceptCodeOfConduct"
+                         ValueChanged="OnAcceptCodeOfConductChanged"
+                         Label="Certify compliance with assessor code of conduct"
+                         Color="Color.Primary"
+                         Disabled="@IsReadOnly" />
+            <MudCheckBox T="bool"
+                         Value="@AcceptPopia"
+                         ValueChanged="OnAcceptPopiaChanged"
+                         Label="Consent to practitioner credential processing under POPIA"
+                         Color="Color.Primary"
+                         Disabled="@IsReadOnly" />
+        </BooleanGroup>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Section { get; set; } = "All";
+
+    [Parameter]
+    public bool IsReadOnly { get; set; }
+
+    [Parameter]
+    public string ApplicationTypeCode { get; set; } = "StandardReRegistration";
+
+    [Parameter]
+    public EventCallback<string> ApplicationTypeCodeChanged { get; set; }
+
+    [Parameter]
+    public string RegistrationNumber { get; set; } = string.Empty;
+
+    [Parameter]
+    public string CurrentExpirationDateText { get; set; } = string.Empty;
+
+    [Parameter]
+    public string ProposedExpirationDateText { get; set; } = string.Empty;
+
+    [Parameter]
+    public string CpdPortfolioSummary { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> CpdPortfolioSummaryChanged { get; set; }
+
+    [Parameter]
+    public string NewCpdTitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> NewCpdTitleChanged { get; set; }
+
+    [Parameter]
+    public string NewCpdCategory { get; set; } = "IndustryPractice";
+
+    [Parameter]
+    public EventCallback<string> NewCpdCategoryChanged { get; set; }
+
+    [Parameter]
+    public int NewCpdPoints { get; set; } = 5;
+
+    [Parameter]
+    public EventCallback<int> NewCpdPointsChanged { get; set; }
+
+    [Parameter]
+    public bool ConfirmAllScopes { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> ConfirmAllScopesChanged { get; set; }
+
+    [Parameter]
+    public bool AcceptCodeOfConduct { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> AcceptCodeOfConductChanged { get; set; }
+
+    [Parameter]
+    public bool AcceptPopia { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> AcceptPopiaChanged { get; set; }
+
+    private async Task OnApplicationTypeCodeChanged(string val)
+    {
+        ApplicationTypeCode = val;
+        if (ApplicationTypeCodeChanged.HasDelegate) await ApplicationTypeCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnCpdPortfolioSummaryChanged(string val)
+    {
+        CpdPortfolioSummary = val;
+        if (CpdPortfolioSummaryChanged.HasDelegate) await CpdPortfolioSummaryChanged.InvokeAsync(val);
+    }
+
+    private async Task OnNewCpdTitleChanged(string val)
+    {
+        NewCpdTitle = val;
+        if (NewCpdTitleChanged.HasDelegate) await NewCpdTitleChanged.InvokeAsync(val);
+    }
+
+    private async Task OnNewCpdCategoryChanged(string val)
+    {
+        NewCpdCategory = val;
+        if (NewCpdCategoryChanged.HasDelegate) await NewCpdCategoryChanged.InvokeAsync(val);
+    }
+
+    private async Task OnNewCpdPointsChanged(int val)
+    {
+        NewCpdPoints = val;
+        if (NewCpdPointsChanged.HasDelegate) await NewCpdPointsChanged.InvokeAsync(val);
+    }
+
+    private async Task OnConfirmAllScopesChanged(bool val)
+    {
+        ConfirmAllScopes = val;
+        if (ConfirmAllScopesChanged.HasDelegate) await ConfirmAllScopesChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAcceptCodeOfConductChanged(bool val)
+    {
+        AcceptCodeOfConduct = val;
+        if (AcceptCodeOfConductChanged.HasDelegate) await AcceptCodeOfConductChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAcceptPopiaChanged(bool val)
+    {
+        AcceptPopia = val;
+        if (AcceptPopiaChanged.HasDelegate) await AcceptPopiaChanged.InvokeAsync(val);
+    }
+}

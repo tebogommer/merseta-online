@@ -1,0 +1,83 @@
+@namespace Nsdms.Web.Components.Shared.Wizard
+@using MudBlazor
+
+<nav class="wizard-stepper-nav mb-6" aria-label="Wizard progress">
+    <ol class="wizard-stepper-list d-flex align-center justify-space-between flex-wrap gap-2 pa-0 ma-0" role="list" style="list-style: none;">
+        @for (int i = 0; i < Steps.Count; i++)
+        {
+            var stepIndex = i;
+            var step = Steps[i];
+            var isCurrent = stepIndex == ActiveStepIndex;
+            var isCompleted = CompletedStepIndices.Contains(stepIndex) || stepIndex < ActiveStepIndex;
+            var isClickable = isCompleted && stepIndex < ActiveStepIndex;
+
+            <li class="wizard-stepper-item d-flex align-center gap-2 flex-grow-1 @(isCurrent ? "is-current" : isCompleted ? "is-completed" : "is-upcoming")"
+                aria-current="@(isCurrent ? "step" : null)">
+                <button type="button"
+                        class="wizard-step-indicator-btn d-flex align-center gap-2 pa-2 rounded border-0 bg-transparent text-start @(isClickable ? "cursor-pointer" : "cursor-default")"
+                        disabled="@(!isClickable)"
+                        aria-label="@($"Step {stepIndex + 1}: {step.Label}. {(isCurrent ? "Current step" : isCompleted ? "Completed step" : "Upcoming step")}")"
+                        @onclick="@(() => HandleStepClick(stepIndex))">
+                    <span class="wizard-step-badge d-inline-flex align-center justify-center font-weight-bold"
+                          style="@GetBadgeStyle(isCurrent, isCompleted)">
+                        @if (isCompleted && !isCurrent)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Inherit" />
+                        }
+                        else
+                        {
+                            <span>@(stepIndex + 1)</span>
+                        }
+                    </span>
+                    <span class="wizard-step-label-wrapper">
+                        <span class="wizard-step-label d-block text-body2 @(isCurrent ? "font-weight-bold text-primary" : isCompleted ? "font-weight-medium" : "text-muted")">
+                            @step.Label
+                        </span>
+                    </span>
+                </button>
+
+                @if (stepIndex < Steps.Count - 1)
+                {
+                    <div class="wizard-step-divider flex-grow-1 d-none d-sm-block"
+                         style="height: 2px; min-width: 16px; background-color: @(isCompleted ? "var(--status-success, #16A34A)" : "var(--border, #E2E8F0)");"
+                         aria-hidden="true"></div>
+                }
+            </li>
+        }
+    </ol>
+</nav>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<WizardStepInfo> Steps { get; set; } = Array.Empty<WizardStepInfo>();
+
+    [Parameter]
+    public int ActiveStepIndex { get; set; }
+
+    [Parameter]
+    public IReadOnlySet<int> CompletedStepIndices { get; set; } = new HashSet<int>();
+
+    [Parameter]
+    public EventCallback<int> OnStepClicked { get; set; }
+
+    private async Task HandleStepClick(int index)
+    {
+        if (OnStepClicked.HasDelegate)
+        {
+            await OnStepClicked.InvokeAsync(index);
+        }
+    }
+
+    private string GetBadgeStyle(bool isCurrent, bool isCompleted)
+    {
+        if (isCurrent)
+        {
+            return "width: 28px; height: 28px; border-radius: 50%; background-color: var(--brand-navy, #172B4D); color: #ffffff; border: 2px solid var(--brand-navy, #172B4D); font-size: 0.875rem;";
+        }
+        if (isCompleted)
+        {
+            return "width: 28px; height: 28px; border-radius: 50%; background-color: var(--status-success, #16A34A); color: #ffffff; border: 2px solid var(--status-success, #16A34A); font-size: 0.875rem;";
+        }
+        return "width: 28px; height: 28px; border-radius: 50%; background-color: var(--surface-subtle, #F1F5F9); color: var(--text-muted, #94A3B8); border: 2px solid var(--border, #E2E8F0); font-size: 0.875rem;";
+    }
+}

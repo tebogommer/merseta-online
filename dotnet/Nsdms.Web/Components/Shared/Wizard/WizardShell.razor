@@ -1,0 +1,295 @@
+@namespace Nsdms.Web.Components.Shared.Wizard
+@using MudBlazor
+
+<div class="nsdms-wizard-shell d-flex flex-column" role="region" aria-label="@Title">
+    <!-- Header Zone -->
+    <header class="wizard-header pa-4 mb-4 rounded-lg"
+            style="background: var(--surface); border: 1px solid var(--border);">
+        <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+            <div>
+                <h1 class="text-h5 font-weight-bold text-primary mb-0">@Title</h1>
+                @if (!string.IsNullOrWhiteSpace(Subtitle))
+                {
+                    <p class="text-body2 text-secondary mb-0 mt-1">@Subtitle</p>
+                }
+            </div>
+            @if (HeaderActions != null)
+            {
+                <div class="wizard-header-actions">
+                    @HeaderActions
+                </div>
+            }
+        </div>
+    </header>
+
+    <!-- Stepper Zone -->
+    @if (_stepInfos.Count > 1)
+    {
+        <WizardStepper Steps="@_stepInfos"
+                       ActiveStepIndex="@ActiveStepIndex"
+                       CompletedStepIndices="@_completedIndices"
+                       OnStepClicked="NavigateToStepAsync" />
+    }
+
+    <!-- Content Zone (Active Step) -->
+    <main class="wizard-body flex-grow-1 pa-4 pa-md-6 mb-6 rounded-lg"
+          style="background: var(--surface); border: 1px solid var(--border); min-height: 380px;">
+        @if (IsBusy)
+        {
+            <div class="d-flex justify-center align-center py-12">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium" />
+            </div>
+        }
+        else
+        {
+            <CascadingValue Value="this" IsFixed="true">
+                @ChildContent
+            </CascadingValue>
+        }
+    </main>
+
+    <!-- Sticky Footer Zone with Enforced Layout -->
+    <!-- Cancel (left) | Save draft (left-centre, hidden on step 1) | Back, Next/Finish (right) -->
+    <footer class="wizard-footer sticky-bottom pa-3 pa-md-4 rounded-lg d-flex align-center justify-space-between flex-wrap gap-3"
+            style="background: var(--surface); border: 1px solid var(--border); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 5;">
+        
+        <!-- Left: Exactly One Cancel Button -->
+        <div class="wizard-footer-left">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.Cancel"
+                       Disabled="@IsBusy"
+                       OnClick="HandleCancelAsync">
+                Cancel
+            </MudButton>
+        </div>
+
+        <!-- Left-Centre: Save Draft (Hidden on Step 1) -->
+        <div class="wizard-footer-center flex-grow-1 d-flex justify-start ml-2">
+            @if (ActiveStepIndex > 0 && AllowSaveDraft)
+            {
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           Disabled="@IsBusy"
+                           OnClick="HandleSaveDraftAsync">
+                    Save draft
+                </MudButton>
+            }
+        </div>
+
+        <!-- Right: Back & Next / Finish -->
+        <div class="wizard-footer-right d-flex align-center gap-2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Disabled="@(ActiveStepIndex == 0 || IsBusy)"
+                       OnClick="HandleBackAsync">
+                Back
+            </MudButton>
+
+            @if (IsLastStep)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.CheckCircle"
+                           Disabled="@IsBusy"
+                           OnClick="HandleFinishAsync">
+                    @FinishButtonText
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           EndIcon="@Icons.Material.Filled.ArrowForward"
+                           Disabled="@IsBusy"
+                           OnClick="HandleNextAsync">
+                    Next
+                </MudButton>
+            }
+        </div>
+    </footer>
+</div>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public RenderFragment? HeaderActions { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public int ActiveStepIndex { get; set; } = 0;
+
+    [Parameter]
+    public EventCallback<int> ActiveStepIndexChanged { get; set; }
+
+    [Parameter]
+    public bool AllowSaveDraft { get; set; } = true;
+
+    [Parameter]
+    public string FinishButtonText { get; set; } = "Finish";
+
+    [Parameter]
+    public bool IsBusy { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    [Parameter]
+    public EventCallback OnSaveDraft { get; set; }
+
+    [Parameter]
+    public EventCallback OnFinish { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnStepChanged { get; set; }
+
+    private readonly List<WizardStep> _steps = new();
+    private readonly List<WizardStepInfo> _stepInfos = new();
+    private readonly HashSet<int> _completedIndices = new();
+
+    public bool IsLastStep => _steps.Count > 0 && ActiveStepIndex == _steps.Count - 1;
+
+    internal void RegisterStep(WizardStep step)
+    {
+        if (!_steps.Contains(step))
+        {
+            step.StepIndex = _steps.Count;
+            _steps.Add(step);
+            _stepInfos.Add(new WizardStepInfo
+            {
+                Index = step.StepIndex,
+                Label = step.Label,
+                Heading = step.Heading,
+                Description = step.Description
+            });
+            StateHasChanged();
+        }
+    }
+
+    internal void UnregisterStep(WizardStep step)
+    {
+        if (_steps.Remove(step))
+        {
+            ReindexSteps();
+            StateHasChanged();
+        }
+    }
+
+    private void ReindexSteps()
+    {
+        _stepInfos.Clear();
+        for (int i = 0; i < _steps.Count; i++)
+        {
+            _steps[i].StepIndex = i;
+            _stepInfos.Add(new WizardStepInfo
+            {
+                Index = i,
+                Label = _steps[i].Label,
+                Heading = _steps[i].Heading,
+                Description = _steps[i].Description
+            });
+        }
+    }
+
+    public async Task NavigateToStepAsync(int targetIndex)
+    {
+        if (targetIndex == ActiveStepIndex) return;
+
+        if (targetIndex < ActiveStepIndex)
+        {
+            await SetActiveStepIndexAsync(targetIndex);
+            return;
+        }
+
+        if (ActiveStepIndex < _steps.Count)
+        {
+            var currentStep = _steps[ActiveStepIndex];
+            bool isValid = await currentStep.ExecuteValidationAsync();
+            if (!isValid) return;
+
+            _completedIndices.Add(ActiveStepIndex);
+        }
+
+        await SetActiveStepIndexAsync(targetIndex);
+    }
+
+    private async Task HandleNextAsync()
+    {
+        if (ActiveStepIndex < _steps.Count)
+        {
+            var currentStep = _steps[ActiveStepIndex];
+            bool isValid = await currentStep.ExecuteValidationAsync();
+            if (!isValid) return;
+
+            _completedIndices.Add(ActiveStepIndex);
+        }
+
+        if (ActiveStepIndex < _steps.Count - 1)
+        {
+            await SetActiveStepIndexAsync(ActiveStepIndex + 1);
+        }
+    }
+
+    private async Task HandleBackAsync()
+    {
+        if (ActiveStepIndex > 0)
+        {
+            await SetActiveStepIndexAsync(ActiveStepIndex - 1);
+        }
+    }
+
+    private async Task SetActiveStepIndexAsync(int newIndex)
+    {
+        ActiveStepIndex = newIndex;
+        if (ActiveStepIndexChanged.HasDelegate)
+        {
+            await ActiveStepIndexChanged.InvokeAsync(ActiveStepIndex);
+        }
+        if (OnStepChanged.HasDelegate)
+        {
+            await OnStepChanged.InvokeAsync(ActiveStepIndex);
+        }
+    }
+
+    private async Task HandleCancelAsync()
+    {
+        if (OnCancel.HasDelegate)
+        {
+            await OnCancel.InvokeAsync();
+        }
+    }
+
+    private async Task HandleSaveDraftAsync()
+    {
+        if (OnSaveDraft.HasDelegate)
+        {
+            await OnSaveDraft.InvokeAsync();
+        }
+    }
+
+    private async Task HandleFinishAsync()
+    {
+        if (ActiveStepIndex < _steps.Count)
+        {
+            var currentStep = _steps[ActiveStepIndex];
+            bool isValid = await currentStep.ExecuteValidationAsync();
+            if (!isValid) return;
+
+            _completedIndices.Add(ActiveStepIndex);
+        }
+
+        if (OnFinish.HasDelegate)
+        {
+            await OnFinish.InvokeAsync();
+        }
+    }
+}

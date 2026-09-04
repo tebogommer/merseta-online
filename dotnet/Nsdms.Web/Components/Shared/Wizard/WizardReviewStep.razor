@@ -1,0 +1,85 @@
+@namespace Nsdms.Web.Components.Shared.Wizard
+@using MudBlazor
+
+<div class="wizard-review-panel">
+    <div class="wizard-review-groups mb-6">
+        @if (ReviewGroups != null && ReviewGroups.Any())
+        {
+            @foreach (var group in ReviewGroups)
+            {
+                <div class="wizard-review-group-card mb-4 pa-4 rounded-lg"
+                     style="background: var(--surface); border: 1px solid var(--border);">
+                    <div class="d-flex align-center justify-space-between pb-2 mb-3 border-b"
+                         style="border-color: var(--border);">
+                        <div class="d-flex align-center gap-2">
+                            @if (!string.IsNullOrWhiteSpace(group.Icon))
+                            {
+                                <MudIcon Icon="@group.Icon" Size="Size.Small" Color="Color.Primary" />
+                            }
+                            <span class="text-subtitle1 font-weight-bold text-primary">@group.Title</span>
+                        </div>
+                        @if (group.TargetStepIndex >= 0 && OnEditStep.HasDelegate)
+                        {
+                            <button type="button"
+                                    class="wizard-review-edit-btn d-inline-flex align-center gap-1 pa-1 px-2 rounded border-0 bg-transparent text-primary cursor-pointer"
+                                    aria-label="@($"Edit {group.Title}")"
+                                    @onclick="@(() => OnEditStep.InvokeAsync(group.TargetStepIndex))">
+                                <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Small" />
+                                <span class="text-body2 font-weight-medium">Edit</span>
+                            </button>
+                        }
+                    </div>
+
+                    @if (group.CustomContent != null)
+                    {
+                        @group.CustomContent
+                    }
+                    else if (group.Items != null && group.Items.Any())
+                    {
+                        <div class="wizard-review-items-grid d-flex flex-wrap gap-4">
+                            @foreach (var item in group.Items)
+                            {
+                                <div class="wizard-review-item" style="min-width: 200px; flex: 1 1 220px;">
+                                    <span class="d-block text-caption text-secondary">@item.Label</span>
+                                    <span class="d-block text-body2 font-weight-medium text-primary @(item.IsMonospace ? "font-mono" : "")">
+                                        @(string.IsNullOrWhiteSpace(item.Value) ? "—" : item.Value)
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        @if (ChildContent != null)
+        {
+            @ChildContent
+        }
+    </div>
+
+    @if (LifecycleContent != null)
+    {
+        <div class="wizard-review-lifecycle-section pa-4 rounded-lg mb-4"
+             style="background: var(--surface-subtle, #F8FAFC); border: 1px solid var(--border);">
+            <span class="text-subtitle2 font-weight-bold d-block mb-3 text-primary">
+                Lifecycle & Attestation
+            </span>
+            @LifecycleContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<WizardReviewGroup>? ReviewGroups { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? LifecycleContent { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnEditStep { get; set; }
+}
