@@ -1,32 +1,27 @@
 @page "/audit-logs"
 @using Microsoft.EntityFrameworkCore
 @using Nsdms.Application.Common
+@using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
-@inject INsdmsDbContextFactory DbFactory
+@using Nsdms.Web.Components.Shared
+@inject IAuditService AuditService
 @inject ISnackbar Snackbar
 
 <PageTitle>Audit Trail Logs - MerSETA NSDMS</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4 mb-8">
-    <!-- Header Banner -->
-    <MudPaper Elevation="1" Class="pa-6 mb-6 rounded-lg" Style="border-left: 6px solid var(--mud-palette-primary);">
-        <div class="d-flex flex-wrap justify-space-between align-center gap-4">
-            <div>
-                <MudText Typo="Typo.h4" Class="font-weight-bold" Color="Color.Primary">
-                    <MudIcon Icon="@Icons.Material.Filled.History" Class="mr-2" Size="Size.Large" />
-                    System Audit Trail &amp; Forensic Records
-                </MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">
-                    Official activity logs tracking system changes, user actions, and change history.
-                </MudText>
-            </div>
-            <div class="d-flex gap-2">
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAuditLogsAsync">
-                    Refresh Logs
-                </MudButton>
-            </div>
-        </div>
-    </MudPaper>
+<EntityHeader Title="System Audit Trail &amp; Forensic Records"
+              Subtitle="Official audited change logs tracking system mutations, user actions, and security timeline"
+              ReferenceKey="T3-AUDIT-LOGS"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Refresh" 
+                   OnClick="LoadAuditLogsAsync">
+            Refresh Logs
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
 
     <!-- Filter & Search Toolbar -->
     <MudPaper Elevation="1" Class="pa-4 mb-4 rounded-lg">
@@ -75,7 +70,7 @@
             <HeaderContent>
                 <MudTh>Timestamp (UTC)</MudTh>
                 <MudTh>Entity</MudTh>
-                <MudTh>Record ID</MudTh>
+                <MudTh>Record Reference</MudTh>
                 <MudTh>Action</MudTh>
                 <MudTh>Actor</MudTh>
                 <MudTh>Change Details</MudTh>
@@ -91,9 +86,9 @@
                         @context.EntityName
                     </MudChip>
                 </MudTd>
-                <MudTd DataLabel="Record ID">
-                    <MudText Typo="Typo.body2" Class="font-weight-bold">
-                        #@context.RecordId
+                <MudTd DataLabel="Record Reference">
+                    <MudText Typo="Typo.body2" Class="font-mono fw-bold">
+                        @FormatRecordReference(context.EntityName, context.RecordId)
                     </MudText>
                 </MudTd>
                 <MudTd DataLabel="Action">
@@ -118,7 +113,7 @@
                     }
                     else
                     {
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">No metadata</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">—</MudText>
                     }
                 </MudTd>
             </RowTemplate>
@@ -126,18 +121,23 @@
                 <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
             </PagerContent>
             <NoRecordsContent>
-                <EmptyStateCard Icon="@Icons.Material.Outlined.HistoryEdu"
-                                Title="No Audit Logs Found"
-                                Description="No security or mutation audit trail entries match your search criteria. Try clearing your entity or action filters."
-                                ActionText="Reset Filters"
-                                ActionIcon="@Icons.Material.Filled.Refresh"
-                                OnActionClick="ResetFilters" />
+                <EmptyState Icon="@Icons.Material.Filled.SearchOff"
+                            Message="No Audit Logs Found"
+                            Description="No security or mutation audit trail entries match your search criteria. Try clearing your entity or action filters."
+                            ActionLabel="Reset Filters"
+                            OnAction="ResetFilters" />
             </NoRecordsContent>
         </MudTable>
     </MudPaper>
-</MudContainer>
 
 @code {
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Dashboard", "/"),
+        new BreadcrumbItem("System Administration", "/admin"),
+        new BreadcrumbItem("Audited Change Logs", null, disabled: true)
+    };
+
     private List<AuditLog> _logs = new();
     private List<AuditLog> _filteredLogs = new();
     private List<string> _distinctEntities = new();
@@ -157,11 +157,7 @@
         _isLoading = true;
         try
         {
-            await using var db = await DbFactory.CreateDbContextAsync();
-            _logs = await db.AuditLogs
-                .OrderByDescending(a => a.Timestamp)
-                .Take(500)
-                .ToListAsync();
+            _logs = await AuditService.GetRecentLogsAsync(500);
 
             _distinctEntities = _logs.Select(l => l.EntityName).Where(e => !string.IsNullOrEmpty(e)).Distinct().OrderBy(e => e).ToList();
             _distinctActions = _logs.Select(l => l.ActionName).Where(a => !string.IsNullOrEmpty(a)).Distinct().OrderBy(a => a).ToList();
@@ -190,7 +186,8 @@
                 (l.ActionName?.ToLowerInvariant().Contains(q) ?? false) ||
                 (l.Actor?.ToLowerInvariant().Contains(q) ?? false) ||
                 (l.MetadataJson?.ToLowerInvariant().Contains(q) ?? false) ||
-                l.RecordId.ToString().Contains(q));
+                l.RecordId.ToString().Contains(q) ||
+                FormatRecordReference(l.EntityName, l.RecordId).ToLowerInvariant().Contains(q));
         }
 
         if (!string.IsNullOrWhiteSpace(_selectedEntity))
@@ -225,5 +222,22 @@
         _selectedEntity = null;
         _selectedAction = null;
         ApplyFilters();
+    }
+
+    private static string FormatRecordReference(string? entityName, long recordId)
+    {
+        var prefix = entityName?.ToUpperInvariant() switch
+        {
+            "ORGANISATION" or "EMPLOYER" => "ORG",
+            "GRANTMOA" => "MOA",
+            "GRANTAPPLICATION" => "DG",
+            "PERSON" or "USER" => "USR",
+            "LEARNER" => "LRN",
+            "TRAININGPROVIDER" or "SDP" => "SDP",
+            "WSPSUBMISSION" => "WSP",
+            "WORKPLACEAPPROVAL" => "WPA",
+            _ => (entityName != null && entityName.Length >= 3 ? entityName[..3].ToUpperInvariant() : "REC")
+        };
+        return $"{prefix}-{recordId:D5}";
     }
 }

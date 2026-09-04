@@ -5,6 +5,7 @@
 @inject LookupService LookupService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @using Nsdms.Application.Common.Models
 @using Nsdms.Application.Common.Utilities
 @using Nsdms.Domain.Entities
@@ -13,70 +14,64 @@
 
 <PageTitle>@(Id == 0 ? "New Person Registration" : $"{_person.Title} {_person.FirstName} {_person.LastName}".Trim()) - merSETA NSDMS</PageTitle>
 
-<!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
-<MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3 bg-surface" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
-    <div class="d-flex align-center gap-3">
-        <MudButton Variant="Variant.Text"
-                   StartIcon="@Icons.Material.Filled.ArrowBack"
-                   Color="Color.Default"
-                   OnClick="BackToList"
-                   aria-label="Back to People Directory">
-            Back to Directory
-        </MudButton>
-        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
-        <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
-            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" />
-        </MudAvatar>
-        <div>
-            <div class="d-flex align-center gap-2">
-                <MudText Typo="Typo.h5" Class="fw-bold">
-                    @(Id == 0 ? "New Person Registration (SETMIS File 400)" : $"{_person.Title} {_person.FirstName} {_person.LastName}".Trim())
-                </MudText>
-                @if (Id > 0)
-                {
-                    <MudChip T="string" Color="@(_person.IsActive ? Color.Success : Color.Error)" Size="Size.Small" Variant="Variant.Filled">
-                        @(_person.IsActive ? "Active" : "Inactive")
-                    </MudChip>
-                }
-            </div>
-            @if (Id > 0)
-            {
-                <MudText Typo="Typo.caption" Color="Color.Secondary">
-                    RSA ID: <strong>@(!string.IsNullOrWhiteSpace(_person.RsaIdNumber) ? _person.RsaIdNumber : "N/A")</strong> | 
-                    Email: <strong>@(!string.IsNullOrWhiteSpace(_person.Email) ? _person.Email : "N/A")</strong> |
-                    Gender: <strong>@_person.Gender</strong>
-                </MudText>
-            }
-        </div>
-    </div>
-    <div class="d-flex align-center gap-2">
-        @if (Id > 0)
-        {
+@if (!_isEditMode && Id > 0)
+{
+    <EntityHeader Title="@($"{_person.Title} {_person.FirstName} {_person.LastName}".Trim())"
+                  ReferenceKey="@_person.RsaIdNumber"
+                  Status="@(_person.IsActive ? "Active" : "Inactive")"
+                  Subtitle="@($"RSA ID: {(!string.IsNullOrWhiteSpace(_person.RsaIdNumber) ? _person.RsaIdNumber : "N/A")} | Email: {_person.Email ?? "N/A"} | Gender: {_person.Gender}")"
+                  BreadcrumbItems="@_breadcrumbItems">
+        <ActionZone>
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Color="Color.Default"
+                       OnClick="BackToList"
+                       aria-label="Back to People Directory">
+                Back to Directory
+            </MudButton>
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Error"
                        StartIcon="@Icons.Material.Filled.Delete"
                        OnClick="DeletePerson"
                        aria-label="Delete Person">
-                Delete
+                Deactivate
             </MudButton>
-        }
-        <MudButton Variant="Variant.Outlined"
-                   Color="Color.Secondary"
-                   StartIcon="@Icons.Material.Filled.Cancel"
-                   OnClick="BackToList"
-                   aria-label="Cancel">
-            Cancel
-        </MudButton>
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Save"
-                   OnClick="SavePerson"
-                   Disabled="_isSaving"
-                   aria-label="Save Person">
-            @(_isSaving ? "Saving..." : "Save Person")
-        </MudButton>
-    </div>
-</MudPaper>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Edit"
+                       OnClick="EnterEditMode"
+                       aria-label="Edit Person Record">
+                Edit Person
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+}
+else
+{
+    <EntityHeader Title="@(Id == 0 ? "New Person Registration (SETMIS File 400)" : $"Edit {_person.FirstName} {_person.LastName}")"
+                  ReferenceKey="@_person.RsaIdNumber"
+                  Status="@(Id == 0 ? "Draft" : "Editing")"
+                  Subtitle="@(Id == 0 ? "Register person demographics, RSA ID credentials, and equity status" : "Update biographical, demographic, and contact information")"
+                  BreadcrumbItems="@_breadcrumbItems">
+        <ActionZone>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="ExitEditMode"
+                       aria-label="Cancel">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="SavePerson"
+                       Disabled="_isSaving"
+                       aria-label="Save Person">
+                @(_isSaving ? "Saving..." : "Save Person")
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+}
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
     @if (_loading)
@@ -89,7 +84,7 @@
             
             <!-- TAB 1: Demographics & Master Info -->
             <MudTabPanel Text="Demographics & Identity" Icon="@Icons.Material.Filled.Badge">
-                <MudForm @ref="_form" @bind-IsValid="_isValid" Class="pa-4">
+                <MudForm @ref="_form" @bind-IsValid="_isValid" ReadOnly="@(!_isEditMode)" Class="pa-4">
                     <MudGrid Spacing="3">
                         <!-- Identity & Demographics Card -->
                         <MudItem xs="12" lg="8">
@@ -569,6 +564,31 @@
 
     private (bool IsValid, DateTime? DateOfBirth, string? Gender, bool? IsSouthAfricanCitizen, string? ErrorMessage) _rsaValidation = (true, null, null, null, null);
     private List<BreadcrumbItem> _breadcrumbItems = new();
+    private bool _isEditMode;
+
+    protected override void OnParametersSet()
+    {
+        _isEditMode = Id == 0 || NavManager.Uri.EndsWith("/edit", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void EnterEditMode()
+    {
+        _isEditMode = true;
+        NavManager.NavigateTo($"/people/{Id}/edit");
+    }
+
+    private void ExitEditMode()
+    {
+        if (Id == 0)
+        {
+            NavManager.NavigateTo("/people");
+        }
+        else
+        {
+            _isEditMode = false;
+            NavManager.NavigateTo($"/people/{Id}");
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -731,6 +751,17 @@
     private async Task DeletePerson()
     {
         if (Id <= 0) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Deactivate Person Record" },
+            { x => x.Consequence, $"Are you sure you want to mark '{_person.FirstName} {_person.LastName}' as inactive? This will disable associated user logins and revoke system privileges." },
+            { x => x.ConfirmLabel, "Deactivate Person" },
+            { x => x.IsDestructive, true }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Deactivate Person Record", parameters);
+        var result = await dialog.Result;
+        if (result == null || result.Canceled) return;
 
         try
         {

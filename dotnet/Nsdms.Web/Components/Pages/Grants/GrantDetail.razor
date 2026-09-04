@@ -13,49 +13,26 @@
 @inject ILookupService LookupService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @rendermode InteractiveServer
 
 <PageTitle>@(Id == 0 ? "New Discretionary Grant (DG) Application" : $"{_grant.ApplicationNumber} - {_grant.ProjectTitle}") - merSETA NSDMS</PageTitle>
 
-<!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
-<MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3 bg-surface" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
-    <div class="d-flex align-center gap-3">
-        <MudButton Variant="Variant.Text"
-                   StartIcon="@Icons.Material.Filled.ArrowBack"
-                   Color="Color.Default"
-                   OnClick="BackToList"
-                   aria-label="Back to Discretionary Grants (DG)">
-            Back to DG Applications
-        </MudButton>
-        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
-        <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
-            <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Size="Size.Small" />
-        </MudAvatar>
-        <div>
-            <div class="d-flex align-center gap-2">
-                <MudText Typo="Typo.h5" Class="fw-bold">
-                    @(Id == 0 ? "New Discretionary Grant (DG) Application" : $"{_grant.ApplicationNumber} - {_grant.ProjectTitle}")
-                </MudText>
-                @if (Id > 0)
-                {
-                    <MudChip T="string" Color="@GetStatusColor(_grant.StatusCode)" Size="Size.Small" Variant="Variant.Filled">
-                        @_grant.StatusCode
-                    </MudChip>
-                }
-            </div>
-            @if (Id > 0)
-            {
-                <MudText Typo="Typo.caption" Color="Color.Secondary">
-                    Requested: <strong>@_grant.RequestedAmount.ToString("C")</strong> | 
-                    Approved: <strong>@(_grant.ApprovedAmount.HasValue ? _grant.ApprovedAmount.Value.ToString("C") : "Pending")</strong> | 
-                    Type: <strong>@_grant.GrantTypeCode</strong>
-                </MudText>
-            }
-        </div>
-    </div>
-    <div class="d-flex align-center gap-2">
-        @if (Id > 0)
-        {
+@if (!_isEditMode && Id > 0)
+{
+    <EntityHeader Title="@_grant.ProjectTitle"
+                  ReferenceKey="@_grant.ApplicationNumber"
+                  Status="@_grant.StatusCode"
+                  Subtitle="@($"Requested: {_grant.RequestedAmount:C} | Approved: {(_grant.ApprovedAmount.HasValue ? _grant.ApprovedAmount.Value.ToString("C") : "Pending")} | Type: {_grant.GrantTypeCode}")"
+                  BreadcrumbItems="@_breadcrumbItems">
+        <ActionZone>
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Color="Color.Default"
+                       OnClick="BackToList"
+                       aria-label="Back to Discretionary Grants (DG)">
+                Back to DG Applications
+            </MudButton>
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Error"
                        StartIcon="@Icons.Material.Filled.Delete"
@@ -63,24 +40,42 @@
                        aria-label="Delete Discretionary Grant Application">
                 Delete
             </MudButton>
-        }
-        <MudButton Variant="Variant.Outlined"
-                   Color="Color.Secondary"
-                   StartIcon="@Icons.Material.Filled.Cancel"
-                   OnClick="BackToList"
-                   aria-label="Cancel">
-            Cancel
-        </MudButton>
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Save"
-                   OnClick="SaveGrant"
-                   Disabled="_isSaving"
-                   aria-label="Save Discretionary Grant Application">
-            @(_isSaving ? "Saving..." : "Save DG Application")
-        </MudButton>
-    </div>
-</MudPaper>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Edit"
+                       OnClick="EnterEditMode"
+                       aria-label="Edit Discretionary Grant Application">
+                Edit DG Application
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+}
+else
+{
+    <EntityHeader Title="@(Id == 0 ? "New Discretionary Grant (DG) Application" : $"Edit {_grant.ApplicationNumber}")"
+                  ReferenceKey="@_grant.ApplicationNumber"
+                  Status="@(Id == 0 ? "Draft" : "Editing")"
+                  Subtitle="@(Id == 0 ? "Apply for PIVOTAL funding window allocations" : $"Modify project goals and budget allocations for {_grant.ProjectTitle}")"
+                  BreadcrumbItems="@_breadcrumbItems">
+        <ActionZone>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="ExitEditMode"
+                       aria-label="Cancel">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="SaveGrant"
+                       Disabled="_isSaving"
+                       aria-label="Save Discretionary Grant Application">
+                @(_isSaving ? "Saving..." : "Save DG Application")
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+}
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
     @if (Id > 0)
@@ -108,7 +103,7 @@
         <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" @bind-ActivePanelIndex="_activeTabIndex">
             <!-- TAB 1: DG Application Details -->
             <MudTabPanel Text="DG Application Details" Icon="@Icons.Material.Filled.AssignmentTurnedIn">
-                <MudForm @ref="_form" @bind-IsValid="_isValid" Class="pa-4">
+                <MudForm @ref="_form" @bind-IsValid="_isValid" ReadOnly="@(!_isEditMode)" Class="pa-4">
                     <MudGrid Spacing="3">
                         <MudItem xs="12" lg="8">
                             <MudCard Outlined="true" Class="pa-4 mb-4">
@@ -162,14 +157,9 @@
                                         </MudSelect>
                                     </MudItem>
                                     <MudItem xs="12" md="6">
-                                        <MudSelect T="string" Label="Application Status" @bind-Value="_grant.StatusCode" Variant="Variant.Outlined">
-                                            <MudSelectItem Value="@("DRAFT")">Draft</MudSelectItem>
-                                            <MudSelectItem Value="@("SUBMITTED")">Submitted</MudSelectItem>
-                                            <MudSelectItem Value="@("EVALUATING")">Evaluating</MudSelectItem>
-                                            <MudSelectItem Value="@("PENDING_COMMITTEE")">Pending Committee</MudSelectItem>
-                                            <MudSelectItem Value="@("APPROVED")">Approved</MudSelectItem>
-                                            <MudSelectItem Value="@("REJECTED")">Rejected</MudSelectItem>
-                                        </MudSelect>
+                                        <ReadOnlyField Label="Application Status">
+                                            <StatusBadge Status="@_grant.StatusCode" />
+                                        </ReadOnlyField>
                                     </MudItem>
                                     <MudItem xs="12" md="6">
                                         <MudNumericField T="decimal"
@@ -584,6 +574,31 @@
     private GrantProjectBudget _newBudget = new();
 
     private List<BreadcrumbItem> _breadcrumbItems = new();
+    private bool _isEditMode;
+
+    protected override void OnParametersSet()
+    {
+        _isEditMode = Id == 0 || NavManager.Uri.EndsWith("/edit", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void EnterEditMode()
+    {
+        _isEditMode = true;
+        NavManager.NavigateTo($"/dg-grants/{Id}/edit");
+    }
+
+    private void ExitEditMode()
+    {
+        if (Id == 0)
+        {
+            NavManager.NavigateTo("/dg-grants");
+        }
+        else
+        {
+            _isEditMode = false;
+            NavManager.NavigateTo($"/dg-grants/{Id}");
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -754,6 +769,17 @@
     private async Task DeleteGrant()
     {
         if (Id <= 0) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Delete Discretionary Grant Application" },
+            { x => x.Consequence, "Are you sure you want to delete this Discretionary Grant (DG) application? All associated project budgets and intervention targets will be permanently removed." },
+            { x => x.ConfirmLabel, "Delete Application" },
+            { x => x.IsDestructive, true }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Grant Application", parameters);
+        var result = await dialog.Result;
+        if (result == null || result.Canceled) return;
 
         try
         {

@@ -21,34 +21,21 @@
 
 <PageTitle>@(IsNew ? "New Learner Registration" : $"Learner {_learner.LearnerContractNumber}") - NSDMS</PageTitle>
 
-<!-- STICKY TOP BAR -->
-<MudPaper Elevation="0" Class="sticky-top pa-4 mb-4 rounded-lg bg-surface border-default d-flex flex-wrap justify-space-between align-center gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10; border: 1px solid var(--mud-palette-lines-default);">
-    <div class="d-flex align-center gap-3">
-        <MudButton Variant="Variant.Text"
-                   StartIcon="@Icons.Material.Filled.ArrowBack"
-                   Color="Color.Default"
-                   OnClick="@(() => Navigation.NavigateTo("/learners"))"
-                   aria-label="Back to Learners List">
-            Back to Learners
-        </MudButton>
-        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
-        <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
-            <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" />
-        </MudAvatar>
-        <div>
-            <MudBreadcrumbs Items="_breadcrumbItems" Class="pa-0 ma-0" />
-            <MudText Typo="Typo.h6" Class="fw-bold">
-                @(IsNew ? "Register New Learner / Apprentice (SETMIS Files 500-506)" : $"{(_person?.FullName ?? "Learner Profile")} ({_learner.LearnerContractNumber ?? "LRN-" + Id})")
-            </MudText>
-        </div>
-    </div>
-    <div class="d-flex gap-2 align-center">
-        @if (!IsNew)
-        {
-            <MudChip T="string" Color="@GetStatusColor(_learner.EnrolmentStatusCode)" Variant="Variant.Filled">
-                @(_learner.EnrolmentStatusCode ?? "Registered")
-            </MudChip>
-
+@if (!_isEditMode && !IsNew)
+{
+    <EntityHeader Title="@(_person?.FullName ?? "Learner Profile")"
+                  ReferenceKey="@(_learner.LearnerContractNumber ?? "LRN-" + Id)"
+                  Status="@(_learner.EnrolmentStatusCode ?? "Registered")"
+                  Subtitle="@($"ID: {_person?.RsaIdNumber ?? "N/A"} | Qualification: {_learner.QualificationTitle ?? "Skills Programme"} | Reference: {_learner.LearnerContractNumber ?? "LRN-" + Id}")"
+                  BreadcrumbItems="@_breadcrumbItems">
+        <ActionZone>
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Color="Color.Default"
+                       OnClick="@(() => Navigation.NavigateTo("/learners"))"
+                       aria-label="Back to Learners List">
+                Back to Learners
+            </MudButton>
             <MudMenu Label="Learner Lifecycle"
                      StartIcon="@Icons.Material.Filled.Bolt"
                      EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
@@ -82,17 +69,33 @@
                     Delete Learner Agreement
                 </MudMenuItem>
             </MudMenu>
-        }
-
-        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Navigation.NavigateTo("/learners"))" aria-label="Cancel and Return">
-            Cancel
-        </MudButton>
-
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveAsync" Disabled="_saving" aria-label="Save Learner Record">
-            @(_saving ? "Saving..." : "Save Learner")
-        </MudButton>
-    </div>
-</MudPaper>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Edit"
+                       OnClick="EnterEditMode"
+                       aria-label="Edit Learner Record">
+                Edit Learner
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+}
+else
+{
+    <EntityHeader Title="@(IsNew ? "Register New Learner / Apprentice (SETMIS Files 500-506)" : $"Edit {_person?.FullName ?? "Learner"}")"
+                  ReferenceKey="@(_learner.LearnerContractNumber ?? "LRN-" + Id)"
+                  Status="@(IsNew ? "Draft" : "Editing")"
+                  Subtitle="@(IsNew ? "Enrol candidate into registered learnership, apprenticeship, or skills programme" : "Modify learner registration parameters and workplace assignment")"
+                  BreadcrumbItems="@_breadcrumbItems">
+        <ActionZone>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="ExitEditMode" aria-label="Cancel and Return">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveAsync" Disabled="_saving" aria-label="Save Learner Record">
+                @(_saving ? "Saving..." : "Save Learner")
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+}
 
 @if (!IsNew)
 {
@@ -116,6 +119,7 @@
 }
 else
 {
+    <MudForm ReadOnly="@(!_isEditMode)">
     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" @bind-ActivePanelIndex="_activeTabIndex">
         
         <!-- TAB 1: DEMOGRAPHICS & PROFILE -->
@@ -733,6 +737,7 @@ else
             </MudTabPanel>
         }
     </MudTabs>
+    </MudForm>
 }
 
 <!-- SCHEDULE TRADE TEST DIALOG -->
@@ -814,9 +819,34 @@ else
     [Parameter] public int Id { get; set; }
 
     private bool IsNew => Id == 0;
+    private bool _isEditMode;
     private bool _loading = true;
     private bool _saving = false;
     private int _activeTabIndex = 0;
+
+    protected override void OnParametersSet()
+    {
+        _isEditMode = Id == 0 || Navigation.Uri.EndsWith("/edit", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void EnterEditMode()
+    {
+        _isEditMode = true;
+        Navigation.NavigateTo($"/learners/{Id}/edit");
+    }
+
+    private void ExitEditMode()
+    {
+        if (Id == 0)
+        {
+            Navigation.NavigateTo("/learners");
+        }
+        else
+        {
+            _isEditMode = false;
+            Navigation.NavigateTo($"/learners/{Id}");
+        }
+    }
 
     private CompanyLearner _learner = new();
     private Person _person = new();
@@ -1021,6 +1051,17 @@ else
     private async Task DeleteAsync()
     {
         if (Id <= 0) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Delete Learner Agreement" },
+            { x => x.Consequence, $"Are you sure you want to delete the learner agreement for '{_person?.FullName}' ({_learner.LearnerContractNumber})? This will permanently remove all associated SETMIS enrollment records." },
+            { x => x.ConfirmLabel, "Delete Agreement" },
+            { x => x.IsDestructive, true }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Learner Agreement", parameters);
+        var result = await dialog.Result;
+        if (result == null || result.Canceled) return;
 
         try
         {

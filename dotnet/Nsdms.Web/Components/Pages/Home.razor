@@ -1,19 +1,13 @@
 @page "/"
 @page "/dashboard"
+@using Microsoft.EntityFrameworkCore
+@using Nsdms.Application.Common
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
-@inject IPersonService PersonService
-@inject IOrganisationService OrgService
-@inject ITrainingProviderService ProviderService
-@inject IWspService WspService
-@inject IGrantService GrantService
-@inject ILevyService LevyService
-@inject IEtqaService EtqaService
-@inject IWorkplaceApprovalService WpaService
-@inject ILearnerService LearnerService
-@inject IWorkflowEngineService WorkflowService
+@inject IAnalyticsService AnalyticsService
 @inject NavigationManager Navigation
+@inject ILogger<Home> Logger
 
 @*
   UI-STANDARD.md Archetype: A5 (Dashboard / Executive Operations Portal)
@@ -70,7 +64,7 @@
                   Label="DG Grant Applications"
                   Context="Strategic Skills Projects"
                   TrendColor="Color.Warning"
-                  Href="/grants" />
+                  Href="/dg-grants" />
     </StatCardRow>
 </section>
 
@@ -141,6 +135,13 @@
                             </MudButton>
                         </MudTd>
                     </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-6 text-center">
+                            <EmptyState Title="No Pending SLA Actions"
+                                        Description="All discretionary grants and operational queues are currently up to date."
+                                        Icon="@Icons.Material.Filled.TaskAlt" />
+                        </div>
+                    </NoRecordsContent>
                 </MudTable>
             </MudCardContent>
         </MudCard>
@@ -258,7 +259,7 @@
     private int _providerCount = 0;
     private int _grantCount = 0;
 
-    private List<DashboardActionItem> _actionItems = new();
+    private List<DashboardActionItemDto> _actionItems = new();
 
     private List<BreadcrumbItem> _breadcrumbItems = new()
     {
@@ -270,82 +271,16 @@
     {
         try
         {
-            var orgs = await OrgService.GetAllAsync();
-            _employerCount = orgs.Count;
-
-            var learners = await LearnerService.GetAllLearnersAsync();
-            _learnerCount = learners.Count;
-
-            var providers = await ProviderService.GetAllAsync();
-            _providerCount = providers.Count;
-
-            var grants = await GrantService.GetAllAsync();
-            _grantCount = grants.Count;
-
-            // Operational Action Queues
-            _actionItems = new List<DashboardActionItem>
-            {
-                new()
-                {
-                    EntityTitle = "Apex Technical Academy",
-                    ReferenceNumber = "SDP-2026-0812",
-                    ProcessName = "Provider Accreditation",
-                    CurrentStage = "Site Audit Scheduled",
-                    DaysRemaining = 3,
-                    IsDueSoon = true,
-                    IsOverdue = false,
-                    TargetUrl = "/sdp"
-                },
-                new()
-                {
-                    EntityTitle = "Sasol Synfuels Secunda",
-                    ReferenceNumber = "WSP-2026-0042",
-                    ProcessName = "Workplace Skills Plan",
-                    CurrentStage = "Under Review",
-                    DaysRemaining = -1,
-                    IsDueSoon = false,
-                    IsOverdue = true,
-                    TargetUrl = "/wsp"
-                },
-                new()
-                {
-                    EntityTitle = "Scaw Metals Heavy Foundry",
-                    ReferenceNumber = "DG-2026-0199",
-                    ProcessName = "Discretionary Grant",
-                    CurrentStage = "Committee Review",
-                    DaysRemaining = 5,
-                    IsDueSoon = false,
-                    IsOverdue = false,
-                    TargetUrl = "/grants"
-                },
-                new()
-                {
-                    EntityTitle = "First National Bank (FNB)",
-                    ReferenceNumber = "BNK-2026-0018",
-                    ProcessName = "Banking Details Approval",
-                    CurrentStage = "Pending Signoff",
-                    DaysRemaining = 1,
-                    IsDueSoon = true,
-                    IsOverdue = false,
-                    TargetUrl = "/finance/banking-details"
-                }
-            };
+            var summary = await AnalyticsService.GetExecutiveDashboardSummaryAsync();
+            _employerCount = summary.EmployerCount;
+            _learnerCount = summary.LearnerCount;
+            _providerCount = summary.ProviderCount;
+            _grantCount = summary.GrantCount;
+            _actionItems = summary.ActionItems;
         }
-        catch
+        catch (Exception ex)
         {
-            // Graceful fallback during prerendering
+            Logger.LogWarning(ex, "Failed to load dashboard operational metrics during initialization.");
         }
-    }
-
-    private class DashboardActionItem
-    {
-        public string EntityTitle { get; set; } = string.Empty;
-        public string ReferenceNumber { get; set; } = string.Empty;
-        public string ProcessName { get; set; } = string.Empty;
-        public string CurrentStage { get; set; } = string.Empty;
-        public int DaysRemaining { get; set; }
-        public bool IsDueSoon { get; set; }
-        public bool IsOverdue { get; set; }
-        public string TargetUrl { get; set; } = string.Empty;
     }
 }

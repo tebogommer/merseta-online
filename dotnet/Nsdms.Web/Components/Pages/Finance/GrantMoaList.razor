@@ -9,6 +9,7 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject IJSRuntime JS
 @rendermode InteractiveServer
 
 @*
@@ -21,7 +22,6 @@
 <EntityHeader Title="Discretionary Grant (DG) MOAs &amp; Tranches"
               Subtitle="Memorandum of Agreements, milestone deliverable contracting, and tranche invoice payment matrix"
               ReferenceKey="T1-FINANCE-DG-MOA"
-              Status="Active"
               BreadcrumbItems="@_breadcrumbs">
     <ActionZone>
         <MudButton Variant="Variant.Outlined" 
@@ -102,10 +102,11 @@
                TotalItemsCount="@FilteredMoas.Count"
                SelectedItems="@_selectedMoas"
                SelectedItemsChanged="OnSelectedMoasChanged"
+               ExportCallback="ExportSelected"
                EmptyTitle="No Grant MOAs Found"
                EmptyMessage="No grant contracting memorandum of agreements match your active search or filter criteria."
                EmptyActionLabel="Contract New MOA"
-               OnEmptyAction="@(() => Navigation.NavigateTo("/finance/grants/create"))">
+               OnEmptyAction="@(() => Navigation.NavigateTo("/finance/dg-moa/create"))">
     <BulkActionBarContent>
         <MudText Typo="Typo.body2" Class="fw-bold text-white">
             @_selectedMoas.Count MOA(s) selected
@@ -180,6 +181,14 @@
                     </div>
                 </MudTd>
             </RowTemplate>
+            <NoRecordsContent>
+                <EmptyState Icon="@Icons.Material.Filled.AssignmentLate"
+                            Message="No Discretionary Grant (DG) MOAs Found"
+                            Description="@(_moas.Count == 0 ? "No active Discretionary Grant (DG) memorandum of agreements in the system. Initiate contracting from an approved DG application." : "No MOA records match your active search or filter criteria. Try clearing your filters.")"
+                            ActionLabel="@(_moas.Count == 0 ? "New DG MOA Contract" : "Clear Filters")"
+                            ActionHref="@(_moas.Count == 0 ? "/finance/dg-moa/create" : null)"
+                            OnAction="ClearFilters" />
+            </NoRecordsContent>
             <PagerContent>
                 <!-- Fixed page size ladder (Clause 11.3.3) -->
                 <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
@@ -261,8 +270,27 @@
         _selectedMoas = selected;
     }
 
-    private void ExportSelected()
+    private async Task ExportSelected()
     {
-        Snackbar.Add($"Exporting {_selectedMoas.Count} MOA contracts to CSV...", Severity.Info);
+        var targetList = _selectedMoas.Count > 0 ? _selectedMoas.ToList() : FilteredMoas.ToList();
+        if (targetList.Count == 0)
+        {
+            Snackbar.Add("No Discretionary Grant (DG) MOA records available to export.", Severity.Warning);
+            return;
+        }
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("MOA Number,Organisation Name,Project Title,Contract Value,Status");
+        foreach (var moa in targetList)
+        {
+            sb.AppendLine($"\"{EscapeCsv(moa.MoaNumber)}\",\"{EscapeCsv(moa.Organisation?.CompanyName ?? "Unknown")}\",\"{EscapeCsv(moa.ProjectTitle)}\",\"{moa.TotalContractValue.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)}\",\"{EscapeCsv(moa.MoaStatusCode)}\"");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("downloadFileFromBytes", $"Grant_MOAs_Export_{DateTime.UtcNow:yyyyMMdd_HHmmss}.csv", "text/csv", base64);
+        Snackbar.Add($"Exported {targetList.Count} Discretionary Grant (DG) MOA records to CSV.", Severity.Success);
     }
+
+    private static string EscapeCsv(string? val) => (val ?? "").Replace("\"", "\"\"").Replace("\r", " ").Replace("\n", " ");
 }

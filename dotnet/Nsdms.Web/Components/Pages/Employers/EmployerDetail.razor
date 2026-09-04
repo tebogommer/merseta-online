@@ -14,37 +14,22 @@
 @rendermode InteractiveServer
 
 <!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
-<MudPaper Elevation="1" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
-    <div class="d-flex align-center gap-3">
-        <MudButton Variant="Variant.Text"
-                   StartIcon="@Icons.Material.Filled.ArrowBack"
-                   Color="Color.Default"
-                   OnClick="BackToList"
-                   aria-label="Back to Employers List">
-            Back to Employers
-        </MudButton>
-        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
-        @if (!string.IsNullOrEmpty(_logoDataUri))
-        {
-            <img src="@_logoDataUri" alt="Employer Logo" style="height: 38px; width: 38px; object-fit: cover; border-radius: 4px; border: 1px solid var(--mud-palette-lines-default);" />
-        }
-        else
-        {
-            <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
-                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" />
-            </MudAvatar>
-        }
-        <div>
-            <MudBreadcrumbs Items="_breadcrumbItems" Separator=">" Class="pa-0 ma-0" />
-            <MudText Typo="Typo.h6" Class="font-weight-bold">
-                @(Id == 0 ? "New Employer / Organisation Registration" : $"{_organisation.CompanyName} ({_organisation.SdlNumber})")
-            </MudText>
-        </div>
-    </div>
-    <div class="d-flex align-center gap-2">
-        @if (Id > 0)
-        {
-            <MudMenu Label="Launch Service"
+@if (!_isEditMode && Id > 0)
+{
+    <EntityHeader Title="@(string.IsNullOrWhiteSpace(_organisation.CompanyName) ? "Employer Record" : _organisation.CompanyName)"
+                  ReferenceKey="@_organisation.SdlNumber"
+                  Status="@(_organisation.IsActive ? "Active" : "Inactive")"
+                  Subtitle="@($"Category: {_organisation.CategoryCode ?? "EMP"} | Chamber: {_organisation.ChamberCode ?? "General"} | Province: {_organisation.ProvinceCode ?? "National"}")"
+                  BreadcrumbItems="@_breadcrumbItems">
+        <ActionZone>
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Color="Color.Default"
+                       OnClick="BackToList"
+                       aria-label="Back to Employers List">
+                Back to Employers
+            </MudButton>
+            <MudMenu Label="Services"
                      StartIcon="@Icons.Material.Filled.Bolt"
                      EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
                      Color="Color.Default"
@@ -80,24 +65,42 @@
                     Delete Employer
                 </MudMenuItem>
             </MudMenu>
-        }
-        <MudButton Variant="Variant.Outlined"
-                   Color="Color.Secondary"
-                   StartIcon="@Icons.Material.Filled.Cancel"
-                   OnClick="BackToList"
-                   aria-label="Cancel and Return to List">
-            Cancel
-        </MudButton>
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Save"
-                   OnClick="SaveEmployer"
-                   Disabled="_isSaving"
-                   aria-label="Save Employer Record">
-            @(_isSaving ? "Saving..." : "Save Employer")
-        </MudButton>
-    </div>
-</MudPaper>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Edit"
+                       OnClick="EnterEditMode"
+                       aria-label="Edit Employer Record">
+                Edit Employer
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+}
+else
+{
+    <EntityHeader Title="@(Id == 0 ? "New Employer Registration" : $"Edit {_organisation.CompanyName}")"
+                  ReferenceKey="@_organisation.SdlNumber"
+                  Status="@(Id == 0 ? "Draft" : "Editing")"
+                  Subtitle="@(Id == 0 ? "Register a new levy-paying or non-levy paying organisation in NSDMS" : "Modify statutory organisation details, SIC codes, and contacts")"
+                  BreadcrumbItems="@_breadcrumbItems">
+        <ActionZone>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="ExitEditMode"
+                       aria-label="Cancel and Return to View">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="SaveEmployer"
+                       Disabled="_isSaving"
+                       aria-label="Save Employer Record">
+                @(_isSaving ? "Saving..." : "Save Employer")
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+}
 
 <div>
     @if (_loading)
@@ -110,7 +113,7 @@
             
             <!-- TAB 1: General Master Details -->
             <MudTabPanel Text="General Master Details" Icon="@Icons.Material.Filled.Business">
-                <MudForm @ref="_form" @bind-IsValid="_isValid">
+                <MudForm @ref="_form" @bind-IsValid="_isValid" ReadOnly="@(!_isEditMode)">
                     <MudGrid Spacing="3">
                         <!-- Organisation Core Info Card -->
                         <MudItem xs="12" lg="8">
@@ -330,12 +333,9 @@
                                 </MudCardHeader>
                                 <MudCardContent>
                                     <div class="d-flex flex-column gap-3">
-                                        <MudSelect T="string" Label="Registration Status" @bind-Value="_organisation.StatusCode" Variant="Variant.Outlined">
-                                            @foreach (var st in _statusTypes)
-                                            {
-                                                <MudSelectItem Value="@st.Code">@st.Name</MudSelectItem>
-                                            }
-                                        </MudSelect>
+                                        <ReadOnlyField Label="Registration Status">
+                                            <StatusBadge Status="@_organisation.StatusCode" />
+                                        </ReadOnlyField>
                                         <MudSelect T="string" Label="SARS Levy Category" @bind-Value="_organisation.LevyCategoryCode" Variant="Variant.Outlined">
                                             <MudSelectItem Value="@("LEVY_PAYING")">Levy Paying Entity</MudSelectItem>
                                             <MudSelectItem Value="@("NON_LEVY_PAYING")">Non-Levy Paying</MudSelectItem>
@@ -1198,6 +1198,31 @@
     private DateTime? _visitDate = DateTime.Today;
 
     private List<BreadcrumbItem> _breadcrumbItems = new();
+    private bool _isEditMode;
+
+    protected override void OnParametersSet()
+    {
+        _isEditMode = Id == 0 || NavManager.Uri.EndsWith("/edit", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void EnterEditMode()
+    {
+        _isEditMode = true;
+        NavManager.NavigateTo($"/employers/{Id}/edit");
+    }
+
+    private void ExitEditMode()
+    {
+        if (Id == 0)
+        {
+            NavManager.NavigateTo("/employers");
+        }
+        else
+        {
+            _isEditMode = false;
+            NavManager.NavigateTo($"/employers/{Id}");
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -1347,6 +1372,17 @@
     private async Task DeleteEmployer()
     {
         if (Id <= 0) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Delete Organisation / Employer" },
+            { x => x.Consequence, $"Are you sure you want to delete '{_organisation.CompanyName}'? This action cannot be undone and will remove all associated contact mappings, sites, and committees." },
+            { x => x.ConfirmLabel, "Delete Record" },
+            { x => x.IsDestructive, true }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Organisation", parameters);
+        var result = await dialog.Result;
+        if (result == null || result.Canceled) return;
 
         try
         {

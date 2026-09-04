@@ -7,6 +7,7 @@
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject IJSRuntime JS
 @rendermode InteractiveServer
 
 @*
@@ -17,7 +18,6 @@
 <EntityHeader Title="Employer &amp; Organisation Registry"
               Subtitle="Centralized master register of levy-paying employers, chambers, providers, and accredited entities"
               ReferenceKey="T1-EMPLOYERS"
-              Status="Active"
               BreadcrumbItems="@_breadcrumbs">
     <ActionZone>
         <MudButton Variant="Variant.Filled" 
@@ -29,11 +29,23 @@
     </ActionZone>
 </EntityHeader>
 
-<!-- Filter Bar (Clause 11.4) -->
-<FilterBar SearchPlaceholder="Search by SDL Number, Organisation Name, Registration No, Tax No..."
-           @bind-SearchText="_searchString"
-           OnSearch="HandleFilterChanged"
-           OnClear="HandleFilterCleared">
+<!-- Data Grid Shell (Clause 11.9) with integrated filters and search -->
+<DataGridShell TItem="Organisation"
+               GridKey="EmployerRegistryGrid"
+               Items="@FilteredEmployers"
+               IsLoading="@_loading"
+               TotalItemsCount="@FilteredEmployers.Count"
+               SelectedItems="@_selectedEmployers"
+               SelectedItemsChanged="OnSelectedEmployersChanged"
+               @bind-SearchString="_searchString"
+               SearchPlaceholder="Search by SDL Number, Organisation Name, Registration No, Tax No..."
+               HasActiveFilters="@(!string.IsNullOrWhiteSpace(_searchString) || _statusFilter != "All")"
+               OnClearFilters="HandleFilterCleared"
+               EmptyTitle="No Organisations Found"
+               EmptyMessage="No registered employers match your active search and filter criteria. Register a new employer to populate the master registry."
+               EmptyActionLabel="Register New Organisation"
+               OnEmptyAction="CreateNewEmployer"
+               ExportCallback="ExportSelected">
     <FilterContent>
         <MudSelect T="string" 
                    Label="Status Filter" 
@@ -61,20 +73,6 @@
             </MudChip>
         }
     </ActiveFilterChips>
-</FilterBar>
-
-<!-- Data Grid Shell (Clause 11.9) -->
-<DataGridShell TItem="Organisation"
-               GridKey="EmployerRegistryGrid"
-               Items="@FilteredEmployers"
-               IsLoading="@_loading"
-               TotalItemsCount="@FilteredEmployers.Count"
-               SelectedItems="@_selectedEmployers"
-               SelectedItemsChanged="OnSelectedEmployersChanged"
-               EmptyTitle="No Organisations Found"
-               EmptyMessage="No registered employers match your active search and filter criteria. Register a new employer to populate the master registry."
-               EmptyActionLabel="Register New Organisation"
-               OnEmptyAction="CreateNewEmployer">
     <BulkActionBarContent>
         <MudText Typo="Typo.body2" Class="fw-bold text-white">
             @_selectedEmployers.Count organisation(s) selected
@@ -183,6 +181,14 @@
                     </div>
                 </MudTd>
             </RowTemplate>
+            <NoRecordsContent>
+                <EmptyState Icon="@Icons.Material.Filled.Business"
+                            Message="No Organisations Found"
+                            Description="@(_employers.Count == 0 ? "No registered employers in the database. Register a new employer to populate the master registry." : "No registered employers match your active search and filter criteria. Try clearing your search or status filter.")"
+                            ActionLabel="@(_employers.Count == 0 ? "Register New Organisation" : "Clear Filters")"
+                            ActionHref="@(_employers.Count == 0 ? "/employers/create" : null)"
+                            OnAction="HandleFilterCleared" />
+            </NoRecordsContent>
             <PagerContent>
                 <!-- Fixed page size ladder (Clause 11.3.3) -->
                 <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
@@ -279,10 +285,29 @@
         NavManager.NavigateTo("/employers/create");
     }
 
-    private void ExportSelected()
+    private async Task ExportSelected()
     {
-        Snackbar.Add($"Exporting {_selectedEmployers.Count} organisations to CSV...", Severity.Info);
+        var targetList = _selectedEmployers.Count > 0 ? _selectedEmployers.ToList() : FilteredEmployers.ToList();
+        if (targetList.Count == 0)
+        {
+            Snackbar.Add("No organisation records available to export.", Severity.Warning);
+            return;
+        }
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("SDL Number,Organisation Name,Trading Name,Registration Number,SIC Code,Status");
+        foreach (var org in targetList)
+        {
+            sb.AppendLine($"\"{EscapeCsv(org.SdlNumber)}\",\"{EscapeCsv(org.CompanyName)}\",\"{EscapeCsv(org.TradingName)}\",\"{EscapeCsv(org.RegistrationNumber)}\",\"{EscapeCsv(org.SicCode)}\",\"{(org.IsActive ? "Active" : "Inactive")}\"");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("downloadFileFromBytes", $"Organisations_Export_{DateTime.UtcNow:yyyyMMdd_HHmmss}.csv", "text/csv", base64);
+        Snackbar.Add($"Exported {targetList.Count} organisations to CSV.", Severity.Success);
     }
+
+    private static string EscapeCsv(string? val) => (val ?? "").Replace("\"", "\"\"").Replace("\r", " ").Replace("\n", " ");
 
     private async Task DeleteEmployer(int id, string companyName)
     {

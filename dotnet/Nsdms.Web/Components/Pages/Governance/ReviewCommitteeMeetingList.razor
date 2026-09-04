@@ -161,7 +161,7 @@
 
         var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
         var base64 = Convert.ToBase64String(bytes);
-        await JS.InvokeVoidAsync("eval", $"const a = document.createElement('a'); a.href = 'data:text/csv;base64,{base64}'; a.download = 'CommitteeMeetings_{DateTime.UtcNow:yyyyMMdd}.csv'; a.click();");
+        await JS.InvokeVoidAsync("nsdmsDownloadFile", $"CommitteeMeetings_{DateTime.UtcNow:yyyyMMdd}.csv", base64, "text/csv");
         Snackbar.Add("Committee meetings exported to CSV successfully.", Severity.Success);
     }
 }

@@ -208,7 +208,7 @@
                             <MudTh Style="text-align: right;">Actions</MudTh>
                         </HeaderContent>
                         <RowTemplate>
-                            <MudTd DataLabel="Claim Ref"><strong>CLM-@context.Id.ToString("D5")</strong></MudTd>
+                            <MudTd DataLabel="Claim Ref"><strong class="font-monospace">@(string.IsNullOrWhiteSpace(context.PaymentReferenceNumber) ? $"CLM-{context.Id:D5}" : context.PaymentReferenceNumber)</strong></MudTd>
                             <MudTd DataLabel="Milestone Ref">Milestone #@(context.GrantMoaMilestone?.MilestoneNumber ?? 1)</MudTd>
                             <MudTd DataLabel="Invoice Number">@context.InvoiceNumber</MudTd>
                             <MudTd DataLabel="Claim Amount">
@@ -232,13 +232,19 @@
                                 </MudChip>
                             </MudTd>
                             <MudTd DataLabel="Actions" Style="text-align: right;">
-                                @if (context.PaymentStatusCode == "Claim Submitted")
+                                @if (context.PaymentStatusCode == "Claim Submitted" || context.PaymentStatusCode == "Submitted")
                                 {
                                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.FactCheck" OnClick="@(() => ApprovePayment(context))" aria-label="Approve Claim for Batch">
                                         Approve
                                     </MudButton>
                                 }
-                                else if (context.PaymentStatusCode == "Batch Approved")
+                                else if (context.PaymentStatusCode == "PendingCfoApproval")
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" StartIcon="@Icons.Material.Filled.VerifiedUser" OnClick="@(() => CfoApprovePayment(context))" aria-label="CFO Executive Signoff">
+                                        CFO Signoff
+                                    </MudButton>
+                                }
+                                else if (context.PaymentStatusCode == "Batch Approved" || context.PaymentStatusCode == "Finance Approved" || context.PaymentStatusCode == "CfoApproved")
                                 {
                                     <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Payment" OnClick="@(() => ProcessPayout(context))" aria-label="Confirm Bank Payout">
                                         Payout
@@ -803,12 +809,33 @@
         {
             var batchNumber = $"GP-BATCH-{DateTime.UtcNow:yyyyMMdd}-{payment.Id}";
             await FinanceService.ApproveTranchePaymentAsync(payment.Id, "FinanceManager", batchNumber, "Batch verified");
-            Snackbar.Add($"Tranche claim CLM-{payment.Id:D5} approved for GP Batch {batchNumber}.", Severity.Success);
+            if (payment.ClaimedAmount >= 500000.00m)
+            {
+                Snackbar.Add($"Tranche claim CLM-{payment.Id:D5} (R {payment.ClaimedAmount:N2}) routed for CFO executive signoff per DOFA delegation.", Severity.Warning);
+            }
+            else
+            {
+                Snackbar.Add($"Tranche claim CLM-{payment.Id:D5} approved for GP Batch {batchNumber}.", Severity.Success);
+            }
             await LoadMoaData();
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Error approving payment: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task CfoApprovePayment(GrantTranchePayment payment)
+    {
+        try
+        {
+            await FinanceService.CfoApproveTranchePaymentAsync(payment.Id, "CFO_User", "CFO executive approval per DOFA delegation");
+            Snackbar.Add($"Tranche claim CLM-{payment.Id:D5} approved by CFO. Payment voucher issued.", Severity.Success);
+            await LoadMoaData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error during CFO approval: {ex.Message}", Severity.Error);
         }
     }
 
@@ -922,8 +949,8 @@
     private static Color GetPaymentColor(string? status) => status switch
     {
         "Paid" => Color.Success,
-        "Batch Approved" => Color.Info,
-        "Claim Submitted" => Color.Warning,
+        "CfoApproved" or "Finance Approved" or "Batch Approved" => Color.Info,
+        "PendingCfoApproval" or "Claim Submitted" or "Submitted" => Color.Warning,
         _ => Color.Default
     };
 }

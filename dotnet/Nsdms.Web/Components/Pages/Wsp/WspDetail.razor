@@ -8,28 +8,23 @@
 @inject LookupService LookupService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @rendermode InteractiveServer
 
-<!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
-<MudPaper Elevation="0" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3 border-default" Style="top: var(--mud-appbar-height, 64px); z-index: 10; border: 1px solid var(--mud-palette-lines-default);">
-    <div class="d-flex align-center gap-3">
-        <MudButton Variant="Variant.Text"
-                   StartIcon="@Icons.Material.Filled.ArrowBack"
-                   Color="Color.Default"
-                   OnClick="BackToList">
-            Back to WSP Submissions
-        </MudButton>
-        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
-        <div>
-            <MudBreadcrumbs Items="_breadcrumbItems" Separator=">" Class="pa-0 ma-0" />
-            <MudText Typo="Typo.h6" Class="font-weight-bold">
-                @(Id == 0 ? "New WSP & Mandatory Grant Submission" : $"{_wsp.ReferenceNumber} ({_wsp.FinYear}) - {_wsp.Organisation?.CompanyName ?? "Submission Detail"}")
-            </MudText>
-        </div>
-    </div>
-    <div class="d-flex align-center gap-2">
-        @if (Id > 0)
-        {
+@if (!_isEditMode && Id > 0)
+{
+    <EntityHeader Title="@(_wsp.Organisation?.CompanyName ?? "WSP Submission")"
+                  ReferenceKey="@_wsp.ReferenceNumber"
+                  Status="@_wsp.StatusCode"
+                  Subtitle="@($"Financial Scheme Year: {_wsp.FinYear} | ATR Submission Reference: {_wsp.ReferenceNumber}")"
+                  BreadcrumbItems="@_breadcrumbItems">
+        <ActionZone>
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Color="Color.Default"
+                       OnClick="BackToList">
+                Back to WSP Submissions
+            </MudButton>
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.PictureAsPdf"
@@ -42,22 +37,39 @@
                        OnClick="DeleteWsp">
                 Delete
             </MudButton>
-        }
-        <MudButton Variant="Variant.Outlined"
-                   Color="Color.Secondary"
-                   StartIcon="@Icons.Material.Filled.Cancel"
-                   OnClick="BackToList">
-            Cancel
-        </MudButton>
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Save"
-                   OnClick="SaveWsp"
-                   Disabled="_isSaving">
-            @(_isSaving ? "Saving..." : "Save Submission")
-        </MudButton>
-    </div>
-</MudPaper>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Edit"
+                       OnClick="EnterEditMode">
+                Edit WSP Submission
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+}
+else
+{
+    <EntityHeader Title="@(Id == 0 ? "New WSP & Mandatory Grant Submission" : $"Edit {_wsp.ReferenceNumber}")"
+                  ReferenceKey="@_wsp.ReferenceNumber"
+                  Status="@(Id == 0 ? "Draft" : "Editing")"
+                  Subtitle="@(Id == 0 ? "Submit Workplace Skills Plan and Annual Training Report for 20% Mandatory Grant rebate" : $"Modify training plans and employment equity targets for {_wsp.Organisation?.CompanyName}")"
+                  BreadcrumbItems="@_breadcrumbItems">
+        <ActionZone>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="ExitEditMode">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="SaveWsp"
+                       Disabled="_isSaving">
+                @(_isSaving ? "Saving..." : "Save Submission")
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+}
 
 <div>
     @if (Id > 0)
@@ -85,7 +97,7 @@
         <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface">
             <!-- TAB 1: Submission Info -->
             <MudTabPanel Text="Submission Info" Icon="@Icons.Material.Filled.Assignment">
-                <MudForm @ref="_form" @bind-IsValid="_isValid">
+                <MudForm @ref="_form" @bind-IsValid="_isValid" ReadOnly="@(!_isEditMode)">
                     <MudGrid Spacing="3">
                         <MudItem xs="12" lg="8">
                             <MudCard Elevation="2" Class="mb-4">
@@ -135,16 +147,10 @@
                                                           Variant="Variant.Outlined" />
                                         </MudItem>
                                         <MudItem xs="12" md="6">
-                                            <MudSelect T="string" Label="Submission Lifecycle Status" @bind-Value="_wsp.StatusCode" Variant="Variant.Outlined">
-                                                <MudSelectItem Value="@("DRAFT")">Draft</MudSelectItem>
-                                                <MudSelectItem Value="@("SDF_SIGNED")">Signed by SDF</MudSelectItem>
-                                                <MudSelectItem Value="@("LABOUR_SIGNED")">Signed by Labour</MudSelectItem>
-                                                <MudSelectItem Value="@("SUBMITTED")">Submitted</MudSelectItem>
-                                                <MudSelectItem Value="@("UNDER_REVIEW")">Under Review</MudSelectItem>
-                                                <MudSelectItem Value="@("APPROVED")">Approved</MudSelectItem>
-                                                <MudSelectItem Value="@("REJECTED")">Rejected</MudSelectItem>
-                                            </MudSelect>
-                                        </MudItem>
+                                             <ReadOnlyField Label="Submission Lifecycle Status">
+                                                 <StatusBadge Status="@_wsp.StatusCode" />
+                                             </ReadOnlyField>
+                                         </MudItem>
                                         <MudItem xs="12" md="6">
                                             <MudNumericField T="int"
                                                              Label="Total Employee Headcount"
@@ -797,6 +803,31 @@
     private WspTrainingPlan _newPlan = new();
 
     private List<BreadcrumbItem> _breadcrumbItems = new();
+    private bool _isEditMode;
+
+    protected override void OnParametersSet()
+    {
+        _isEditMode = Id == 0 || NavManager.Uri.EndsWith("/edit", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void EnterEditMode()
+    {
+        _isEditMode = true;
+        NavManager.NavigateTo($"/wsp/{Id}/edit");
+    }
+
+    private void ExitEditMode()
+    {
+        if (Id == 0)
+        {
+            NavManager.NavigateTo("/wsp");
+        }
+        else
+        {
+            _isEditMode = false;
+            NavManager.NavigateTo($"/wsp/{Id}");
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -906,6 +937,17 @@
     private async Task DeleteWsp()
     {
         if (Id <= 0) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Delete WSP Submission" },
+            { x => x.Consequence, "Are you sure you want to delete this Workplace Skills Plan? This action cannot be undone and will remove all associated training plans and ATR records." },
+            { x => x.ConfirmLabel, "Delete WSP" },
+            { x => x.IsDestructive, true }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete WSP Submission", parameters);
+        var result = await dialog.Result;
+        if (result == null || result.Canceled) return;
 
         try
         {
