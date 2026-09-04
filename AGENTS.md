@@ -11,11 +11,16 @@
 3. Check the technology mapping note for this application's entity vocabulary.
 
 **Strict Rules that must never be breached:**
-- **View by default:** Records open in **View** mode (`/{entity}/{id}`). Edit is a separate route (`/{entity}/{id}/edit`) with Save/Cancel buttons.
+- **View by default (Strict):** Records MUST open in read-only **View** mode (`/{entity}/{id}`) displaying `<ReadOnlyField>` components. Never render editable inputs (`<MudTextField>`), dropdowns, or Save buttons on `/{entity}/{id}`. Edit is strictly a separate route (`/{entity}/{id}/edit`) wrapped in `<FormShell>`. Never combine View and Edit into a single file without explicit read-only display state.
+- **Authentication & Authorization:** Every interactive page must declare `@attribute [Authorize]` or `@attribute [Authorize(Roles = "...")]`. Router must use `<AuthorizeRouteView>`. Minimal APIs must declare `.RequireAuthorization()`.
+- **Zero Raw Database Access in UI:** Razor components MUST NEVER inject `DbContext` or `IDbContextFactory`. All data fetching and mutations must pass through application service interfaces.
+- **Unbounded Query Prohibition:** Never call `.ToListAsync()` without `.Take()` or server-side pagination. In-memory aggregation of full tables in services is strictly prohibited.
+- **Destructive Action Confirmation:** Deleting any record must require an affirmative confirmation dialog via `IDialogService.ShowAsync<ConfirmDialog>()`. Immediate unconfirmed deletion is prohibited.
+- **Theme Token Invariant:** Hardcoded hex color codes (`#...`) in components and inline `style="..."` attributes for layout/colors are strictly prohibited. All colors and spacing must use MudBlazor theme variables.
 - **State reports, actions perform:** A badge is never clickable; a button never displays a value.
 - **Workflow axes:** Workflow **state**, **status**, and **flags** are three distinct concepts. Exactly one state badge per page.
 - **Central transitions:** Transition actions come from the shared transition service, never from conditions hardcoded in a page.
-- **Data Table Baseline:** Every list meets the 13-point data table baseline via `<DataGridShell>`.
+- **Data Table Baseline:** Every list meets the 13-point data table baseline via `<DataGridShell>` with standard 7-tier page sizes (`5, 10, 20, 50, 100, 250, 500`).
 - **Unique key links:** The unique key/identifier column is a real hyperlink (`<MudLink>`) to the record's View route.
 - **Sentence Case:** All labels, headers, buttons, and messages use standard sentence case.
 - **Responsive Layout:** Page content bounded by `<main id="main-content" style="max-width: 1600px; ...">`. Multi-column grids enclosed in overflow scroll wrappers.
@@ -77,8 +82,16 @@ Every page must pass all 16 items before being declared complete:
 5. **Streaming In-Line Pre-Flight Gatekeeper & Zero-Tolerance Policy**:
    - Before any staging records (`SarsLevyStaging`) or financial ledger records (`LevyFile`) are written, the raw file stream must pass pre-flight compliance inspection via `ISarsCompliancePreProcessor`.
    - Structural encoding, statutory SDL number regex (`^L\d{9}$`), 5-digit SIC codes, non-negative monetary values, duplicate Digital Security Seals, and trailer control reconciliations must be 100% compliant.
-   - Any compliance violation must immediately throw `SarsComplianceException`, aborting ingestion with zero database modifications and returning a line-by-line forensic diagnostic log.
+   - Any compliance violation must immediately throw `SarsComplianceException`, aborting ingestion with zero database modifications and returning a line-by-line forensic diagnostic log.---
 
+## Option and lookup controls
 
-
+The Option and Lookup Controls Standard v1.1 (Rules E.1 and E.2, OPT-001 through OPT-011) governs all option, lookup, and status controls across this organization:
+- **OPT-001**: Status, Workflow State, and Lifecycle fields MUST NOT be bound to user-editable option controls; they must render as read-only text or `<StatusBadge>`.
+- **OPT-002**: In View mode, every option field MUST render as text or badge (`<ReadOnlyField>`). Disabled inputs are prohibited.
+- **OPT-003 / OPT-004**: Lists > 15 items MUST use searchable comboboxes (`<SearchableLookup>`) debounced $\ge 300\text{ms}$ with min 2 chars and capped results ($\le 50$); entity references and lists > 500 MUST use `<EntityLookupDialog>`.
+- **OPT-005**: Reference data MUST be served from cached scoped services with declared TTL expiry (`LookupService`).
+- **OPT-006**: 2–5 exclusive record values MUST use radio groups enclosed in `<fieldset><legend>`.
+- **OPT-010**: Cascading lookups MUST clear and disable children when the parent value is empty.
+- **OPT-011**: All lookups MUST be registered in `declarations.yml`.
 

@@ -169,3 +169,7 @@ $$\text{WORK} \longrightarrow \text{CONTEXT} \longrightarrow \text{DECISION} \lo
 - ❌ **No Modals for Core Editing**: Full-page Stacked Master-Detail routes (`/[resource]/[id]`) replace small cluttered dialogs.
 - ❌ **No Unconnected Status**: Every workflow mutation performs an atomic double-write into `audit_logs` with before/after JSON snapshots.
 - ❌ **No Empty Decorative Containers**: Never leave empty bordered cards or placeholder boxes in production UI.
+
+### Wizard Exceptions
+- `AssessorReRegistrationWizard.razor`
+
