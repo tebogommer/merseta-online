@@ -56,6 +56,7 @@ public interface IAssessorReRegistrationService
     Task<AssessorReRegistrationApplication> InitiateReRegistrationApplicationAsync(InitiateReRegistrationRequest request, string currentUsername = "SYSTEM");
     Task<AssessorCpdActivity> LogCpdActivityAsync(LogCpdActivityRequest request, string currentUsername = "SYSTEM");
     Task<AssessorReRegistrationApplication> SubmitApplicationForReviewAsync(int applicationId, string currentUsername = "SYSTEM");
+    Task<AssessorReRegistrationApplication> UpdateDraftApplicationAsync(int applicationId, string cpdPortfolioSummary, string currentUsername = "SYSTEM");
     Task<AssessorReRegistrationApplication> AdjudicateApplicationAsync(AdjudicateReRegistrationRequest request, string currentUsername = "SYSTEM");
     Task<List<AssessorReRegistrationApplication>> GetApplicationsForAssessorAsync(int assessorId);
     Task<AssessorReRegistrationApplication?> GetApplicationDetailsAsync(int applicationId);
@@ -203,6 +204,28 @@ public class AssessorReRegistrationService : IAssessorReRegistrationService
             app.ApplicationReferenceNumber,
             app.CpdPointsAccumulated,
             ActivityCount = app.CpdActivities.Count
+        });
+
+        return app;
+    }
+
+    public async Task<AssessorReRegistrationApplication> UpdateDraftApplicationAsync(int applicationId, string cpdPortfolioSummary, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var app = await db.AssessorReRegistrationApplications
+            .Include(a => a.CpdActivities)
+            .FirstOrDefaultAsync(a => a.Id == applicationId);
+
+        if (app == null)
+            throw new KeyNotFoundException($"AssessorReRegistrationApplication with ID {applicationId} not found.");
+
+        app.CpdPortfolioSummary = cpdPortfolioSummary;
+        await db.SaveChangesAsync();
+
+        await _audit.LogAsync("AssessorReRegistrationApplication", app.Id, "UpdateDraft", currentUsername, new
+        {
+            app.CpdPortfolioSummary,
+            app.ReviewStatusCode
         });
 
         return app;

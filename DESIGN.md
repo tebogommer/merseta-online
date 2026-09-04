@@ -204,5 +204,5 @@ $$\text{WORK} \longrightarrow \text{CONTEXT} \longrightarrow \text{DECISION} \lo
 Direct usage of raw library stepper components (`MudStepper`, `MudStep`) outside `Components/Shared/Wizard` is prohibited and halts build execution with diagnostic `[NSDMS0001]`.
 
 ### Wizard Exceptions
-- `AssessorReRegistrationWizard.razor` (Transitional: scheduled for Phase 4 rebuild on WizardShell)
+None. All multi-step flows strictly adhere to WizardShell.
 
