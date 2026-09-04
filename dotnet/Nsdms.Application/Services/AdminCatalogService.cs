@@ -1,7 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Nsdms.Application.Common;
 using Nsdms.Application.Common.Interfaces;
 using Nsdms.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 
 namespace Nsdms.Application.Services;
@@ -58,7 +62,7 @@ public class AdminTelemetryDto
     public int TotalTemplatesCount { get; set; }
     public bool IsDatabaseConnected { get; set; } = true;
     public bool IsTemporalVersioningActive { get; set; } = true;
-    public string EnvironmentName { get; set; } = "Production-Ready Enterprise";
+    public string EnvironmentName { get; set; } = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
     public DateTime ServerTimeUtc { get; set; } = DateTime.UtcNow;
 }
 
@@ -81,12 +85,15 @@ public interface IAdminCatalogService
 
 public class AdminCatalogService : IAdminCatalogService
 {
+    private static readonly List<AdminSearchItemDto> _primaryAdminModules = BuildPrimaryAdminModules();
+
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly ISystemConfigurationService _configService;
     private readonly IFeatureFlagService _featureFlagService;
     private readonly ILookupService _lookupService;
     private readonly IRolePermissionService _roleService;
     private readonly IAuditService _audit;
+    private readonly ILogger<AdminCatalogService>? _logger;
 
     public AdminCatalogService(
         INsdmsDbContextFactory contextFactory,
@@ -94,7 +101,8 @@ public class AdminCatalogService : IAdminCatalogService
         IFeatureFlagService featureFlagService,
         ILookupService lookupService,
         IRolePermissionService roleService,
-        IAuditService audit)
+        IAuditService audit,
+        ILogger<AdminCatalogService>? logger = null)
     {
         _contextFactory = contextFactory;
         _configService = configService;
@@ -102,6 +110,7 @@ public class AdminCatalogService : IAdminCatalogService
         _lookupService = lookupService;
         _roleService = roleService;
         _audit = audit;
+        _logger = logger;
     }
 
     public async Task<AdminCatalogIndexDto> GetCatalogIndexAsync(string? search = null, string? category = null)
@@ -185,12 +194,13 @@ public class AdminCatalogService : IAdminCatalogService
         {
             ServerTimeUtc = DateTime.UtcNow,
             IsDatabaseConnected = true,
-            IsTemporalVersioningActive = true
+            IsTemporalVersioningActive = true,
+            EnvironmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"
         };
 
         try
         {
-            using var db = await _contextFactory.CreateDbContextAsync();
+            await using var db = await _contextFactory.CreateDbContextAsync();
             telemetry.TotalAuditLogsCount = await db.AuditLogs.CountAsync();
             telemetry.TotalConfigsCount = await db.SystemConfigs.CountAsync(c => c.IsActive);
             telemetry.TotalFlagsCount = await db.SystemFeatureFlags.CountAsync();
@@ -205,10 +215,13 @@ public class AdminCatalogService : IAdminCatalogService
                                              telemetry.TotalFlagsCount +
                                              telemetry.TotalLookupsCount +
                                              telemetry.TotalRolesCount +
-                                             telemetry.TotalTemplatesCount + 18;
+                                             telemetry.TotalTemplatesCount +
+                                             _primaryAdminModules.Count;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger?.LogWarning(ex, "Failed to retrieve telemetry stats from database.");
+            telemetry.IsDatabaseConnected = false;
         }
 
         return telemetry;
@@ -218,7 +231,7 @@ public class AdminCatalogService : IAdminCatalogService
     {
         try
         {
-            using var db = await _contextFactory.CreateDbContextAsync();
+            await using var db = await _contextFactory.CreateDbContextAsync();
             var existing = await db.SystemConfigs.FirstOrDefaultAsync(c => c.ConfigKey == key);
             if (existing == null)
             {
@@ -230,8 +243,9 @@ public class AdminCatalogService : IAdminCatalogService
             }
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger?.LogError(ex, "Failed to update config value inline for key {ConfigKey}.", key);
             return false;
         }
     }
@@ -243,8 +257,9 @@ public class AdminCatalogService : IAdminCatalogService
             await _featureFlagService.SetFeatureFlagAsync(featureKey, isEnabled, currentUsername: currentUsername);
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger?.LogError(ex, "Failed to toggle feature flag inline for key {FeatureKey}.", featureKey);
             return false;
         }
     }
@@ -280,7 +295,10 @@ public class AdminCatalogService : IAdminCatalogService
                 });
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Failed to load system configs into admin catalog.");
+        }
 
         // 3. FEATURE FLAGS & INTEGRATIONS
         try
@@ -306,7 +324,10 @@ public class AdminCatalogService : IAdminCatalogService
                 });
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Failed to load feature flags into admin catalog.");
+        }
 
         // 4. REFERENCE DATA & SETMIS LOOKUP TABLES
         try
@@ -332,7 +353,10 @@ public class AdminCatalogService : IAdminCatalogService
                 });
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Failed to load lookup tables into admin catalog.");
+        }
 
         // 5. SECURITY ROLES & ACCESS CONTROL
         try
@@ -358,13 +382,22 @@ public class AdminCatalogService : IAdminCatalogService
                 });
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Failed to load roles into admin catalog.");
+        }
 
         return items;
     }
 
     private void AddPrimaryAdminModules(List<AdminSearchItemDto> items)
     {
+        items.AddRange(_primaryAdminModules);
+    }
+
+    private static List<AdminSearchItemDto> BuildPrimaryAdminModules()
+    {
+        var items = new List<AdminSearchItemDto>();
         items.Add(new AdminSearchItemDto
         {
             Key = "MOD-SECURITY-ROLES",
@@ -670,6 +703,7 @@ public class AdminCatalogService : IAdminCatalogService
             StatusBadgeColor = "Primary",
             DisplayOrder = 18
         });
+        return items;
     }
 
     private static string FormatConfigTitle(string key)

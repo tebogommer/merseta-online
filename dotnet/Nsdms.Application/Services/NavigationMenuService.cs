@@ -22,6 +22,9 @@ public class NavigationMenuService : INavigationMenuService
     // Thread-safe in-memory cache for user navigation preferences
     private static readonly ConcurrentDictionary<string, UserNavPreferencesDto> _userPreferencesCache = new(StringComparer.OrdinalIgnoreCase);
 
+    // Thread-safe static lazy cache for master navigation catalog definition
+    private static readonly Lazy<List<NavItemDto>> _masterNavigationCatalog = new(InitializeMasterNavigationCatalog);
+
     public NavigationMenuService(
         INsdmsDbContextFactory contextFactory,
         IAuditService audit,
@@ -68,7 +71,9 @@ public class NavigationMenuService : INavigationMenuService
                                            r.Equals("Admin", StringComparison.OrdinalIgnoreCase) || 
                                            username.Equals("Admin", StringComparison.OrdinalIgnoreCase));
 
-        // Filter items by role & permissions (Union RBAC)
+        var pinnedSet = new HashSet<string>(preferences.PinnedItemIds, StringComparer.OrdinalIgnoreCase);
+
+        // Filter items by role & permissions (Union RBAC) and project user-scoped instances
         var accessibleItems = allCatalogItems.Where(item =>
         {
             if (isSuperAdmin && (persona.StartsWith("All", StringComparison.OrdinalIgnoreCase) || persona.StartsWith("System", StringComparison.OrdinalIgnoreCase)))
@@ -111,19 +116,36 @@ public class NavigationMenuService : INavigationMenuService
             }
 
             return item.RequiredRoles.Count == 0 && string.IsNullOrEmpty(item.RequiredModule);
-        }).ToList();
-
-        // Apply badges & pinned state
-        var pinnedSet = new HashSet<string>(preferences.PinnedItemIds, StringComparer.OrdinalIgnoreCase);
-        foreach (var item in accessibleItems)
+        }).Select(item =>
         {
-            item.IsPinned = pinnedSet.Contains(item.Id);
+            int badgeCount = 0;
+            string? badgeColor = null;
             if (badgeCounts.TryGetValue(item.Id, out var count))
             {
-                item.BadgeCount = count;
-                item.BadgeColor = count > 5 ? "Error" : count > 0 ? "Warning" : "Primary";
+                badgeCount = count;
+                badgeColor = count > 5 ? "Error" : count > 0 ? "Warning" : "Primary";
             }
-        }
+
+            return new NavItemDto
+            {
+                Id = item.Id,
+                Title = item.Title,
+                Href = item.Href,
+                Icon = item.Icon,
+                Category = item.Category,
+                Description = item.Description,
+                RequiredModule = item.RequiredModule,
+                RequiredAction = item.RequiredAction,
+                RequiredRoles = item.RequiredRoles,
+                BadgeCount = badgeCount,
+                BadgeColor = badgeColor,
+                IsPinned = pinnedSet.Contains(item.Id),
+                DisplayOrder = item.DisplayOrder,
+                Keywords = item.Keywords,
+                PersonaTags = item.PersonaTags,
+                ExactMatch = item.ExactMatch
+            };
+        }).ToList();
 
         // Extract pinned items
         var pinnedItems = accessibleItems.Where(i => i.IsPinned).OrderBy(i => i.DisplayOrder).ToList();
@@ -162,7 +184,29 @@ public class NavigationMenuService : INavigationMenuService
         var master = BuildMasterNavigationCatalog();
         var pinnedSet = new HashSet<string>(prefs.PinnedItemIds, StringComparer.OrdinalIgnoreCase);
         
-        return master.Where(i => pinnedSet.Contains(i.Id)).OrderBy(i => i.DisplayOrder).ToList();
+        return master
+            .Where(i => pinnedSet.Contains(i.Id))
+            .OrderBy(i => i.DisplayOrder)
+            .Select(i => new NavItemDto
+            {
+                Id = i.Id,
+                Title = i.Title,
+                Href = i.Href,
+                Icon = i.Icon,
+                Category = i.Category,
+                Description = i.Description,
+                RequiredModule = i.RequiredModule,
+                RequiredAction = i.RequiredAction,
+                RequiredRoles = i.RequiredRoles,
+                BadgeCount = i.BadgeCount,
+                BadgeColor = i.BadgeColor,
+                IsPinned = true,
+                DisplayOrder = i.DisplayOrder,
+                Keywords = i.Keywords,
+                PersonaTags = i.PersonaTags,
+                ExactMatch = i.ExactMatch
+            })
+            .ToList();
     }
 
     public async Task<bool> PinItemAsync(string username, string itemId)
@@ -516,7 +560,12 @@ public class NavigationMenuService : INavigationMenuService
         };
     }
 
-    private List<NavItemDto> BuildMasterNavigationCatalog()
+    private static IReadOnlyList<NavItemDto> BuildMasterNavigationCatalog()
+    {
+        return _masterNavigationCatalog.Value;
+    }
+
+    private static List<NavItemDto> InitializeMasterNavigationCatalog()
     {
         return new List<NavItemDto>
         {

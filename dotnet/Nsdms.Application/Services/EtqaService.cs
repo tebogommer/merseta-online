@@ -143,6 +143,7 @@ public class EtqaService : IEtqaService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var query = db.EtqaAssessors
+            .AsNoTracking()
             .Include(a => a.Person)
             .Include(a => a.Scopes)
             .Include(a => a.Assessments)
@@ -317,6 +318,7 @@ public class EtqaService : IEtqaService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         return await db.AssessorModeratorScopes
+            .AsNoTracking()
             .Where(s => s.EtqaAssessorId == assessorId)
             .OrderBy(s => s.QualificationTitle)
             .ToListAsync();
@@ -508,6 +510,7 @@ public class EtqaService : IEtqaService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var query = db.LearnerAssessments
+            .AsNoTracking()
             .Include(a => a.EtqaAssessor)
             .Include(a => a.Person)
             .Include(a => a.Organisation)

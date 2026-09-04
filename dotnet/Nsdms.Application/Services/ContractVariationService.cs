@@ -20,6 +20,7 @@ public class ContractVariationService : IContractVariationService
     {
         using var db = await _factory.CreateDbContextAsync();
         return await db.ContractAddendas
+            .AsNoTracking()
             .Include(a => a.GrantMoa)
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync();
@@ -29,6 +30,7 @@ public class ContractVariationService : IContractVariationService
     {
         using var db = await _factory.CreateDbContextAsync();
         return await db.ContractAddendas
+            .AsNoTracking()
             .Include(a => a.GrantMoa)
             .FirstOrDefaultAsync(a => a.Id == id);
     }
@@ -90,6 +92,7 @@ public class ContractVariationService : IContractVariationService
     {
         using var db = await _factory.CreateDbContextAsync();
         return await db.ContractExtensionRequests
+            .AsNoTracking()
             .Include(e => e.GrantMoa)
             .OrderByDescending(e => e.CreatedAt)
             .ToListAsync();
@@ -111,12 +114,13 @@ public class ContractVariationService : IContractVariationService
             ProjectProgressStatus = progressStatus,
             MitigationPlanSummary = mitigationPlan,
             StatusCode = "Submitted",
-            CreatedBy = currentUsername,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
         };
 
         db.ContractExtensionRequests.Add(entity);
         await db.SaveChangesAsync();
+
         await _audit.LogAsync("ContractExtensionRequest", entity.Id, "SubmitExtensionRequest", currentUsername, new { entity.RequestNumber, extensionMonths });
         return entity;
     }
@@ -149,6 +153,7 @@ public class ContractVariationService : IContractVariationService
     {
         using var db = await _factory.CreateDbContextAsync();
         return await db.ContractTerminationRequests
+            .AsNoTracking()
             .Include(t => t.GrantMoa)
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();
@@ -237,6 +242,7 @@ public class ContractVariationService : IContractVariationService
     {
         using var db = await _factory.CreateDbContextAsync();
         return await db.ContractAddendas
+            .AsNoTracking()
             .Where(a => a.GrantMoaId == grantMoaId)
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync();
@@ -246,6 +252,7 @@ public class ContractVariationService : IContractVariationService
     {
         using var db = await _factory.CreateDbContextAsync();
         return await db.ContractExtensionRequests
+            .AsNoTracking()
             .Where(e => e.GrantMoaId == grantMoaId)
             .OrderByDescending(e => e.CreatedAt)
             .ToListAsync();

@@ -130,6 +130,117 @@ public class FinanceServiceTests
     }
 
     [Fact]
+    public async Task SubmitTranchePayment_BudgetEnvelopeHeadroom_BlocksOverclaiming()
+    {
+        // Arrange
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var financeService = new FinanceService(factory);
+
+        var moa = new GrantMoa
+        {
+            MoaNumber = "MOA-2026-CAP-001",
+            ContractStartDate = new DateTime(2026, 4, 1),
+            ContractEndDate = new DateTime(2027, 3, 31),
+            TotalContractValue = 200000.00m // R200k budget cap
+        };
+        var created = await financeService.CreateGrantMoaAsync(moa, "admin@merseta.org.za");
+        var milestone = created.Milestones.First();
+
+        // Act 1: Submit claim within headroom (R 150,000)
+        var payment1 = new GrantTranchePayment
+        {
+            GrantMoaMilestoneId = milestone.Id,
+            InvoiceNumber = "INV-2026-CAP-1",
+            InvoiceDate = DateTime.Today,
+            ClaimedAmount = 150000.00m
+        };
+        var submitted1 = await financeService.SubmitTranchePaymentAsync(payment1, "sdf@employer.co.za");
+        Assert.NotNull(submitted1);
+        Assert.Equal(150000.00m, submitted1.ClaimedAmount);
+
+        // Act 2: Submit claim exceeding remaining headroom (R 60,000 where remaining is 50,000)
+        var payment2 = new GrantTranchePayment
+        {
+            GrantMoaMilestoneId = milestone.Id,
+            InvoiceNumber = "INV-2026-CAP-2",
+            InvoiceDate = DateTime.Today,
+            ClaimedAmount = 60000.00m
+        };
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            financeService.SubmitTranchePaymentAsync(payment2, "sdf@employer.co.za"));
+        Assert.Contains("exceeds remaining MoA budget envelope", ex.Message);
+    }
+
+    [Fact]
+    public async Task ApproveTranchePayment_HighValueClaim_RequiresCfoDualSignoffAndGeneratesVoucher()
+    {
+        // Arrange
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var financeService = new FinanceService(factory);
+
+        var moa = new GrantMoa
+        {
+            MoaNumber = "MOA-2026-DOFA-001",
+            ContractStartDate = new DateTime(2026, 4, 1),
+            ContractEndDate = new DateTime(2027, 3, 31),
+            TotalContractValue = 2000000.00m
+        };
+        var created = await financeService.CreateGrantMoaAsync(moa, "admin@merseta.org.za");
+        var milestone = created.Milestones.First();
+
+        // 1. CLO milestone verification
+        var cloVerified = await financeService.CloVerifyMilestoneAsync(milestone.Id, "clo@merseta.org.za", "Site inspection completed");
+        Assert.True(cloVerified);
+
+        // 2. Submit high-value claim >= R500,000 (R 600,000)
+        var payment = new GrantTranchePayment
+        {
+            GrantMoaMilestoneId = milestone.Id,
+            InvoiceNumber = "INV-2026-HV-01",
+            InvoiceDate = DateTime.Today,
+            ClaimedAmount = 600000.00m
+        };
+        var submitted = await financeService.SubmitTranchePaymentAsync(payment, "sdf@employer.co.za");
+        Assert.Equal("Submitted", submitted.PaymentStatusCode);
+
+        // 3. Finance Manager approves -> should transition to PendingCfoApproval (DOFA threshold)
+        var finApproved = await financeService.ApproveTranchePaymentAsync(submitted.Id, "finmanager@merseta.org.za", "BATCH-2026-DOFA");
+        Assert.True(finApproved);
+
+        using (var ctx = (Nsdms.Infrastructure.Data.NsdmsDbContext)factory.CreateDbContext())
+        {
+            var p = await ctx.GrantTranchePayments.FindAsync(submitted.Id);
+            Assert.Equal("PendingCfoApproval", p!.PaymentStatusCode);
+        }
+
+        // Payout while PendingCfoApproval must be blocked
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            financeService.ProcessTranchePayoutAsync(submitted.Id, "disbursements@merseta.org.za", "EFT-FAIL"));
+
+        // 4. CFO Executive Approval
+        var cfoApproved = await financeService.CfoApproveTranchePaymentAsync(submitted.Id, "cfo@merseta.org.za", "CFO executive authorization confirmed");
+        Assert.True(cfoApproved);
+
+        using (var ctx = (Nsdms.Infrastructure.Data.NsdmsDbContext)factory.CreateDbContext())
+        {
+            var p = await ctx.GrantTranchePayments.FindAsync(submitted.Id);
+            Assert.Equal("CfoApproved", p!.PaymentStatusCode);
+            Assert.StartsWith($"PV-{DateTime.UtcNow.Year}-DG-", p.PaymentReferenceNumber);
+        }
+
+        // 5. Process Payout succeeds
+        var paid = await financeService.ProcessTranchePayoutAsync(submitted.Id, "disbursements@merseta.org.za", "EFT-DOFA-SUCCESS");
+        Assert.True(paid);
+
+        using (var ctx = (Nsdms.Infrastructure.Data.NsdmsDbContext)factory.CreateDbContext())
+        {
+            var p = await ctx.GrantTranchePayments.FindAsync(submitted.Id);
+            Assert.Equal("Paid", p!.PaymentStatusCode);
+        }
+    }
+
+    [Fact]
     public async Task CalculateMandatoryGrantRebates_ShouldCreate20PercentDisbursement()
     {
         // Arrange

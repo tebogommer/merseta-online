@@ -257,25 +257,29 @@ END");
         foreach (var t in tables)
         {
             var schema = string.IsNullOrWhiteSpace(t.SchemaName) ? "dbo" : t.SchemaName;
-            var escapedTableDesc = (t.Description ?? string.Empty).Replace("'", "''");
+            if (!System.Text.RegularExpressions.Regex.IsMatch(schema, @"^[a-zA-Z0-9_]+$") ||
+                !System.Text.RegularExpressions.Regex.IsMatch(t.TableName, @"^[a-zA-Z0-9_]+$"))
+            {
+                continue;
+            }
 
-            var tableSql = $@"
-IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'{schema}' AND t.name = N'{t.TableName}')
+            var tableDesc = t.Description ?? string.Empty;
+            try
+            {
+                await context.Database.ExecuteSqlInterpolatedAsync($@"
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = {schema} AND t.name = {t.TableName})
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM sys.extended_properties ep
         JOIN sys.tables t ON ep.major_id = t.object_id
         JOIN sys.schemas s ON t.schema_id = s.schema_id
         WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
-          AND s.name = N'{schema}' AND t.name = N'{t.TableName}'
+          AND s.name = {schema} AND t.name = {t.TableName}
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'{escapedTableDesc}', @level0type=N'SCHEMA', @level0name=N'{schema}', @level1type=N'TABLE', @level1name=N'{t.TableName}';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value={tableDesc}, @level0type=N'SCHEMA', @level0name={schema}, @level1type=N'TABLE', @level1name={t.TableName};
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'{escapedTableDesc}', @level0type=N'SCHEMA', @level0name=N'{schema}', @level1type=N'TABLE', @level1name=N'{t.TableName}';
-END";
-            try
-            {
-                await context.Database.ExecuteSqlRawAsync(tableSql);
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value={tableDesc}, @level0type=N'SCHEMA', @level0name={schema}, @level1type=N'TABLE', @level1name={t.TableName};
+END");
                 updatedCount++;
             }
             catch
@@ -285,9 +289,16 @@ END";
 
             foreach (var col in t.Columns)
             {
-                var escapedColDesc = (col.Description ?? string.Empty).Replace("'", "''");
-                var colSql = $@"
-IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'{schema}' AND t.name = N'{t.TableName}' AND c.name = N'{col.ColumnName}')
+                if (!System.Text.RegularExpressions.Regex.IsMatch(col.ColumnName, @"^[a-zA-Z0-9_]+$"))
+                {
+                    continue;
+                }
+
+                var colDesc = col.Description ?? string.Empty;
+                try
+                {
+                    await context.Database.ExecuteSqlInterpolatedAsync($@"
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = {schema} AND t.name = {t.TableName} AND c.name = {col.ColumnName})
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM sys.extended_properties ep
@@ -295,15 +306,12 @@ BEGIN
         JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
         JOIN sys.schemas s ON t.schema_id = s.schema_id
         WHERE ep.name = N'MS_Description'
-          AND s.name = N'{schema}' AND t.name = N'{t.TableName}' AND c.name = N'{col.ColumnName}'
+          AND s.name = {schema} AND t.name = {t.TableName} AND c.name = {col.ColumnName}
     )
-        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'{escapedColDesc}', @level0type=N'SCHEMA', @level0name=N'{schema}', @level1type=N'TABLE', @level1name=N'{t.TableName}', @level2type=N'COLUMN', @level2name=N'{col.ColumnName}';
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value={colDesc}, @level0type=N'SCHEMA', @level0name={schema}, @level1type=N'TABLE', @level1name={t.TableName}, @level2type=N'COLUMN', @level2name={col.ColumnName};
     ELSE
-        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'{escapedColDesc}', @level0type=N'SCHEMA', @level0name=N'{schema}', @level1type=N'TABLE', @level1name=N'{t.TableName}', @level2type=N'COLUMN', @level2name=N'{col.ColumnName}';
-END";
-                try
-                {
-                    await context.Database.ExecuteSqlRawAsync(colSql);
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value={colDesc}, @level0type=N'SCHEMA', @level0name={schema}, @level1type=N'TABLE', @level1name={t.TableName}, @level2type=N'COLUMN', @level2name={col.ColumnName};
+END");
                     updatedCount++;
                 }
                 catch

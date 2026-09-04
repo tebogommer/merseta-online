@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
 using Nsdms.Domain.Entities;
 using System.Text.Json;
@@ -12,6 +13,7 @@ public interface IAuditService
     Task LogAsync(string entityName, long recordId, string actionName, string description, string actor, object? afterState = null);
     void LogAction(INsdmsDbContext db, string entityName, long recordId, string actionName, string actor, object? beforeState = null, object? afterState = null);
     Task LogActionAsync(INsdmsDbContext db, string entityName, long recordId, string actionName, string actor, object? beforeState = null, object? afterState = null);
+    Task<List<AuditLog>> GetRecentLogsAsync(int count = 500);
 }
 
 public class AuditService : IAuditService
@@ -136,5 +138,15 @@ public class AuditService : IAuditService
     {
         LogAction(db, entityName, recordId, actionName, actor, beforeState, afterState);
         return Task.CompletedTask;
+    }
+
+    public async Task<List<AuditLog>> GetRecentLogsAsync(int count = 500)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.AuditLogs
+            .AsNoTracking()
+            .OrderByDescending(a => a.Timestamp)
+            .Take(count)
+            .ToListAsync();
     }
 }

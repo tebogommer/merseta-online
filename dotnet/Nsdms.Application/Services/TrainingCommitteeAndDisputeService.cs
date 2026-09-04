@@ -106,6 +106,26 @@ public class TrainingCommitteeAndDisputeService : ITrainingCommitteeAndDisputeSe
         dispute.ModifiedAt = DateTime.UtcNow;
         dispute.ModifiedBy = currentUsername;
 
+        if (dispute.WspSubmissionId.HasValue)
+        {
+            var wsp = await db.WspSubmissions.FindAsync(dispute.WspSubmissionId.Value);
+            if (wsp != null)
+            {
+                var otherActiveDisputes = await db.WspDisputes.AnyAsync(d =>
+                    d.WspSubmissionId == wsp.Id &&
+                    d.Id != dispute.Id &&
+                    d.DisputeStatusCode == "Logged");
+
+                if (!otherActiveDisputes)
+                {
+                    wsp.DisputeLogged = false;
+                    wsp.WspApprovalStatusCode = "PendingSignoff";
+                    wsp.ModifiedAt = DateTime.UtcNow;
+                    wsp.ModifiedBy = currentUsername;
+                }
+            }
+        }
+
         _audit.LogAction(db, "WspDispute", dispute.Id, "ResolveDispute", currentUsername, before, dispute);
         await db.SaveChangesAsync();
 

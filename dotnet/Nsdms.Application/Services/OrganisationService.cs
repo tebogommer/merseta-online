@@ -108,6 +108,7 @@ public class OrganisationService : IOrganisationService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var query = db.Organisations
+            .AsNoTracking()
             .Include(o => o.PrimaryContactPerson)
             .AsQueryable();
 
@@ -132,6 +133,7 @@ public class OrganisationService : IOrganisationService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         return await db.Organisations
+            .AsNoTracking()
             .Include(o => o.PrimaryContactPerson)
             .Include(o => o.Contacts)
                 .ThenInclude(c => c.Person)

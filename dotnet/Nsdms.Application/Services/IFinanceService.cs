@@ -20,11 +20,13 @@ public interface IFinanceService
     // Milestones
     Task<GrantMoaMilestone?> GetMilestoneByIdAsync(int milestoneId);
     Task<bool> VerifyMilestoneAsync(int milestoneId, string userId, string comments);
+    Task<bool> CloVerifyMilestoneAsync(int milestoneId, string userId, string comments);
 
     // Tranche Payments
     Task<List<GrantTranchePayment>> GetTranchePaymentsAsync(int? moaId = null);
     Task<GrantTranchePayment> SubmitTranchePaymentAsync(GrantTranchePayment payment, string userId);
     Task<bool> ApproveTranchePaymentAsync(int paymentId, string userId, string batchNumber, string? comments = null);
+    Task<bool> CfoApproveTranchePaymentAsync(int paymentId, string userId, string? comments = null);
     Task<bool> ProcessTranchePayoutAsync(int paymentId, string userId, string bankReference);
 
     // Mandatory Grant 20% Rebates

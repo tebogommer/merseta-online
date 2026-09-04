@@ -17,6 +17,7 @@ public class FinanceService : IFinanceService
     {
         using var context = await _contextFactory.CreateDbContextAsync();
         return await context.GrantMoas
+            .AsNoTracking()
             .Include(m => m.GrantApplication)
                 .ThenInclude(g => g!.Organisation)
             .Include(m => m.Milestones)
@@ -29,6 +30,7 @@ public class FinanceService : IFinanceService
     {
         using var context = await _contextFactory.CreateDbContextAsync();
         return await context.GrantMoas
+            .AsNoTracking()
             .Include(m => m.GrantApplication)
                 .ThenInclude(g => g!.Organisation)
             .Include(m => m.Milestones)
@@ -168,10 +170,38 @@ public class FinanceService : IFinanceService
         return true;
     }
 
+    public async Task<bool> CloVerifyMilestoneAsync(int milestoneId, string userId, string comments)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var ms = await context.GrantMoaMilestones.FirstOrDefaultAsync(m => m.Id == milestoneId);
+        if (ms == null) return false;
+
+        ms.MilestoneStatusCode = "CloVerified";
+        ms.VerificationDate = DateTime.UtcNow;
+        ms.VerifiedByUserId = userId;
+        ms.VerificationComments = $"CLO Inspection: {comments}";
+        ms.ModifiedAt = DateTime.UtcNow;
+        ms.ModifiedBy = userId;
+
+        context.AuditLogs.Add(new AuditLog
+        {
+            EntityName = "GrantMoaMilestone",
+            RecordId = milestoneId,
+            ActionName = "CLO_VERIFY_MILESTONE",
+            Actor = userId,
+            Timestamp = DateTime.UtcNow,
+            MetadataJson = $"{{\"milestoneNumber\":{ms.MilestoneNumber},\"status\":\"CloVerified\",\"comments\":\"{comments}\"}}"
+        });
+
+        await context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<List<GrantTranchePayment>> GetTranchePaymentsAsync(int? moaId = null)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
         var query = context.GrantTranchePayments
+            .AsNoTracking()
             .Include(p => p.GrantMoaMilestone)
                 .ThenInclude(m => m!.GrantMoa)
                     .ThenInclude(moa => moa!.GrantApplication)
@@ -189,13 +219,40 @@ public class FinanceService : IFinanceService
     public async Task<GrantTranchePayment> SubmitTranchePaymentAsync(GrantTranchePayment payment, string userId)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
+
+        // Budget Envelope Headroom Protection
+        var milestone = await context.GrantMoaMilestones
+            .Include(m => m.GrantMoa)
+                .ThenInclude(moa => moa!.Milestones)
+                    .ThenInclude(ms => ms.Payments)
+            .FirstOrDefaultAsync(m => m.Id == payment.GrantMoaMilestoneId);
+
+        if (milestone?.GrantMoa != null)
+        {
+            var moa = milestone.GrantMoa;
+            decimal totalAllocation = moa.TotalContractValue;
+            if (totalAllocation > 0)
+            {
+                decimal alreadyClaimed = moa.Milestones
+                    .SelectMany(ms => ms.Payments)
+                    .Where(p => p.Id != payment.Id && p.PaymentStatusCode != "Rejected" && p.PaymentStatusCode != "Cancelled")
+                    .Sum(p => p.ClaimedAmount);
+
+                decimal availableHeadroom = totalAllocation - alreadyClaimed;
+                if (payment.ClaimedAmount > availableHeadroom)
+                {
+                    throw new InvalidOperationException($"Claim amount R {payment.ClaimedAmount:N2} exceeds remaining MoA budget envelope of R {availableHeadroom:N2} (Total Allocation: R {totalAllocation:N2}, Previously Claimed: R {alreadyClaimed:N2}).");
+                }
+            }
+        }
+
         payment.CreatedAt = DateTime.UtcNow;
         payment.CreatedBy = userId;
         payment.PaymentStatusCode = "Submitted";
 
         if (string.IsNullOrWhiteSpace(payment.PaymentReferenceNumber))
         {
-            payment.PaymentReferenceNumber = $"PAY-2026-{Guid.NewGuid().ToString()[..8].ToUpperInvariant()}";
+            payment.PaymentReferenceNumber = $"CLM-{DateTime.UtcNow.Year}-DG-{Guid.NewGuid().ToString()[..6].ToUpperInvariant()}";
         }
 
         context.GrantTranchePayments.Add(payment);
@@ -224,12 +281,13 @@ public class FinanceService : IFinanceService
         if (pay == null) return false;
 
         // Gatekeeping: Ensure milestone is verified prior to finance approval
-        if (pay.GrantMoaMilestone != null && pay.GrantMoaMilestone.MilestoneStatusCode != "Verified")
+        if (pay.GrantMoaMilestone != null && 
+            pay.GrantMoaMilestone.MilestoneStatusCode != "Verified" && 
+            pay.GrantMoaMilestone.MilestoneStatusCode != "CloVerified")
         {
             throw new InvalidOperationException($"Cannot approve tranche payment #{paymentId}: Associated Milestone #{pay.GrantMoaMilestone.MilestoneNumber} must be verified by the project officer first.");
         }
 
-        pay.PaymentStatusCode = "Finance Approved";
         pay.BatchNumber = batchNumber;
         pay.FinanceApproverUserId = userId;
         pay.FinanceApprovalDate = DateTime.UtcNow;
@@ -238,14 +296,59 @@ public class FinanceService : IFinanceService
         pay.ModifiedAt = DateTime.UtcNow;
         pay.ModifiedBy = userId;
 
+        // DOFA Dual Signoff: Claims >= R500,000 require mandatory CFO signoff
+        if (pay.ClaimedAmount >= 500000.00m)
+        {
+            pay.PaymentStatusCode = "PendingCfoApproval";
+            context.AuditLogs.Add(new AuditLog
+            {
+                EntityName = "GrantTranchePayment",
+                RecordId = paymentId,
+                ActionName = "SUBMIT_FOR_CFO_APPROVAL",
+                Actor = userId,
+                Timestamp = DateTime.UtcNow,
+                MetadataJson = $"{{\"status\":\"PendingCfoApproval\",\"batch\":\"{batchNumber}\",\"amount\":{pay.ApprovedPaymentAmount},\"reason\":\"DOFA threshold >= R500,000\"}}"
+            });
+        }
+        else
+        {
+            pay.PaymentStatusCode = "Finance Approved";
+            pay.PaymentReferenceNumber = $"PV-{DateTime.UtcNow.Year}-DG-{pay.Id:D5}";
+            context.AuditLogs.Add(new AuditLog
+            {
+                EntityName = "GrantTranchePayment",
+                RecordId = paymentId,
+                ActionName = "APPROVE_TRANCHE_PAYMENT",
+                Actor = userId,
+                Timestamp = DateTime.UtcNow,
+                MetadataJson = $"{{\"status\":\"Finance Approved\",\"batch\":\"{batchNumber}\",\"voucher\":\"{pay.PaymentReferenceNumber}\",\"amount\":{pay.ApprovedPaymentAmount}}}"
+            });
+        }
+
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> CfoApproveTranchePaymentAsync(int paymentId, string userId, string? comments = null)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var pay = await context.GrantTranchePayments.FirstOrDefaultAsync(p => p.Id == paymentId);
+        if (pay == null) return false;
+
+        pay.PaymentStatusCode = "CfoApproved";
+        pay.PaymentReferenceNumber = $"PV-{DateTime.UtcNow.Year}-DG-{pay.Id:D5}";
+        pay.ApprovalComments = string.IsNullOrWhiteSpace(comments) ? "CFO executive approval per DOFA delegation." : comments;
+        pay.ModifiedAt = DateTime.UtcNow;
+        pay.ModifiedBy = userId;
+
         context.AuditLogs.Add(new AuditLog
         {
             EntityName = "GrantTranchePayment",
             RecordId = paymentId,
-            ActionName = "APPROVE_TRANCHE_PAYMENT",
+            ActionName = "CFO_APPROVE_TRANCHE_PAYMENT",
             Actor = userId,
             Timestamp = DateTime.UtcNow,
-            MetadataJson = $"{{\"status\":\"Finance Approved\",\"batch\":\"{batchNumber}\",\"amount\":{pay.ApprovedPaymentAmount}}}"
+            MetadataJson = $"{{\"status\":\"CfoApproved\",\"voucher\":\"{pay.PaymentReferenceNumber}\",\"amount\":{pay.ApprovedPaymentAmount}}}"
         });
 
         await context.SaveChangesAsync();
@@ -257,6 +360,11 @@ public class FinanceService : IFinanceService
         using var context = await _contextFactory.CreateDbContextAsync();
         var pay = await context.GrantTranchePayments.Include(p => p.GrantMoaMilestone).FirstOrDefaultAsync(p => p.Id == paymentId);
         if (pay == null) return false;
+
+        if (pay.PaymentStatusCode == "PendingCfoApproval")
+        {
+            throw new InvalidOperationException($"Cannot payout tranche payment #{paymentId}: High-value claim requires CFO executive sign-off prior to disbursement.");
+        }
 
         pay.PaymentStatusCode = "Paid";
         pay.PaymentDate = DateTime.UtcNow;
@@ -289,6 +397,7 @@ public class FinanceService : IFinanceService
     {
         using var context = await _contextFactory.CreateDbContextAsync();
         var query = context.MandatoryGrantDisbursements
+            .AsNoTracking()
             .Include(d => d.WspSubmission)
             .Include(d => d.Organisation)
             .AsQueryable();
