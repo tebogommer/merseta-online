@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
 using Nsdms.Domain.Common;
@@ -35,6 +36,10 @@ public class LookupService : ILookupService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
+
+    // OPT-005 In-memory cache with declared 1-hour expiry
+    private static readonly ConcurrentDictionary<string, (DateTime ExpiryUtc, List<LookupItemDto> Items)> _lookupCache = new();
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(1);
 
     public LookupService(INsdmsDbContextFactory contextFactory, IAuditService audit)
     {
@@ -137,6 +142,12 @@ public class LookupService : ILookupService
 
     public async Task<List<LookupItemDto>> GetLookupItemsAsync(string tableName, string? search = null, int skip = 0, int take = 100)
     {
+        string cacheKey = $"{tableName}:{skip}:{take}";
+        if (string.IsNullOrWhiteSpace(search) && _lookupCache.TryGetValue(cacheKey, out var cached) && cached.ExpiryUtc > DateTime.UtcNow)
+        {
+            return cached.Items;
+        }
+
         using var db = await _contextFactory.CreateDbContextAsync();
         var query = GetQueryableForTable(db, tableName);
 
@@ -145,7 +156,7 @@ public class LookupService : ILookupService
             query = query.Where(x => x.Code.Contains(search) || x.Name.Contains(search) || (x.Description != null && x.Description.Contains(search)));
         }
 
-        return await query
+        var result = await query
             .OrderBy(x => x.Name)
             .Skip(skip)
             .Take(take)
@@ -157,6 +168,13 @@ public class LookupService : ILookupService
                 Active = x.Active
             })
             .ToListAsync();
+
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            _lookupCache[cacheKey] = (DateTime.UtcNow.Add(CacheTtl), result);
+        }
+
+        return result;
     }
 
     public async Task<int> GetLookupItemsCountAsync(string tableName, string? search = null)
@@ -216,6 +234,16 @@ public class LookupService : ILookupService
         }
 
         await db.SaveChangesAsync();
+
+        // Invalidate cached lookups for this table
+        foreach (var key in _lookupCache.Keys)
+        {
+            if (key.StartsWith($"{tableName}:", StringComparison.OrdinalIgnoreCase))
+            {
+                _lookupCache.TryRemove(key, out _);
+            }
+        }
+
         return true;
     }
 
