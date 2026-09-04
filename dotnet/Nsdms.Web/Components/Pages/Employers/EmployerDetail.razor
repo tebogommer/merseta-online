@@ -196,12 +196,14 @@ else
                                             </MudSelect>
                                         </MudItem>
                                         <MudItem xs="12" md="4">
-                                            <MudSelect T="string" Label="SIC Code (Stats SA 5-Digit)" Value="_organisation.SicCode" ValueChanged="OnSicCodeChangedAsync" Variant="Variant.Outlined" HelperText="Determines statutory Chamber jurisdiction" Dense="true">
-                                                @foreach (var sic in _sicCodes)
-                                                {
-                                                    <MudSelectItem Value="@sic.Code">@sic.Code - @sic.Name</MudSelectItem>
-                                                }
-                                            </MudSelect>
+                                            <SearchableLookup T="string"
+                                                              Label="SIC Code (Stats SA 5-Digit)"
+                                                              Value="_organisation.SicCode"
+                                                              ValueChanged="OnSicCodeChangedAsync"
+                                                              SearchFunc="SearchSicCodesAsync"
+                                                              ToStringFunc="FormatSicCode"
+                                                              HelperText="Determines statutory Chamber jurisdiction"
+                                                              Dense="true" />
                                         </MudItem>
                                         <MudItem xs="12" md="4">
                                             <MudSelect T="string" Label="merSETA Chamber" @bind-Value="_organisation.ChamberCode" Variant="Variant.Outlined" ReadOnly="@(!_organisation.IsManualChamberOverride)" HelperText="@(_organisation.IsManualChamberOverride ? "Manual Chamber Override Active" : "Auto-determined from SIC Code")" Dense="true">
@@ -1275,9 +1277,32 @@ else
     private string _newLogoUri = string.Empty;
     private string _newBrandColor = "#cc9c47";
 
-    private async Task OnSicCodeChangedAsync(string newSic)
+    private Task<IEnumerable<string>> SearchSicCodesAsync(string value, CancellationToken token)
     {
-        _organisation.SicCode = newSic;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return Task.FromResult<IEnumerable<string>>(_sicCodes.Take(50).Select(s => s.Code));
+        }
+
+        var lower = value.Trim().ToLowerInvariant();
+        var results = _sicCodes
+            .Where(s => s.Code.ToLowerInvariant().Contains(lower) || s.Name.ToLowerInvariant().Contains(lower))
+            .Take(50)
+            .Select(s => s.Code);
+
+        return Task.FromResult(results);
+    }
+
+    private string FormatSicCode(string? code)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return string.Empty;
+        var item = _sicCodes.FirstOrDefault(s => s.Code == code);
+        return item != null ? $"{item.Code} - {item.Name}" : code;
+    }
+
+    private async Task OnSicCodeChangedAsync(string? newSic)
+    {
+        _organisation.SicCode = newSic ?? string.Empty;
         if (!_organisation.IsManualChamberOverride && !string.IsNullOrWhiteSpace(newSic))
         {
             var derivedChamber = await OrgService.ResolveChamberFromSicCodeAsync(newSic);

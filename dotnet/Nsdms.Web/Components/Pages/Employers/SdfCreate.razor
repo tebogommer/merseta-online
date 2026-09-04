@@ -6,6 +6,7 @@
 @inject ISdfAppointmentService SdfService
 @inject IPersonService PersonService
 @inject IOrganisationService OrgService
+@inject IDialogService DialogService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
 @rendermode InteractiveServer
@@ -69,13 +70,22 @@
 
                 @if (!_isNewPerson)
                 {
-                    <MudSelect T="int" Label="Registered Facilitator" @bind-Value="_selectedPersonId" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Class="mb-3" Required="true">
-                        <MudSelectItem Value="0">-- Select Person --</MudSelectItem>
-                        @foreach (var p in _peopleList)
-                        {
-                            <MudSelectItem Value="@p.Id">@p.FirstName @p.LastName (@(string.IsNullOrEmpty(p.RsaIdNumber) ? p.EmailAddress : p.RsaIdNumber))</MudSelectItem>
-                        }
-                    </MudSelect>
+                    <div class="d-flex align-center gap-2 mb-3">
+                        <MudTextField T="string"
+                                      Label="Registered Facilitator"
+                                      Value="@GetSelectedPersonDisplayName()"
+                                      ReadOnly="true"
+                                      Variant="Variant.Outlined"
+                                      HelperText="Click Find Facilitator to search the Central Registry"
+                                      Class="flex-grow-1" />
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.PersonSearch"
+                                   OnClick="OpenPersonLookupAsync"
+                                   Class="mt-1">
+                            Find...
+                        </MudButton>
+                    </div>
                 }
                 else
                 {
@@ -111,13 +121,22 @@
                     Select the levy-paying or non-levy-paying organisation appointing this SDF.
                 </MudText>
 
-                <MudSelect T="int" Label="Appointing Organisation" @bind-Value="_selectedOrgId" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Class="mb-3" Required="true">
-                    <MudSelectItem Value="0">-- Select Organisation --</MudSelectItem>
-                    @foreach (var o in _orgList)
-                    {
-                        <MudSelectItem Value="@o.Id">@o.CompanyName (@(string.IsNullOrEmpty(o.SdlNumber) ? "No SDL" : o.SdlNumber))</MudSelectItem>
-                    }
-                </MudSelect>
+                <div class="d-flex align-center gap-2 mb-3">
+                    <MudTextField T="string"
+                                  Label="Appointing Organisation"
+                                  Value="@GetSelectedOrgDisplayName()"
+                                  ReadOnly="true"
+                                  Variant="Variant.Outlined"
+                                  HelperText="Click Find Organisation to search by SDL, Name, or Reg No"
+                                  Class="flex-grow-1" />
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Search"
+                               OnClick="OpenOrgLookupAsync"
+                               Class="mt-1">
+                        Find...
+                    </MudButton>
+                </div>
 
                 <div class="d-flex align-center gap-2 mb-3 mt-4">
                     <MudIcon Icon="@Icons.Material.Filled.Badge" Color="Color.Primary" />
@@ -185,15 +204,14 @@
         new BreadcrumbItem("Appoint SDF", href: null, disabled: true)
     };
 
-    private List<Person> _peopleList = new();
-    private List<Organisation> _orgList = new();
-
     private bool _isNewPerson = false;
     private int _selectedPersonId = 0;
+    private Person? _selectedPerson;
     private Person _newPerson = new() { Title = "Mr", Gender = "Male", GenderCode = "M", CitizenStatusCode = "SA_CIT", IsSouthAfricanCitizen = true, NationalityCode = "ZA", EquityCode = "African", IsActive = true };
     private string _rsaValidationHelper = "Enter 13-digit RSA National ID to auto-populate Demographics";
 
     private int _selectedOrgId = 0;
+    private Organisation? _selectedOrg;
     private string _sdfTypeCode = "Primary";
     private DateTime? _startDate = DateTime.UtcNow;
     private bool _allowWsp = true;
@@ -204,12 +222,90 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _peopleList = await PersonService.GetAllAsync();
-        _orgList = await OrgService.GetAllAsync();
-
         if (OrgIdQuery.HasValue && OrgIdQuery.Value > 0)
         {
             _selectedOrgId = OrgIdQuery.Value;
+            _selectedOrg = await OrgService.GetByIdAsync(_selectedOrgId);
+        }
+    }
+
+    private string GetSelectedPersonDisplayName()
+    {
+        if (_selectedPerson != null)
+        {
+            var idOrEmail = !string.IsNullOrEmpty(_selectedPerson.RsaIdNumber) ? $"ID: {_selectedPerson.RsaIdNumber}" : _selectedPerson.EmailAddress;
+            return $"{_selectedPerson.FirstName} {_selectedPerson.LastName} ({idOrEmail})";
+        }
+        return _selectedPersonId > 0 ? $"Person #{_selectedPersonId}" : "No facilitator selected";
+    }
+
+    private string GetSelectedOrgDisplayName()
+    {
+        if (_selectedOrg != null)
+        {
+            var sdl = !string.IsNullOrEmpty(_selectedOrg.SdlNumber) ? $"SDL: {_selectedOrg.SdlNumber}" : "No SDL";
+            return $"{_selectedOrg.CompanyName} ({sdl})";
+        }
+        return _selectedOrgId > 0 ? $"Organisation #{_selectedOrgId}" : "No organisation selected";
+    }
+
+    private async Task OpenPersonLookupAsync()
+    {
+        var parameters = new DialogParameters<EntityLookupDialog<Person>>
+        {
+            { x => x.Title, "Select Skills Development Facilitator" },
+            { x => x.FetchFunc, async (q) =>
+                {
+                    var all = await PersonService.GetAllAsync();
+                    if (string.IsNullOrWhiteSpace(q)) return all.Take(50).ToList();
+                    var lower = q.Trim().ToLowerInvariant();
+                    return all.Where(p =>
+                        (p.FirstName != null && p.FirstName.ToLowerInvariant().Contains(lower)) ||
+                        (p.LastName != null && p.LastName.ToLowerInvariant().Contains(lower)) ||
+                        (p.RsaIdNumber != null && p.RsaIdNumber.Contains(lower)) ||
+                        (p.EmailAddress != null && p.EmailAddress.ToLowerInvariant().Contains(lower)))
+                        .Take(50).ToList();
+                }
+            },
+            { x => x.DisplayFunc, (p) => ($"{p.FirstName} {p.LastName}", string.IsNullOrEmpty(p.RsaIdNumber) ? p.EmailAddress ?? "" : $"ID: {p.RsaIdNumber}") }
+        };
+
+        var dialog = await DialogService.ShowAsync<EntityLookupDialog<Person>>("Select Facilitator", parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled && result.Data is Person selected)
+        {
+            _selectedPersonId = selected.Id;
+            _selectedPerson = selected;
+        }
+    }
+
+    private async Task OpenOrgLookupAsync()
+    {
+        var parameters = new DialogParameters<EntityLookupDialog<Organisation>>
+        {
+            { x => x.Title, "Select Appointing Organisation" },
+            { x => x.FetchFunc, async (q) =>
+                {
+                    var all = await OrgService.GetAllAsync();
+                    if (string.IsNullOrWhiteSpace(q)) return all.Take(50).ToList();
+                    var lower = q.Trim().ToLowerInvariant();
+                    return all.Where(o =>
+                        (o.CompanyName != null && o.CompanyName.ToLowerInvariant().Contains(lower)) ||
+                        (o.TradingName != null && o.TradingName.ToLowerInvariant().Contains(lower)) ||
+                        (o.SdlNumber != null && o.SdlNumber.ToLowerInvariant().Contains(lower)) ||
+                        (o.RegistrationNumber != null && o.RegistrationNumber.ToLowerInvariant().Contains(lower)))
+                        .Take(50).ToList();
+                }
+            },
+            { x => x.DisplayFunc, (o) => (o.CompanyName ?? "Unnamed", string.IsNullOrEmpty(o.SdlNumber) ? "No SDL" : $"SDL: {o.SdlNumber}") }
+        };
+
+        var dialog = await DialogService.ShowAsync<EntityLookupDialog<Organisation>>("Select Organisation", parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled && result.Data is Organisation selected)
+        {
+            _selectedOrgId = selected.Id;
+            _selectedOrg = selected;
         }
     }
 

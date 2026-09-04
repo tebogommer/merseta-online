@@ -205,12 +205,13 @@ else
                                         </MudSelect>
                                     </MudItem>
                                     <MudItem xs="12" sm="6" md="4">
-                                        <MudSelect T="string" Label="Nationality" @bind-Value="_person.NationalityCode" Variant="Variant.Outlined">
-                                            @foreach (var nat in _nationalityTypes)
-                                            {
-                                                <MudSelectItem Value="@nat.Code">@nat.Name</MudSelectItem>
-                                            }
-                                        </MudSelect>
+                                        <SearchableLookup T="string"
+                                                          Label="Nationality"
+                                                          Value="_person.NationalityCode"
+                                                          ValueChanged="@((code) => _person.NationalityCode = code)"
+                                                          SearchFunc="SearchNationalitiesAsync"
+                                                          ToStringFunc="FormatNationality"
+                                                          Dense="true" />
                                     </MudItem>
                                 </MudGrid>
                             </MudCard>
@@ -683,6 +684,29 @@ else
 
         _mentorships = await PersonService.GetPersonMentorshipsAsync(Id);
         _loadingMentors = false;
+    }
+
+    private Task<IEnumerable<string>> SearchNationalitiesAsync(string value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return Task.FromResult<IEnumerable<string>>(_nationalityTypes.Take(50).Select(n => n.Code));
+        }
+
+        var lower = value.Trim().ToLowerInvariant();
+        var results = _nationalityTypes
+            .Where(n => n.Name.ToLowerInvariant().Contains(lower) || n.Code.ToLowerInvariant().Contains(lower))
+            .Take(50)
+            .Select(n => n.Code);
+
+        return Task.FromResult(results);
+    }
+
+    private string FormatNationality(string? code)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return string.Empty;
+        var item = _nationalityTypes.FirstOrDefault(n => n.Code == code);
+        return item != null ? item.Name : code;
     }
 
     private void OnRsaIdChanged(string newId)

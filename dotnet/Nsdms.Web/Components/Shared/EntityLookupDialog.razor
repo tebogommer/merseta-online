@@ -37,10 +37,31 @@
                       RowClassFunc="@((item, idx) => EqualityComparer<TItem>.Default.Equals(item, _selectedItem) ? "selected" : "")"
                       OnRowClick="@((TableRowClickEventArgs<TItem> args) => SelectRow(args.Item))">
                 <HeaderContent>
-                    @HeaderTemplate
+                    @if (HeaderTemplate != null)
+                    {
+                        @HeaderTemplate
+                    }
+                    else
+                    {
+                        <MudTh>Reference / Name</MudTh>
+                        <MudTh>Details</MudTh>
+                    }
                 </HeaderContent>
                 <RowTemplate>
-                    @RowTemplate(context)
+                    @if (RowTemplate != null)
+                    {
+                        @RowTemplate(context)
+                    }
+                    else if (DisplayFunc != null)
+                    {
+                        var display = DisplayFunc(context);
+                        <MudTd Class="font-weight-medium">@display.Primary</MudTd>
+                        <MudTd Class="text-secondary">@display.Secondary</MudTd>
+                    }
+                    else
+                    {
+                        <MudTd colspan="2">@context?.ToString()</MudTd>
+                    }
                 </RowTemplate>
                 <NoRecordsContent>
                     <div class="pa-4 text-center text-secondary">
@@ -70,8 +91,9 @@
 
     [Parameter] public string Title { get; set; } = "Select Record";
     [Parameter] public Func<string?, Task<List<TItem>>>? FetchFunc { get; set; }
+    [Parameter] public Func<TItem, (string Primary, string Secondary)>? DisplayFunc { get; set; }
     [Parameter] public RenderFragment? HeaderTemplate { get; set; }
-    [Parameter] public RenderFragment<TItem> RowTemplate { get; set; } = default!;
+    [Parameter] public RenderFragment<TItem>? RowTemplate { get; set; }
 
     private string? _searchTerm;
     private List<TItem> _items = new();

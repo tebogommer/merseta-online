@@ -47,17 +47,22 @@
                OnEmptyAction="CreateNewEmployer"
                ExportCallback="ExportSelected">
     <FilterContent>
-        <MudSelect T="string" 
-                   Label="Status Filter" 
-                   @bind-Value="_statusFilter" 
-                   @bind-Value:after="HandleFilterChanged"
-                   Variant="Variant.Outlined" 
-                   Margin="Margin.Dense"
-                   Dense="true">
-            <MudSelectItem Value="@("All")">All Organisations</MudSelectItem>
-            <MudSelectItem Value="@("Active")">Active Only</MudSelectItem>
-            <MudSelectItem Value="@("Inactive")">Inactive Only</MudSelectItem>
-        </MudSelect>
+        <div class="d-flex flex-column gap-1">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Status</MudText>
+            <MudToggleGroup T="string"
+                            Value="_statusFilter"
+                            ValueChanged="HandleStatusToggleChanged"
+                            SelectionMode="SelectionMode.SingleSelection"
+                            Color="Color.Primary"
+                            Variant="Variant.Outlined"
+                            Dense="true"
+                            Size="Size.Small"
+                            aria-label="Filter organisations by status">
+                <MudToggleItem Value="@("All")" Text="All" />
+                <MudToggleItem Value="@("Active")" Text="Active" />
+                <MudToggleItem Value="@("Inactive")" Text="Inactive" />
+            </MudToggleGroup>
+        </div>
     </FilterContent>
     <ActiveFilterChips>
         @if (!string.IsNullOrWhiteSpace(_searchString))
@@ -251,6 +256,12 @@
 
             return query.ToList();
         }
+    }
+
+    private void HandleStatusToggleChanged(string? val)
+    {
+        _statusFilter = string.IsNullOrEmpty(val) ? "All" : val;
+        HandleFilterChanged();
     }
 
     private void HandleFilterChanged()

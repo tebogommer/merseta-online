@@ -50,19 +50,24 @@
            OnSearch="HandleFilterChanged"
            OnClear="HandleFilterCleared">
     <FilterContent>
-        <MudSelect T="string" 
-                   Label="Status Filter" 
-                   @bind-Value="_statusFilter" 
-                   @bind-Value:after="HandleFilterChanged"
-                   Variant="Variant.Outlined" 
-                   Margin="Margin.Dense"
-                   Dense="true">
-            <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
-            <MudSelectItem Value="@("DRAFT")">Draft</MudSelectItem>
-            <MudSelectItem Value="@("SUBMITTED")">Submitted</MudSelectItem>
-            <MudSelectItem Value="@("APPROVED")">Approved</MudSelectItem>
-            <MudSelectItem Value="@("REJECTED")">Rejected</MudSelectItem>
-        </MudSelect>
+        <div class="d-flex flex-column gap-1">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Status</MudText>
+            <MudToggleGroup T="string"
+                            Value="_statusFilter"
+                            ValueChanged="HandleStatusToggleChanged"
+                            SelectionMode="SelectionMode.SingleSelection"
+                            Color="Color.Primary"
+                            Variant="Variant.Outlined"
+                            Dense="true"
+                            Size="Size.Small"
+                            aria-label="Filter WSP submissions by status">
+                <MudToggleItem Value="@("All")" Text="All" />
+                <MudToggleItem Value="@("DRAFT")" Text="Draft" />
+                <MudToggleItem Value="@("SUBMITTED")" Text="Submitted" />
+                <MudToggleItem Value="@("APPROVED")" Text="Approved" />
+                <MudToggleItem Value="@("REJECTED")" Text="Rejected" />
+            </MudToggleGroup>
+        </div>
     </FilterContent>
     <ActiveFilterChips>
         @if (!string.IsNullOrWhiteSpace(_searchString))
@@ -234,6 +239,12 @@
 
             return query.ToList();
         }
+    }
+
+    private void HandleStatusToggleChanged(string? val)
+    {
+        _statusFilter = string.IsNullOrEmpty(val) ? "All" : val;
+        HandleFilterChanged();
     }
 
     private void HandleFilterChanged()
