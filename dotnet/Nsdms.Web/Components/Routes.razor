@@ -1,6 +1,37 @@
+@using Microsoft.AspNetCore.Components.Authorization
+
 <Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                <div class="pa-8 text-center" style="max-width: 600px; margin: 40px auto;">
+                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Color="Color.Error" Class="mb-3" />
+                    <MudText Typo="Typo.h5" Class="fw-bold text-danger mb-2">Access Restricted</MudText>
+                    <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-4">
+                        You do not have statutory authorization to access this NSDMS resource. Contact your System Administrator if you believe this is an error.
+                    </MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/" StartIcon="@Icons.Material.Filled.Dashboard">
+                        Return to Dashboard
+                    </MudButton>
+                </div>
+            </NotAuthorized>
+            <Authorizing>
+                <div class="pa-8 text-center" style="margin-top: 80px;">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                    <MudText Typo="Typo.body2" Class="mt-3 text-secondary">Verifying statutory credentials...</MudText>
+                </div>
+            </Authorizing>
+        </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
+    <NotFound>
+        <LayoutView Layout="typeof(Layout.MainLayout)">
+            <div class="pa-8 text-center" style="max-width: 600px; margin: 40px auto;">
+                <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" Class="mb-3" />
+                <MudText Typo="Typo.h5" Class="fw-bold mb-2">Page Not Found</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">The requested NSDMS resource or route does not exist.</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/" StartIcon="@Icons.Material.Filled.Home">Return to Dashboard</MudButton>
+            </div>
+        </LayoutView>
+    </NotFound>
 </Router>

@@ -46,7 +46,9 @@
     {
         <div class="grid-toolbar mb-3 d-flex flex-column flex-md-row justify-space-between align-start align-md-center gap-3">
             <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 480px; width: 100%;">
-                <MudTextField @bind-Value="SearchString"
+                <MudTextField Value="SearchString"
+                              ValueChanged="OnSearchStringChanged"
+                              T="string"
                               Placeholder="@(SearchPlaceholder ?? "Search records...")"
                               Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Search"
@@ -63,14 +65,6 @@
                 <span class="text-secondary font-mono mr-1" style="font-size: 0.8125rem;">
                     @EffectiveCount @(EffectiveCount == 1 ? "record" : "records")
                 </span>
-
-                <MudTooltip Text="Column visibility &amp; density">
-                    <MudIconButton Icon="@Icons.Material.Filled.ViewWeek" 
-                                   Color="Color.Default" 
-                                   Size="Size.Small" 
-                                   Style="border: 1px solid var(--border); border-radius: 6px; padding: 4px;"
-                                   aria-label="Toggle column layout" />
-                </MudTooltip>
 
                 @if (CustomActions != null)
                 {
@@ -180,7 +174,7 @@
         {
             <div class="pa-4">
                 <EmptyState Message="@(EmptyMessage ?? "No records registered yet")"
-                            Description="@(EmptyDescription ?? "Create your first record to begin tracking assets.")"
+                            Description="@(EmptyDescription ?? "No statutory records found. Create a new record to begin.")"
                             ActionLabel="@(!string.IsNullOrWhiteSpace(CreateRoute) ? (CreateLabel ?? "Create Record") : (OnEmptyAction.HasDelegate ? EmptyActionLabel : null))"
                             ActionHref="@CreateRoute"
                             OnAction="OnEmptyAction"
@@ -195,7 +189,7 @@
                 <MudText Typo="Typo.body2" Class="text-secondary mb-4">
                     @(FilterEmptyMessage ?? "Your search or active filters excluded all records.")
                 </MudText>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => SearchString = "")">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(async () => { await OnSearchStringChanged(""); if (OnClearFilters.HasDelegate) await OnClearFilters.InvokeAsync(); })">
                     Clear search filter
                 </MudButton>
             </div>
@@ -223,7 +217,7 @@
                     </Columns>
                     <PagerContent>
                         <div class="d-flex justify-end align-center px-4 py-2 border-t" style="border-color: var(--border);">
-                            <MudDataGridPager T="TItem" PageSizeOptions="new int[] { 10, 20, 50, 100 }" />
+                            <MudDataGridPager T="TItem" PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
                         </div>
                     </PagerContent>
                 </MudDataGrid>
@@ -243,7 +237,7 @@
                         <MudText Typo="Typo.caption" Color="Color.Secondary">
                             Total Records: <strong class="font-monospace">@EffectiveCount.ToString("N0")</strong>
                         </MudText>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 20, 50, 100 }" />
+                        <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
                     </div>
                 </PagerContent>
             </MudTable>
@@ -291,8 +285,17 @@
     [Parameter] public EventCallback OnRetry { get; set; }
     [Parameter] public HashSet<TItem>? SelectedItems { get; set; }
     [Parameter] public EventCallback<HashSet<TItem>> SelectedItemsChanged { get; set; }
+    [Parameter] public string SearchString { get; set; } = "";
+    [Parameter] public EventCallback<string> SearchStringChanged { get; set; }
 
-    private string SearchString = "";
+    private async Task OnSearchStringChanged(string value)
+    {
+        SearchString = value;
+        if (SearchStringChanged.HasDelegate)
+        {
+            await SearchStringChanged.InvokeAsync(value);
+        }
+    }
 
     private IEnumerable<TItem>? EffectiveSelectedItems => SelectedItems;
 

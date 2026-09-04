@@ -150,7 +150,7 @@
                             <span class="nsdms-user-name">System Administrator</span>
                             <span class="nsdms-user-role-badge">SUPERADMIN</span>
                         </div>
-                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" Style="color: #64748B; font-size: 1rem;" />
+                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" Style="color: var(--mud-palette-text-secondary); font-size: 1rem;" />
                     </div>
                 </ActivatorContent>
                 <ChildContent>
@@ -160,7 +160,7 @@
                                 SA
                             </div>
                             <div>
-                                <MudText Typo="Typo.subtitle2" Class="fw-bold" Style="color: #0F172A;">System Administrator</MudText>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold" Style="color: var(--mud-palette-text-primary);">System Administrator</MudText>
                                 <span class="nsdms-user-role-badge">SUPERADMIN • ALL ACCESS</span>
                             </div>
                         </div>
@@ -360,10 +360,7 @@
         {
             try
             {
-                var stored = await JS.InvokeAsync<string?>("localStorage.getItem", "nsdms_dark_mode") 
-                             ?? await JS.InvokeAsync<string?>("localStorage.getItem", "app_theme");
-                _isDarkMode = stored == "true" || stored == "dark" || 
-                              (string.IsNullOrEmpty(stored) && await JS.InvokeAsync<bool>("eval", "window.matchMedia('(prefers-color-scheme: dark)').matches"));
+                _isDarkMode = await JS.InvokeAsync<bool>("nsdmsTheme.isDark");
                 await ApplyThemeDomState(_isDarkMode);
                 StateHasChanged();
             }
@@ -394,7 +391,7 @@
     private async Task ApplyThemeDomState(bool isDark)
     {
         var theme = isDark ? "dark" : "light";
-        await JS.InvokeVoidAsync("eval", $"document.documentElement.setAttribute('data-theme', '{theme}'); if ('{theme}' === 'dark') document.documentElement.classList.add('mud-theme-dark'); else document.documentElement.classList.remove('mud-theme-dark');");
+        await JS.InvokeVoidAsync("nsdmsTheme.setTheme", theme);
     }
 
     private string GetCurrentModuleSubtitle()

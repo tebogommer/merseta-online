@@ -28,3 +28,4 @@ window.downloadFileFromBase64 = (fileName, contentType, base64Data) => {
     URL.revokeObjectURL(url);
 };
 
+window.downloadFileFromBytes = window.downloadFileFromBase64;
