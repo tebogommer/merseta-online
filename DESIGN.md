@@ -203,17 +203,29 @@ $$\text{WORK} \longrightarrow \text{CONTEXT} \longrightarrow \text{DECISION} \lo
 ### 10.3 Build-Time Guard ([NSDMS0001])
 Direct usage of raw library stepper components (`MudStepper`, `MudStep`) outside `Components/Shared/Wizard` is prohibited and halts build execution with diagnostic `[NSDMS0001]`.
 
-### 10.4 Approved Step Structure for Existing Wizards
-| Flow / Wizard | Canonical Steps | Review Step Content |
-| :--- | :--- | :--- |
-| **Assessor Re-Registration Wizard** (`AssessorReRegistrationWizard.razor`) | 1. Verification of Profile<br>2. Unit Standards Selection<br>3. Continuous Professional Development (CPD)<br>4. Declaration & Review | Read-only profile cards, unit standard code chips, CPD points summary against 30-point statutory threshold, POPIA compliance checkbox, legal declaration, and per-step "Edit" jump buttons. |
+### 10.4 Strategic Wizard Candidate Matrix & Approved Step Structures
+
+The Enterprise Multi-Step Wizard architecture (`<WizardShell>`) applies to high-cognitive-load, multi-party, and dependency-ordered statutory actions. The table below codifies the approved candidate matrix and canonical step specifications:
+
+| # | Flow / Wizard | Route | Canonical Steps | Review Step Content |
+| :---: | :--- | :--- | :--- | :--- |
+| **1** | **Assessor Re-Registration Wizard** (`AssessorReRegistrationWizard.razor`) | `/etqa/assessors/{id}/re-register` | 1. Verification of Profile<br>2. Unit Standards Selection<br>3. Continuous Professional Development (CPD)<br>4. Declaration & Review | Read-only profile cards, unit standard code chips, CPD points summary against 30-point statutory threshold, POPIA compliance checkbox, legal declaration, and per-step "Edit" jump buttons. |
+| **2** | **Discretionary Grant (DG) Application Wizard** (`DgGrantApplicationWizard.razor`) | `/dg-grants/apply` | 1. Funding Window & Eligibility<br>2. Organisation & Appointed SDF<br>3. Strategic PIVOTAL Programmes<br>4. PIP & Budget Allocation<br>5. Compliance Documents<br>6. Statutory Declaration & Review | Read-only summary cards per section, funding envelope verification, calculated requested vs available headroom, B-BBEE and tax clearance statuses, POPIA declaration, and per-step "Edit" jump links. |
+| **3** | **Tripartite Learnership / Apprenticeship Agreement Wizard** (`LearnerAgreementRegistrationWizard.razor`) | `/learners/register-agreement` | 1. Learner Demographics & Identification<br>2. Qualification & OFO Selection<br>3. Host Employer & SDP Allocation<br>4. Employment Terms & Stipend<br>5. Tripartite Attestation & Review | Demographic validation summary (RSA ID, DOB, gender, equity), SAQA qualification chips, accredited SDP campus, mentor link, monthly stipend schedule, dynamic QR code verification stub, and per-step "Edit" jump links. |
+| **4** | **Workplace Approval (WPA) Application Wizard** (`WorkplaceApprovalWizard.razor`) | `/workplace-approvals/apply` | 1. Workplace Site & Mandatory Contact Person<br>2. Designated Trades Scope<br>3. Nominated Mentors & Quota Assessment<br>4. Tooling & OHS Compliance<br>5. Review & Inspection Dispatch | Site details, validated Contact Person (`contact_person_id` invariant), designated trade scope, calculated apprentice capacity via `IMentorRatioPolicyEngine` (1:4 standard or trade policy), tooling audit checklist, and per-step "Edit" jump links. |
+| **5** | **Trade Test Application & ARPL Submission Wizard** (`TradeTestApplicationWizard.razor`) | `/trade-tests/apply` | 1. Candidate Route Selection<br>2. Curricular & Theory Clearance<br>3. Workplace Practical Hours Verification<br>4. Accredited Trade Test Centre (TTC)<br>5. Review & Pre-Trade Clearance | Route type (Contracted vs ARPL Section 28), verified N2/NCV credits, employer logbook attestation ($\ge 80$ weeks), accredited TTC selection, fee subsidy verification, and per-step "Edit" jump links. |
+| **6** | **DG Tranche Milestone Claim & Payment Voucher Wizard** (`DgTrancheClaimWizard.razor`) | `/finance/claims/create` | 1. MoA & Milestone Selection<br>2. Learner Milestone Deliverables<br>3. Financial Tranche Breakdown<br>4. Audit Verification Evidence<br>5. DOFA Attestation & Voucher Review | MoA and tranche balance, remaining budget headroom, selected learner deliverable headcount, DOFA approval tier (>R500k CFO gate), serialized payment voucher preview, and per-step "Edit" jump links. |
+| **7** | **SDP Initial Institutional Accreditation Wizard** | `/providers/apply-accreditation` | 1. Provider Profile & Legal Entity<br>2. Proposed Scope of Accreditation<br>3. Staffing (Assessor/Moderator)<br>4. QMS Policies & Self-Audit<br>5. Review & Desktop Audit Dispatch | CIPC registration, physical campus, qualification scope chips, linked ETQA registered practitioners, statutory QMS policy checklist, and per-step "Edit" jump links. |
+| **8** | **Mandatory Grant WSP/ATR Annual Submission Wizard** | `/wsp/submit` | 1. Organisation & Payroll Standing<br>2. ATR Actual Training Completed<br>3. WSP Planned Training Interventions<br>4. Training Committee Consultation<br>5. Quorum Alignment & SETMIS Pre-Flight<br>6. Review & Statutory Seal | Payroll reconciliation, ATR/WSP summary grids by OFO code and equity, committee minutes upload, bipartite (<50) or tripartite ($\ge$50) quorum sign-off structure, 20% grant rebate calculation, and per-step "Edit" jump links. |
+| **9** | **Inter-SETA Transfer Application (Section 32)** | `/inter-seta/transfer-request` | 1. Employer Profile & SDL Verification<br>2. Transfer Direction & Justification<br>3. SARS SIC Code Corroboration<br>4. Review & Section 32 Gazette Package | Current SETA vs destination SETA, 5-digit SIC code reclassification, SARS EMP103/201 corroboration, stakeholder endorsements, and per-step "Edit" jump links. |
 
 ### Wizard Exceptions
-None. All multi-step flows strictly adhere to WizardShell.
+None. All multi-step flows strictly adhere to `WizardShell`.
 
 ---
 
 ## 11. Revision History & Changelog
+- **v1.3 (2026-09-04)**: Codified and deployed the **Strategic Wizard Candidate Matrix** (Section 10.4). Implemented candidates #2 (`DgGrantApplicationWizard`), #3 (`LearnerAgreementRegistrationWizard`), #4 (`WorkplaceApprovalWizard`), and built the administrative `WizardCandidateMatrixHub` (`/wizards`). Added automated discovery and bUnit parity tests for all newly registered multi-step wizards.
 - **v1.2 (2026-09-04)**: Installed Enterprise Multi-Step Wizard Standard (Section 10). Implemented shared components (`WizardShell`, `WizardStepper`, `WizardStep`, `WizardReviewStep`), build-time guard `[NSDMS0001]`, rebuilt `AssessorReRegistrationWizard` with zero raw stepper tags, added bUnit parity tests and automated discovery tests.
 - **v1.1**: Added SARS Monthly Levy Reactive Streaming & SqlBulkCopy Staging Standard.
 - **v1.0**: Initial baseline enterprise design system.

@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-04 17:35:34 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 183
+> **Generated:** 2026-09-04 17:56:46 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 183
 
 ---
 
@@ -6505,6 +6505,7 @@
 | :--- | :--- | :--- |
 | `IX_OfoCodeType_Active` | `Active` | No |
 | `IX_OfoCodeType_Name` | `Name` | No |
+| `IX_OfoCodeType_Code_Name` | `Code, Name` | No |
 
 ---
 
@@ -6901,6 +6902,7 @@
 | `IX_SicCodeType_ChamberCode` | `ChamberCode` | No |
 | `IX_SicCodeType_Name` | `Name` | No |
 | `IX_SicCodeType_SetaCode` | `SetaCode` | No |
+| `IX_SicCodeType_Code_Name` | `Code, Name` | No |
 
 ---
 
@@ -6957,6 +6959,7 @@
 | :--- | :--- | :--- |
 | `IX_StatssaAreaCodeType_Active` | `Active` | No |
 | `IX_StatssaAreaCodeType_Name` | `Name` | No |
+| `IX_StatssaAreaCodeType_Code_Name` | `Code, Name` | No |
 
 ---
 

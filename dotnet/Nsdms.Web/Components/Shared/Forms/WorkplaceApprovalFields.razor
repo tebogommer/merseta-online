@@ -1,0 +1,406 @@
+@namespace Nsdms.Web.Components.Shared.Forms
+@using MudBlazor
+@using Nsdms.Domain.Entities
+
+@if (Section == "SiteAndContact" || Section == "All")
+{
+    <div class="nsdms-section-site mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int"
+                           Label="Employer organisation"
+                           Value="@OrganisationId"
+                           ValueChanged="OnOrganisationIdChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           ToStringFunc="@(id => GetOrgDisplay(id))"
+                           HelperText="Host employer organisation applying for workplace approval">
+                    @if (Organisations != null)
+                    {
+                        @foreach (var org in Organisations)
+                        {
+                            <MudSelectItem Value="@org.Id">
+                                @($"{org.CompanyName} ({org.SdlNumber})")
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int?"
+                           Label="Designated workplace site / plant"
+                           Value="@OrganisationSiteId"
+                           ValueChanged="OnOrganisationSiteIdChanged"
+                           Variant="Variant.Outlined"
+                           Disabled="@IsReadOnly"
+                           ToStringFunc="@(id => GetSiteDisplay(id))"
+                           HelperText="Physical training premises where apprentices will be hosted">
+                    @if (Sites != null)
+                    {
+                        @foreach (var s in Sites)
+                        {
+                            <MudSelectItem Value="@((int?)s.Id)">
+                                @($"{s.SiteName} ({s.PhysicalAddress})")
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int?"
+                           Label="Employer contact person (compulsory for site visit)"
+                           Value="@ContactPersonId"
+                           ValueChanged="OnContactPersonIdChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           ToStringFunc="@(id => GetContactDisplay(id))"
+                           HelperText="Mandatory designated employer liaison present during CLO physical inspection">
+                    @if (Contacts != null)
+                    {
+                        @foreach (var c in Contacts)
+                        {
+                            <MudSelectItem Value="@((int?)c.Id)">
+                                @($"{c.FirstName} {c.LastName} (ID: {c.RsaIdNumber})")
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Physical inspection address"
+                              Value="@PhysicalAddress"
+                              ValueChanged="OnPhysicalAddressChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Exact physical address for CLO auditor site visit" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "TradeScope" || Section == "All")
+{
+    <div class="nsdms-section-trades mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
+                           Label="Designated trade code"
+                           Value="@TradeCode"
+                           ValueChanged="OnTradeCodeChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="QCTO / NAMB designated artisan trade">
+                    <MudSelectItem Value="@("FITT")">Fitter and Turner (OFO: 653301)</MudSelectItem>
+                    <MudSelectItem Value="@("ELEC")">Electrician (OFO: 671101)</MudSelectItem>
+                    <MudSelectItem Value="@("WELD")">Welder (OFO: 651202)</MudSelectItem>
+                    <MudSelectItem Value="@("BOIL")">Boilermaker (OFO: 651401)</MudSelectItem>
+                    <MudSelectItem Value="@("DIES")">Diesel Mechanic (OFO: 653101)</MudSelectItem>
+                    <MudSelectItem Value="@("TOOL")">Toolmaker (OFO: 653201)</MudSelectItem>
+                    <MudSelectItem Value="@("AUTO")">Automotive Motor Mechanic (OFO: 653102)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Registered qualification title"
+                              Value="@QualificationTitle"
+                              ValueChanged="OnQualificationTitleChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Full SAQA / QCTO qualification title" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField T="int"
+                                 Label="Requested learner intake capacity"
+                                 Value="@RequestedCapacity"
+                                 ValueChanged="OnRequestedCapacityChanged"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Min="1"
+                                 Max="50"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Maximum number of apprentices planned to be hosted concurrently" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudCheckBox T="bool"
+                             Label="Enforce trade-specific mentor-to-apprentice ratio policy"
+                             Value="@IsRatioEnforced"
+                             ValueChanged="OnIsRatioEnforcedChanged"
+                             Color="Color.Primary"
+                             Disabled="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Mentors" || Section == "All")
+{
+    <div class="nsdms-section-mentors mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Lead mentor artisan full name"
+                              Value="@MentorFullName"
+                              ValueChanged="OnMentorFullNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Full name of qualified certified artisan supervisor" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Artisan trade test certificate number"
+                              Value="@TradeCertificateNumber"
+                              ValueChanged="OnTradeCertificateNumberChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              Class="font-mono"
+                              HelperText="Statutory Red Seal / NAMB trade test certificate number" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField T="int"
+                                 Label="Years of post-qualification trade experience"
+                                 Value="@MentorExperienceYears"
+                                 ValueChanged="OnMentorExperienceYearsChanged"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Min="1"
+                                 Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField T="int"
+                                 Label="Individual mentor learner capacity"
+                                 Value="@MentorCapacity"
+                                 ValueChanged="OnMentorCapacityChanged"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Min="1"
+                                 Max="4"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Statutory cap (NAMB standard: 1 mentor to 4 apprentices maximum)" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Safety" || Section == "All")
+{
+    <div class="nsdms-section-safety mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Occupational health &amp; safety (OHS) compliance certificate reference"
+                              Value="@OhsCertificateNumber"
+                              ValueChanged="OnOhsCertificateNumberChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              Class="font-mono" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="OHS audit validity date"
+                               Date="@OhsExpiryDate"
+                               DateChanged="OnOhsExpiryDateChanged"
+                               Variant="Variant.Outlined"
+                               Required="true"
+                               Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudCheckBox T="bool"
+                             Label="Certify full availability of compulsory tooling and safety gear per NAMB trade guidelines"
+                             Value="@ToolingChecklistCertified"
+                             ValueChanged="OnToolingChecklistCertifiedChanged"
+                             Color="Color.Primary"
+                             Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudCheckBox T="bool"
+                             Label="Confirm employer willingness to accommodate unannounced CLO monitoring visits"
+                             Value="@MonitoringConsent"
+                             ValueChanged="OnMonitoringConsentChanged"
+                             Color="Color.Primary"
+                             Disabled="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@code {
+    [Parameter] public string Section { get; set; } = "All";
+    [Parameter] public bool IsReadOnly { get; set; }
+
+    [Parameter] public int OrganisationId { get; set; }
+    [Parameter] public EventCallback<int> OrganisationIdChanged { get; set; }
+
+    [Parameter] public int? OrganisationSiteId { get; set; }
+    [Parameter] public EventCallback<int?> OrganisationSiteIdChanged { get; set; }
+
+    [Parameter] public int? ContactPersonId { get; set; }
+    [Parameter] public EventCallback<int?> ContactPersonIdChanged { get; set; }
+
+    [Parameter] public string PhysicalAddress { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> PhysicalAddressChanged { get; set; }
+
+    [Parameter] public string TradeCode { get; set; } = "FITT";
+    [Parameter] public EventCallback<string> TradeCodeChanged { get; set; }
+
+    [Parameter] public string QualificationTitle { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> QualificationTitleChanged { get; set; }
+
+    [Parameter] public int RequestedCapacity { get; set; } = 4;
+    [Parameter] public EventCallback<int> RequestedCapacityChanged { get; set; }
+
+    [Parameter] public bool IsRatioEnforced { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsRatioEnforcedChanged { get; set; }
+
+    [Parameter] public string MentorFullName { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> MentorFullNameChanged { get; set; }
+
+    [Parameter] public string TradeCertificateNumber { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> TradeCertificateNumberChanged { get; set; }
+
+    [Parameter] public int MentorExperienceYears { get; set; } = 5;
+    [Parameter] public EventCallback<int> MentorExperienceYearsChanged { get; set; }
+
+    [Parameter] public int MentorCapacity { get; set; } = 4;
+    [Parameter] public EventCallback<int> MentorCapacityChanged { get; set; }
+
+    [Parameter] public string OhsCertificateNumber { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> OhsCertificateNumberChanged { get; set; }
+
+    [Parameter] public DateTime? OhsExpiryDate { get; set; } = DateTime.UtcNow.Date.AddYears(1);
+    [Parameter] public EventCallback<DateTime?> OhsExpiryDateChanged { get; set; }
+
+    [Parameter] public bool ToolingChecklistCertified { get; set; }
+    [Parameter] public EventCallback<bool> ToolingChecklistCertifiedChanged { get; set; }
+
+    [Parameter] public bool MonitoringConsent { get; set; }
+    [Parameter] public EventCallback<bool> MonitoringConsentChanged { get; set; }
+
+    [Parameter] public List<Organisation>? Organisations { get; set; }
+    [Parameter] public List<OrganisationSite>? Sites { get; set; }
+    [Parameter] public List<Person>? Contacts { get; set; }
+
+    private async Task OnOrganisationIdChanged(int val)
+    {
+        OrganisationId = val;
+        await OrganisationIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnOrganisationSiteIdChanged(int? val)
+    {
+        OrganisationSiteId = val;
+        await OrganisationSiteIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnContactPersonIdChanged(int? val)
+    {
+        ContactPersonId = val;
+        await ContactPersonIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPhysicalAddressChanged(string val)
+    {
+        PhysicalAddress = val;
+        await PhysicalAddressChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTradeCodeChanged(string val)
+    {
+        TradeCode = val;
+        await TradeCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnQualificationTitleChanged(string val)
+    {
+        QualificationTitle = val;
+        await QualificationTitleChanged.InvokeAsync(val);
+    }
+
+    private async Task OnRequestedCapacityChanged(int val)
+    {
+        RequestedCapacity = val;
+        await RequestedCapacityChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsRatioEnforcedChanged(bool val)
+    {
+        IsRatioEnforced = val;
+        await IsRatioEnforcedChanged.InvokeAsync(val);
+    }
+
+    private async Task OnMentorFullNameChanged(string val)
+    {
+        MentorFullName = val;
+        await MentorFullNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTradeCertificateNumberChanged(string val)
+    {
+        TradeCertificateNumber = val;
+        await TradeCertificateNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnMentorExperienceYearsChanged(int val)
+    {
+        MentorExperienceYears = val;
+        await MentorExperienceYearsChanged.InvokeAsync(val);
+    }
+
+    private async Task OnMentorCapacityChanged(int val)
+    {
+        MentorCapacity = val;
+        await MentorCapacityChanged.InvokeAsync(val);
+    }
+
+    private async Task OnOhsCertificateNumberChanged(string val)
+    {
+        OhsCertificateNumber = val;
+        await OhsCertificateNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnOhsExpiryDateChanged(DateTime? val)
+    {
+        OhsExpiryDate = val;
+        await OhsExpiryDateChanged.InvokeAsync(val);
+    }
+
+    private async Task OnToolingChecklistCertifiedChanged(bool val)
+    {
+        ToolingChecklistCertified = val;
+        await ToolingChecklistCertifiedChanged.InvokeAsync(val);
+    }
+
+    private async Task OnMonitoringConsentChanged(bool val)
+    {
+        MonitoringConsent = val;
+        await MonitoringConsentChanged.InvokeAsync(val);
+    }
+
+    private string GetOrgDisplay(int id)
+    {
+        if (Organisations == null) return string.Empty;
+        var o = Organisations.FirstOrDefault(x => x.Id == id);
+        return o != null ? $"{o.CompanyName} ({o.SdlNumber})" : $"Org #{id}";
+    }
+
+    private string GetSiteDisplay(int? id)
+    {
+        if (id == null || Sites == null) return "Headquarters (Default)";
+        var s = Sites.FirstOrDefault(x => x.Id == id.Value);
+        return s != null ? $"{s.SiteName} ({s.PhysicalAddress})" : $"Site #{id}";
+    }
+
+    private string GetContactDisplay(int? id)
+    {
+        if (id == null || Contacts == null) return "Select a contact person";
+        var c = Contacts.FirstOrDefault(x => x.Id == id.Value);
+        return c != null ? $"{c.FirstName} {c.LastName}" : $"Contact #{id}";
+    }
+}

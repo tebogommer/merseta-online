@@ -1,0 +1,489 @@
+@page "/workplace-approvals/apply"
+@page "/workplace-approvals/create"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using Nsdms.Web.Components.Shared.Forms
+@using Nsdms.Web.Components.Shared.Wizard
+@using MudBlazor
+@inject IWorkplaceApprovalService WpaService
+@inject IOrganisationService OrgService
+@inject IPersonService PersonService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="mb-4">
+    <div class="d-flex align-center gap-2 mb-2">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="GoBack">
+            Back to workplace approvals
+        </MudButton>
+        <MudBreadcrumbs Items="_breadcrumbs" Separator=">" Class="pa-0 ma-0" />
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="d-flex justify-center align-center py-12">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else if (_isSuccess)
+{
+    <MudCard Elevation="2" Class="pa-6 rounded-lg text-center">
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" Class="mb-3" />
+        <h1 class="text-h5 font-weight-bold text-primary mb-2">Workplace approval application submitted</h1>
+        <p class="text-body1 text-secondary mb-4">
+            Approval tracking reference <strong class="font-mono">@_approvalNumber</strong> has been scheduled for CLO physical site inspection.
+        </p>
+        <div class="d-flex justify-center gap-3">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.AssignmentTurnedIn"
+                       OnClick="ViewSubmittedApproval">
+                View approval record
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       OnClick="GoBack">
+                Return to approvals list
+            </MudButton>
+        </div>
+    </MudCard>
+}
+else
+{
+    <WizardShell Title="Workplace approval application"
+                 Subtitle="Statutory employer site approval and artisan mentor quota evaluation under NAMB regulations"
+                 ActiveStepIndex="@_activeStep"
+                 ActiveStepIndexChanged="OnStepChanged"
+                 FinishButtonText="Submit approval application"
+                 IsBusy="@_isProcessing"
+                 OnCancel="GoBack"
+                 OnSaveDraft="SaveDraftAsync"
+                 OnFinish="SubmitApprovalAsync">
+
+        <!-- STEP 1: Site & Contact Person (Mandatory Invariant) -->
+        <WizardStep Label="Workplace site"
+                    Heading="Designate employer site &amp; mandatory contact person"
+                    Description="Specify the host organisation site and the employer contact person responsible for the site visit"
+                    ValidateAsync="ValidateStep1Async">
+            <WorkplaceApprovalFields Section="SiteAndContact"
+                                     Organisations="@_organisations"
+                                     OrganisationId="@_organisationId"
+                                     OrganisationIdChanged="OnOrganisationChanged"
+                                     Sites="@_sites"
+                                     OrganisationSiteId="@_siteId"
+                                     OrganisationSiteIdChanged="@((val) => { _siteId = val; UpdateReviewGroups(); })"
+                                     Contacts="@_contacts"
+                                     ContactPersonId="@_contactPersonId"
+                                     ContactPersonIdChanged="@((val) => { _contactPersonId = val; UpdateReviewGroups(); })"
+                                     PhysicalAddress="@_physicalAddress"
+                                     PhysicalAddressChanged="@((val) => { _physicalAddress = val; UpdateReviewGroups(); })" />
+        </WizardStep>
+
+        <!-- STEP 2: Trade Scope & Capacity -->
+        <WizardStep Label="Trade scope"
+                    Heading="Select artisan trade &amp; requested learner capacity"
+                    Description="Designate QCTO/NAMB trade code and requested apprentice concurrent intake cap"
+                    ValidateAsync="ValidateStep2Async">
+            <WorkplaceApprovalFields Section="TradeScope"
+                                     TradeCode="@_tradeCode"
+                                     TradeCodeChanged="@((val) => { _tradeCode = val; UpdateReviewGroups(); })"
+                                     QualificationTitle="@_qualificationTitle"
+                                     QualificationTitleChanged="@((val) => { _qualificationTitle = val; UpdateReviewGroups(); })"
+                                     RequestedCapacity="@_requestedCapacity"
+                                     RequestedCapacityChanged="@((val) => { _requestedCapacity = val; UpdateReviewGroups(); })"
+                                     IsRatioEnforced="@_isRatioEnforced"
+                                     IsRatioEnforcedChanged="@((val) => { _isRatioEnforced = val; UpdateReviewGroups(); })" />
+        </WizardStep>
+
+        <!-- STEP 3: Mentors & Quota Assessment -->
+        <WizardStep Label="Artisan mentors"
+                    Heading="Nominate certified artisan mentors &amp; verify ratio quotas"
+                    Description="Add certified artisans with verified Red Seal / trade test numbers to supervise practical training"
+                    ValidateAsync="ValidateStep3Async">
+            <WorkplaceApprovalFields Section="Mentors"
+                                     MentorFullName="@_mentorFullName"
+                                     MentorFullNameChanged="@((val) => { _mentorFullName = val; UpdateReviewGroups(); })"
+                                     TradeCertificateNumber="@_tradeCertificateNumber"
+                                     TradeCertificateNumberChanged="@((val) => { _tradeCertificateNumber = val; UpdateReviewGroups(); })"
+                                     MentorExperienceYears="@_mentorExperienceYears"
+                                     MentorExperienceYearsChanged="@((val) => { _mentorExperienceYears = val; UpdateReviewGroups(); })"
+                                     MentorCapacity="@_mentorCapacity"
+                                     MentorCapacityChanged="@((val) => { _mentorCapacity = val; UpdateReviewGroups(); })" />
+        </WizardStep>
+
+        <!-- STEP 4: Tooling & OHS Compliance -->
+        <WizardStep Label="Safety &amp; tooling"
+                    Heading="Confirm occupational health &amp; safety (OHS) and tooling checklist"
+                    Description="Verify compliance with compulsory workshop equipment, safety apparatus, and monitoring readiness"
+                    ValidateAsync="ValidateStep4Async">
+            <WorkplaceApprovalFields Section="Safety"
+                                     OhsCertificateNumber="@_ohsCertNumber"
+                                     OhsCertificateNumberChanged="@((val) => { _ohsCertNumber = val; UpdateReviewGroups(); })"
+                                     OhsExpiryDate="@_ohsExpiryDate"
+                                     OhsExpiryDateChanged="@((val) => { _ohsExpiryDate = val; UpdateReviewGroups(); })"
+                                     ToolingChecklistCertified="@_toolingCertified"
+                                     ToolingChecklistCertifiedChanged="@((val) => { _toolingCertified = val; UpdateReviewGroups(); })"
+                                     MonitoringConsent="@_monitoringConsent"
+                                     MonitoringConsentChanged="@((val) => { _monitoringConsent = val; UpdateReviewGroups(); })" />
+        </WizardStep>
+
+        <!-- STEP 5: Review & Inspection Dispatch -->
+        <WizardReviewStep ReviewGroups="@_reviewGroups"
+                          OnEditStep="OnEditStepRequested">
+            <LifecycleContent>
+                <div class="d-flex align-center gap-3">
+                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Color="Color.Primary" Size="Size.Medium" />
+                    <div>
+                        <span class="d-block text-body2 font-weight-bold text-primary">
+                            NAMB mentor ratio &amp; CLO site visit audit trail
+                        </span>
+                        <span class="d-block text-caption text-secondary">
+                            Enforces statutory 1:4 mentor-to-apprentice capacity cap and captures mandatory contact person linkage.
+                        </span>
+                    </div>
+                </div>
+            </LifecycleContent>
+        </WizardReviewStep>
+
+    </WizardShell>
+}
+
+@code {
+    private int _activeStep = 0;
+    private bool _loading = true;
+    private bool _isProcessing = false;
+    private bool _isSuccess = false;
+    private int _createdApprovalId = 0;
+    private string _approvalNumber = string.Empty;
+
+    private List<Organisation> _organisations = new();
+    private List<OrganisationSite> _sites = new();
+    private List<Person> _contacts = new();
+
+    // Step 1
+    private int _organisationId;
+    private int? _siteId;
+    private int? _contactPersonId;
+    private string _physicalAddress = string.Empty;
+
+    // Step 2
+    private string _tradeCode = "FITT";
+    private string _qualificationTitle = "Occupational Certificate: Fitter and Turner (NQF 4)";
+    private int _requestedCapacity = 4;
+    private bool _isRatioEnforced = true;
+
+    // Step 3
+    private string _mentorFullName = "Johan van der Merwe";
+    private string _tradeCertificateNumber = "TT-NAMB-2018-0941";
+    private int _mentorExperienceYears = 8;
+    private int _mentorCapacity = 4;
+
+    // Step 4
+    private string _ohsCertNumber = "OHS-2026-GAUTENG-110";
+    private DateTime? _ohsExpiryDate = DateTime.UtcNow.Date.AddYears(1);
+    private bool _toolingCertified = false;
+    private bool _monitoringConsent = false;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Learner & artisan development", href: "/workplace-approvals"),
+        new BreadcrumbItem("Workplace approvals", href: "/workplace-approvals"),
+        new BreadcrumbItem("Apply for approval", href: null, disabled: true)
+    };
+
+    private List<WizardReviewGroup> _reviewGroups = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _organisations = await OrgService.GetAllAsync();
+            _contacts = await PersonService.GetAllAsync();
+
+            if (_organisations.Any())
+            {
+                _organisationId = _organisations.First().Id;
+                _physicalAddress = _organisations.First().PhysicalAddress ?? "14 Steelworks Road, Germiston, Gauteng";
+            }
+
+            if (_contacts.Any())
+            {
+                _contactPersonId = _contacts.First().Id;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading organisation or contact records: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            UpdateReviewGroups();
+        }
+    }
+
+    private void OnOrganisationChanged(int id)
+    {
+        _organisationId = id;
+        var org = _organisations.FirstOrDefault(o => o.Id == id);
+        if (org != null && !string.IsNullOrWhiteSpace(org.PhysicalAddress))
+        {
+            _physicalAddress = org.PhysicalAddress;
+        }
+        UpdateReviewGroups();
+    }
+
+    private void OnStepChanged(int step)
+    {
+        _activeStep = step;
+        UpdateReviewGroups();
+    }
+
+    private void OnEditStepRequested(int targetStep)
+    {
+        _activeStep = targetStep;
+    }
+
+    private Task<bool> ValidateStep1Async()
+    {
+        if (_organisationId <= 0)
+        {
+            Snackbar.Add("Please select the host employer organisation.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        // Strict invariant: Mandatory Contact Person selection
+        if (_contactPersonId == null || _contactPersonId <= 0)
+        {
+            Snackbar.Add("Employer Contact Person is mandatory for scheduling workplace inspections.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_physicalAddress))
+        {
+            Snackbar.Add("Physical inspection address is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep2Async()
+    {
+        if (string.IsNullOrWhiteSpace(_tradeCode))
+        {
+            Snackbar.Add("Please select a designated artisan trade code.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_qualificationTitle))
+        {
+            Snackbar.Add("Qualification title is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (_requestedCapacity <= 0)
+        {
+            Snackbar.Add("Requested intake capacity must be at least 1.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep3Async()
+    {
+        if (string.IsNullOrWhiteSpace(_mentorFullName))
+        {
+            Snackbar.Add("Lead mentor artisan full name is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_tradeCertificateNumber))
+        {
+            Snackbar.Add("Artisan Red Seal / trade certificate number is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (_requestedCapacity > _mentorCapacity)
+        {
+            Snackbar.Add($"Requested capacity ({_requestedCapacity}) exceeds available mentor capacity ({_mentorCapacity}). Add additional mentors or adjust intake.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep4Async()
+    {
+        if (string.IsNullOrWhiteSpace(_ohsCertNumber))
+        {
+            Snackbar.Add("OHS compliance certificate reference number is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (!_toolingCertified)
+        {
+            Snackbar.Add("You must certify the availability of compulsory tooling and safety apparatus.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (!_monitoringConsent)
+        {
+            Snackbar.Add("Confirmation of willingness to accommodate CLO monitoring visits is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private void UpdateReviewGroups()
+    {
+        var org = _organisations.FirstOrDefault(o => o.Id == _organisationId);
+        var contact = _contacts.FirstOrDefault(c => c.Id == _contactPersonId);
+
+        _reviewGroups = new List<WizardReviewGroup>
+        {
+            new()
+            {
+                Title = "Workplace site & contact person",
+                Icon = Icons.Material.Filled.Apartment,
+                TargetStepIndex = 0,
+                Items = new()
+                {
+                    new("Employer", org?.CompanyName ?? "Not selected"),
+                    new("SDL number", org?.SdlNumber ?? "—", isMonospace: true),
+                    new("Contact person", contact != null ? $"{contact.FirstName} {contact.LastName}" : "Not selected"),
+                    new("Physical address", _physicalAddress)
+                }
+            },
+            new()
+            {
+                Title = "Trade scope & requested capacity",
+                Icon = Icons.Material.Filled.Build,
+                TargetStepIndex = 1,
+                Items = new()
+                {
+                    new("Trade code", _tradeCode, isMonospace: true),
+                    new("Qualification", _qualificationTitle),
+                    new("Requested capacity", $"{_requestedCapacity} apprentices"),
+                    new("Ratio policy", _isRatioEnforced ? "Enforced (1:4 NAMB policy)" : "Special dispensation requested")
+                }
+            },
+            new()
+            {
+                Title = "Artisan mentor quota",
+                Icon = Icons.Material.Filled.Engineering,
+                TargetStepIndex = 2,
+                Items = new()
+                {
+                    new("Lead mentor", _mentorFullName),
+                    new("Certificate number", _tradeCertificateNumber, isMonospace: true),
+                    new("Experience", $"{_mentorExperienceYears} years post-trade"),
+                    new("Approved capacity", $"{_mentorCapacity} apprentices cap")
+                }
+            },
+            new()
+            {
+                Title = "OHS & tooling compliance",
+                Icon = Icons.Material.Filled.HealthAndSafety,
+                TargetStepIndex = 3,
+                Items = new()
+                {
+                    new("OHS certificate", _ohsCertNumber, isMonospace: true),
+                    new("OHS validity", _ohsExpiryDate?.ToString("yyyy-MM-dd") ?? "—"),
+                    new("Tooling checklist", _toolingCertified ? "Certified compliant" : "Pending"),
+                    new("Monitoring consent", _monitoringConsent ? "Granted" : "Pending")
+                }
+            }
+        };
+    }
+
+    private async Task SaveDraftAsync()
+    {
+        _isProcessing = true;
+        try
+        {
+            var approval = BuildApprovalEntity("Draft");
+            var saved = await WpaService.SaveAsync(approval, "CurrentEmployer");
+            Snackbar.Add($"Workplace approval draft '{saved.ApprovalNumber}' saved successfully.", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Could not save draft: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task SubmitApprovalAsync()
+    {
+        _isProcessing = true;
+        try
+        {
+            var approval = BuildApprovalEntity("PendingInspection");
+            var result = await WpaService.CreateAsync(approval, "CurrentEmployer");
+            _createdApprovalId = result.Id;
+            _approvalNumber = result.ApprovalNumber;
+
+            // Add lead mentor
+            await WpaService.AddMentorAsync(new WorkplaceApprovalMentor
+            {
+                WorkplaceApprovalId = result.Id,
+                PersonId = _contactPersonId ?? 1,
+                Designation = "Lead Artisan Mentor",
+                ArtisanTradeNumber = _tradeCertificateNumber,
+                YearsExperience = _mentorExperienceYears,
+                MaxLearnerCapacity = _mentorCapacity,
+                IsRatioExempt = !_isRatioEnforced
+            }, "CurrentEmployer");
+
+            _isSuccess = true;
+            Snackbar.Add($"Workplace approval '{_approvalNumber}' submitted and scheduled for CLO site inspection!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Application submission failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private WorkplaceApproval BuildApprovalEntity(string status)
+    {
+        return new WorkplaceApproval
+        {
+            OrganisationId = _organisationId,
+            OrganisationSiteId = _siteId,
+            ContactPersonId = _contactPersonId,
+            TradeCode = _tradeCode,
+            QualificationTitle = _qualificationTitle,
+            ApprovalNumber = $"WPA-2026-{_tradeCode}-{DateTime.UtcNow:MMddHHmm}",
+            ApprovalStatusCode = status,
+            IsRatioEnforced = _isRatioEnforced,
+            CustomTradeRatio = _mentorCapacity,
+            Recommendations = $"Applicant certifies {_mentorFullName} ({_tradeCertificateNumber}) with {_requestedCapacity} intake capacity and OHS clearance {_ohsCertNumber}."
+        };
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo("/workplace-approvals");
+    }
+
+    private void ViewSubmittedApproval()
+    {
+        NavManager.NavigateTo($"/workplace-approvals/{_createdApprovalId}");
+    }
+}

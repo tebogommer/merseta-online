@@ -1,0 +1,372 @@
+@namespace Nsdms.Web.Components.Shared.Forms
+@using MudBlazor
+@using Nsdms.Domain.Entities
+
+@if (Section == "Window" || Section == "All")
+{
+    <div class="nsdms-section-window mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int?"
+                           Label="Funding window"
+                           Value="@FundingWindowId"
+                           ValueChanged="OnFundingWindowChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           ToStringFunc="@(id => GetWindowDisplayText(id))"
+                           HelperText="Select the gazetted Discretionary Grant funding window">
+                    @if (FundingWindows != null)
+                    {
+                        @foreach (var w in FundingWindows)
+                        {
+                            <MudSelectItem Value="@((int?)w.Id)">
+                                @($"FY{w.FinYear} - {w.WindowName} (Budget: {w.TotalAvailableBudget:C0})")
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
+                           Label="Grant type"
+                           Value="@GrantTypeCode"
+                           ValueChanged="OnGrantTypeCodeChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="Statutory Discretionary Grant intervention category">
+                    <MudSelectItem Value="@("PIVOTAL")">PIVOTAL (Strategic Skills &amp; Qualifications)</MudSelectItem>
+                    <MudSelectItem Value="@("APPRENTICESHIP")">Artisan Apprenticeship</MudSelectItem>
+                    <MudSelectItem Value="@("LEARNERSHIP")">Learnership Programme</MudSelectItem>
+                    <MudSelectItem Value="@("BURSARY")">Bursary (Higher Education)</MudSelectItem>
+                    <MudSelectItem Value="@("SKILLS_PROGRAMME")">Accredited Skills Programme</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string"
+                              Label="Project title"
+                              Value="@ProjectTitle"
+                              ValueChanged="OnProjectTitleChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Concise, descriptive title for the skills development initiative" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Organisation" || Section == "All")
+{
+    <div class="nsdms-section-organisation mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int"
+                           Label="Applying organisation"
+                           Value="@OrganisationId"
+                           ValueChanged="OnOrganisationChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           ToStringFunc="@(id => GetOrgDisplayText(id))"
+                           HelperText="Registered employer or skills development stakeholder">
+                    @if (Organisations != null)
+                    {
+                        @foreach (var org in Organisations)
+                        {
+                            <MudSelectItem Value="@org.Id">
+                                @($"{org.CompanyName} ({org.SdlNumber})")
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Skills Development Levy (SDL) number"
+                              Value="@SdlNumber"
+                              ReadOnly="true"
+                              Variant="Variant.Outlined"
+                              Class="font-mono" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudCheckBox T="bool"
+                             Label="Mandatory Grant (WSP/ATR) compliant for current financial year"
+                             Value="@IsWspCompliant"
+                             ValueChanged="OnIsWspCompliantChanged"
+                             Color="Color.Primary"
+                             Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudCheckBox T="bool"
+                             Label="Legally exempt from Mandatory Grant WSP submission (e.g. Non-levy payer)"
+                             Value="@IsWspExempt"
+                             ValueChanged="OnIsWspExemptChanged"
+                             Color="Color.Primary"
+                             Disabled="@IsReadOnly" />
+            </MudItem>
+            @if (IsWspExempt)
+            {
+                <MudItem xs="12">
+                    <MudTextField T="string"
+                                  Label="WSP exemption rationale"
+                                  Value="@WspExemptionReason"
+                                  ValueChanged="OnWspExemptionReasonChanged"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  Lines="2"
+                                  Disabled="@IsReadOnly"
+                                  HelperText="Statutory justification for exemption from regulation 4(4) submission" />
+                </MudItem>
+            }
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Budget" || Section == "All")
+{
+    <div class="nsdms-section-budget mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudNumericField T="decimal"
+                                 Label="Total funding requested (ZAR)"
+                                 Value="@RequestedAmount"
+                                 ValueChanged="OnRequestedAmountChanged"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Format="C2"
+                                 Min="1000m"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Total grant funding requested for this skills programme" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField T="int"
+                                 Label="Target learner headcount"
+                                 Value="@LearnerCount"
+                                 ValueChanged="OnLearnerCountChanged"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Min="1"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Total number of planned enrolled beneficiaries" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string"
+                              Label="Project implementation summary &amp; milestones"
+                              Value="@ImplementationPlanSummary"
+                              ValueChanged="OnImplementationPlanSummaryChanged"
+                              Variant="Variant.Outlined"
+                              Lines="3"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="High-level timeline covering learner recruitment, training delivery, and milestone tranches" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Compliance" || Section == "All")
+{
+    <div class="nsdms-section-compliance mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="SARS tax compliance PIN"
+                              Value="@TaxCompliancePin"
+                              ValueChanged="OnTaxCompliancePinChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              Class="font-mono"
+                              HelperText="Valid 10-character SARS Tax Clearance Status PIN" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
+                           Label="B-BBEE contributor status level"
+                           Value="@BbbeeLevel"
+                           ValueChanged="OnBbbeeLevelChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly">
+                    <MudSelectItem Value="@("Level 1")">Level 1 Contributor (135% recognition)</MudSelectItem>
+                    <MudSelectItem Value="@("Level 2")">Level 2 Contributor (125% recognition)</MudSelectItem>
+                    <MudSelectItem Value="@("Level 3")">Level 3 Contributor (110% recognition)</MudSelectItem>
+                    <MudSelectItem Value="@("Level 4")">Level 4 Contributor (100% recognition)</MudSelectItem>
+                    <MudSelectItem Value="@("Level 5")">Level 5 Contributor (80% recognition)</MudSelectItem>
+                    <MudSelectItem Value="@("Level 6")">Level 6 Contributor (60% recognition)</MudSelectItem>
+                    <MudSelectItem Value="@("Level 7")">Level 7 Contributor (50% recognition)</MudSelectItem>
+                    <MudSelectItem Value="@("Level 8")">Level 8 Contributor (10% recognition)</MudSelectItem>
+                    <MudSelectItem Value="@("Non-Compliant")">Non-Compliant</MudSelectItem>
+                    <MudSelectItem Value="@("Exempt Micro Enterprise")">Exempt Micro Enterprise (EME)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12">
+                <MudCheckBox T="bool"
+                             Label="Confirm statutory compliance with the Skills Development Act and PFMA guidelines"
+                             Value="@ConfirmStatutoryCompliance"
+                             ValueChanged="OnConfirmStatutoryComplianceChanged"
+                             Color="Color.Primary"
+                             Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudCheckBox T="bool"
+                             Label="Consent to the processing of enterprise and learner personal information under POPIA"
+                             Value="@PopiaConsent"
+                             ValueChanged="OnPopiaConsentChanged"
+                             Color="Color.Primary"
+                             Disabled="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@code {
+    [Parameter] public string Section { get; set; } = "All";
+    [Parameter] public bool IsReadOnly { get; set; }
+
+    [Parameter] public int? FundingWindowId { get; set; }
+    [Parameter] public EventCallback<int?> FundingWindowIdChanged { get; set; }
+
+    [Parameter] public string GrantTypeCode { get; set; } = "PIVOTAL";
+    [Parameter] public EventCallback<string> GrantTypeCodeChanged { get; set; }
+
+    [Parameter] public string ProjectTitle { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ProjectTitleChanged { get; set; }
+
+    [Parameter] public int OrganisationId { get; set; }
+    [Parameter] public EventCallback<int> OrganisationIdChanged { get; set; }
+
+    [Parameter] public string SdlNumber { get; set; } = string.Empty;
+
+    [Parameter] public bool IsWspCompliant { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsWspCompliantChanged { get; set; }
+
+    [Parameter] public bool IsWspExempt { get; set; }
+    [Parameter] public EventCallback<bool> IsWspExemptChanged { get; set; }
+
+    [Parameter] public string? WspExemptionReason { get; set; }
+    [Parameter] public EventCallback<string?> WspExemptionReasonChanged { get; set; }
+
+    [Parameter] public decimal RequestedAmount { get; set; } = 250000m;
+    [Parameter] public EventCallback<decimal> RequestedAmountChanged { get; set; }
+
+    [Parameter] public int LearnerCount { get; set; } = 10;
+    [Parameter] public EventCallback<int> LearnerCountChanged { get; set; }
+
+    [Parameter] public string ImplementationPlanSummary { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ImplementationPlanSummaryChanged { get; set; }
+
+    [Parameter] public string TaxCompliancePin { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> TaxCompliancePinChanged { get; set; }
+
+    [Parameter] public string BbbeeLevel { get; set; } = "Level 2";
+    [Parameter] public EventCallback<string> BbbeeLevelChanged { get; set; }
+
+    [Parameter] public bool ConfirmStatutoryCompliance { get; set; }
+    [Parameter] public EventCallback<bool> ConfirmStatutoryComplianceChanged { get; set; }
+
+    [Parameter] public bool PopiaConsent { get; set; }
+    [Parameter] public EventCallback<bool> PopiaConsentChanged { get; set; }
+
+    [Parameter] public List<GrantFundingWindow>? FundingWindows { get; set; }
+    [Parameter] public List<Organisation>? Organisations { get; set; }
+
+    private async Task OnFundingWindowChanged(int? val)
+    {
+        FundingWindowId = val;
+        await FundingWindowIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnGrantTypeCodeChanged(string val)
+    {
+        GrantTypeCode = val;
+        await GrantTypeCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnProjectTitleChanged(string val)
+    {
+        ProjectTitle = val;
+        await ProjectTitleChanged.InvokeAsync(val);
+    }
+
+    private async Task OnOrganisationChanged(int val)
+    {
+        OrganisationId = val;
+        await OrganisationIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsWspCompliantChanged(bool val)
+    {
+        IsWspCompliant = val;
+        await IsWspCompliantChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsWspExemptChanged(bool val)
+    {
+        IsWspExempt = val;
+        await IsWspExemptChanged.InvokeAsync(val);
+    }
+
+    private async Task OnWspExemptionReasonChanged(string? val)
+    {
+        WspExemptionReason = val;
+        await WspExemptionReasonChanged.InvokeAsync(val);
+    }
+
+    private async Task OnRequestedAmountChanged(decimal val)
+    {
+        RequestedAmount = val;
+        await RequestedAmountChanged.InvokeAsync(val);
+    }
+
+    private async Task OnLearnerCountChanged(int val)
+    {
+        LearnerCount = val;
+        await LearnerCountChanged.InvokeAsync(val);
+    }
+
+    private async Task OnImplementationPlanSummaryChanged(string val)
+    {
+        ImplementationPlanSummary = val;
+        await ImplementationPlanSummaryChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTaxCompliancePinChanged(string val)
+    {
+        TaxCompliancePin = val;
+        await TaxCompliancePinChanged.InvokeAsync(val);
+    }
+
+    private async Task OnBbbeeLevelChanged(string val)
+    {
+        BbbeeLevel = val;
+        await BbbeeLevelChanged.InvokeAsync(val);
+    }
+
+    private async Task OnConfirmStatutoryComplianceChanged(bool val)
+    {
+        ConfirmStatutoryCompliance = val;
+        await ConfirmStatutoryComplianceChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPopiaConsentChanged(bool val)
+    {
+        PopiaConsent = val;
+        await PopiaConsentChanged.InvokeAsync(val);
+    }
+
+    private string GetWindowDisplayText(int? id)
+    {
+        if (id == null || FundingWindows == null) return "Select a funding window";
+        var w = FundingWindows.FirstOrDefault(x => x.Id == id.Value);
+        return w != null ? $"FY{w.FinYear} - {w.WindowName}" : $"Window #{id}";
+    }
+
+    private string GetOrgDisplayText(int id)
+    {
+        if (Organisations == null) return string.Empty;
+        var o = Organisations.FirstOrDefault(x => x.Id == id);
+        return o != null ? $"{o.CompanyName} ({o.SdlNumber})" : $"Org #{id}";
+    }
+}

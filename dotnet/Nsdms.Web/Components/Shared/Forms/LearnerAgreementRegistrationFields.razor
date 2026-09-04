@@ -1,0 +1,409 @@
+@namespace Nsdms.Web.Components.Shared.Forms
+@using MudBlazor
+@using Nsdms.Application.Common.Utilities
+@using Nsdms.Domain.Entities
+
+@if (Section == "Demographics" || Section == "All")
+{
+    <div class="nsdms-section-demographics mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="South African National ID number"
+                              Value="@RsaIdNumber"
+                              ValueChanged="OnRsaIdChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              Class="font-mono"
+                              HelperText="13-digit RSA National Identity document number" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Date of birth"
+                              Value="@DateOfBirthText"
+                              ReadOnly="true"
+                              Variant="Variant.Outlined"
+                              HelperText="Auto-extracted from RSA National ID" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="First names"
+                              Value="@FirstName"
+                              ValueChanged="OnFirstNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Surname"
+                              Value="@LastName"
+                              ValueChanged="OnLastNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Gender"
+                              Value="@Gender"
+                              ReadOnly="true"
+                              Variant="Variant.Outlined"
+                              HelperText="Derived from RSA ID" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Citizenship"
+                              Value="@Citizenship"
+                              ReadOnly="true"
+                              Variant="Variant.Outlined"
+                              HelperText="Derived from RSA ID" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect T="string"
+                           Label="Equity / Population group"
+                           Value="@EquityGroup"
+                           ValueChanged="OnEquityGroupChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly">
+                    <MudSelectItem Value="@("African")">African</MudSelectItem>
+                    <MudSelectItem Value="@("Coloured")">Coloured</MudSelectItem>
+                    <MudSelectItem Value="@("Indian/Asian")">Indian / Asian</MudSelectItem>
+                    <MudSelectItem Value="@("White")">White</MudSelectItem>
+                    <MudSelectItem Value="@("Other")">Other</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Programme" || Section == "All")
+{
+    <div class="nsdms-section-programme mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
+                           Label="Learning programme type"
+                           Value="@ProgrammeType"
+                           ValueChanged="OnProgrammeTypeChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly">
+                    <MudSelectItem Value="@("Learnership")">Learnership (18.1 / 18.2)</MudSelectItem>
+                    <MudSelectItem Value="@("Apprenticeship")">Artisan Apprenticeship</MudSelectItem>
+                    <MudSelectItem Value="@("Internship")">Graduate Internship</MudSelectItem>
+                    <MudSelectItem Value="@("SkillsProgramme")">Accredited Skills Programme</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Learnership registration / OFO code"
+                              Value="@LearnershipRegNumber"
+                              ValueChanged="OnLearnershipRegNumberChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              Class="font-mono"
+                              HelperText="DHET Registered Agreement Reference or 6-digit OFO code" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string"
+                              Label="Qualification title &amp; SAQA ID"
+                              Value="@QualificationTitle"
+                              ValueChanged="OnQualificationTitleChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Full SAQA Registered Qualification or Unit Standard Title" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="Commencement date"
+                               Date="@CommencementDate"
+                               DateChanged="OnCommencementDateChanged"
+                               Variant="Variant.Outlined"
+                               Required="true"
+                               Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="Planned completion date"
+                               Date="@CompletionDate"
+                               DateChanged="OnCompletionDateChanged"
+                               Variant="Variant.Outlined"
+                               Required="true"
+                               Disabled="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Providers" || Section == "All")
+{
+    <div class="nsdms-section-providers mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int"
+                           Label="Host employer organisation"
+                           Value="@OrganisationId"
+                           ValueChanged="OnOrganisationIdChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           ToStringFunc="@(id => GetOrgDisplay(id))"
+                           HelperText="Approved workplace provider hosting practical training">
+                    @if (Organisations != null)
+                    {
+                        @foreach (var org in Organisations)
+                        {
+                            <MudSelectItem Value="@org.Id">
+                                @($"{org.CompanyName} ({org.SdlNumber})")
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int?"
+                           Label="Accredited Skills Development Provider (SDP)"
+                           Value="@TrainingProviderId"
+                           ValueChanged="OnTrainingProviderIdChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           ToStringFunc="@(id => GetProviderDisplay(id))"
+                           HelperText="Accredited institution providing theoretical and institutional training">
+                    @if (TrainingProviders != null)
+                    {
+                        @foreach (var sdp in TrainingProviders)
+                        {
+                            <MudSelectItem Value="@((int?)sdp.Id)">
+                                @($"{sdp.ProviderName} (Accreditation: {sdp.AccreditationNumber})")
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Employment" || Section == "All")
+{
+    <div class="nsdms-section-employment mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudNumericField T="decimal"
+                                 Label="Monthly learner allowance / stipend (ZAR)"
+                                 Value="@MonthlyStipendAmount"
+                                 ValueChanged="OnMonthlyStipendChanged"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Format="C2"
+                                 Min="1500m"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Must comply with Sectoral Determination 5 for Learnerships" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
+                           Label="Learner employment status"
+                           Value="@EmploymentStatusCode"
+                           ValueChanged="OnEmploymentStatusCodeChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly">
+                    <MudSelectItem Value="@("18.2")">Section 18.2 (Unemployed prior to agreement)</MudSelectItem>
+                    <MudSelectItem Value="@("18.1")">Section 18.1 (Employed worker upskilling)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12">
+                <MudCheckBox T="bool"
+                             Label="Certify employer and learner contract execution per the Skills Development Act"
+                             Value="@ContractExecuted"
+                             ValueChanged="OnContractExecutedChanged"
+                             Color="Color.Primary"
+                             Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudCheckBox T="bool"
+                             Label="Learner consent to statutory SETMIS/NLRD reporting and POPIA data processing"
+                             Value="@LearnerPopiaConsent"
+                             ValueChanged="OnLearnerPopiaConsentChanged"
+                             Color="Color.Primary"
+                             Disabled="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@code {
+    [Parameter] public string Section { get; set; } = "All";
+    [Parameter] public bool IsReadOnly { get; set; }
+
+    [Parameter] public string RsaIdNumber { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> RsaIdNumberChanged { get; set; }
+
+    [Parameter] public string FirstName { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> FirstNameChanged { get; set; }
+
+    [Parameter] public string LastName { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> LastNameChanged { get; set; }
+
+    [Parameter] public string DateOfBirthText { get; set; } = string.Empty;
+    [Parameter] public string Gender { get; set; } = string.Empty;
+    [Parameter] public string Citizenship { get; set; } = string.Empty;
+
+    [Parameter] public string EquityGroup { get; set; } = "African";
+    [Parameter] public EventCallback<string> EquityGroupChanged { get; set; }
+
+    [Parameter] public string ProgrammeType { get; set; } = "Learnership";
+    [Parameter] public EventCallback<string> ProgrammeTypeChanged { get; set; }
+
+    [Parameter] public string LearnershipRegNumber { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> LearnershipRegNumberChanged { get; set; }
+
+    [Parameter] public string QualificationTitle { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> QualificationTitleChanged { get; set; }
+
+    [Parameter] public DateTime? CommencementDate { get; set; } = DateTime.UtcNow.Date;
+    [Parameter] public EventCallback<DateTime?> CommencementDateChanged { get; set; }
+
+    [Parameter] public DateTime? CompletionDate { get; set; } = DateTime.UtcNow.Date.AddYears(1);
+    [Parameter] public EventCallback<DateTime?> CompletionDateChanged { get; set; }
+
+    [Parameter] public int OrganisationId { get; set; }
+    [Parameter] public EventCallback<int> OrganisationIdChanged { get; set; }
+
+    [Parameter] public int? TrainingProviderId { get; set; }
+    [Parameter] public EventCallback<int?> TrainingProviderIdChanged { get; set; }
+
+    [Parameter] public decimal MonthlyStipendAmount { get; set; } = 3500m;
+    [Parameter] public EventCallback<decimal> MonthlyStipendAmountChanged { get; set; }
+
+    [Parameter] public string EmploymentStatusCode { get; set; } = "18.2";
+    [Parameter] public EventCallback<string> EmploymentStatusCodeChanged { get; set; }
+
+    [Parameter] public bool ContractExecuted { get; set; }
+    [Parameter] public EventCallback<bool> ContractExecutedChanged { get; set; }
+
+    [Parameter] public bool LearnerPopiaConsent { get; set; }
+    [Parameter] public EventCallback<bool> LearnerPopiaConsentChanged { get; set; }
+
+    [Parameter] public List<Organisation>? Organisations { get; set; }
+    [Parameter] public List<TrainingProvider>? TrainingProviders { get; set; }
+
+    private async Task OnRsaIdChanged(string val)
+    {
+        RsaIdNumber = val;
+        await RsaIdNumberChanged.InvokeAsync(val);
+
+        if (!string.IsNullOrWhiteSpace(val) && val.Length == 13)
+        {
+            var (valid, dob, gen, isCitizen, _) = RsaIdValidator.Parse(val);
+            if (valid)
+            {
+                DateOfBirthText = dob?.ToString("yyyy-MM-dd") ?? string.Empty;
+                Gender = gen ?? string.Empty;
+                Citizenship = isCitizen == true ? "South African Citizen" : "Permanent Resident";
+            }
+        }
+    }
+
+    private async Task OnFirstNameChanged(string val)
+    {
+        FirstName = val;
+        await FirstNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnLastNameChanged(string val)
+    {
+        LastName = val;
+        await LastNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnEquityGroupChanged(string val)
+    {
+        EquityGroup = val;
+        await EquityGroupChanged.InvokeAsync(val);
+    }
+
+    private async Task OnProgrammeTypeChanged(string val)
+    {
+        ProgrammeType = val;
+        await ProgrammeTypeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnLearnershipRegNumberChanged(string val)
+    {
+        LearnershipRegNumber = val;
+        await LearnershipRegNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnQualificationTitleChanged(string val)
+    {
+        QualificationTitle = val;
+        await QualificationTitleChanged.InvokeAsync(val);
+    }
+
+    private async Task OnCommencementDateChanged(DateTime? val)
+    {
+        CommencementDate = val;
+        await CommencementDateChanged.InvokeAsync(val);
+    }
+
+    private async Task OnCompletionDateChanged(DateTime? val)
+    {
+        CompletionDate = val;
+        await CompletionDateChanged.InvokeAsync(val);
+    }
+
+    private async Task OnOrganisationIdChanged(int val)
+    {
+        OrganisationId = val;
+        await OrganisationIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTrainingProviderIdChanged(int? val)
+    {
+        TrainingProviderId = val;
+        await TrainingProviderIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnMonthlyStipendChanged(decimal val)
+    {
+        MonthlyStipendAmount = val;
+        await MonthlyStipendAmountChanged.InvokeAsync(val);
+    }
+
+    private async Task OnEmploymentStatusCodeChanged(string val)
+    {
+        EmploymentStatusCode = val;
+        await EmploymentStatusCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnContractExecutedChanged(bool val)
+    {
+        ContractExecuted = val;
+        await ContractExecutedChanged.InvokeAsync(val);
+    }
+
+    private async Task OnLearnerPopiaConsentChanged(bool val)
+    {
+        LearnerPopiaConsent = val;
+        await LearnerPopiaConsentChanged.InvokeAsync(val);
+    }
+
+    private string GetOrgDisplay(int id)
+    {
+        if (Organisations == null) return string.Empty;
+        var o = Organisations.FirstOrDefault(x => x.Id == id);
+        return o != null ? $"{o.CompanyName} ({o.SdlNumber})" : $"Org #{id}";
+    }
+
+    private string GetProviderDisplay(int? id)
+    {
+        if (id == null || TrainingProviders == null) return "Select a training provider";
+        var s = TrainingProviders.FirstOrDefault(x => x.Id == id.Value);
+        return s != null ? $"{s.ProviderName} ({s.AccreditationNumber})" : $"SDP #{id}";
+    }
+}

@@ -2655,6 +2655,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(s => s.SetaCode).HasMaxLength(10).HasDefaultValue("17");
             entity.HasIndex(s => s.ChamberCode);
             entity.HasIndex(s => s.SetaCode);
+            entity.HasIndex(s => new { s.Code, s.Name }).HasDatabaseName("IX_SicCodeType_Code_Name");
         });
         ConfigureLookup<StatusType>(modelBuilder, "StatusType");
         ConfigureLookup<LearningProgrammeType>(modelBuilder, "LearningProgrammeType");
@@ -2666,6 +2667,10 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         ConfigureLookup<GrantTypeType>(modelBuilder, "GrantTypeType");
         ConfigureLookup<InterventionType>(modelBuilder, "InterventionType");
         ConfigureLookup<OfoCodeType>(modelBuilder, "OfoCodeType");
+        modelBuilder.Entity<OfoCodeType>(entity =>
+        {
+            entity.HasIndex(o => new { o.Code, o.Name }).HasDatabaseName("IX_OfoCodeType_Code_Name");
+        });
         ConfigureLookup<VisitTypeType>(modelBuilder, "VisitTypeType");
         ConfigureLookup<SiteVisitApprovalStatusType>(modelBuilder, "SiteVisitApprovalStatusType");
         ConfigureLookup<EmployerApprovalStatusType>(modelBuilder, "EmployerApprovalStatusType");
@@ -2691,6 +2696,10 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         ConfigureLookup<TradeTestResultType>(modelBuilder, "TradeTestResultType");
         ConfigureLookup<TradeTestResultReasonType>(modelBuilder, "TradeTestResultReasonType");
         ConfigureLookup<StatssaAreaCodeType>(modelBuilder, "StatssaAreaCodeType");
+        modelBuilder.Entity<StatssaAreaCodeType>(entity =>
+        {
+            entity.HasIndex(s => new { s.Code, s.Name }).HasDatabaseName("IX_StatssaAreaCodeType_Code_Name");
+        });
         ConfigureLookup<UrbanRuralType>(modelBuilder, "UrbanRuralType");
         ConfigureLookup<SetaType>(modelBuilder, "SetaType");
         ConfigureLookup<FundingType>(modelBuilder, "FundingType");

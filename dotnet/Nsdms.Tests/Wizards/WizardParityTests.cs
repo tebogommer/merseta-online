@@ -143,6 +143,9 @@ public class WizardParityTests : BunitContext, IAsyncLifetime
             var recognizedWizards = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
                 "AssessorReRegistrationWizard.razor",
+                "DgGrantApplicationWizard.razor",
+                "LearnerAgreementRegistrationWizard.razor",
+                "WorkplaceApprovalWizard.razor",
                 // WspSignoffWizard.razor is documented as an attestation status board rather than a sequential stepper
                 "WspSignoffWizard.razor"
             };
@@ -155,5 +158,69 @@ public class WizardParityTests : BunitContext, IAsyncLifetime
                 );
             }
         }
+    }
+
+    [Fact]
+    public void DgGrantApplicationFields_RendersExpectedStatutoryFields()
+    {
+        var cut = Render<DgGrantApplicationFields>(parameters => parameters
+            .Add(p => p.Section, "All")
+            .Add(p => p.ProjectTitle, "Artisan Upskilling 2026")
+            .Add(p => p.SdlNumber, "L123456789")
+            .Add(p => p.TaxCompliancePin, "9823471029")
+            .Add(p => p.RequestedAmount, 350000m)
+        );
+
+        Assert.Contains("Funding window", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Grant type", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Project title", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Applying organisation", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Skills Development Levy (SDL) number", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Total funding requested", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("SARS tax compliance PIN", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("B-BBEE contributor status level", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("POPIA", cut.Markup, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void LearnerAgreementRegistrationFields_RendersExpectedStatutoryFields()
+    {
+        var cut = Render<LearnerAgreementRegistrationFields>(parameters => parameters
+            .Add(p => p.Section, "All")
+            .Add(p => p.RsaIdNumber, "0102035123088")
+            .Add(p => p.FirstName, "Sipho")
+            .Add(p => p.LastName, "Dlamini")
+            .Add(p => p.LearnershipRegNumber, "17Q170034281204")
+            .Add(p => p.QualificationTitle, "Automotive Maintenance")
+        );
+
+        Assert.Contains("South African National ID number", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("First names", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Surname", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Learning programme type", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Host employer organisation", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Accredited Skills Development Provider (SDP)", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Monthly learner allowance", cut.Markup, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void WorkplaceApprovalFields_RendersExpectedStatutoryFields()
+    {
+        var cut = Render<WorkplaceApprovalFields>(parameters => parameters
+            .Add(p => p.Section, "All")
+            .Add(p => p.TradeCode, "FITT")
+            .Add(p => p.QualificationTitle, "Fitter and Turner")
+            .Add(p => p.MentorFullName, "Johan van der Merwe")
+            .Add(p => p.TradeCertificateNumber, "TT-NAMB-2018-0941")
+            .Add(p => p.OhsCertificateNumber, "OHS-2026-001")
+        );
+
+        Assert.Contains("Employer organisation", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Employer contact person", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Physical inspection address", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Designated trade code", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Lead mentor artisan full name", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Artisan trade test certificate number", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("OHS", cut.Markup, StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -1358,6 +1358,21 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "Admin", "Developer" },
                 DisplayOrder = 8,
                 Keywords = new() { "compliance hud", "ui standard", "wcag", "heuristics", "audit" }
+            },
+            new()
+            {
+                Id = "nav-wizard-matrix",
+                Title = "Wizard candidate matrix",
+                Href = "wizards",
+                Icon = "AccountTree",
+                Category = "System administration",
+                Description = "Enterprise multi-step wizard registry, candidate matrix, and compliance hub (DESIGN.md §10)",
+                RequiredModule = AppPermissions.ModuleSystem,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Executive", "Developer" },
+                PersonaTags = new() { "All", "Admin", "Executive", "Developer", "SDF", "CLO" },
+                DisplayOrder = 9,
+                Keywords = new() { "wizard matrix", "multi-step", "wizards", "candidate matrix", "wizard shell", "stepper" }
             }
         };
     }

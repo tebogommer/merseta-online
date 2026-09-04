@@ -1,0 +1,466 @@
+@page "/learners/register-agreement"
+@page "/learners/create"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using Nsdms.Web.Components.Shared.Forms
+@using Nsdms.Web.Components.Shared.Wizard
+@using MudBlazor
+@inject ILearnerService LearnerService
+@inject IOrganisationService OrgService
+@inject ITrainingProviderService ProviderService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="mb-4">
+    <div class="d-flex align-center gap-2 mb-2">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="GoBack">
+            Back to learners register
+        </MudButton>
+        <MudBreadcrumbs Items="_breadcrumbs" Separator=">" Class="pa-0 ma-0" />
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="d-flex justify-center align-center py-12">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else if (_isSuccess)
+{
+    <MudCard Elevation="2" Class="pa-6 rounded-lg text-center">
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" Class="mb-3" />
+        <h1 class="text-h5 font-weight-bold text-primary mb-2">Tripartite learnership agreement registered</h1>
+        <p class="text-body1 text-secondary mb-4">
+            Statutory agreement reference <strong class="font-mono">@_registeredContractNo</strong> has been generated and queued for SETMIS export.
+        </p>
+        <div class="d-flex justify-center gap-3">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.QrCode"
+                       OnClick="ViewRegisteredLearner">
+                View learner profile &amp; agreement
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       OnClick="GoBack">
+                Return to learners list
+            </MudButton>
+        </div>
+    </MudCard>
+}
+else
+{
+    <WizardShell Title="Tripartite learnership agreement registration"
+                 Subtitle="Statutory tri-party skills development agreement (Learner, Host Employer, Accredited SDP)"
+                 ActiveStepIndex="@_activeStep"
+                 ActiveStepIndexChanged="OnStepChanged"
+                 FinishButtonText="Register agreement"
+                 IsBusy="@_isProcessing"
+                 OnCancel="GoBack"
+                 OnSaveDraft="SaveDraftAsync"
+                 OnFinish="SubmitAgreementAsync">
+
+        <!-- STEP 1: Learner Demographics -->
+        <WizardStep Label="Demographics"
+                    Heading="Learner demographics &amp; RSA identity verification"
+                    Description="Capture learner national ID and verify automatic extraction of birth date, gender, and citizenship"
+                    ValidateAsync="ValidateStep1Async">
+            <LearnerAgreementRegistrationFields Section="Demographics"
+                                                RsaIdNumber="@_rsaIdNumber"
+                                                RsaIdNumberChanged="@((val) => { _rsaIdNumber = val; UpdateReviewGroups(); })"
+                                                FirstName="@_firstName"
+                                                FirstNameChanged="@((val) => { _firstName = val; UpdateReviewGroups(); })"
+                                                LastName="@_lastName"
+                                                LastNameChanged="@((val) => { _lastName = val; UpdateReviewGroups(); })"
+                                                EquityGroup="@_equityGroup"
+                                                EquityGroupChanged="@((val) => { _equityGroup = val; UpdateReviewGroups(); })" />
+        </WizardStep>
+
+        <!-- STEP 2: Programme & Qualification -->
+        <WizardStep Label="Programme"
+                    Heading="Select learning programme &amp; qualification scope"
+                    Description="Specify learnership or apprenticeship registration code, qualification title, and tenure dates"
+                    ValidateAsync="ValidateStep2Async">
+            <LearnerAgreementRegistrationFields Section="Programme"
+                                                ProgrammeType="@_programmeType"
+                                                ProgrammeTypeChanged="@((val) => { _programmeType = val; UpdateReviewGroups(); })"
+                                                LearnershipRegNumber="@_learnershipRegNumber"
+                                                LearnershipRegNumberChanged="@((val) => { _learnershipRegNumber = val; UpdateReviewGroups(); })"
+                                                QualificationTitle="@_qualificationTitle"
+                                                QualificationTitleChanged="@((val) => { _qualificationTitle = val; UpdateReviewGroups(); })"
+                                                CommencementDate="@_commencementDate"
+                                                CommencementDateChanged="@((val) => { _commencementDate = val; UpdateReviewGroups(); })"
+                                                CompletionDate="@_completionDate"
+                                                CompletionDateChanged="@((val) => { _completionDate = val; UpdateReviewGroups(); })" />
+        </WizardStep>
+
+        <!-- STEP 3: Employer & Training Provider -->
+        <WizardStep Label="Workplace &amp; SDP"
+                    Heading="Assign host employer &amp; accredited SDP"
+                    Description="Link the approved workplace practical facility and the accredited theoretical training provider"
+                    ValidateAsync="ValidateStep3Async">
+            <LearnerAgreementRegistrationFields Section="Providers"
+                                                Organisations="@_organisations"
+                                                OrganisationId="@_organisationId"
+                                                OrganisationIdChanged="OnOrganisationChanged"
+                                                TrainingProviders="@_providers"
+                                                TrainingProviderId="@_trainingProviderId"
+                                                TrainingProviderIdChanged="OnTrainingProviderChanged" />
+        </WizardStep>
+
+        <!-- STEP 4: Employment & Allowance -->
+        <WizardStep Label="Terms &amp; stipend"
+                    Heading="Specify employment terms &amp; monthly learner allowance"
+                    Description="Confirm sectoral determination stipend compliance and certify bipartite contract execution"
+                    ValidateAsync="ValidateStep4Async">
+            <LearnerAgreementRegistrationFields Section="Employment"
+                                                MonthlyStipendAmount="@_monthlyStipendAmount"
+                                                MonthlyStipendAmountChanged="@((val) => { _monthlyStipendAmount = val; UpdateReviewGroups(); })"
+                                                EmploymentStatusCode="@_employmentStatusCode"
+                                                EmploymentStatusCodeChanged="@((val) => { _employmentStatusCode = val; UpdateReviewGroups(); })"
+                                                ContractExecuted="@_contractExecuted"
+                                                ContractExecutedChanged="@((val) => { _contractExecuted = val; UpdateReviewGroups(); })"
+                                                LearnerPopiaConsent="@_learnerPopiaConsent"
+                                                LearnerPopiaConsentChanged="@((val) => { _learnerPopiaConsent = val; UpdateReviewGroups(); })" />
+        </WizardStep>
+
+        <!-- STEP 5: Review & Statutory Attestation -->
+        <WizardReviewStep ReviewGroups="@_reviewGroups"
+                          OnEditStep="OnEditStepRequested">
+            <LifecycleContent>
+                <div class="d-flex align-center gap-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Verified" Color="Color.Primary" Size="Size.Medium" />
+                    <div>
+                        <span class="d-block text-body2 font-weight-bold text-primary">
+                            DHET SETMIS Files 500 &amp; 501 compliance
+                        </span>
+                        <span class="d-block text-caption text-secondary">
+                            Registration publishes statutory records with a dynamic verification QR reference.
+                        </span>
+                    </div>
+                </div>
+            </LifecycleContent>
+        </WizardReviewStep>
+
+    </WizardShell>
+}
+
+@code {
+    private int _activeStep = 0;
+    private bool _loading = true;
+    private bool _isProcessing = false;
+    private bool _isSuccess = false;
+    private int _registeredLearnerId = 0;
+    private string _registeredContractNo = string.Empty;
+
+    private List<Organisation> _organisations = new();
+    private List<TrainingProvider> _providers = new();
+
+    // Step 1
+    private string _rsaIdNumber = "0102035123088";
+    private string _firstName = "Sipho";
+    private string _lastName = "Dlamini";
+    private string _equityGroup = "African";
+
+    // Step 2
+    private string _programmeType = "Learnership";
+    private string _learnershipRegNumber = "17Q170034281204";
+    private string _qualificationTitle = "National Certificate: Automotive Repair and Maintenance (NQF 4)";
+    private DateTime? _commencementDate = DateTime.UtcNow.Date;
+    private DateTime? _completionDate = DateTime.UtcNow.Date.AddYears(1);
+
+    // Step 3
+    private int _organisationId;
+    private int? _trainingProviderId;
+
+    // Step 4
+    private decimal _monthlyStipendAmount = 4500m;
+    private string _employmentStatusCode = "18.2";
+    private bool _contractExecuted = false;
+    private bool _learnerPopiaConsent = false;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Learner & artisan development", href: "/learners"),
+        new BreadcrumbItem("Learner agreements", href: "/learners"),
+        new BreadcrumbItem("Register agreement", href: null, disabled: true)
+    };
+
+    private List<WizardReviewGroup> _reviewGroups = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _organisations = await OrgService.GetAllAsync();
+            _providers = await ProviderService.GetAllAsync();
+
+            if (_organisations.Any())
+            {
+                _organisationId = _organisations.First().Id;
+            }
+
+            if (_providers.Any())
+            {
+                _trainingProviderId = _providers.First().Id;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading organisation or provider records: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            UpdateReviewGroups();
+        }
+    }
+
+    private void OnOrganisationChanged(int id)
+    {
+        _organisationId = id;
+        UpdateReviewGroups();
+    }
+
+    private void OnTrainingProviderChanged(int? id)
+    {
+        _trainingProviderId = id;
+        UpdateReviewGroups();
+    }
+
+    private void OnStepChanged(int step)
+    {
+        _activeStep = step;
+        UpdateReviewGroups();
+    }
+
+    private void OnEditStepRequested(int targetStep)
+    {
+        _activeStep = targetStep;
+    }
+
+    private Task<bool> ValidateStep1Async()
+    {
+        if (string.IsNullOrWhiteSpace(_rsaIdNumber) || _rsaIdNumber.Length != 13)
+        {
+            Snackbar.Add("Please enter a valid 13-digit South African National ID number.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_firstName) || string.IsNullOrWhiteSpace(_lastName))
+        {
+            Snackbar.Add("First names and surname are compulsory statutory fields.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep2Async()
+    {
+        if (string.IsNullOrWhiteSpace(_learnershipRegNumber))
+        {
+            Snackbar.Add("Learnership registration number / OFO code is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_qualificationTitle))
+        {
+            Snackbar.Add("Qualification title is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (_commencementDate == null || _completionDate == null || _completionDate <= _commencementDate)
+        {
+            Snackbar.Add("Completion date must be later than commencement date.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep3Async()
+    {
+        if (_organisationId <= 0)
+        {
+            Snackbar.Add("Please select the host employer organisation.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (_trainingProviderId == null || _trainingProviderId <= 0)
+        {
+            Snackbar.Add("Please select an accredited Skills Development Provider (SDP).", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep4Async()
+    {
+        if (_monthlyStipendAmount < 1500m)
+        {
+            Snackbar.Add("Monthly stipend must satisfy Sectoral Determination 5 minimums (>= R1,500.00).", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (!_contractExecuted)
+        {
+            Snackbar.Add("You must certify employer and learner contract execution.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (!_learnerPopiaConsent)
+        {
+            Snackbar.Add("Learner POPIA consent is required before registration.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private void UpdateReviewGroups()
+    {
+        var org = _organisations.FirstOrDefault(o => o.Id == _organisationId);
+        var sdp = _providers.FirstOrDefault(p => p.Id == _trainingProviderId);
+
+        _reviewGroups = new List<WizardReviewGroup>
+        {
+            new()
+            {
+                Title = "Learner demographics",
+                Icon = Icons.Material.Filled.Person,
+                TargetStepIndex = 0,
+                Items = new()
+                {
+                    new("Full names", $"{_firstName} {_lastName}"),
+                    new("RSA ID number", _rsaIdNumber, isMonospace: true),
+                    new("Equity group", _equityGroup)
+                }
+            },
+            new()
+            {
+                Title = "Learning programme & qualification",
+                Icon = Icons.Material.Filled.School,
+                TargetStepIndex = 1,
+                Items = new()
+                {
+                    new("Programme type", _programmeType),
+                    new("Registration number", _learnershipRegNumber, isMonospace: true),
+                    new("Qualification", _qualificationTitle),
+                    new("Duration", $"{_commencementDate:yyyy-MM-dd} to {_completionDate:yyyy-MM-dd}")
+                }
+            },
+            new()
+            {
+                Title = "Host employer & accredited SDP",
+                Icon = Icons.Material.Filled.Apartment,
+                TargetStepIndex = 2,
+                Items = new()
+                {
+                    new("Host employer", org?.CompanyName ?? "Not selected"),
+                    new("SDL number", org?.SdlNumber ?? "—", isMonospace: true),
+                    new("Skills development provider", sdp?.ProviderName ?? "Not selected"),
+                    new("Accreditation", sdp?.AccreditationNumber ?? "—", isMonospace: true)
+                }
+            },
+            new()
+            {
+                Title = "Employment terms & compliance",
+                Icon = Icons.Material.Filled.Badge,
+                TargetStepIndex = 3,
+                Items = new()
+                {
+                    new("Monthly allowance", _monthlyStipendAmount.ToString("C2", System.Globalization.CultureInfo.InvariantCulture)),
+                    new("Employment status", _employmentStatusCode == "18.2" ? "Section 18.2 (Unemployed)" : "Section 18.1 (Employed)"),
+                    new("Contract signed", _contractExecuted ? "Certified executed" : "Pending"),
+                    new("POPIA consent", _learnerPopiaConsent ? "Consent granted" : "Pending")
+                }
+            }
+        };
+    }
+
+    private async Task SaveDraftAsync()
+    {
+        _isProcessing = true;
+        try
+        {
+            var learner = BuildLearnerEntity("Draft");
+            var saved = await LearnerService.RegisterLearnerAsync(learner, "SdfUser");
+            Snackbar.Add($"Learner agreement draft '{saved.LearnerContractNumber}' saved successfully.", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Could not save draft: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task SubmitAgreementAsync()
+    {
+        _isProcessing = true;
+        try
+        {
+            var learner = BuildLearnerEntity("Registered");
+            var result = await LearnerService.RegisterLearnerAsync(learner, "SdfUser");
+            _registeredLearnerId = result.Id;
+            _registeredContractNo = result.LearnerContractNumber ?? $"LNK-{result.Id:D5}";
+            _isSuccess = true;
+            Snackbar.Add($"Learner agreement '{_registeredContractNo}' registered successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Registration failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private CompanyLearner BuildLearnerEntity(string status)
+    {
+        return new CompanyLearner
+        {
+            OrganisationId = _organisationId,
+            TrainingProviderId = _trainingProviderId,
+            LearnerContractNumber = $"LA-2026-{DateTime.UtcNow:MMdd}-{_rsaIdNumber.Substring(Math.Max(0, _rsaIdNumber.Length - 4))}",
+            QualificationTitle = _qualificationTitle,
+            LearnershipId = _learnershipRegNumber,
+            OfoCode = _learnershipRegNumber,
+            LearningProgrammeTypeCode = _programmeType,
+            CommencementDate = _commencementDate,
+            CompletionDate = _completionDate,
+            EnrolmentStatusCode = status,
+            EconomicStatusId = _employmentStatusCode == "18.2" ? "02" : "01",
+            CumulativeSpend = _monthlyStipendAmount,
+            Person = new Person
+            {
+                RsaIdNumber = _rsaIdNumber,
+                FirstName = _firstName,
+                LastName = _lastName,
+                EquityCode = _equityGroup
+            }
+        };
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo("/learners");
+    }
+
+    private void ViewRegisteredLearner()
+    {
+        NavManager.NavigateTo($"/learners/{_registeredLearnerId}");
+    }
+}
