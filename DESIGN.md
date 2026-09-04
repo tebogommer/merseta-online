@@ -170,6 +170,39 @@ $$\text{WORK} \longrightarrow \text{CONTEXT} \longrightarrow \text{DECISION} \lo
 - ❌ **No Unconnected Status**: Every workflow mutation performs an atomic double-write into `audit_logs` with before/after JSON snapshots.
 - ❌ **No Empty Decorative Containers**: Never leave empty bordered cards or placeholder boxes in production UI.
 
+---
+
+## 10. Multi-Step Wizard Architecture & Interaction Standard
+
+### 10.1 The 15 Principles (House Rules)
+1. **One decision per step**: Each step focuses on a single semantic task.
+2. **Progressive disclosure**: Dependent options appear only after their controlling choice.
+3. **Dependency-ordered sequence**: Canonical order: Controlling choice → Data input → Review & lifecycle decisions.
+4. **Smart defaults, deferred decisions**: Never pre-check statutory legal consents or hardcode mock decision IDs.
+5. **Visible, meaningful progress**: Stepper shows state (completed, current, upcoming) with concise labels (<= 3 words); no live progress counts.
+6. **Freedom to leave and return**: "Save draft" available from Step 2 onward; Back never loses input state.
+7. **Single clear primary action**: Exactly one Next / Finish action button; exactly one Cancel button.
+8. **Concise task-oriented copy**: Zero explanatory essays or parenthetical system commentary in field labels.
+9. **Consistency with the product**: Wizard steps and the entity edit view share identical field definitions.
+10. **Chunking**: <= 7 inputs per step, grouped under semantic headings.
+11. **Reduced choice load**: Few, highly differentiated options.
+12. **Per-step validation**: Inline field errors; Next action blocked until the active step passes validation.
+13. **Review before commit**: Comprehensive read-only review step with grouped cards and per-step "Edit" links.
+14. **Visual consistency**: Helper-text rows level, single theme color for boolean controls (`Color.Primary`), WCAG 2.2 AA contrast in both Light and Dark themes.
+15. **Accessibility**: Semantic `<ol>` with `aria-current="step"`, accessible button labels, programmatic focus moves to step heading on activation.
+
+### 10.2 Component Anatomy & Footer Layout
+- **Shell**: `<WizardShell>` (`Components/Shared/Wizard/WizardShell.razor`)
+- **Stepper**: `<WizardStepper>` (`Components/Shared/Wizard/WizardStepper.razor`)
+- **Step Container**: `<WizardStep>` (`Components/Shared/Wizard/WizardStep.razor`)
+- **Review Step**: `<WizardReviewStep>` (`Components/Shared/Wizard/WizardReviewStep.razor`)
+- **State Machine**: `WizardState<TModel>` (`Components/Shared/Wizard/WizardState.cs`)
+- **Enforced Footer Layout**:
+  `[Cancel]` (left) | `[Save draft]` (left-centre, hidden on Step 1) | `[Back]` `[Next / Finish]` (right).
+
+### 10.3 Build-Time Guard ([NSDMS0001])
+Direct usage of raw library stepper components (`MudStepper`, `MudStep`) outside `Components/Shared/Wizard` is prohibited and halts build execution with diagnostic `[NSDMS0001]`.
+
 ### Wizard Exceptions
-- `AssessorReRegistrationWizard.razor`
+- `AssessorReRegistrationWizard.razor` (Transitional: scheduled for Phase 4 rebuild on WizardShell)
 
