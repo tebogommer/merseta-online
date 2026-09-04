@@ -279,3 +279,11 @@ Every page must pass all 16 items before being declared complete:
 ### 🛡️ High-Volume Primary Key Type Alignment Invariant
 1. **BIGINT Primary Key Integrity**: Entities inheriting `BaseLongEntity` (`LevyFileLine`, `WspTrainingPlan`, `AuditLog`) MUST map to underlying SQL Server columns defined as `BIGINT IDENTITY(1,1)`.
 2. **Type Cast Protection**: Mismatches where the physical SQL Server column is `INT` while the C# domain property is `long` cause runtime ADO.NET `InvalidCastException: Unable to cast Int32 to Int64` during query iteration.
+
+---
+
+### 🛡️ High-Volume Lookup Composite Indexing & Covering Standard
+1. **Composite Search Indexing**: Reference and taxonomy lookups exceeding 1,000 rows (`SicCodeType`, `OfoCodeType`, `StatssaAreaCodeType`) MUST declare non-clustered composite indexes on `(Code, Name)` in both Fluent API (`entity.HasIndex(x => new { x.Code, x.Name }).HasDatabaseName(...)`) and physical DDL scripts.
+2. **Covering INCLUDE Columns**: Physical DDL migrations for lookup search tables MUST include commonly filtered/displayed attributes (`INCLUDE (Active, Description, ...)`) to enable index-only scans during combobox debounced queries.
+3. **Wizard Contract Parity**: Multi-step wizards registered in `DESIGN.md` §10 must expose step-level review jump links and pair with bUnit parity tests ensuring shared form field definitions match statutory domain entities without unmapped property mismatches.
+
