@@ -1,0 +1,120 @@
+@namespace Nsdms.Web.Components.Shared
+@typeparam TItem
+@using MudBlazor
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Search" Color="Color.Primary" Size="Size.Medium" />
+            <MudText Typo="Typo.h6" Class="font-weight-bold">
+                @Title
+            </MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField T="string"
+                      @bind-Value="_searchTerm"
+                      Placeholder="Search by name, reference, ID number, or code..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      DebounceInterval="300"
+                      OnDebounceIntervalElapsed="OnSearchChanged"
+                      Class="mb-3"
+                      aria-label="Search filter" />
+
+        <div style="max-height: 400px; overflow-y: auto;">
+            @if (_loading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-2" />
+            }
+            <MudTable Items="@_items"
+                      Hover="true"
+                      Dense="true"
+                      Striped="true"
+                      SelectedRow="_selectedItem"
+                      RowClassFunc="@((item, idx) => EqualityComparer<TItem>.Default.Equals(item, _selectedItem) ? "selected" : "")"
+                      OnRowClick="@((TableRowClickEventArgs<TItem> args) => SelectRow(args.Item))">
+                <HeaderContent>
+                    @HeaderTemplate
+                </HeaderContent>
+                <RowTemplate>
+                    @RowTemplate(context)
+                </RowTemplate>
+                <NoRecordsContent>
+                    <div class="pa-4 text-center text-secondary">
+                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Medium" Class="mb-1" />
+                        <div>No matching records found.</div>
+                    </div>
+                </NoRecordsContent>
+            </MudTable>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Close" OnClick="Cancel">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Check"
+                   Disabled="@(EqualityComparer<TItem>.Default.Equals(_selectedItem, default))"
+                   OnClick="Confirm">
+            Select
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public string Title { get; set; } = "Select Record";
+    [Parameter] public Func<string?, Task<List<TItem>>>? FetchFunc { get; set; }
+    [Parameter] public RenderFragment? HeaderTemplate { get; set; }
+    [Parameter] public RenderFragment<TItem> RowTemplate { get; set; } = default!;
+
+    private string? _searchTerm;
+    private List<TItem> _items = new();
+    private TItem? _selectedItem;
+    private bool _loading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task OnSearchChanged(string text)
+    {
+        _searchTerm = text;
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        if (FetchFunc == null) return;
+        _loading = true;
+        try
+        {
+            _items = await FetchFunc(_searchTerm);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void SelectRow(TItem item)
+    {
+        _selectedItem = item;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Confirm()
+    {
+        if (_selectedItem != null)
+        {
+            MudDialog.Close(DialogResult.Ok(_selectedItem));
+        }
+    }
+}
