@@ -113,6 +113,119 @@ public class WorkplaceApproval : BaseEntity
     public string? MentorRatioExemptionNotes { get; set; }
 
     /// <summary>
+    /// Learning programme stream code (e.g. Apprenticeship, Learnership, InternshipNDiploma, OccupationalQual, SkillsProgramme, Candidacy).
+    /// </summary>
+    public string? LearningProgramTypeCode { get; set; } = "Apprenticeship";
+
+    /// <summary>
+    /// Indicates whether this learning programme and qualification stream mandates statutory workplace approval.
+    /// </summary>
+    public bool RequiresWorkplaceApproval { get; set; } = true;
+
+    /// <summary>
+    /// Indicates whether a physical on-site audit visit is required (true) or desktop verification suffices (false).
+    /// </summary>
+    public bool? IsSiteVisitRequired { get; set; } = true;
+
+    /// <summary>
+    /// Justification notes if a physical site visit is waived in favour of desktop audit.
+    /// </summary>
+    public string? SiteVisitJustification { get; set; }
+
+    /// <summary>
+    /// Statutory SLA deadline (20 South African business days from application submission).
+    /// </summary>
+    public DateTime? InspectionDueDate { get; set; }
+
+    // Section 6.2: Workplace Verification Attributes (Role-Neutral)
+    /// <summary>
+    /// Recommendation reason category for workplace verification.
+    /// </summary>
+    public string? VerificationRecommendationReason { get; set; }
+
+    /// <summary>
+    /// Detailed justification for recommending workplace approval.
+    /// </summary>
+    public string? VerificationRecommendationExplanation { get; set; }
+
+    /// <summary>
+    /// Rejection reason category identified during workplace verification.
+    /// </summary>
+    public string? VerificationRejectionReason { get; set; }
+
+    /// <summary>
+    /// Detailed justification for rejecting or returning the application during verification.
+    /// </summary>
+    public string? VerificationRejectionExplanation { get; set; }
+
+    /// <summary>
+    /// Date when the formal workplace verification report was concluded.
+    /// </summary>
+    public DateTime? VerifiedDate { get; set; }
+
+    /// <summary>
+    /// Foreign key referencing the officer person who performed the verification.
+    /// </summary>
+    public int? VerifiedByPersonId { get; set; }
+
+    /// <summary>
+    /// Navigational reference to the verifying officer person.
+    /// </summary>
+    public Person? VerifiedByPerson { get; set; }
+
+    // Section 6.3: Workplace Evaluation & Decision Attributes (Role-Neutral)
+    /// <summary>
+    /// Statutory approval decision reason code.
+    /// </summary>
+    public string? ApprovalReason { get; set; }
+
+    /// <summary>
+    /// Detailed rationale for granting final workplace approval.
+    /// </summary>
+    public string? ApprovalExplanation { get; set; }
+
+    /// <summary>
+    /// Statutory rejection decision reason code.
+    /// </summary>
+    public string? RejectionReason { get; set; }
+
+    /// <summary>
+    /// Detailed rationale for rejecting the workplace approval application.
+    /// </summary>
+    public string? RejectionExplanation { get; set; }
+
+    /// <summary>
+    /// Date when the final committee or management evaluation decision was rendered.
+    /// </summary>
+    public DateTime? DecisionDate { get; set; }
+
+    /// <summary>
+    /// Foreign key referencing the manager or committee chairperson who rendered the decision.
+    /// </summary>
+    public int? DecisionByPersonId { get; set; }
+
+    /// <summary>
+    /// Navigational reference to the decision maker person.
+    /// </summary>
+    public Person? DecisionByPerson { get; set; }
+
+    // Non-merSETA Support
+    /// <summary>
+    /// Indicates whether the host employer is registered with another SETA under non-merSETA SDL.
+    /// </summary>
+    public bool IsNonMerSetaCompany { get; set; } = false;
+
+    /// <summary>
+    /// Title of the originating Home SETA if employer is registered outside merSETA.
+    /// </summary>
+    public string? HomeSetaName { get; set; }
+
+    /// <summary>
+    /// Statutory Inter-SETA agreement or MOU reference number.
+    /// </summary>
+    public string? HomeSetaAgreementRef { get; set; }
+
+    /// <summary>
     /// Certified artisan mentors assigned to supervise learners at this site.
     /// </summary>
     public ICollection<WorkplaceApprovalMentor> Mentors { get; set; } = new List<WorkplaceApprovalMentor>();

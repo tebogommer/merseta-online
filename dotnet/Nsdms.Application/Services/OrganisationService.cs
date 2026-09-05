@@ -39,17 +39,45 @@ public interface IOrganisationService
     Task<List<OrganisationLevyReconDto>> GetLevyReconHistoryAsync(int organisationId);
     Task<string?> ResolveChamberFromSicCodeAsync(string sicCode);
     Task<Organisation> SetManualChamberOverrideAsync(int organisationId, string newChamberCode, string overrideReason, string approvedBy);
+    Task<string> GenerateNonLevyNumberAsync(CancellationToken cancellationToken = default);
+    Task<ChamberDerivationResult> DeriveChamberAndVendorClassAsync(string? sicCode, string? organisationTypeCode = null, string? manualChamber = null, bool isManual = false);
+    Task<ChamberValidationResult> ValidateChamberGovernanceAsync(int organisationId);
 }
 
 public class OrganisationService : IOrganisationService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
+    private readonly ITenantProvider? _tenantProvider;
+    private readonly INonLevyNumberGeneratorService _nonLevyGenerator;
+    private readonly IChamberDerivationService _chamberService;
 
-    public OrganisationService(INsdmsDbContextFactory contextFactory, IAuditService audit)
+    public OrganisationService(
+        INsdmsDbContextFactory contextFactory, 
+        IAuditService audit,
+        ITenantProvider? tenantProvider = null,
+        INonLevyNumberGeneratorService? nonLevyGenerator = null,
+        IChamberDerivationService? chamberService = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
+        _tenantProvider = tenantProvider;
+        _nonLevyGenerator = nonLevyGenerator!;
+        _chamberService = chamberService!;
+    }
+
+    public OrganisationService(INsdmsDbContextFactory contextFactory, IAuditService audit)
+        : this(contextFactory, audit, null, null, null)
+    {
+    }
+
+    public OrganisationService(
+        INsdmsDbContextFactory contextFactory, 
+        IAuditService audit,
+        INonLevyNumberGeneratorService? nonLevyGenerator,
+        IChamberDerivationService? chamberService)
+        : this(contextFactory, audit, null, nonLevyGenerator, chamberService)
+    {
     }
 
     public async Task<PagedResult<OrganisationListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default)
@@ -58,6 +86,11 @@ public class OrganisationService : IOrganisationService
         var baseQuery = db.Organisations
             .Include(o => o.PrimaryContactPerson)
             .AsNoTracking();
+
+        if (_tenantProvider != null && !_tenantProvider.IsAdmin && _tenantProvider.CurrentOrganisationId != null)
+        {
+            baseQuery = baseQuery.Where(o => o.Id == _tenantProvider.CurrentOrganisationId.Value);
+        }
 
         if (query.FilterParams.TryGetValue("status", out var statusVal) && !string.IsNullOrWhiteSpace(statusVal) && statusVal != "All")
         {
@@ -112,6 +145,11 @@ public class OrganisationService : IOrganisationService
             .Include(o => o.PrimaryContactPerson)
             .AsQueryable();
 
+        if (_tenantProvider != null && !_tenantProvider.IsAdmin && _tenantProvider.CurrentOrganisationId != null)
+        {
+            query = query.Where(o => o.Id == _tenantProvider.CurrentOrganisationId.Value);
+        }
+
         if (!string.IsNullOrWhiteSpace(search))
         {
             var s = search.Trim();
@@ -131,6 +169,11 @@ public class OrganisationService : IOrganisationService
 
     public async Task<Organisation?> GetByIdAsync(int id)
     {
+        if (_tenantProvider != null && !_tenantProvider.IsAdmin && _tenantProvider.CurrentOrganisationId != null && id != _tenantProvider.CurrentOrganisationId.Value)
+        {
+            return null;
+        }
+
         using var db = await _contextFactory.CreateDbContextAsync();
         return await db.Organisations
             .AsNoTracking()
@@ -152,16 +195,69 @@ public class OrganisationService : IOrganisationService
         org.CreatedAt = DateTime.UtcNow;
         org.CreatedBy = currentUsername;
 
-        // Auto-cascade ChamberCode from SicCodeType unless an authorized manual override is flagged
-        if (!org.IsManualChamberOverride && !string.IsNullOrWhiteSpace(org.SicCode))
+        // 1. Auto-assign statutory N-Number for non-levy organisations, TVETs, NGOs, and exempt SMEs
+        bool isNonLevy = string.IsNullOrWhiteSpace(org.SdlNumber) || 
+                         org.LevyCategoryCode == "NON_LEVY_PAYING" ||
+                         org.OrganisationTypeCode?.Contains("TVET", StringComparison.OrdinalIgnoreCase) == true ||
+                         org.OrganisationTypeCode?.Contains("NGO", StringComparison.OrdinalIgnoreCase) == true ||
+                         org.OrganisationTypeCode?.Contains("NPO", StringComparison.OrdinalIgnoreCase) == true ||
+                         org.OrganisationTypeCode?.Contains("UNIVERSITY", StringComparison.OrdinalIgnoreCase) == true;
+
+        if (isNonLevy && (string.IsNullOrWhiteSpace(org.SdlNumber) || org.SdlNumber == "N/A" || org.SdlNumber == "PENDING"))
         {
-            var matchedSic = await db.SicCodeTypes.AsNoTracking().FirstOrDefaultAsync(s => s.Code == org.SicCode);
+            org.SdlNumber = _nonLevyGenerator != null
+                ? await _nonLevyGenerator.GenerateNextNonLevyNumberAsync()
+                : $"N{DateTime.UtcNow.Ticks % 1000000000:D9}";
+            org.LevyCategoryCode = "NON_LEVY_PAYING";
+        }
+
+        // 2. Chamber & Dynamics GP Vendor Class Derivation & Governance
+        if (_chamberService != null)
+        {
+            var derivation = await _chamberService.DeriveChamberAndVendorClassAsync(
+                org.SicCode,
+                org.OrganisationTypeCode,
+                org.ChamberCode,
+                org.IsManualChamberOverride
+            );
+
+            if (derivation.IsSuccess)
+            {
+                org.ChamberCode = derivation.ChamberCode;
+                org.GpVendorClass = derivation.GpVendorClass;
+                org.HasMissingChamberMapping = false;
+            }
+            else
+            {
+                org.ChamberCode = null;
+                org.GpVendorClass = null;
+                org.HasMissingChamberMapping = true;
+            }
+        }
+        else if (!org.IsManualChamberOverride && !string.IsNullOrWhiteSpace(org.SicCode))
+        {
+            var matchedSic = await db.SicCodeTypes.AsNoTracking().FirstOrDefaultAsync(s => s.Code == org.SicCode.Trim());
             if (matchedSic != null && !string.IsNullOrWhiteSpace(matchedSic.ChamberCode))
             {
                 org.ChamberCode = matchedSic.ChamberCode;
+                org.HasMissingChamberMapping = false;
+                org.GpVendorClass = matchedSic.ChamberCode switch
+                {
+                    "AUTO" => "AUTO",
+                    "METAL" => "METAL",
+                    "MOTOR" => "MOTOR",
+                    "NEW_TYRE" or "NEW TYRE" => "NEW TYRE",
+                    "PLASTICS" => "PLASTICS",
+                    _ => "SETA"
+                };
+            }
+            else
+            {
+                org.HasMissingChamberMapping = true;
             }
         }
-        else if (org.IsManualChamberOverride)
+
+        if (org.IsManualChamberOverride)
         {
             org.ChamberOverrideDate ??= DateTime.UtcNow;
             org.ChamberOverrideApprovedBy ??= currentUsername;
@@ -222,13 +318,65 @@ public class OrganisationService : IOrganisationService
             existing.IsActive
         };
 
-        // Auto-cascade ChamberCode from SicCodeType unless an authorized manual override is active
-        if (!org.IsManualChamberOverride && !string.IsNullOrWhiteSpace(org.SicCode))
+        // 1. Auto-assign statutory N-Number if missing on non-levy organisations
+        bool isNonLevy = string.IsNullOrWhiteSpace(org.SdlNumber) || 
+                         org.LevyCategoryCode == "NON_LEVY_PAYING" ||
+                         org.OrganisationTypeCode?.Contains("TVET", StringComparison.OrdinalIgnoreCase) == true ||
+                         org.OrganisationTypeCode?.Contains("NGO", StringComparison.OrdinalIgnoreCase) == true ||
+                         org.OrganisationTypeCode?.Contains("NPO", StringComparison.OrdinalIgnoreCase) == true ||
+                         org.OrganisationTypeCode?.Contains("UNIVERSITY", StringComparison.OrdinalIgnoreCase) == true;
+
+        if (isNonLevy && (string.IsNullOrWhiteSpace(org.SdlNumber) || org.SdlNumber == "N/A" || org.SdlNumber == "PENDING"))
         {
-            var matchedSic = await db.SicCodeTypes.AsNoTracking().FirstOrDefaultAsync(s => s.Code == org.SicCode);
+            org.SdlNumber = _nonLevyGenerator != null
+                ? await _nonLevyGenerator.GenerateNextNonLevyNumberAsync()
+                : $"N{DateTime.UtcNow.Ticks % 1000000000:D9}";
+            org.LevyCategoryCode = "NON_LEVY_PAYING";
+        }
+
+        // 2. Chamber & Dynamics GP Vendor Class Derivation & Governance
+        if (_chamberService != null)
+        {
+            var derivation = await _chamberService.DeriveChamberAndVendorClassAsync(
+                org.SicCode,
+                org.OrganisationTypeCode,
+                org.ChamberCode,
+                org.IsManualChamberOverride
+            );
+
+            if (derivation.IsSuccess)
+            {
+                org.ChamberCode = derivation.ChamberCode;
+                org.GpVendorClass = derivation.GpVendorClass;
+                org.HasMissingChamberMapping = false;
+            }
+            else
+            {
+                org.ChamberCode = null;
+                org.GpVendorClass = null;
+                org.HasMissingChamberMapping = true;
+            }
+        }
+        else if (!org.IsManualChamberOverride && !string.IsNullOrWhiteSpace(org.SicCode))
+        {
+            var matchedSic = await db.SicCodeTypes.AsNoTracking().FirstOrDefaultAsync(s => s.Code == org.SicCode.Trim());
             if (matchedSic != null && !string.IsNullOrWhiteSpace(matchedSic.ChamberCode))
             {
                 org.ChamberCode = matchedSic.ChamberCode;
+                org.HasMissingChamberMapping = false;
+                org.GpVendorClass = matchedSic.ChamberCode switch
+                {
+                    "AUTO" => "AUTO",
+                    "METAL" => "METAL",
+                    "MOTOR" => "MOTOR",
+                    "NEW_TYRE" or "NEW TYRE" => "NEW TYRE",
+                    "PLASTICS" => "PLASTICS",
+                    _ => "SETA"
+                };
+            }
+            else
+            {
+                org.HasMissingChamberMapping = true;
             }
         }
 
@@ -245,6 +393,8 @@ public class OrganisationService : IOrganisationService
         existing.CountryCode = org.CountryCode;
         existing.SectorCode = org.SectorCode;
         existing.ChamberCode = org.ChamberCode;
+        existing.GpVendorClass = org.GpVendorClass;
+        existing.HasMissingChamberMapping = org.HasMissingChamberMapping;
         existing.SicCode = org.SicCode;
         existing.IsManualChamberOverride = org.IsManualChamberOverride;
         existing.ChamberOverrideReason = org.ChamberOverrideReason;
@@ -275,12 +425,43 @@ public class OrganisationService : IOrganisationService
         return existing;
     }
 
+    public async Task<string> GenerateNonLevyNumberAsync(CancellationToken cancellationToken = default)
+    {
+        return _nonLevyGenerator != null
+            ? await _nonLevyGenerator.GenerateNextNonLevyNumberAsync(cancellationToken)
+            : $"N{DateTime.UtcNow.Ticks % 1000000000:D9}";
+    }
+
+    public async Task<ChamberDerivationResult> DeriveChamberAndVendorClassAsync(
+        string? sicCode, string? organisationTypeCode = null, string? manualChamber = null, bool isManual = false)
+    {
+        if (_chamberService != null)
+        {
+            return await _chamberService.DeriveChamberAndVendorClassAsync(sicCode, organisationTypeCode, manualChamber, isManual);
+        }
+        return new ChamberDerivationResult(false, null, null, null, "None", "Chamber derivation service not available");
+    }
+
+    public async Task<ChamberValidationResult> ValidateChamberGovernanceAsync(int organisationId)
+    {
+        if (_chamberService != null)
+        {
+            return await _chamberService.ValidateChamberGovernanceAsync(organisationId);
+        }
+        return new ChamberValidationResult(true, null, null, true, true, true, true, null);
+    }
+
     public async Task<string?> ResolveChamberFromSicCodeAsync(string sicCode)
     {
         if (string.IsNullOrWhiteSpace(sicCode)) return null;
+        if (_chamberService != null)
+        {
+            var derivation = await _chamberService.DeriveChamberAndVendorClassAsync(sicCode);
+            return derivation.IsSuccess ? derivation.ChamberCode : null;
+        }
         using var db = await _contextFactory.CreateDbContextAsync();
-        var sic = await db.SicCodeTypes.AsNoTracking().FirstOrDefaultAsync(s => s.Code == sicCode.Trim() && s.Active);
-        return sic?.ChamberCode;
+        var matchedSic = await db.SicCodeTypes.AsNoTracking().FirstOrDefaultAsync(s => s.Code == sicCode.Trim() && s.Active);
+        return matchedSic?.ChamberCode;
     }
 
     public async Task<Organisation> SetManualChamberOverrideAsync(int organisationId, string newChamberCode, string overrideReason, string approvedBy)
@@ -295,6 +476,8 @@ public class OrganisationService : IOrganisationService
         var before = new
         {
             org.ChamberCode,
+            org.GpVendorClass,
+            org.HasMissingChamberMapping,
             org.IsManualChamberOverride,
             org.ChamberOverrideReason,
             org.ChamberOverrideDate,
@@ -302,6 +485,8 @@ public class OrganisationService : IOrganisationService
         };
 
         org.ChamberCode = newChamberCode;
+        org.GpVendorClass = _chamberService != null ? _chamberService.MapChamberToGpVendorClass(newChamberCode) : "SETA";
+        org.HasMissingChamberMapping = false;
         org.IsManualChamberOverride = true;
         org.ChamberOverrideReason = overrideReason;
         org.ChamberOverrideDate = DateTime.UtcNow;

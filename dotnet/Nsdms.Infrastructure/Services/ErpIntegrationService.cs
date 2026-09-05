@@ -236,14 +236,27 @@ public class ErpIntegrationService : IErpIntegrationService
     public async Task<ErpOutboxMessage> EnqueueVendorSyncAsync(int organisationId, string currentUsername = "SYSTEM")
     {
         using var db = await _contextFactory.CreateDbContextAsync();
-        var org = await db.Organisations.FindAsync(organisationId);
+        var org = await db.Organisations.FindAsync(organisationId)
+            ?? throw new KeyNotFoundException($"Organisation with ID {organisationId} not found.");
+
+        if (org.HasMissingChamberMapping || string.IsNullOrWhiteSpace(org.ChamberCode))
+        {
+            throw new InvalidOperationException($"Dynamics GP Vendor Sync blocked: Organisation '{org.CompanyName}' (#{organisationId}) has an unmapped merSETA Chamber / GP Vendor Class. Please resolve the Chamber mapping before syncing to GP.");
+        }
 
         var message = new ErpOutboxMessage
         {
             MessageType = "VendorSync",
             ReferenceKey = organisationId.ToString(),
             OrganisationId = organisationId,
-            PayloadJson = System.Text.Json.JsonSerializer.Serialize(new { organisationId, org?.CompanyName, org?.SdlNumber }),
+            PayloadJson = System.Text.Json.JsonSerializer.Serialize(new 
+            { 
+                organisationId, 
+                org.CompanyName, 
+                org.SdlNumber, 
+                ChamberCode = org.ChamberCode, 
+                GpVendorClass = org.GpVendorClass ?? "SETA" 
+            }),
             QueueStatusCode = "Pending",
             ExecutionPriority = 1,
             CreatedAt = DateTime.UtcNow,

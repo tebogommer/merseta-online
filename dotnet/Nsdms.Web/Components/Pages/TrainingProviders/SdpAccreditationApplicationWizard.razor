@@ -12,6 +12,7 @@
 @inject IOrganisationService OrgService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IWizardDraftService DraftService
 @rendermode InteractiveServer
 
 <div class="mb-4">
@@ -63,6 +64,11 @@ else
                  ActiveStepIndexChanged="OnStepChanged"
                  FinishButtonText="Submit accreditation application"
                  IsBusy="@_isProcessing"
+                 HasDraftToResume="@_hasDraftToResume"
+                 DraftStepIndex="@_draftStepIndex"
+                 DraftSavedTimeAgo="@_draftSavedTimeAgo"
+                 OnResumeDraft="ResumeDraftAsync"
+                 OnDiscardDraft="DiscardDraftAsync"
                  OnCancel="GoBack"
                  OnSaveDraft="SaveDraftAsync"
                  OnFinish="SubmitApplicationAsync">
@@ -238,6 +244,50 @@ else
 
     private List<WizardReviewGroup> _reviewGroups = new();
 
+    // Draft Persistence & Resume Lifecycle Engine
+    private bool _hasDraftToResume = false;
+    private int _draftStepIndex = 0;
+    private string? _draftSavedTimeAgo;
+    private string? _activeDraftKey;
+    private WizardDraftSession? _loadedDraft;
+
+    private record SdpAccreditationDraftModel
+    {
+        public string ProviderLegalName { get; init; } = string.Empty;
+        public string TradingName { get; init; } = string.Empty;
+        public string RegistrationNumber { get; init; } = string.Empty;
+        public string TaxNumber { get; init; } = string.Empty;
+        public string ProviderClassId { get; init; } = "02";
+        public string ProviderTypeId { get; init; } = "01";
+        public string PhysicalAddress { get; init; } = string.Empty;
+        public string Province { get; init; } = "Gauteng";
+        public string PrincipalFullName { get; init; } = string.Empty;
+        public string ContactEmail { get; init; } = string.Empty;
+        public string ContactPhone { get; init; } = string.Empty;
+        public string AccreditationScopeType { get; init; } = "Primary";
+        public string PrimaryQualificationTitle { get; init; } = string.Empty;
+        public string SaqaQualificationId { get; init; } = string.Empty;
+        public int NqfLevel { get; init; } = 4;
+        public string DeliveryMode { get; init; } = "FullTimeContact";
+        public int MaxLearnerCapacity { get; init; } = 60;
+        public string? OfoCode { get; init; }
+        public string AssessorFullName { get; init; } = string.Empty;
+        public string AssessorRegNumber { get; init; } = string.Empty;
+        public string ModeratorFullName { get; init; } = string.Empty;
+        public string ModeratorRegNumber { get; init; } = string.Empty;
+        public string FacilitatorFullName { get; init; } = string.Empty;
+        public bool IsStaffRatioCompliant { get; init; } = true;
+        public bool HasAdmissionsPolicy { get; init; } = true;
+        public bool HasAssessmentPolicy { get; init; } = true;
+        public bool HasAppealsPolicy { get; init; } = true;
+        public bool HasFinancialInsurance { get; init; } = true;
+        public string OhsCertificateNumber { get; init; } = string.Empty;
+        public string QmsManualReference { get; init; } = string.Empty;
+        public string AuthorizedRepFullName { get; init; } = string.Empty;
+        public string AuthorizedRepDesignation { get; init; } = string.Empty;
+        public bool IsDeclarationAccepted { get; init; } = true;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -245,6 +295,9 @@ else
             _loading = true;
             await Task.Delay(50);
             UpdateReviewGroups();
+
+            // Check for in-progress draft
+            await CheckForActiveDraftAsync();
         }
         catch (Exception ex)
         {
@@ -429,13 +482,149 @@ else
         return Task.FromResult(true);
     }
 
-    private async Task SaveDraftAsync()
+    private async Task CheckForActiveDraftAsync()
     {
         try
         {
-            _isProcessing = true;
-            await Task.Delay(300);
-            Snackbar.Add("SDP accreditation application draft saved.", Severity.Info);
+            var draft = await DraftService.GetActiveDraftAsync("SdpAccreditation", "SdpUser");
+            if (draft != null && draft.CurrentStepIndex > 0)
+            {
+                _loadedDraft = draft;
+                _activeDraftKey = draft.DraftKey;
+                _draftStepIndex = draft.CurrentStepIndex;
+                var delta = DateTime.UtcNow - (draft.ModifiedAt ?? draft.CreatedAt);
+                _draftSavedTimeAgo = delta.TotalHours >= 1 ? $"{(int)delta.TotalHours}h ago" : $"{(int)delta.TotalMinutes}m ago";
+                _hasDraftToResume = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Non-blocking draft lookup
+            Console.WriteLine($"Draft check skipped: {ex.Message}");
+        }
+    }
+
+    private async Task ResumeDraftAsync()
+    {
+        if (_loadedDraft == null) return;
+
+        var model = DraftService.DeserializeDraftModel<SdpAccreditationDraftModel>(_loadedDraft);
+        if (model != null)
+        {
+            _providerLegalName = model.ProviderLegalName;
+            _tradingName = model.TradingName;
+            _registrationNumber = model.RegistrationNumber;
+            _taxNumber = model.TaxNumber;
+            _providerClassId = model.ProviderClassId;
+            _providerTypeId = model.ProviderTypeId;
+            _physicalAddress = model.PhysicalAddress;
+            _province = model.Province;
+            _principalFullName = model.PrincipalFullName;
+            _contactEmail = model.ContactEmail;
+            _contactPhone = model.ContactPhone;
+            _accreditationScopeType = model.AccreditationScopeType;
+            _primaryQualificationTitle = model.PrimaryQualificationTitle;
+            _saqaQualificationId = model.SaqaQualificationId;
+            _nqfLevel = model.NqfLevel;
+            _deliveryMode = model.DeliveryMode;
+            _maxLearnerCapacity = model.MaxLearnerCapacity;
+            _ofoCode = model.OfoCode;
+            _assessorFullName = model.AssessorFullName;
+            _assessorRegNumber = model.AssessorRegNumber;
+            _moderatorFullName = model.ModeratorFullName;
+            _moderatorRegNumber = model.ModeratorRegNumber;
+            _facilitatorFullName = model.FacilitatorFullName;
+            _isStaffRatioCompliant = model.IsStaffRatioCompliant;
+            _hasAdmissionsPolicy = model.HasAdmissionsPolicy;
+            _hasAssessmentPolicy = model.HasAssessmentPolicy;
+            _hasAppealsPolicy = model.HasAppealsPolicy;
+            _hasFinancialInsurance = model.HasFinancialInsurance;
+            _ohsCertificateNumber = model.OhsCertificateNumber;
+            _qmsManualReference = model.QmsManualReference;
+            _authorizedRepFullName = model.AuthorizedRepFullName;
+            _authorizedRepDesignation = model.AuthorizedRepDesignation;
+            _isDeclarationAccepted = model.IsDeclarationAccepted;
+
+            _activeStep = _loadedDraft.CurrentStepIndex;
+            _hasDraftToResume = false;
+            UpdateReviewGroups();
+            Snackbar.Add($"Resumed SDP accreditation draft from Step {_activeStep + 1}.", Severity.Info);
+        }
+    }
+
+    private async Task DiscardDraftAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+        {
+            await DraftService.DiscardDraftAsync(_activeDraftKey);
+            _hasDraftToResume = false;
+            _activeDraftKey = null;
+            _loadedDraft = null;
+            Snackbar.Add("Draft discarded. You are starting a clean SDP accreditation application.", Severity.Normal);
+        }
+    }
+
+    private async Task SaveDraftAsync()
+    {
+        _isProcessing = true;
+        try
+        {
+            var draftModel = new SdpAccreditationDraftModel
+            {
+                ProviderLegalName = _providerLegalName,
+                TradingName = _tradingName,
+                RegistrationNumber = _registrationNumber,
+                TaxNumber = _taxNumber,
+                ProviderClassId = _providerClassId,
+                ProviderTypeId = _providerTypeId,
+                PhysicalAddress = _physicalAddress,
+                Province = _province,
+                PrincipalFullName = _principalFullName,
+                ContactEmail = _contactEmail,
+                ContactPhone = _contactPhone,
+                AccreditationScopeType = _accreditationScopeType,
+                PrimaryQualificationTitle = _primaryQualificationTitle,
+                SaqaQualificationId = _saqaQualificationId,
+                NqfLevel = _nqfLevel,
+                DeliveryMode = _deliveryMode,
+                MaxLearnerCapacity = _maxLearnerCapacity,
+                OfoCode = _ofoCode,
+                AssessorFullName = _assessorFullName,
+                AssessorRegNumber = _assessorRegNumber,
+                ModeratorFullName = _moderatorFullName,
+                ModeratorRegNumber = _moderatorRegNumber,
+                FacilitatorFullName = _facilitatorFullName,
+                IsStaffRatioCompliant = _isStaffRatioCompliant,
+                HasAdmissionsPolicy = _hasAdmissionsPolicy,
+                HasAssessmentPolicy = _hasAssessmentPolicy,
+                HasAppealsPolicy = _hasAppealsPolicy,
+                HasFinancialInsurance = _hasFinancialInsurance,
+                OhsCertificateNumber = _ohsCertificateNumber,
+                QmsManualReference = _qmsManualReference,
+                AuthorizedRepFullName = _authorizedRepFullName,
+                AuthorizedRepDesignation = _authorizedRepDesignation,
+                IsDeclarationAccepted = _isDeclarationAccepted
+            };
+
+            var session = await DraftService.SaveDraftAsync(
+                "SdpAccreditation",
+                "SDP institutional accreditation application",
+                "/providers/apply-accreditation",
+                "SdpUser",
+                null,
+                _activeStep,
+                5,
+                draftModel,
+                _activeDraftKey
+            );
+
+            _activeDraftKey = session.DraftKey;
+            _hasDraftToResume = false;
+            Snackbar.Add($"Draft saved at Step {_activeStep + 1} ('{session.DraftKey}').", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Could not save draft: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -511,8 +700,14 @@ else
 
             _createdProviderId = created.Id;
             _submittedAccNumber = accNumber;
-            _isSuccess = true;
 
+            // Clear submitted draft
+            if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+            {
+                await DraftService.MarkAsSubmittedAsync(_activeDraftKey);
+            }
+
+            _isSuccess = true;
             Snackbar.Add($"SDP accreditation application {accNumber} registered successfully.", Severity.Success);
         }
         catch (Exception ex)

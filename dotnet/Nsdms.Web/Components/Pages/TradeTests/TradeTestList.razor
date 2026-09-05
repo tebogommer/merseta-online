@@ -74,6 +74,25 @@
             <MudSelectItem Value="@("NotYetCompetent")">Not Yet Competent</MudSelectItem>
             <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
         </MudSelect>
+
+        <MudSelect T="string" 
+                   Label="Workflow status" 
+                   @bind-Value="_statusFilter" 
+                   @bind-Value:after="HandleFilterChanged"
+                   Variant="Variant.Outlined" 
+                   Margin="Margin.Dense"
+                   Dense="true">
+            <MudSelectItem Value="@("All")">All statuses</MudSelectItem>
+            <MudSelectItem Value="@("Submitted")">Submitted</MudSelectItem>
+            <MudSelectItem Value="@("RecommendedApplication")">Recommended (CLA)</MudSelectItem>
+            <MudSelectItem Value="@("Registered")">Registered (QA)</MudSelectItem>
+            <MudSelectItem Value="@("Assessing")">Assessing</MudSelectItem>
+            <MudSelectItem Value="@("Competent")">Competent</MudSelectItem>
+            <MudSelectItem Value="@("Certified")">Certified</MudSelectItem>
+            <MudSelectItem Value="@("RejectedForResubmission")">Returned for resubmission</MudSelectItem>
+            <MudSelectItem Value="@("Withdrawn")">Withdrawn</MudSelectItem>
+            <MudSelectItem Value="@("Rejected")">Rejected</MudSelectItem>
+        </MudSelect>
     </FilterContent>
     <ActiveFilterChips>
         @if (!string.IsNullOrWhiteSpace(_searchString))
@@ -92,6 +111,12 @@
         {
             <MudChip T="string" Size="Size.Small" Color="Color.Success" OnClose="@(() => { _outcomeFilter = "All"; HandleFilterChanged(); })">
                 Outcome: @_outcomeFilter
+            </MudChip>
+        }
+        @if (_statusFilter != "All")
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
+                Status: @_statusFilter
             </MudChip>
         }
     </ActiveFilterChips>
@@ -222,6 +247,7 @@
     private string _searchString = string.Empty;
     private string _typeFilter = "All";
     private string _outcomeFilter = "All";
+    private string _statusFilter = "All";
     private bool _isLoading = true;
 
     private List<BreadcrumbItem> _breadcrumbs = new()
@@ -265,6 +291,11 @@
                 query = query.Where(x => x.CompetencyStatusCode != null && x.CompetencyStatusCode.Equals(_outcomeFilter, StringComparison.OrdinalIgnoreCase));
             }
 
+            if (_statusFilter != "All")
+            {
+                query = query.Where(x => x.StatusCode != null && x.StatusCode.Equals(_statusFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
             if (!string.IsNullOrWhiteSpace(_searchString))
             {
                 var s = _searchString.Trim();
@@ -289,6 +320,7 @@
         _searchString = string.Empty;
         _typeFilter = "All";
         _outcomeFilter = "All";
+        _statusFilter = "All";
         StateHasChanged();
     }
 

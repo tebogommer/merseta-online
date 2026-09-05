@@ -46,6 +46,8 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<TradeMentorRatioPolicy> TradeMentorRatioPolicies { get; }
     DbSet<CompanyLearner> CompanyLearners { get; }
     DbSet<LearnerTradeTest> LearnerTradeTests { get; }
+    DbSet<PersonGuardian> PersonGuardians { get; }
+    DbSet<LearnerRegisteredUnitStandard> LearnerRegisteredUnitStandards { get; }
     DbSet<AuditLog> AuditLogs { get; }
 
     // Workflow Engine & Task Matrix
@@ -89,6 +91,7 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<SystemConfig> SystemConfigs { get; }
     DbSet<SystemFeatureFlag> SystemFeatureFlags { get; }
     DbSet<SystemNotification> SystemNotifications { get; }
+    DbSet<WizardDraftSession> WizardDraftSessions { get; }
 
     // Document & File Management
     DbSet<DocumentAttachment> DocumentAttachments { get; }
@@ -131,6 +134,9 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<ArplExperienceDetail> ArplExperienceDetails { get; }
     DbSet<ArplTrainingDetail> ArplTrainingDetails { get; }
     DbSet<NambDecisionHistory> NambDecisionHistories { get; }
+    DbSet<LearnerTradeTestWithdrawal> LearnerTradeTestWithdrawals { get; }
+    DbSet<ArplDocumentChecklist> ArplDocumentChecklists { get; }
+    DbSet<CertificateDistributionEvent> CertificateDistributionEvents { get; }
 
     // Summative Assessment Reports & Moderation (Area 14)
     DbSet<SummativeAssessmentReport> SummativeAssessmentReports { get; }

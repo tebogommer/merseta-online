@@ -65,6 +65,27 @@ public class OmnisearchResultItemDto
     public int Score { get; set; }
 }
 
+public class PersonaProfileDto
+{
+    public string PersonaKey { get; set; } = string.Empty;
+    public string PersonaTitle { get; set; } = string.Empty;
+    public string ShortLabel { get; set; } = string.Empty;
+    public string CompactLabel { get; set; } = string.Empty;
+    public string PersonName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Initials { get; set; } = string.Empty;
+    public string StatutoryRole { get; set; } = string.Empty;
+    public string RoleBadge { get; set; } = string.Empty;
+    public string OrganisationName { get; set; } = string.Empty;
+    public string Subtitle { get; set; } = string.Empty;
+    public string Category { get; set; } = "Enterprise Governance"; // "Workplace Approval" vs "Enterprise Governance"
+    public string Icon { get; set; } = string.Empty;
+    public string ThemeColor { get; set; } = "Primary";
+    public List<string> Roles { get; set; } = new();
+    public bool IsWorkplaceApprovalPersona { get; set; } = false;
+    public string? WorkplaceReference { get; set; }
+}
+
 public interface INavigationMenuService
 {
     Task<NavigationTreeResultDto> GetUserNavigationTreeAsync(string username, List<string> roles, HashSet<string> permissions, string? activePersona = null);
@@ -77,4 +98,6 @@ public interface INavigationMenuService
     Task<List<OmnisearchResultItemDto>> SearchOmnisearchAsync(string query, string username, List<string> roles, HashSet<string> permissions, int maxResults = 25);
     Task<Dictionary<string, int>> GetDynamicBadgeCountsAsync(string username, List<string> roles);
     List<string> GetPredefinedPersonas();
+    List<PersonaProfileDto> GetPersonaProfiles();
+    PersonaProfileDto? GetPersonaProfile(string personaKeyOrTitle);
 }

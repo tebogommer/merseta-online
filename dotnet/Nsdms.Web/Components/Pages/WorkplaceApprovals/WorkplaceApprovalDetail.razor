@@ -12,66 +12,131 @@
 @inject IVisitService VisitService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject Nsdms.Application.Common.Interfaces.IPdfDocumentService PdfService
 
 <PageTitle>@(IsNew ? "New Workplace Approval" : $"Workplace Approval {_approval.ApprovalNumber}") - NSDMS</PageTitle>
 
-<!-- STICKY TOP BAR -->
-<MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg bg-surface d-flex justify-space-between align-center" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
-    <div class="d-flex align-center gap-3">
-        <MudButton Variant="Variant.Text"
-                   StartIcon="@Icons.Material.Filled.ArrowBack"
-                   Color="Color.Default"
-                   OnClick="@(() => Navigation.NavigateTo("/workplace-approvals"))"
-                   aria-label="Back to Workplace Approvals">
-            Back to Approvals
-        </MudButton>
-        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
-        <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
-            <MudIcon Icon="@Icons.Material.Filled.HomeRepairService" Size="Size.Small" />
-        </MudAvatar>
-        <div>
-            <div class="d-flex align-center gap-2">
-                <MudText Typo="Typo.h5" Class="fw-bold">
-                    @(IsNew ? "Create Workplace Approval Application" : $"Workplace Approval: {_approval.ApprovalNumber}")
-                </MudText>
-                @if (!IsNew)
+@if (!_isEditMode && !IsNew)
+{
+    <!-- VIEW BY DEFAULT: ENTITY HEADER (16-Point UI Standard compliant) -->
+    <EntityHeader Title="@($"{_approval.QualificationTitle} ({_approval.ApprovalNumber})")"
+                  ReferenceKey="@_approval.ApprovalNumber"
+                  Status="@_approval.ApprovalStatusCode"
+                  Subtitle="@($"Host Employer: {(_approval.Organisation?.CompanyName ?? "Organisation")} | Trade Scope: {_approval.QualificationTitle} | Site: {(_approval.OrganisationSite?.SiteName ?? "Main Plant")}")"
+                  BreadcrumbItems="@_breadcrumbItems">
+        <ActionZone>
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Color="Color.Default"
+                       OnClick="@(() => Navigation.NavigateTo("/workplace-approvals"))"
+                       aria-label="Back to Workplace Approvals">
+                Back to Approvals
+            </MudButton>
+
+            <!-- SLA / Inspection Countdown Badge -->
+            @if (_approval.InspectionDueDate.HasValue)
+            {
+                var daysRemaining = (_approval.InspectionDueDate.Value.Date - DateTime.Today).Days;
+                @if (daysRemaining < 0)
                 {
-                    <MudChip T="string" Color="@GetStatusColor(_approval.ApprovalStatusCode)" Size="Size.Small" Variant="Variant.Filled">
-                        @_approval.ApprovalStatusCode
+                    <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Alarm">
+                        SLA Overdue (@Math.Abs(daysRemaining) days past deadline)
                     </MudChip>
                 }
-            </div>
-            @if (!IsNew)
-            {
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    Employer: <strong>@(_approval.Organisation?.CompanyName ?? "Organisation")</strong> |
-                    Trade: <strong>@_approval.QualificationTitle</strong> |
-                    Site: <strong>@(_approval.OrganisationSite?.SiteName ?? "Main Plant")</strong>
-                </MudText>
+                else if (daysRemaining <= 5)
+                {
+                    <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.HourglassBottom">
+                        SLA Deadline: @daysRemaining days left (@_approval.InspectionDueDate.Value.ToString("yyyy-MM-dd"))
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.AccessTime">
+                        Inspection Due: @_approval.InspectionDueDate.Value.ToString("yyyy-MM-dd") (@daysRemaining days)
+                    </MudChip>
+                }
             }
-        </div>
-    </div>
-    <div class="d-flex gap-2 align-center">
-        @if (!IsNew)
-        {
-            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="DeleteAsync" aria-label="Delete Approval">
-                Delete
-            </MudButton>
-        }
 
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveAsync" Disabled="_saving" aria-label="Save Approval">
-            @if (_saving)
-            {
-                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                <span>Saving...</span>
-            }
-            else
-            {
-                <span>Save</span>
-            }
-        </MudButton>
-    </div>
-</MudPaper>
+            <!-- Statutory Services & Actions Menu -->
+            <MudMenu Label="Statutory Services"
+                     StartIcon="@Icons.Material.Filled.Bolt"
+                     EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                     Color="Color.Default"
+                     Variant="Variant.Outlined"
+                     Dense="true"
+                     aria-label="Launch Statutory Services">
+                <MudMenuItem Icon="@Icons.Material.Filled.EventAvailable" OnClick="OpenScheduleVisitDialog">
+                    Schedule Site Inspection Visit
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.FactCheck" OnClick="OpenVerificationDialog" Disabled="@(_approval.ApprovalStatusCode != "APPLICATION" && _approval.ApprovalStatusCode != "AUDIT_SCHEDULED")">
+                    Conduct Workplace Verification (Audit)
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.AssignmentTurnedIn" OnClick="OpenEvaluationDialog" Disabled="@(_approval.ApprovalStatusCode != "VERIFIED" && _approval.ApprovalStatusCode != "UNDER_EVALUATION")">
+                    Render Committee Decision (Maker-Checker)
+                </MudMenuItem>
+                <MudDivider Class="my-1" />
+                <MudMenuItem Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="DownloadOutcomeLetterPdf">
+                    Workplace Approval Outcome Letter (ETQ-TP-003)
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Description" OnClick="DownloadInspectionReportPdf">
+                    Workplace Approval Report (ETQ-TP-054)
+                </MudMenuItem>
+                <MudDivider Class="my-1" />
+                <MudMenuItem Icon="@Icons.Material.Filled.Block" IconColor="Color.Warning" OnClick="OpenWithdrawDialog" Disabled="@(_approval.ApprovalStatusCode == "WITHDRAWN" || _approval.ApprovalStatusCode == "REJECTED")">
+                    Withdraw Approval Application
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error" OnClick="DeleteAsync">
+                    Delete Approval Record
+                </MudMenuItem>
+            </MudMenu>
+
+            <!-- Edit Button -->
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Edit"
+                       OnClick="EnterEditMode"
+                       aria-label="Edit Workplace Approval">
+                Edit Approval
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+}
+else
+{
+    <!-- EDIT MODE HEADER -->
+    <EntityHeader Title="@(IsNew ? "New Workplace Approval Application" : $"Edit {_approval.QualificationTitle}")"
+                  ReferenceKey="@_approval.ApprovalNumber"
+                  Status="@(IsNew ? "DRAFT" : "Editing")"
+                  Subtitle="@(IsNew ? "Create a new workplace approval record under the statutory QCTO & NAMB standards" : "Modify workplace approval scope, ratio policy overrides, or designated contact persons")"
+                  BreadcrumbItems="@_breadcrumbItems">
+        <ActionZone>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="ExitEditMode"
+                       aria-label="Cancel Edit">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="SaveAsync"
+                       Disabled="_saving"
+                       aria-label="Save Workplace Approval">
+                @if (_saving)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <span>Saving...</span>
+                }
+                else
+                {
+                    <span>Save</span>
+                }
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+}
 
 @if (!IsNew)
 {
@@ -99,96 +164,226 @@ else
         
         <!-- TAB 1: MASTER APPLICATION DETAILS -->
         <MudTabPanel Text="Workplace & Scope" Icon="@Icons.Material.Filled.FactCheck">
-            <MudCard Outlined="true" Class="pa-4">
-                <MudGrid Spacing="3">
-                    <MudItem xs="12" md="6">
-                        <MudSelect T="int" @bind-Value="_approval.OrganisationId" Label="Host Employer / Organisation" Variant="Variant.Outlined" Required="true">
-                            <MudSelectItem Value="0">-- Select Employer --</MudSelectItem>
-                            @foreach (var org in _organisations)
-                            {
-                                <MudSelectItem Value="@org.Id">@org.CompanyName (@org.SdlNumber)</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" md="6">
-                        <MudTextField @bind-Value="_approval.ApprovalNumber" Label="Approval Reference Number" Variant="Variant.Outlined" ReadOnly="!IsNew" HelperText="Auto-generated upon creation" />
-                    </MudItem>
-
-                    <MudItem xs="12" md="8">
-                        <MudTextField @bind-Value="_approval.QualificationTitle" Label="Qualification / Trade Scope" Variant="Variant.Outlined" Required="true"
-                                      Placeholder="e.g. Automotive Motor Mechanic, Boilermaker, Electrician, Fitter &amp; Turner" />
-                    </MudItem>
-                    <MudItem xs="12" md="4">
-                        <MudNumericField @bind-Value="_approval.SaqaQualificationId" Label="SAQA Qualification ID" Variant="Variant.Outlined" />
-                    </MudItem>
-
-                    <MudItem xs="12" md="4">
-                        <MudDatePicker @bind-Date="_inspectionDate" Label="Site Inspection Date" Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" md="4">
-                        <MudDatePicker @bind-Date="_approvalDate" Label="Approval Granted Date" Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" md="4">
-                        <MudDatePicker @bind-Date="_expiryDate" Label="Accreditation Expiry Date" Variant="Variant.Outlined" />
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudSelect T="int?" @bind-Value="_approval.ContactPersonId" Label="Mandatory Employer Contact Person" Variant="Variant.Outlined" Required="true" RequiredError="Employer Contact Person must be selected per visit governance rules" Clearable="true">
-                            <MudSelectItem Value="@((int?)null)">-- Select Employer Contact Person --</MudSelectItem>
-                            @foreach (var person in _people)
-                            {
-                                <MudSelectItem Value="@((int?)person.Id)">@person.FullName (@(person.RsaIdNumber ?? person.Email))</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" md="6">
-                        <MudSelect T="int?" @bind-Value="_approval.AssessorPersonId" Label="Evaluating Assessor / Inspector" Variant="Variant.Outlined" Clearable="true">
-                            <MudSelectItem Value="@((int?)null)">-- Select Assessor --</MudSelectItem>
-                            @foreach (var person in _people)
-                            {
-                                <MudSelectItem Value="@((int?)person.Id)">@person.FullName (@person.RsaIdNumber)</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" md="12">
-                        <ReadOnlyField Label="Approval Status">
-                            <StatusBadge Status="@_approval.ApprovalStatusCode" />
-                        </ReadOnlyField>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudSelect T="string" @bind-Value="_approval.TradeCode" Label="Designated Trade Ratio Policy" Variant="Variant.Outlined" Clearable="true" HelperText="Determines statutory apprentice-to-mentor ratio standard">
-                            <MudSelectItem Value="@((string?)null)">-- Auto-detect from Qualification --</MudSelectItem>
-                            @foreach (var tp in _tradePolicies)
-                            {
-                                <MudSelectItem Value="@tp.TradeCode">@tp.TradeTitle (@tp.TradeCode - 1:@tp.StandardRatio)</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" md="3">
-                        <MudSelect T="bool?" @bind-Value="_approval.IsRatioEnforced" Label="Ratio Enforcement Override" Variant="Variant.Outlined">
-                            <MudSelectItem Value="@((bool?)null)">Default (Inherit Org/Global)</MudSelectItem>
-                            <MudSelectItem Value="@((bool?)true)">Strictly Enforce Ratios</MudSelectItem>
-                            <MudSelectItem Value="@((bool?)false)">Exempt from Ratio Checking</MudSelectItem>
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" md="3">
-                        <MudNumericField @bind-Value="_approval.CustomTradeRatio" Label="Custom Site Ratio (e.g. 3 for 1:3)" Variant="Variant.Outlined" Min="1" Max="20" HelperText="Overrides trade standard" />
-                    </MudItem>
-
-                    @if (_approval.IsRatioEnforced == false)
-                    {
-                        <MudItem xs="12">
-                            <MudTextField @bind-Value="_approval.MentorRatioExemptionNotes" Label="Workplace Ratio Exemption Justification / Dispensation" Variant="Variant.Outlined" Required="true" Placeholder="e.g. Approved board dispensation for dual-shift master artisan rotation" />
+            @if (!_isEditMode && !IsNew)
+            {
+                <!-- READ-ONLY VIEW (View by default) -->
+                <MudCard Outlined="true" Class="pa-4">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" md="6">
+                            <ReadOnlyField Label="Host Employer / Organisation" 
+                                           Value="@($"{_approval.Organisation?.CompanyName} ({_approval.Organisation?.SdlNumber})")" 
+                                           Icon="@Icons.Material.Filled.Business" />
                         </MudItem>
-                    }
+                        <MudItem xs="12" md="6">
+                            <ReadOnlyField Label="Approval Reference Number" 
+                                           Value="@_approval.ApprovalNumber" 
+                                           IsMonospace="true" 
+                                           AllowCopy="true" 
+                                           Icon="@Icons.Material.Filled.ConfirmationNumber" />
+                        </MudItem>
 
-                    <MudItem xs="12">
-                        <MudTextField @bind-Value="_approval.Recommendations" Label="Audit Findings &amp; Recommendations" Variant="Variant.Outlined" Lines="3"
-                                      Placeholder="Enter evaluator findings on tooling, safety equipment, and artisan ratios..." />
-                    </MudItem>
-                </MudGrid>
-            </MudCard>
+                        <MudItem xs="12" md="6">
+                            <ReadOnlyField Label="Learning Programme Stream" 
+                                           Value="@_approval.LearningProgramTypeCode" 
+                                           Icon="@Icons.Material.Filled.School" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <ReadOnlyField Label="Designated Site / Operating Plant" 
+                                           Value="@(_approval.OrganisationSite?.SiteName ?? "Main Plant / Head Office")" 
+                                           Icon="@Icons.Material.Filled.Place" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="8">
+                            <ReadOnlyField Label="Qualification / Trade Scope" 
+                                           Value="@_approval.QualificationTitle" 
+                                           Icon="@Icons.Material.Filled.Work" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <ReadOnlyField Label="SAQA Qualification ID" 
+                                           Value="@(_approval.SaqaQualificationId?.ToString() ?? "—")" 
+                                           IsMonospace="true" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <ReadOnlyField Label="Site Inspection Date" 
+                                           Value="@(_approval.InspectionDate?.ToString("yyyy-MM-dd") ?? "Pending Inspection")" 
+                                           Icon="@Icons.Material.Filled.CalendarMonth" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <ReadOnlyField Label="Approval Granted Date" 
+                                           Value="@(_approval.ApprovalDate?.ToString("yyyy-MM-dd") ?? "Pending Approval")" 
+                                           Icon="@Icons.Material.Filled.CheckCircle" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <ReadOnlyField Label="Accreditation Expiry Date" 
+                                           Value="@(_approval.ExpiryDate?.ToString("yyyy-MM-dd") ?? "—")" 
+                                           Icon="@Icons.Material.Filled.EventBusy" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <ReadOnlyField Label="Mandatory Employer Contact Person" 
+                                           Value="@(_approval.ContactPerson != null ? $"{_approval.ContactPerson.FullName} ({_approval.ContactPerson.Email ?? _approval.ContactPerson.CellNumber ?? _approval.ContactPerson.RsaIdNumber})" : "Not Selected")" 
+                                           Icon="@Icons.Material.Filled.PersonPin" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <ReadOnlyField Label="Assigned Verification Officer / Assessor" 
+                                           Value="@(_approval.AssessorPerson?.FullName ?? (_approval.VerifiedByPerson?.FullName ?? "Unassigned"))" 
+                                           Icon="@Icons.Material.Filled.Badge" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <ReadOnlyField Label="Designated Trade Ratio Policy" 
+                                           Value="@(!string.IsNullOrWhiteSpace(_approval.TradeCode) ? $"{_approval.TradeCode} (Standard 1:{_ratioEval.StandardTradeRatio})" : "Auto-detected")" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <ReadOnlyField Label="Ratio Enforcement Override" 
+                                           Value="@(_approval.IsRatioEnforced == true ? "Strictly Enforced" : (_approval.IsRatioEnforced == false ? "Exempt from Ratios" : "Inherit Org/Global"))" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <ReadOnlyField Label="Custom Site Ratio" 
+                                           Value="@(_approval.CustomTradeRatio.HasValue ? $"1:{_approval.CustomTradeRatio.Value}" : "Using Standard Trade Policy")" />
+                        </MudItem>
+
+                        @if (_approval.IsNonMerSetaCompany)
+                        {
+                            <MudItem xs="12" md="6">
+                                <ReadOnlyField Label="Originating Home SETA" Value="@(_approval.HomeSetaName ?? "Non-merSETA")" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <ReadOnlyField Label="Inter-SETA Agreement Reference" Value="@(_approval.HomeSetaAgreementRef ?? "—")" IsMonospace="true" />
+                            </MudItem>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(_approval.MentorRatioExemptionNotes))
+                        {
+                            <MudItem xs="12">
+                                <ReadOnlyField Label="Ratio Exemption Justification / Dispensation" Value="@_approval.MentorRatioExemptionNotes" />
+                            </MudItem>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(_approval.Recommendations))
+                        {
+                            <MudItem xs="12">
+                                <ReadOnlyField Label="Audit Findings & Recommendations" Value="@_approval.Recommendations" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudCard>
+            }
+            else
+            {
+                <!-- EDITABLE FORM (When in edit mode or new record) -->
+                <MudCard Outlined="true" Class="pa-4">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int" @bind-Value="_approval.OrganisationId" Label="Host Employer / Organisation" Variant="Variant.Outlined" Required="true">
+                                <MudSelectItem Value="0">-- Select Employer --</MudSelectItem>
+                                @foreach (var org in _organisations)
+                                {
+                                    <MudSelectItem Value="@org.Id">@org.CompanyName (@org.SdlNumber)</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_approval.ApprovalNumber" Label="Approval Reference Number" Variant="Variant.Outlined" ReadOnly="!IsNew" HelperText="Auto-generated upon creation" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="string" @bind-Value="_approval.LearningProgramTypeCode" Label="Learning Programme Stream" Variant="Variant.Outlined" Required="true">
+                                <MudSelectItem Value="@("Apprenticeship")">Apprenticeship (Section 13/28 Trade)</MudSelectItem>
+                                <MudSelectItem Value="@("Learnership")">Learnership (NQF Aligned)</MudSelectItem>
+                                <MudSelectItem Value="@("InternshipNDiploma")">Internship / N-Diploma Practical</MudSelectItem>
+                                <MudSelectItem Value="@("OccupationalQual")">Occupational Qualification (QCTO)</MudSelectItem>
+                                <MudSelectItem Value="@("SkillsProgramme")">Skills Programme</MudSelectItem>
+                                <MudSelectItem Value="@("Candidacy")">Candidacy Programme</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int?" @bind-Value="_approval.OrganisationSiteId" Label="Designated Site / Plant" Variant="Variant.Outlined" Clearable="true">
+                                <MudSelectItem Value="@((int?)null)">-- Main Plant / Head Office --</MudSelectItem>
+                                @foreach (var s in _sites)
+                                {
+                                    <MudSelectItem Value="@((int?)s.Id)">@s.SiteName (@(s.City ?? s.ProvinceCode))</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" md="8">
+                            <MudTextField @bind-Value="_approval.QualificationTitle" Label="Qualification / Trade Scope" Variant="Variant.Outlined" Required="true"
+                                          Placeholder="e.g. Automotive Motor Mechanic, Boilermaker, Electrician, Fitter &amp; Turner" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudNumericField @bind-Value="_approval.SaqaQualificationId" Label="SAQA Qualification ID" Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudDatePicker @bind-Date="_inspectionDate" Label="Site Inspection Date" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudDatePicker @bind-Date="_approvalDate" Label="Approval Granted Date" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudDatePicker @bind-Date="_expiryDate" Label="Accreditation Expiry Date" Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int?" @bind-Value="_approval.ContactPersonId" Label="Mandatory Employer Contact Person" Variant="Variant.Outlined" Required="true" RequiredError="Employer Contact Person must be selected per visit governance rules" Clearable="true">
+                                <MudSelectItem Value="@((int?)null)">-- Select Employer Contact Person --</MudSelectItem>
+                                @foreach (var person in _people)
+                                {
+                                    <MudSelectItem Value="@((int?)person.Id)">@person.FullName (@(person.RsaIdNumber ?? person.Email))</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int?" @bind-Value="_approval.AssessorPersonId" Label="Evaluating Assessor / Inspector" Variant="Variant.Outlined" Clearable="true">
+                                <MudSelectItem Value="@((int?)null)">-- Select Assessor --</MudSelectItem>
+                                @foreach (var person in _people)
+                                {
+                                    <MudSelectItem Value="@((int?)person.Id)">@person.FullName (@person.RsaIdNumber)</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="12">
+                            <ReadOnlyField Label="Approval Status">
+                                <StatusBadge Status="@_approval.ApprovalStatusCode" />
+                            </ReadOnlyField>
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="string" @bind-Value="_approval.TradeCode" Label="Designated Trade Ratio Policy" Variant="Variant.Outlined" Clearable="true" HelperText="Determines statutory apprentice-to-mentor ratio standard">
+                                <MudSelectItem Value="@((string?)null)">-- Auto-detect from Qualification --</MudSelectItem>
+                                @foreach (var tp in _tradePolicies)
+                                {
+                                    <MudSelectItem Value="@tp.TradeCode">@tp.TradeTitle (@tp.TradeCode - 1:@tp.StandardRatio)</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="3">
+                            <MudSelect T="bool?" @bind-Value="_approval.IsRatioEnforced" Label="Ratio Enforcement Override" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@((bool?)null)">Default (Inherit Org/Global)</MudSelectItem>
+                                <MudSelectItem Value="@((bool?)true)">Strictly Enforce Ratios</MudSelectItem>
+                                <MudSelectItem Value="@((bool?)false)">Exempt from Ratio Checking</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="3">
+                            <MudNumericField @bind-Value="_approval.CustomTradeRatio" Label="Custom Site Ratio (e.g. 3 for 1:3)" Variant="Variant.Outlined" Min="1" Max="20" HelperText="Overrides trade standard" />
+                        </MudItem>
+
+                        @if (_approval.IsRatioEnforced == false)
+                        {
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="_approval.MentorRatioExemptionNotes" Label="Workplace Ratio Exemption Justification / Dispensation" Variant="Variant.Outlined" Required="true" Placeholder="e.g. Approved board dispensation for dual-shift master artisan rotation" />
+                            </MudItem>
+                        }
+
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_approval.Recommendations" Label="Audit Findings &amp; Recommendations" Variant="Variant.Outlined" Lines="3"
+                                          Placeholder="Enter evaluator findings on tooling, safety equipment, and artisan ratios..." />
+                        </MudItem>
+                    </MudGrid>
+                </MudCard>
+            }
         </MudTabPanel>
 
         <!-- TAB 2: CERTIFIED WORKSHOP MENTORS -->
@@ -369,8 +564,7 @@ else
                                            Color="Color.Primary"
                                            Size="Size.Small"
                                            OnClick="@(() => OpenEditMentorCapacityDialog(context))"
-                                           aria-label="Configure Mentor Capacity"
-                                           Title="Configure Supervision Capacity Override" />
+                                           aria-label="Configure Mentor Capacity" />
                             <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                            Color="Color.Error"
                                            Size="Size.Small"
@@ -599,20 +793,267 @@ else
             }
         </MudTabPanel>
 
-        <!-- TAB 7: Evidence Vault -->
+        <!-- TAB 7: Statutory Audit & Compliance Outcome -->
+        @if (!IsNew && (_approval.VerifiedDate.HasValue || _approval.DecisionDate.HasValue || !string.IsNullOrWhiteSpace(_approval.VerificationRecommendationReason) || !string.IsNullOrWhiteSpace(_approval.ApprovalReason)))
+        {
+            <MudTabPanel Text="Verification & Decision Audit" Icon="@Icons.Material.Filled.VerifiedUser">
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" md="6">
+                        <MudCard Outlined="true" Class="pa-4">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Info" Variant="Variant.Filled">
+                                        <MudIcon Icon="@Icons.Material.Filled.FactCheck" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">Workplace Verification Audit</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Concluded by Verification Officer</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <ReadOnlyField Label="Verification Officer" Value="@(_approval.VerifiedByPerson?.FullName ?? "—")" />
+                                <ReadOnlyField Label="Verification Date" Value="@(_approval.VerifiedDate?.ToString("yyyy-MM-dd") ?? "—")" />
+                                <ReadOnlyField Label="Site Visit Conducted" Value="@(_approval.IsSiteVisitRequired == true ? "Yes (Physical Inspection)" : "No (Desktop Verification)")" />
+                                @if (!string.IsNullOrWhiteSpace(_approval.SiteVisitJustification))
+                                {
+                                    <ReadOnlyField Label="Site Visit Justification" Value="@_approval.SiteVisitJustification" />
+                                }
+                                @if (!string.IsNullOrWhiteSpace(_approval.VerificationRecommendationReason))
+                                {
+                                    <ReadOnlyField Label="Recommendation Reason" Value="@_approval.VerificationRecommendationReason" />
+                                    <ReadOnlyField Label="Recommendation Explanation" Value="@_approval.VerificationRecommendationExplanation" />
+                                }
+                                @if (!string.IsNullOrWhiteSpace(_approval.VerificationRejectionReason))
+                                {
+                                    <ReadOnlyField Label="Rejection / Return Reason" Value="@_approval.VerificationRejectionReason" />
+                                    <ReadOnlyField Label="Rejection / Return Explanation" Value="@_approval.VerificationRejectionExplanation" />
+                                }
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudCard Outlined="true" Class="pa-4">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Success" Variant="Variant.Filled">
+                                        <MudIcon Icon="@Icons.Material.Filled.Gavel" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">Committee / Executive Decision</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Rendered by Approval Authority (Maker-Checker)</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <ReadOnlyField Label="Decision Maker" Value="@(_approval.DecisionByPerson?.FullName ?? "—")" />
+                                <ReadOnlyField Label="Decision Date" Value="@(_approval.DecisionDate?.ToString("yyyy-MM-dd") ?? "—")" />
+                                <ReadOnlyField Label="Approval Outcome" Value="@_approval.ApprovalStatusCode" />
+                                @if (!string.IsNullOrWhiteSpace(_approval.ApprovalReason))
+                                {
+                                    <ReadOnlyField Label="Approval Reason" Value="@_approval.ApprovalReason" />
+                                    <ReadOnlyField Label="Approval Explanation" Value="@_approval.ApprovalExplanation" />
+                                }
+                                @if (!string.IsNullOrWhiteSpace(_approval.RejectionReason))
+                                {
+                                    <ReadOnlyField Label="Rejection Reason" Value="@_approval.RejectionReason" />
+                                    <ReadOnlyField Label="Rejection Explanation" Value="@_approval.RejectionExplanation" />
+                                }
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+        }
+
+        <!-- TAB 8: Evidence Vault -->
         @if (!IsNew)
         {
             <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
                 <DocumentVault TargetEntityName="WorkplaceApproval" TargetEntityId="@Id" />
             </MudTabPanel>
 
-            <!-- TAB 8: Workflow History -->
+            <!-- TAB 9: Workflow History -->
             <MudTabPanel Text="Workflow History" Icon="@Icons.Material.Filled.History">
                 <WorkflowTimeline ProcessCode="WPAPP" EntityId="@Id" />
             </MudTabPanel>
         }
     </MudTabs>
 }
+
+<!-- STATUTORY VERIFICATION AUDIT DIALOG (Role-Neutral Verification Officer) -->
+<MudDialog @bind-Visible="_verificationDialogOpen">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.FactCheck" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">Conclude Workplace Verification (Audit Report)</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">
+                    Record compliance audit findings per the statutory criteria. A generated inspection report (ETQ-TP-054) will be produced.
+                </MudAlert>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSwitch T="bool" @bind-Value="_verifyIsSiteVisitRequired" Label="Physical Site Inspection Conducted" Color="Color.Primary" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int?" @bind-Value="_verifyOfficerPersonId" Label="Verification Officer" Variant="Variant.Outlined" Required="true">
+                    @foreach (var p in _people)
+                    {
+                        <MudSelectItem Value="@((int?)p.Id)">@p.FullName (@(p.RsaIdNumber ?? p.Email))</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            @if (!_verifyIsSiteVisitRequired)
+            {
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_verifySiteVisitJustification" Label="Desktop Verification Justification" Variant="Variant.Outlined" Required="true"
+                                  Placeholder="e.g. Existing approved workshop site with valid tooling certification and unchanged plant layout..." />
+                </MudItem>
+            }
+
+            <MudItem xs="12">
+                <MudRadioGroup T="bool" @bind-Value="_verifyIsRecommended">
+                    <MudRadio Value="true" Color="Color.Success">Recommend Workplace Approval</MudRadio>
+                    <MudRadio Value="false" Color="Color.Error">Recommend Rejection / Return for Updates</MudRadio>
+                </MudRadioGroup>
+            </MudItem>
+
+            @if (_verifyIsRecommended)
+            {
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" @bind-Value="_verifyRecommendationReason" Label="Recommendation Reason" Variant="Variant.Outlined" Required="true">
+                        <MudSelectItem Value="@("FullCompliance")">Full Compliance with Trade Curriculum & Tooling</MudSelectItem>
+                        <MudSelectItem Value="@("QualifiedArtisans")">Sufficient Qualified Artisan Mentors at 1:4 Ratio</MudSelectItem>
+                        <MudSelectItem Value="@("SafeWorkingEnvironment")">OHS Act & Safety Standards Satisfied</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_verifyRecommendationExplanation" Label="Detailed Recommendation Findings" Variant="Variant.Outlined" Lines="2"
+                                  Placeholder="Detail observations on toolroom condition, mentor credentials, and training capacity..." />
+                </MudItem>
+            }
+            else
+            {
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" @bind-Value="_verifyRejectionReason" Label="Rejection / Return Reason" Variant="Variant.Outlined" Required="true">
+                        <MudSelectItem Value="@("MissingTools")">Mandatory Curriculum Tools Deficient or Unavailable</MudSelectItem>
+                        <MudSelectItem Value="@("NoCertifiedMentors")">Insufficient Qualified Artisan Mentors for Trade</MudSelectItem>
+                        <MudSelectItem Value="@("OHSNonCompliance")">Occupational Health & Safety Hazard Identified</MudSelectItem>
+                        <MudSelectItem Value="@("IncompleteEvidence")">Incomplete Portfolio / Evidence Documentation</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_verifyRejectionExplanation" Label="Deficiency Explanation & Corrective Actions" Variant="Variant.Outlined" Lines="2"
+                                  Placeholder="Specify exact deficiencies required to be rectified before re-inspection..." />
+                </MudItem>
+            }
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => _verificationDialogOpen = false)">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" OnClick="SaveVerificationAsync">
+            Submit Verification
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- STATUTORY EVALUATION & DECISION DIALOG (Role-Neutral Approval Authority) -->
+<MudDialog @bind-Visible="_evaluationDialogOpen">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Gavel" Color="Color.Success" />
+            <MudText Typo="Typo.h6">Render Statutory Approval Decision (Maker-Checker)</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">
+                    Approval Authority gatekeeper. Approval triggers issuance of the official Workplace Approval Letter (ETQ-TP-003).
+                </MudAlert>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int?" @bind-Value="_evalDecisionMakerPersonId" Label="Approval Authority / Committee Chair" Variant="Variant.Outlined" Required="true">
+                    @foreach (var p in _people)
+                    {
+                        <MudSelectItem Value="@((int?)p.Id)">@p.FullName (@(p.RsaIdNumber ?? p.Email))</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudRadioGroup T="bool" @bind-Value="_evalIsApproved">
+                    <MudRadio Value="true" Color="Color.Success">Grant Workplace Approval</MudRadio>
+                    <MudRadio Value="false" Color="Color.Error">Decline Workplace Approval</MudRadio>
+                </MudRadioGroup>
+            </MudItem>
+
+            @if (_evalIsApproved)
+            {
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" @bind-Value="_evalReason" Label="Approval Decision Category" Variant="Variant.Outlined" Required="true">
+                        <MudSelectItem Value="@("AuditVerified")">Audit Criteria Fully Met & Verified</MudSelectItem>
+                        <MudSelectItem Value="@("CommitteeApproved")">ETQA Committee Ratified Approval</MudSelectItem>
+                        <MudSelectItem Value="@("StandardAccredited")">National Artisan Moderation Body Standards Met</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_evalExplanation" Label="Decision Rationale & Terms of Accreditation" Variant="Variant.Outlined" Lines="2"
+                                  Placeholder="Accredited for 3-year term subject to annual monitoring audits..." />
+                </MudItem>
+            }
+            else
+            {
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" @bind-Value="_evalReason" Label="Decline Reason Category" Variant="Variant.Outlined" Required="true">
+                        <MudSelectItem Value="@("FailedAudit")">Critical Audit Deficiencies Unresolved</MudSelectItem>
+                        <MudSelectItem Value="@("NonCompliantRatios")">Artisan Supervision Ratio Exceeded</MudSelectItem>
+                        <MudSelectItem Value="@("CommitteeDeclined")">Committee Adjudication Declined</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_evalExplanation" Label="Formal Decline Reason" Variant="Variant.Outlined" Lines="2"
+                                  Placeholder="Detailed reasons for declining accreditation..." />
+                </MudItem>
+            }
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => _evaluationDialogOpen = false)">Cancel</MudButton>
+        <MudButton Color="@(_evalIsApproved ? Color.Success : Color.Error)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveEvaluationAsync">
+            @(_evalIsApproved ? "Grant Approval" : "Decline Approval")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- WITHDRAW APPLICATION DIALOG -->
+<MudDialog @bind-Visible="_withdrawDialogOpen">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Withdraw Workplace Approval Application</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2">
+                    Withdrawing will mark the application as Withdrawn and archive all pending verification tasks.
+                </MudAlert>
+                <MudTextField @bind-Value="_withdrawReason" Label="Withdrawal Reason" Variant="Variant.Outlined" Required="true" Lines="2"
+                              Placeholder="e.g. Employer relocated workshop facility; re-applying under new plant address" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => _withdrawDialogOpen = false)">Cancel</MudButton>
+        <MudButton Color="Color.Warning" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Block" OnClick="SaveWithdrawAsync">
+            Confirm Withdrawal
+        </MudButton>
+    </DialogActions>
+</MudDialog>
 
 <!-- ADD MENTOR DIALOG -->
 <MudDialog @bind-Visible="_addMentorOpen">
@@ -778,10 +1219,13 @@ else
 @code {
     [Parameter] public int Id { get; set; }
     private bool IsNew => Id == 0;
+    private bool _isEditMode = false;
 
     private WorkplaceApproval _approval = new();
     private List<Organisation> _organisations = new();
+    private List<OrganisationSite> _sites = new();
     private List<Person> _people = new();
+    private List<BreadcrumbItem> _breadcrumbItems = new();
 
     private bool _loading = true;
     private bool _saving = false;
@@ -823,14 +1267,40 @@ else
     private string _newVisitLocation = string.Empty;
     private string _newVisitPurpose = "Workplace Approval Site Audit & Tool Inspection";
 
+    // Statutory Verification Dialog State (Role-Neutral)
+    private bool _verificationDialogOpen = false;
+    private bool _verifyIsSiteVisitRequired = true;
+    private string? _verifySiteVisitJustification;
+    private bool _verifyIsRecommended = true;
+    private string? _verifyRecommendationReason = "FullCompliance";
+    private string? _verifyRecommendationExplanation;
+    private string? _verifyRejectionReason = "MissingTools";
+    private string? _verifyRejectionExplanation;
+    private int? _verifyOfficerPersonId;
+
+    // Statutory Evaluation Dialog State (Role-Neutral)
+    private bool _evaluationDialogOpen = false;
+    private bool _evalIsApproved = true;
+    private string? _evalReason = "AuditVerified";
+    private string? _evalExplanation;
+    private int? _evalDecisionMakerPersonId;
+
+    // Withdraw Dialog State
+    private bool _withdrawDialogOpen = false;
+    private string? _withdrawReason;
+
     protected override async Task OnInitializedAsync()
     {
         _loading = true;
         try
         {
+            _isEditMode = IsNew || Navigation.Uri.EndsWith("/edit", StringComparison.OrdinalIgnoreCase);
+
             _organisations = await OrganisationService.GetAllAsync();
             _people = await PersonService.GetAllAsync();
             _tradePolicies = await RatioEngine.GetAllTradePoliciesAsync(activeOnly: true);
+
+            SetupBreadcrumbs();
 
             if (!IsNew)
             {
@@ -841,6 +1311,9 @@ else
                 _approval = new WorkplaceApproval
                 {
                     ApprovalStatusCode = "DRAFT",
+                    LearningProgramTypeCode = "Apprenticeship",
+                    RequiresWorkplaceApproval = true,
+                    IsSiteVisitRequired = true,
                     InspectionDate = DateTime.Today,
                     ApprovalDate = DateTime.Today,
                     ExpiryDate = DateTime.Today.AddYears(3),
@@ -858,6 +1331,28 @@ else
         }
     }
 
+    private void SetupBreadcrumbs()
+    {
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("Workplace Approvals", href: "/workplace-approvals"),
+            new BreadcrumbItem(IsNew ? "New Application" : $"Approval #{Id}", href: null, disabled: true)
+        };
+    }
+
+    private void EnterEditMode()
+    {
+        _isEditMode = true;
+        Navigation.NavigateTo($"/workplace-approvals/{Id}/edit", replace: true);
+    }
+
+    private void ExitEditMode()
+    {
+        _isEditMode = false;
+        Navigation.NavigateTo($"/workplace-approvals/{Id}", replace: true);
+    }
+
     private async Task LoadApprovalDataAsync()
     {
         var existing = await ApprovalService.GetByIdAsync(Id);
@@ -867,6 +1362,11 @@ else
             _inspectionDate = _approval.InspectionDate;
             _approvalDate = _approval.ApprovalDate;
             _expiryDate = _approval.ExpiryDate;
+
+            if (_approval.OrganisationId > 0)
+            {
+                _sites = await OrganisationService.GetSitesAsync(_approval.OrganisationId);
+            }
 
             // Load 360-Degree Relational Collections
             _loadingLearners = true;
@@ -942,6 +1442,8 @@ else
             else
             {
                 _approval = saved;
+                _isEditMode = false;
+                Navigation.NavigateTo($"/workplace-approvals/{Id}", replace: true);
                 await LoadApprovalDataAsync();
             }
         }
@@ -957,11 +1459,117 @@ else
 
     private async Task DeleteAsync()
     {
-        var success = await ApprovalService.DeleteAsync(Id, "ADMIN");
-        if (success)
+        var confirm = await DialogService.ShowMessageBoxAsync(
+            "Delete Workplace Approval",
+            $"Are you sure you want to delete Workplace Approval '{_approval.ApprovalNumber}'? This action cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (confirm == true)
         {
-            Snackbar.Add("Workplace Approval deleted successfully.", Severity.Success);
-            Navigation.NavigateTo("/workplace-approvals");
+            var success = await ApprovalService.DeleteAsync(Id, "ADMIN");
+            if (success)
+            {
+                Snackbar.Add("Workplace Approval deleted successfully.", Severity.Success);
+                Navigation.NavigateTo("/workplace-approvals");
+            }
+        }
+    }
+
+    private void DownloadOutcomeLetterPdf()
+    {
+        Navigation.NavigateTo($"/api/documents/workplace-approval/{Id}/letter-pdf", forceLoad: true);
+    }
+
+    private void DownloadInspectionReportPdf()
+    {
+        Navigation.NavigateTo($"/api/documents/workplace-approval/{Id}/report-pdf", forceLoad: true);
+    }
+
+    private void OpenVerificationDialog()
+    {
+        _verifyIsSiteVisitRequired = _approval.IsSiteVisitRequired ?? true;
+        _verifySiteVisitJustification = _approval.SiteVisitJustification;
+        _verifyOfficerPersonId = _approval.VerifiedByPersonId ?? _approval.AssessorPersonId ?? _people.FirstOrDefault()?.Id;
+        _verificationDialogOpen = true;
+    }
+
+    private async Task SaveVerificationAsync()
+    {
+        try
+        {
+            await ApprovalService.VerifyWorkplaceAsync(
+                Id,
+                _verifyIsSiteVisitRequired,
+                _verifySiteVisitJustification,
+                _approval.InspectionDate,
+                _verifyIsRecommended ? _verifyRecommendationReason : null,
+                _verifyIsRecommended ? _verifyRecommendationExplanation : null,
+                !_verifyIsRecommended ? _verifyRejectionReason : null,
+                !_verifyIsRecommended ? _verifyRejectionExplanation : null,
+                _verifyOfficerPersonId,
+                "ADMIN");
+
+            Snackbar.Add("Workplace verification report concluded and transition executed.", Severity.Success);
+            _verificationDialogOpen = false;
+            await LoadApprovalDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Verification error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OpenEvaluationDialog()
+    {
+        _evalDecisionMakerPersonId = _approval.DecisionByPersonId ?? _people.FirstOrDefault()?.Id;
+        _evaluationDialogOpen = true;
+    }
+
+    private async Task SaveEvaluationAsync()
+    {
+        try
+        {
+            await ApprovalService.EvaluateWorkplaceAsync(
+                Id,
+                _evalIsApproved,
+                _evalReason,
+                _evalExplanation,
+                _evalDecisionMakerPersonId,
+                "ADMIN");
+
+            Snackbar.Add(_evalIsApproved ? "Workplace Approval granted by authority!" : "Workplace Approval rejected.", _evalIsApproved ? Severity.Success : Severity.Warning);
+            _evaluationDialogOpen = false;
+            await LoadApprovalDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Evaluation error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OpenWithdrawDialog()
+    {
+        _withdrawDialogOpen = true;
+    }
+
+    private async Task SaveWithdrawAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_withdrawReason))
+        {
+            Snackbar.Add("Please provide a reason for withdrawal.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await ApprovalService.WithdrawWorkplaceApprovalAsync(Id, _withdrawReason, "ADMIN");
+            Snackbar.Add("Workplace Approval application withdrawn.", Severity.Info);
+            _withdrawDialogOpen = false;
+            await LoadApprovalDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Withdrawal error: {ex.Message}", Severity.Error);
         }
     }
 
@@ -1158,9 +1766,9 @@ else
     private static Color GetStatusColor(string? status) => status?.ToUpperInvariant() switch
     {
         "APPROVED" or "ACTIVE" => Color.Success,
-        "AUDITED" or "AUDIT_SCHEDULED" => Color.Info,
-        "DRAFT" or "PENDING" => Color.Warning,
-        "REJECTED" or "EXPIRED" => Color.Error,
+        "AUDITED" or "AUDIT_SCHEDULED" or "VERIFIED" or "UNDER_EVALUATION" => Color.Info,
+        "DRAFT" or "APPLICATION" or "PENDING" => Color.Warning,
+        "REJECTED" or "EXPIRED" or "WITHDRAWN" => Color.Error,
         _ => Color.Default
     };
 }

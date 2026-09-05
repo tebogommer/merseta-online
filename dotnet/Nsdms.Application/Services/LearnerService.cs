@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
 using Nsdms.Application.Common.Models;
+using Nsdms.Application.Validation;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
@@ -15,6 +16,9 @@ public interface ILearnerService
     Task<CompanyLearner> RegisterLearnerAsync(CompanyLearner learner, string currentUsername = "SYSTEM");
     Task<CompanyLearner> UpdateLearnerAsync(CompanyLearner learner, string currentUsername = "SYSTEM");
     Task<CompanyLearner> SaveLearnerAsync(CompanyLearner learner, string currentUsername = "SYSTEM");
+    Task<CompanyLearner> WithdrawLearnerApplicationAsync(int id, string reasonCode, string? comments, string currentUsername = "SYSTEM");
+    Task<CompanyLearner> ResubmitLearnerApplicationAsync(int id, CompanyLearner learner, string currentUsername = "SYSTEM");
+    Task<CompanyLearner> ResubmitLearnerApplicationAsync(int id, string justificationOrNotes, string currentUsername = "SYSTEM");
     Task<bool> DeleteLearnerAsync(int id, string currentUsername = "SYSTEM");
 
     // Trade Testing & Progression
@@ -145,12 +149,13 @@ public class LearnerService : ILearnerService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         return await db.CompanyLearners
-            .Include(l => l.Person)
+            .Include(l => l.Person).ThenInclude(p => p.Guardians)
             .Include(l => l.Organisation)
             .Include(l => l.OrganisationSite)
             .Include(l => l.TrainingProvider)
             .Include(l => l.TradeTests).ThenInclude(t => t.AssessorPerson)
             .Include(l => l.TradeTests).ThenInclude(t => t.ModeratorPerson)
+            .Include(l => l.RegisteredUnitStandards)
             .FirstOrDefaultAsync(l => l.Id == id);
     }
 
@@ -166,9 +171,38 @@ public class LearnerService : ILearnerService
             throw new ArgumentException("A valid OrganisationId (employer) is required.");
         }
 
-        if (string.IsNullOrWhiteSpace(learner.QualificationTitle))
+        bool isCandidacy = string.Equals(learner.LearningProgrammeTypeCode, "06", StringComparison.OrdinalIgnoreCase) ||
+                           string.Equals(learner.LearningProgrammeTypeCode, "Candidacy", StringComparison.OrdinalIgnoreCase);
+
+        if (!isCandidacy && string.IsNullOrWhiteSpace(learner.QualificationTitle))
         {
             throw new ArgumentException("Qualification title is required.");
+        }
+
+        if (isCandidacy)
+        {
+            if (string.IsNullOrWhiteSpace(learner.ProfessionalRegistrationNumber))
+            {
+                throw new ArgumentException("Professional registration body council registration number is mandatory for Candidacy programmes.");
+            }
+            if (string.IsNullOrWhiteSpace(learner.QualificationTitle))
+            {
+                learner.QualificationTitle = "Engineering Candidacy Programme";
+            }
+        }
+
+        if (learner.LearnerSignatureDate.HasValue && learner.SubmissionDate.HasValue)
+        {
+            var workingDays = CompanyLearnerDomainValidator.CalculateWorkingDays(learner.LearnerSignatureDate.Value, learner.SubmissionDate.Value);
+            if (workingDays > 30)
+            {
+                throw new InvalidOperationException($"Statutory compliance violation: Application was submitted {workingDays} working days after learner signature date, exceeding the mandatory 30-working-day submission limit.");
+            }
+        }
+
+        if (!learner.SubmissionDate.HasValue)
+        {
+            learner.SubmissionDate = DateTime.UtcNow;
         }
 
         if (string.IsNullOrWhiteSpace(learner.LearnerContractNumber))
@@ -236,8 +270,11 @@ public class LearnerService : ILearnerService
             existing.OrganisationSiteId,
             existing.EnrolmentStatusCode,
             existing.QualificationTitle,
-            existing.CompletionDate
+            existing.CompletionDate,
+            existing.HasPendingModifications
         };
+
+        bool wasRegistered = string.Equals(existing.EnrolmentStatusCode, "Registered", StringComparison.OrdinalIgnoreCase);
 
         existing.QualificationTitle = learner.QualificationTitle;
         existing.SaqaQualificationId = learner.SaqaQualificationId;
@@ -273,10 +310,105 @@ public class LearnerService : ILearnerService
         existing.SetaRegion = learner.SetaRegion;
         existing.ChamberCode = learner.ChamberCode;
         existing.IsActive = learner.IsActive;
+
+        // Statutory Learner Registration alignment fields
+        existing.LearnerSignatureDate = learner.LearnerSignatureDate;
+        existing.SubmissionDate = learner.SubmissionDate;
+        existing.SignatoryRoleTitle = learner.SignatoryRoleTitle;
+        existing.SignatoryPersonId = learner.SignatoryPersonId;
+        existing.ProfessionalRegistrationNumber = learner.ProfessionalRegistrationNumber;
+        existing.WithdrawalReasonCode = learner.WithdrawalReasonCode;
+        existing.WithdrawalComments = learner.WithdrawalComments;
+        existing.IsNonEmployerEntity = learner.IsNonEmployerEntity;
+        existing.ExternalSetaId = learner.ExternalSetaId;
+
+        // If registered learner data is modified, flag pending modifications
+        if (wasRegistered)
+        {
+            existing.HasPendingModifications = true;
+        }
+
         existing.ModifiedAt = DateTime.UtcNow;
         existing.ModifiedBy = currentUsername;
 
         _audit.LogAction(db, "CompanyLearner", existing.Id, "UpdateLearner", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
+        return existing;
+    }
+
+    public async Task<CompanyLearner> WithdrawLearnerApplicationAsync(int id, string reasonCode, string? comments, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.CompanyLearners.FindAsync(id);
+        if (existing == null) throw new KeyNotFoundException($"CompanyLearner with ID {id} not found.");
+
+        var beforeState = new { existing.EnrolmentStatusCode, existing.WithdrawalReasonCode, existing.WithdrawalComments };
+
+        existing.EnrolmentStatusCode = "Withdrawn";
+        existing.WithdrawalReasonCode = reasonCode;
+        existing.WithdrawalComments = comments;
+        existing.HasPendingModifications = false;
+        existing.ModifiedAt = DateTime.UtcNow;
+        existing.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "CompanyLearner", existing.Id, "WithdrawLearnerApplication", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
+        return existing;
+    }
+
+    public async Task<CompanyLearner> ResubmitLearnerApplicationAsync(int id, CompanyLearner learner, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.CompanyLearners.FindAsync(id);
+        if (existing == null) throw new KeyNotFoundException($"CompanyLearner with ID {id} not found.");
+
+        var beforeState = new { existing.EnrolmentStatusCode, existing.HasPendingModifications };
+
+        existing.QualificationTitle = learner.QualificationTitle;
+        existing.SaqaQualificationId = learner.SaqaQualificationId;
+        existing.NqfLevel = learner.NqfLevel;
+        existing.LearningProgrammeTypeCode = learner.LearningProgrammeTypeCode;
+        existing.LearnershipId = learner.LearnershipId;
+        existing.NonNqfInterventionCode = learner.NonNqfInterventionCode;
+        existing.PartOfId = learner.PartOfId;
+        existing.AssessorRegistrationNumber = learner.AssessorRegistrationNumber;
+        existing.PracticalProviderCode = learner.PracticalProviderCode;
+        existing.OfoCode = learner.OfoCode;
+        existing.OrganisationSiteId = learner.OrganisationSiteId;
+        existing.TrainingProviderId = learner.TrainingProviderId;
+        existing.CommencementDate = learner.CommencementDate;
+        existing.ExpectedCompletionDate = learner.ExpectedCompletionDate;
+        existing.ProfessionalRegistrationNumber = learner.ProfessionalRegistrationNumber;
+        existing.SignatoryRoleTitle = learner.SignatoryRoleTitle;
+        existing.SignatoryPersonId = learner.SignatoryPersonId;
+        existing.LearnerSignatureDate = learner.LearnerSignatureDate;
+        existing.SubmissionDate = DateTime.UtcNow;
+        existing.EnrolmentStatusCode = "Resubmitted";
+        existing.HasPendingModifications = false;
+        existing.ModifiedAt = DateTime.UtcNow;
+        existing.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "CompanyLearner", existing.Id, "ResubmitLearnerApplication", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
+        return existing;
+    }
+
+    public async Task<CompanyLearner> ResubmitLearnerApplicationAsync(int id, string justificationOrNotes, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.CompanyLearners.FindAsync(id);
+        if (existing == null) throw new KeyNotFoundException($"CompanyLearner with ID {id} not found.");
+
+        var beforeState = new { existing.EnrolmentStatusCode, existing.WithdrawalComments };
+
+        existing.EnrolmentStatusCode = "Resubmitted";
+        existing.WithdrawalComments = justificationOrNotes;
+        existing.SubmissionDate = DateTime.UtcNow;
+        existing.HasPendingModifications = false;
+        existing.ModifiedAt = DateTime.UtcNow;
+        existing.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "CompanyLearner", existing.Id, "ResubmitLearnerApplication", currentUsername, beforeState, existing);
         await db.SaveChangesAsync();
         return existing;
     }

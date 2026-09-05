@@ -12,6 +12,7 @@
 @inject IOrganisationService OrgService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IWizardDraftService DraftService
 @rendermode InteractiveServer
 
 <div class="mb-4">
@@ -63,6 +64,11 @@ else
                  ActiveStepIndexChanged="OnStepChanged"
                  FinishButtonText="Submit WSP/ATR submission"
                  IsBusy="@_isProcessing"
+                 HasDraftToResume="@_hasDraftToResume"
+                 DraftStepIndex="@_draftStepIndex"
+                 DraftSavedTimeAgo="@_draftSavedTimeAgo"
+                 OnResumeDraft="ResumeDraftAsync"
+                 OnDiscardDraft="DiscardDraftAsync"
                  OnCancel="GoBack"
                  OnSaveDraft="SaveDraftAsync"
                  OnFinish="SubmitApplicationAsync">
@@ -247,6 +253,48 @@ else
 
     private List<WizardReviewGroup> _reviewGroups = new();
 
+    // Draft Persistence & Resume Lifecycle Engine
+    private bool _hasDraftToResume = false;
+    private int _draftStepIndex = 0;
+    private string? _draftSavedTimeAgo;
+    private string? _activeDraftKey;
+    private WizardDraftSession? _loadedDraft;
+
+    private record WspAtrDraftModel
+    {
+        public int? OrganisationId { get; init; }
+        public int FinYear { get; init; } = 2026;
+        public decimal PayrollAnnualTotal { get; init; } = 25000000m;
+        public decimal EstimatedLevy { get; init; } = 250000m;
+        public int EmployeeCount { get; init; } = 120;
+        public decimal AtrActualExpenditure { get; init; } = 320000m;
+        public int AtrTrainedBeneficiaries { get; init; } = 45;
+        public int AtrInterventionsCount { get; init; } = 12;
+        public string AtrPrimaryOccupationalCategory { get; init; } = string.Empty;
+        public string? AtrOfoCode { get; init; }
+        public int AtrAfricanCount { get; init; } = 28;
+        public int AtrFemaleCount { get; init; } = 18;
+        public int AtrDisabledCount { get; init; } = 2;
+        public int AtrYouthCount { get; init; } = 30;
+        public decimal PlannedTrainingBudget { get; init; } = 450000m;
+        public int WspPlannedBeneficiaries { get; init; } = 60;
+        public string WspPrimaryProgrammeType { get; init; } = "Apprenticeship";
+        public int? WspTargetNqfLevel { get; init; } = 4;
+        public decimal WspPivotalRatio { get; init; } = 75.0m;
+        public bool TrainingCommitteeMet { get; init; } = true;
+        public DateTime? ConsultationMeetingDate { get; init; }
+        public string MinutesDocumentUri { get; init; } = string.Empty;
+        public bool SkillsAuditConducted { get; init; } = true;
+        public string? ConsultationSummary { get; init; }
+        public bool IsUnionRepresented { get; init; } = true;
+        public string UnionName { get; init; } = "NUMSA";
+        public string UnionRepName { get; init; } = string.Empty;
+        public string UnionRepEmail { get; init; } = string.Empty;
+        public string SdfFullName { get; init; } = string.Empty;
+        public string CeoFullName { get; init; } = string.Empty;
+        public bool IsDeclarationAccepted { get; init; } = true;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -260,6 +308,9 @@ else
             }
 
             UpdateReviewGroups();
+
+            // Check for available in-progress draft
+            await CheckForActiveDraftAsync();
         }
         catch (Exception ex)
         {
@@ -444,13 +495,145 @@ else
         return Task.FromResult(true);
     }
 
-    private async Task SaveDraftAsync()
+    private async Task CheckForActiveDraftAsync()
     {
         try
         {
-            _isProcessing = true;
-            await Task.Delay(300);
-            Snackbar.Add("WSP/ATR submission draft saved successfully.", Severity.Info);
+            var draft = await DraftService.GetActiveDraftAsync("WspAtrSubmission", "SdfUser", _organisationId);
+            if (draft != null && draft.CurrentStepIndex > 0)
+            {
+                _loadedDraft = draft;
+                _activeDraftKey = draft.DraftKey;
+                _draftStepIndex = draft.CurrentStepIndex;
+                var delta = DateTime.UtcNow - (draft.ModifiedAt ?? draft.CreatedAt);
+                _draftSavedTimeAgo = delta.TotalHours >= 1 ? $"{(int)delta.TotalHours}h ago" : $"{(int)delta.TotalMinutes}m ago";
+                _hasDraftToResume = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Non-blocking draft lookup
+            Console.WriteLine($"Draft check skipped: {ex.Message}");
+        }
+    }
+
+    private async Task ResumeDraftAsync()
+    {
+        if (_loadedDraft == null) return;
+
+        var model = DraftService.DeserializeDraftModel<WspAtrDraftModel>(_loadedDraft);
+        if (model != null)
+        {
+            _organisationId = model.OrganisationId;
+            _finYear = model.FinYear;
+            _payrollAnnualTotal = model.PayrollAnnualTotal;
+            _estimatedLevy = model.EstimatedLevy;
+            _employeeCount = model.EmployeeCount;
+            _atrActualExpenditure = model.AtrActualExpenditure;
+            _atrTrainedBeneficiaries = model.AtrTrainedBeneficiaries;
+            _atrInterventionsCount = model.AtrInterventionsCount;
+            _atrPrimaryOccupationalCategory = model.AtrPrimaryOccupationalCategory;
+            _atrOfoCode = model.AtrOfoCode;
+            _atrAfricanCount = model.AtrAfricanCount;
+            _atrFemaleCount = model.AtrFemaleCount;
+            _atrDisabledCount = model.AtrDisabledCount;
+            _atrYouthCount = model.AtrYouthCount;
+            _plannedTrainingBudget = model.PlannedTrainingBudget;
+            _wspPlannedBeneficiaries = model.WspPlannedBeneficiaries;
+            _wspPrimaryProgrammeType = model.WspPrimaryProgrammeType;
+            _wspTargetNqfLevel = model.WspTargetNqfLevel;
+            _wspPivotalRatio = model.WspPivotalRatio;
+            _trainingCommitteeMet = model.TrainingCommitteeMet;
+            _consultationMeetingDate = model.ConsultationMeetingDate;
+            _minutesDocumentUri = model.MinutesDocumentUri;
+            _skillsAuditConducted = model.SkillsAuditConducted;
+            _consultationSummary = model.ConsultationSummary;
+            _isUnionRepresented = model.IsUnionRepresented;
+            _unionName = model.UnionName;
+            _unionRepName = model.UnionRepName;
+            _unionRepEmail = model.UnionRepEmail;
+            _sdfFullName = model.SdfFullName;
+            _ceoFullName = model.CeoFullName;
+            _isDeclarationAccepted = model.IsDeclarationAccepted;
+
+            _activeStep = _loadedDraft.CurrentStepIndex;
+            _hasDraftToResume = false;
+            UpdateReviewGroups();
+            Snackbar.Add($"Resumed WSP/ATR submission draft from Step {_activeStep + 1}.", Severity.Info);
+        }
+    }
+
+    private async Task DiscardDraftAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+        {
+            await DraftService.DiscardDraftAsync(_activeDraftKey);
+            _hasDraftToResume = false;
+            _activeDraftKey = null;
+            _loadedDraft = null;
+            Snackbar.Add("Draft discarded. You are starting a clean WSP/ATR submission.", Severity.Normal);
+        }
+    }
+
+    private async Task SaveDraftAsync()
+    {
+        _isProcessing = true;
+        try
+        {
+            var draftModel = new WspAtrDraftModel
+            {
+                OrganisationId = _organisationId,
+                FinYear = _finYear,
+                PayrollAnnualTotal = _payrollAnnualTotal,
+                EstimatedLevy = _estimatedLevy,
+                EmployeeCount = _employeeCount,
+                AtrActualExpenditure = _atrActualExpenditure,
+                AtrTrainedBeneficiaries = _atrTrainedBeneficiaries,
+                AtrInterventionsCount = _atrInterventionsCount,
+                AtrPrimaryOccupationalCategory = _atrPrimaryOccupationalCategory,
+                AtrOfoCode = _atrOfoCode,
+                AtrAfricanCount = _atrAfricanCount,
+                AtrFemaleCount = _atrFemaleCount,
+                AtrDisabledCount = _atrDisabledCount,
+                AtrYouthCount = _atrYouthCount,
+                PlannedTrainingBudget = _plannedTrainingBudget,
+                WspPlannedBeneficiaries = _wspPlannedBeneficiaries,
+                WspPrimaryProgrammeType = _wspPrimaryProgrammeType,
+                WspTargetNqfLevel = _wspTargetNqfLevel,
+                WspPivotalRatio = _wspPivotalRatio,
+                TrainingCommitteeMet = _trainingCommitteeMet,
+                ConsultationMeetingDate = _consultationMeetingDate,
+                MinutesDocumentUri = _minutesDocumentUri,
+                SkillsAuditConducted = _skillsAuditConducted,
+                ConsultationSummary = _consultationSummary,
+                IsUnionRepresented = _isUnionRepresented,
+                UnionName = _unionName,
+                UnionRepName = _unionRepName,
+                UnionRepEmail = _unionRepEmail,
+                SdfFullName = _sdfFullName,
+                CeoFullName = _ceoFullName,
+                IsDeclarationAccepted = _isDeclarationAccepted
+            };
+
+            var session = await DraftService.SaveDraftAsync(
+                "WspAtrSubmission",
+                "Mandatory Grant WSP / ATR annual submission",
+                "/wsp/submit",
+                "SdfUser",
+                _organisationId,
+                _activeStep,
+                6,
+                draftModel,
+                _activeDraftKey
+            );
+
+            _activeDraftKey = session.DraftKey;
+            _hasDraftToResume = false;
+            Snackbar.Add($"Draft saved at Step {_activeStep + 1} ('{session.DraftKey}').", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Could not save draft: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -520,8 +703,14 @@ else
 
             _createdSubmissionId = created.Id;
             _submittedAppNumber = created.ReferenceNumber;
-            _isSuccess = true;
 
+            // Clear submitted draft
+            if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+            {
+                await DraftService.MarkAsSubmittedAsync(_activeDraftKey);
+            }
+
+            _isSuccess = true;
             Snackbar.Add($"Mandatory Grant WSP/ATR submission {created.ReferenceNumber} submitted successfully.", Severity.Success);
         }
         catch (Exception ex)

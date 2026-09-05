@@ -230,4 +230,148 @@ public class WorkplaceApprovalServiceTests
     }
 
     #endregion
+
+    #region Statutory Alignment Spec NMok_19122022 Role-Neutral Tests
+
+    [Fact]
+    public async Task SubmitApplicationAsync_ComputesTwentyWorkingDaySlaAndSetsStatus()
+    {
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Bell Equipment", SdlNumber = "L102938475" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var wpa = await service.CreateAsync(new WorkplaceApproval
+        {
+            OrganisationId = org.Id,
+            QualificationTitle = "Boilermaker",
+            ApprovalStatusCode = "DRAFT"
+        });
+
+        var submitted = await service.SubmitApplicationAsync(wpa.Id, "TEST_APPLICANT");
+
+        Assert.Equal("APPLICATION", submitted.ApprovalStatusCode);
+        Assert.NotNull(submitted.InspectionDueDate);
+        Assert.True(submitted.InspectionDueDate.Value > DateTime.Today);
+
+        // Verify SLA is strictly >= 20 calendar days away (accounting for weekends)
+        var totalDays = (submitted.InspectionDueDate.Value.Date - DateTime.Today).TotalDays;
+        Assert.True(totalDays >= 20);
+
+        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "WorkplaceApproval" && a.ActionName == "SubmitApplication");
+        Assert.NotNull(auditLog);
+    }
+
+    [Fact]
+    public async Task VerifyWorkplaceAsync_DesktopVerification_UpdatesRecommendationAndAudit()
+    {
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Defy Appliances", SdlNumber = "L998877665" };
+        var officer = new Person { FirstName = "Kagiso", LastName = "Mabe", RsaIdNumber = "8505055009087" };
+        db.Organisations.Add(org);
+        db.People.Add(officer);
+        await db.SaveChangesAsync();
+
+        var wpa = await service.CreateAsync(new WorkplaceApproval
+        {
+            OrganisationId = org.Id,
+            QualificationTitle = "Electrician",
+            ApprovalStatusCode = "APPLICATION"
+        });
+
+        var verified = await service.VerifyWorkplaceAsync(
+            wpa.Id,
+            isSiteVisitRequired: false,
+            visitJustification: "Existing accredited workshop with valid tooling certification and unchanged plant layout",
+            scheduledVisitDate: null,
+            recommendationReason: "FullCompliance",
+            recommendationExplanation: "All theoretical and practical workshop requirements fully certified",
+            rejectionReason: null,
+            rejectionExplanation: null,
+            officerPersonId: officer.Id,
+            currentUsername: "VERIFY_OFFICER");
+
+        Assert.Equal("VERIFIED", verified.ApprovalStatusCode);
+        Assert.False(verified.IsSiteVisitRequired);
+        Assert.NotNull(verified.SiteVisitJustification);
+        Assert.Equal("FullCompliance", verified.VerificationRecommendationReason);
+        Assert.Equal(officer.Id, verified.VerifiedByPersonId);
+        Assert.NotNull(verified.VerifiedDate);
+
+        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "WorkplaceApproval" && a.ActionName == "VerifyWorkplace");
+        Assert.NotNull(auditLog);
+        Assert.Equal("VERIFY_OFFICER", auditLog.Actor);
+    }
+
+    [Fact]
+    public async Task EvaluateWorkplaceAsync_Approved_RendersDecisionAndSetsDates()
+    {
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Sasol Synfuels", SdlNumber = "L123123123" };
+        var chair = new Person { FirstName = "Nalini", LastName = "Govender", RsaIdNumber = "7809095009087" };
+        db.Organisations.Add(org);
+        db.People.Add(chair);
+        await db.SaveChangesAsync();
+
+        var wpa = await service.CreateAsync(new WorkplaceApproval
+        {
+            OrganisationId = org.Id,
+            QualificationTitle = "Fitter & Turner",
+            ApprovalStatusCode = "VERIFIED"
+        });
+
+        var approved = await service.EvaluateWorkplaceAsync(
+            wpa.Id,
+            isApproved: true,
+            reason: "AuditVerified",
+            explanation: "Accreditation granted for 3-year statutory validity cycle subject to annual reviews",
+            decisionMakerPersonId: chair.Id,
+            currentUsername: "APPROVAL_AUTHORITY");
+
+        Assert.Equal("APPROVED", approved.ApprovalStatusCode);
+        Assert.Equal("AuditVerified", approved.ApprovalReason);
+        Assert.Equal(chair.Id, approved.DecisionByPersonId);
+        Assert.NotNull(approved.DecisionDate);
+        Assert.NotNull(approved.ApprovalDate);
+        Assert.NotNull(approved.ExpiryDate);
+        Assert.True(approved.ExpiryDate.Value >= approved.ApprovalDate.Value.AddYears(3).AddDays(-1));
+
+        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "WorkplaceApproval" && a.ActionName == "EvaluateWorkplace");
+        Assert.NotNull(auditLog);
+    }
+
+    [Fact]
+    public async Task WithdrawWorkplaceApprovalAsync_SetsWithdrawnStatusAndAudits()
+    {
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Ford Motor Company", SdlNumber = "L555666777" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var wpa = await service.CreateAsync(new WorkplaceApproval
+        {
+            OrganisationId = org.Id,
+            QualificationTitle = "Motor Mechanic",
+            ApprovalStatusCode = "APPLICATION"
+        });
+
+        var withdrawn = await service.WithdrawWorkplaceApprovalAsync(
+            wpa.Id,
+            "Employer relocated workshop facility; re-applying under new plant address",
+            "SDF_USER");
+
+        Assert.Equal("WITHDRAWN", withdrawn.ApprovalStatusCode);
+        Assert.Contains("Employer relocated", withdrawn.Recommendations);
+
+        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "WorkplaceApproval" && a.ActionName == "WithdrawWorkplaceApproval");
+        Assert.NotNull(auditLog);
+        Assert.Equal("SDF_USER", auditLog.Actor);
+    }
+
+    #endregion
 }
+

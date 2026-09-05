@@ -35,6 +35,10 @@ public interface IPdfDocumentService
     // Phase 4: Statutory Contract & Certificate Templates
     Task<byte[]> GenerateTripartiteAgreementPdfAsync(CompanyLearner learner);
     Task<byte[]> GenerateAssessorRegistrationCertificatePdfAsync(EtqaAssessor assessor);
+
+    // Statutory Workplace Approval Spec NMok_19122022 Annexures
+    Task<byte[]> GenerateWorkplaceApprovalLetterPdfAsync(int approvalId);
+    Task<byte[]> GenerateWorkplaceApprovalReportPdfAsync(int approvalId);
 }
 
 public class ErpDisbursementResult

@@ -1,13 +1,16 @@
 @page "/employers"
+@using Nsdms.Application.Common
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
 @using MudBlazor
 @inject IOrganisationService OrgService
+@inject ITenantProvider TenantProvider
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject IJSRuntime JS
+@implements IDisposable
 @rendermode InteractiveServer
 
 @*
@@ -218,7 +221,17 @@
 
     protected override async Task OnInitializedAsync()
     {
+        TenantProvider.OnTenantChanged += HandleTenantChanged;
         await LoadData();
+    }
+
+    private async void HandleTenantChanged()
+    {
+        await InvokeAsync(async () =>
+        {
+            await LoadData();
+            StateHasChanged();
+        });
     }
 
     private async Task LoadData()
@@ -342,5 +355,10 @@
                 Snackbar.Add("Could not delete the employer record.", Severity.Error);
             }
         }
+    }
+
+    public void Dispose()
+    {
+        TenantProvider.OnTenantChanged -= HandleTenantChanged;
     }
 }

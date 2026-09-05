@@ -1,0 +1,354 @@
+@using Nsdms.Application.Common
+@using Nsdms.Application.Services
+@inject ITenantProvider TenantProvider
+@inject IOrganisationContextService OrgContextService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<MudMenu AnchorOrigin="Origin.BottomRight" 
+         TransformOrigin="Origin.TopRight" 
+         Dense="true" 
+         AriaLabel="Organisation context switcher menu" 
+         Title="Organisation context switcher">
+    <ActivatorContent Context="orgMenuCtx">
+        <MudButton Variant="Variant.Outlined" 
+                   OnClick="@orgMenuCtx.ToggleAsync"
+                   Class="org-context-switcher-pill mr-2" 
+                   Style="@GetPillStyle()"
+                   aria-label="@($"Active organisation: {GetDisplayTitle()}")" 
+                   title="@($"Active organisation: {GetDisplayTitle()}")">
+            <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" Class="mr-1" Style="color: inherit; font-size: 1.1rem;" />
+            <span class="org-context-label font-weight-medium">@GetShortDisplayTitle()</span>
+            <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" Style="color: inherit; font-size: 1rem; margin-left: 4px;" />
+        </MudButton>
+    </ActivatorContent>
+    <ChildContent>
+        <div class="pa-3" style="min-width: 360px; max-width: 440px;">
+            <!-- Header -->
+            <div class="d-flex align-center justify-space-between mb-2">
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Domain" Color="Color.Primary" Size="Size.Small" />
+                    <MudText Typo="Typo.subtitle2" Style="font-weight: 700; color: var(--mud-palette-text-primary);">
+                        Working Organisation Context
+                    </MudText>
+                </div>
+                @if (TenantProvider.IsAdmin)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined" Style="height: 20px; font-size: 0.65rem;">
+                        Admin Bypass
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Style="height: 20px; font-size: 0.65rem;">
+                        @_affiliatedOrgs.Count Affiliation@(_affiliatedOrgs.Count == 1 ? "" : "s")
+                    </MudChip>
+                }
+            </div>
+            
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-2">
+                All records, WSP submissions, and grant claims are filtered to your active organisation.
+            </MudText>
+
+            <!-- Search input if multiple orgs -->
+            @if (_affiliatedOrgs.Count > 3 || TenantProvider.IsAdmin)
+            {
+                <MudTextField T="string" 
+                              @bind-Value="_searchFilter" 
+                              Placeholder="Filter organisations..." 
+                              Adornment="Adornment.Start" 
+                              AdornmentIcon="@Icons.Material.Filled.Search" 
+                              Variant="Variant.Outlined" 
+                              Margin="Margin.Dense" 
+                              Class="mb-2" 
+                              Immediate="true" />
+            }
+
+            <MudDivider Class="my-2" />
+
+            <!-- Active Organisation Spotlight Card -->
+            @if (TenantProvider.CurrentOrganisationId != null)
+            {
+                <div class="pa-2 rounded mb-2" style="background: var(--mud-palette-action-default-hover); border-left: 3px solid var(--mud-palette-primary);">
+                    <div class="d-flex justify-space-between align-center">
+                        <MudText Typo="Typo.caption" Style="font-weight: 600; text-transform: uppercase; color: var(--mud-palette-primary); font-size: 0.68rem;">
+                            Current Active Employer
+                        </MudText>
+                        <span class="font-mono text-muted" style="font-size: 0.7rem;">SDL: @TenantProvider.CurrentOrganisationSdl</span>
+                    </div>
+                    <MudText Typo="Typo.body2" Style="font-weight: 700; color: var(--mud-palette-text-primary);" Class="mt-1">
+                        @TenantProvider.CurrentOrganisationName
+                    </MudText>
+                </div>
+            }
+            else if (TenantProvider.IsAdmin)
+            {
+                <div class="pa-2 rounded mb-2" style="background: var(--mud-palette-action-default-hover); border-left: 3px solid var(--mud-palette-info);">
+                    <MudText Typo="Typo.caption" Style="font-weight: 600; text-transform: uppercase; color: var(--mud-palette-info); font-size: 0.68rem;">
+                        Global Mode Active
+                    </MudText>
+                    <MudText Typo="Typo.body2" Style="font-weight: 700; color: var(--mud-palette-text-primary);" Class="mt-1">
+                        All Organisations (Global View)
+                    </MudText>
+                </div>
+            }
+            else
+            {
+                <div class="pa-2 rounded mb-2" style="background: var(--mud-palette-warning-hover); border-left: 3px solid var(--mud-palette-warning);">
+                    <MudText Typo="Typo.caption" Style="font-weight: 600; color: var(--mud-palette-warning); font-size: 0.68rem;">
+                        No Organisation Selected
+                    </MudText>
+                    <MudText Typo="Typo.caption" Class="d-block" Style="color: var(--mud-palette-text-primary);">
+                        Please select an organisation below to view and manage records.
+                    </MudText>
+                </div>
+            }
+
+            <!-- Affiliated Organisations List -->
+            <MudText Typo="Typo.caption" Style="font-weight: 700; color: var(--mud-palette-text-secondary); text-transform: uppercase; font-size: 0.65rem;" Class="mb-1 d-block">
+                @(TenantProvider.IsAdmin ? "Select specific employer" : "Your Affiliated Organisations")
+            </MudText>
+
+            <div style="max-height: 240px; overflow-y: auto;" class="d-flex flex-column gap-1">
+                @foreach (var org in FilteredOrganisations)
+                {
+                    var isSelected = TenantProvider.CurrentOrganisationId == org.OrganisationId;
+                    <div class="pa-2 rounded d-flex justify-space-between align-center"
+                         style="border: 1px solid @(isSelected ? "var(--mud-palette-primary)" : "var(--mud-palette-lines-default)"); background: @(isSelected ? "var(--mud-palette-action-default-hover)" : "transparent"); cursor: pointer;"
+                         @onclick="@(() => SelectOrganisation(org))">
+                        <div class="d-flex flex-column" style="max-width: 75%;">
+                            <MudText Typo="Typo.body2" Style="font-weight: 600; line-height: 1.2; font-size: 0.85rem;">
+                                @org.OrganisationName
+                            </MudText>
+                            <div class="d-flex align-center gap-1 mt-1">
+                                <span class="font-mono text-muted" style="font-size: 0.7rem;">@org.SdlNumber</span>
+                                @if (!string.IsNullOrEmpty(org.ChamberName))
+                                {
+                                    <span class="text-muted" style="font-size: 0.7rem;">• @org.ChamberName</span>
+                                }
+                            </div>
+                            @if (org.Roles.Count > 0)
+                            {
+                                <div class="d-flex flex-wrap gap-1 mt-1">
+                                    @foreach (var r in org.Roles)
+                                    {
+                                        <span class="badge-role" style="font-size: 0.62rem; padding: 1px 4px; border-radius: 3px; background: var(--mud-palette-action-default); color: var(--mud-palette-text-primary);">
+                                            @r
+                                        </span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <MudButton Variant="@(isSelected ? Variant.Filled : Variant.Outlined)"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   Style="font-size: 0.7rem; min-width: 60px; height: 26px;"
+                                   OnClick="@(() => SelectOrganisation(org))">
+                            @(isSelected ? "Active" : "Switch")
+                        </MudButton>
+                    </div>
+                }
+            </div>
+
+            <!-- Admin Reset to Global merSETA View -->
+            @if (TenantProvider.IsAdmin)
+            {
+                <MudDivider Class="my-2" />
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Public"
+                           OnClick="@ResetToGlobalAdmin"
+                           Class="justify-start">
+                    Switch to All Organisations (Global View)
+                </MudButton>
+            }
+
+            @if (_affiliatedOrgs.Count > 1 && !TenantProvider.IsAdmin)
+            {
+                <MudDivider Class="my-2" />
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Default"
+                           FullWidth="true"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.GridView"
+                           OnClick="@OpenSelectionModal"
+                           Class="justify-start">
+                    Open Organisation Portfolio Modal
+                </MudButton>
+            }
+        </div>
+    </ChildContent>
+</MudMenu>
+
+@code {
+    [Parameter]
+    public string? CurrentUserEmail { get; set; }
+
+    [Parameter]
+    public string? CurrentPersonName { get; set; }
+
+    [Parameter]
+    public bool IsAdminUser { get; set; } = true;
+
+    [Parameter]
+    public EventCallback<AffiliatedOrganisationDto?> OnOrganisationChanged { get; set; }
+
+    private List<AffiliatedOrganisationDto> _affiliatedOrgs = new();
+    private string _searchFilter = string.Empty;
+
+    private IEnumerable<AffiliatedOrganisationDto> FilteredOrganisations =>
+        string.IsNullOrWhiteSpace(_searchFilter)
+            ? _affiliatedOrgs
+            : _affiliatedOrgs.Where(o => 
+                o.OrganisationName.Contains(_searchFilter, StringComparison.OrdinalIgnoreCase) ||
+                o.SdlNumber.Contains(_searchFilter, StringComparison.OrdinalIgnoreCase) ||
+                (o.ChamberName != null && o.ChamberName.Contains(_searchFilter, StringComparison.OrdinalIgnoreCase)));
+
+    protected override async Task OnInitializedAsync()
+    {
+        TenantProvider.OnTenantChanged += HandleTenantChanged;
+        await LoadAffiliationsAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAffiliationsAsync();
+    }
+
+    public async Task ReloadAffiliationsAsync(string? email, string? name, bool isAdmin)
+    {
+        CurrentUserEmail = email;
+        CurrentPersonName = name;
+        IsAdminUser = isAdmin;
+        await LoadAffiliationsAsync();
+    }
+
+    private async Task LoadAffiliationsAsync()
+    {
+        try
+        {
+            _affiliatedOrgs = await OrgContextService.GetAffiliatedOrganisationsAsync(CurrentUserEmail, isAdmin: IsAdminUser);
+            
+            if (!IsAdminUser)
+            {
+                var isCurrentValid = TenantProvider.CurrentOrganisationId != null && 
+                                     _affiliatedOrgs.Any(o => o.OrganisationId == TenantProvider.CurrentOrganisationId.Value);
+
+                if (!isCurrentValid && _affiliatedOrgs.Count > 0)
+                {
+                    var target = _affiliatedOrgs.FirstOrDefault(o => o.IsPrimary) ?? _affiliatedOrgs[0];
+                    TenantProvider.SetTenant(target.OrganisationId, target.OrganisationName, target.SdlNumber, isAdmin: false);
+                }
+                else if (!isCurrentValid && _affiliatedOrgs.Count == 0)
+                {
+                    TenantProvider.SetTenant(null, null, null, isAdmin: false);
+                }
+                else if (isCurrentValid && TenantProvider.IsAdmin)
+                {
+                    var curOrg = _affiliatedOrgs.First(o => o.OrganisationId == TenantProvider.CurrentOrganisationId!.Value);
+                    TenantProvider.SetTenant(curOrg.OrganisationId, curOrg.OrganisationName, curOrg.SdlNumber, isAdmin: false);
+                }
+            }
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[OrganisationContextSwitcher] Error loading affiliations: {ex.Message}");
+        }
+    }
+
+    private void HandleTenantChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SelectOrganisation(AffiliatedOrganisationDto org)
+    {
+        TenantProvider.SetTenant(org.OrganisationId, org.OrganisationName, org.SdlNumber, isAdmin: false);
+        Snackbar.Add($"Switched organisation context to {org.OrganisationName}.", Severity.Success);
+        if (OnOrganisationChanged.HasDelegate)
+        {
+            await OnOrganisationChanged.InvokeAsync(org);
+        }
+    }
+
+    private async Task ResetToGlobalAdmin()
+    {
+        TenantProvider.ResetToGlobalAdmin();
+        Snackbar.Add("Switched to All Organisations (Global View).", Severity.Info);
+        if (OnOrganisationChanged.HasDelegate)
+        {
+            await OnOrganisationChanged.InvokeAsync(null);
+        }
+    }
+
+    private async Task OpenSelectionModal()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Organisations", _affiliatedOrgs },
+            { "PersonDisplayName", CurrentPersonName }
+        };
+
+        var dialog = await DialogService.ShowAsync<SelectOrganisationDialog>("Select Working Organisation", parameters);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled && result.Data is AffiliatedOrganisationDto selected)
+        {
+            if (OnOrganisationChanged.HasDelegate)
+            {
+                await OnOrganisationChanged.InvokeAsync(selected);
+            }
+        }
+    }
+
+    private string GetDisplayTitle()
+    {
+        if (TenantProvider.CurrentOrganisationId != null)
+        {
+            var sdl = !string.IsNullOrEmpty(TenantProvider.CurrentOrganisationSdl) ? $" ({TenantProvider.CurrentOrganisationSdl})" : "";
+            return $"{TenantProvider.CurrentOrganisationName}{sdl}";
+        }
+        if (TenantProvider.IsAdmin)
+        {
+            return "All Organisations (Global View)";
+        }
+        return "Select Organisation";
+    }
+
+    private string GetShortDisplayTitle()
+    {
+        if (TenantProvider.CurrentOrganisationId != null)
+        {
+            var name = TenantProvider.CurrentOrganisationName ?? "Organisation";
+            if (name.Length > 20)
+            {
+                name = name.Substring(0, 18) + "...";
+            }
+            return name;
+        }
+        if (TenantProvider.IsAdmin)
+        {
+            return "All Organisations";
+        }
+        return "Select Org ⚠️";
+    }
+
+    private string GetPillStyle()
+    {
+        var border = TenantProvider.CurrentOrganisationId != null 
+            ? "border: 1px solid var(--mud-palette-primary) !important;" 
+            : (TenantProvider.IsAdmin 
+                ? "border: 1px solid var(--mud-palette-lines-default) !important;" 
+                : "border: 1px solid var(--mud-palette-warning) !important; color: var(--mud-palette-warning) !important;");
+        
+        return $"{border} border-radius: 20px !important; text-transform: none !important; font-size: 0.82rem !important; padding: 3px 10px !important; height: 32px !important; color: var(--mud-palette-text-primary);";
+    }
+
+    public void Dispose()
+    {
+        TenantProvider.OnTenantChanged -= HandleTenantChanged;
+    }
+}

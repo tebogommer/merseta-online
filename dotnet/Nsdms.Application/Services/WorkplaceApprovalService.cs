@@ -23,6 +23,28 @@ public interface IWorkplaceApprovalService
     Task<WorkplaceApproval> ApproveWorkplaceAsync(int id, string recommendations, string currentUsername = "SYSTEM");
     Task<WorkplaceApproval> RejectWorkplaceAsync(int id, string reason, string currentUsername = "SYSTEM");
 
+    // Statutory Spec NMok_19122022 Role-Neutral Methods
+    Task<WorkplaceApproval> SubmitApplicationAsync(int id, string currentUsername = "SYSTEM");
+    Task<WorkplaceApproval> VerifyWorkplaceAsync(
+        int id,
+        bool isSiteVisitRequired,
+        string? visitJustification,
+        DateTime? scheduledVisitDate,
+        string? recommendationReason,
+        string? recommendationExplanation,
+        string? rejectionReason,
+        string? rejectionExplanation,
+        int? officerPersonId,
+        string currentUsername = "SYSTEM");
+    Task<WorkplaceApproval> EvaluateWorkplaceAsync(
+        int id,
+        bool isApproved,
+        string? reason,
+        string? explanation,
+        int? decisionMakerPersonId,
+        string currentUsername = "SYSTEM");
+    Task<WorkplaceApproval> WithdrawWorkplaceApprovalAsync(int id, string reason, string currentUsername = "SYSTEM");
+
     // 360-Degree Relational Queries
     Task<List<Nsdms.Application.Common.Models.WpaLearnerDto>> GetPlacedLearnersAsync(int workplaceApprovalId);
     Task<List<Nsdms.Application.Common.Models.WpaSdpDto>> GetPartnerSdpsAsync(int workplaceApprovalId);
@@ -57,7 +79,10 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         var query = db.WorkplaceApprovals
             .Include(w => w.Organisation)
             .Include(w => w.OrganisationSite)
+            .Include(w => w.ContactPerson)
             .Include(w => w.AssessorPerson)
+            .Include(w => w.VerifiedByPerson)
+            .Include(w => w.DecisionByPerson)
             .Include(w => w.Mentors).ThenInclude(m => m.Person)
             .Include(w => w.ToolItems)
             .AsQueryable();
@@ -92,7 +117,10 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         return await db.WorkplaceApprovals
             .Include(w => w.Organisation)
             .Include(w => w.OrganisationSite)
+            .Include(w => w.ContactPerson)
             .Include(w => w.AssessorPerson)
+            .Include(w => w.VerifiedByPerson)
+            .Include(w => w.DecisionByPerson)
             .Include(w => w.Mentors).ThenInclude(m => m.Person)
             .Include(w => w.ToolItems)
             .FirstOrDefaultAsync(w => w.Id == id);
@@ -159,6 +187,26 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         existing.IsRatioEnforced = approval.IsRatioEnforced;
         existing.CustomTradeRatio = approval.CustomTradeRatio;
         existing.MentorRatioExemptionNotes = approval.MentorRatioExemptionNotes;
+        existing.LearningProgramTypeCode = approval.LearningProgramTypeCode;
+        existing.RequiresWorkplaceApproval = approval.RequiresWorkplaceApproval;
+        existing.IsSiteVisitRequired = approval.IsSiteVisitRequired;
+        existing.SiteVisitJustification = approval.SiteVisitJustification;
+        existing.InspectionDueDate = approval.InspectionDueDate;
+        existing.VerificationRecommendationReason = approval.VerificationRecommendationReason;
+        existing.VerificationRecommendationExplanation = approval.VerificationRecommendationExplanation;
+        existing.VerificationRejectionReason = approval.VerificationRejectionReason;
+        existing.VerificationRejectionExplanation = approval.VerificationRejectionExplanation;
+        existing.VerifiedDate = approval.VerifiedDate;
+        existing.VerifiedByPersonId = approval.VerifiedByPersonId;
+        existing.ApprovalReason = approval.ApprovalReason;
+        existing.ApprovalExplanation = approval.ApprovalExplanation;
+        existing.RejectionReason = approval.RejectionReason;
+        existing.RejectionExplanation = approval.RejectionExplanation;
+        existing.DecisionDate = approval.DecisionDate;
+        existing.DecisionByPersonId = approval.DecisionByPersonId;
+        existing.IsNonMerSetaCompany = approval.IsNonMerSetaCompany;
+        existing.HomeSetaName = approval.HomeSetaName;
+        existing.HomeSetaAgreementRef = approval.HomeSetaAgreementRef;
         existing.IsActive = approval.IsActive;
         existing.ModifiedAt = DateTime.UtcNow;
         existing.ModifiedBy = currentUsername;
@@ -273,6 +321,133 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         _audit.LogAction(db, "WorkplaceApproval", existing.Id, "RejectWorkplace", currentUsername, beforeState, existing);
         await db.SaveChangesAsync();
         return existing;
+    }
+
+    public async Task<WorkplaceApproval> SubmitApplicationAsync(int id, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.WorkplaceApprovals.FindAsync(id);
+        if (existing == null) throw new KeyNotFoundException($"WorkplaceApproval with ID {id} not found.");
+
+        var beforeState = new { existing.ApprovalStatusCode, existing.InspectionDueDate };
+        existing.ApprovalStatusCode = "APPLICATION";
+        existing.InspectionDueDate = AddBusinessDays(DateTime.UtcNow, 20);
+        existing.ModifiedAt = DateTime.UtcNow;
+        existing.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "WorkplaceApproval", existing.Id, "SubmitApplication", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
+        return existing;
+    }
+
+    public async Task<WorkplaceApproval> VerifyWorkplaceAsync(
+        int id,
+        bool isSiteVisitRequired,
+        string? visitJustification,
+        DateTime? scheduledVisitDate,
+        string? recommendationReason,
+        string? recommendationExplanation,
+        string? rejectionReason,
+        string? rejectionExplanation,
+        int? officerPersonId,
+        string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.WorkplaceApprovals.FindAsync(id);
+        if (existing == null) throw new KeyNotFoundException($"WorkplaceApproval with ID {id} not found.");
+
+        var beforeState = new { existing.ApprovalStatusCode, existing.VerifiedDate };
+        existing.IsSiteVisitRequired = isSiteVisitRequired;
+        existing.SiteVisitJustification = visitJustification;
+        if (scheduledVisitDate.HasValue) existing.InspectionDate = scheduledVisitDate.Value;
+        existing.VerificationRecommendationReason = recommendationReason;
+        existing.VerificationRecommendationExplanation = recommendationExplanation;
+        existing.VerificationRejectionReason = rejectionReason;
+        existing.VerificationRejectionExplanation = rejectionExplanation;
+        existing.VerifiedDate = DateTime.UtcNow;
+        existing.VerifiedByPersonId = officerPersonId;
+        existing.ApprovalStatusCode = isSiteVisitRequired && scheduledVisitDate.HasValue ? "AUDIT_SCHEDULED" : "VERIFIED";
+        existing.ModifiedAt = DateTime.UtcNow;
+        existing.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "WorkplaceApproval", existing.Id, "VerifyWorkplace", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
+        return existing;
+    }
+
+    public async Task<WorkplaceApproval> EvaluateWorkplaceAsync(
+        int id,
+        bool isApproved,
+        string? reason,
+        string? explanation,
+        int? decisionMakerPersonId,
+        string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.WorkplaceApprovals.FindAsync(id);
+        if (existing == null) throw new KeyNotFoundException($"WorkplaceApproval with ID {id} not found.");
+
+        var beforeState = new { existing.ApprovalStatusCode, existing.ApprovalDate };
+        existing.DecisionDate = DateTime.UtcNow;
+        existing.DecisionByPersonId = decisionMakerPersonId;
+
+        if (isApproved)
+        {
+            existing.ApprovalStatusCode = "APPROVED";
+            existing.ApprovalDate = DateTime.UtcNow;
+            existing.ExpiryDate = DateTime.UtcNow.AddYears(3);
+            existing.ApprovalReason = reason;
+            existing.ApprovalExplanation = explanation;
+            existing.Recommendations = explanation ?? reason;
+        }
+        else
+        {
+            existing.ApprovalStatusCode = "REJECTED";
+            existing.RejectionReason = reason;
+            existing.RejectionExplanation = explanation;
+            existing.Recommendations = explanation ?? reason;
+        }
+
+        existing.ModifiedAt = DateTime.UtcNow;
+        existing.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "WorkplaceApproval", existing.Id, "EvaluateWorkplace", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
+        return existing;
+    }
+
+    public async Task<WorkplaceApproval> WithdrawWorkplaceApprovalAsync(int id, string reason, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.WorkplaceApprovals.FindAsync(id);
+        if (existing == null) throw new KeyNotFoundException($"WorkplaceApproval with ID {id} not found.");
+
+        var beforeState = new { existing.ApprovalStatusCode, existing.IsActive };
+        existing.ApprovalStatusCode = "WITHDRAWN";
+        existing.IsActive = false;
+        existing.RejectionReason = "Approval Withdrawn / Revoked";
+        existing.RejectionExplanation = reason;
+        existing.Recommendations = reason;
+        existing.ModifiedAt = DateTime.UtcNow;
+        existing.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "WorkplaceApproval", existing.Id, "WithdrawWorkplaceApproval", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
+        return existing;
+    }
+
+    public static DateTime AddBusinessDays(DateTime startDate, int businessDays)
+    {
+        var current = startDate;
+        while (businessDays > 0)
+        {
+            current = current.AddDays(1);
+            if (current.DayOfWeek != DayOfWeek.Saturday && current.DayOfWeek != DayOfWeek.Sunday)
+            {
+                businessDays--;
+            }
+        }
+        return current;
     }
 
     #region 360-Degree Relational Queries

@@ -13,6 +13,7 @@
 @inject IDgProjectImplementationService PipService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IWizardDraftService DraftService
 @rendermode InteractiveServer
 
 <div class="mb-4">
@@ -76,6 +77,11 @@ else
                  ActiveStepIndexChanged="OnStepChanged"
                  FinishButtonText="Submit tranche claim"
                  IsBusy="@_isProcessing"
+                 HasDraftToResume="@_hasDraftToResume"
+                 DraftStepIndex="@_draftStepIndex"
+                 DraftSavedTimeAgo="@_draftSavedTimeAgo"
+                 OnResumeDraft="ResumeDraftAsync"
+                 OnDiscardDraft="DiscardDraftAsync"
                  OnCancel="GoBack"
                  OnSaveDraft="SaveDraftAsync"
                  OnFinish="SubmitClaimAsync">
@@ -223,6 +229,35 @@ else
 
     private List<WizardReviewGroup> _reviewGroups = new();
 
+    // Draft Persistence & Resume Lifecycle Engine
+    private bool _hasDraftToResume = false;
+    private int _draftStepIndex = 0;
+    private string? _draftSavedTimeAgo;
+    private string? _activeDraftKey;
+    private WizardDraftSession? _loadedDraft;
+
+    private record DgTrancheClaimDraftModel
+    {
+        public int? GrantMoaId { get; init; }
+        public int? PipId { get; init; }
+        public int? GrantMoaMilestoneId { get; init; }
+        public int LearnerDeliverableHeadcount { get; init; } = 25;
+        public DateTime? MilestoneCompletionDate { get; init; }
+        public bool IsDeliverableInspectedByClo { get; init; } = true;
+        public string DeliverableDescription { get; init; } = string.Empty;
+        public int TrancheNumber { get; init; } = 2;
+        public decimal ClaimAmount { get; init; } = 350000m;
+        public string TaxCompliancePin { get; init; } = string.Empty;
+        public string BankName { get; init; } = string.Empty;
+        public string BankAccountNumber { get; init; } = string.Empty;
+        public string BranchCode { get; init; } = string.Empty;
+        public bool IsBankingDetailsVerified { get; init; } = true;
+        public string? ProofDocumentUri { get; init; }
+        public string EvidenceSummary { get; init; } = string.Empty;
+        public string? AuditNotes { get; init; }
+        public bool IsPfmaAttestationAccepted { get; init; } = true;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -248,6 +283,9 @@ else
             }
 
             UpdateReviewGroups();
+
+            // Check for available in-progress draft
+            await CheckForActiveDraftAsync();
         }
         catch (Exception ex)
         {
@@ -500,10 +538,128 @@ else
         return Task.FromResult(true);
     }
 
+    private async Task CheckForActiveDraftAsync()
+    {
+        try
+        {
+            var draft = await DraftService.GetActiveDraftAsync("DgTrancheClaim", "CurrentFinanceOfficer");
+            if (draft != null && draft.CurrentStepIndex > 0)
+            {
+                _loadedDraft = draft;
+                _activeDraftKey = draft.DraftKey;
+                _draftStepIndex = draft.CurrentStepIndex;
+                var delta = DateTime.UtcNow - (draft.ModifiedAt ?? draft.CreatedAt);
+                _draftSavedTimeAgo = delta.TotalHours >= 1 ? $"{(int)delta.TotalHours}h ago" : $"{(int)delta.TotalMinutes}m ago";
+                _hasDraftToResume = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Non-blocking draft lookup
+            Console.WriteLine($"Draft check skipped: {ex.Message}");
+        }
+    }
+
+    private async Task ResumeDraftAsync()
+    {
+        if (_loadedDraft == null) return;
+
+        var model = DraftService.DeserializeDraftModel<DgTrancheClaimDraftModel>(_loadedDraft);
+        if (model != null)
+        {
+            _grantMoaId = model.GrantMoaId;
+            if (_grantMoaId.HasValue)
+            {
+                await RefreshMoaFinancialsAsync(_grantMoaId.Value);
+            }
+            _pipId = model.PipId;
+            _grantMoaMilestoneId = model.GrantMoaMilestoneId;
+            _learnerDeliverableHeadcount = model.LearnerDeliverableHeadcount;
+            _milestoneCompletionDate = model.MilestoneCompletionDate;
+            _isDeliverableInspectedByClo = model.IsDeliverableInspectedByClo;
+            _deliverableDescription = model.DeliverableDescription;
+            _trancheNumber = model.TrancheNumber;
+            _claimAmount = model.ClaimAmount;
+            _taxCompliancePin = model.TaxCompliancePin;
+            _bankName = model.BankName;
+            _bankAccountNumber = model.BankAccountNumber;
+            _branchCode = model.BranchCode;
+            _isBankingDetailsVerified = model.IsBankingDetailsVerified;
+            _proofDocumentUri = model.ProofDocumentUri;
+            _evidenceSummary = model.EvidenceSummary;
+            _auditNotes = model.AuditNotes;
+            _isPfmaAttestationAccepted = model.IsPfmaAttestationAccepted;
+
+            _activeStep = _loadedDraft.CurrentStepIndex;
+            _hasDraftToResume = false;
+            UpdateReviewGroups();
+            Snackbar.Add($"Resumed tranche claim draft from Step {_activeStep + 1}.", Severity.Info);
+        }
+    }
+
+    private async Task DiscardDraftAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+        {
+            await DraftService.DiscardDraftAsync(_activeDraftKey);
+            _hasDraftToResume = false;
+            _activeDraftKey = null;
+            _loadedDraft = null;
+            Snackbar.Add("Draft discarded. You are starting a clean tranche claim.", Severity.Normal);
+        }
+    }
+
     private async Task SaveDraftAsync()
     {
-        Snackbar.Add("Discretionary Grant tranche claim draft saved locally.", Severity.Info);
-        await Task.CompletedTask;
+        _isProcessing = true;
+        try
+        {
+            var draftModel = new DgTrancheClaimDraftModel
+            {
+                GrantMoaId = _grantMoaId,
+                PipId = _pipId,
+                GrantMoaMilestoneId = _grantMoaMilestoneId,
+                LearnerDeliverableHeadcount = _learnerDeliverableHeadcount,
+                MilestoneCompletionDate = _milestoneCompletionDate,
+                IsDeliverableInspectedByClo = _isDeliverableInspectedByClo,
+                DeliverableDescription = _deliverableDescription,
+                TrancheNumber = _trancheNumber,
+                ClaimAmount = _claimAmount,
+                TaxCompliancePin = _taxCompliancePin,
+                BankName = _bankName,
+                BankAccountNumber = _bankAccountNumber,
+                BranchCode = _branchCode,
+                IsBankingDetailsVerified = _isBankingDetailsVerified,
+                ProofDocumentUri = _proofDocumentUri,
+                EvidenceSummary = _evidenceSummary,
+                AuditNotes = _auditNotes,
+                IsPfmaAttestationAccepted = _isPfmaAttestationAccepted
+            };
+
+            var session = await DraftService.SaveDraftAsync(
+                "DgTrancheClaim",
+                "Discretionary Grant tranche claim & payment voucher",
+                "/finance/claims/create",
+                "CurrentFinanceOfficer",
+                null,
+                _activeStep,
+                5,
+                draftModel,
+                _activeDraftKey
+            );
+
+            _activeDraftKey = session.DraftKey;
+            _hasDraftToResume = false;
+            Snackbar.Add($"Draft saved at Step {_activeStep + 1} ('{session.DraftKey}').", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Could not save draft: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
     }
 
     private async Task SubmitClaimAsync()
@@ -530,8 +686,14 @@ else
             var claim = await ClaimService.SubmitTrancheClaimAsync(req, "CurrentFinanceOfficer");
             _createdClaimId = claim.Id;
             _submittedClaimNumber = claim.ClaimNumber;
-            _isSuccess = true;
 
+            // Clear submitted draft
+            if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+            {
+                await DraftService.MarkAsSubmittedAsync(_activeDraftKey);
+            }
+
+            _isSuccess = true;
             Snackbar.Add($"Tranche payment claim '{_submittedClaimNumber}' successfully registered!", Severity.Success);
         }
         catch (Exception ex)

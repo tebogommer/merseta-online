@@ -37,21 +37,228 @@ public class NavigationMenuService : INavigationMenuService
         _adminCatalogService = adminCatalogService;
     }
 
+    public List<PersonaProfileDto> GetPersonaProfiles()
+    {
+        return new List<PersonaProfileDto>
+        {
+            // === Group 1: Workplace Approval Personas ===
+            new()
+            {
+                PersonaKey = "WorkplaceMentor",
+                PersonaTitle = "Workplace Artisan Mentor (Sipho Khumalo)",
+                ShortLabel = "Sipho Khumalo (Mentor)",
+                CompactLabel = "Sipho K. (Mentor)",
+                PersonName = "Sipho Khumalo",
+                Email = "sipho.khumalo@toyota.co.za",
+                Initials = "SK",
+                StatutoryRole = "Workplace Artisan Mentor & Workshop Lead",
+                RoleBadge = "ARTISAN MENTOR",
+                OrganisationName = "Toyota South Africa Motors (Pty) Ltd",
+                Subtitle = "Master Artisan (ART-1999-88741) • Supervising Motor Mechanic Apprentices",
+                Category = "Workplace Approval",
+                Icon = "Build",
+                ThemeColor = "Warning",
+                Roles = new() { "Mentor", "ArtisanMentor", "CLO" },
+                IsWorkplaceApprovalPersona = true,
+                WorkplaceReference = "Toyota Prospection Plant • WPA-2025-TOYOTA-PROS"
+            },
+            new()
+            {
+                PersonaKey = "CLOInspector",
+                PersonaTitle = "SETA Client Liaison Officer (Thabo Molefe)",
+                ShortLabel = "Thabo Molefe (CLO)",
+                CompactLabel = "Thabo M. (CLO)",
+                PersonName = "Thabo Molefe",
+                Email = "thabo.molefe@merseta.org.za",
+                Initials = "TM",
+                StatutoryRole = "SETA Client Liaison Officer (CLO) & Site Inspector",
+                RoleBadge = "CLO INSPECTOR",
+                OrganisationName = "merSETA Regional Operations",
+                Subtitle = "Conducts physical workplace audits, tool checklists & site verification",
+                Category = "Workplace Approval",
+                Icon = "FactCheck",
+                ThemeColor = "Info",
+                Roles = new() { "CLO", "Inspector" },
+                IsWorkplaceApprovalPersona = true,
+                WorkplaceReference = "Regional Inspectorate • Workplace Approval Site Audits"
+            },
+            new()
+            {
+                PersonaKey = "EmployerContactSDF",
+                PersonaTitle = "Employer Contact Person & SDF (Nalini Moodley)",
+                ShortLabel = "Nalini Moodley (SDF)",
+                CompactLabel = "Nalini M. (SDF)",
+                PersonName = "Nalini Moodley",
+                Email = "nalini.moodley@toyota.co.za",
+                Initials = "NM",
+                StatutoryRole = "Designated Employer Contact Person & Primary SDF",
+                RoleBadge = "SDF • EMPLOYER",
+                OrganisationName = "Toyota South Africa Motors (Pty) Ltd",
+                Subtitle = "Mandatory contact person for workplace visits & WSP submissions",
+                Category = "Workplace Approval",
+                Icon = "Work",
+                ThemeColor = "Primary",
+                Roles = new() { "SDF", "EmployerContact" },
+                IsWorkplaceApprovalPersona = true,
+                WorkplaceReference = "Host Employer Lead • Contact Person for Site Inspections"
+            },
+            new()
+            {
+                PersonaKey = "WorkplaceAssessor",
+                PersonaTitle = "Workplace Trade Assessor (Bongani Mabaso)",
+                ShortLabel = "Bongani Mabaso (Assessor)",
+                CompactLabel = "Bongani M. (Assessor)",
+                PersonName = "Bongani Mabaso",
+                Email = "bongani.mabaso@assessors.org.za",
+                Initials = "BM",
+                StatutoryRole = "Registered Trade Assessor & ETQA Evaluator",
+                RoleBadge = "ETQA ASSESSOR",
+                OrganisationName = "merSETA ETQA Accreditation Partner",
+                Subtitle = "Inspects workshop trade tooling & conducts ARPL trade test assessments",
+                Category = "Workplace Approval",
+                Icon = "VerifiedUser",
+                ThemeColor = "Success",
+                Roles = new() { "Assessor", "ETQA" },
+                IsWorkplaceApprovalPersona = true,
+                WorkplaceReference = "Inspecting Assessor on WPA-2025-TOYOTA-PROS"
+            },
+            new()
+            {
+                PersonaKey = "ReviewCommittee",
+                PersonaTitle = "Approval Review Committee (Dr. Johan van der Merwe)",
+                ShortLabel = "Dr. Johan v.d. Merwe (Chair)",
+                CompactLabel = "Dr. Johan (Chair)",
+                PersonName = "Dr. Johan van der Merwe",
+                Email = "johan.vdm@merietasamples.co.za",
+                Initials = "JM",
+                StatutoryRole = "Review & Adjudication Committee Chair",
+                RoleBadge = "COMMITTEE CHAIR",
+                OrganisationName = "merSETA Executive Directorate",
+                Subtitle = "Adjudicates workplace approvals, site accreditations & mentor ratio exemptions",
+                Category = "Workplace Approval",
+                Icon = "Gavel",
+                ThemeColor = "Secondary",
+                Roles = new() { "ReviewCommittee", "Executive" },
+                IsWorkplaceApprovalPersona = true,
+                WorkplaceReference = "Executive Governance • Workplace Approval Ratification"
+            },
+
+            // === Group 2: Enterprise & Statutory Personas ===
+            new()
+            {
+                PersonaKey = "UnifiedAdmin",
+                PersonaTitle = "All Roles (Unified) • System Administrator",
+                ShortLabel = "System Administrator",
+                CompactLabel = "SysAdmin",
+                PersonName = "System Administrator",
+                Email = "sysadmin@merseta.org.za",
+                Initials = "SA",
+                StatutoryRole = "Enterprise Super Administrator",
+                RoleBadge = "SUPERADMIN",
+                OrganisationName = "merSETA ICT & Executive Directorate",
+                Subtitle = "Full administrative access across all 7 statutory pillars and workflow engine",
+                Category = "Enterprise Governance",
+                Icon = "AdminPanelSettings",
+                ThemeColor = "Dark",
+                Roles = new() { "SuperAdmin", "Admin", "FinanceManager", "CLO", "SDF", "SDP", "Assessor", "Executive", "Legal", "Compliance", "Mentor" },
+                IsWorkplaceApprovalPersona = false,
+                WorkplaceReference = "Global System Authority"
+            },
+            new()
+            {
+                PersonaKey = "FinanceSpecialist",
+                PersonaTitle = "Finance & Disbursements (Fatima Adams)",
+                ShortLabel = "Fatima Adams (Finance)",
+                CompactLabel = "Fatima A. (Finance)",
+                PersonName = "Fatima Adams",
+                Email = "fatima.adams@finance.merseta.org.za",
+                Initials = "FA",
+                StatutoryRole = "Senior Finance & Grant Disbursements Officer",
+                RoleBadge = "FINANCE SPECIALIST",
+                OrganisationName = "merSETA Finance Directorate",
+                Subtitle = "DG tranche claims, MoA payment vouchers, and SARS levy allocations",
+                Category = "Enterprise Governance",
+                Icon = "AccountBalance",
+                ThemeColor = "Success",
+                Roles = new() { "FinanceManager" },
+                IsWorkplaceApprovalPersona = false
+            },
+            new()
+            {
+                PersonaKey = "SkillsProvider",
+                PersonaTitle = "Skills Development Provider (Prof. K. Naidoo)",
+                ShortLabel = "Prof. K. Naidoo (SDP)",
+                CompactLabel = "Prof. Naidoo (SDP)",
+                PersonName = "Prof. K. Naidoo",
+                Email = "k.naidoo@vut-accredited.ac.za",
+                Initials = "KN",
+                StatutoryRole = "Accredited SDP Campus Director",
+                RoleBadge = "SDP PRINCIPAL",
+                OrganisationName = "Vaal Skills & Technology Campus",
+                Subtitle = "Accredited occupational qualifications, learner enrolments & campus management",
+                Category = "Enterprise Governance",
+                Icon = "School",
+                ThemeColor = "Info",
+                Roles = new() { "SDP" },
+                IsWorkplaceApprovalPersona = false
+            },
+            new()
+            {
+                PersonaKey = "LegalSpecialist",
+                PersonaTitle = "Legal & Contracting (Adv. Nomvula Dlamini)",
+                ShortLabel = "Adv. Nomvula Dlamini (Legal)",
+                CompactLabel = "Adv. Dlamini (Legal)",
+                PersonName = "Adv. Nomvula Dlamini",
+                Email = "legal@merseta.org.za",
+                Initials = "ND",
+                StatutoryRole = "Legal & MoA Contracting Specialist",
+                RoleBadge = "LEGAL COUNSEL",
+                OrganisationName = "merSETA Legal Directorate",
+                Subtitle = "MoA legal contracting, addenda, dispute mediation & compliance governance",
+                Category = "Enterprise Governance",
+                Icon = "Policy",
+                ThemeColor = "Warning",
+                Roles = new() { "Legal" },
+                IsWorkplaceApprovalPersona = false
+            },
+            new()
+            {
+                PersonaKey = "StatutoryAuditor",
+                PersonaTitle = "Statutory Compliance Auditor (Zanele Sithole)",
+                ShortLabel = "Zanele Sithole (Auditor)",
+                CompactLabel = "Zanele S. (Audit)",
+                PersonName = "Zanele Sithole",
+                Email = "compliance@merseta.org.za",
+                Initials = "ZS",
+                StatutoryRole = "Statutory Compliance & SETMIS Auditor",
+                RoleBadge = "COMPLIANCE AUDITOR",
+                OrganisationName = "merSETA Internal Audit & Compliance",
+                Subtitle = "SETMIS 11-file pre-flight checks, SAQA NLRD extracts & audit logs",
+                Category = "Enterprise Governance",
+                Icon = "Security",
+                ThemeColor = "Primary",
+                Roles = new() { "Compliance" },
+                IsWorkplaceApprovalPersona = false
+            }
+        };
+    }
+
+    public PersonaProfileDto? GetPersonaProfile(string personaKeyOrTitle)
+    {
+        if (string.IsNullOrWhiteSpace(personaKeyOrTitle)) return null;
+        var profiles = GetPersonaProfiles();
+        return profiles.FirstOrDefault(p => 
+            p.PersonaKey.Equals(personaKeyOrTitle, StringComparison.OrdinalIgnoreCase) ||
+            p.PersonaTitle.Equals(personaKeyOrTitle, StringComparison.OrdinalIgnoreCase) ||
+            p.ShortLabel.Equals(personaKeyOrTitle, StringComparison.OrdinalIgnoreCase) ||
+            p.PersonName.Equals(personaKeyOrTitle, StringComparison.OrdinalIgnoreCase) ||
+            p.PersonaTitle.Contains(personaKeyOrTitle, StringComparison.OrdinalIgnoreCase) ||
+            personaKeyOrTitle.Contains(p.PersonName, StringComparison.OrdinalIgnoreCase));
+    }
+
     public List<string> GetPredefinedPersonas()
     {
-        return new List<string>
-        {
-            "All Roles (Unified)",
-            "Skills Development Facilitator (SDF)",
-            "Skills Development Provider (SDP)",
-            "Assessor & Quality Assurance Partner",
-            "Finance & Disbursements Specialist",
-            "SETA Client Liaison Officer (CLO)",
-            "Legal & Contracting Specialist",
-            "Statutory Compliance Auditor",
-            "Executive & Governance",
-            "System Administrator"
-        };
+        return GetPersonaProfiles().Select(p => p.PersonaTitle).ToList();
     }
 
     public async Task<NavigationTreeResultDto> GetUserNavigationTreeAsync(
@@ -494,14 +701,15 @@ public class NavigationMenuService : INavigationMenuService
 
     private string NormalizePersonaKey(string persona)
     {
+        if (persona.Contains("Mentor", StringComparison.OrdinalIgnoreCase) || persona.Contains("Artisan", StringComparison.OrdinalIgnoreCase)) return "Mentor";
         if (persona.Contains("SDF", StringComparison.OrdinalIgnoreCase)) return "SDF";
         if (persona.Contains("Provider", StringComparison.OrdinalIgnoreCase) || persona.Contains("SDP", StringComparison.OrdinalIgnoreCase)) return "SDP";
         if (persona.Contains("Assessor", StringComparison.OrdinalIgnoreCase) || persona.Contains("QA", StringComparison.OrdinalIgnoreCase)) return "Assessor";
         if (persona.Contains("Finance", StringComparison.OrdinalIgnoreCase)) return "Finance";
         if (persona.Contains("CLO", StringComparison.OrdinalIgnoreCase) || persona.Contains("Liaison", StringComparison.OrdinalIgnoreCase)) return "CLO";
         if (persona.Contains("Legal", StringComparison.OrdinalIgnoreCase)) return "Legal";
-        if (persona.Contains("Compliance", StringComparison.OrdinalIgnoreCase)) return "Compliance";
-        if (persona.Contains("Executive", StringComparison.OrdinalIgnoreCase)) return "Executive";
+        if (persona.Contains("Compliance", StringComparison.OrdinalIgnoreCase) || persona.Contains("Auditor", StringComparison.OrdinalIgnoreCase)) return "Compliance";
+        if (persona.Contains("Executive", StringComparison.OrdinalIgnoreCase) || persona.Contains("Committee", StringComparison.OrdinalIgnoreCase)) return "Executive";
         if (persona.Contains("Admin", StringComparison.OrdinalIgnoreCase) || persona.Contains("System", StringComparison.OrdinalIgnoreCase)) return "Admin";
         return "All";
     }
@@ -1021,8 +1229,8 @@ public class NavigationMenuService : INavigationMenuService
                 Description = "Learner registrations, agreements, NLRD submissions, and progress tracking",
                 RequiredModule = AppPermissions.ModuleLearners,
                 RequiredAction = AppPermissions.ActionView,
-                RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "SDP", "CLO" },
-                PersonaTags = new() { "Admin", "SDF", "SDP", "CLO" },
+                RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "SDP", "CLO", "Mentor" },
+                PersonaTags = new() { "Admin", "SDF", "SDP", "CLO", "Mentor" },
                 DisplayOrder = 1,
                 Keywords = new() { "learners", "students", "agreements", "nlrd", "contracts", "artisan" }
             },
@@ -1111,8 +1319,8 @@ public class NavigationMenuService : INavigationMenuService
                 Description = "Workplace approval applications, safety checks, and mentor certifications",
                 RequiredModule = AppPermissions.ModuleWorkplace,
                 RequiredAction = AppPermissions.ActionView,
-                RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "CLO" },
-                PersonaTags = new() { "Admin", "SDF", "CLO" },
+                RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "CLO", "Mentor", "Assessor" },
+                PersonaTags = new() { "Admin", "SDF", "CLO", "Mentor", "Assessor" },
                 DisplayOrder = 4,
                 Keywords = new() { "wpa", "workplace approval", "mentor", "safety", "workplace" }
             },
@@ -1126,8 +1334,8 @@ public class NavigationMenuService : INavigationMenuService
                 Description = "Statutory artisan mentor-to-apprentice ratios and multi-tiered exemption policy matrix",
                 RequiredModule = AppPermissions.ModuleWorkplace,
                 RequiredAction = AppPermissions.ActionView,
-                RequiredRoles = new() { "SuperAdmin", "Admin", "CLO" },
-                PersonaTags = new() { "Admin", "CLO" },
+                RequiredRoles = new() { "SuperAdmin", "Admin", "CLO", "Mentor" },
+                PersonaTags = new() { "Admin", "CLO", "Mentor" },
                 DisplayOrder = 5,
                 Keywords = new() { "ratio", "mentor ratio", "artisan ratio", "capacity", "trade policy", "exemption" }
             },

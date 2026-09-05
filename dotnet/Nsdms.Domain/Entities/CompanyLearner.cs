@@ -233,6 +233,65 @@ public class CompanyLearner : BaseEntity
     /// </summary>
     public bool IsActive { get; set; } = true;
 
+    #region Statutory Registration & Sign-Off Attributes (Use Case Specification)
+    /// <summary>
+    /// Date when the learner physically or electronically signed the agreement.
+    /// Used to enforce the statutory 30-working-day submission deadline.
+    /// </summary>
+    public DateTime? LearnerSignatureDate { get; set; }
+
+    /// <summary>
+    /// System auto-generated date and time when the application was formally submitted to merSETA.
+    /// </summary>
+    public DateTime? SubmissionDate { get; set; }
+
+    /// <summary>
+    /// Appointed role title of the individual executing the submission sign-off.
+    /// </summary>
+    public string? SignatoryRoleTitle { get; set; }
+
+    /// <summary>
+    /// Optional foreign key referencing the Person who signed off the application.
+    /// </summary>
+    public int? SignatoryPersonId { get; set; }
+
+    /// <summary>
+    /// Professional council candidate registration number (e.g. ECSA Candidate Engineer) for Candidacy programmes.
+    /// </summary>
+    public string? ProfessionalRegistrationNumber { get; set; }
+
+    /// <summary>
+    /// Reason code if the learner agreement application is withdrawn prior to approval.
+    /// </summary>
+    public string? WithdrawalReasonCode { get; set; }
+
+    /// <summary>
+    /// Detailed comments or justification recorded upon application withdrawal.
+    /// </summary>
+    public string? WithdrawalComments { get; set; }
+
+    [NotMapped]
+    public string? ApprovalWorkflowStatus { get => EnrolmentStatusCode; set => EnrolmentStatusCode = value ?? "Registered"; }
+
+    [NotMapped]
+    public string? ReviewNotes { get => WithdrawalComments; set => WithdrawalComments = value; }
+
+    /// <summary>
+    /// Indicates whether the contracting partner is a Non-Employer Entity (TVET, CET, HEI, NGO).
+    /// </summary>
+    public bool IsNonEmployerEntity { get; set; } = false;
+
+    /// <summary>
+    /// External SETA identifier for non-employer entities paying levies to other SETAs.
+    /// </summary>
+    public string? ExternalSetaId { get; set; }
+
+    /// <summary>
+    /// Flags whether modifications have been made to this application prior to approval.
+    /// </summary>
+    public bool HasPendingModifications { get; set; } = false;
+    #endregion
+
     /// <summary>
     /// Trade tests and competency assessments undertaken by this learner.
     /// </summary>
@@ -242,4 +301,9 @@ public class CompanyLearner : BaseEntity
     /// Formative and summative unit standard assessments linked to this learner agreement.
     /// </summary>
     public ICollection<LearnerAssessment> Assessments { get; set; } = new List<LearnerAssessment>();
+
+    /// <summary>
+    /// Registered unit standards or skills set components linked to this agreement.
+    /// </summary>
+    public ICollection<LearnerRegisteredUnitStandard> RegisteredUnitStandards { get; set; } = new List<LearnerRegisteredUnitStandard>();
 }

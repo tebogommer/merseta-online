@@ -96,3 +96,41 @@ The Option and Lookup Controls Standard v1.1 (Rules E.1 and E.2, OPT-001 through
 - **OPT-010**: Cascading lookups MUST clear and disable children when the parent value is empty.
 - **OPT-011**: All lookups MUST be registered in `declarations.yml`.
 
+---
+
+### 🛡️ ARPL & Artisan Trade Test Statutory Governance Standard (Signed 2023 Specification)
+1. **17 Designated Toolkit Trades Whitelist**:
+   - Only 17 statutory designated trades (Diesel Mechanic, Motor Mechanic, Boilermaker, Welder, Fitter, Fitter & Turner, Electrician, Heavy Equipment Mechanic, Instrument Mechanic, Lift Mechanic, Shipbuilder, Panel Beater, Vehicle Painter, Bricklayer, Plumber, Carpenter, Sheet fed-Lithograph) require toolkits.
+   - Category 7 applications (`Category7_Min3Years_ToolkitAssessment`) are strictly restricted to these 17 trades. All other trades require qualification prerequisites under Categories 1–6.
+2. **50% Task Credit Retention & Non-Destructive History**:
+   - Candidates passing $\ge 50\%$ of evaluated practical tasks retain credit for passed modules for a maximum of 3 attempts or 18 months.
+   - Old tasks must NEVER be deleted from `TradeTestTask` upon re-testing; tasks are partitioned by `AttemptNumber` to maintain a non-repudiable audit trail.
+3. **2-Tier Regional Approval & Serial Number Milestone**:
+   - Applications must pass 2 sequential regional gates: CLA recommendation (`RecommendedApplication`) followed by Regional QA approval (`Registered`).
+   - The official Trade Test Serial Number (`TT-SER-{yyyy}-{id:D5}`) is generated strictly upon QA approval and must be stamped on the re-uploaded application document.
+   - QA rejection requires setting `IsFinalRejection`: `false` routes for candidate resubmission (`RejectedForResubmission`); `true` marks terminal rejection (`RejectedApplication`).
+4. **Dynamic Document Upload Gate**:
+   - Toolkit trades require 7 mandatory verified documents; non-toolkit trades require 6 verified documents per Section 4.2.7.
+
+---
+
+### 🛡️ Workplace Approval & Site Inspection Statutory Governance Standard (Signed 2022 Specification)
+1. **Role-Neutral Maker-Checker Workflow Architecture**:
+   - Job titles such as "CLO" or "QA" are transitory organizational assignments, not permanent workflow roles.
+   - All workflow states, transitions, entity columns, and UI actions MUST use role-neutral terminology:
+     - **Verification / Inspection**: `Verification Officer` (verification audit, on-site or desktop audit, `VerifiedDate`, `VerifiedByPersonId`, `VerificationRecommendationReason`, `VerificationRejectionReason`).
+     - **Evaluation / Adjudication**: `Approval Authority` (maker-checker decision gatekeeper, `DecisionDate`, `DecisionByPersonId`, `ApprovalReason`, `RejectionReason`).
+     - **Applicant / Submitter**: `Primary SDF / Applicant` (submission, condonation, withdrawal).
+2. **20-Working-Day Statutory Inspection SLA**:
+   - Applications submitted to status `APPLICATION` MUST compute a 20-working-day SLA inspection due date (`InspectionDueDate`), excluding weekends and gazetted public holidays via `WorkplaceApprovalService.AddBusinessDays`.
+   - UI master detail views must render real-time countdown chips with alert state progression (Compliant, Warning $\le 5$ days, Overdue).
+3. **Desktop vs Physical On-Site Inspection Dual-Mode**:
+   - Verification may occur via physical on-site audit (`IsSiteVisitRequired = true`) or desktop evaluation (`IsSiteVisitRequired = false`).
+   - If a physical site visit is waived in favour of desktop audit, `SiteVisitJustification` is mandatory and must be audited.
+4. **Official QuestPDF Statutory Controlled Documents**:
+   - **Annexure 10.1 (`ETQ-TP-003`)**: Workplace Approval Outcome Letter complete with official merSETA branding, QR code verification reference (`/verify/workplace-approval/{id}`), 3-year accreditation validity cycle, and controlled document metadata box.
+   - **Annexure 10.2 (`ETQ-TP-054`)**: Workplace Approval Report complete with site information, trade curriculum scope, tool/equipment compliance audit table, and certified artisan mentor quota breakdown.
+5. **Preservation of Advanced Invariants & Relational Collections**:
+   - Live 5-tier cascading NAMB mentor-to-apprentice ratio policy engine (`IMentorRatioPolicyEngine`).
+   - Mandatory Employer Contact Person linkage for all site visits and inspections.
+   - 360-degree relational tabs (Placed Apprentices, Partnering SDPs, Site Audits, Tool Inventory, Mentors, Evidence Vault, Workflow Timeline).

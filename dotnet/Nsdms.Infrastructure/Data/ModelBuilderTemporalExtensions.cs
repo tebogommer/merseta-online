@@ -19,6 +19,7 @@ public static class ModelBuilderTemporalExtensions
         "WorkflowTaskLease",
         "SystemFeatureFlag",
         "SystemConfig",
+        "WizardDraftSession",
         "AppUserRole",
         "AppUserClaim",
         "AppUserLogin",

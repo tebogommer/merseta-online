@@ -1,4 +1,4 @@
-﻿using Nsdms.Domain.Common;
+using Nsdms.Domain.Common;
 
 namespace Nsdms.Domain.Entities;
 
@@ -38,9 +38,11 @@ public class PersonContact : BaseEntity
     public string? FaxNumber { get; set; }
 
     /// <summary>
-    /// Physical residential street address line 1.
+    /// Physical residential street address lines (Section 6.1 attributes 16, 17, 18).
     /// </summary>
     public string? PhysicalAddress { get; set; }
+    public string? PhysicalAddressLine2 { get; set; }
+    public string? PhysicalAddressLine3 { get; set; }
 
     /// <summary>
     /// Physical residential address postal code.
@@ -48,14 +50,37 @@ public class PersonContact : BaseEntity
     public string? PhysicalAddressPostalCode { get; set; }
 
     /// <summary>
-    /// Postal delivery address.
+    /// Indicates whether postal address is identical to home residential address (Section 6.1 attribute 22).
+    /// </summary>
+    public bool IsPostalSameAsPhysical { get; set; } = false;
+
+    /// <summary>
+    /// Postal delivery address lines (Section 6.1 attributes 23, 24, 25).
     /// </summary>
     public string? PostalAddress { get; set; }
+    public string? PostalAddressLine2 { get; set; }
+    public string? PostalAddressLine3 { get; set; }
 
     /// <summary>
     /// Postal address delivery code.
     /// </summary>
     public string? PostalAddressPostalCode { get; set; }
+
+    /// <summary>
+    /// Next of kin demographic and contact details (Section 6.1 attributes 29, 30).
+    /// </summary>
+    public string? NextOfKinName { get; set; }
+    public string? NextOfKinContactNumber { get; set; }
+
+    /// <summary>
+    /// Secondary email contact address (Section 6.1 attribute 32).
+    /// </summary>
+    public string? SecondaryEmail { get; set; }
+
+    /// <summary>
+    /// Urban / Rural area classification code (Section 6.1 attribute 20, references lookup.UrbanRuralType).
+    /// </summary>
+    public string? UrbanRuralId { get; set; } = "01";
 
     /// <summary>
     /// South African province code of primary residence (references lookup.ProvinceType: GP, KZN, WC, EC, FS, MP, NW, NC, LP).

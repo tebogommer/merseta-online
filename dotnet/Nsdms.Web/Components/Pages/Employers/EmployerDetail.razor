@@ -6,8 +6,8 @@
 @inject IOrganisationService OrgService
 @inject IPersonService PersonService
 @inject IBrandAssetService BrandAssetService
-@inject VisitService VisitService
-@inject LookupService LookupService
+@inject IVisitService VisitService
+@inject ILookupService LookupService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -152,7 +152,18 @@ else
                                                           RequiredError="SDL Levy Number is mandatory"
                                                           @bind-Value="_organisation.SdlNumber"
                                                           Variant="Variant.Outlined"
-                                                          Placeholder="e.g. L123456789" />
+                                                          Placeholder="e.g. L123456789 or N000100001" />
+                                            @if (string.IsNullOrWhiteSpace(_organisation.SdlNumber) || _organisation.SdlNumber.StartsWith("N", StringComparison.OrdinalIgnoreCase) || _organisation.CategoryCode == "NON_LEVY_PAYING")
+                                            {
+                                                <MudButton Variant="Variant.Text"
+                                                           Color="Color.Secondary"
+                                                           Size="Size.Small"
+                                                           Class="mt-1"
+                                                           StartIcon="@Icons.Material.Filled.Autorenew"
+                                                           OnClick="GenerateNonLevyNumberAsync">
+                                                    Generate Statutory N-Number
+                                                </MudButton>
+                                            }
                                         </MudItem>
                                         <MudItem xs="12" md="4">
                                             <MudTextField T="string"
@@ -182,11 +193,20 @@ else
                                     </CardHeaderAvatar>
                                     <CardHeaderContent>
                                         <MudText Typo="Typo.h6">Sector Classification & Scope</MudText>
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">SETA Chamber, SIC codes, and organisation classifications</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">SETA Chamber, SIC codes, and Dynamics GP vendor classification</MudText>
                                     </CardHeaderContent>
                                 </MudCardHeader>
                                 <MudCardContent>
                                     <MudGrid>
+                                        @if (_organisation.HasMissingChamberMapping || string.IsNullOrWhiteSpace(_organisation.ChamberCode))
+                                        {
+                                            <MudItem xs="12">
+                                                <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Dense="true" Class="mb-2">
+                                                    <strong>Action Required: Chamber / Dynamics GP Vendor Class Unmapped</strong><br />
+                                                    This organisation has no valid merSETA Chamber or GP Vendor Class mapping. Grant applications, WSP submissions, MoAs, and payment runs are currently <strong>blocked</strong> until a valid 5-digit SIC code or manual Chamber override is assigned.
+                                                </MudAlert>
+                                            </MudItem>
+                                        }
                                         <MudItem xs="12" md="4">
                                             <MudSelect T="string" Label="SETA Industry Sector" @bind-Value="_organisation.SectorCode" Variant="Variant.Outlined">
                                                 @foreach (var s in _sectors)
@@ -212,6 +232,17 @@ else
                                                     <MudSelectItem Value="@ch.Code">@ch.Name (@ch.Code)</MudSelectItem>
                                                 }
                                             </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="4">
+                                            <MudTextField T="string"
+                                                          Label="Dynamics GP Vendor Class"
+                                                          Value="@(_organisation.GpVendorClass ?? (_organisation.HasMissingChamberMapping ? "UNMAPPED (BLOCKED)" : "Not Assigned"))"
+                                                          ReadOnly="true"
+                                                          Variant="Variant.Outlined"
+                                                          HelperText="Synchronized with GP Accounts Payable"
+                                                          Adornment="Adornment.Start"
+                                                          AdornmentIcon="@Icons.Material.Filled.AccountBalance"
+                                                          Dense="true" />
                                         </MudItem>
                                         <MudItem xs="12" md="4">
                                             <MudSwitch T="bool" @bind-Value="_organisation.IsManualChamberOverride" Color="Color.Warning" Label="Manual Chamber Override" />
@@ -1303,19 +1334,49 @@ else
     private async Task OnSicCodeChangedAsync(string? newSic)
     {
         _organisation.SicCode = newSic ?? string.Empty;
-        if (!_organisation.IsManualChamberOverride && !string.IsNullOrWhiteSpace(newSic))
+        if (!_organisation.IsManualChamberOverride)
         {
-            var derivedChamber = await OrgService.ResolveChamberFromSicCodeAsync(newSic);
-            if (!string.IsNullOrWhiteSpace(derivedChamber))
+            if (!string.IsNullOrWhiteSpace(newSic))
             {
-                _organisation.ChamberCode = derivedChamber;
-                var chamberName = _chambers.FirstOrDefault(c => c.Code == derivedChamber)?.Name ?? derivedChamber;
-                Snackbar.Add($"Chamber auto-determined as '{chamberName}' from statutory SIC Code {newSic}.", Severity.Info);
+                var derivation = await OrgService.DeriveChamberAndVendorClassAsync(newSic, _organisation.OrganisationTypeCode);
+                if (derivation.IsSuccess)
+                {
+                    _organisation.ChamberCode = derivation.ChamberCode;
+                    _organisation.GpVendorClass = derivation.GpVendorClass;
+                    _organisation.HasMissingChamberMapping = false;
+                    var chamberName = derivation.ChamberName ?? derivation.ChamberCode;
+                    Snackbar.Add($"Chamber auto-determined as '{chamberName}' (Dynamics GP Vendor Class: {derivation.GpVendorClass}).", Severity.Info);
+                }
+                else
+                {
+                    _organisation.ChamberCode = null;
+                    _organisation.GpVendorClass = null;
+                    _organisation.HasMissingChamberMapping = true;
+                    Snackbar.Add("Warning: SIC code did not resolve to a valid merSETA Chamber. Organisation flagged as unmapped.", Severity.Warning);
+                }
+            }
+            else
+            {
+                _organisation.ChamberCode = null;
+                _organisation.GpVendorClass = null;
+                _organisation.HasMissingChamberMapping = true;
             }
         }
-        else if (string.IsNullOrWhiteSpace(newSic) && !_organisation.IsManualChamberOverride)
+    }
+
+    private async Task GenerateNonLevyNumberAsync()
+    {
+        try
         {
-            _organisation.ChamberCode = null;
+            var nextN = await OrgService.GenerateNonLevyNumberAsync();
+            _organisation.SdlNumber = nextN;
+            _organisation.CategoryCode = "NON_LEVY_PAYING";
+            _organisation.LevyCategoryCode = "NON_LEVY_PAYING";
+            Snackbar.Add($"Assigned unique statutory N-Number: {nextN}", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to generate statutory N-Number: {ex.Message}", Severity.Error);
         }
     }
 

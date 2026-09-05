@@ -146,6 +146,120 @@ public static class CompanyLearnerDomainValidator
             }
         }
 
+        // 6. 30 Working Days Statutory Submission Rule (Table 17 Item 2 & 4)
+        if (learner.LearnerSignatureDate.HasValue && learner.SubmissionDate.HasValue)
+        {
+            var workingDays = CalculateWorkingDays(learner.LearnerSignatureDate.Value, learner.SubmissionDate.Value);
+            if (workingDays > 30)
+            {
+                errors.Add(new StatutoryValidationError
+                {
+                    FileIdentifier = fileId,
+                    RecordId = learner.Id,
+                    EntityName = nameof(CompanyLearner),
+                    RecordDescriptor = desc,
+                    FieldName = nameof(learner.SubmissionDate),
+                    FieldValue = $"{workingDays} working days",
+                    RuleCode = "SETMIS_500_30DAY_DEADLINE_EXCEEDED",
+                    Severity = StatutoryValidationSeverity.Fatal,
+                    Message = $"Learner agreement was submitted {workingDays} working days after learner signature date. Maximum statutory submission window is 30 working days.",
+                    Remediation = "The agreement has lapsed; request a fresh bilateral agreement execution or upload condonation approval."
+                });
+            }
+        }
+
+        // 7. Minor Learner (< 18 Years) Guardian Requirement (Table 17 Item 2)
+        if (learner.Person?.DateOfBirth.HasValue == true)
+        {
+            var agreementDate = learner.LearnerSignatureDate ?? learner.CommencementDate ?? DateTime.UtcNow;
+            var ageYears = (agreementDate - learner.Person.DateOfBirth.Value).TotalDays / 365.25;
+
+            if (ageYears < 18.0)
+            {
+                var hasActiveGuardian = learner.Person.Guardians != null && learner.Person.Guardians.Any(g => g.IsActive && !string.IsNullOrWhiteSpace(g.GuardianFullName));
+                if (!hasActiveGuardian)
+                {
+                    errors.Add(new StatutoryValidationError
+                    {
+                        FileIdentifier = fileId,
+                        RecordId = learner.Id,
+                        EntityName = nameof(CompanyLearner),
+                        RecordDescriptor = desc,
+                        FieldName = "PersonGuardians",
+                        FieldValue = null,
+                        RuleCode = "SETMIS_500_GUARDIAN_REQUIRED_FOR_MINOR",
+                        Severity = StatutoryValidationSeverity.Fatal,
+                        Message = $"Learner is an unmarried minor under 18 years of age ({ageYears:F1} years old). A legal parent or guardian must be a co-signatory to this agreement.",
+                        Remediation = "Capture parent or guardian identification, contact details, and signature."
+                    });
+                }
+            }
+        }
+
+        // 8. Programme-Specific Rules (Candidacy & AET)
+        bool isCandidacy = learner.LearningProgrammeTypeCode == "06" || 
+                           (learner.LearningProgrammeTypeCode != null && learner.LearningProgrammeTypeCode.Equals("Candidacy", StringComparison.OrdinalIgnoreCase));
+        if (isCandidacy)
+        {
+            if (string.IsNullOrWhiteSpace(learner.ProfessionalRegistrationNumber))
+            {
+                errors.Add(new StatutoryValidationError
+                {
+                    FileIdentifier = fileId,
+                    RecordId = learner.Id,
+                    EntityName = nameof(CompanyLearner),
+                    RecordDescriptor = desc,
+                    FieldName = nameof(learner.ProfessionalRegistrationNumber),
+                    FieldValue = null,
+                    RuleCode = "SETMIS_500_CANDIDACY_REG_NUMBER_REQUIRED",
+                    Severity = StatutoryValidationSeverity.Fatal,
+                    Message = "Candidacy Programme requires a valid Professional Council candidate registration reference (e.g. ECSA Candidate Registration Number).",
+                    Remediation = "Capture the professional council candidate registration number."
+                });
+            }
+        }
+        else
+        {
+            // For non-candidacy programmes, QualificationTitle is mandatory
+            if (string.IsNullOrWhiteSpace(learner.QualificationTitle))
+            {
+                errors.Add(new StatutoryValidationError
+                {
+                    FileIdentifier = fileId,
+                    RecordId = learner.Id,
+                    EntityName = nameof(CompanyLearner),
+                    RecordDescriptor = desc,
+                    FieldName = nameof(learner.QualificationTitle),
+                    FieldValue = null,
+                    RuleCode = "SETMIS_500_01_QUAL_TITLE_REQUIRED",
+                    Severity = StatutoryValidationSeverity.Fatal,
+                    Message = "Qualification Title is required for learner registration agreements.",
+                    Remediation = "Select or enter the qualification title."
+                });
+            }
+        }
+
         return errors;
+    }
+
+    /// <summary>
+    /// Calculates business working days between two dates, excluding weekends (Saturday/Sunday).
+    /// </summary>
+    public static int CalculateWorkingDays(DateTime startDate, DateTime endDate)
+    {
+        if (endDate < startDate) return 0;
+        int businessDays = 0;
+        var current = startDate.Date.AddDays(1); // Days elapsed after signature
+
+        while (current <= endDate.Date)
+        {
+            if (current.DayOfWeek != DayOfWeek.Saturday && current.DayOfWeek != DayOfWeek.Sunday)
+            {
+                businessDays++;
+            }
+            current = current.AddDays(1);
+        }
+
+        return businessDays;
     }
 }

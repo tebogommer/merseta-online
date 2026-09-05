@@ -161,6 +161,9 @@ public class Person : BaseEntity
     /// </summary>
     public string? PreviousLastName { get; set; }
 
+    [NotMapped]
+    public string? MaidenSurname { get => PreviousLastName; set => PreviousLastName = value; }
+
     /// <summary>
     /// Previous alternate identity number.
     /// </summary>
@@ -228,6 +231,18 @@ public class Person : BaseEntity
     /// Postal address delivery code.
     /// </summary>
     public string? PostalAddressPostalCode { get; set; }
+
+    [NotMapped]
+    public string? NextOfKinName { get => Contact?.NextOfKinName; set { if (Contact != null) Contact.NextOfKinName = value; } }
+
+    [NotMapped]
+    public string? NextOfKinContactNumber { get => Contact?.NextOfKinContactNumber; set { if (Contact != null) Contact.NextOfKinContactNumber = value; } }
+
+    [NotMapped]
+    public string? SecondaryEmail { get => Contact?.SecondaryEmail; set { if (Contact != null) Contact.SecondaryEmail = value; } }
+
+    [NotMapped]
+    public bool IsPostalSameAsPhysical { get => Contact?.IsPostalSameAsPhysical ?? false; set { if (Contact != null) Contact.IsPostalSameAsPhysical = value; } }
     #endregion
 
     /// <summary>
@@ -255,5 +270,10 @@ public class Person : BaseEntity
     /// 1:1 satellite navigation record isolating special personal information under POPIA (disability functioning ratings).
     /// </summary>
     public PersonDisabilityRating? DisabilityRating { get; set; }
+
+    /// <summary>
+    /// Legal parent or guardian records linked to this individual when registering as a minor.
+    /// </summary>
+    public ICollection<PersonGuardian> Guardians { get; set; } = new List<PersonGuardian>();
     #endregion
 }

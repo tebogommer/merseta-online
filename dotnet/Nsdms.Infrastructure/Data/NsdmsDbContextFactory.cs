@@ -5,20 +5,22 @@ namespace Nsdms.Infrastructure.Data;
 
 public class NsdmsDbContextFactory : INsdmsDbContextFactory
 {
-    private readonly IDbContextFactory<NsdmsDbContext> _underlyingFactory;
+    private readonly DbContextOptions<NsdmsDbContext> _options;
+    private readonly ITenantProvider _tenantProvider;
 
-    public NsdmsDbContextFactory(IDbContextFactory<NsdmsDbContext> underlyingFactory)
+    public NsdmsDbContextFactory(DbContextOptions<NsdmsDbContext> options, ITenantProvider tenantProvider)
     {
-        _underlyingFactory = underlyingFactory;
+        _options = options;
+        _tenantProvider = tenantProvider;
     }
 
     public INsdmsDbContext CreateDbContext()
     {
-        return _underlyingFactory.CreateDbContext();
+        return new NsdmsDbContext(_options, _tenantProvider);
     }
 
-    public async Task<INsdmsDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
+    public Task<INsdmsDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
     {
-        return await _underlyingFactory.CreateDbContextAsync(cancellationToken);
+        return Task.FromResult<INsdmsDbContext>(new NsdmsDbContext(_options, _tenantProvider));
     }
 }

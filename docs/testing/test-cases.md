@@ -23,6 +23,7 @@
 18. **TC-WFL-008 (Vitest):** `createWSPAction` enforces `financialYear` mapping context successfully.
 19. **TC-WFL-009 (Playwright):** "Visit" scheduling enforces UI selection of a `ContactPerson`.
 20. **TC-WFL-010 (Vitest):** `saveLookup` enforces mandatory existence of Code/Description combinations.
+21. **TC-WFL-011 (Manual / Playwright):** Workplace Approval & Site Audit (WPAPP) Multi-Persona Lifecycle e2e validation (SDF -> CLO -> Assessor -> QA Approver).
 
 ## P0 Data Integrity & Auditing
 21. **TC-DAT-001 (Vitest):** Double-Write check: `createWSPAction` successful call creates a row in `AuditLog`.

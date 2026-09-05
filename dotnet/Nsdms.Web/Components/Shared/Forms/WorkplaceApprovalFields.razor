@@ -88,6 +88,24 @@
         <FormRow>
             <MudItem xs="12" md="6">
                 <MudSelect T="string"
+                           Label="Statutory learning programme stream"
+                           Value="@LearningProgramTypeCode"
+                           ValueChanged="OnLearningProgramTypeCodeChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="Learning programme requiring workplace approval per merSETA spec">
+                    <MudSelectItem Value="@("Apprenticeship")">Apprenticeship / Listed Trade</MudSelectItem>
+                    <MudSelectItem Value="@("Learnership")">Learnership</MudSelectItem>
+                    <MudSelectItem Value="@("OccupationalQual")">Occupational Qualification</MudSelectItem>
+                    <MudSelectItem Value="@("InternshipNDiploma")">Internship (N Diploma / TVET WIL)</MudSelectItem>
+                    <MudSelectItem Value="@("SkillsProgramme")">Selected Skills Programme / Unit Standard</MudSelectItem>
+                    <MudSelectItem Value="@("Candidacy")">Candidacy Programme</MudSelectItem>
+                    <MudSelectItem Value="@("GraduateInternship")">Student / Graduate Internship</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
                            Label="Designated trade code"
                            Value="@TradeCode"
                            ValueChanged="OnTradeCodeChanged"
@@ -247,6 +265,9 @@
     [Parameter] public string PhysicalAddress { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> PhysicalAddressChanged { get; set; }
 
+    [Parameter] public string? LearningProgramTypeCode { get; set; } = "Apprenticeship";
+    [Parameter] public EventCallback<string?> LearningProgramTypeCodeChanged { get; set; }
+
     [Parameter] public string TradeCode { get; set; } = "FITT";
     [Parameter] public EventCallback<string> TradeCodeChanged { get; set; }
 
@@ -309,6 +330,12 @@
     {
         PhysicalAddress = val;
         await PhysicalAddressChanged.InvokeAsync(val);
+    }
+
+    private async Task OnLearningProgramTypeCodeChanged(string? val)
+    {
+        LearningProgramTypeCode = val;
+        await LearningProgramTypeCodeChanged.InvokeAsync(val);
     }
 
     private async Task OnTradeCodeChanged(string val)

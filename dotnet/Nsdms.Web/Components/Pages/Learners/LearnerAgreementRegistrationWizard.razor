@@ -1,6 +1,7 @@
 @page "/learners/register-agreement"
 @page "/learners/create"
 @using Nsdms.Application.Services
+@using Nsdms.Application.Common.Utilities
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
 @using Nsdms.Web.Components.Shared.Forms
@@ -11,6 +12,7 @@
 @inject ITrainingProviderService ProviderService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IWizardDraftService DraftService
 @rendermode InteractiveServer
 
 <div class="mb-4">
@@ -62,6 +64,11 @@ else
                  ActiveStepIndexChanged="OnStepChanged"
                  FinishButtonText="Register agreement"
                  IsBusy="@_isProcessing"
+                 HasDraftToResume="@_hasDraftToResume"
+                 DraftStepIndex="@_draftStepIndex"
+                 DraftSavedTimeAgo="@_draftSavedTimeAgo"
+                 OnResumeDraft="ResumeDraftAsync"
+                 OnDiscardDraft="DiscardDraftAsync"
                  OnCancel="GoBack"
                  OnSaveDraft="SaveDraftAsync"
                  OnFinish="SubmitAgreementAsync">
@@ -79,17 +86,45 @@ else
                                                 LastName="@_lastName"
                                                 LastNameChanged="@((val) => { _lastName = val; UpdateReviewGroups(); })"
                                                 EquityGroup="@_equityGroup"
-                                                EquityGroupChanged="@((val) => { _equityGroup = val; UpdateReviewGroups(); })" />
+                                                EquityGroupChanged="@((val) => { _equityGroup = val; UpdateReviewGroups(); })"
+                                                AddressLine1="@_addressLine1"
+                                                AddressLine1Changed="@((val) => { _addressLine1 = val; UpdateReviewGroups(); })"
+                                                AddressLine2="@_addressLine2"
+                                                AddressLine2Changed="@((val) => { _addressLine2 = val; UpdateReviewGroups(); })"
+                                                City="@_city"
+                                                CityChanged="@((val) => { _city = val; UpdateReviewGroups(); })"
+                                                PostalCode="@_postalCode"
+                                                PostalCodeChanged="@((val) => { _postalCode = val; UpdateReviewGroups(); })"
+                                                IsPostalSameAsResidential="@_isPostalSameAsResidential"
+                                                IsPostalSameAsResidentialChanged="@((val) => { _isPostalSameAsResidential = val; UpdateReviewGroups(); })"
+                                                PostalAddressLine1="@_postalAddressLine1"
+                                                PostalAddressLine1Changed="@((val) => { _postalAddressLine1 = val; UpdateReviewGroups(); })"
+                                                PostalAddressLine2="@_postalAddressLine2"
+                                                PostalAddressLine2Changed="@((val) => { _postalAddressLine2 = val; UpdateReviewGroups(); })"
+                                                PostalCity="@_postalCity"
+                                                PostalCityChanged="@((val) => { _postalCity = val; UpdateReviewGroups(); })"
+                                                PostalAddressCode="@_postalAddressCode"
+                                                PostalAddressCodeChanged="@((val) => { _postalAddressCode = val; UpdateReviewGroups(); })"
+                                                GuardianFullName="@_guardianFullName"
+                                                GuardianFullNameChanged="@((val) => { _guardianFullName = val; UpdateReviewGroups(); })"
+                                                GuardianIdNumber="@_guardianIdNumber"
+                                                GuardianIdNumberChanged="@((val) => { _guardianIdNumber = val; UpdateReviewGroups(); })"
+                                                GuardianContactNumber="@_guardianContactNumber"
+                                                GuardianContactNumberChanged="@((val) => { _guardianContactNumber = val; UpdateReviewGroups(); })"
+                                                GuardianRelationship="@_guardianRelationship"
+                                                GuardianRelationshipChanged="@((val) => { _guardianRelationship = val; UpdateReviewGroups(); })" />
         </WizardStep>
 
         <!-- STEP 2: Programme & Qualification -->
         <WizardStep Label="Programme"
                     Heading="Select learning programme &amp; qualification scope"
-                    Description="Specify learnership or apprenticeship registration code, qualification title, and tenure dates"
+                    Description="Specify learnership, apprenticeship, or candidacy scope, qualification title, and tenure dates"
                     ValidateAsync="ValidateStep2Async">
             <LearnerAgreementRegistrationFields Section="Programme"
                                                 ProgrammeType="@_programmeType"
                                                 ProgrammeTypeChanged="@((val) => { _programmeType = val; UpdateReviewGroups(); })"
+                                                ProfessionalRegistrationNumber="@_professionalRegistrationNumber"
+                                                ProfessionalRegistrationNumberChanged="@((val) => { _professionalRegistrationNumber = val; UpdateReviewGroups(); })"
                                                 LearnershipRegNumber="@_learnershipRegNumber"
                                                 LearnershipRegNumberChanged="@((val) => { _learnershipRegNumber = val; UpdateReviewGroups(); })"
                                                 QualificationTitle="@_qualificationTitle"
@@ -130,7 +165,93 @@ else
                                                 LearnerPopiaConsentChanged="@((val) => { _learnerPopiaConsent = val; UpdateReviewGroups(); })" />
         </WizardStep>
 
-        <!-- STEP 5: Review & Statutory Attestation -->
+        <!-- STEP 5: Mandatory Document Checklist (Table 14) -->
+        <WizardStep Label="Documents"
+                    Heading="Mandatory compliance document verification"
+                    Description="Verify statutory documentation attachments per merSETA Table 14 programme gating"
+                    ValidateAsync="ValidateStep5Async">
+            <MudGrid Spacing="2">
+                <MudItem xs="12">
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">
+                        Statutory Evidence Gate: All mandatory documents must be confirmed attached prior to agreement registration.
+                    </MudAlert>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudCard Outlined="true" Class="pa-3 mb-2">
+                        <div class="d-flex align-center justify-space-between">
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Color="Color.Primary">Certified Copy of RSA ID / Passport</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Compulsory for all applicants. Certified within 3 months.</MudText>
+                            </div>
+                            <MudCheckBox T="bool" @bind-Value="_docIdCopy" Color="Color.Success" Label="Confirmed Attached" />
+                        </div>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudCard Outlined="true" Class="pa-3 mb-2">
+                        <div class="d-flex align-center justify-space-between">
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Color="Color.Primary">Certified Highest Qualification / Matric Certificate</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Proof of entry-level qualification or NQF prerequisite.</MudText>
+                            </div>
+                            <MudCheckBox T="bool" @bind-Value="_docHighestQual" Color="Color.Success" Label="Confirmed Attached" />
+                        </div>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudCard Outlined="true" Class="pa-3 mb-2">
+                        <div class="d-flex align-center justify-space-between">
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Color="Color.Primary">Signed Tripartite Agreement Document</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Fully signed tripartite contract executed by Learner, Employer, and SDP.</MudText>
+                            </div>
+                            <MudCheckBox T="bool" @bind-Value="_docSignedAgreement" Color="Color.Success" Label="Confirmed Attached" />
+                        </div>
+                    </MudCard>
+                </MudItem>
+                @if (IsApplicantMinor)
+                {
+                    <MudItem xs="12">
+                        <MudCard Outlined="true" Class="pa-3 mb-2" Style="border-left: 4px solid var(--mud-palette-warning);">
+                            <div class="d-flex align-center justify-space-between">
+                                <div>
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Warning">Parent / Legal Guardian Consent Form</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Mandatory statutory consent for minors under 18 years of age.</MudText>
+                                </div>
+                                <MudCheckBox T="bool" @bind-Value="_docGuardianConsent" Color="Color.Success" Label="Confirmed Attached" />
+                            </div>
+                        </MudCard>
+                    </MudItem>
+                }
+                @if (_programmeType == "Candidacy" || _programmeType == "06")
+                {
+                    <MudItem xs="12">
+                        <MudCard Outlined="true" Class="pa-3 mb-2" Style="border-left: 4px solid var(--mud-palette-info);">
+                            <div class="d-flex align-center justify-space-between">
+                                <div>
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Info">Professional Body Council Registration Confirmation</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Official letter confirming ECSA/statutory candidate registration.</MudText>
+                                </div>
+                                <MudCheckBox T="bool" @bind-Value="_docCouncilLetter" Color="Color.Success" Label="Confirmed Attached" />
+                            </div>
+                        </MudCard>
+                    </MudItem>
+                }
+                <MudItem xs="12">
+                    <MudCard Outlined="true" Class="pa-3 mb-2">
+                        <div class="d-flex align-center justify-space-between">
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Color="Color.Primary">Workplace Approval Letter &amp; Mentor Allocation</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Confirmation of approved workplace training facility and qualified artisan mentor.</MudText>
+                            </div>
+                            <MudCheckBox T="bool" @bind-Value="_docWorkplaceMentor" Color="Color.Success" Label="Confirmed Attached" />
+                        </div>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </WizardStep>
+
+        <!-- STEP 6: Review & Statutory Attestation -->
         <WizardReviewStep ReviewGroups="@_reviewGroups"
                           OnEditStep="OnEditStepRequested">
             <LifecycleContent>
@@ -162,28 +283,68 @@ else
     private List<Organisation> _organisations = new();
     private List<TrainingProvider> _providers = new();
 
-    // Step 1
+    // Step 1: Demographics & Address
     private string _rsaIdNumber = "0102035123088";
     private string _firstName = "Sipho";
     private string _lastName = "Dlamini";
     private string _equityGroup = "African";
+    private string _addressLine1 = "124 Mandela Avenue";
+    private string _addressLine2 = "Block B, Flat 4";
+    private string _city = "Germiston";
+    private string _postalCode = "1401";
+    private bool _isPostalSameAsResidential = true;
+    private string _postalAddressLine1 = string.Empty;
+    private string _postalAddressLine2 = string.Empty;
+    private string _postalCity = string.Empty;
+    private string _postalAddressCode = string.Empty;
+    private string _guardianFullName = string.Empty;
+    private string _guardianIdNumber = string.Empty;
+    private string _guardianContactNumber = string.Empty;
+    private string _guardianRelationship = "Parent";
 
-    // Step 2
+    // Step 2: Programme & Qualification
     private string _programmeType = "Learnership";
+    private string _professionalRegistrationNumber = string.Empty;
     private string _learnershipRegNumber = "17Q170034281204";
     private string _qualificationTitle = "National Certificate: Automotive Repair and Maintenance (NQF 4)";
     private DateTime? _commencementDate = DateTime.UtcNow.Date;
     private DateTime? _completionDate = DateTime.UtcNow.Date.AddYears(1);
 
-    // Step 3
+    // Step 3: Workplace & SDP
     private int _organisationId;
     private int? _trainingProviderId;
 
-    // Step 4
+    // Step 4: Employment & Allowance
     private decimal _monthlyStipendAmount = 4500m;
     private string _employmentStatusCode = "18.2";
     private bool _contractExecuted = false;
     private bool _learnerPopiaConsent = false;
+
+    // Step 5: Document Checklist (Table 14)
+    private bool _docIdCopy = true;
+    private bool _docHighestQual = true;
+    private bool _docSignedAgreement = true;
+    private bool _docGuardianConsent = false;
+    private bool _docCouncilLetter = false;
+    private bool _docWorkplaceMentor = true;
+
+    private bool IsApplicantMinor
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(_rsaIdNumber) && _rsaIdNumber.Length == 13)
+            {
+                var (valid, dob, _, _, _) = RsaIdValidator.Parse(_rsaIdNumber);
+                if (valid && dob.HasValue)
+                {
+                    var age = DateTime.Today.Year - dob.Value.Year;
+                    if (dob.Value.Date > DateTime.Today.AddYears(-age)) age--;
+                    return age < 18;
+                }
+            }
+            return false;
+        }
+    }
 
     private List<BreadcrumbItem> _breadcrumbs = new()
     {
@@ -194,6 +355,32 @@ else
     };
 
     private List<WizardReviewGroup> _reviewGroups = new();
+
+    // Draft Persistence & Resume Lifecycle Engine
+    private bool _hasDraftToResume = false;
+    private int _draftStepIndex = 0;
+    private string? _draftSavedTimeAgo;
+    private string? _activeDraftKey;
+    private WizardDraftSession? _loadedDraft;
+
+    private record LearnerAgreementDraftModel
+    {
+        public string RsaIdNumber { get; init; } = string.Empty;
+        public string FirstName { get; init; } = string.Empty;
+        public string LastName { get; init; } = string.Empty;
+        public string EquityGroup { get; init; } = "African";
+        public string ProgrammeType { get; init; } = "Learnership";
+        public string LearnershipRegNumber { get; init; } = string.Empty;
+        public string QualificationTitle { get; init; } = string.Empty;
+        public DateTime? CommencementDate { get; init; }
+        public DateTime? CompletionDate { get; init; }
+        public int OrganisationId { get; init; }
+        public int? TrainingProviderId { get; init; }
+        public decimal MonthlyStipendAmount { get; init; } = 4500m;
+        public string EmploymentStatusCode { get; init; } = "18.2";
+        public bool ContractExecuted { get; init; }
+        public bool LearnerPopiaConsent { get; init; }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -211,6 +398,9 @@ else
             {
                 _trainingProviderId = _providers.First().Id;
             }
+
+            // Check for available in-progress draft for the current user
+            await CheckForActiveDraftAsync();
         }
         catch (Exception ex)
         {
@@ -260,21 +450,45 @@ else
             return Task.FromResult(false);
         }
 
+        if (IsApplicantMinor)
+        {
+            if (string.IsNullOrWhiteSpace(_guardianFullName) || string.IsNullOrWhiteSpace(_guardianIdNumber) || string.IsNullOrWhiteSpace(_guardianContactNumber))
+            {
+                Snackbar.Add("Applicant is a minor (< 18 years old). Parent / legal guardian full name, ID number, and contact phone are statutory mandatory.", Severity.Warning);
+                return Task.FromResult(false);
+            }
+        }
+
         return Task.FromResult(true);
     }
 
     private Task<bool> ValidateStep2Async()
     {
-        if (string.IsNullOrWhiteSpace(_learnershipRegNumber))
+        if (_programmeType == "Candidacy" || _programmeType == "06")
         {
-            Snackbar.Add("Learnership registration number / OFO code is required.", Severity.Warning);
-            return Task.FromResult(false);
+            if (string.IsNullOrWhiteSpace(_professionalRegistrationNumber))
+            {
+                Snackbar.Add("Professional Council candidate registration number (e.g. ECSA Ref) is mandatory for Candidacy programmes.", Severity.Warning);
+                return Task.FromResult(false);
+            }
+            if (string.IsNullOrWhiteSpace(_qualificationTitle))
+            {
+                _qualificationTitle = "Engineering Candidacy Programme";
+            }
         }
-
-        if (string.IsNullOrWhiteSpace(_qualificationTitle))
+        else
         {
-            Snackbar.Add("Qualification title is required.", Severity.Warning);
-            return Task.FromResult(false);
+            if (string.IsNullOrWhiteSpace(_learnershipRegNumber))
+            {
+                Snackbar.Add("Learnership registration number / OFO code is required.", Severity.Warning);
+                return Task.FromResult(false);
+            }
+
+            if (string.IsNullOrWhiteSpace(_qualificationTitle))
+            {
+                Snackbar.Add("Qualification title is required.", Severity.Warning);
+                return Task.FromResult(false);
+            }
         }
 
         if (_commencementDate == null || _completionDate == null || _completionDate <= _commencementDate)
@@ -326,10 +540,71 @@ else
         return Task.FromResult(true);
     }
 
+    private Task<bool> ValidateStep5Async()
+    {
+        if (!_docIdCopy)
+        {
+            Snackbar.Add("Certified copy of RSA ID / Passport is mandatory for all applicants.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (!_docHighestQual)
+        {
+            Snackbar.Add("Certified copy of Highest Qualification / Matric Certificate is mandatory.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (!_docSignedAgreement)
+        {
+            Snackbar.Add("Signed Tripartite Agreement Document is mandatory.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (IsApplicantMinor && !_docGuardianConsent)
+        {
+            Snackbar.Add("Parent / Legal Guardian Consent Form is statutory mandatory for minors under 18.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if ((_programmeType == "Candidacy" || _programmeType == "06") && !_docCouncilLetter)
+        {
+            Snackbar.Add("Professional Council Candidate Registration confirmation letter is mandatory for Candidacy.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
     private void UpdateReviewGroups()
     {
         var org = _organisations.FirstOrDefault(o => o.Id == _organisationId);
         var sdp = _providers.FirstOrDefault(p => p.Id == _trainingProviderId);
+
+        var demoItems = new List<WizardReviewItem>
+        {
+            new("Full names", $"{_firstName} {_lastName}"),
+            new("RSA ID number", _rsaIdNumber, isMonospace: true),
+            new("Equity group", _equityGroup),
+            new("Residential address", $"{_addressLine1}, {_city} ({_postalCode})")
+        };
+
+        if (IsApplicantMinor)
+        {
+            demoItems.Add(new("Parent / Guardian", $"{_guardianFullName} ({_guardianRelationship}) - Tel: {_guardianContactNumber}"));
+        }
+
+        var progItems = new List<WizardReviewItem>
+        {
+            new("Programme type", _programmeType),
+            new("Registration number", _learnershipRegNumber, isMonospace: true),
+            new("Qualification", _qualificationTitle),
+            new("Duration", $"{_commencementDate:yyyy-MM-dd} to {_completionDate:yyyy-MM-dd}")
+        };
+
+        if (_programmeType == "Candidacy" || _programmeType == "06")
+        {
+            progItems.Add(new("Council registration", _professionalRegistrationNumber, isMonospace: true));
+        }
 
         _reviewGroups = new List<WizardReviewGroup>
         {
@@ -338,25 +613,14 @@ else
                 Title = "Learner demographics",
                 Icon = Icons.Material.Filled.Person,
                 TargetStepIndex = 0,
-                Items = new()
-                {
-                    new("Full names", $"{_firstName} {_lastName}"),
-                    new("RSA ID number", _rsaIdNumber, isMonospace: true),
-                    new("Equity group", _equityGroup)
-                }
+                Items = demoItems
             },
             new()
             {
                 Title = "Learning programme & qualification",
                 Icon = Icons.Material.Filled.School,
                 TargetStepIndex = 1,
-                Items = new()
-                {
-                    new("Programme type", _programmeType),
-                    new("Registration number", _learnershipRegNumber, isMonospace: true),
-                    new("Qualification", _qualificationTitle),
-                    new("Duration", $"{_commencementDate:yyyy-MM-dd} to {_completionDate:yyyy-MM-dd}")
-                }
+                Items = progItems
             },
             new()
             {
@@ -383,8 +647,86 @@ else
                     new("Contract signed", _contractExecuted ? "Certified executed" : "Pending"),
                     new("POPIA consent", _learnerPopiaConsent ? "Consent granted" : "Pending")
                 }
+            },
+            new()
+            {
+                Title = "Statutory document checklist",
+                Icon = Icons.Material.Filled.Attachment,
+                TargetStepIndex = 4,
+                Items = new()
+                {
+                    new("RSA ID / Passport", _docIdCopy ? "Confirmed Attached" : "Missing"),
+                    new("Highest Qualification", _docHighestQual ? "Confirmed Attached" : "Missing"),
+                    new("Tripartite Agreement", _docSignedAgreement ? "Confirmed Attached" : "Missing"),
+                    new("Guardian Consent", IsApplicantMinor ? (_docGuardianConsent ? "Confirmed Attached" : "Missing") : "Not Applicable (< 18 only)"),
+                    new("Council Confirmation", (_programmeType == "Candidacy" || _programmeType == "06") ? (_docCouncilLetter ? "Confirmed Attached" : "Missing") : "Not Applicable (Candidacy only)")
+                }
             }
         };
+    }
+
+    private async Task CheckForActiveDraftAsync()
+    {
+        try
+        {
+            var draft = await DraftService.GetActiveDraftAsync("LearnerAgreement", "SdfUser", _organisationId > 0 ? _organisationId : null);
+            if (draft != null && draft.CurrentStepIndex > 0)
+            {
+                _loadedDraft = draft;
+                _activeDraftKey = draft.DraftKey;
+                _draftStepIndex = draft.CurrentStepIndex;
+                var delta = DateTime.UtcNow - (draft.ModifiedAt ?? draft.CreatedAt);
+                _draftSavedTimeAgo = delta.TotalHours >= 1 ? $"{(int)delta.TotalHours}h ago" : $"{(int)delta.TotalMinutes}m ago";
+                _hasDraftToResume = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Non-blocking draft lookup
+            Console.WriteLine($"Draft check skipped: {ex.Message}");
+        }
+    }
+
+    private async Task ResumeDraftAsync()
+    {
+        if (_loadedDraft == null) return;
+
+        var model = DraftService.DeserializeDraftModel<LearnerAgreementDraftModel>(_loadedDraft);
+        if (model != null)
+        {
+            _rsaIdNumber = model.RsaIdNumber;
+            _firstName = model.FirstName;
+            _lastName = model.LastName;
+            _equityGroup = model.EquityGroup;
+            _programmeType = model.ProgrammeType;
+            _learnershipRegNumber = model.LearnershipRegNumber;
+            _qualificationTitle = model.QualificationTitle;
+            _commencementDate = model.CommencementDate;
+            _completionDate = model.CompletionDate;
+            _organisationId = model.OrganisationId;
+            _trainingProviderId = model.TrainingProviderId;
+            _monthlyStipendAmount = model.MonthlyStipendAmount;
+            _employmentStatusCode = model.EmploymentStatusCode;
+            _contractExecuted = model.ContractExecuted;
+            _learnerPopiaConsent = model.LearnerPopiaConsent;
+
+            _activeStep = _loadedDraft.CurrentStepIndex;
+            _hasDraftToResume = false;
+            UpdateReviewGroups();
+            Snackbar.Add($"Resumed learner agreement draft from Step {_activeStep + 1}.", Severity.Info);
+        }
+    }
+
+    private async Task DiscardDraftAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+        {
+            await DraftService.DiscardDraftAsync(_activeDraftKey);
+            _hasDraftToResume = false;
+            _activeDraftKey = null;
+            _loadedDraft = null;
+            Snackbar.Add("Draft discarded. You are starting a clean learner agreement registration.", Severity.Normal);
+        }
     }
 
     private async Task SaveDraftAsync()
@@ -392,9 +734,40 @@ else
         _isProcessing = true;
         try
         {
-            var learner = BuildLearnerEntity("Draft");
-            var saved = await LearnerService.RegisterLearnerAsync(learner, "SdfUser");
-            Snackbar.Add($"Learner agreement draft '{saved.LearnerContractNumber}' saved successfully.", Severity.Info);
+            var draftModel = new LearnerAgreementDraftModel
+            {
+                RsaIdNumber = _rsaIdNumber,
+                FirstName = _firstName,
+                LastName = _lastName,
+                EquityGroup = _equityGroup,
+                ProgrammeType = _programmeType,
+                LearnershipRegNumber = _learnershipRegNumber,
+                QualificationTitle = _qualificationTitle,
+                CommencementDate = _commencementDate,
+                CompletionDate = _completionDate,
+                OrganisationId = _organisationId,
+                TrainingProviderId = _trainingProviderId,
+                MonthlyStipendAmount = _monthlyStipendAmount,
+                EmploymentStatusCode = _employmentStatusCode,
+                ContractExecuted = _contractExecuted,
+                LearnerPopiaConsent = _learnerPopiaConsent
+            };
+
+            var session = await DraftService.SaveDraftAsync(
+                "LearnerAgreement",
+                "Tripartite learnership agreement registration",
+                "/learners/register-agreement",
+                "SdfUser",
+                _organisationId > 0 ? _organisationId : null,
+                _activeStep,
+                5,
+                draftModel,
+                _activeDraftKey
+            );
+
+            _activeDraftKey = session.DraftKey;
+            _hasDraftToResume = false;
+            Snackbar.Add($"Draft saved at Step {_activeStep + 1} ('{session.DraftKey}').", Severity.Info);
         }
         catch (Exception ex)
         {
@@ -415,6 +788,13 @@ else
             var result = await LearnerService.RegisterLearnerAsync(learner, "SdfUser");
             _registeredLearnerId = result.Id;
             _registeredContractNo = result.LearnerContractNumber ?? $"LNK-{result.Id:D5}";
+
+            // Clear submitted draft
+            if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+            {
+                await DraftService.MarkAsSubmittedAsync(_activeDraftKey);
+            }
+
             _isSuccess = true;
             Snackbar.Add($"Learner agreement '{_registeredContractNo}' registered successfully!", Severity.Success);
         }
@@ -430,7 +810,7 @@ else
 
     private CompanyLearner BuildLearnerEntity(string status)
     {
-        return new CompanyLearner
+        var learner = new CompanyLearner
         {
             OrganisationId = _organisationId,
             TrainingProviderId = _trainingProviderId,
@@ -444,6 +824,9 @@ else
             EnrolmentStatusCode = status,
             EconomicStatusId = _employmentStatusCode == "18.2" ? "02" : "01",
             CumulativeSpend = _monthlyStipendAmount,
+            LearnerSignatureDate = DateTime.UtcNow.AddDays(-2),
+            SubmissionDate = DateTime.UtcNow,
+            ProfessionalRegistrationNumber = _professionalRegistrationNumber,
             Person = new Person
             {
                 RsaIdNumber = _rsaIdNumber,
@@ -452,6 +835,21 @@ else
                 EquityCode = _equityGroup
             }
         };
+
+        if (IsApplicantMinor && !string.IsNullOrWhiteSpace(_guardianFullName))
+        {
+            learner.Person.Guardians.Add(new PersonGuardian
+            {
+                GuardianFullName = _guardianFullName,
+                GuardianIdNumber = _guardianIdNumber,
+                ContactNumber = _guardianContactNumber,
+                RelationshipTypeId = _guardianRelationship,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = "SdfUser"
+            });
+        }
+
+        return learner;
     }
 
     private void GoBack()

@@ -1,4 +1,4 @@
-﻿using Nsdms.Domain.Entities;
+using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Common.Interfaces;
 
@@ -11,6 +11,13 @@ public interface ITradeTestAndArplService
         int attemptNumber = 1,
         string? tradeOfoCode = null,
         int? preferredTrainingCenterId = null,
+        int? qualificationId = null,
+        string? specialisation = null,
+        bool hasAttemptedPreviously = false,
+        string? previousCenterName = null,
+        DateTime? previousAttemptDate = null,
+        int? previousAttemptsCount = null,
+        ArplQualifyingCategory? qualifyingCategory = null,
         string currentUsername = "SYSTEM");
 
     Task<ArplTradeTestInformation> SubmitArplEvidenceAndChecklistAsync(
@@ -21,6 +28,22 @@ public interface ITradeTestAndArplService
         List<ArplExperienceDetail> experienceDetails,
         List<ArplTrainingDetail> trainingDetails,
         decimal portfolioScorePercentage,
+        string currentUsername = "SYSTEM");
+
+    Task<LearnerTradeTestApplication> SubmitClaRecommendationAsync(
+        int applicationId,
+        bool recommend,
+        string? rejectionReason = null,
+        string? comments = null,
+        string currentUsername = "SYSTEM");
+
+    Task<LearnerTradeTestApplication> SubmitQaApprovalAsync(
+        int applicationId,
+        bool approve,
+        int? stampedDocumentAttachmentId,
+        bool isFinalRejection,
+        string? rejectionReason,
+        string? comments,
         string currentUsername = "SYSTEM");
 
     Task<LearnerTradeTestApplication> AllocateTradeTestCenterAndScheduleAsync(
@@ -57,7 +80,43 @@ public interface ITradeTestAndArplService
         string? moderatorRegNumber,
         string currentUsername = "SYSTEM");
 
+    Task<LearnerTradeTestApplication> WithdrawTradeTestApplicationAsync(
+        int applicationId,
+        string withdrawalReasonCode,
+        string justification,
+        string currentUsername = "SYSTEM");
+
+    Task<List<ArplDocumentChecklist>> SaveDocumentChecklistAsync(
+        int applicationId,
+        List<(string DocTypeCode, int? AttachmentId)> documents,
+        string currentUsername = "SYSTEM");
+
+    Task<List<ArplDocumentChecklist>> SaveDocumentChecklistAsync(
+        int applicationId,
+        List<ArplDocumentChecklist> checklist,
+        string currentUsername = "SYSTEM");
+
+    Task<CertificateDistributionEvent> LogCertificateDistributionAsync(
+        int applicationId,
+        string methodCode,
+        string? trackingNumber,
+        string recipientName,
+        string? recipientId,
+        string currentUsername = "SYSTEM");
+
+    Task<CertificateDistributionEvent> LogCertificateDistributionAsync(
+        int applicationId,
+        string methodCode,
+        string? trackingNumber,
+        DateTime dispatchedDate,
+        string recipientName,
+        string? recipientId,
+        DateTime? receivedDate,
+        string? notes,
+        string currentUsername = "SYSTEM");
+
     Task<LearnerTradeTestApplication?> GetApplicationByIdAsync(int id);
+    Task<LearnerTradeTestApplication?> GetApplicationWithFullDetailsByIdAsync(int id);
     Task<List<LearnerTradeTestApplication>> GetApplicationsAsync(string? statusCode = null, string? tradeTitle = null);
 }
 

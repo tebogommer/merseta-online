@@ -1,8 +1,11 @@
 @page "/wizards"
 @page "/admin/wizards"
+@using Nsdms.Application.Services
 @using Nsdms.Web.Components.Shared
+@using Nsdms.Web.Components.Shared.Wizard
 @using MudBlazor
 @inject NavigationManager NavManager
+@inject IWizardDraftService DraftService
 @rendermode InteractiveServer
 
 <PageTitle>Strategic Wizard Candidate Matrix - merSETA NSDMS</PageTitle>
@@ -12,6 +15,14 @@
               ReferenceKey="A5-WIZARD-MATRIX"
               BreadcrumbItems="@_breadcrumbs">
     <ActionZone>
+        <MudBadge Content="@_activeDrafts.Count" Color="Color.Warning" Overlap="true" Visible="@(_activeDrafts.Count > 0)" Class="mr-2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.HistoryEdu"
+                       OnClick="@(() => _isDraftsDrawerOpen = true)">
+                In-progress drafts
+            </MudButton>
+        </MudBadge>
         <MudButton Variant="Variant.Outlined"
                    Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.School"
@@ -50,7 +61,7 @@
                 <MudText Typo="Typo.caption" Color="Color.Secondary">Total Candidate Flows</MudText>
                 <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" Size="Size.Small" />
             </div>
-            <MudText Typo="Typo.h4" Class="font-weight-bold text-primary">8</MudText>
+            <MudText Typo="Typo.h4" Class="font-weight-bold text-primary">@_candidates.Count</MudText>
             <MudText Typo="Typo.caption" Color="Color.Secondary">Across 7 statutory domain pillars</MudText>
         </MudCard>
     </MudItem>
@@ -80,11 +91,35 @@
                 <MudText Typo="Typo.caption" Color="Color.Secondary">Average Step Count</MudText>
                 <MudIcon Icon="@Icons.Material.Filled.LinearScale" Color="Color.Warning" Size="Size.Small" />
             </div>
-            <MudText Typo="Typo.h4" Class="font-weight-bold text-warning">5.2</MudText>
+            <MudText Typo="Typo.h4" Class="font-weight-bold text-warning">@(_candidates.Any() ? _candidates.Average(c => c.StepCount).ToString("F1") : "0.0")</MudText>
             <MudText Typo="Typo.caption" Color="Color.Secondary">Canonical chunking (&lt;= 7 inputs / step)</MudText>
         </MudCard>
     </MudItem>
 </MudGrid>
+
+<!-- Active In-Progress Drafts Resumption Banner -->
+@if (_activeDrafts.Any())
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4 rounded-lg border-2" Icon="@Icons.Material.Filled.HistoryEdu">
+        <div class="d-flex align-center justify-space-between w-100 flex-wrap gap-2">
+            <div>
+                <MudText Typo="Typo.subtitle2" Class="font-weight-bold text-primary">
+                    @_activeDrafts.Count active in-progress wizard draft@(_activeDrafts.Count == 1 ? "" : "s") detected
+                </MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    You have saved uncommitted statutory application sessions. You can resume any session right where you left off.
+                </MudText>
+            </div>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Warning"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.PlayArrow"
+                       OnClick="@(() => _isDraftsDrawerOpen = true)">
+                Open drafts drawer
+            </MudButton>
+        </div>
+    </MudAlert>
+}
 
 <!-- Candidate Matrix Table -->
 <MudCard Elevation="1" Class="rounded-lg mb-6 border" Style="border-color: var(--border);">
@@ -208,7 +243,30 @@
     </MudGrid>
 </MudCard>
 
+<!-- In-Progress Drafts Drawer Component -->
+<WizardDraftsDrawer @bind-IsOpen="_isDraftsDrawerOpen" CurrentUserId="CurrentSdf" OnDraftsChanged="LoadActiveDraftsAsync" />
+
 @code {
+    private bool _isDraftsDrawerOpen = false;
+    private List<WizardDraftSummaryDto> _activeDrafts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadActiveDraftsAsync();
+    }
+
+    private async Task LoadActiveDraftsAsync()
+    {
+        try
+        {
+            _activeDrafts = await DraftService.GetActiveDraftsForUserAsync("CurrentSdf");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading wizard drafts: {ex.Message}");
+        }
+    }
+
     private List<BreadcrumbItem> _breadcrumbs = new()
     {
         new BreadcrumbItem("Home", href: "/"),

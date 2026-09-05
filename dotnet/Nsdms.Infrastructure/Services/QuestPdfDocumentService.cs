@@ -1313,6 +1313,332 @@ public class QuestPdfDocumentService : IPdfDocumentService
         return document.GeneratePdf();
     }
 
+    public async Task<byte[]> GenerateWorkplaceApprovalLetterPdfAsync(int approvalId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var approval = await db.WorkplaceApprovals
+            .Include(w => w.Organisation)
+            .Include(w => w.OrganisationSite)
+            .Include(w => w.ContactPerson)
+            .Include(w => w.Mentors).ThenInclude(m => m.Person)
+            .FirstOrDefaultAsync(w => w.Id == approvalId);
+
+        if (approval == null)
+            throw new KeyNotFoundException($"Workplace approval with ID {approvalId} not found.");
+
+        var enableWatermarks = await _featureFlags.IsFeatureEnabledAsync("Pdfs.WatermarksAndQrCodes", true);
+        var setaName = await _config.GetValueAsync("General.SetaName", "Manufacturing, Engineering and Related Services SETA (merSETA)");
+        var orgName = approval.Organisation?.CompanyName ?? "Host Employer";
+        var sdlNumber = approval.Organisation?.SdlNumber ?? "N/A";
+        var siteName = approval.OrganisationSite?.SiteName ?? approval.Organisation?.TradingName ?? orgName;
+        var contactName = approval.ContactPerson?.FullName ?? "Skills Development Facilitator";
+        var tradeCode = approval.TradeCode ?? (approval.SaqaQualificationId.HasValue ? approval.SaqaQualificationId.Value.ToString() : "N/A");
+        var tradeTitle = approval.QualificationTitle;
+        var refNumber = string.IsNullOrWhiteSpace(approval.ApprovalNumber) ? $"WPA-{approval.Id}" : approval.ApprovalNumber;
+        var approvalDate = approval.ApprovalDate ?? approval.DecisionDate ?? DateTime.UtcNow;
+
+        var baseUrl = await _config.GetValueAsync("System.BaseUrl", "https://nsdms.merseta.org.za");
+        var verifyUrl = $"{baseUrl.TrimEnd('/')}/verify/wpa/{refNumber}";
+        var qrBytes = GenerateQrBytes(verifyUrl);
+
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(1.5f, Unit.Centimetre);
+                page.PageColor(Colors.White);
+                page.DefaultTextStyle(x => x.FontSize(10.5f).FontFamily("Arial"));
+
+                page.Header().Column(col =>
+                {
+                    col.Item().Row(row =>
+                    {
+                        row.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("REPUBLIC OF SOUTH AFRICA").Bold().FontSize(12).FontColor(Colors.Grey.Darken3);
+                            c.Item().Text(setaName).FontSize(10).FontColor(Colors.Blue.Darken3);
+                            c.Item().Text("Department of Higher Education and Training (DHET)").FontSize(8.5f).FontColor(Colors.Grey.Darken1);
+                        });
+
+                        row.ConstantItem(50).Height(50).Image(qrBytes);
+                    });
+                    col.Item().PaddingTop(4).LineHorizontal(1.5f).LineColor(Colors.Blue.Darken2);
+                });
+
+                page.Content().PaddingVertical(14).Column(col =>
+                {
+                    col.Spacing(10);
+
+                    col.Item().Text(approvalDate.ToString("dd MMMM yyyy")).FontSize(10).FontColor(Colors.Grey.Darken2);
+
+                    col.Item().Text($"Dear {contactName}").Bold().FontSize(11);
+
+                    col.Item().PaddingVertical(4).Text($"WORKPLACE APPROVAL OUTCOME FOR {orgName.ToUpperInvariant()} ({sdlNumber}): {siteName.ToUpperInvariant()}").Bold().FontSize(11.5f).FontColor(Colors.Blue.Darken4);
+
+                    col.Item().Text("The merSETA has the pleasure to inform you that your workplace has been granted approval to train in the following discipline(s):").FontSize(10.5f);
+
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(3);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Background(Colors.Grey.Lighten3).Border(0.5f).BorderColor(Colors.Grey.Darken1).Padding(6).Text("Qualification Code / Trade Code").Bold().FontSize(9.5f);
+                            header.Cell().Background(Colors.Grey.Lighten3).Border(0.5f).BorderColor(Colors.Grey.Darken1).Padding(6).Text("Qualification Title / Trade Title").Bold().FontSize(9.5f);
+                        });
+
+                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Darken1).Padding(6).Text(tradeCode).FontFamily("Consolas").FontSize(10);
+                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Darken1).Padding(6).Text(tradeTitle).Bold().FontSize(10);
+                    });
+
+                    col.Item().Text("Please note that a merSETA Verification Officer or Quality Assurance representative will be conducting monitoring, assessments, and capacity building visits throughout the training of the learners or apprentices without prior notice.").FontSize(10);
+
+                    col.Item().Text("Should you require any assistance or further information, kindly contact the Client Services division at your designated regional office.").FontSize(10);
+
+                    col.Item().PaddingTop(15).Row(row =>
+                    {
+                        row.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("Yours sincerely,").FontSize(10);
+                            c.Item().PaddingTop(25).LineHorizontal(1).LineColor(Colors.Grey.Darken1);
+                            c.Item().Text("Manager: Quality Assurance & ETQA").Bold().FontSize(10.5f);
+                            c.Item().Text(setaName).FontSize(9).FontColor(Colors.Grey.Darken2);
+                        });
+
+                        row.ConstantItem(150).Column(c =>
+                        {
+                            c.Item().Text($"Approval Ref: {refNumber}").Bold().FontFamily("Consolas").FontSize(9);
+                            c.Item().Text($"Valid From: {approvalDate:yyyy-MM-dd}").FontSize(8.5f);
+                            c.Item().Text($"Expiry Date: {(approval.ExpiryDate ?? approvalDate.AddYears(3)):yyyy-MM-dd}").FontSize(8.5f);
+                        });
+                    });
+
+                    col.Item().PaddingTop(12).Table(box =>
+                    {
+                        box.ColumnsDefinition(cols =>
+                        {
+                            cols.RelativeColumn(2);
+                            cols.RelativeColumn(2);
+                            cols.RelativeColumn(2);
+                            cols.RelativeColumn(2);
+                        });
+
+                        box.Cell().Border(0.5f).Padding(4).Text("Document Title: Workplace Approval Letter").FontSize(7.5f);
+                        box.Cell().Border(0.5f).Padding(4).Text("Page 1 of 1").FontSize(7.5f);
+                        box.Cell().Border(0.5f).Padding(4).Text($"Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm}").FontSize(7.5f);
+                        box.Cell().Border(0.5f).Padding(4).Text("Access: Controlled").FontSize(7.5f);
+
+                        box.Cell().Border(0.5f).Padding(4).Text("Document Number: ETQ-TP-003").Bold().FontSize(7.5f);
+                        box.Cell().Border(0.5f).Padding(4).Text($"Status: {approval.ApprovalStatusCode}").FontSize(7.5f);
+                        box.Cell().Border(0.5f).Padding(4).Text($"SDL: {sdlNumber}").FontSize(7.5f);
+                        box.Cell().Border(0.5f).Padding(4).Text("merSETA Head Office").FontSize(7.5f);
+                    });
+                });
+
+                page.Footer().AlignCenter().Text("merSETA Head Office: 95 7th Avenue, Cnr Rustenburg Road, Melville, Johannesburg 2109 • Telephone: 010 219 3000 • www.merseta.org.za").FontSize(7.5f).FontColor(Colors.Grey.Darken1);
+            });
+        });
+
+        return document.GeneratePdf();
+    }
+
+    public async Task<byte[]> GenerateWorkplaceApprovalReportPdfAsync(int approvalId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var approval = await db.WorkplaceApprovals
+            .Include(w => w.Organisation)
+            .Include(w => w.OrganisationSite)
+            .Include(w => w.ContactPerson)
+            .Include(w => w.VerifiedByPerson)
+            .Include(w => w.DecisionByPerson)
+            .Include(w => w.Mentors).ThenInclude(m => m.Person)
+            .Include(w => w.ToolItems)
+            .FirstOrDefaultAsync(w => w.Id == approvalId);
+
+        if (approval == null)
+            throw new KeyNotFoundException($"Workplace approval with ID {approvalId} not found.");
+
+        var setaName = await _config.GetValueAsync("General.SetaName", "Manufacturing, Engineering and Related Services SETA (merSETA)");
+        var org = approval.Organisation;
+        var site = approval.OrganisationSite;
+        var contact = approval.ContactPerson;
+        var refNumber = string.IsNullOrWhiteSpace(approval.ApprovalNumber) ? $"WPA-{approval.Id}" : approval.ApprovalNumber;
+        var submissionDate = approval.CreatedAt;
+
+        var baseUrl = await _config.GetValueAsync("System.BaseUrl", "https://nsdms.merseta.org.za");
+        var verifyUrl = $"{baseUrl.TrimEnd('/')}/verify/wpa-report/{refNumber}";
+        var qrBytes = GenerateQrBytes(verifyUrl);
+
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(1.5f, Unit.Centimetre);
+                page.PageColor(Colors.White);
+                page.DefaultTextStyle(x => x.FontSize(9.5f).FontFamily("Arial"));
+
+                page.Header().Column(col =>
+                {
+                    col.Item().Row(row =>
+                    {
+                        row.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("REPUBLIC OF SOUTH AFRICA").Bold().FontSize(12).FontColor(Colors.Grey.Darken3);
+                            c.Item().Text(setaName).FontSize(10).FontColor(Colors.Blue.Darken3);
+                            c.Item().Text("WORKPLACE APPROVAL REPORT (ETQ-TP-054)").Bold().FontSize(13).FontColor(Colors.Blue.Darken4);
+                        });
+                        row.ConstantItem(45).Height(45).Image(qrBytes);
+                    });
+                    col.Item().PaddingTop(4).LineHorizontal(1.5f).LineColor(Colors.Blue.Darken2);
+                });
+
+                page.Content().PaddingVertical(10).Column(col =>
+                {
+                    col.Spacing(8);
+
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(cols =>
+                        {
+                            cols.RelativeColumn(3);
+                            cols.RelativeColumn(5);
+                        });
+
+                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).Padding(4).Text("ORGANISATION NAME").Bold();
+                        table.Cell().Border(0.5f).Padding(4).Text(org?.CompanyName ?? "N/A");
+
+                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).Padding(4).Text("SITE NAME").Bold();
+                        table.Cell().Border(0.5f).Padding(4).Text(site?.SiteName ?? org?.TradingName ?? "Main Facility");
+
+                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).Padding(4).Text("SDL / NON-LEVY ID").Bold();
+                        table.Cell().Border(0.5f).Padding(4).Text(org?.SdlNumber ?? "N/A").FontFamily("Consolas").Bold();
+
+                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).Padding(4).Text("PHYSICAL ADDRESS").Bold();
+                        table.Cell().Border(0.5f).Padding(4).Text(site?.PhysicalAddress ?? org?.PhysicalAddress ?? "N/A");
+
+                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).Padding(4).Text("POSTAL ADDRESS").Bold();
+                        table.Cell().Border(0.5f).Padding(4).Text(site?.PostalAddress ?? org?.PostalAddress ?? "N/A");
+
+                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).Padding(4).Text("CONTACT PERSON").Bold();
+                        table.Cell().Border(0.5f).Padding(4).Text($"{contact?.FullName ?? "N/A"} ({contact?.Email ?? "No email"})");
+
+                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).Padding(4).Text("QUALIFICATION / TRADE").Bold();
+                        table.Cell().Border(0.5f).Padding(4).Text($"{approval.QualificationTitle} (Trade: {approval.TradeCode ?? "N/A"})");
+
+                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).Padding(4).Text("STREAM / PROGRAMME").Bold();
+                        table.Cell().Border(0.5f).Padding(4).Text(approval.LearningProgramTypeCode ?? "Apprenticeship");
+                    });
+
+                    col.Item().PaddingTop(4).Text("Inspection Audit Findings & Compliance Checklists").Bold().FontSize(10.5f).FontColor(Colors.Blue.Darken3);
+
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(cols =>
+                        {
+                            cols.RelativeColumn(3);
+                            cols.RelativeColumn(2);
+                            cols.RelativeColumn(1.5f);
+                            cols.RelativeColumn(1.5f);
+                            cols.RelativeColumn(2);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Background(Colors.Grey.Lighten3).Border(0.5f).Padding(4).Text("Tool / Equipment Item").Bold();
+                            header.Cell().Background(Colors.Grey.Lighten3).Border(0.5f).Padding(4).Text("Category").Bold();
+                            header.Cell().Background(Colors.Grey.Lighten3).Border(0.5f).Padding(4).Text("Required").Bold();
+                            header.Cell().Background(Colors.Grey.Lighten3).Border(0.5f).Padding(4).Text("Available").Bold();
+                            header.Cell().Background(Colors.Grey.Lighten3).Border(0.5f).Padding(4).Text("Compliance").Bold();
+                        });
+
+                        if (approval.ToolItems != null && approval.ToolItems.Any())
+                        {
+                            foreach (var tool in approval.ToolItems)
+                            {
+                                table.Cell().Border(0.5f).Padding(3).Text(tool.ToolName);
+                                table.Cell().Border(0.5f).Padding(3).Text(tool.Category ?? "Standard");
+                                table.Cell().Border(0.5f).Padding(3).Text(tool.RequiredQuantity.ToString());
+                                table.Cell().Border(0.5f).Padding(3).Text(tool.AvailableQuantity.ToString());
+                                table.Cell().Border(0.5f).Padding(3).Text(tool.IsCompliant ? "COMPLIANT" : "DEFICIENT").FontColor(tool.IsCompliant ? Colors.Green.Darken3 : Colors.Red.Darken3).Bold();
+                            }
+                        }
+                        else
+                        {
+                            table.Cell().ColumnSpan(5).Border(0.5f).Padding(4).AlignCenter().Text("Curriculum standard tool inspection certified by applicant.").Italic();
+                        }
+                    });
+
+                    col.Item().PaddingTop(4).Text("Assigned Artisan Mentors & Supervision Ratio Quotas").Bold().FontSize(10.5f).FontColor(Colors.Blue.Darken3);
+
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(cols =>
+                        {
+                            cols.RelativeColumn(3);
+                            cols.RelativeColumn(2);
+                            cols.RelativeColumn(2);
+                            cols.RelativeColumn(2);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Background(Colors.Grey.Lighten3).Border(0.5f).Padding(4).Text("Mentor Artisan").Bold();
+                            header.Cell().Background(Colors.Grey.Lighten3).Border(0.5f).Padding(4).Text("Trade Serial No").Bold();
+                            header.Cell().Background(Colors.Grey.Lighten3).Border(0.5f).Padding(4).Text("Experience").Bold();
+                            header.Cell().Background(Colors.Grey.Lighten3).Border(0.5f).Padding(4).Text("Capacity Cap").Bold();
+                        });
+
+                        if (approval.Mentors != null && approval.Mentors.Any())
+                        {
+                            foreach (var mentor in approval.Mentors)
+                            {
+                                table.Cell().Border(0.5f).Padding(3).Text(mentor.Person?.FullName ?? mentor.Designation);
+                                table.Cell().Border(0.5f).Padding(3).Text(mentor.ArtisanTradeNumber ?? "Verified");
+                                table.Cell().Border(0.5f).Padding(3).Text($"{mentor.YearsExperience} Years");
+                                table.Cell().Border(0.5f).Padding(3).Text(mentor.MaxLearnerCapacity.HasValue ? $"1:{mentor.MaxLearnerCapacity.Value} (Custom)" : "1:4 (Standard)");
+                            }
+                        }
+                        else
+                        {
+                            table.Cell().ColumnSpan(4).Border(0.5f).Padding(4).AlignCenter().Text("No dedicated mentors attached to site record.").Italic();
+                        }
+                    });
+
+                    col.Item().PaddingTop(4).Table(box =>
+                    {
+                        box.ColumnsDefinition(cols =>
+                        {
+                            cols.RelativeColumn(2);
+                            cols.RelativeColumn(2);
+                            cols.RelativeColumn(2);
+                            cols.RelativeColumn(2);
+                        });
+
+                        box.Cell().Border(0.5f).Padding(3).Text("Document Title: Workplace Approval Report").FontSize(7.5f);
+                        box.Cell().Border(0.5f).Padding(3).Text("Page 1 of 1").FontSize(7.5f);
+                        box.Cell().Border(0.5f).Padding(3).Text($"Audit Date: {DateTime.UtcNow:yyyy-MM-dd}").FontSize(7.5f);
+                        box.Cell().Border(0.5f).Padding(3).Text("Access: Controlled").FontSize(7.5f);
+
+                        box.Cell().Border(0.5f).Padding(3).Text("Document Number: ETQ-TP-054").Bold().FontSize(7.5f);
+                        box.Cell().Border(0.5f).Padding(3).Text($"Status: {approval.ApprovalStatusCode}").FontSize(7.5f);
+                        box.Cell().Border(0.5f).Padding(3).Text($"Submission: {submissionDate:yyyy-MM-dd}").FontSize(7.5f);
+                        box.Cell().Border(0.5f).Padding(3).Text("merSETA NSDMS 2.0").FontSize(7.5f);
+                    });
+                });
+
+                page.Footer().AlignCenter().Text("merSETA Quality Assurance Division • Controlled Statutory Verification Report ETQ-TP-054 • www.merseta.org.za").FontSize(7.5f).FontColor(Colors.Grey.Darken1);
+            });
+        });
+
+        return document.GeneratePdf();
+    }
+
     private byte[] GenerateQrBytes(string verifyUrl)
     {
         if (_verificationService != null)

@@ -1,57 +1,176 @@
 @namespace Nsdms.Web.Components.Shared
 @using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
 @using Nsdms.Application.Common.Interfaces
+@using Nsdms.Web.Services
 @inject INavigationMenuService NavService
 @inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthStateProvider
 
-<div class="d-flex align-center gap-1">
-    <MudMenu AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Dense="true" AriaLabel="Active Persona Context Switcher" Title="Switch Active Persona Context">
-        <ActivatorContent>
-            <MudButton Variant="Variant.Filled" 
-                       Color="@GetPersonaButtonColor(ActivePersona)" 
+<div class="d-flex align-center mr-2">
+    <MudMenu AnchorOrigin="Origin.BottomRight" 
+             TransformOrigin="Origin.TopRight" 
+             Dense="true" 
+             AriaLabel="Active workspace persona and person identity switcher" 
+             Title="Switch active persona and person login session">
+        <ActivatorContent Context="menuCtx">
+            <MudButton Variant="Variant.Outlined" 
+                       Color="@GetProfileButtonColor(ActiveProfile)" 
                        Size="Size.Small" 
-                       StartIcon="@GetPersonaIcon(ActivePersona)" 
+                       StartIcon="@GetProfileIcon(ActiveProfile)" 
                        EndIcon="@Icons.Material.Filled.ArrowDropDown"
-                       Class="text-none font-weight-medium rounded-pill px-3 py-1 d-none d-sm-inline-flex"
-                       Style="font-size: 0.76rem; letter-spacing: -0.01em; border: 1px solid rgba(255, 255, 255, 0.2);">
-                <span>@GetShortPersonaLabel(ActivePersona)</span>
+                       OnClick="@menuCtx.ToggleAsync"
+                       Class="persona-switcher-pill rounded-pill px-3 py-1"
+                       Style="font-size: 0.76rem; font-weight: 600; text-transform: none; border-width: 1.5px; height: 32px;"
+                       aria-label="@($"Active persona: {ActiveProfile.PersonName} ({ActiveProfile.StatutoryRole}). Click to switch or log in as another persona.")">
+                <span class="d-none d-md-inline">@ActiveProfile.ShortLabel</span>
+                <span class="d-inline d-md-none">@ActiveProfile.CompactLabel</span>
             </MudButton>
         </ActivatorContent>
         <ChildContent>
-            <div class="pa-3" style="min-width: 290px;">
-                <div class="d-flex align-center justify-space-between mb-2">
+            <div class="pa-2" style="min-width: 360px; max-width: 440px; max-height: 82vh; overflow-y: auto;">
+                <!-- Header -->
+                <div class="px-2 pt-2 pb-1 d-flex align-center justify-space-between">
                     <div class="d-flex align-center gap-2">
-                        <MudIcon Icon="@Icons.Material.Filled.Badge" Color="Color.Primary" Size="Size.Small" />
-                        <MudText Typo="Typo.subtitle2" Class="fw-bold">Active Role Persona</MudText>
+                        <MudIcon Icon="@Icons.Material.Filled.SwitchAccount" Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle2" Class="fw-bold">Statutory Personas &amp; Logins</MudText>
                     </div>
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Class="px-1 py-0" Style="font-size: 0.65rem;">
-                        Multi-Role Filter
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Class="px-2 py-0" Style="font-size: 0.65rem; height: 18px;">
+                        @_profiles.Count Personas
                     </MudChip>
                 </div>
-                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-2">
-                    Select a workspace persona to filter navigation or view all combined role capabilities.
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="px-2 d-block mb-2">
+                    Switch active user session and filter navigation pillars by person &amp; statutory role.
                 </MudText>
-                <MudDivider Class="my-2" />
-                <MudList T="string" Dense="true" Clickable="true">
-                    @foreach (var persona in _availablePersonas)
-                    {
-                        var isCurrent = persona.Equals(ActivePersona, StringComparison.OrdinalIgnoreCase);
-                        <MudListItem T="string" OnClick="@(() => HandleSelectPersona(persona))" Class="@(isCurrent ? "mud-theme-primary rounded px-2" : "rounded px-2")">
-                            <div class="d-flex align-center justify-space-between py-1">
-                                <div class="d-flex align-center gap-2">
-                                    <MudIcon Icon="@GetPersonaIcon(persona)" Size="Size.Small" Color="@(isCurrent ? Color.Inherit : Color.Secondary)" />
-                                    <MudText Typo="Typo.caption" Class="@(isCurrent ? "font-weight-bold text-white" : "font-weight-medium")">
-                                        @persona
+
+                <!-- SECTION 1: WORKPLACE APPROVAL PERSONAS -->
+                <div class="px-2 py-1 mt-1 d-flex align-center gap-2" style="background-color: var(--mud-palette-background-grey); border-radius: 4px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Handyman" Size="Size.Small" Color="Color.Warning" />
+                    <MudText Typo="Typo.caption" Class="fw-bold text-uppercase" Style="font-size: 0.68rem; letter-spacing: 0.5px;">
+                        Workplace Approval Personas
+                    </MudText>
+                </div>
+
+                @foreach (var profile in _profiles.Where(p => p.IsWorkplaceApprovalPersona))
+                {
+                    var isCurrent = IsCurrentProfile(profile);
+                    <MudMenuItem OnClick="@(() => HandleSelectProfile(profile))" 
+                                 Class="@(isCurrent ? "mud-theme-primary rounded my-1" : "rounded my-1")"
+                                 Dense="true">
+                        <div class="d-flex align-center justify-space-between mud-width-full py-1">
+                            <div class="d-flex align-center gap-2">
+                                <MudAvatar Size="Size.Small" 
+                                           Color="@GetProfileButtonColor(profile)" 
+                                           Style="font-size: 0.68rem; font-weight: 700; width: 28px; height: 28px;">
+                                    @profile.Initials
+                                </MudAvatar>
+                                <div class="text-left">
+                                    <div class="d-flex align-center gap-1">
+                                        <MudText Typo="Typo.caption" Class="@(isCurrent ? "font-weight-bold text-white d-block" : "font-weight-bold d-block")">
+                                            @profile.PersonName
+                                        </MudText>
+                                        <span class="badge-role-pill @(isCurrent ? "text-white" : "")" style="font-size: 0.60rem; font-weight: 600; opacity: 0.85;">
+                                            • @profile.RoleBadge
+                                        </span>
+                                    </div>
+                                    <MudText Typo="Typo.caption" Style="font-size: 0.68rem;" Class="@(isCurrent ? "text-white opacity-75 d-block" : "text-secondary d-block")">
+                                        @profile.OrganisationName
                                     </MudText>
+                                    @if (!string.IsNullOrWhiteSpace(profile.WorkplaceReference))
+                                    {
+                                        <MudText Typo="Typo.caption" Style="font-size: 0.64rem;" Class="@(isCurrent ? "text-white opacity-75 d-block" : "text-muted d-block")">
+                                            <MudIcon Icon="@Icons.Material.Filled.PinDrop" Size="Size.Small" Style="font-size: 0.70rem; vertical-align: middle;" />
+                                            @profile.WorkplaceReference
+                                        </MudText>
+                                    }
                                 </div>
+                            </div>
+                            <div class="d-flex align-center ml-2">
                                 @if (isCurrent)
                                 {
-                                    <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Inherit" />
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled" Style="height: 18px; font-size: 0.62rem;">
+                                        Active
+                                    </MudChip>
+                                }
+                                else
+                                {
+                                    <MudTooltip Text="@($"Log in as {profile.PersonName}")">
+                                        <MudIcon Icon="@Icons.Material.Filled.Login" Size="Size.Small" Color="Color.Default" Style="opacity: 0.6;" />
+                                    </MudTooltip>
                                 }
                             </div>
-                        </MudListItem>
-                    }
-                </MudList>
+                        </div>
+                    </MudMenuItem>
+                }
+
+                <!-- SECTION 2: ENTERPRISE & GOVERNANCE PERSONAS -->
+                <div class="px-2 py-1 mt-2 d-flex align-center gap-2" style="background-color: var(--mud-palette-background-grey); border-radius: 4px;">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Size="Size.Small" Color="Color.Primary" />
+                    <MudText Typo="Typo.caption" Class="fw-bold text-uppercase" Style="font-size: 0.68rem; letter-spacing: 0.5px;">
+                        Enterprise &amp; Statutory Governance
+                    </MudText>
+                </div>
+
+                @foreach (var profile in _profiles.Where(p => !p.IsWorkplaceApprovalPersona))
+                {
+                    var isCurrent = IsCurrentProfile(profile);
+                    <MudMenuItem OnClick="@(() => HandleSelectProfile(profile))" 
+                                 Class="@(isCurrent ? "mud-theme-primary rounded my-1" : "rounded my-1")"
+                                 Dense="true">
+                        <div class="d-flex align-center justify-space-between mud-width-full py-1">
+                            <div class="d-flex align-center gap-2">
+                                <MudAvatar Size="Size.Small" 
+                                           Color="@GetProfileButtonColor(profile)" 
+                                           Style="font-size: 0.68rem; font-weight: 700; width: 28px; height: 28px;">
+                                    @profile.Initials
+                                </MudAvatar>
+                                <div class="text-left">
+                                    <div class="d-flex align-center gap-1">
+                                        <MudText Typo="Typo.caption" Class="@(isCurrent ? "font-weight-bold text-white d-block" : "font-weight-bold d-block")">
+                                            @profile.PersonName
+                                        </MudText>
+                                        <span class="badge-role-pill @(isCurrent ? "text-white" : "")" style="font-size: 0.60rem; font-weight: 600; opacity: 0.85;">
+                                            • @profile.RoleBadge
+                                        </span>
+                                    </div>
+                                    <MudText Typo="Typo.caption" Style="font-size: 0.68rem;" Class="@(isCurrent ? "text-white opacity-75 d-block" : "text-secondary d-block")">
+                                        @profile.Subtitle
+                                    </MudText>
+                                </div>
+                            </div>
+                            <div class="d-flex align-center ml-2">
+                                @if (isCurrent)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled" Style="height: 18px; font-size: 0.62rem;">
+                                        Active
+                                    </MudChip>
+                                }
+                                else
+                                {
+                                    <MudTooltip Text="@($"Log in as {profile.PersonName}")">
+                                        <MudIcon Icon="@Icons.Material.Filled.Login" Size="Size.Small" Color="Color.Default" Style="opacity: 0.6;" />
+                                    </MudTooltip>
+                                }
+                            </div>
+                        </div>
+                    </MudMenuItem>
+                }
+
+                <!-- Bottom Reset Action -->
+                <MudDivider Class="my-2" />
+                <div class="px-2 py-1 d-flex justify-space-between align-center">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size: 0.68rem;">
+                        Signed in as <strong>@ActiveProfile.PersonName</strong>
+                    </MudText>
+                    <MudButton Variant="Variant.Text" 
+                               Color="Color.Error" 
+                               Size="Size.Small" 
+                               StartIcon="@Icons.Material.Filled.Logout"
+                               OnClick="@HandleResetToAdmin"
+                               Style="font-size: 0.68rem; text-transform: none;">
+                        Reset Session
+                    </MudButton>
+                </div>
             </div>
         </ChildContent>
     </MudMenu>
@@ -64,72 +183,107 @@
     [Parameter]
     public EventCallback<string> OnPersonaChanged { get; set; }
 
-    private List<string> _availablePersonas = new();
+    [Parameter]
+    public EventCallback<PersonaProfileDto> OnPersonaSelected { get; set; }
+
+    private List<PersonaProfileDto> _profiles = new();
+    private PersonaProfileDto ActiveProfile => ResolveProfile(ActivePersona);
 
     protected override void OnInitialized()
     {
-        _availablePersonas = NavService.GetPredefinedPersonas();
+        _profiles = NavService.GetPersonaProfiles();
     }
 
-    private async Task HandleSelectPersona(string persona)
+    private PersonaProfileDto ResolveProfile(string keyOrTitle)
     {
-        ActivePersona = persona;
-        Snackbar.Add($"🔀 Switched active workspace to: {persona}", Severity.Info);
+        var resolved = NavService.GetPersonaProfile(keyOrTitle);
+        if (resolved != null) return resolved;
+
+        return _profiles.FirstOrDefault(p => p.PersonaKey == "UnifiedAdmin") ?? new PersonaProfileDto
+        {
+            PersonaKey = "UnifiedAdmin",
+            PersonaTitle = "All Roles (Unified)",
+            ShortLabel = "System Administrator",
+            CompactLabel = "SysAdmin",
+            PersonName = "System Administrator",
+            Email = "sysadmin@merseta.org.za",
+            Initials = "SA",
+            StatutoryRole = "Enterprise Super Administrator",
+            RoleBadge = "SUPERADMIN",
+            Roles = new() { "SuperAdmin", "Admin" }
+        };
+    }
+
+    private bool IsCurrentProfile(PersonaProfileDto profile)
+    {
+        if (string.IsNullOrWhiteSpace(ActivePersona)) return profile.PersonaKey == "UnifiedAdmin";
+        return profile.PersonaTitle.Equals(ActivePersona, StringComparison.OrdinalIgnoreCase) ||
+               profile.ShortLabel.Equals(ActivePersona, StringComparison.OrdinalIgnoreCase) ||
+               profile.PersonName.Equals(ActivePersona, StringComparison.OrdinalIgnoreCase) ||
+               ActivePersona.Contains(profile.PersonName, StringComparison.OrdinalIgnoreCase) ||
+               ActivePersona.Contains(profile.PersonaKey, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task HandleSelectProfile(PersonaProfileDto profile)
+    {
+        ActivePersona = profile.PersonaTitle;
+
+        // Execute dynamic user identity simulation in AuthenticationStateProvider
+        if (AuthStateProvider is NsdmsAuthenticationStateProvider authProvider)
+        {
+            authProvider.SetUser(profile.Email, profile.PersonName, profile.Roles);
+        }
+
+        Snackbar.Add($"Logged in as {profile.PersonName} ({profile.StatutoryRole})", Severity.Success);
+
+        if (OnPersonaSelected.HasDelegate)
+        {
+            await OnPersonaSelected.InvokeAsync(profile);
+        }
+
         if (OnPersonaChanged.HasDelegate)
         {
-            await OnPersonaChanged.InvokeAsync(persona);
+            await OnPersonaChanged.InvokeAsync(profile.PersonaTitle);
         }
     }
 
-    private string GetShortPersonaLabel(string persona)
+    private async Task HandleResetToAdmin()
     {
-        if (string.IsNullOrWhiteSpace(persona) || persona.StartsWith("All", StringComparison.OrdinalIgnoreCase))
-            return "All Roles (Unified)";
-        if (persona.Contains("SDF", StringComparison.OrdinalIgnoreCase))
-            return "SDF Workspace";
-        if (persona.Contains("Finance", StringComparison.OrdinalIgnoreCase))
-            return "Finance Workspace";
-        if (persona.Contains("Assessor", StringComparison.OrdinalIgnoreCase))
-            return "Assessor & QA";
-        if (persona.Contains("Provider", StringComparison.OrdinalIgnoreCase) || persona.Contains("SDP", StringComparison.OrdinalIgnoreCase))
-            return "SDP Workspace";
-        if (persona.Contains("CLO", StringComparison.OrdinalIgnoreCase))
-            return "CLO Liaison";
-        if (persona.Contains("Legal", StringComparison.OrdinalIgnoreCase))
-            return "Legal & MoA";
-        if (persona.Contains("Compliance", StringComparison.OrdinalIgnoreCase))
-            return "Compliance & Audits";
-        if (persona.Contains("Executive", StringComparison.OrdinalIgnoreCase))
-            return "Executive BI";
-        if (persona.Contains("Admin", StringComparison.OrdinalIgnoreCase))
-            return "Admin Control";
-        return persona;
+        var adminProfile = _profiles.FirstOrDefault(p => p.PersonaKey == "UnifiedAdmin");
+        if (adminProfile != null)
+        {
+            await HandleSelectProfile(adminProfile);
+        }
     }
 
-    private string GetPersonaIcon(string persona)
+    private string GetProfileIcon(PersonaProfileDto profile)
     {
-        if (persona.StartsWith("All", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Layers;
-        if (persona.Contains("SDF", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Badge;
-        if (persona.Contains("Finance", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.AccountBalance;
-        if (persona.Contains("Assessor", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.VerifiedUser;
-        if (persona.Contains("Provider", StringComparison.OrdinalIgnoreCase) || persona.Contains("SDP", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.School;
-        if (persona.Contains("CLO", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.SupportAgent;
-        if (persona.Contains("Legal", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Gavel;
-        if (persona.Contains("Compliance", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.FactCheck;
-        if (persona.Contains("Executive", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Insights;
-        if (persona.Contains("Admin", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.AdminPanelSettings;
-        return Icons.Material.Filled.Person;
+        return profile.Icon switch
+        {
+            "Build" => Icons.Material.Filled.Build,
+            "FactCheck" => Icons.Material.Filled.FactCheck,
+            "Work" => Icons.Material.Filled.Work,
+            "VerifiedUser" => Icons.Material.Filled.VerifiedUser,
+            "Gavel" => Icons.Material.Filled.Gavel,
+            "AdminPanelSettings" => Icons.Material.Filled.AdminPanelSettings,
+            "AccountBalance" => Icons.Material.Filled.AccountBalance,
+            "School" => Icons.Material.Filled.School,
+            "Policy" => Icons.Material.Filled.Policy,
+            "Security" => Icons.Material.Filled.Security,
+            _ => Icons.Material.Filled.Person
+        };
     }
 
-    private Color GetPersonaButtonColor(string persona)
+    private Color GetProfileButtonColor(PersonaProfileDto profile)
     {
-        if (persona.StartsWith("All", StringComparison.OrdinalIgnoreCase)) return Color.Primary;
-        if (persona.Contains("SDF", StringComparison.OrdinalIgnoreCase)) return Color.Info;
-        if (persona.Contains("Finance", StringComparison.OrdinalIgnoreCase)) return Color.Success;
-        if (persona.Contains("Assessor", StringComparison.OrdinalIgnoreCase)) return Color.Warning;
-        if (persona.Contains("Provider", StringComparison.OrdinalIgnoreCase) || persona.Contains("SDP", StringComparison.OrdinalIgnoreCase)) return Color.Secondary;
-        if (persona.Contains("Legal", StringComparison.OrdinalIgnoreCase)) return Color.Tertiary;
-        if (persona.Contains("Compliance", StringComparison.OrdinalIgnoreCase)) return Color.Warning;
-        return Color.Primary;
+        return profile.ThemeColor switch
+        {
+            "Warning" => Color.Warning,
+            "Info" => Color.Info,
+            "Success" => Color.Success,
+            "Secondary" => Color.Secondary,
+            "Dark" => Color.Dark,
+            _ => Color.Primary
+        };
     }
 }

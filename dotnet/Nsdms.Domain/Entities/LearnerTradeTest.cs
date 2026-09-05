@@ -146,4 +146,10 @@ public class LearnerTradeTest : BaseEntity
     /// Assessment feedback and examiner moderation remarks.
     /// </summary>
     public string? Remarks { get; set; }
+
+    /// <summary>
+    /// Foreign key linking this statutory SETMIS File 505 record to the originating operational trade test application.
+    /// </summary>
+    public int? LearnerTradeTestApplicationId { get; set; }
+    public LearnerTradeTestApplication? LearnerTradeTestApplication { get; set; }
 }

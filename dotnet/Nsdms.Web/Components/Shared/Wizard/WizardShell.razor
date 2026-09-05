@@ -1,5 +1,7 @@
 @namespace Nsdms.Web.Components.Shared.Wizard
 @using MudBlazor
+@using System.Threading
+@implements IAsyncDisposable
 
 <div class="nsdms-wizard-shell d-flex flex-column" role="region" aria-label="@Title">
     <!-- Header Zone -->
@@ -21,6 +23,38 @@
             }
         </div>
     </header>
+
+    @if (ShowDraftResumePrompt && HasDraftToResume)
+    {
+        <!-- Draft Resume Banner -->
+        <div class="pa-4 mb-4 rounded-lg d-flex align-center justify-space-between flex-wrap gap-2 border"
+             style="background: var(--mud-palette-warning-hover); border-color: var(--mud-palette-warning) !important;">
+            <div class="d-flex align-center gap-3">
+                <MudIcon Icon="@Icons.Material.Filled.HistoryEdu" Color="Color.Warning" Size="Size.Medium" />
+                <div>
+                    <span class="d-block font-weight-bold text-primary">Unsaved draft available</span>
+                    <span class="d-block text-caption text-secondary">
+                        You have an in-progress draft saved at Step @(DraftStepIndex + 1)@(!string.IsNullOrWhiteSpace(DraftSavedTimeAgo) ? $" ({DraftSavedTimeAgo})" : ""). Would you like to resume where you left off?
+                    </span>
+                </div>
+            </div>
+            <div class="d-flex align-center gap-2">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Warning"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.PlayArrow"
+                           OnClick="HandleResumeDraftAsync">
+                    Resume draft
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Default"
+                           Size="Size.Small"
+                           OnClick="HandleDiscardDraftAsync">
+                    Discard draft
+                </MudButton>
+            </div>
+        </div>
+    }
 
     <!-- Stepper Zone -->
     @if (_stepInfos.Count > 1)
@@ -64,17 +98,40 @@
             </MudButton>
         </div>
 
-        <!-- Left-Centre: Save Draft (Hidden on Step 1) -->
-        <div class="wizard-footer-center flex-grow-1 d-flex justify-start ml-2">
+        <!-- Left-Centre: Save Draft & Auto-Save Indicator (Hidden on Step 1) -->
+        <div class="wizard-footer-center flex-grow-1 d-flex align-center justify-start ml-2 gap-2 flex-wrap">
             @if (ActiveStepIndex > 0 && AllowSaveDraft)
             {
                 <MudButton Variant="Variant.Text"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Save"
-                           Disabled="@IsBusy"
+                           Disabled="@(IsBusy || _isAutoSaving)"
                            OnClick="HandleSaveDraftAsync">
                     Save draft
                 </MudButton>
+
+                @if (_isAutoSaving)
+                {
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Variant="Variant.Text"
+                             Icon="@Icons.Material.Filled.CloudSync"
+                             Color="Color.Info"
+                             Class="text-caption text-secondary py-0">
+                        Auto-saving...
+                    </MudChip>
+                }
+                else if (_lastAutoSavedAt.HasValue)
+                {
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Variant="Variant.Text"
+                             Icon="@Icons.Material.Filled.CloudDone"
+                             Color="Color.Default"
+                             Class="text-caption text-secondary py-0">
+                        Draft saved @GetAutoSavedTimeAgo()
+                    </MudChip>
+                }
             }
         </div>
 
@@ -151,6 +208,55 @@
 
     [Parameter]
     public EventCallback<int> OnStepChanged { get; set; }
+
+    [Parameter]
+    public bool ShowDraftResumePrompt { get; set; } = true;
+
+    [Parameter]
+    public bool HasDraftToResume { get; set; } = false;
+
+    [Parameter]
+    public int DraftStepIndex { get; set; } = 0;
+
+    [Parameter]
+    public string? DraftSavedTimeAgo { get; set; }
+
+    [Parameter]
+    public EventCallback OnResumeDraft { get; set; }
+
+    [Parameter]
+    public EventCallback OnDiscardDraft { get; set; }
+
+    [Parameter]
+    public bool EnableAutoSave { get; set; } = true;
+
+    [Parameter]
+    public int AutoSaveIntervalSeconds { get; set; } = 60;
+
+    [Parameter]
+    public bool IsDirty { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<bool> IsDirtyChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnAutoSaveCompleted { get; set; }
+
+    private async Task HandleResumeDraftAsync()
+    {
+        if (OnResumeDraft.HasDelegate)
+        {
+            await OnResumeDraft.InvokeAsync();
+        }
+    }
+
+    private async Task HandleDiscardDraftAsync()
+    {
+        if (OnDiscardDraft.HasDelegate)
+        {
+            await OnDiscardDraft.InvokeAsync();
+        }
+    }
 
     private readonly List<WizardStep> _steps = new();
     private readonly List<WizardStepInfo> _stepInfos = new();
@@ -268,11 +374,149 @@
         }
     }
 
+    private CancellationTokenSource? _autoSaveCts;
+    private Task? _autoSaveLoopTask;
+    private bool _isAutoSaving = false;
+    private DateTime? _lastAutoSavedAt;
+
+    protected override void OnInitialized()
+    {
+        StartAutoSaveTimer();
+    }
+
+    private void StartAutoSaveTimer()
+    {
+        if (!EnableAutoSave || AutoSaveIntervalSeconds <= 0) return;
+
+        _autoSaveCts?.Cancel();
+        _autoSaveCts?.Dispose();
+        _autoSaveCts = new CancellationTokenSource();
+        _autoSaveLoopTask = RunAutoSaveLoopAsync(_autoSaveCts.Token);
+    }
+
+    private async Task RunAutoSaveLoopAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var interval = TimeSpan.FromSeconds(Math.Max(1, AutoSaveIntervalSeconds));
+            using var periodicTimer = new PeriodicTimer(interval);
+            while (await periodicTimer.WaitForNextTickAsync(cancellationToken))
+            {
+                if (cancellationToken.IsCancellationRequested) break;
+
+                if (ActiveStepIndex > 0 && AllowSaveDraft && !IsBusy && !_isAutoSaving && OnSaveDraft.HasDelegate)
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        try
+                        {
+                            _isAutoSaving = true;
+                            StateHasChanged();
+
+                            await OnSaveDraft.InvokeAsync();
+
+                            _lastAutoSavedAt = DateTime.UtcNow;
+                            if (IsDirty)
+                            {
+                                IsDirty = false;
+                                if (IsDirtyChanged.HasDelegate)
+                                {
+                                    await IsDirtyChanged.InvokeAsync(false);
+                                }
+                            }
+                            if (OnAutoSaveCompleted.HasDelegate)
+                            {
+                                await OnAutoSaveCompleted.InvokeAsync();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[WizardShell] Background auto-save error: {ex.Message}");
+                        }
+                        finally
+                        {
+                            _isAutoSaving = false;
+                            StateHasChanged();
+                        }
+                    });
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Normal cancellation
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[WizardShell] Auto-save loop exception: {ex.Message}");
+        }
+    }
+
+    public async Task TriggerAutoSaveNowAsync()
+    {
+        if (ActiveStepIndex > 0 && AllowSaveDraft && !IsBusy && !_isAutoSaving && OnSaveDraft.HasDelegate)
+        {
+            await InvokeAsync(async () =>
+            {
+                try
+                {
+                    _isAutoSaving = true;
+                    StateHasChanged();
+
+                    await OnSaveDraft.InvokeAsync();
+
+                    _lastAutoSavedAt = DateTime.UtcNow;
+                    if (IsDirty)
+                    {
+                        IsDirty = false;
+                        if (IsDirtyChanged.HasDelegate)
+                        {
+                            await IsDirtyChanged.InvokeAsync(false);
+                        }
+                    }
+                    if (OnAutoSaveCompleted.HasDelegate)
+                    {
+                        await OnAutoSaveCompleted.InvokeAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[WizardShell] Manual auto-save trigger error: {ex.Message}");
+                }
+                finally
+                {
+                    _isAutoSaving = false;
+                    StateHasChanged();
+                }
+            });
+        }
+    }
+
+    private string GetAutoSavedTimeAgo()
+    {
+        if (!_lastAutoSavedAt.HasValue) return string.Empty;
+        var diff = DateTime.UtcNow - _lastAutoSavedAt.Value;
+        if (diff.TotalSeconds < 15) return "just now";
+        if (diff.TotalMinutes < 1) return $"{(int)diff.TotalSeconds}s ago";
+        if (diff.TotalHours < 1) return $"{(int)diff.TotalMinutes}m ago";
+        return $"{(int)diff.TotalHours}h ago";
+    }
+
     private async Task HandleSaveDraftAsync()
     {
         if (OnSaveDraft.HasDelegate)
         {
             await OnSaveDraft.InvokeAsync();
+            _lastAutoSavedAt = DateTime.UtcNow;
+            if (IsDirty)
+            {
+                IsDirty = false;
+                if (IsDirtyChanged.HasDelegate)
+                {
+                    await IsDirtyChanged.InvokeAsync(false);
+                }
+            }
+            StateHasChanged();
         }
     }
 
@@ -290,6 +534,26 @@
         if (OnFinish.HasDelegate)
         {
             await OnFinish.InvokeAsync();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_autoSaveCts != null)
+        {
+            _autoSaveCts.Cancel();
+            _autoSaveCts.Dispose();
+            _autoSaveCts = null;
+        }
+
+        if (_autoSaveLoopTask != null)
+        {
+            try
+            {
+                await _autoSaveLoopTask;
+            }
+            catch (OperationCanceledException) { }
+            catch { }
         }
     }
 }

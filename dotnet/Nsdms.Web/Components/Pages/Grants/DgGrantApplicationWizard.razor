@@ -10,6 +10,7 @@
 @using MudBlazor
 @inject IGrantService GrantService
 @inject IOrganisationService OrgService
+@inject IWizardDraftService DraftService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @rendermode InteractiveServer
@@ -63,6 +64,11 @@ else
                  ActiveStepIndexChanged="OnStepChanged"
                  FinishButtonText="Submit DG application"
                  IsBusy="@_isProcessing"
+                 HasDraftToResume="@_hasDraftToResume"
+                 DraftStepIndex="@_draftStepIndex"
+                 DraftSavedTimeAgo="@_draftSavedTimeAgo"
+                 OnResumeDraft="ResumeDraftAsync"
+                 OnDiscardDraft="DiscardDraftAsync"
                  OnCancel="GoBack"
                  OnSaveDraft="SaveDraftAsync"
                  OnFinish="SubmitApplicationAsync">
@@ -197,6 +203,32 @@ else
 
     private List<WizardReviewGroup> _reviewGroups = new();
 
+    // Draft Persistence & Resume Lifecycle Engine
+    private bool _hasDraftToResume = false;
+    private int _draftStepIndex = 0;
+    private string? _draftSavedTimeAgo;
+    private string? _activeDraftKey;
+    private WizardDraftSession? _loadedDraft;
+
+    private record DgApplicationDraftModel
+    {
+        public int? FundingWindowId { get; init; }
+        public string GrantTypeCode { get; init; } = "PIVOTAL";
+        public string ProjectTitle { get; init; } = string.Empty;
+        public int OrganisationId { get; init; }
+        public string SdlNumber { get; init; } = string.Empty;
+        public bool IsWspCompliant { get; init; } = true;
+        public bool IsWspExempt { get; init; } = false;
+        public string? WspExemptionReason { get; init; }
+        public decimal RequestedAmount { get; init; } = 350000m;
+        public int LearnerCount { get; init; } = 15;
+        public string ImplementationPlanSummary { get; init; } = string.Empty;
+        public string TaxCompliancePin { get; init; } = string.Empty;
+        public string BbbeeLevel { get; init; } = "Level 2";
+        public bool ConfirmStatutoryCompliance { get; init; } = false;
+        public bool PopiaConsent { get; init; } = false;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -222,6 +254,9 @@ else
             _projectTitle = "Strategic Artisan Development Initiative 2026";
             _implementationPlanSummary = "Cohort recruitment in month 1, accredited theoretical training months 2-4, workplace practical placement months 5-12.";
             _taxCompliancePin = "9823471029";
+
+            // Check for available in-progress draft for the current user
+            await CheckForActiveDraftAsync();
         }
         catch (Exception ex)
         {
@@ -407,14 +442,109 @@ else
         };
     }
 
+    private async Task CheckForActiveDraftAsync()
+    {
+        try
+        {
+            var draft = await DraftService.GetActiveDraftAsync("DgGrantApplication", "CurrentSdf", _organisationId > 0 ? _organisationId : null);
+            if (draft != null && draft.CurrentStepIndex > 0)
+            {
+                _loadedDraft = draft;
+                _activeDraftKey = draft.DraftKey;
+                _draftStepIndex = draft.CurrentStepIndex;
+                var delta = DateTime.UtcNow - (draft.ModifiedAt ?? draft.CreatedAt);
+                _draftSavedTimeAgo = delta.TotalHours >= 1 ? $"{(int)delta.TotalHours}h ago" : $"{(int)delta.TotalMinutes}m ago";
+                _hasDraftToResume = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Non-blocking draft lookup
+            Console.WriteLine($"Draft check skipped: {ex.Message}");
+        }
+    }
+
+    private async Task ResumeDraftAsync()
+    {
+        if (_loadedDraft == null) return;
+
+        var model = DraftService.DeserializeDraftModel<DgApplicationDraftModel>(_loadedDraft);
+        if (model != null)
+        {
+            _fundingWindowId = model.FundingWindowId;
+            _grantTypeCode = model.GrantTypeCode;
+            _projectTitle = model.ProjectTitle;
+            _organisationId = model.OrganisationId;
+            _sdlNumber = model.SdlNumber;
+            _isWspCompliant = model.IsWspCompliant;
+            _isWspExempt = model.IsWspExempt;
+            _wspExemptionReason = model.WspExemptionReason;
+            _requestedAmount = model.RequestedAmount;
+            _learnerCount = model.LearnerCount;
+            _implementationPlanSummary = model.ImplementationPlanSummary;
+            _taxCompliancePin = model.TaxCompliancePin;
+            _bbbeeLevel = model.BbbeeLevel;
+            _confirmStatutoryCompliance = model.ConfirmStatutoryCompliance;
+            _popiaConsent = model.PopiaConsent;
+
+            _activeStep = _loadedDraft.CurrentStepIndex;
+            _hasDraftToResume = false;
+            UpdateReviewGroups();
+            Snackbar.Add($"Resumed application draft from Step {_activeStep + 1}.", Severity.Info);
+        }
+    }
+
+    private async Task DiscardDraftAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+        {
+            await DraftService.DiscardDraftAsync(_activeDraftKey);
+            _hasDraftToResume = false;
+            _activeDraftKey = null;
+            _loadedDraft = null;
+            Snackbar.Add("Draft discarded. You are starting a clean application.", Severity.Normal);
+        }
+    }
+
     private async Task SaveDraftAsync()
     {
         _isProcessing = true;
         try
         {
-            var app = BuildApplicationEntity("Draft");
-            var saved = await GrantService.SaveAsync(app, "CurrentSdf");
-            Snackbar.Add($"Draft application '{saved.ApplicationNumber}' saved successfully.", Severity.Info);
+            var draftModel = new DgApplicationDraftModel
+            {
+                FundingWindowId = _fundingWindowId,
+                GrantTypeCode = _grantTypeCode,
+                ProjectTitle = _projectTitle,
+                OrganisationId = _organisationId,
+                SdlNumber = _sdlNumber,
+                IsWspCompliant = _isWspCompliant,
+                IsWspExempt = _isWspExempt,
+                WspExemptionReason = _wspExemptionReason,
+                RequestedAmount = _requestedAmount,
+                LearnerCount = _learnerCount,
+                ImplementationPlanSummary = _implementationPlanSummary,
+                TaxCompliancePin = _taxCompliancePin,
+                BbbeeLevel = _bbbeeLevel,
+                ConfirmStatutoryCompliance = _confirmStatutoryCompliance,
+                PopiaConsent = _popiaConsent
+            };
+
+            var session = await DraftService.SaveDraftAsync(
+                "DgGrantApplication",
+                "Discretionary Grant (DG) application",
+                "/dg-grants/apply",
+                "CurrentSdf",
+                _organisationId > 0 ? _organisationId : null,
+                _activeStep,
+                5,
+                draftModel,
+                _activeDraftKey
+            );
+
+            _activeDraftKey = session.DraftKey;
+            _hasDraftToResume = false;
+            Snackbar.Add($"Draft saved at Step {_activeStep + 1} ('{session.DraftKey}').", Severity.Info);
         }
         catch (Exception ex)
         {
@@ -435,6 +565,13 @@ else
             var result = await GrantService.CreateApplicationAsync(app, "CurrentSdf");
             _submittedAppId = result.Id;
             _submittedAppNumber = result.ApplicationNumber;
+
+            // Clear submitted draft
+            if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+            {
+                await DraftService.MarkAsSubmittedAsync(_activeDraftKey);
+            }
+
             _isSuccess = true;
             Snackbar.Add($"Discretionary Grant (DG) application '{_submittedAppNumber}' submitted successfully!", Severity.Success);
         }

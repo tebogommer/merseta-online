@@ -378,6 +378,16 @@ public class GrantService : IGrantService
         }
 
         using var db = await _contextFactory.CreateDbContextAsync();
+
+        // Statutory Invariant: Prevent Discretionary Grant submissions if Organisation has missing/unmapped Chamber
+        if (application.OrganisationId > 0)
+        {
+            var org = await db.Organisations.AsNoTracking().FirstOrDefaultAsync(o => o.Id == application.OrganisationId);
+            if (org != null && org.HasMissingChamberMapping)
+            {
+                throw new InvalidOperationException($"Discretionary Grant Application blocked: Organisation '{org.CompanyName}' (#{org.Id}) has an unmapped or missing merSETA Chamber / GP Vendor Class. Please resolve the organisation's Chamber mapping before submitting.");
+            }
+        }
         application.ApplicationDate = DateTime.UtcNow;
         application.CreatedAt = DateTime.UtcNow;
         application.CreatedBy = currentUsername;

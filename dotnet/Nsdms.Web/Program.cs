@@ -28,6 +28,7 @@ builder.Services.AddScoped<PasswordHasher<ApplicationUser>>();
 // Authentication & Authorization Services
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, Nsdms.Web.Services.NsdmsAuthenticationStateProvider>();
+builder.Services.AddScoped<Nsdms.Web.Services.NsdmsAuthenticationStateProvider>(sp => (Nsdms.Web.Services.NsdmsAuthenticationStateProvider)sp.GetRequiredService<AuthenticationStateProvider>());
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
@@ -54,36 +55,56 @@ builder.Services.AddDbContextFactory<NsdmsDbContext>((sp, options) =>
     options.UseSqlServer(conn)
            .AddInterceptors(interceptor);
 });
-builder.Services.AddScoped<NsdmsDbContext>(sp => sp.GetRequiredService<IDbContextFactory<NsdmsDbContext>>().CreateDbContext());
-
 // Multi-Tenancy Provider
 builder.Services.AddScoped<ITenantProvider, DefaultTenantProvider>();
 builder.Services.AddScoped<DefaultTenantProvider>(sp => (DefaultTenantProvider)sp.GetRequiredService<ITenantProvider>());
 
+builder.Services.AddScoped<NsdmsDbContext>(sp => new NsdmsDbContext(
+    sp.GetRequiredService<DbContextOptions<NsdmsDbContext>>(),
+    sp.GetRequiredService<ITenantProvider>()));
+
 // Interface registration
 builder.Services.AddScoped<INsdmsDbContext>(sp => sp.GetRequiredService<NsdmsDbContext>());
-builder.Services.AddSingleton<INsdmsDbContextFactory, NsdmsDbContextFactory>();
+builder.Services.AddScoped<INsdmsDbContextFactory, NsdmsDbContextFactory>();
 
 // Application Services
-builder.Services.AddScoped<IAuditService, AuditService>();
-builder.Services.AddScoped<IPersonService, PersonService>();
-builder.Services.AddScoped<IOrganisationService, OrganisationService>();
-builder.Services.AddScoped<IIdentityService, IdentityService>();
-builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
-builder.Services.AddScoped<ICaslAbilityService, CaslAbilityService>();
-builder.Services.AddScoped<IVisitService, VisitService>();
-builder.Services.AddScoped<ILookupService, LookupService>();
-builder.Services.AddScoped<ITrainingProviderService, TrainingProviderService>();
+builder.Services.AddScoped<AuditService>();
+builder.Services.AddScoped<IAuditService>(sp => sp.GetRequiredService<AuditService>());
+builder.Services.AddScoped<PersonService>();
+builder.Services.AddScoped<IPersonService>(sp => sp.GetRequiredService<PersonService>());
+builder.Services.AddScoped<OrganisationService>();
+builder.Services.AddScoped<IOrganisationService>(sp => sp.GetRequiredService<OrganisationService>());
+builder.Services.AddScoped<OrganisationContextService>();
+builder.Services.AddScoped<IOrganisationContextService>(sp => sp.GetRequiredService<OrganisationContextService>());
+builder.Services.AddScoped<IdentityService>();
+builder.Services.AddScoped<IIdentityService>(sp => sp.GetRequiredService<IdentityService>());
+builder.Services.AddScoped<RolePermissionService>();
+builder.Services.AddScoped<IRolePermissionService>(sp => sp.GetRequiredService<RolePermissionService>());
+builder.Services.AddScoped<CaslAbilityService>();
+builder.Services.AddScoped<ICaslAbilityService>(sp => sp.GetRequiredService<CaslAbilityService>());
+builder.Services.AddScoped<VisitService>();
+builder.Services.AddScoped<IVisitService>(sp => sp.GetRequiredService<VisitService>());
+builder.Services.AddScoped<LookupService>();
+builder.Services.AddScoped<ILookupService>(sp => sp.GetRequiredService<LookupService>());
+builder.Services.AddScoped<TrainingProviderService>();
+builder.Services.AddScoped<ITrainingProviderService>(sp => sp.GetRequiredService<TrainingProviderService>());
 
 // Phase 7: SDP Campus Infrastructure & Assessor Linking
-builder.Services.AddScoped<ISdpCampusService, SdpCampusService>();
-builder.Services.AddScoped<IWspService, WspService>();
-builder.Services.AddScoped<IGrantService, GrantService>();
-builder.Services.AddScoped<ILevyService, LevyService>();
-builder.Services.AddScoped<IEtqaService, EtqaService>();
+builder.Services.AddScoped<SdpCampusService>();
+builder.Services.AddScoped<ISdpCampusService>(sp => sp.GetRequiredService<SdpCampusService>());
+builder.Services.AddScoped<WspService>();
+builder.Services.AddScoped<IWspService>(sp => sp.GetRequiredService<WspService>());
+builder.Services.AddScoped<GrantService>();
+builder.Services.AddScoped<IGrantService>(sp => sp.GetRequiredService<GrantService>());
+builder.Services.AddScoped<LevyService>();
+builder.Services.AddScoped<ILevyService>(sp => sp.GetRequiredService<LevyService>());
+builder.Services.AddScoped<EtqaService>();
+builder.Services.AddScoped<IEtqaService>(sp => sp.GetRequiredService<EtqaService>());
 builder.Services.AddScoped<IMentorRatioPolicyEngine, MentorRatioPolicyEngine>();
-builder.Services.AddScoped<IWorkplaceApprovalService, WorkplaceApprovalService>();
-builder.Services.AddScoped<ILearnerService, LearnerService>();
+builder.Services.AddScoped<WorkplaceApprovalService>();
+builder.Services.AddScoped<IWorkplaceApprovalService>(sp => sp.GetRequiredService<WorkplaceApprovalService>());
+builder.Services.AddScoped<LearnerService>();
+builder.Services.AddScoped<ILearnerService>(sp => sp.GetRequiredService<LearnerService>());
 
 // Workflow Engine & Storage Services
 builder.Services.AddScoped<IWorkflowEngineService, WorkflowEngineService>();
@@ -108,6 +129,9 @@ builder.Services.AddScoped<IAdminCatalogService, AdminCatalogService>();
 // Grid View Preferences Persistence (Clause 11.2.7)
 builder.Services.AddScoped<IGridViewPreferenceService, GridViewPreferenceService>();
 
+// Wizard Draft Persistence & Resume Lifecycle Engine (Option 1)
+builder.Services.AddScoped<IWizardDraftService, Nsdms.Infrastructure.Services.WizardDraftService>();
+
 // Modern Navigation Menu & Role-Based Workspaces (Option C)
 builder.Services.AddScoped<INavigationMenuService, NavigationMenuService>();
 
@@ -120,6 +144,8 @@ builder.Services.AddScoped<IPdfDocumentService, Nsdms.Infrastructure.Services.Qu
 // Decoupled ERP Integration Adapter (Off by default)
 builder.Services.AddScoped<IErpIntegrationService, Nsdms.Infrastructure.Services.ErpIntegrationService>();
 builder.Services.AddScoped<IErpOutboxQueueService, Nsdms.Infrastructure.Services.ErpOutboxQueueService>();
+builder.Services.AddScoped<INonLevyNumberGeneratorService, Nsdms.Infrastructure.Services.NonLevyNumberGeneratorService>();
+builder.Services.AddScoped<IChamberDerivationService, Nsdms.Infrastructure.Services.ChamberDerivationService>();
 
 // Advanced Learner Lifecycle Transitions
 builder.Services.AddScoped<ILearnerLifecycleService, LearnerLifecycleService>();
@@ -150,6 +176,7 @@ builder.Services.AddScoped<IQcdAndCurriculumService, QcdAndCurriculumService>();
 
 // Non-SETA Qualifications & Provider Verification (Area 16)
 builder.Services.AddScoped<INonSetaVerificationService, NonSetaVerificationService>();
+builder.Services.AddScoped<IQualificationEnrolmentGatekeeperService, QualificationEnrolmentGatekeeperService>();
 
 // Advanced SARS Historical Levy Reconciliation (Area 17)
 builder.Services.AddScoped<ISarsLevyReconAuditService, SarsLevyReconAuditService>();
@@ -270,6 +297,19 @@ app.MapGet("/api/documents/remittance/{id:int}/pdf", async (int id, IPdfDocument
     return Results.File(bytes, "application/pdf", $"Mandatory_Rebate_Remittance_{id}.pdf");
 }).RequireAuthorization();
 
+app.MapGet("/api/documents/workplace-approval/{id:int}/letter-pdf", async (int id, IPdfDocumentService pdf) =>
+{
+    var bytes = await pdf.GenerateWorkplaceApprovalLetterPdfAsync(id);
+    return Results.File(bytes, "application/pdf", $"WorkplaceApproval_Outcome_Letter_ETQ_TP_003_{id}.pdf");
+}).RequireAuthorization();
+
+app.MapGet("/api/documents/workplace-approval/{id:int}/report-pdf", async (int id, IPdfDocumentService pdf) =>
+{
+    var bytes = await pdf.GenerateWorkplaceApprovalReportPdfAsync(id);
+    return Results.File(bytes, "application/pdf", $"WorkplaceApproval_Report_ETQ_TP_054_{id}.pdf");
+}).RequireAuthorization();
+
+
 // Statutory Flat-File and Batch Zip Package Download Endpoints
 app.MapGet("/api/statutory/setmis/files/{fileCode}", async (string fileCode, ISetmisExtractService setmis) =>
 {
@@ -384,6 +424,12 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase23LookupIndexes", () => Phase23LookupIndexesMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase24ErpOutboxQueue", () => Phase24ErpOutboxQueueMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase25VerticalPartitioning", () => Phase25VerticalPartitioningMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase26NonLevyAndChamber", () => Phase26NonLevyAndChamberMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase27PhysicalRenaming", () => Phase27PhysicalRenamingMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase28WizardDraftPersistence", () => Phase28WizardDraftPersistenceMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase29LearnerRegistrationAlignment", () => Phase29LearnerRegistrationAlignmentMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase30ArplGovernance", () => Phase30ArplGovernanceSchemaMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase31WorkplaceApproval", () => Phase31WorkplaceApprovalSchemaMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
     RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
     RunMigrator("RolePermissions", () => scope.ServiceProvider.GetRequiredService<IRolePermissionService>().SeedDefaultRolePermissionsAsync().GetAwaiter().GetResult());

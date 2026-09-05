@@ -1,15 +1,22 @@
 @inherits LayoutComponentBase
 @implements IDisposable
+@using Nsdms.Application.Common
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
+@using Nsdms.Web.Components.Shared.Wizard
+@using Nsdms.Web.Services
 @using Nsdms.Web.Themes
 @inject IRealtimeNotificationService NotificationService
 @inject INotificationService PersistentNotificationService
+@inject INavigationMenuService NavService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ITenantProvider TenantProvider
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
 @inject NavigationManager Nav
+@inject IWizardDraftService DraftService
 
 <MudThemeProvider @ref="_mudThemeProvider" Theme="_customTheme" @bind-IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -50,6 +57,18 @@
                 <span class="text-secondary" style="font-size: 0.78rem;">Search &amp; jump...</span>
                 <span class="kbd-shortcut ml-3">Ctrl + K</span>
             </div>
+
+            <!-- In-Progress Statutory Wizard Drafts Launcher with Badge (Option A) -->
+            <MudBadge Content="@_activeDraftsCount" Color="Color.Warning" Overlap="true" Visible="@(_activeDraftsCount > 0)" Class="mr-2">
+                <MudTooltip Text="@(_activeDraftsCount > 0 ? $"{_activeDraftsCount} in-progress draft{(_activeDraftsCount == 1 ? "" : "s")}" : "In-progress application drafts")">
+                    <MudIconButton Icon="@Icons.Material.Filled.HistoryEdu"
+                                   Color="Color.Default"
+                                   Size="Size.Medium"
+                                   OnClick="@(() => _isDraftsDrawerOpen = true)"
+                                   aria-label="In-progress application drafts"
+                                   Title="In-progress application drafts" />
+                </MudTooltip>
+            </MudBadge>
 
             <!-- Real-time Notifications Bell with Badge -->
             <MudBadge Content="@_unreadCount" Color="Color.Error" Overlap="true" Visible="@(_unreadCount > 0)" Class="mr-2">
@@ -139,44 +158,69 @@
                                aria-label="Toggle color theme" />
             </MudTooltip>
 
-            <!-- User Profile Avatar Pill & Menu matching exact screenshot -->
-            <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" AriaLabel="User Profile &amp; Role Context Menu">
-                <ActivatorContent>
-                    <div class="nsdms-user-pill-btn" role="button" tabindex="0" title="User Profile &amp; Role Context">
+            <!-- Dedicated Top-Bar Organisation Context Switcher (Option C) -->
+            <OrganisationContextSwitcher @ref="_orgSwitcherRef"
+                                         CurrentUserEmail="@_currentUserEmail"
+                                         CurrentPersonName="@_currentUserDisplayName"
+                                         IsAdminUser="@_isCurrentUserAdmin"
+                                         OnOrganisationChanged="@HandleOrganisationChanged" />
+
+            <!-- Dedicated Top-Bar Persona Switcher Pill with Person Name (Option B Enhanced) -->
+            <PersonaSwitcher ActivePersona="@_activePersona" 
+                             OnPersonaChanged="@HandlePersonaChanged" 
+                             OnPersonaSelected="@HandlePersonaSelected" />
+
+            <!-- User Profile Avatar Pill & Menu matching active person identity -->
+            <MudMenu AnchorOrigin="Origin.BottomRight" 
+                     TransformOrigin="Origin.TopRight" 
+                     Dense="true" 
+                     AriaLabel="User profile and account session menu" 
+                     Title="User profile and account session">
+                <ActivatorContent Context="avatarCtx">
+                    <MudButton Variant="Variant.Text" 
+                               OnClick="@avatarCtx.ToggleAsync"
+                               Class="nsdms-user-pill-btn" 
+                               Style="text-transform: none !important; min-width: 0 !important; padding: 2px 8px !important;"
+                               aria-label="@($"User profile: {_currentUserDisplayName} ({_currentUserRoleBadge})")" 
+                               title="@($"User profile: {_currentUserDisplayName} ({_currentUserRoleBadge})")">
                         <div class="nsdms-user-avatar">
-                            SA
+                            @_currentUserInitials
                         </div>
                         <div class="d-none d-md-flex flex-column text-left">
-                            <span class="nsdms-user-name">System Administrator</span>
-                            <span class="nsdms-user-role-badge">SUPERADMIN</span>
+                            <span class="nsdms-user-name">@_currentUserDisplayName</span>
+                            <span class="nsdms-user-role-badge">@_currentUserRoleBadge</span>
                         </div>
                         <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" Style="color: var(--mud-palette-text-secondary); font-size: 1rem;" />
-                    </div>
+                    </MudButton>
                 </ActivatorContent>
                 <ChildContent>
-                    <div class="pa-3" style="min-width: 290px;">
+                    <div class="pa-3" style="min-width: 300px;">
                         <div class="d-flex align-center gap-3 mb-2">
                             <div class="nsdms-user-avatar" style="width: 38px; height: 38px; font-size: 0.9rem;">
-                                SA
+                                @_currentUserInitials
                             </div>
                             <div>
-                                <MudText Typo="Typo.subtitle2" Class="fw-bold" Style="color: var(--mud-palette-text-primary);">System Administrator</MudText>
-                                <span class="nsdms-user-role-badge">SUPERADMIN • ALL ACCESS</span>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold" Style="color: var(--mud-palette-text-primary);">@_currentUserDisplayName</MudText>
+                                <span class="nsdms-user-role-badge">@_currentUserRoleBadge</span>
                             </div>
                         </div>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-2">
-                            Signed in as <strong>sysadmin@merseta.org.za</strong>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-1">
+                            Signed in as <strong>@_currentUserEmail</strong>
+                        </MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size: 0.68rem;" Class="d-block mb-2">
+                            @_currentUserSubtitle
                         </MudText>
                         <MudDivider Class="my-2" />
-                        <MudText Typo="Typo.caption" Class="fw-bold text-secondary mb-1 d-block">ACTIVE ROLE PERSONA</MudText>
-                        <PersonaSwitcher ActivePersona="@_activePersona" OnPersonaChanged="@HandlePersonaChanged" />
+                        <MudMenuItem Icon="@Icons.Material.Filled.Dashboard" Href="/">Executive dashboard</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Inbox" Href="/tasks">Universal task inbox</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Handyman" Href="/workplace-approvals">Workplace approvals</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Business" Href="/employers">Organisations &amp; employers</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Security" Href="/admin/audit-logs">Audit trail &amp; change logs</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Filled.MenuBook" Href="/developer/schema">Data dictionary &amp; schema</MudMenuItem>
                         <MudDivider Class="my-2" />
-                        <MudMenuItem Icon="@Icons.Material.Filled.Dashboard" Href="/dashboard">Executive Dashboard</MudMenuItem>
-                        <MudMenuItem Icon="@Icons.Material.Filled.Business" Href="/employers">Organisations &amp; Employers</MudMenuItem>
-                        <MudMenuItem Icon="@Icons.Material.Filled.Inbox" Href="/tasks">Universal Task Inbox</MudMenuItem>
-                        <MudMenuItem Icon="@Icons.Material.Filled.MenuBook" Href="/developer/schema">Data Dictionary &amp; Schema</MudMenuItem>
-                        <MudDivider Class="my-2" />
-                        <MudMenuItem Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error">Sign Out</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" OnClick="@HandleSignOut">
+                            Log out (Reset to Admin)
+                        </MudMenuItem>
                     </div>
                 </ChildContent>
             </MudMenu>
@@ -210,6 +254,11 @@
     <AdminCommandPalette @ref="_commandPaletteRef" 
                          CurrentUsername="@_currentUsername" 
                          CurrentRoles="@_currentUserRoles" />
+
+    <!-- Central In-Progress Wizard Drafts Drawer (Option A) -->
+    <WizardDraftsDrawer @bind-IsOpen="_isDraftsDrawerOpen" 
+                        CurrentUserId="@_currentUsername" 
+                        OnDraftsChanged="RefreshDraftsCountAsync" />
 </div>
 
 @code {
@@ -217,26 +266,86 @@
     private NavMenu? _navMenuRef;
     private AdminCommandPalette? _commandPaletteRef;
     private bool _drawerOpen = true;
+    private bool _isDraftsDrawerOpen = false;
+    private int _activeDraftsCount = 0;
     private bool _isDarkMode = false;
     private string _activePersona = "All Roles (Unified)";
     private MudTheme _customTheme = NsdmsTheme.CreateTheme();
     private List<SystemNotificationDto> _userNotifications = new();
     private int _unreadCount = 0;
-    private string _currentUsername = "Admin";
+    private string _currentUsername = "System Administrator";
+    private string _currentUserDisplayName = "System Administrator";
+    private string _currentUserEmail = "sysadmin@merseta.org.za";
+    private string _currentUserInitials = "SA";
+    private string _currentUserRoleBadge = "SUPERADMIN";
+    private string _currentUserSubtitle = "Enterprise Super Administrator • ICT & Executive Directorate";
     private List<string> _currentUserRoles = new() { "SuperAdmin", "Admin", "FinanceManager", "CLO" };
+    private OrganisationContextSwitcher? _orgSwitcherRef;
+    private bool _isCurrentUserAdmin => _currentUserRoles.Any(r => r is "SuperAdmin" or "Admin" or "Executive" or "CLO" or "Finance" or "Legal" or "Compliance");
 
     public void OpenCommandPalette()
     {
         _commandPaletteRef?.Open();
     }
 
+    private Task HandleOrganisationChanged(AffiliatedOrganisationDto? org)
+    {
+        InvokeAsync(StateHasChanged);
+        return Task.CompletedTask;
+    }
+
     private async Task HandlePersonaChanged(string newPersona)
     {
+        var profile = NavService.GetPersonaProfile(newPersona);
+        if (profile != null)
+        {
+            await HandlePersonaSelected(profile);
+            return;
+        }
+
         _activePersona = newPersona;
         if (_navMenuRef != null)
         {
             await _navMenuRef.SetActivePersonaAsync(newPersona);
         }
+        StateHasChanged();
+    }
+
+    private async Task HandlePersonaSelected(PersonaProfileDto profile)
+    {
+        _activePersona = profile.PersonaTitle;
+        _currentUsername = profile.PersonName;
+        _currentUserDisplayName = profile.PersonName;
+        _currentUserEmail = profile.Email;
+        _currentUserInitials = profile.Initials;
+        _currentUserRoleBadge = profile.RoleBadge;
+        _currentUserSubtitle = $"{profile.StatutoryRole} • {profile.OrganisationName}";
+        _currentUserRoles = profile.Roles;
+
+        if (AuthStateProvider is NsdmsAuthenticationStateProvider authProvider)
+        {
+            authProvider.SetUser(profile.Email, profile.PersonName, profile.Roles);
+        }
+
+        if (_navMenuRef != null)
+        {
+            await _navMenuRef.SetActivePersonaAsync(profile.PersonaTitle);
+        }
+
+        var isInternalAdmin = profile.Roles.Any(r => r is "SuperAdmin" or "Admin" or "Executive" or "CLO" or "Finance" or "Legal" or "Compliance");
+        if (_orgSwitcherRef != null)
+        {
+            await _orgSwitcherRef.ReloadAffiliationsAsync(profile.Email, profile.PersonName, isInternalAdmin);
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", "nsdms_active_persona", profile.PersonaTitle);
+        }
+        catch { }
+
+        await RefreshNotificationsAsync();
+        await RefreshDraftsCountAsync();
         StateHasChanged();
     }
 
@@ -246,9 +355,27 @@
         NotificationService.WorkflowTransitionReceived += HandleWorkflowTransition;
         NotificationService.UserNotificationReceived += HandleUserNotification;
         NotificationService.SlaWarningReceived += HandleSlaWarning;
+        TenantProvider.OnTenantChanged += HandleTenantContextChanged;
 
         await RefreshNotificationsAsync();
+        await RefreshDraftsCountAsync();
     }
+
+    private async Task RefreshDraftsCountAsync()
+    {
+        try
+        {
+            var drafts = await DraftService.GetActiveDraftsForUserAsync(_currentUsername);
+            _activeDraftsCount = drafts.Count;
+            StateHasChanged();
+        }
+        catch
+        {
+            // Non-blocking draft count lookup
+        }
+    }
+
+    private void HandleTenantContextChanged() => InvokeAsync(StateHasChanged);
 
     private async Task RefreshNotificationsAsync()
     {
@@ -370,6 +497,7 @@
         NotificationService.WorkflowTransitionReceived -= HandleWorkflowTransition;
         NotificationService.UserNotificationReceived -= HandleUserNotification;
         NotificationService.SlaWarningReceived -= HandleSlaWarning;
+        TenantProvider.OnTenantChanged -= HandleTenantContextChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -380,6 +508,17 @@
             {
                 _isDarkMode = await JS.InvokeAsync<bool>("nsdmsTheme.isDark");
                 await ApplyThemeDomState(_isDarkMode);
+
+                var savedPersona = await JS.InvokeAsync<string?>("localStorage.getItem", "nsdms_active_persona");
+                if (!string.IsNullOrWhiteSpace(savedPersona) && !savedPersona.Equals("All Roles (Unified)", StringComparison.OrdinalIgnoreCase))
+                {
+                    var p = NavService.GetPersonaProfile(savedPersona);
+                    if (p != null)
+                    {
+                        await HandlePersonaSelected(p);
+                    }
+                }
+
                 StateHasChanged();
             }
             catch
@@ -442,4 +581,41 @@
 
         return "merSETA National Skills Development Management System";
     }
+
+    private async Task HandleSignOut()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.removeItem", "nsdms_active_persona");
+        }
+        catch { }
+
+        TenantProvider.ResetToGlobalAdmin();
+        if (_orgSwitcherRef != null)
+        {
+            await _orgSwitcherRef.ReloadAffiliationsAsync("sysadmin@merseta.org.za", "System Administrator", isAdmin: true);
+        }
+
+        var adminProfile = NavService.GetPersonaProfile("UnifiedAdmin");
+        if (adminProfile != null)
+        {
+            await HandlePersonaSelected(adminProfile);
+        }
+        else
+        {
+            _activePersona = "All Roles (Unified)";
+            _currentUserDisplayName = "System Administrator";
+            _currentUserEmail = "sysadmin@merseta.org.za";
+            _currentUserInitials = "SA";
+            _currentUserRoleBadge = "SUPERADMIN";
+            _currentUserRoles = new() { "SuperAdmin", "Admin" };
+            if (AuthStateProvider is NsdmsAuthenticationStateProvider authProvider)
+            {
+                authProvider.SetUser("sysadmin@merseta.org.za", "System Administrator", _currentUserRoles);
+            }
+        }
+        Snackbar.Add("Active session reset to System Administrator.", Severity.Info);
+        Nav.NavigateTo("/");
+    }
 }
+

@@ -11,6 +11,7 @@
 @inject IPersonService PersonService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IWizardDraftService DraftService
 @rendermode InteractiveServer
 
 <div class="mb-4">
@@ -62,6 +63,11 @@ else
                  ActiveStepIndexChanged="OnStepChanged"
                  FinishButtonText="Submit approval application"
                  IsBusy="@_isProcessing"
+                 HasDraftToResume="@_hasDraftToResume"
+                 DraftStepIndex="@_draftStepIndex"
+                 DraftSavedTimeAgo="@_draftSavedTimeAgo"
+                 OnResumeDraft="ResumeDraftAsync"
+                 OnDiscardDraft="DiscardDraftAsync"
                  OnCancel="GoBack"
                  OnSaveDraft="SaveDraftAsync"
                  OnFinish="SubmitApprovalAsync">
@@ -88,9 +94,11 @@ else
         <!-- STEP 2: Trade Scope & Capacity -->
         <WizardStep Label="Trade scope"
                     Heading="Select artisan trade &amp; requested learner capacity"
-                    Description="Designate QCTO/NAMB trade code and requested apprentice concurrent intake cap"
+                    Description="Designate QCTO/NAMB trade code, learning programme stream, and requested apprentice intake cap"
                     ValidateAsync="ValidateStep2Async">
             <WorkplaceApprovalFields Section="TradeScope"
+                                     LearningProgramTypeCode="@_learningProgramTypeCode"
+                                     LearningProgramTypeCodeChanged="@((val) => { _learningProgramTypeCode = val ?? "Apprenticeship"; UpdateReviewGroups(); })"
                                      TradeCode="@_tradeCode"
                                      TradeCodeChanged="@((val) => { _tradeCode = val; UpdateReviewGroups(); })"
                                      QualificationTitle="@_qualificationTitle"
@@ -133,20 +141,99 @@ else
                                      MonitoringConsentChanged="@((val) => { _monitoringConsent = val; UpdateReviewGroups(); })" />
         </WizardStep>
 
-        <!-- STEP 5: Review & Inspection Dispatch -->
+        <!-- STEP 5: Statutory Evidence Documents (Section 9) -->
+        <WizardStep Label="Evidence documents"
+                    Heading="Upload statutory compliance &amp; curriculum evidence"
+                    Description="Attach mandatory structured training programme, tooling verification checklists, and artisan mentor documentation per merSETA regulations"
+                    ValidateAsync="ValidateStep5Async">
+            <MudGrid Spacing="3" Class="mb-4">
+                <MudItem xs="12">
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">
+                        In accordance with the Workplace Approval Application Use Case (Section 4.2.5 and Section 9), all required compliance documents must be attached before this application can be submitted for verification.
+                    </MudAlert>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudPaper Outlined="true" Class="pa-4 rounded-lg">
+                        <div class="d-flex align-center justify-space-between">
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Structured Training Programme</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Curriculum timetable aligned with trade training regulations</MudText>
+                            </div>
+                            <MudCheckBox T="bool" @bind-Value="_hasStructuredProgramme" Color="Color.Primary" Label="Attached" />
+                        </div>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudPaper Outlined="true" Class="pa-4 rounded-lg">
+                        <div class="d-flex align-center justify-space-between">
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Prescribed Tools &amp; Equipment Checklist</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Inventory or agreement with partner approved workplace</MudText>
+                            </div>
+                            <MudCheckBox T="bool" @bind-Value="_hasToolingChecklistUploaded" Color="Color.Primary" Label="Attached" />
+                        </div>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudPaper Outlined="true" Class="pa-4 rounded-lg">
+                        <div class="d-flex align-center justify-space-between">
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Artisan Mentor Quota Statement</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Learner-to-artisan ratio compliance per SAQA &amp; NAMB</MudText>
+                            </div>
+                            <MudCheckBox T="bool" @bind-Value="_hasRatioStatementUploaded" Color="Color.Primary" Label="Attached" />
+                        </div>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudPaper Outlined="true" Class="pa-4 rounded-lg">
+                        <div class="d-flex align-center justify-space-between">
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Mentor Contract &amp; Trade Certificate</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Employment agreement, CV, and Red Seal trade certificate</MudText>
+                            </div>
+                            <MudCheckBox T="bool" @bind-Value="_hasMentorContractsUploaded" Color="Color.Primary" Label="Attached" />
+                        </div>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudPaper Outlined="true" Class="pa-4 rounded-lg bg-surface">
+                        <MudCheckBox T="bool" @bind-Value="_isNonMerSetaCompany" Color="Color.Info" Label="Host employer is registered with another SETA under a non-merSETA SDL" />
+                        @if (_isNonMerSetaCompany)
+                        {
+                            <div class="mt-2">
+                                <MudTextField @bind-Value="_homeSetaAgreementRef" Label="Home SETA Cross-Border Training Agreement / MOU Reference" Variant="Variant.Outlined" Required="true" Placeholder="e.g. MOU-CHIETA-MERSETA-2026-001" />
+                            </div>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </WizardStep>
+
+        <!-- STEP 6: Review & Statutory Sign-off -->
         <WizardReviewStep ReviewGroups="@_reviewGroups"
                           OnEditStep="OnEditStepRequested">
             <LifecycleContent>
-                <div class="d-flex align-center gap-3">
-                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Color="Color.Primary" Size="Size.Medium" />
-                    <div>
-                        <span class="d-block text-body2 font-weight-bold text-primary">
-                            NAMB mentor ratio &amp; CLO site visit audit trail
-                        </span>
-                        <span class="d-block text-caption text-secondary">
-                            Enforces statutory 1:4 mentor-to-apprentice capacity cap and captures mandatory contact person linkage.
-                        </span>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex align-center gap-3">
+                        <MudIcon Icon="@Icons.Material.Filled.FactCheck" Color="Color.Primary" Size="Size.Medium" />
+                        <div>
+                            <span class="d-block text-body2 font-weight-bold text-primary">
+                                NAMB mentor ratio &amp; 20-working-day inspection SLA
+                            </span>
+                            <span class="d-block text-caption text-secondary">
+                                Enforces statutory 1:4 mentor-to-apprentice capacity cap and captures mandatory contact person linkage.
+                            </span>
+                        </div>
                     </div>
+                    <MudDivider Class="my-2" />
+                    <MudPaper Outlined="true" Class="pa-3 bg-surface rounded">
+                        <MudCheckBox T="bool"
+                                     @bind-Value="_applicantSignoffAcknowledged"
+                                     Color="Color.Primary"
+                                     Class="fw-bold"
+                                     Label="Applicant Statutory Declaration: I solemnly declare that the captured workplace premises, tooling checklist declarations, and artisan mentor credentials are valid, complete, and compliant with merSETA regulations (Section 4.2.6)." />
+                    </MudPaper>
                 </div>
             </LifecycleContent>
         </WizardReviewStep>
@@ -173,6 +260,7 @@ else
     private string _physicalAddress = string.Empty;
 
     // Step 2
+    private string _learningProgramTypeCode = "Apprenticeship";
     private string _tradeCode = "FITT";
     private string _qualificationTitle = "Occupational Certificate: Fitter and Turner (NQF 4)";
     private int _requestedCapacity = 4;
@@ -190,6 +278,17 @@ else
     private bool _toolingCertified = false;
     private bool _monitoringConsent = false;
 
+    // Step 5: Statutory Documentation
+    private bool _hasStructuredProgramme = true;
+    private bool _hasToolingChecklistUploaded = true;
+    private bool _hasRatioStatementUploaded = true;
+    private bool _hasMentorContractsUploaded = true;
+    private bool _isNonMerSetaCompany = false;
+    private string _homeSetaAgreementRef = string.Empty;
+
+    // Step 6: Sign-off
+    private bool _applicantSignoffAcknowledged = false;
+
     private List<BreadcrumbItem> _breadcrumbs = new()
     {
         new BreadcrumbItem("Home", href: "/"),
@@ -199,6 +298,40 @@ else
     };
 
     private List<WizardReviewGroup> _reviewGroups = new();
+
+    // Draft Persistence & Resume Lifecycle Engine
+    private bool _hasDraftToResume = false;
+    private int _draftStepIndex = 0;
+    private string? _draftSavedTimeAgo;
+    private string? _activeDraftKey;
+    private WizardDraftSession? _loadedDraft;
+
+    private record WorkplaceApprovalDraftModel
+    {
+        public int OrganisationId { get; init; }
+        public int? SiteId { get; init; }
+        public int? ContactPersonId { get; init; }
+        public string PhysicalAddress { get; init; } = string.Empty;
+        public string LearningProgramTypeCode { get; init; } = "Apprenticeship";
+        public string TradeCode { get; init; } = "FITT";
+        public string QualificationTitle { get; init; } = string.Empty;
+        public int RequestedCapacity { get; init; } = 4;
+        public bool IsRatioEnforced { get; init; } = true;
+        public string MentorFullName { get; init; } = string.Empty;
+        public string TradeCertificateNumber { get; init; } = string.Empty;
+        public int MentorExperienceYears { get; init; } = 8;
+        public int MentorCapacity { get; init; } = 4;
+        public string OhsCertNumber { get; init; } = string.Empty;
+        public DateTime? OhsExpiryDate { get; init; }
+        public bool ToolingCertified { get; init; }
+        public bool MonitoringConsent { get; init; }
+        public bool HasStructuredProgramme { get; init; } = true;
+        public bool HasToolingChecklistUploaded { get; init; } = true;
+        public bool HasRatioStatementUploaded { get; init; } = true;
+        public bool HasMentorContractsUploaded { get; init; } = true;
+        public bool IsNonMerSetaCompany { get; init; }
+        public string HomeSetaAgreementRef { get; init; } = string.Empty;
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -211,12 +344,24 @@ else
             {
                 _organisationId = _organisations.First().Id;
                 _physicalAddress = _organisations.First().PhysicalAddress ?? "14 Steelworks Road, Germiston, Gauteng";
+                _sites = await OrgService.GetSitesAsync(_organisationId);
+                if (_sites.Any())
+                {
+                    _siteId = _sites.First().Id;
+                    if (!string.IsNullOrWhiteSpace(_sites.First().PhysicalAddress))
+                    {
+                        _physicalAddress = _sites.First().PhysicalAddress!;
+                    }
+                }
             }
 
             if (_contacts.Any())
             {
                 _contactPersonId = _contacts.First().Id;
             }
+
+            // Check for available in-progress draft for the current user
+            await CheckForActiveDraftAsync();
         }
         catch (Exception ex)
         {
@@ -229,13 +374,19 @@ else
         }
     }
 
-    private void OnOrganisationChanged(int id)
+    private async Task OnOrganisationChanged(int id)
     {
         _organisationId = id;
         var org = _organisations.FirstOrDefault(o => o.Id == id);
         if (org != null && !string.IsNullOrWhiteSpace(org.PhysicalAddress))
         {
             _physicalAddress = org.PhysicalAddress;
+        }
+        _sites = await OrgService.GetSitesAsync(id);
+        _siteId = _sites.FirstOrDefault()?.Id;
+        if (_siteId.HasValue && !string.IsNullOrWhiteSpace(_sites.First().PhysicalAddress))
+        {
+            _physicalAddress = _sites.First().PhysicalAddress!;
         }
         UpdateReviewGroups();
     }
@@ -337,7 +488,42 @@ else
 
         if (!_monitoringConsent)
         {
-            Snackbar.Add("Confirmation of willingness to accommodate CLO monitoring visits is required.", Severity.Warning);
+            Snackbar.Add("Confirmation of willingness to accommodate monitoring visits is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep5Async()
+    {
+        if (!_hasStructuredProgramme)
+        {
+            Snackbar.Add("Structured training curriculum with timeframes must be attached (Section 9).", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (!_hasToolingChecklistUploaded)
+        {
+            Snackbar.Add("Prescribed tools and equipment checklist must be attached (Section 9).", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (!_hasRatioStatementUploaded)
+        {
+            Snackbar.Add("Artisan mentor quota statement must be attached (Section 9).", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (!_hasMentorContractsUploaded)
+        {
+            Snackbar.Add("Mentor contract and trade credentials must be attached (Section 9).", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (_isNonMerSetaCompany && string.IsNullOrWhiteSpace(_homeSetaAgreementRef))
+        {
+            Snackbar.Add("Home SETA agreement reference is required for non-merSETA employers.", Severity.Warning);
             return Task.FromResult(false);
         }
 
@@ -348,6 +534,7 @@ else
     {
         var org = _organisations.FirstOrDefault(o => o.Id == _organisationId);
         var contact = _contacts.FirstOrDefault(c => c.Id == _contactPersonId);
+        var site = _sites.FirstOrDefault(s => s.Id == _siteId);
 
         _reviewGroups = new List<WizardReviewGroup>
         {
@@ -360,17 +547,19 @@ else
                 {
                     new("Employer", org?.CompanyName ?? "Not selected"),
                     new("SDL number", org?.SdlNumber ?? "—", isMonospace: true),
+                    new("Site / plant", site?.SiteName ?? "Main Facility"),
                     new("Contact person", contact != null ? $"{contact.FirstName} {contact.LastName}" : "Not selected"),
                     new("Physical address", _physicalAddress)
                 }
             },
             new()
             {
-                Title = "Trade scope & requested capacity",
+                Title = "Programme stream & trade scope",
                 Icon = Icons.Material.Filled.Build,
                 TargetStepIndex = 1,
                 Items = new()
                 {
+                    new("Programme stream", _learningProgramTypeCode),
                     new("Trade code", _tradeCode, isMonospace: true),
                     new("Qualification", _qualificationTitle),
                     new("Requested capacity", $"{_requestedCapacity} apprentices"),
@@ -402,8 +591,94 @@ else
                     new("Tooling checklist", _toolingCertified ? "Certified compliant" : "Pending"),
                     new("Monitoring consent", _monitoringConsent ? "Granted" : "Pending")
                 }
+            },
+            new()
+            {
+                Title = "Statutory compliance evidence",
+                Icon = Icons.Material.Filled.FolderZip,
+                TargetStepIndex = 4,
+                Items = new()
+                {
+                    new("Curriculum programme", _hasStructuredProgramme ? "Attached" : "Missing"),
+                    new("Tools & equipment", _hasToolingChecklistUploaded ? "Attached" : "Missing"),
+                    new("Mentor ratio statement", _hasRatioStatementUploaded ? "Attached" : "Missing"),
+                    new("Mentor credentials", _hasMentorContractsUploaded ? "Attached" : "Missing"),
+                    new("Non-merSETA employer", _isNonMerSetaCompany ? $"Yes ({_homeSetaAgreementRef})" : "No (Standard merSETA)")
+                }
             }
         };
+    }
+
+    private async Task CheckForActiveDraftAsync()
+    {
+        try
+        {
+            var draft = await DraftService.GetActiveDraftAsync("WorkplaceApproval", "CurrentEmployer", _organisationId > 0 ? _organisationId : null);
+            if (draft != null && draft.CurrentStepIndex > 0)
+            {
+                _loadedDraft = draft;
+                _activeDraftKey = draft.DraftKey;
+                _draftStepIndex = draft.CurrentStepIndex;
+                var delta = DateTime.UtcNow - (draft.ModifiedAt ?? draft.CreatedAt);
+                _draftSavedTimeAgo = delta.TotalHours >= 1 ? $"{(int)delta.TotalHours}h ago" : $"{(int)delta.TotalMinutes}m ago";
+                _hasDraftToResume = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Non-blocking draft lookup
+            Console.WriteLine($"Draft check skipped: {ex.Message}");
+        }
+    }
+
+    private async Task ResumeDraftAsync()
+    {
+        if (_loadedDraft == null) return;
+
+        var model = DraftService.DeserializeDraftModel<WorkplaceApprovalDraftModel>(_loadedDraft);
+        if (model != null)
+        {
+            _organisationId = model.OrganisationId;
+            _siteId = model.SiteId;
+            _contactPersonId = model.ContactPersonId;
+            _physicalAddress = model.PhysicalAddress;
+            _learningProgramTypeCode = model.LearningProgramTypeCode ?? "Apprenticeship";
+            _tradeCode = model.TradeCode;
+            _qualificationTitle = model.QualificationTitle;
+            _requestedCapacity = model.RequestedCapacity;
+            _isRatioEnforced = model.IsRatioEnforced;
+            _mentorFullName = model.MentorFullName;
+            _tradeCertificateNumber = model.TradeCertificateNumber;
+            _mentorExperienceYears = model.MentorExperienceYears;
+            _mentorCapacity = model.MentorCapacity;
+            _ohsCertNumber = model.OhsCertNumber;
+            _ohsExpiryDate = model.OhsExpiryDate;
+            _toolingCertified = model.ToolingCertified;
+            _monitoringConsent = model.MonitoringConsent;
+            _hasStructuredProgramme = model.HasStructuredProgramme;
+            _hasToolingChecklistUploaded = model.HasToolingChecklistUploaded;
+            _hasRatioStatementUploaded = model.HasRatioStatementUploaded;
+            _hasMentorContractsUploaded = model.HasMentorContractsUploaded;
+            _isNonMerSetaCompany = model.IsNonMerSetaCompany;
+            _homeSetaAgreementRef = model.HomeSetaAgreementRef ?? string.Empty;
+
+            _activeStep = _loadedDraft.CurrentStepIndex;
+            _hasDraftToResume = false;
+            UpdateReviewGroups();
+            Snackbar.Add($"Resumed workplace approval draft from Step {_activeStep + 1}.", Severity.Info);
+        }
+    }
+
+    private async Task DiscardDraftAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+        {
+            await DraftService.DiscardDraftAsync(_activeDraftKey);
+            _hasDraftToResume = false;
+            _activeDraftKey = null;
+            _loadedDraft = null;
+            Snackbar.Add("Draft discarded. You are starting a clean workplace approval application.", Severity.Normal);
+        }
     }
 
     private async Task SaveDraftAsync()
@@ -411,9 +686,48 @@ else
         _isProcessing = true;
         try
         {
-            var approval = BuildApprovalEntity("Draft");
-            var saved = await WpaService.SaveAsync(approval, "CurrentEmployer");
-            Snackbar.Add($"Workplace approval draft '{saved.ApprovalNumber}' saved successfully.", Severity.Info);
+            var draftModel = new WorkplaceApprovalDraftModel
+            {
+                OrganisationId = _organisationId,
+                SiteId = _siteId,
+                ContactPersonId = _contactPersonId,
+                PhysicalAddress = _physicalAddress,
+                LearningProgramTypeCode = _learningProgramTypeCode,
+                TradeCode = _tradeCode,
+                QualificationTitle = _qualificationTitle,
+                RequestedCapacity = _requestedCapacity,
+                IsRatioEnforced = _isRatioEnforced,
+                MentorFullName = _mentorFullName,
+                TradeCertificateNumber = _tradeCertificateNumber,
+                MentorExperienceYears = _mentorExperienceYears,
+                MentorCapacity = _mentorCapacity,
+                OhsCertNumber = _ohsCertNumber,
+                OhsExpiryDate = _ohsExpiryDate,
+                ToolingCertified = _toolingCertified,
+                MonitoringConsent = _monitoringConsent,
+                HasStructuredProgramme = _hasStructuredProgramme,
+                HasToolingChecklistUploaded = _hasToolingChecklistUploaded,
+                HasRatioStatementUploaded = _hasRatioStatementUploaded,
+                HasMentorContractsUploaded = _hasMentorContractsUploaded,
+                IsNonMerSetaCompany = _isNonMerSetaCompany,
+                HomeSetaAgreementRef = _homeSetaAgreementRef
+            };
+
+            var session = await DraftService.SaveDraftAsync(
+                "WorkplaceApproval",
+                "Workplace approval application",
+                "/workplace-approvals/apply",
+                "CurrentEmployer",
+                _organisationId > 0 ? _organisationId : null,
+                _activeStep,
+                6,
+                draftModel,
+                _activeDraftKey
+            );
+
+            _activeDraftKey = session.DraftKey;
+            _hasDraftToResume = false;
+            Snackbar.Add($"Draft saved at Step {_activeStep + 1} ('{session.DraftKey}').", Severity.Info);
         }
         catch (Exception ex)
         {
@@ -427,10 +741,16 @@ else
 
     private async Task SubmitApprovalAsync()
     {
+        if (!_applicantSignoffAcknowledged)
+        {
+            Snackbar.Add("Please acknowledge the statutory applicant declaration before submitting (Section 4.2.6).", Severity.Warning);
+            return;
+        }
+
         _isProcessing = true;
         try
         {
-            var approval = BuildApprovalEntity("PendingInspection");
+            var approval = BuildApprovalEntity("APPLICATION");
             var result = await WpaService.CreateAsync(approval, "CurrentEmployer");
             _createdApprovalId = result.Id;
             _approvalNumber = result.ApprovalNumber;
@@ -447,8 +767,14 @@ else
                 IsRatioExempt = !_isRatioEnforced
             }, "CurrentEmployer");
 
+            // Clear submitted draft
+            if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+            {
+                await DraftService.MarkAsSubmittedAsync(_activeDraftKey);
+            }
+
             _isSuccess = true;
-            Snackbar.Add($"Workplace approval '{_approvalNumber}' submitted and scheduled for CLO site inspection!", Severity.Success);
+            Snackbar.Add($"Workplace approval '{_approvalNumber}' submitted (Status: APPLICATION) and scheduled for 20-working-day verification!", Severity.Success);
         }
         catch (Exception ex)
         {
@@ -467,12 +793,16 @@ else
             OrganisationId = _organisationId,
             OrganisationSiteId = _siteId,
             ContactPersonId = _contactPersonId,
+            LearningProgramTypeCode = _learningProgramTypeCode,
             TradeCode = _tradeCode,
             QualificationTitle = _qualificationTitle,
-            ApprovalNumber = $"WPA-2026-{_tradeCode}-{DateTime.UtcNow:MMddHHmm}",
+            ApprovalNumber = $"WPA-{DateTime.UtcNow.Year}-{_tradeCode}-{DateTime.UtcNow:MMddHHmm}",
             ApprovalStatusCode = status,
+            InspectionDueDate = WorkplaceApprovalService.AddBusinessDays(DateTime.UtcNow, 20),
             IsRatioEnforced = _isRatioEnforced,
             CustomTradeRatio = _mentorCapacity,
+            IsNonMerSetaCompany = _isNonMerSetaCompany,
+            HomeSetaAgreementRef = _homeSetaAgreementRef,
             Recommendations = $"Applicant certifies {_mentorFullName} ({_tradeCertificateNumber}) with {_requestedCapacity} intake capacity and OHS clearance {_ohsCertNumber}."
         };
     }

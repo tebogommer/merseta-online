@@ -60,6 +60,9 @@
                 <MudMenuItem Icon="@Icons.Material.Filled.EditNote" OnClick="@(() => OpenLifecycleDialog("ChangeRequest"))">
                     Submit Contract Amendment
                 </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Close" OnClick="OpenWithdrawApplicationDialog">
+                    Withdraw Learner Application
+                </MudMenuItem>
                 <MudDivider Class="my-1" />
                 <MudMenuItem Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="DownloadAgreementPdf">
                     Download Tripartite Agreement (PDF)
@@ -239,6 +242,41 @@ else
                             </MudGrid>
                         </MudCardContent>
                     </MudCard>
+
+                    @if ((_person.DateOfBirth.HasValue && (DateTime.Today.Year - _person.DateOfBirth.Value.Year < 18)) || (_person.Guardians != null && _person.Guardians.Any()))
+                    {
+                        <MudCard Elevation="2" Class="mt-4">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Warning" Variant="Variant.Filled">
+                                        <MudIcon Icon="@Icons.Material.Filled.SupervisorAccount" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">Parent / Legal Guardian (Minor Protection)</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Statutory representation per Skills Development Act</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                @if (_person.Guardians != null && _person.Guardians.Any())
+                                {
+                                    @foreach (var g in _person.Guardians)
+                                    {
+                                        <MudGrid Class="mb-2">
+                                            <MudItem xs="12" md="6"><MudTextField Value="@g.GuardianFullName" Label="Guardian Full Name" ReadOnly="true" Variant="Variant.Outlined" /></MudItem>
+                                            <MudItem xs="12" md="6"><MudTextField Value="@g.GuardianIdNumber" Label="Guardian ID / Passport" ReadOnly="true" Variant="Variant.Outlined" Class="font-mono" /></MudItem>
+                                            <MudItem xs="12" md="6"><MudTextField Value="@g.ContactNumber" Label="Contact Telephone" ReadOnly="true" Variant="Variant.Outlined" /></MudItem>
+                                            <MudItem xs="12" md="6"><MudTextField Value="@g.RelationshipTypeId" Label="Relationship" ReadOnly="true" Variant="Variant.Outlined" /></MudItem>
+                                        </MudGrid>
+                                    }
+                                }
+                                else
+                                {
+                                    <MudAlert Severity="Severity.Warning" Dense="true">Applicant is a minor (&lt; 18 years old). Parent / legal guardian registration is statutory mandatory.</MudAlert>
+                                }
+                            </MudCardContent>
+                        </MudCard>
+                    }
                 </MudItem>
 
                 <!-- Current Active Agreement Summary Sidebar -->
@@ -1189,6 +1227,29 @@ else
         catch (Exception ex)
         {
             Snackbar.Add($"Error recording outcome: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OpenWithdrawApplicationDialog()
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Withdraw learner application",
+            "Are you sure you want to withdraw this learner registration application? An audited change log entry will be recorded.",
+            yesText: "Confirm withdrawal",
+            cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            try
+            {
+                await LearnerService.WithdrawLearnerApplicationAsync(Id, "ApplicantRequest", "Withdrawn by applicant/SDF request", "SdfUser");
+                Snackbar.Add($"Learner agreement {_learner.LearnerContractNumber} withdrawn successfully.", Severity.Warning);
+                await LoadLearnerData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Could not withdraw application: {ex.Message}", Severity.Error);
+            }
         }
     }
 

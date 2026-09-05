@@ -12,6 +12,7 @@
 @inject IOrganisationService OrgService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IWizardDraftService DraftService
 @rendermode InteractiveServer
 
 <div class="mb-4">
@@ -58,6 +59,11 @@ else
                  ActiveStepIndexChanged="OnStepChanged"
                  FinishButtonText="Submit transfer application"
                  IsBusy="@_isProcessing"
+                 HasDraftToResume="@_hasDraftToResume"
+                 DraftStepIndex="@_draftStepIndex"
+                 DraftSavedTimeAgo="@_draftSavedTimeAgo"
+                 OnResumeDraft="ResumeDraftAsync"
+                 OnDiscardDraft="DiscardDraftAsync"
                  OnCancel="GoBack"
                  OnSaveDraft="SaveDraftAsync"
                  OnFinish="SubmitTransferAsync">
@@ -120,20 +126,22 @@ else
         </WizardStep>
 
         <!-- STEP 4: Review & Section 32 Declaration -->
-        <WizardReviewStep Heading="Inter-SETA transfer review &amp; Section 32 declaration"
-                          Description="Inspect employer profile, counterpart SETA details, SIC code alignment, and execute statutory declaration"
-                          ReviewGroups="@_reviewGroups"
-                          OnEditStep="@((idx) => _activeStep = idx)">
-            <ChildContent>
-                <InterSetaTransferFields Section="Declaration"
-                                         SignatoryFullName="@_signatoryFullName"
-                                         SignatoryFullNameChanged="@((val) => _signatoryFullName = val)"
-                                         SignatoryDesignation="@_signatoryDesignation"
-                                         SignatoryDesignationChanged="@((val) => _signatoryDesignation = val)"
-                                         IsDeclarationAccepted="@_isDeclarationAccepted"
-                                         IsDeclarationAcceptedChanged="@((val) => _isDeclarationAccepted = val)" />
-            </ChildContent>
-        </WizardReviewStep>
+        <WizardStep Label="Review &amp; Declaration"
+                    Heading="Inter-SETA transfer review &amp; Section 32 declaration"
+                    Description="Inspect employer profile, counterpart SETA details, SIC code alignment, and execute statutory declaration">
+            <WizardReviewStep ReviewGroups="@_reviewGroups"
+                              OnEditStep="@((idx) => _activeStep = idx)">
+                <ChildContent>
+                    <InterSetaTransferFields Section="Declaration"
+                                             SignatoryFullName="@_signatoryFullName"
+                                             SignatoryFullNameChanged="@((val) => _signatoryFullName = val)"
+                                             SignatoryDesignation="@_signatoryDesignation"
+                                             SignatoryDesignationChanged="@((val) => _signatoryDesignation = val)"
+                                             IsDeclarationAccepted="@_isDeclarationAccepted"
+                                             IsDeclarationAcceptedChanged="@((val) => _isDeclarationAccepted = val)" />
+                </ChildContent>
+            </WizardReviewStep>
+        </WizardStep>
     </WizardShell>
 }
 
@@ -147,6 +155,36 @@ else
 
     // Data collections
     private List<Organisation> _organisations = new();
+
+    // Draft persistence state
+    private bool _hasDraftToResume = false;
+    private int _draftStepIndex = 0;
+    private string _draftSavedTimeAgo = string.Empty;
+    private string? _activeDraftKey;
+    private WizardDraftSession? _loadedDraft;
+
+    private record InterSetaTransferDraftModel
+    {
+        public int? OrganisationId { get; init; }
+        public string SdlNumber { get; init; } = string.Empty;
+        public string Chamber { get; init; } = "Automotive";
+        public int EmployeeCount { get; init; } = 250;
+        public string TransferType { get; init; } = "Outgoing";
+        public string OtherSetaCode { get; init; } = "CHIETA";
+        public string TransferReason { get; init; } = "Predominant Business Activity Realignment";
+        public DateTime? EffectiveDate { get; init; }
+        public string Motivation { get; init; } = string.Empty;
+        public string CurrentSicCode { get; init; } = "38100";
+        public string TargetSicCode { get; init; } = "33400";
+        public decimal TransferAmount { get; init; } = 185000m;
+        public string Emp103DocRef { get; init; } = string.Empty;
+        public string CipcDocRef { get; init; } = string.Empty;
+        public string LabourDocRef { get; init; } = string.Empty;
+        public string BoardResolutionDocRef { get; init; } = string.Empty;
+        public string SignatoryFullName { get; init; } = string.Empty;
+        public string SignatoryDesignation { get; init; } = "Chief Executive Officer";
+        public bool IsDeclarationAccepted { get; init; } = true;
+    }
 
     // Step 1: Profile
     private int? _organisationId;
@@ -199,6 +237,7 @@ else
                 _sdlNumber = o.SdlNumber;
             }
 
+            await CheckForActiveDraftAsync();
             UpdateReviewGroups();
         }
         catch (Exception ex)
@@ -346,13 +385,121 @@ else
         return Task.FromResult(true);
     }
 
-    private async Task SaveDraftAsync()
+    private async Task CheckForActiveDraftAsync()
     {
         try
         {
-            _isProcessing = true;
-            await Task.Delay(300);
-            Snackbar.Add("Section 32 transfer draft saved.", Severity.Info);
+            var draft = await DraftService.GetActiveDraftAsync("InterSetaTransfer", "SdfUser", _organisationId);
+            if (draft != null && draft.CurrentStepIndex > 0)
+            {
+                _loadedDraft = draft;
+                _activeDraftKey = draft.DraftKey;
+                _draftStepIndex = draft.CurrentStepIndex;
+                var delta = DateTime.UtcNow - (draft.ModifiedAt ?? draft.CreatedAt);
+                _draftSavedTimeAgo = delta.TotalHours >= 1 ? $"{(int)delta.TotalHours}h ago" : $"{(int)delta.TotalMinutes}m ago";
+                _hasDraftToResume = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Non-blocking draft lookup
+            Console.WriteLine($"Draft check skipped: {ex.Message}");
+        }
+    }
+
+    private async Task ResumeDraftAsync()
+    {
+        if (_loadedDraft == null) return;
+
+        var model = DraftService.DeserializeDraftModel<InterSetaTransferDraftModel>(_loadedDraft);
+        if (model != null)
+        {
+            _organisationId = model.OrganisationId;
+            _sdlNumber = model.SdlNumber;
+            _chamber = model.Chamber;
+            _employeeCount = model.EmployeeCount;
+            _transferType = model.TransferType;
+            _otherSetaCode = model.OtherSetaCode;
+            _transferReason = model.TransferReason;
+            _effectiveDate = model.EffectiveDate;
+            _motivation = model.Motivation;
+            _currentSicCode = model.CurrentSicCode;
+            _targetSicCode = model.TargetSicCode;
+            _transferAmount = model.TransferAmount;
+            _emp103DocRef = model.Emp103DocRef;
+            _cipcDocRef = model.CipcDocRef;
+            _labourDocRef = model.LabourDocRef;
+            _boardResolutionDocRef = model.BoardResolutionDocRef;
+            _signatoryFullName = model.SignatoryFullName;
+            _signatoryDesignation = model.SignatoryDesignation;
+            _isDeclarationAccepted = model.IsDeclarationAccepted;
+
+            _activeStep = _loadedDraft.CurrentStepIndex;
+            _hasDraftToResume = false;
+            UpdateReviewGroups();
+            Snackbar.Add($"Resumed Section 32 transfer draft from Step {_activeStep + 1}.", Severity.Info);
+        }
+    }
+
+    private async Task DiscardDraftAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+        {
+            await DraftService.DiscardDraftAsync(_activeDraftKey);
+            _hasDraftToResume = false;
+            _activeDraftKey = null;
+            _loadedDraft = null;
+            Snackbar.Add("Draft discarded. You are starting a clean Section 32 transfer application.", Severity.Normal);
+        }
+    }
+
+    private async Task SaveDraftAsync()
+    {
+        _isProcessing = true;
+        try
+        {
+            var draftModel = new InterSetaTransferDraftModel
+            {
+                OrganisationId = _organisationId,
+                SdlNumber = _sdlNumber,
+                Chamber = _chamber,
+                EmployeeCount = _employeeCount,
+                TransferType = _transferType,
+                OtherSetaCode = _otherSetaCode,
+                TransferReason = _transferReason,
+                EffectiveDate = _effectiveDate,
+                Motivation = _motivation,
+                CurrentSicCode = _currentSicCode,
+                TargetSicCode = _targetSicCode,
+                TransferAmount = _transferAmount,
+                Emp103DocRef = _emp103DocRef,
+                CipcDocRef = _cipcDocRef,
+                LabourDocRef = _labourDocRef,
+                BoardResolutionDocRef = _boardResolutionDocRef,
+                SignatoryFullName = _signatoryFullName,
+                SignatoryDesignation = _signatoryDesignation,
+                IsDeclarationAccepted = _isDeclarationAccepted
+            };
+
+            var session = await DraftService.SaveDraftAsync(
+                "InterSetaTransfer",
+                "Section 32 Inter-SETA transfer application",
+                "/inter-seta/transfer-request",
+                "SdfUser",
+                _organisationId,
+                _activeStep,
+                4,
+                draftModel,
+                _activeDraftKey
+            );
+
+            _activeDraftKey = session.DraftKey;
+            _hasDraftToResume = false;
+            Snackbar.Add($"Draft saved at Step {_activeStep + 1} ('{session.DraftKey}').", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Could not save draft: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -394,6 +541,13 @@ else
 
             _submittedTransferRef = transferRef;
             _submittedOrgName = org?.CompanyName ?? "Employer Organisation";
+
+            // Clear submitted draft
+            if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+            {
+                await DraftService.MarkAsSubmittedAsync(_activeDraftKey);
+            }
+
             _isSuccess = true;
 
             Snackbar.Add($"Section 32 transfer application {transferRef} submitted successfully.", Severity.Success);

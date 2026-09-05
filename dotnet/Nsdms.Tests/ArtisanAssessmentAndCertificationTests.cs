@@ -64,7 +64,7 @@ public class ArtisanAssessmentAndCertificationTests
             1,
             "653306",
             null,
-            "EmployerCoordinator");
+            currentUsername: "EmployerCoordinator");
 
         Assert.NotNull(app);
         Assert.StartsWith("TT-", app.ApplicationNumber);
@@ -146,7 +146,7 @@ public class ArtisanAssessmentAndCertificationTests
             1,
             "651401",
             null,
-            "LearnerCandidate");
+            currentUsername: "LearnerCandidate");
 
         var exp = new List<ArplExperienceDetail>
         {

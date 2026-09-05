@@ -8,6 +8,7 @@
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IJSRuntime JsRuntime
+@inject IWizardDraftService DraftService
 @rendermode InteractiveServer
 
 <div class="mb-4">
@@ -63,6 +64,11 @@ else
                  ActiveStepIndexChanged="OnStepChanged"
                  FinishButtonText="Submit application"
                  IsBusy="@_isProcessing"
+                 HasDraftToResume="@_hasDraftToResume"
+                 DraftStepIndex="@_draftStepIndex"
+                 DraftSavedTimeAgo="@_draftSavedTimeAgo"
+                 OnResumeDraft="ResumeDraftAsync"
+                 OnDiscardDraft="DiscardDraftAsync"
                  OnCancel="GoBack"
                  OnSaveDraft="SaveDraftAsync"
                  OnFinish="SubmitApplicationAsync">
@@ -222,6 +228,23 @@ else
 
     private int CurrentPoints => _cpdActivities.Sum(a => a.PointsApproved);
 
+    // Draft Persistence & Resume Lifecycle Engine
+    private bool _hasDraftToResume = false;
+    private int _draftStepIndex = 0;
+    private string? _draftSavedTimeAgo;
+    private string? _activeDraftKey;
+    private WizardDraftSession? _loadedDraft;
+
+    private record AssessorReRegistrationDraftModel
+    {
+        public int AssessorId { get; init; }
+        public string ApplicationTypeCode { get; init; } = "StandardReRegistration";
+        public string CpdPortfolioSummary { get; init; } = string.Empty;
+        public bool ConfirmAllScopes { get; init; }
+        public bool AcceptCodeOfConduct { get; init; }
+        public bool AcceptPopia { get; init; }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         _breadcrumbs = new List<BreadcrumbItem>
@@ -249,6 +272,9 @@ else
                 _cpdPortfolioSummary = _currentApplication.CpdPortfolioSummary ?? string.Empty;
                 _cpdActivities = _currentApplication.CpdActivities.ToList();
             }
+
+            // Check for in-progress draft for this assessor
+            await CheckForActiveDraftAsync();
         }
         catch (Exception ex)
         {
@@ -386,6 +412,59 @@ else
         }
     }
 
+    private async Task CheckForActiveDraftAsync()
+    {
+        try
+        {
+            var draft = await DraftService.GetActiveDraftAsync("AssessorReRegistration", $"Assessor_{AssessorId}");
+            if (draft != null && draft.CurrentStepIndex > 0)
+            {
+                _loadedDraft = draft;
+                _activeDraftKey = draft.DraftKey;
+                _draftStepIndex = draft.CurrentStepIndex;
+                var delta = DateTime.UtcNow - (draft.ModifiedAt ?? draft.CreatedAt);
+                _draftSavedTimeAgo = delta.TotalHours >= 1 ? $"{(int)delta.TotalHours}h ago" : $"{(int)delta.TotalMinutes}m ago";
+                _hasDraftToResume = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Non-blocking draft lookup
+            Console.WriteLine($"Draft check skipped: {ex.Message}");
+        }
+    }
+
+    private async Task ResumeDraftAsync()
+    {
+        if (_loadedDraft == null) return;
+
+        var model = DraftService.DeserializeDraftModel<AssessorReRegistrationDraftModel>(_loadedDraft);
+        if (model != null)
+        {
+            _applicationTypeCode = model.ApplicationTypeCode;
+            _cpdPortfolioSummary = model.CpdPortfolioSummary;
+            _confirmAllScopes = model.ConfirmAllScopes;
+            _acceptCodeOfConduct = model.AcceptCodeOfConduct;
+            _acceptPopia = model.AcceptPopia;
+
+            _activeStep = _loadedDraft.CurrentStepIndex;
+            _hasDraftToResume = false;
+            Snackbar.Add($"Resumed re-registration draft from Step {_activeStep + 1}.", Severity.Info);
+        }
+    }
+
+    private async Task DiscardDraftAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+        {
+            await DraftService.DiscardDraftAsync(_activeDraftKey);
+            _hasDraftToResume = false;
+            _activeDraftKey = null;
+            _loadedDraft = null;
+            Snackbar.Add("Draft discarded. You are starting a clean re-registration application.", Severity.Normal);
+        }
+    }
+
     private async Task SaveDraftAsync()
     {
         await EnsureApplicationCreatedAsync();
@@ -395,7 +474,32 @@ else
         try
         {
             await ReRegService.UpdateDraftApplicationAsync(_currentApplication.Id, _cpdPortfolioSummary);
-            Snackbar.Add("Draft saved successfully.", Severity.Success);
+
+            var draftModel = new AssessorReRegistrationDraftModel
+            {
+                AssessorId = AssessorId,
+                ApplicationTypeCode = _applicationTypeCode,
+                CpdPortfolioSummary = _cpdPortfolioSummary,
+                ConfirmAllScopes = _confirmAllScopes,
+                AcceptCodeOfConduct = _acceptCodeOfConduct,
+                AcceptPopia = _acceptPopia
+            };
+
+            var session = await DraftService.SaveDraftAsync(
+                "AssessorReRegistration",
+                "Assessor and moderator re-registration",
+                $"/etqa/assessors/{AssessorId}/re-register",
+                $"Assessor_{AssessorId}",
+                null,
+                _activeStep,
+                4,
+                draftModel,
+                _activeDraftKey
+            );
+
+            _activeDraftKey = session.DraftKey;
+            _hasDraftToResume = false;
+            Snackbar.Add($"Draft saved at Step {_activeStep + 1} ('{session.DraftKey}').", Severity.Success);
         }
         catch (Exception ex)
         {
@@ -416,6 +520,13 @@ else
         try
         {
             await ReRegService.SubmitApplicationForReviewAsync(_currentApplication.Id);
+
+            // Clear submitted draft
+            if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+            {
+                await DraftService.MarkAsSubmittedAsync(_activeDraftKey);
+            }
+
             Snackbar.Add("Re-registration application submitted for committee review.", Severity.Success);
             NavManager.NavigateTo($"/etqa/assessors/{AssessorId}");
         }

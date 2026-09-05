@@ -45,6 +45,20 @@ Every page must pass all 16 items before being declared complete:
 
 ---
 
+### 🛡️ MudMenu ActivatorContent Event Binding Invariant
+- In MudBlazor v9+, when customizing a `<MudMenu>` trigger via `<ActivatorContent Context="menuCtx">`, the inner interactive component (e.g. `<MudButton>` or `<button>`) MUST explicitly bind `OnClick="@menuCtx.ToggleAsync"` or `@onclick="@menuCtx.ToggleAsync"`.
+- Unlike basic menus with `Label="..."` or `Icon="..."` where MudBlazor renders the trigger button automatically, `<ActivatorContent>` replaces the default button and passes a `MenuContext` parameter. Omitting the `OnClick` binding leaves the inner button inert, preventing the popover from opening.
+
+---
+
+### 🛡️ Dedicated Top-Bar Persona Switcher Architecture Invariant
+- The statutory workspace persona switcher (`PersonaSwitcher.razor`) resides on the top application bar (`MudAppBar`), positioned immediately preceding the user profile avatar menu.
+- It displays the active persona in a clean, themed pill button with role-specific icon, responsive label (`GetShortPersonaLabel` / `GetCompactPersonaLabel`), and dropdown chevron.
+- Selecting a persona updates `_activePersona`, fires an `ISnackbar` confirmation toast, and dynamically filters the 7 statutory navigation pillars in `NavMenu` via `INavigationMenuService`.
+- No nested persona switchers shall be embedded within the avatar profile popover; user account session actions (dashboard links, audit logs, sign out) remain strictly isolated from workspace persona filters.
+
+---
+
 ### 🛡️ Schema-Domain Synchronization Rule
 - Whenever new properties are added to an Entity class in `Nsdms.Domain/Entities/`, immediately:
   1. Add corresponding `ALTER TABLE ... ADD [ColumnName] ...` clauses to the active Schema Migrator in `Nsdms.Infrastructure/Data/`.
@@ -306,5 +320,135 @@ Every page must pass all 16 items before being declared complete:
 4. **Audit Double-Write**:
    - Every message state transition (`Pending` -> `InFlight` -> `Delivered` / `FailedRetryable` / `DeadLetter`) must perform an audited change log write to `audit_logs`.
 
+---
+
+### 🛡️ Non-Levy Statutory N-Number Generation Governance
+1. **4-Tier Zero-Collision Sequence Allocation**:
+   - Non-levy organisations (TVET colleges, public universities, NGOs, CBOs, trade unions, exempt SMEs) must be allocated unique 10-character statutory identifiers (`N` + 9 digits: `^[LN]\d{9}$`).
+   - Generation MUST utilize `INonLevyNumberGeneratorService` powered by the dedicated SQL Server sequence `[dbo].[seq_NonLevyOrganisationNumber]` with high-water mark dynamic restart seeding (`MAX(TRY_CAST(SUBSTRING(SdlNumber, 2, 9) AS INT)) + 1`).
+   - In-memory concurrency and dirty-data collision safeguards must implement a bounded skip-and-retry loop (up to 5 attempts) against `[dbo].[Organisation]` with unique filtered index `[UQ_Organisation_SdlNumber]`.
+2. **Audit Double-Write**:
+   - All statutory N-number allocations must record an immutable change snapshot in `audit_logs`.
+
+---
+
+### 🛡️ merSETA Chamber & Dynamics GP Vendor Class Derivation Governance
+1. **Automated SIC Code & Organisation Type Derivation**:
+   - merSETA Chambers (`AUTO`, `METAL`, `MOTOR`, `NEW_TYRE`, `PLASTICS`, `SETA`) and Dynamics GP Vendor Classes (`AUTO`, `METAL`, `MOTOR`, `NEW TYRE`, `PLASTICS`, `SETA`) must be derived via `IChamberDerivationService`.
+   - Derivation precedence:
+     - Tier 1: Manual Chamber Override (`IsManualChamberOverride = true` with mandatory Board/Executive justification).
+     - Tier 2: Special legal constitution types (TVET colleges, public universities, NGOs, government entities $\rightarrow$ `SETA`).
+     - Tier 3: 5-digit statutory SIC code lookup against `[lookup].[sic_code_type]`.
+2. **Organisation-Level Missing Chamber Flag & Downstream Blockers**:
+   - If an organisation lacks a valid Chamber mapping, `HasMissingChamberMapping` MUST be set to `true` on `[dbo].[Organisation]`.
+    - When `HasMissingChamberMapping == true`:
+      - Discretionary Grant application creation and submission (`GrantService.CreateApplicationAsync`) must be BLOCKED with `InvalidOperationException`.
+      - Dynamics GP vendor synchronization (`ErpIntegrationService.EnqueueVendorSyncAsync`) must be BLOCKED.
+      - Mandatory Grant WSP/ATR submissions and MoA contracting must be BLOCKED until the Chamber mapping is resolved.
+
+---
+
+### 🛡️ Dependency Injection Dual-Registration Invariant
+1. **Concrete & Interface Dual Resolution**:
+   - When application or infrastructure services inject a concrete type directly in their constructors (e.g. `AuditService` rather than `IAuditService`), `Program.cs` must register both the concrete implementation and the interface:
+     ```csharp
+     builder.Services.AddScoped<AuditService>();
+     builder.Services.AddScoped<IAuditService>(sp => sp.GetRequiredService<AuditService>());
+     ```
+   - This ensures that ASP.NET Core service validation (`ValidateOnBuild` and `ValidateScopes`) succeeds in Development mode.
+
+---
+
+### 🛡️ Shared Component Parameter Compatibility & Alias Invariant
+1. **Semantic Parameter Aliasing**:
+   - Shared components in `Components/Shared/` (such as `EmptyState.razor`) that accept semantic titles or headers must provide property aliases (e.g., `[Parameter] public string? Title { get => Message; set => Message = value; }`) when both `Title` and `Message` are used interchangeably across consuming pages.
+   - Blazor components throw a runtime `InvalidOperationException` when an unknown incoming parameter is passed. Ensure shared components define aliases for common naming variations.
+
+---
+
+### 🛡️ Dynamic Persona Switcher & Identity Synchronization Standard
+1. **Named Persona Toggle & Compact Representation**:
+   - The top application bar persona toggle pill button (`PersonaSwitcher.razor`) MUST display the individual's full person name and role in sentence case (e.g. `System Administrator`, `Sipho Khumalo (Mentor)`, `Thabo Molefe (CLO)`, `Nalini Moodley (SDF)`), using compact representations on mobile/compact viewports (e.g. `Sipho K. (Mentor)`).
+2. **Workplace Approval & Enterprise Domain Categorization**:
+   - The persona switcher popover MUST cleanly separate domain-specific actors (such as **Workplace Approval Personas**: Artisan Mentor, SETA CLO Site Inspector, Designated Employer Contact SDF, Trade Assessor, Review Committee Chair) from **Enterprise Governance Personas** (System Administrator, Finance Specialist, SDP Principal, Legal Counsel, Compliance Auditor).
+   - Each persona entry must render person name, initials avatar, statutory role badge, host organisation, and statutory reference (e.g. `WPA-2025-TOYOTA-PROS`, `ART-1999-88741`).
+3. **Simulated Logout / Login Synchronization**:
+   - Selecting a persona must invoke `NsdmsAuthenticationStateProvider.SetUser(email, displayName, roles)` to update Blazor's cascading authentication state without a full-page reload.
+   - It must synchronize the top-right user profile avatar pill (`_currentUserInitials`, `_currentUserDisplayName`, `_currentUserRoleBadge`) and avatar dropdown card with active person credentials (`Signed in as [Email]`, organisation, and a direct "Log out (Reset to Admin)" button).
+   - It must trigger an `ISnackbar` toast confirmation and dynamically filter the 7 statutory navigation pillars in `NavMenu` via `INavigationMenuService`.
+
+---
+
+### 🛡️ Organisation Context Scoping & Multi-Company Affiliation Standard
+1. **Multi-Company Affiliation Resolution**:
+   - Individuals can represent one or multiple organisations across diverse roles (e.g. Primary/Secondary SDF, Owner, Director, HR Manager, Training Committee Member).
+   - Affiliations MUST be resolved dynamically by querying both `OrganisationContact` and `SdfCompany` for the active `PersonId`.
+2. **Persistent Top-Bar Context Switcher Pill**:
+   - The top application bar (`MudAppBar`) MUST feature an `OrganisationContextSwitcher` pill docked adjacent to the `PersonaSwitcher`.
+   - In Admin / merSETA Internal mode (`CLO`, `Finance`, `Executive`, `SuperAdmin`), it displays `All Organisations` (Global View) with an `Admin Bypass` indicator and live search across the entire registry.
+   - For employer/SDF personas, it displays the active company name and SDL reference (e.g. `Toyota South Africa...`), restricting options strictly to their affiliated entities.
+3. **Reactive Circuit Synchronization & Scoping**:
+   - Switching working organisations updates `ITenantProvider.SetTenant(orgId, name, sdl, isAdmin)` and fires `OnTenantChanged`.
+   - All downstream domain queries in EF Core (`NsdmsDbContext`) automatically apply multi-tenancy filtering to `CurrentOrganisationId` when not in Admin mode.
+   - If a multi-organisation user has no context selected, prompt them with `SelectOrganisationDialog.razor` or alert badge styling.
+
+---
+
+### 🛡️ Multi-Tenancy Scoped Factory & Entity Query Filter Invariant
+1. **Primary Entity Query Filters**: Every entity scoped to an organisation (`Organisation`, `OrganisationSite`, `OrganisationContact`, `WspSubmission`, `GrantApplication`, `Visit`) MUST declare `entity.HasQueryFilter(e => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || e.OrganisationId == _tenantProvider.CurrentOrganisationId);` in `NsdmsDbContext`. For `Organisation`, the filter evaluates `o.Id == _tenantProvider.CurrentOrganisationId`.
+2. **Scoped Factory Registration**: `INsdmsDbContextFactory` MUST be registered as `Scoped` in `Program.cs` and inject scoped `ITenantProvider`. `NsdmsDbContext` must have `[ActivatorUtilitiesConstructor]` on its constructor accepting `ITenantProvider? tenantProvider`.
+3. **Application Service Defense**: Application service listing methods (`GetAllAsync`, `GetPagedAsync`, `GetByIdAsync`) must inject `ITenantProvider` and enforce `CurrentOrganisationId` constraints when `!_tenantProvider.IsAdmin`.
+4. **UI Tenancy Subscription**: Any Blazor page rendering tenant-scoped records must inject `ITenantProvider`, implement `IDisposable`, subscribe to `TenantProvider.OnTenantChanged`, and re-query data on tenant context mutations.
+5. **Cross-Tenant Aggregation**: Services dedicated to discovering a user's multi-company affiliations (`OrganisationContextService`) or background bulk reconciliation engines must explicitly append `.IgnoreQueryFilters()`.
+
+---
+
+### 🛡️ Statutory Learner Registration & Minor Protection Invariant
+1. **Minor Co-Signatory Requirement**:
+   - For all learner registration workflows (Agreements, ARPL, Trade Tests), any applicant under 18 years of age at the time of agreement execution MUST capture a linked `PersonGuardian` record. Bypassing guardian details for minors violates the Skills Development Act.
+2. **30-Working-Day Submission Deadline**:
+   - Applications must be submitted within 30 working days of `LearnerSignatureDate`. Working days must exclude Saturdays, Sundays, and gazetted South African public holidays via `CompanyLearnerDomainValidator.CalculateWorkingDays`. Submissions exceeding 30 working days require formal condonation.
+3. **Engineering Candidacy Exception**:
+   - Engineering Candidacy programmes do not require an active SAQA Qualification ID, but MANDATE a verified Professional Council Registration Number (e.g. ECSA Candidate Engineer Reference).
+4. **SETMIS Anti-Placeholder Enforcement**:
+   - Never accept placeholder strings (`%UNKNOWN%`, `AS ABOVE`, `N/A`, `SOOS BO`, `TEST`) in person names, street addresses, or postal codes. Mobile numbers must strictly conform to 10 digits starting with `0` (`^0\d{9}$`).
 
 
+---
+
+### 🛡️ ARPL & Artisan Trade Test Statutory Governance Standard (Signed 2023 Specification)
+1. **17 Designated Toolkit Trades Whitelist**:
+   - Only 17 statutory designated trades (Diesel Mechanic, Motor Mechanic, Boilermaker, Welder, Fitter, Fitter & Turner, Electrician, Heavy Equipment Mechanic, Instrument Mechanic, Lift Mechanic, Shipbuilder, Panel Beater, Vehicle Painter, Bricklayer, Plumber, Carpenter, Sheet fed-Lithograph) require toolkits.
+   - Category 7 applications (`Category7_Min3Years_ToolkitAssessment`) are strictly restricted to these 17 trades. All other trades require qualification prerequisites under Categories 1–6.
+2. **50% Task Credit Retention & Non-Destructive History**:
+   - Candidates passing $\ge 50\%$ of evaluated practical tasks retain credit for passed modules for a maximum of 3 attempts or 18 months.
+   - Old tasks must NEVER be deleted from `TradeTestTask` upon re-testing; tasks are partitioned by `AttemptNumber` to maintain a non-repudiable audit trail.
+3. **2-Tier Regional Approval & Serial Number Milestone**:
+   - Applications must pass 2 sequential regional gates: CLA recommendation (`RecommendedApplication`) followed by Regional QA approval (`Registered`).
+   - The official Trade Test Serial Number (`TT-SER-{yyyy}-{id:D5}`) is generated strictly upon QA approval and must be stamped on the re-uploaded application document.
+   - QA rejection requires setting `IsFinalRejection`: `false` routes for candidate resubmission (`RejectedForResubmission`); `true` marks terminal rejection (`RejectedApplication`).
+4. **Dynamic Document Upload Gate**:
+   - Toolkit trades require 7 mandatory verified documents; non-toolkit trades require 6 verified documents per Section 4.2.7.
+
+---
+
+### 🛡️ Workplace Approval & Site Inspection Statutory Governance Standard (Signed 2022 Specification)
+1. **Role-Neutral Maker-Checker Workflow Architecture**:
+   - Job titles such as "CLO" or "QA" are transitory organizational assignments, not permanent workflow roles.
+   - All workflow states, transitions, entity columns, and UI actions MUST use role-neutral terminology:
+     - **Verification / Inspection**: `Verification Officer` (verification audit, on-site or desktop audit, `VerifiedDate`, `VerifiedByPersonId`, `VerificationRecommendationReason`, `VerificationRejectionReason`).
+     - **Evaluation / Adjudication**: `Approval Authority` (maker-checker decision gatekeeper, `DecisionDate`, `DecisionByPersonId`, `ApprovalReason`, `RejectionReason`).
+     - **Applicant / Submitter**: `Primary SDF / Applicant` (submission, condonation, withdrawal).
+2. **20-Working-Day Statutory Inspection SLA**:
+   - Applications submitted to status `APPLICATION` MUST compute a 20-working-day SLA inspection due date (`InspectionDueDate`), excluding weekends and gazetted public holidays via `WorkplaceApprovalService.AddBusinessDays`.
+   - UI master detail views must render real-time countdown chips with alert state progression (Compliant, Warning $\le 5$ days, Overdue).
+3. **Desktop vs Physical On-Site Inspection Dual-Mode**:
+   - Verification may occur via physical on-site audit (`IsSiteVisitRequired = true`) or desktop evaluation (`IsSiteVisitRequired = false`).
+   - If a physical site visit is waived in favour of desktop audit, `SiteVisitJustification` is mandatory and must be audited.
+4. **Official QuestPDF Statutory Controlled Documents**:
+   - **Annexure 10.1 (`ETQ-TP-003`)**: Workplace Approval Outcome Letter complete with official merSETA branding, QR code verification reference (`/verify/workplace-approval/{id}`), 3-year accreditation validity cycle, and controlled document metadata box.
+   - **Annexure 10.2 (`ETQ-TP-054`)**: Workplace Approval Report complete with site information, trade curriculum scope, tool/equipment compliance audit table, and certified artisan mentor quota breakdown.
+5. **Preservation of Advanced Invariants & Relational Collections**:
+   - Live 5-tier cascading NAMB mentor-to-apprentice ratio policy engine (`IMentorRatioPolicyEngine`).
+   - Mandatory Employer Contact Person linkage for all site visits and inspections.
+   - 360-degree relational tabs (Placed Apprentices, Partnering SDPs, Site Audits, Tool Inventory, Mentors, Evidence Vault, Workflow Timeline).

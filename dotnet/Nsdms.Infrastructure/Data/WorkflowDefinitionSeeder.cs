@@ -118,13 +118,27 @@ public static class WorkflowDefinitionSeeder
             await context.SaveChangesAsync();
         }
 
-        // 4. WPAPP: Workplace Approval
-        if (!await context.WorkflowDefinitions.AnyAsync(d => d.Code == "WPAPP"))
+        // 4. WPAPP: Workplace Approval (Statutory Maker-Checker Lifecycle per Spec NMok_19122022)
+        var existingWp = await context.WorkflowDefinitions
+            .Include(d => d.States)
+            .Include(d => d.Transitions)
+            .FirstOrDefaultAsync(d => d.Code == "WPAPP");
+
+        if (existingWp != null && existingWp.States.Count < 7)
+        {
+            context.WorkflowTransitions.RemoveRange(existingWp.Transitions);
+            context.WorkflowStates.RemoveRange(existingWp.States);
+            context.WorkflowDefinitions.Remove(existingWp);
+            await context.SaveChangesAsync();
+            existingWp = null;
+        }
+
+        if (existingWp == null)
         {
             var wpDef = new WorkflowDefinition
             {
                 Code = "WPAPP",
-                Name = "Workplace Approval & Site Audit",
+                Name = "Workplace Approval & Site Verification",
                 TargetEntityName = "WorkplaceApproval",
                 KeyFieldName = "Id",
                 IsActive = true
@@ -132,24 +146,49 @@ public static class WorkflowDefinitionSeeder
             context.WorkflowDefinitions.Add(wpDef);
             await context.SaveChangesAsync();
 
-            var wpS1 = new WorkflowState { WorkflowDefinitionId = wpDef.Id, StateCode = "DRAFT", StateName = "Draft Workplace Request", StepOrder = 1, IsInitial = true };
-            var wpS2 = new WorkflowState { WorkflowDefinitionId = wpDef.Id, StateCode = "AUDIT_SCHEDULED", StateName = "Site Audit Scheduled", StepOrder = 2, AllowedGroupRole = "Client Liaison Officer (CLO)" };
-            var wpS3 = new WorkflowState { WorkflowDefinitionId = wpDef.Id, StateCode = "AUDITED", StateName = "Audit Completed (Tools & Mentors Verified)", StepOrder = 3, AllowedGroupRole = "Client Liaison Officer (CLO)" };
-            var wpS4 = new WorkflowState { WorkflowDefinitionId = wpDef.Id, StateCode = "APPROVED", StateName = "Workplace Approved", StepOrder = 4, IsTerminal = true };
+            var wpS1 = new WorkflowState { WorkflowDefinitionId = wpDef.Id, StateCode = "DRAFT", StateName = "Draft Application", StepOrder = 1, IsInitial = true, AllowedGroupRole = "Primary SDF / Applicant" };
+            var wpS2 = new WorkflowState { WorkflowDefinitionId = wpDef.Id, StateCode = "APPLICATION", StateName = "Application Submitted (Pending Verification)", StepOrder = 2, AllowedGroupRole = "Verification Officer" };
+            var wpS3 = new WorkflowState { WorkflowDefinitionId = wpDef.Id, StateCode = "AUDIT_SCHEDULED", StateName = "Site Inspection Scheduled", StepOrder = 3, AllowedGroupRole = "Verification Officer" };
+            var wpS4 = new WorkflowState { WorkflowDefinitionId = wpDef.Id, StateCode = "VERIFIED", StateName = "Verification Completed (Report Generated)", StepOrder = 4, AllowedGroupRole = "Verification Officer" };
+            var wpS5 = new WorkflowState { WorkflowDefinitionId = wpDef.Id, StateCode = "UNDER_EVALUATION", StateName = "Under Evaluation & Decision", StepOrder = 5, AllowedGroupRole = "Approval Authority" };
+            var wpS6 = new WorkflowState { WorkflowDefinitionId = wpDef.Id, StateCode = "APPROVED", StateName = "Workplace Approved", StepOrder = 6, IsTerminal = true };
+            var wpS7 = new WorkflowState { WorkflowDefinitionId = wpDef.Id, StateCode = "REJECTED", StateName = "Workplace Rejected", StepOrder = 7, IsTerminal = true };
+            var wpS8 = new WorkflowState { WorkflowDefinitionId = wpDef.Id, StateCode = "REVISE_REQUESTED", StateName = "Revision Requested", StepOrder = 8, AllowedGroupRole = "Primary SDF / Applicant" };
 
-            context.WorkflowStates.AddRange(wpS1, wpS2, wpS3, wpS4);
+            context.WorkflowStates.AddRange(wpS1, wpS2, wpS3, wpS4, wpS5, wpS6, wpS7, wpS8);
             await context.SaveChangesAsync();
 
             context.WorkflowTransitions.AddRange(
-                new WorkflowTransition { WorkflowDefinitionId = wpDef.Id, FromStateId = wpS1.Id, ToStateId = wpS2.Id, ActionName = "Schedule Physical Inspection", ButtonColor = "#1e40af", ButtonIcon = "Schedule", RequiredPermission = "Workplace:Verify", NewEntityStatusCode = "AUDIT_SCHEDULED" },
-                new WorkflowTransition { WorkflowDefinitionId = wpDef.Id, FromStateId = wpS2.Id, ToStateId = wpS3.Id, ActionName = "Complete Site Verification", ButtonColor = "#0284c7", ButtonIcon = "FactCheck", RequiredPermission = "Workplace:Verify", NewEntityStatusCode = "AUDITED" },
-                new WorkflowTransition { WorkflowDefinitionId = wpDef.Id, FromStateId = wpS3.Id, ToStateId = wpS4.Id, ActionName = "Approve Workplace Accreditation", ButtonColor = "#16a34a", ButtonIcon = "Verified", RequiredPermission = "Workplace:Approve", NewEntityStatusCode = "APPROVED" }
+                new WorkflowTransition { WorkflowDefinitionId = wpDef.Id, FromStateId = wpS1.Id, ToStateId = wpS2.Id, ActionName = "Submit Approval Application", ButtonColor = "#1e40af", ButtonIcon = "Send", RequiredPermission = "Workplace:Submit", NewEntityStatusCode = "APPLICATION" },
+                new WorkflowTransition { WorkflowDefinitionId = wpDef.Id, FromStateId = wpS2.Id, ToStateId = wpS3.Id, ActionName = "Schedule Physical Inspection", ButtonColor = "#0284c7", ButtonIcon = "Event", RequiredPermission = "Workplace:Verify", NewEntityStatusCode = "AUDIT_SCHEDULED" },
+                new WorkflowTransition { WorkflowDefinitionId = wpDef.Id, FromStateId = wpS2.Id, ToStateId = wpS4.Id, ActionName = "Complete Desktop Verification", ButtonColor = "#0284c7", ButtonIcon = "FactCheck", RequiredPermission = "Workplace:Verify", NewEntityStatusCode = "VERIFIED" },
+                new WorkflowTransition { WorkflowDefinitionId = wpDef.Id, FromStateId = wpS3.Id, ToStateId = wpS4.Id, ActionName = "Conclude On-Site Verification", ButtonColor = "#0284c7", ButtonIcon = "CheckCircle", RequiredPermission = "Workplace:Verify", NewEntityStatusCode = "VERIFIED" },
+                new WorkflowTransition { WorkflowDefinitionId = wpDef.Id, FromStateId = wpS4.Id, ToStateId = wpS5.Id, ActionName = "Submit for Committee Evaluation", ButtonColor = "#7c3aed", ButtonIcon = "AssignmentTurnedIn", RequiredPermission = "Workplace:Verify", NewEntityStatusCode = "UNDER_EVALUATION" },
+                new WorkflowTransition { WorkflowDefinitionId = wpDef.Id, FromStateId = wpS5.Id, ToStateId = wpS6.Id, ActionName = "Approve Workplace Accreditation", ButtonColor = "#16a34a", ButtonIcon = "Verified", RequiredPermission = "Workplace:Approve", NewEntityStatusCode = "APPROVED" },
+                new WorkflowTransition { WorkflowDefinitionId = wpDef.Id, FromStateId = wpS5.Id, ToStateId = wpS7.Id, ActionName = "Reject Workplace Application", ButtonColor = "#dc2626", ButtonIcon = "Cancel", RequiredPermission = "Workplace:Approve", NewEntityStatusCode = "REJECTED" },
+                new WorkflowTransition { WorkflowDefinitionId = wpDef.Id, FromStateId = wpS2.Id, ToStateId = wpS8.Id, ActionName = "Return for Updates", ButtonColor = "#d97706", ButtonIcon = "Edit", RequiredPermission = "Workplace:Verify", NewEntityStatusCode = "REVISE_REQUESTED" },
+                new WorkflowTransition { WorkflowDefinitionId = wpDef.Id, FromStateId = wpS8.Id, ToStateId = wpS2.Id, ActionName = "Resubmit Corrected Application", ButtonColor = "#1e40af", ButtonIcon = "Send", RequiredPermission = "Workplace:Submit", NewEntityStatusCode = "APPLICATION" }
             );
             await context.SaveChangesAsync();
         }
 
-        // 5. LRN: Learner Agreement Registration
-        if (!await context.WorkflowDefinitions.AnyAsync(d => d.Code == "LRN"))
+        // 5. LRN: Learner Agreement Registration (8-State Statutory Maker-Checker Lifecycle per Table 20)
+        var existingLrn = await context.WorkflowDefinitions
+            .Include(d => d.States)
+            .Include(d => d.Transitions)
+            .FirstOrDefaultAsync(d => d.Code == "LRN");
+
+        if (existingLrn != null && existingLrn.States.Count < 8)
+        {
+            // Remove legacy simplified 3-state definition to allow re-seeding full 8-state statutory workflow
+            context.WorkflowTransitions.RemoveRange(existingLrn.Transitions);
+            context.WorkflowStates.RemoveRange(existingLrn.States);
+            context.WorkflowDefinitions.Remove(existingLrn);
+            await context.SaveChangesAsync();
+            existingLrn = null;
+        }
+
+        if (existingLrn == null)
         {
             var lrnDef = new WorkflowDefinition
             {
@@ -162,16 +201,42 @@ public static class WorkflowDefinitionSeeder
             context.WorkflowDefinitions.Add(lrnDef);
             await context.SaveChangesAsync();
 
-            var lrnS1 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "DRAFT", StateName = "Draft Contract", StepOrder = 1, IsInitial = true };
-            var lrnS2 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "QA_CHECK", StateName = "Quality Assurance Verification", StepOrder = 2, AllowedGroupRole = "Client Liaison Officer (CLO)" };
-            var lrnS3 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "REGISTERED", StateName = "Contract Registered", StepOrder = 3, IsTerminal = true };
+            var lrnS1 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "DRAFT", StateName = "Application Started (Not Submitted)", StepOrder = 1, IsInitial = true, AllowedGroupRole = "Primary SDF" };
+            var lrnS2 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "SUBMITTED", StateName = "Application Submitted (Under Review)", StepOrder = 2, AllowedGroupRole = "Client Liaison Officer (CLO)" };
+            var lrnS3 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "REJECTED_RESUBMIT", StateName = "Rejected for Resubmission", StepOrder = 3, AllowedGroupRole = "Primary SDF" };
+            var lrnS4 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "RESUBMITTED", StateName = "Resubmitted Application", StepOrder = 4, AllowedGroupRole = "Client Liaison Officer (CLO)" };
+            var lrnS5 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "RECOMMENDED", StateName = "Recommended for Registration", StepOrder = 5, AllowedGroupRole = "Quality Assurance Manager" };
+            var lrnS6 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "REGISTERED", StateName = "Registered (Approved by merSETA)", StepOrder = 6, IsTerminal = true };
+            var lrnS7 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "REJECTED", StateName = "Application Rejected", StepOrder = 7, IsTerminal = true };
+            var lrnS8 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "WITHDRAWN", StateName = "Application Withdrawn", StepOrder = 8, IsTerminal = true };
 
-            context.WorkflowStates.AddRange(lrnS1, lrnS2, lrnS3);
+            context.WorkflowStates.AddRange(lrnS1, lrnS2, lrnS3, lrnS4, lrnS5, lrnS6, lrnS7, lrnS8);
             await context.SaveChangesAsync();
 
             context.WorkflowTransitions.AddRange(
-                new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS1.Id, ToStateId = lrnS2.Id, ActionName = "Submit for QA Verification", ButtonColor = "#1e40af", ButtonIcon = "Send", RequiredPermission = "Learners:Submit", NewEntityStatusCode = "PENDING_QA" },
-                new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS2.Id, ToStateId = lrnS3.Id, ActionName = "Approve & Register Contract", ButtonColor = "#16a34a", ButtonIcon = "CheckCircle", RequiredPermission = "Learners:Approve", NewEntityStatusCode = "REGISTERED" }
+                // 1. Draft -> Submitted
+                new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS1.Id, ToStateId = lrnS2.Id, ActionName = "Submit Application", ButtonColor = "#1e40af", ButtonIcon = "Send", RequiredPermission = "Learners:Submit", NewEntityStatusCode = "SUBMITTED" },
+                
+                // 2. Reviewer actions on Submitted
+                new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS2.Id, ToStateId = lrnS5.Id, ActionName = "Recommend for Registration", ButtonColor = "#0284c7", ButtonIcon = "ThumbUp", RequiredPermission = "Learners:Review", NewEntityStatusCode = "RECOMMENDED" },
+                new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS2.Id, ToStateId = lrnS3.Id, ActionName = "Reject for Resubmission (RFI)", ButtonColor = "#f59e0b", ButtonIcon = "HelpOutline", RequiresComments = true, RequiredPermission = "Learners:Review", NewEntityStatusCode = "REJECTED_RESUBMIT" },
+                new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS2.Id, ToStateId = lrnS7.Id, ActionName = "Reject Application", ButtonColor = "#dc2626", ButtonIcon = "Cancel", RequiresComments = true, RequiredPermission = "Learners:Review", NewEntityStatusCode = "REJECTED" },
+
+                // 3. User actions on Rejected for Resubmission
+                new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS3.Id, ToStateId = lrnS4.Id, ActionName = "Resubmit Remediated Application", ButtonColor = "#059669", ButtonIcon = "Send", RequiredPermission = "Learners:Submit", NewEntityStatusCode = "RESUBMITTED" },
+
+                // 4. Reviewer actions on Resubmitted
+                new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS4.Id, ToStateId = lrnS5.Id, ActionName = "Recommend for Registration", ButtonColor = "#0284c7", ButtonIcon = "ThumbUp", RequiredPermission = "Learners:Review", NewEntityStatusCode = "RECOMMENDED" },
+                new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS4.Id, ToStateId = lrnS7.Id, ActionName = "Reject Application", ButtonColor = "#dc2626", ButtonIcon = "Cancel", RequiresComments = true, RequiredPermission = "Learners:Review", NewEntityStatusCode = "REJECTED" },
+
+                // 5. Approver actions on Recommended
+                new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS5.Id, ToStateId = lrnS6.Id, ActionName = "Approve & Register Contract", ButtonColor = "#16a34a", ButtonIcon = "CheckCircle", RequiredPermission = "Learners:Approve", NewEntityStatusCode = "REGISTERED" },
+                new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS5.Id, ToStateId = lrnS7.Id, ActionName = "Decline Registration", ButtonColor = "#dc2626", ButtonIcon = "Block", RequiresComments = true, RequiredPermission = "Learners:Approve", NewEntityStatusCode = "REJECTED" },
+
+                // 6. Withdrawal actions (allowed from pre-registration states)
+                new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS1.Id, ToStateId = lrnS8.Id, ActionName = "Withdraw Application", ButtonColor = "#6b7280", ButtonIcon = "CancelPresentation", RequiresComments = true, RequiredPermission = "Learners:Withdraw", NewEntityStatusCode = "WITHDRAWN" },
+                new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS2.Id, ToStateId = lrnS8.Id, ActionName = "Withdraw Application", ButtonColor = "#6b7280", ButtonIcon = "CancelPresentation", RequiresComments = true, RequiredPermission = "Learners:Withdraw", NewEntityStatusCode = "WITHDRAWN" },
+                new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS3.Id, ToStateId = lrnS8.Id, ActionName = "Withdraw Application", ButtonColor = "#6b7280", ButtonIcon = "CancelPresentation", RequiresComments = true, RequiredPermission = "Learners:Withdraw", NewEntityStatusCode = "WITHDRAWN" }
             );
             await context.SaveChangesAsync();
         }

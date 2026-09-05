@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-05 11:40:27 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 187
+> **Generated:** 2026-09-05 21:39:11 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 193
 
 ---
 
@@ -18,6 +18,7 @@
 | `dbo` | [`AqpLearnerAssessment`](#aqplearnerassessment) | `AqpLearnerAssessment` | 20 | `Id` | External Integrated Summative Assessment (EISA) record administered by an AQP for a registered learner. |
 | `dbo` | [`AqpPartner`](#aqppartner) | `AqpPartner` | 19 | `Id` | Assessment Quality Partner (AQP) accredited by QCTO to develop assessment instruments and manage EISA exams. |
 | `dbo` | [`AqpQualificationScope`](#aqpqualificationscope) | `AqpQualificationScope` | 12 | `Id` | Qualifications in scope for which the AQP is authorized to administer external summative assessments (EISA). |
+| `dbo` | [`ArplDocumentChecklist`](#arpldocumentchecklist) | `ArplDocumentChecklist` | 16 | `Id` | System entity for ArplDocumentChecklist data governance. |
 | `dbo` | [`ArplExperienceDetail`](#arplexperiencedetail) | `ArplExperienceDetail` | 12 | `Id` | Historical work experience item claimed under ARPL. |
 | `dbo` | [`ArplTradeTestInformation`](#arpltradetestinformation) | `ArplTradeTestInformation` | 17 | `Id` | Artisan Recognition of Prior Learning (ARPL) Portfolio Assessment record. |
 | `dbo` | [`ArplTrainingDetail`](#arpltrainingdetail) | `ArplTrainingDetail` | 10 | `Id` | Prior formal or non-formal training modules completed by an ARPL candidate. |
@@ -29,7 +30,8 @@
 | `dbo` | [`AuditLog`](#auditlog) | `AuditLog` | 11 | `Id` | Immutable operational audit trail recording entity mutations, actor identity, timestamps, and JSON snapshots. |
 | `dbo` | [`BankingDetails`](#bankingdetails) | `BankingDetails` | 34 | `Id` | System entity for BankingDetails data governance. |
 | `dbo` | [`BankingDetailsAudit`](#bankingdetailsaudit) | `BankingDetailsAudit` | 8 | `Id` | System entity for BankingDetailsAudit data governance. |
-| `dbo` | [`CompanyLearner`](#companylearner) | `CompanyLearner` | 43 | `Id` | Represents a learner registration agreement linked to an employer organisation, training provider, and MerSETA learning programme, capturing all statutory fields for SETMIS Files 500, 501, 502, and 506. |
+| `dbo` | [`CertificateDistributionEvent`](#certificatedistributionevent) | `CertificateDistributionEvent` | 14 | `Id` | Certificate Distribution Event tracking for National Red Seal certificates (Section 4.2.6). |
+| `dbo` | [`CompanyLearner`](#companylearner) | `CompanyLearner` | 53 | `Id` | Represents a learner registration agreement linked to an employer organisation, training provider, and MerSETA learning programme, capturing all statutory fields for SETMIS Files 500, 501, 502, and 506. |
 | `dbo` | [`CompanyLearnerChangeRequest`](#companylearnerchangerequest) | `CompanyLearnerChangeRequest` | 16 | `Id` | Formal change request for amending an active registered CompanyLearner contract or demographic details. |
 | `dbo` | [`CompanyLearnerLostTime`](#companylearnerlosttime) | `CompanyLearnerLostTime` | 16 | `Id` | Tracks suspended or lost training time and recalculates revised contract end dates. |
 | `dbo` | [`CompanyLearnerTermination`](#companylearnertermination) | `CompanyLearnerTermination` | 15 | `Id` | Manages formal bilateral or unilateral cancellation of learner contracts. |
@@ -61,8 +63,10 @@
 | `dbo` | [`GrantTranchePayment`](#granttranchepayment) | `GrantTranchePayment` | 19 | `Id` | Tranche Invoices and Payment Requisitions. |
 | `dbo` | [`InterSetaTransfer`](#intersetatransfer) | `InterSetaTransfer` | 16 | `Id` | Inter-SETA Transfer of employer registration and levy funds between SETAs. |
 | `dbo` | [`LearnerAssessment`](#learnerassessment) | `LearnerAssessment` | 30 | `Id` | Formative and summative learning programme unit standard assessment evaluations, capturing all statutory fields required for SETMIS File 503 (Unit Standard Enrolment) reporting. |
-| `dbo` | [`LearnerTradeTest`](#learnertradetest) | `LearnerTradeTest` | 28 | `Id` | Trade test final competency evaluation and artisan certification attempt records (ARPL & standard), fully normalized with statutory columns required for SETMIS File 505 (Trade Test) reporting. |
-| `dbo` | [`LearnerTradeTestApplication`](#learnertradetestapplication) | `LearnerTradeTestApplication` | 33 | `Id` | Artisan Trade Test Application and Assessment Record (Section 26D / Section 28 ARPL / Apprenticeships). |
+| `dbo` | [`LearnerRegisteredUnitStandard`](#learnerregisteredunitstandard) | `LearnerRegisteredUnitStandard` | 12 | `Id` | Tracks individual Unit Standards or Skills Sets registered against a CompanyLearner for Skills Programme and Unit Standard enrolments (SETMIS File 503). |
+| `dbo` | [`LearnerTradeTest`](#learnertradetest) | `LearnerTradeTest` | 29 | `Id` | Trade test final competency evaluation and artisan certification attempt records (ARPL & standard), fully normalized with statutory columns required for SETMIS File 505 (Trade Test) reporting. |
+| `dbo` | [`LearnerTradeTestApplication`](#learnertradetestapplication) | `LearnerTradeTestApplication` | 69 | `Id` | Artisan Trade Test Application and Assessment Record (Section 26D / Section 28 ARPL / Apprenticeships). |
+| `dbo` | [`LearnerTradeTestWithdrawal`](#learnertradetestwithdrawal) | `LearnerTradeTestWithdrawal` | 10 | `Id` | Non-repudiation audit record for withdrawn ARPL and Trade Test applications (Section 4.2.8). |
 | `dbo` | [`LevyFile`](#levyfile) | `LevyFile` | 16 | `Id` | Monthly SARS Skills Development Levy file import batches. |
 | `dbo` | [`LevyFileLine`](#levyfileline) | `LevyFileLine` | 21 | `Id` | Individual employer monthly SARS levy transaction breakdown. |
 | `dbo` | [`MandatoryGrantDisbursement`](#mandatorygrantdisbursement) | `MandatoryGrantDisbursement` | 17 | `Id` | Mandatory Grant 20% Rebate Payouts for compliant employers submitting WSP/ATR. |
@@ -74,13 +78,14 @@
 | `dbo` | [`NambSubmissionBatch`](#nambsubmissionbatch) | `NambSubmissionBatch` | 15 | `Id` | Represents a formal National Artisan Moderation Body (NAMB) moderation and serial allocation submission batch. |
 | `dbo` | [`NonSetaCompany`](#nonsetacompany) | `NonSetaCompany` | 13 | `Id` | Non-SETA External Employer / Organisation registered with other Quality Councils / SETAs. |
 | `dbo` | [`NonSetaQualificationsCompletion`](#nonsetaqualificationscompletion) | `NonSetaQualificationsCompletion` | 19 | `Id` | Cross-SETA Qualification & TVET College Achievement Verification for merSETA articulation. |
-| `dbo` | [`Organisation`](#organisation) | `Organisation` | 44 | `Id` | Registered employer, host workplace, or skills development entity under MerSETA jurisdiction, fully normalized with statutory columns required for SETMIS File 100 and File 200 reporting. |
+| `dbo` | [`Organisation`](#organisation) | `Organisation` | 49 | `Id` | Registered employer, host workplace, or skills development entity under MerSETA jurisdiction, fully normalized with statutory columns required for SETMIS File 100 and File 200 reporting. |
 | `dbo` | [`OrganisationContact`](#organisationcontact) | `OrganisationContact` | 12 | `Id` | Liaison contact person link associating an individual Person with an Employer Organisation. |
 | `dbo` | [`OrganisationSite`](#organisationsite) | `OrganisationSite` | 25 | `Id` | Operational branch facility, plant, or training site belonging to an Employer Organisation, supporting multi-site mapping and GPS geolocation for SETMIS File 200 reporting. |
 | `dbo` | [`Person`](#person) | `Person` | 47 | `Id` | Core demographic profile storing individual identity, SA ID/Passport, Washington Group functioning, POPIA compliance, educational background, and contact details for SETMIS statutory reporting. |
-| `dbo` | [`PersonContact`](#personcontact) | `PersonContact` | 16 | `Id` | Vertically partitioned satellite entity storing residential, postal, and telecommunications contact data for an individual. |
+| `dbo` | [`PersonContact`](#personcontact) | `PersonContact` | 25 | `Id` | Vertically partitioned satellite entity storing residential, postal, and telecommunications contact data for an individual. |
 | `dbo` | [`PersonDemographics`](#persondemographics) | `PersonDemographics` | 15 | `Id` | Vertically partitioned satellite entity storing demographic, language, equity, and statutory POPIA consent metadata. |
 | `dbo` | [`PersonDisabilityRating`](#persondisabilityrating) | `PersonDisabilityRating` | 17 | `Id` | Vertically partitioned satellite entity isolating special personal information under POPIA: Washington Group Functioning disability difficulty ratings, assessment records, and support notes. |
+| `dbo` | [`PersonGuardian`](#personguardian) | `PersonGuardian` | 17 | `Id` | System entity for PersonGuardian data governance. |
 | `dbo` | [`PipLearnerAllocation`](#piplearnerallocation) | `PipLearnerAllocation` | 12 | `Id` | Breakdown of awarded learner interventions and allowance budgets in a PIP. |
 | `dbo` | [`ProjectImplementationPlan`](#projectimplementationplan) | `ProjectImplementationPlan` | 17 | `Id` | Discretionary Grant Project Implementation Plan (PIP) and contracting governance. |
 | `dbo` | [`QualificationsCurriculumDevelopment`](#qualificationscurriculumdevelopment) | `QualificationsCurriculumDevelopment` | 31 | `Id` | Qualifications Curriculum Development (QCD) Application for QCTO Occupational Qualifications and Realignment. |
@@ -106,7 +111,7 @@
 | `dbo` | [`SystemFeatureFlag`](#systemfeatureflag) | `SystemFeatureFlag` | 11 | `Id` | Granular runtime feature flags for enabling/disabling modules and integrations. All external third-party integrations default to IsEnabled = false. |
 | `dbo` | [`SystemNotification`](#systemnotification) | `SystemNotification` | 14 | `Id` | Persistent system notification for real-time SignalR push and user inbox alerts. |
 | `dbo` | [`TradeMentorRatioPolicy`](#tradementorratiopolicy) | `TradeMentorRatioPolicy` | 15 | `Id` | Statutory artisan mentor-to-apprentice ratio policy per trade qualification or OFO occupational code. Regulates maximum learner supervision capacity for workplace approvals under NAMB and QCTO frameworks. |
-| `dbo` | [`TradeTestTask`](#tradetesttask) | `TradeTestTask` | 15 | `Id` | Practical Task and Scoring Item evaluated during the Trade Test. |
+| `dbo` | [`TradeTestTask`](#tradetesttask) | `TradeTestTask` | 19 | `Id` | Practical Task and Scoring Item evaluated during the Trade Test. |
 | `dbo` | [`TrainingCommittee`](#trainingcommittee) | `TrainingCommittee` | 10 | `Id` | Employer Workplace Training Committee constituted per statutory merSETA guidelines. |
 | `dbo` | [`TrainingCommitteeMember`](#trainingcommitteemember) | `TrainingCommitteeMember` | 10 | `Id` | Individual Union and Employer representatives on a Training Committee. |
 | `dbo` | [`TrainingProvider`](#trainingprovider) | `TrainingProvider` | 25 | `Id` | Accredited Skills Development Provider (SDP) offering registered occupational qualifications and skills programmes, capturing all statutory fields required for SETMIS File 100 reporting. |
@@ -115,6 +120,7 @@
 | `dbo` | [`TrainingProviderQualification`](#trainingproviderqualification) | `TrainingProviderQualification` | 11 | `Id` | Registered SAQA qualification delivery scope accredited to a Training Provider. |
 | `dbo` | [`TrainingProviderUnitStandard`](#trainingproviderunitstandard) | `TrainingProviderUnitStandard` | 10 | `Id` | Registered SAQA unit standard accredited for delivery by a Training Provider. |
 | `dbo` | [`Visit`](#visit) | `Visit` | 14 | `Id` | On-site monitoring, workplace inspection, and employer liaison visits scheduled and executed by MerSETA staff. |
+| `dbo` | [`WizardDraftSession`](#wizarddraftsession) | `WizardDraftSession` | 18 | `Id` | Transient wizard draft state session. Stores progressive inputs and active step indices to enable seamless resume lifecycle across all 9 statutory enterprise wizards. |
 | `dbo` | [`WorkflowDefinition`](#workflowdefinition) | `WorkflowDefinition` | 10 | `Id` | Universal workflow process blueprint defining lifecycle states, gates, and transitions. |
 | `dbo` | [`WorkflowDelegation`](#workflowdelegation) | `WorkflowDelegation` | 14 | `Id` | Represents a time-bounded role and module delegation from one user to another (e.g., leave, acting capacity). |
 | `dbo` | [`WorkflowHistory`](#workflowhistory) | `WorkflowHistory` | 14 | `Id` | Immutable audit snapshot recording every workflow transition execution and decision comments. |
@@ -125,7 +131,7 @@
 | `dbo` | [`WorkflowTask`](#workflowtask) | `WorkflowTask` | 17 | `Id` | Task assigned to a specific role or user requiring review, inspection, or verification action. |
 | `dbo` | [`WorkflowTaskLease`](#workflowtasklease) | `WorkflowTaskLease` | 12 | `Id` | Represents a distributed concurrency lock lease on a workflow task to prevent simultaneous claims and race conditions. |
 | `dbo` | [`WorkflowTransition`](#workflowtransition) | `WorkflowTransition` | 14 | `Id` | Authorized state transition path with role authorization gates and UI button metadata. |
-| `dbo` | [`WorkplaceApproval`](#workplaceapproval) | `WorkplaceApproval` | 22 | `Id` | Workplace site inspection approval for hosting apprentice and learnership training. |
+| `dbo` | [`WorkplaceApproval`](#workplaceapproval) | `WorkplaceApproval` | 42 | `Id` | Workplace site inspection approval for hosting apprentice and learnership training. |
 | `dbo` | [`WorkplaceApprovalMentor`](#workplaceapprovalmentor) | `WorkplaceApprovalMentor` | 16 | `Id` | Qualified artisan mentor assigned to supervise apprentices and learners at an approved workplace. |
 | `dbo` | [`WorkplaceApprovalToolList`](#workplaceapprovaltoollist) | `WorkplaceApprovalToolList` | 11 | `Id` | Tool, equipment, or health and safety checklist item inspected for workplace qualification approval. |
 | `dbo` | [`WorkplaceMonitoringActionPlan`](#workplacemonitoringactionplan) | `WorkplaceMonitoringActionPlan` | 15 | `Id` | Corrective Action Plan for identified defects or non-compliances. |
@@ -518,6 +524,49 @@
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
 | `IX_AqpQualificationScope_AqpPartnerId` | `AqpPartnerId` | No |
+
+---
+
+### <a id="arpldocumentchecklist"></a> `dbo.ArplDocumentChecklist`
+
+**Description:** System entity for ArplDocumentChecklist data governance.  
+**CLR Model:** `Nsdms.Domain.Entities.ArplDocumentChecklist`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DocumentAttachmentId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `DocumentTitle` | `nvarchar(max)` | **NOT NULL** |  | Domain property for DocumentTitle. |
+| `DocumentTypeCode` | `nvarchar(100)` | **NOT NULL** |  | Statutory Document Type Codes: - STATEMENT_OF_RESULTS (Statement of results - Toolkit) - ARPL_APPLICATION_FORM (ARPL trade test application form - Both) - CERTIFIED_ID_PASSPORT (Certified copy of ID or passport - Both) - LEGAL_STATUS_PROOF (Documentary proof showing legal stay in SA - Both foreign) - NAMB_EVIDENCE_PACK (Confirmation of NAMB evidence packs submitted - Toolkit) - SERVICE_LETTER (Workplace service letters - Both) - POE_CHECKLIST (Portfolio of Evidence Checklist - Toolkit) - CERTIFIED_HIGHEST_QUAL (Certified copy of highest qualification - Non-toolkit) - PRE_ASSESSMENT_REPORT (Pre-assessment evaluation report from TTC - Non-toolkit) |
+| `IsUploaded` | `bit` | **NOT NULL** |  | Domain property for IsUploaded. |
+| `IsVerified` | `bit` | **NOT NULL** |  | Domain property for IsVerified. |
+| `LearnerTradeTestApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `RejectionReason` | `nvarchar(max)` | NULL |  | Domain property for RejectionReason. |
+| `UploadedAt` | `datetime2` | NULL |  | Domain property for UploadedAt. |
+| `UploadedByUserId` | `nvarchar(max)` | NULL |  | Domain property for UploadedByUserId. |
+| `VerifiedByUserId` | `nvarchar(max)` | NULL |  | Domain property for VerifiedByUserId. |
+| `VerifiedDate` | `datetime2` | NULL |  | Domain property for VerifiedDate. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_ArplDocumentChecklist_DocumentAttachment_DocumentAttachmentId` | `DocumentAttachmentId` | `dbo.DocumentAttachment` | `SetNull` |
+| `FK_ArplDocumentChecklist_LearnerTradeTestApplication_LearnerTradeTestApplicationId` | `LearnerTradeTestApplicationId` | `dbo.LearnerTradeTestApplication` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ArplDocumentChecklist_DocumentTypeCode` | `DocumentTypeCode` | No |
+| `IX_ArplDocumentChecklist_LearnerTradeTestApplicationId` | `LearnerTradeTestApplicationId` | No |
 
 ---
 
@@ -965,6 +1014,46 @@
 
 ---
 
+### <a id="certificatedistributionevent"></a> `dbo.CertificateDistributionEvent`
+
+**Description:** Certificate Distribution Event tracking for National Red Seal certificates (Section 4.2.6).  
+**CLR Model:** `Nsdms.Domain.Entities.CertificateDistributionEvent`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ConsignmentOrTrackingNumber` | `nvarchar(100)` | NULL |  | Domain property for ConsignmentOrTrackingNumber. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DispatchedByUserId` | `nvarchar(max)` | NULL |  | Domain property for DispatchedByUserId. |
+| `DispatchedDate` | `datetime2` | **NOT NULL** |  | Domain property for DispatchedDate. |
+| `DistributionMethodCode` | `nvarchar(100)` | **NOT NULL** |  | Domain property for DistributionMethodCode. |
+| `LearnerTradeTestApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `Notes` | `nvarchar(max)` | NULL |  | Domain property for Notes. |
+| `ReceivedDate` | `datetime2` | NULL |  | Domain property for ReceivedDate. |
+| `RecipientIdNumber` | `nvarchar(max)` | NULL |  | Domain property for RecipientIdNumber. |
+| `RecipientName` | `nvarchar(200)` | NULL |  | Domain property for RecipientName. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_CertificateDistributionEvent_LearnerTradeTestApplication_LearnerTradeTestApplicationId` | `LearnerTradeTestApplicationId` | `dbo.LearnerTradeTestApplication` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_CertificateDistributionEvent_DistributionMethodCode` | `DistributionMethodCode` | No |
+| `IX_CertificateDistributionEvent_LearnerTradeTestApplicationId` | `LearnerTradeTestApplicationId` | No |
+
+---
+
 ### <a id="companylearner"></a> `dbo.CompanyLearner`
 
 **Description:** Represents a learner registration agreement linked to an employer organisation, training provider, and MerSETA learning programme, capturing all statutory fields for SETMIS Files 500, 501, 502, and 506.  
@@ -992,11 +1081,15 @@
 | `EnrolmentStatusReasonId` | `nvarchar(10)` | NULL |  | Statutory reason code for contract termination or status change (references lookup.EnrolmentStatusReasonType). |
 | `EnrolmentTypeId` | `nvarchar(10)` | NULL |  | Learner delivery mode classification code (references lookup.EnrolmentType: 01 Contact, 02 Distance, 03 Mixed Mode, 04 Workplace Based). |
 | `ExpectedCompletionDate` | `datetime2` | NULL |  | Projected completion date based on registered programme curriculum duration. |
+| `ExternalSetaId` | `nvarchar(10)` | NULL |  | External SETA identifier for non-employer entities paying levies to other SETAs. |
 | `FundingId` | `nvarchar(10)` | NULL |  | Funding source lookup identifier (references lookup.FundingType: 01 SETA Funded, 02 Employer Funded, 03 NSF). |
 | `FundingTypeCode` | `nvarchar(50)` | NULL |  | Funding vehicle classification code (e.g. MandatoryGrant, DiscretionaryGrant, SelfFunded). |
+| `HasPendingModifications` | `bit` | **NOT NULL** |  | Flags whether modifications have been made to this application prior to approval. |
 | `InternshipStatusId` | `nvarchar(10)` | NULL |  | Work Integrated Learning / Internship milestone standing (references lookup.InternshipStatusType: 01 In Progress, 02 Completed, 03 Withdrawn). |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the learner record is active in reporting and SETMIS submissions. |
+| `IsNonEmployerEntity` | `bit` | **NOT NULL** |  | Indicates whether the contracting partner is a Non-Employer Entity (TVET, CET, HEI, NGO). |
 | `LearnerContractNumber` | `nvarchar(50)` | NULL |  | Unique MerSETA-generated learner agreement / contract registration number. |
+| `LearnerSignatureDate` | `datetime2` | NULL |  | Date when the learner physically or electronically signed the agreement. Used to enforce the statutory 30-working-day submission deadline. |
 | `LearnershipId` | `nvarchar(50)` | NULL |  | Registered SAQA Learnership ID Code (e.g. 18Q180026241203) for SETMIS File 500 and 501. |
 | `LearningProgrammeTypeCode` | `nvarchar(50)` | NULL |  | Classification code of the learning programme (references lookup.LearningProgrammeType: 01 Apprenticeship, 02 Learnership, 03 Skills Programme, 04 Internship, 05 Bursary). |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
@@ -1012,12 +1105,18 @@
 | `PracticalProviderEtqaId` | `nvarchar(10)` | NULL |  | Secondary practical training provider ETQA ID (default 17). |
 | `PriorQualificationAchievementDate` | `datetime2` | NULL |  | Date when prior qualification was achieved. |
 | `PriorQualificationId` | `nvarchar(50)` | NULL |  | Prior completed TVET / Higher Education qualification ID achieved before entering internship. |
-| `QualificationTitle` | `nvarchar(250)` | **NOT NULL** |  | Title of the registered SAQA / QCTO qualification or learning programme. |
+| `ProfessionalRegistrationNumber` | `nvarchar(100)` | NULL |  | Professional council candidate registration number (e.g. ECSA Candidate Engineer) for Candidacy programmes. |
+| `QualificationTitle` | `nvarchar(250)` | NULL |  | Title of the registered SAQA / QCTO qualification or learning programme. |
 | `RegistrationDate` | `datetime2` | **NOT NULL** |  | Official date when the learner contract was officially registered with MerSETA. |
 | `SaqaQualificationId` | `int` | NULL |  | SAQA Registered Qualification ID code (SETMIS File 501, 505, 506). |
 | `SetaRegion` | `nvarchar(max)` | NULL |  | MerSETA regional office responsible for managing this learner agreement. |
+| `SignatoryPersonId` | `int` | NULL |  | Optional foreign key referencing the Person who signed off the application. |
+| `SignatoryRoleTitle` | `nvarchar(100)` | NULL |  | Appointed role title of the individual executing the submission sign-off. |
+| `SubmissionDate` | `datetime2` | NULL |  | System auto-generated date and time when the application was formally submitted to merSETA. |
 | `TrainingProviderId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the accredited Skills Development Training Provider (SDP). |
 | `UrbanRuralId` | `nvarchar(10)` | NULL |  | Geographic intervention area classification (references lookup.UrbanRuralType: 01 Urban, 02 Rural, 98 Unknown). |
+| `WithdrawalComments` | `nvarchar(max)` | NULL |  | Detailed comments or justification recorded upon application withdrawal. |
+| `WithdrawalReasonCode` | `nvarchar(50)` | NULL |  | Reason code if the learner agreement application is withdrawn prior to approval. |
 
 #### Foreign Key Constraints
 
@@ -1038,6 +1137,7 @@
 | `IX_CompanyLearner_EnrolmentTypeId` | `EnrolmentTypeId` | No |
 | `IX_CompanyLearner_FundingId` | `FundingId` | No |
 | `IX_CompanyLearner_LearnerContractNumber` | `LearnerContractNumber` | No |
+| `IX_CompanyLearner_LearnerSignatureDate` | `LearnerSignatureDate` | No |
 | `IX_CompanyLearner_LearnershipId` | `LearnershipId` | No |
 | `IX_CompanyLearner_NonNqfInterventionCode` | `NonNqfInterventionCode` | No |
 | `IX_CompanyLearner_OfoCode` | `OfoCode` | No |
@@ -1046,6 +1146,7 @@
 | `IX_CompanyLearner_PartOfId` | `PartOfId` | No |
 | `IX_CompanyLearner_PersonId` | `PersonId` | No |
 | `IX_CompanyLearner_RegistrationDate` | `RegistrationDate` | No |
+| `IX_CompanyLearner_SubmissionDate` | `SubmissionDate` | No |
 | `IX_CompanyLearner_TrainingProviderId` | `TrainingProviderId` | No |
 | `IX_CompanyLearner_UrbanRuralId` | `UrbanRuralId` | No |
 
@@ -2386,6 +2487,44 @@
 
 ---
 
+### <a id="learnerregisteredunitstandard"></a> `dbo.LearnerRegisteredUnitStandard`
+
+**Description:** Tracks individual Unit Standards or Skills Sets registered against a CompanyLearner for Skills Programme and Unit Standard enrolments (SETMIS File 503).  
+**CLR Model:** `Nsdms.Domain.Entities.LearnerRegisteredUnitStandard`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent CompanyLearner record. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `Credits` | `int` | NULL |  | Number of credits attached to this unit standard. |
+| `IsCore` | `bit` | **NOT NULL** |  | Indicates whether this unit standard is Core, Fundamental, or Elective. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `NqfLevel` | `int` | NULL |  | NDF level of the unit standard (e.g. 2, 3, 4, 5). |
+| `StatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current enrolment / competency status code (e.g. Enrolled, Competent, NotYetCompetent). |
+| `UnitStandardId` | `int` | **NOT NULL** |  | SAQA Unit Standard ID number (e.g. 116937 or 9964). |
+| `UnitStandardTitle` | `nvarchar(250)` | **NOT NULL** |  | Official SAQA descriptive title of the unit standard. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_LearnerRegisteredUnitStandard_CompanyLearner_CompanyLearnerId` | `CompanyLearnerId` | `dbo.CompanyLearner` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_LearnerRegisteredUnitStandard_CompanyLearnerId` | `CompanyLearnerId` | No |
+| `IX_LearnerRegisteredUnitStandard_UnitStandardId` | `UnitStandardId` | No |
+
+---
+
 ### <a id="learnertradetest"></a> `dbo.LearnerTradeTest`
 
 **Description:** Trade test final competency evaluation and artisan certification attempt records (ARPL & standard), fully normalized with statutory columns required for SETMIS File 505 (Trade Test) reporting.  
@@ -2404,6 +2543,7 @@
 | `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the registered CompanyLearner contract. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `LearnerTradeTestApplicationId` | `int` | NULL | 🔗 **FK** | Foreign key linking this statutory SETMIS File 505 record to the originating operational trade test application. |
 | `ModeratorEtqaId` | `nvarchar(10)` | NULL |  | Submitting ETQA ID of the registered Moderator (default 17). |
 | `ModeratorPersonId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the verifying moderator Person. |
 | `ModeratorRegistrationNumber` | `nvarchar(50)` | NULL |  | Registered ETQA Moderator / NAMB Verifier registration number (SETMIS File 505). |
@@ -2431,6 +2571,7 @@
 | :--- | :--- | :--- | :--- |
 | `FK_LearnerTradeTest_Person_AssessorPersonId` | `AssessorPersonId` | `dbo.Person` | `Restrict` |
 | `FK_LearnerTradeTest_CompanyLearner_CompanyLearnerId` | `CompanyLearnerId` | `dbo.CompanyLearner` | `Cascade` |
+| `FK_LearnerTradeTest_LearnerTradeTestApplication_LearnerTradeTestApplicationId` | `LearnerTradeTestApplicationId` | `dbo.LearnerTradeTestApplication` | `ClientSetNull` |
 | `FK_LearnerTradeTest_Person_ModeratorPersonId` | `ModeratorPersonId` | `dbo.Person` | `Restrict` |
 | `FK_LearnerTradeTest_TrainingProvider_TrainingProviderId` | `TrainingProviderId` | `dbo.TrainingProvider` | `SetNull` |
 
@@ -2468,31 +2609,67 @@
 | `AssessorName` | `nvarchar(max)` | NULL |  | Domain property for AssessorName. |
 | `AssessorRegistrationNumber` | `nvarchar(max)` | NULL |  | Domain property for AssessorRegistrationNumber. |
 | `AttemptNumber` | `int` | **NOT NULL** |  | Domain property for AttemptNumber. |
+| `CertificateDistributedAt` | `datetime2` | NULL |  | Domain property for CertificateDistributedAt. |
 | `CertificateIssueDate` | `datetime2` | NULL |  | Domain property for CertificateIssueDate. |
+| `ClaRecommendationDate` | `datetime2` | NULL |  | Domain property for ClaRecommendationDate. |
+| `ClaRecommendationStatus` | `nvarchar(max)` | NULL |  | Domain property for ClaRecommendationStatus. |
+| `ClaRejectionReason` | `nvarchar(max)` | NULL |  | Domain property for ClaRejectionReason. |
+| `ClaUserId` | `nvarchar(max)` | NULL |  | Domain property for ClaUserId. |
 | `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `CompetencyStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Assessment outcome: Competent, NotYetCompetent, Absent, Deferred |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DesignatedTradeLevel` | `nvarchar(max)` | NULL |  | Domain property for DesignatedTradeLevel. |
+| `HasAttemptedTradeTestPreviously` | `bit` | **NOT NULL** |  | Indicates whether the candidate attempted a trade test previously. |
+| `IsFinalRejection` | `bit` | **NOT NULL** |  | Domain property for IsFinalRejection. |
+| `IsSelectedForQaAuditSample` | `bit` | **NOT NULL** |  | Quality Assurance 10% achievement audit sampling flag (DFD Step 4.0). |
+| `IsWithdrawn` | `bit` | **NOT NULL** |  | Domain property for IsWithdrawn. |
 | `LearnerReadinessDate` | `datetime2` | NULL |  | Domain property for LearnerReadinessDate. |
+| `LearnerSubmissionDate` | `datetime2` | NULL |  | Formal statutory learner submission timestamp. |
 | `ModeratorName` | `nvarchar(max)` | NULL |  | Domain property for ModeratorName. |
 | `ModeratorRegistrationNumber` | `nvarchar(max)` | NULL |  | Domain property for ModeratorRegistrationNumber. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NambApprovalDate` | `datetime2` | NULL |  | Domain property for NambApprovalDate. |
 | `NambDecisionStatusCode` | `nvarchar(max)` | **NOT NULL** |  | Domain property for NambDecisionStatusCode. |
+| `NambPackDocumentAttachmentId` | `int` | NULL |  | Domain property for NambPackDocumentAttachmentId. |
+| `NambPackVerifiedAt` | `datetime2` | NULL |  | Domain property for NambPackVerifiedAt. |
+| `NambPackVerifiedByUserId` | `nvarchar(max)` | NULL |  | Domain property for NambPackVerifiedByUserId. |
 | `NambSerialNumber` | `nvarchar(100)` | NULL |  | Serial number allocated by the National Artisan Moderation Body (NAMB). |
 | `NambSubmissionBatchId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the parent NAMB submission batch. |
 | `NambSubmissionDate` | `datetime2` | NULL |  | Domain property for NambSubmissionDate. |
 | `Notes` | `nvarchar(max)` | NULL |  | Domain property for Notes. |
+| `NoticeDispatchedDate` | `datetime2` | NULL |  | Date when the TTC 5-day advance notice was issued. |
 | `OrganisationId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `PreferredTradeTestCenterId` | `int` | NULL | 🔗 **FK** | Preferred Trade Test Centre (TTC) for the examination. |
+| `PreviousAssessmentCenterName` | `nvarchar(max)` | NULL |  | Domain property for PreviousAssessmentCenterName. |
+| `PreviousAttemptDate` | `datetime2` | NULL |  | Domain property for PreviousAttemptDate. |
+| `PreviousAttemptsCount` | `int` | NULL |  | Domain property for PreviousAttemptsCount. |
+| `PreviousTrainingCenterId` | `int` | NULL |  | Domain property for PreviousTrainingCenterId. |
+| `QaApprovalDate` | `datetime2` | NULL |  | Domain property for QaApprovalDate. |
+| `QaApprovalStatus` | `nvarchar(max)` | NULL |  | Domain property for QaApprovalStatus. |
+| `QaAuditSampleStatus` | `nvarchar(max)` | **NOT NULL** |  | Domain property for QaAuditSampleStatus. |
+| `QaRejectionReason` | `nvarchar(max)` | NULL |  | Domain property for QaRejectionReason. |
+| `QaSignedApplicationDocumentAttachmentId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `QaUserId` | `nvarchar(max)` | NULL |  | Domain property for QaUserId. |
+| `QualificationId` | `int` | NULL |  | Relational Link to SAQA Qualification / Listed Trade. |
+| `QualifyingCategory` | `nvarchar(max)` | NULL |  | Statutory ARPL Qualifying Category (Categories 1-8 per Section 5). |
+| `RequiresToolkit` | `bit` | **NOT NULL** |  | Indicates whether the designated trade requires an ARPL toolkit assessment (Section 5). |
+| `ResultsUploadDeadlineDate` | `datetime2` | NULL |  | Statutory 5-day post-assessment results upload deadline (Section 5). |
+| `ScannedCertificateDocumentAttachmentId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `ScheduledStartTime` | `nvarchar(max)` | NULL |  | Domain property for ScheduledStartTime. |
 | `SerialCertificateNumber` | `nvarchar(100)` | NULL |  | Final Serial Number for the Trade Certificate. |
-| `StatusCode` | `nvarchar(50)` | **NOT NULL** |  | Workflow status: Draft, Submitted, TradeCenterAllocated, AwaitingNambApproval, Assessing, Competent, Certified, Rejected |
+| `Specialisation` | `nvarchar(max)` | NULL |  | Trade specialisation under the designated trade. |
+| `StatusCode` | `nvarchar(50)` | **NOT NULL** |  | Workflow status: Draft, SavedDraft, Submitted, RejectedForResubmission, Resubmitted, Recommended, Registered, TradeCenterAllocated, Assessing, Competent, Certified, Rejected, Withdrawn |
 | `TradeOfoCode` | `nvarchar(max)` | NULL |  | Domain property for TradeOfoCode. |
+| `TradeTestSerialNumber` | `nvarchar(max)` | NULL |  | Official Trade Test Serial Number generated upon QA Approval (committed to record). |
 | `TradeTitle` | `nvarchar(200)` | **NOT NULL** |  | Domain property for TradeTitle. |
 | `TrainingProviderId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `WithdrawalNotes` | `nvarchar(max)` | NULL |  | Domain property for WithdrawalNotes. |
+| `WithdrawalReasonCode` | `nvarchar(max)` | NULL |  | Application withdrawal fields. |
+| `WithdrawnAt` | `datetime2` | NULL |  | Domain property for WithdrawnAt. |
+| `WithdrawnBy` | `nvarchar(max)` | NULL |  | Domain property for WithdrawnBy. |
 
 #### Foreign Key Constraints
 
@@ -2502,6 +2679,9 @@
 | `FK_LearnerTradeTestApplication_NambSubmissionBatch_NambSubmissionBatchId` | `NambSubmissionBatchId` | `dbo.NambSubmissionBatch` | `ClientSetNull` |
 | `FK_LearnerTradeTestApplication_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `SetNull` |
 | `FK_LearnerTradeTestApplication_Person_PersonId` | `PersonId` | `dbo.Person` | `Restrict` |
+| `FK_LearnerTradeTestApplication_TrainingProvider_PreferredTradeTestCenterId` | `PreferredTradeTestCenterId` | `dbo.TrainingProvider` | `SetNull` |
+| `FK_LearnerTradeTestApplication_DocumentAttachment_QaSignedApplicationDocumentAttachmentId` | `QaSignedApplicationDocumentAttachmentId` | `dbo.DocumentAttachment` | `SetNull` |
+| `FK_LearnerTradeTestApplication_DocumentAttachment_ScannedCertificateDocumentAttachmentId` | `ScannedCertificateDocumentAttachmentId` | `dbo.DocumentAttachment` | `SetNull` |
 | `FK_LearnerTradeTestApplication_TrainingProvider_TrainingProviderId` | `TrainingProviderId` | `dbo.TrainingProvider` | `SetNull` |
 
 #### Performance Indexes
@@ -2511,9 +2691,50 @@
 | `IX_LearnerTradeTestApplication_ApplicationNumber` | `ApplicationNumber` | ✅ Yes |
 | `IX_LearnerTradeTestApplication_CompanyLearnerId` | `CompanyLearnerId` | No |
 | `IX_LearnerTradeTestApplication_NambSerialNumber` | `NambSerialNumber` | No |
+| `IX_LearnerTradeTestApplication_OrganisationId` | `OrganisationId` | No |
 | `IX_LearnerTradeTestApplication_PersonId` | `PersonId` | No |
+| `IX_LearnerTradeTestApplication_PreferredTradeTestCenterId` | `PreferredTradeTestCenterId` | No |
+| `IX_LearnerTradeTestApplication_RequiresToolkit` | `RequiresToolkit` | No |
 | `IX_LearnerTradeTestApplication_SerialCertificateNumber` | `SerialCertificateNumber` | No |
 | `IX_LearnerTradeTestApplication_StatusCode` | `StatusCode` | No |
+| `IX_LearnerTradeTestApplication_TradeTestSerialNumber` | `TradeTestSerialNumber` | No |
+| `IX_LearnerTradeTestApplication_TrainingProviderId` | `TrainingProviderId` | No |
+
+---
+
+### <a id="learnertradetestwithdrawal"></a> `dbo.LearnerTradeTestWithdrawal`
+
+**Description:** Non-repudiation audit record for withdrawn ARPL and Trade Test applications (Section 4.2.8).  
+**CLR Model:** `Nsdms.Domain.Entities.LearnerTradeTestWithdrawal`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `LearnerTradeTestApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `WithdrawalDate` | `datetime2` | **NOT NULL** |  | Domain property for WithdrawalDate. |
+| `WithdrawalJustification` | `nvarchar(max)` | **NOT NULL** |  | Domain property for WithdrawalJustification. |
+| `WithdrawalReasonCode` | `nvarchar(100)` | **NOT NULL** |  | Domain property for WithdrawalReasonCode. |
+| `WithdrawnByUserId` | `nvarchar(100)` | **NOT NULL** |  | Domain property for WithdrawnByUserId. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_LearnerTradeTestWithdrawal_LearnerTradeTestApplication_LearnerTradeTestApplicationId` | `LearnerTradeTestApplicationId` | `dbo.LearnerTradeTestApplication` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_LearnerTradeTestWithdrawal_LearnerTradeTestApplicationId` | `LearnerTradeTestApplicationId` | No |
+| `IX_LearnerTradeTestWithdrawal_WithdrawalReasonCode` | `WithdrawalReasonCode` | No |
 
 ---
 
@@ -2988,16 +3209,21 @@
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `CustomMentorRatioCap` | `int` | NULL |  | Optional enterprise-wide uniform mentor capacity cap override (e.g. 5 learners per mentor across all site workshops). |
+| `ExternalSetaId` | `nvarchar(max)` | NULL |  | External SETA classification for entities paying levies to other SETAs (e.g. 10 for ETDPSETA, 23 for Services SETA). |
 | `FaxNumber` | `nvarchar(50)` | NULL |  | Facsimile transmission number. |
+| `GpVendorClass` | `nvarchar(50)` | NULL |  | Resolved Microsoft Dynamics GP Vendor Class code (AUTO, METAL, MOTOR, NEW TYRE, PLASTICS, SETA). |
+| `HasMissingChamberMapping` | `bit` | **NOT NULL** |  | Indicates whether this organisation lacks a valid merSETA Chamber or GP Vendor Class mapping, blocking downstream Discretionary Grant submissions, WSP submissions, MoAs, and ERP payment batches. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the organisation is currently active. |
 | `IsManualChamberOverride` | `bit` | **NOT NULL** |  | Indicates whether the organisation's chamber assignment was manually overridden instead of auto-derived from the SIC code. |
 | `IsMentorRatioEnforced` | `bit` | NULL |  | Explicit mentor ratio enforcement override for this organisation (null = inherit Global, true = enforce, false = exempt). |
+| `IsNonEmployerEntity` | `bit` | **NOT NULL** |  | Indicates whether this entity is a non-employer delivery partner (TVET, CET, HEI, NGO, CBO, Public Entity). |
 | `LevyCategoryCode` | `nvarchar(15)` | NULL |  | Organisation SARS levy compliance category code (e.g. LEVY_PAYING, NON_LEVY_PAYING, EXEMPT). |
 | `LogoDocumentId` | `int` | NULL |  | Foreign key referencing the organisation high-DPI brand logo in DocumentMetadata vault. |
 | `MainSdlNumber` | `nvarchar(20)` | NULL |  | Parent or holding company Main SDL number for enterprise site networks (SETMIS File 200). |
 | `MentorRatioExemptionReason` | `nvarchar(500)` | NULL |  | Statutory or executive justification when the organisation is granted an exemption from mentor ratios (e.g. State-Owned Enterprise Training Academy). |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `NonEmployerEntityType` | `nvarchar(max)` | NULL |  | Non-employer delivery partner classification (e.g. TVET, CET, HEI, NGO, NPO, CBO, PublicEntity, GovtDept, EmployerAssoc, OrganisedLabour). |
 | `OrganisationStatusCode` | `nvarchar(15)` | NULL |  | Current operational registration status code (references lookup.StatusType: ACTIVE, INACTIVE, SUSPENDED). |
 | `OrganisationTypeCode` | `nvarchar(15)` | NULL |  | Legal organisation constitution type code (references lookup.OrganisationType: PTY_LTD, CC, PUBLIC_ENTITY, NGO_NPO). |
 | `PhoneNumber` | `nvarchar(50)` | NULL |  | Primary telephone switchboard number. |
@@ -3029,6 +3255,8 @@
 | `IX_Organisation_ChamberCode` | `ChamberCode` | No |
 | `IX_Organisation_CompanyName` | `CompanyName` | No |
 | `IX_Organisation_CompanySizeCode` | `CompanySizeCode` | No |
+| `IX_Organisation_GpVendorClass` | `GpVendorClass` | No |
+| `IX_Organisation_HasMissingChamberMapping` | `HasMissingChamberMapping` | No |
 | `IX_Organisation_IsActive` | `IsActive` | No |
 | `IX_Organisation_IsManualChamberOverride` | `IsManualChamberOverride` | No |
 | `IX_Organisation_IsMentorRatioEnforced` | `IsMentorRatioEnforced` | No |
@@ -3234,16 +3462,25 @@
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Email` | `nvarchar(150)` | NULL |  | Primary email contact address. |
 | `FaxNumber` | `nvarchar(30)` | NULL |  | Facsimile contact number. |
+| `IsPostalSameAsPhysical` | `bit` | **NOT NULL** |  | Indicates whether postal address is identical to home residential address (Section 6.1 attribute 22). |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `NextOfKinContactNumber` | `nvarchar(max)` | NULL |  | Domain property for NextOfKinContactNumber. |
+| `NextOfKinName` | `nvarchar(max)` | NULL |  | Next of kin demographic and contact details (Section 6.1 attributes 29, 30). |
 | `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent Person record. |
 | `PhoneNumber` | `nvarchar(30)` | NULL |  | Primary telephone contact number. |
-| `PhysicalAddress` | `nvarchar(500)` | NULL |  | Physical residential street address line 1. |
+| `PhysicalAddress` | `nvarchar(500)` | NULL |  | Physical residential street address lines (Section 6.1 attributes 16, 17, 18). |
+| `PhysicalAddressLine2` | `nvarchar(max)` | NULL |  | Domain property for PhysicalAddressLine2. |
+| `PhysicalAddressLine3` | `nvarchar(max)` | NULL |  | Domain property for PhysicalAddressLine3. |
 | `PhysicalAddressPostalCode` | `nvarchar(20)` | NULL |  | Physical residential address postal code. |
-| `PostalAddress` | `nvarchar(500)` | NULL |  | Postal delivery address. |
+| `PostalAddress` | `nvarchar(500)` | NULL |  | Postal delivery address lines (Section 6.1 attributes 23, 24, 25). |
+| `PostalAddressLine2` | `nvarchar(max)` | NULL |  | Domain property for PostalAddressLine2. |
+| `PostalAddressLine3` | `nvarchar(max)` | NULL |  | Domain property for PostalAddressLine3. |
 | `PostalAddressPostalCode` | `nvarchar(20)` | NULL |  | Postal address delivery code. |
 | `ProvinceCode` | `nvarchar(15)` | NULL |  | South African province code of primary residence (references lookup.ProvinceType: GP, KZN, WC, EC, FS, MP, NW, NC, LP). |
+| `SecondaryEmail` | `nvarchar(max)` | NULL |  | Secondary email contact address (Section 6.1 attribute 32). |
 | `StatssaAreaCode` | `nvarchar(50)` | NULL |  | Statistics South Africa Spatial Area Code (references lookup.StatssaAreaCodeType). |
+| `UrbanRuralId` | `nvarchar(max)` | NULL |  | Urban / Rural area classification code (Section 6.1 attribute 20, references lookup.UrbanRuralType). |
 
 #### Foreign Key Constraints
 
@@ -3346,6 +3583,49 @@
 | :--- | :--- | :--- |
 | `IX_PersonDisabilityRating_DisabilityCode` | `DisabilityCode` | No |
 | `IX_PersonDisabilityRating_PersonId` | `PersonId` | ✅ Yes |
+
+---
+
+### <a id="personguardian"></a> `dbo.PersonGuardian`
+
+**Description:** System entity for PersonGuardian data governance.  
+**CLR Model:** `Nsdms.Domain.Entities.PersonGuardian`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CeasedAtAge18` | `bit` | **NOT NULL** |  | Flag indicating whether the parent/guardian relationship has ceased due to the learner attaining 18 years of age. |
+| `ContactNumber` | `nvarchar(20)` | **NOT NULL** |  | Statutory contact telephone / cell number (10 digits starting with 0). |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `EmailAddress` | `nvarchar(100)` | NULL |  | Email contact address of the guardian. |
+| `GuardianFullName` | `nvarchar(100)` | **NOT NULL** |  | Full legal given names and surname of the parent or guardian. |
+| `GuardianIdNumber` | `nvarchar(50)` | **NOT NULL** |  | South African National ID (13 digits) or foreign passport number of the guardian. |
+| `IsActive` | `bit` | **NOT NULL** |  | Active standing of the guardian record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the minor learner's Person record. |
+| `PhysicalAddress` | `nvarchar(250)` | NULL |  | Residential physical street address of the guardian. |
+| `PostalCode` | `nvarchar(10)` | NULL |  | Residential postal code. |
+| `RelationshipTypeId` | `nvarchar(50)` | **NOT NULL** |  | Relationship to minor learner (e.g. Parent, LegalGuardian, FosterParent, Sponsor). |
+| `SignatureDate` | `datetime2` | NULL |  | Date when the guardian signed the agreement. |
+| `SignatureSeal` | `nvarchar(100)` | NULL |  | Digital signature OTP token or verification reference. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_PersonGuardian_Person_PersonId` | `PersonId` | `dbo.Person` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_PersonGuardian_GuardianIdNumber` | `GuardianIdNumber` | No |
+| `IX_PersonGuardian_PersonId` | `PersonId` | No |
 
 ---
 
@@ -4407,15 +4687,19 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `AssessorComments` | `nvarchar(max)` | NULL |  | Domain property for AssessorComments. |
+| `AttemptNumber` | `int` | **NOT NULL** |  | Domain property for AttemptNumber. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `CreditRetentionExpiryDate` | `datetime2` | NULL |  | Domain property for CreditRetentionExpiryDate. |
 | `IsCompetent` | `bit` | **NOT NULL** |  | Domain property for IsCompetent. |
+| `IsRetainedCredit` | `bit` | **NOT NULL** |  | Statutory 50% task credit retention (valid for max 3 attempts or 18 months). |
 | `LearnerTradeTestApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `MarksObtained` | `decimal(18,2)` | **NOT NULL** |  | Domain property for MarksObtained. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PassPercentage` | `decimal(18,2)` | **NOT NULL** |  | Domain property for PassPercentage. |
 | `PercentageAchieved` | `decimal(18,2)` | **NOT NULL** |  | Domain property for PercentageAchieved. |
+| `TaskCode` | `nvarchar(max)` | NULL |  | Domain property for TaskCode. |
 | `TaskDescription` | `nvarchar(max)` | NULL |  | Domain property for TaskDescription. |
 | `TaskNumber` | `int` | **NOT NULL** |  | Domain property for TaskNumber. |
 | `TaskTitle` | `nvarchar(200)` | **NOT NULL** |  | Domain property for TaskTitle. |
@@ -4431,6 +4715,8 @@
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
+| `IX_TradeTestTask_AttemptNumber` | `AttemptNumber` | No |
+| `IX_TradeTestTask_IsRetainedCredit` | `IsRetainedCredit` | No |
 | `IX_TradeTestTask_LearnerTradeTestApplicationId` | `LearnerTradeTestApplicationId` | No |
 | `IX_TradeTestTask_TaskNumber` | `TaskNumber` | No |
 
@@ -4769,6 +5055,51 @@
 | `IX_Visit_OrganisationId` | `OrganisationId` | No |
 | `IX_Visit_VisitDate` | `VisitDate` | No |
 | `IX_Visit_VisitStatusCode` | `VisitStatusCode` | No |
+
+---
+
+### <a id="wizarddraftsession"></a> `dbo.WizardDraftSession`
+
+**Description:** Transient wizard draft state session. Stores progressive inputs and active step indices to enable seamless resume lifecycle across all 9 statutory enterprise wizards.  
+**CLR Model:** `Nsdms.Domain.Entities.WizardDraftSession`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CandidateKey` | `nvarchar(50)` | **NOT NULL** |  | Canonical identifier of the wizard flow (e.g. "DgGrantApplication", "WorkplaceApproval", "AssessorReRegistration"). |
+| `CompletedStepCount` | `int` | **NOT NULL** |  | Count of validated and completed steps. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `CurrentStepIndex` | `int` | **NOT NULL** |  | Active 0-based step index when the draft was saved. |
+| `DraftKey` | `nvarchar(100)` | **NOT NULL** |  | Unique deterministic draft session key, e.g. "DRAFT-DG-APP-USR101-ORG42" or a GUID. |
+| `DraftModelJson` | `nvarchar(max)` | **NOT NULL** |  | Serialized JSON snapshot of the wizard's state/model. |
+| `ExpiresAtUtc` | `datetime2` | **NOT NULL** |  | Expiration timestamp in UTC after which the draft is purged (default: 30 days). |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the draft is currently active and eligible for resume. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `OrganisationId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the employer/SDP organisation context. |
+| `Route` | `nvarchar(250)` | **NOT NULL** |  | Primary entry URL route for the wizard. |
+| `Status` | `nvarchar(30)` | **NOT NULL** |  | Lifecycle status of the draft session ("Active", "Submitted", "Discarded", "Expired"). |
+| `TotalStepCount` | `int` | **NOT NULL** |  | Total number of steps in this wizard. |
+| `UserId` | `nvarchar(100)` | **NOT NULL** |  | User identifier owning this in-progress draft. |
+| `WizardTitle` | `nvarchar(150)` | **NOT NULL** |  | Human-readable title of the wizard. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_WizardDraftSession_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `SetNull` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_WizardDraftSession_DraftKey` | `DraftKey` | ✅ Yes |
+| `IX_WizardDraftSession_OrganisationId` | `OrganisationId` | No |
+| `IX_WizardDraftSession_UserId_CandidateKey_IsActive` | `UserId, CandidateKey, IsActive` | No |
 
 ---
 
@@ -5148,17 +5479,27 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ApprovalDate` | `datetime2` | NULL |  | Official decision date granting workplace approval. |
+| `ApprovalExplanation` | `nvarchar(max)` | NULL |  | Detailed rationale for granting final workplace approval. |
 | `ApprovalNumber` | `nvarchar(50)` | **NOT NULL** |  | Official workplace approval certificate reference number (e.g. WPA-2026-001). |
+| `ApprovalReason` | `nvarchar(100)` | NULL |  | Statutory approval decision reason code. |
 | `ApprovalStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current approval lifecycle status code (e.g. Pending, Approved, Rejected, Expired). |
 | `AssessorPersonId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the MerSETA officer / assessor who performed the inspection. |
 | `ContactPersonId` | `int` | NULL | 🔗 **FK** | Mandatory Foreign key referencing the designated Employer Contact Person present during the workplace visit/approval. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `CustomTradeRatio` | `int` | NULL |  | Custom site-specific learner-to-mentor ratio override (e.g. 3 for 1:3), overriding the standard trade policy. |
+| `DecisionByPersonId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the manager or committee chairperson who rendered the decision. |
+| `DecisionDate` | `datetime2` | NULL |  | Date when the final committee or management evaluation decision was rendered. |
 | `ExpiryDate` | `datetime2` | NULL |  | Validity expiration date of the workplace approval certificate. |
+| `HomeSetaAgreementRef` | `nvarchar(max)` | NULL |  | Statutory Inter-SETA agreement or MOU reference number. |
+| `HomeSetaName` | `nvarchar(max)` | NULL |  | Title of the originating Home SETA if employer is registered outside merSETA. |
 | `InspectionDate` | `datetime2` | NULL |  | Date when the physical on-site audit inspection occurred. |
+| `InspectionDueDate` | `datetime2` | NULL |  | Statutory SLA deadline (20 South African business days from application submission). |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the workplace approval is currently active. |
+| `IsNonMerSetaCompany` | `bit` | **NOT NULL** |  | Indicates whether the host employer is registered with another SETA under non-merSETA SDL. |
 | `IsRatioEnforced` | `bit` | NULL |  | Explicit mentor ratio enforcement override for this workplace approval (null = inherit Org/Global, true = enforce, false = exempt). |
+| `IsSiteVisitRequired` | `bit` | NULL |  | Indicates whether a physical on-site audit visit is required (true) or desktop verification suffices (false). |
+| `LearningProgramTypeCode` | `nvarchar(100)` | NULL |  | Learning programme stream code (e.g. Apprenticeship, Learnership, InternshipNDiploma, OccupationalQual, SkillsProgramme, Candidacy). |
 | `MentorRatioExemptionNotes` | `nvarchar(500)` | NULL |  | Exemption justification or special dispensation notes for this workplace approval. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
@@ -5166,8 +5507,18 @@
 | `OrganisationSiteId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the specific branch or plant site approved. |
 | `QualificationTitle` | `nvarchar(250)` | **NOT NULL** |  | Title of the registered qualification approved for on-site hosting. |
 | `Recommendations` | `nvarchar(max)` | NULL |  | Official auditor recommendations, tool adjustments, or compliance notes. |
+| `RejectionExplanation` | `nvarchar(max)` | NULL |  | Detailed rationale for rejecting the workplace approval application. |
+| `RejectionReason` | `nvarchar(100)` | NULL |  | Statutory rejection decision reason code. |
+| `RequiresWorkplaceApproval` | `bit` | **NOT NULL** |  | Indicates whether this learning programme and qualification stream mandates statutory workplace approval. |
 | `SaqaQualificationId` | `int` | NULL |  | SAQA Registered Qualification ID code approved for practical workplace training. |
+| `SiteVisitJustification` | `nvarchar(max)` | NULL |  | Justification notes if a physical site visit is waived in favour of desktop audit. |
 | `TradeCode` | `nvarchar(50)` | NULL |  | Designated Trade / Occupational Code (references TradeMentorRatioPolicy.TradeCode, e.g. WELD, ELEC, FITT). |
+| `VerificationRecommendationExplanation` | `nvarchar(max)` | NULL |  | Detailed justification for recommending workplace approval. |
+| `VerificationRecommendationReason` | `nvarchar(100)` | NULL |  | Recommendation reason category for workplace verification. |
+| `VerificationRejectionExplanation` | `nvarchar(max)` | NULL |  | Detailed justification for rejecting or returning the application during verification. |
+| `VerificationRejectionReason` | `nvarchar(100)` | NULL |  | Rejection reason category identified during workplace verification. |
+| `VerifiedByPersonId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the officer person who performed the verification. |
+| `VerifiedDate` | `datetime2` | NULL |  | Date when the formal workplace verification report was concluded. |
 
 #### Foreign Key Constraints
 
@@ -5175,8 +5526,10 @@
 | :--- | :--- | :--- | :--- |
 | `FK_WorkplaceApproval_Person_AssessorPersonId` | `AssessorPersonId` | `dbo.Person` | `Restrict` |
 | `FK_WorkplaceApproval_Person_ContactPersonId` | `ContactPersonId` | `dbo.Person` | `Restrict` |
+| `FK_WorkplaceApproval_Person_DecisionByPersonId` | `DecisionByPersonId` | `dbo.Person` | `Restrict` |
 | `FK_WorkplaceApproval_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `Restrict` |
 | `FK_WorkplaceApproval_OrganisationSite_OrganisationSiteId` | `OrganisationSiteId` | `dbo.OrganisationSite` | `Restrict` |
+| `FK_WorkplaceApproval_Person_VerifiedByPersonId` | `VerifiedByPersonId` | `dbo.Person` | `Restrict` |
 
 #### Performance Indexes
 
@@ -5185,10 +5538,13 @@
 | `IX_WorkplaceApproval_ApprovalNumber` | `ApprovalNumber` | No |
 | `IX_WorkplaceApproval_ApprovalStatusCode` | `ApprovalStatusCode` | No |
 | `IX_WorkplaceApproval_ContactPersonId` | `ContactPersonId` | No |
+| `IX_WorkplaceApproval_DecisionByPersonId` | `DecisionByPersonId` | No |
+| `IX_WorkplaceApproval_InspectionDueDate` | `InspectionDueDate` | No |
 | `IX_WorkplaceApproval_IsRatioEnforced` | `IsRatioEnforced` | No |
 | `IX_WorkplaceApproval_OrganisationId` | `OrganisationId` | No |
 | `IX_WorkplaceApproval_OrganisationSiteId` | `OrganisationSiteId` | No |
 | `IX_WorkplaceApproval_TradeCode` | `TradeCode` | No |
+| `IX_WorkplaceApproval_VerifiedByPersonId` | `VerifiedByPersonId` | No |
 
 ---
 

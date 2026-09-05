@@ -1,0 +1,326 @@
+﻿@namespace Nsdms.Web.Components.Shared.Wizard
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using MudBlazor
+@inject IWizardDraftService DraftService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudDrawer Open="@IsOpen"
+           OpenChanged="@OnDrawerOpenChanged"
+           Anchor="Anchor.End"
+           Elevation="4"
+           Variant="DrawerVariant.Temporary"
+           Width="440px"
+           Class="wizard-drafts-drawer pa-4">
+
+    <!-- Drawer Header -->
+    <div class="d-flex align-center justify-space-between pb-3 mb-3 border-b" style="border-color: var(--border) !important;">
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.HistoryEdu" Color="Color.Primary" Size="Size.Medium" />
+            <div>
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                    In-progress drafts
+                </MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    @_drafts.Count active statutory session@(_drafts.Count == 1 ? "" : "s")
+                </MudText>
+            </div>
+        </div>
+        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                       Color="Color.Default"
+                       Size="Size.Small"
+                       OnClick="CloseDrawerAsync"
+                       aria-label="Close drafts panel" />
+    </div>
+
+    <!-- Quick Search & Refresh -->
+    <div class="d-flex align-center gap-2 mb-3">
+        <MudTextField @bind-Value="_searchTerm"
+                      Placeholder="Filter by title or reference..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Clearable="true"
+                      Class="flex-grow-1" />
+        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                       Color="Color.Default"
+                       Size="Size.Medium"
+                       Disabled="@_loading"
+                       OnClick="LoadDraftsAsync"
+                       Title="Refresh drafts" />
+    </div>
+
+    <!-- Drawer Content Body -->
+    <div class="drawer-content flex-grow-1 overflow-y-auto pr-1" style="max-height: calc(100vh - 200px);">
+        @if (_loading)
+        {
+            <div class="d-flex justify-center align-center py-12">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium" />
+            </div>
+        }
+        else if (!FilteredDrafts.Any())
+        {
+            <div class="text-center py-8 px-4">
+                <MudIcon Icon="@Icons.Material.Outlined.Drafts" Color="Color.Secondary" Size="Size.Large" Class="mb-3" />
+                @if (string.IsNullOrWhiteSpace(_searchTerm))
+                {
+                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold text-primary mb-1">
+                        No active in-progress drafts
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-4">
+                        When you begin or save any statutory multi-step application, your progress is saved securely here for instant resumption.
+                    </MudText>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Apps"
+                               OnClick="NavigateToMatrixAsync">
+                        Explore wizard catalogue
+                    </MudButton>
+                }
+                else
+                {
+                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold text-primary mb-1">
+                        No drafts match your filter
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Try clearing your search term to see all available draft sessions.
+                    </MudText>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="d-flex flex-column gap-3">
+                @foreach (var draft in FilteredDrafts)
+                {
+                    var progressPercent = draft.TotalStepCount > 0 ? (int)(((draft.CurrentStepIndex + 1.0) / draft.TotalStepCount) * 100) : 0;
+                    <MudCard Elevation="1" Class="rounded-lg border pa-3" Style="border-color: var(--border);">
+                        <div class="d-flex align-start justify-space-between gap-2 mb-2">
+                            <div class="d-flex align-center gap-2">
+                                <MudAvatar Color="@GetCandidateColor(draft.CandidateKey)" Size="Size.Small" Variant="Variant.Filled">
+                                    <MudIcon Icon="@GetCandidateIcon(draft.CandidateKey)" Size="Size.Small" />
+                                </MudAvatar>
+                                <div>
+                                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold text-primary text-truncate" Style="max-width: 220px;">
+                                        @draft.WizardTitle
+                                    </MudText>
+                                    <span class="text-caption font-mono text-secondary">
+                                        @draft.DraftKey
+                                    </span>
+                                </div>
+                            </div>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default" Class="py-0">
+                                @GetTimeAgo(draft.ModifiedAt ?? draft.CreatedAt)
+                            </MudChip>
+                        </div>
+
+                        <!-- Step Progress Indicator -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-space-between align-center mb-1">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    Progress: Step @(draft.CurrentStepIndex + 1) of @draft.TotalStepCount
+                                </MudText>
+                                <MudText Typo="Typo.caption" Class="font-weight-bold text-primary">
+                                    @progressPercent%
+                                </MudText>
+                            </div>
+                            <MudProgressLinear Color="@GetCandidateColor(draft.CandidateKey)"
+                                               Value="@progressPercent"
+                                               Rounded="true"
+                                               Size="Size.Small" />
+                        </div>
+
+                        <!-- Card Action Buttons -->
+                        <div class="d-flex justify-space-between align-center pt-2 border-t" style="border-color: var(--border) !important;">
+                            <MudButton Variant="Variant.Text"
+                                       Color="Color.Error"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.DeleteOutline"
+                                       OnClick="@(() => ConfirmDiscardDraftAsync(draft))">
+                                Discard
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.PlayArrow"
+                                       OnClick="@(() => ResumeDraftAsync(draft))">
+                                Resume
+                            </MudButton>
+                        </div>
+                    </MudCard>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Drawer Footer Zone -->
+    <div class="pt-3 mt-3 border-t d-flex align-center justify-space-between" style="border-color: var(--border) !important;">
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" Class="vertical-align-middle mr-1" />
+            NSDMS Draft Security Engine
+        </MudText>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   EndIcon="@Icons.Material.Filled.ArrowForward"
+                   OnClick="NavigateToMatrixAsync">
+            Candidate matrix
+        </MudButton>
+    </div>
+</MudDrawer>
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public string CurrentUserId { get; set; } = "CurrentSdf";
+
+    [Parameter]
+    public int? OrganisationId { get; set; }
+
+    [Parameter]
+    public EventCallback OnDraftsChanged { get; set; }
+
+    private List<WizardDraftSummaryDto> _drafts = new();
+    private bool _loading = true;
+    private string _searchTerm = string.Empty;
+
+    private IEnumerable<WizardDraftSummaryDto> FilteredDrafts =>
+        string.IsNullOrWhiteSpace(_searchTerm)
+            ? _drafts
+            : _drafts.Where(d =>
+                d.WizardTitle.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                d.CandidateKey.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                d.DraftKey.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsOpen)
+        {
+            await LoadDraftsAsync();
+        }
+    }
+
+    public async Task LoadDraftsAsync()
+    {
+        try
+        {
+            _loading = true;
+            _drafts = await DraftService.GetActiveDraftsForUserAsync(CurrentUserId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Could not load in-progress drafts: {ex.Message}", Severity.Warning);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnDrawerOpenChanged(bool open)
+    {
+        IsOpen = open;
+        if (IsOpenChanged.HasDelegate)
+        {
+            await IsOpenChanged.InvokeAsync(open);
+        }
+        if (open)
+        {
+            await LoadDraftsAsync();
+        }
+    }
+
+    private async Task CloseDrawerAsync()
+    {
+        IsOpen = false;
+        if (IsOpenChanged.HasDelegate)
+        {
+            await IsOpenChanged.InvokeAsync(false);
+        }
+    }
+
+    private async Task ResumeDraftAsync(WizardDraftSummaryDto draft)
+    {
+        await CloseDrawerAsync();
+        NavManager.NavigateTo(draft.Route);
+        Snackbar.Add($"Resuming {draft.WizardTitle} draft at Step {draft.CurrentStepIndex + 1}.", Severity.Info);
+    }
+
+    private async Task ConfirmDiscardDraftAsync(WizardDraftSummaryDto draft)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Discard In-Progress Draft" },
+            { x => x.Consequence, $"Are you sure you want to discard your saved draft for '{draft.WizardTitle}' ({draft.DraftKey})? All uncommitted progress will be lost." },
+            { x => x.ConfirmLabel, "Discard draft" },
+            { x => x.IsDestructive, true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Discard Draft", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await DraftService.DiscardDraftAsync(draft.DraftKey);
+            Snackbar.Add($"Draft '{draft.DraftKey}' discarded. You can start a fresh application anytime.", Severity.Normal);
+            await LoadDraftsAsync();
+            if (OnDraftsChanged.HasDelegate)
+            {
+                await OnDraftsChanged.InvokeAsync();
+            }
+        }
+    }
+
+    private async Task NavigateToMatrixAsync()
+    {
+        await CloseDrawerAsync();
+        NavManager.NavigateTo("/wizards");
+    }
+
+    private static string GetTimeAgo(DateTime? date)
+    {
+        if (!date.HasValue) return "Recently";
+        var delta = DateTime.UtcNow - date.Value;
+        if (delta.TotalMinutes < 1) return "just now";
+        if (delta.TotalMinutes < 60) return $"{(int)delta.TotalMinutes}m ago";
+        if (delta.TotalHours < 24) return $"{(int)delta.TotalHours}h ago";
+        return $"{(int)delta.TotalDays}d ago";
+    }
+
+    private static Color GetCandidateColor(string candidateKey) => candidateKey switch
+    {
+        "AssessorReRegistration" => Color.Primary,
+        "DgGrantApplication" => Color.Success,
+        "LearnerAgreement" => Color.Info,
+        "WorkplaceApproval" => Color.Warning,
+        "TradeTestApplication" => Color.Secondary,
+        "DgTrancheClaim" => Color.Dark,
+        "SdpAccreditation" => Color.Primary,
+        "WspAtrSubmission" => Color.Success,
+        "InterSetaTransfer" => Color.Info,
+        _ => Color.Default
+    };
+
+    private static string GetCandidateIcon(string candidateKey) => candidateKey switch
+    {
+        "AssessorReRegistration" => Icons.Material.Filled.School,
+        "DgGrantApplication" => Icons.Material.Filled.AddCard,
+        "LearnerAgreement" => Icons.Material.Filled.Badge,
+        "WorkplaceApproval" => Icons.Material.Filled.Build,
+        "TradeTestApplication" => Icons.Material.Filled.Construction,
+        "DgTrancheClaim" => Icons.Material.Filled.Payments,
+        "SdpAccreditation" => Icons.Material.Filled.AccountBalance,
+        "WspAtrSubmission" => Icons.Material.Filled.Assignment,
+        "InterSetaTransfer" => Icons.Material.Filled.SwapHoriz,
+        _ => Icons.Material.Filled.HistoryEdu
+    };
+}

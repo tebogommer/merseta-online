@@ -2,6 +2,8 @@ using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
+using Nsdms.Application.Services;
+using Nsdms.Domain.Entities;
 using Nsdms.Web.Components.Shared.Forms;
 using Nsdms.Web.Components.Shared.Wizard;
 using Xunit;
@@ -382,4 +384,225 @@ public class WizardParityTests : BunitContext, IAsyncLifetime
         Assert.Contains("Board resolution", cut.Markup, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Section 32", cut.Markup, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void WizardShell_RendersDraftResumeBanner_WhenHasDraftToResumeIsTrue()
+    {
+        var cut = Render<WizardShell>(parameters => parameters
+            .Add(p => p.Title, "Test Application")
+            .Add(p => p.HasDraftToResume, true)
+            .Add(p => p.DraftStepIndex, 2)
+            .Add(p => p.DraftSavedTimeAgo, "2h ago")
+            .Add(p => p.ChildContent, builder =>
+            {
+                builder.OpenComponent<WizardStep>(0);
+                builder.AddAttribute(1, "Label", "Step 1");
+                builder.CloseComponent();
+                builder.OpenComponent<WizardStep>(2);
+                builder.AddAttribute(3, "Label", "Step 2");
+                builder.CloseComponent();
+            })
+        );
+
+        Assert.Contains("Unsaved draft available", cut.Markup);
+        Assert.Contains("Step 3", cut.Markup);
+        Assert.Contains("2h ago", cut.Markup);
+        Assert.Contains("Resume draft", cut.Markup);
+        Assert.Contains("Discard draft", cut.Markup);
+    }
+
+    [Fact]
+    public void WizardShell_ResumeAndDiscardCallbacks_FireWhenButtonsClicked()
+    {
+        var resumeClicked = false;
+        var discardClicked = false;
+
+        var cut = Render<WizardShell>(parameters => parameters
+            .Add(p => p.Title, "Test Application")
+            .Add(p => p.HasDraftToResume, true)
+            .Add(p => p.DraftStepIndex, 1)
+            .Add(p => p.OnResumeDraft, EventCallback.Factory.Create(this, () => resumeClicked = true))
+            .Add(p => p.OnDiscardDraft, EventCallback.Factory.Create(this, () => discardClicked = true))
+            .Add(p => p.ChildContent, builder =>
+            {
+                builder.OpenComponent<WizardStep>(0);
+                builder.AddAttribute(1, "Label", "Step 1");
+                builder.CloseComponent();
+                builder.OpenComponent<WizardStep>(2);
+                builder.AddAttribute(3, "Label", "Step 2");
+                builder.CloseComponent();
+            })
+        );
+
+        // Find and click resume button
+        var resumeBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Resume draft"));
+        resumeBtn.Click();
+        Assert.True(resumeClicked);
+
+        // Re-find after re-render and click discard button
+        var discardBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Discard draft"));
+        discardBtn.Click();
+        Assert.True(discardClicked);
+    }
+
+    [Fact]
+    public void WizardShell_HidesDraftResumeBanner_WhenHasDraftToResumeIsFalse()
+    {
+        var cut = Render<WizardShell>(parameters => parameters
+            .Add(p => p.Title, "Test Application")
+            .Add(p => p.HasDraftToResume, false)
+            .Add(p => p.ChildContent, builder =>
+            {
+                builder.OpenComponent<WizardStep>(0);
+                builder.AddAttribute(1, "Label", "Step 1");
+                builder.CloseComponent();
+            })
+        );
+
+        Assert.DoesNotContain("Unsaved draft available", cut.Markup);
+        Assert.DoesNotContain("Resume draft", cut.Markup);
+    }
+
+    [Fact]
+    public async Task WizardShell_AutoSaveTrigger_InvokesOnSaveDraftAndShowsChip()
+    {
+        var saveDraftInvoked = false;
+
+        var cut = Render<WizardShell>(parameters => parameters
+            .Add(p => p.Title, "AutoSave Test Application")
+            .Add(p => p.ActiveStepIndex, 1)
+            .Add(p => p.AllowSaveDraft, true)
+            .Add(p => p.EnableAutoSave, true)
+            .Add(p => p.OnSaveDraft, EventCallback.Factory.Create(this, () => saveDraftInvoked = true))
+            .Add(p => p.ChildContent, builder =>
+            {
+                builder.OpenComponent<WizardStep>(0);
+                builder.AddAttribute(1, "Label", "Step 1");
+                builder.CloseComponent();
+                builder.OpenComponent<WizardStep>(2);
+                builder.AddAttribute(3, "Label", "Step 2");
+                builder.CloseComponent();
+            })
+        );
+
+        Assert.Contains("Save draft", cut.Markup);
+
+        // Explicitly trigger auto-save within dispatcher context
+        await cut.InvokeAsync(async () =>
+        {
+            await cut.Instance.TriggerAutoSaveNowAsync();
+        });
+
+        Assert.True(saveDraftInvoked);
+        Assert.Contains("Draft saved", cut.Markup);
+    }
+
+    [Fact]
+    public void WizardDraftsDrawer_RendersActiveDrafts_WhenOpen()
+    {
+        var stub = new StubWizardDraftService
+        {
+            Drafts = new List<WizardDraftSummaryDto>
+            {
+                new(
+                    1,
+                    "DRAFT-DG-2026-001",
+                    "DgGrantApplication",
+                    "Discretionary Grant Application",
+                    "/dg-grants/apply",
+                    "TestUser",
+                    null,
+                    2,
+                    2,
+                    5,
+                    "Active",
+                    DateTime.UtcNow.AddDays(20),
+                    DateTime.UtcNow.AddHours(-1),
+                    DateTime.UtcNow.AddMinutes(-10)
+                ),
+                new(
+                    2,
+                    "DRAFT-SEC32-2026-002",
+                    "InterSetaTransfer",
+                    "Section 32 Inter-SETA transfer application",
+                    "/inter-seta/transfer-request",
+                    "TestUser",
+                    15,
+                    1,
+                    1,
+                    4,
+                    "Active",
+                    DateTime.UtcNow.AddDays(25),
+                    DateTime.UtcNow.AddHours(-2),
+                    DateTime.UtcNow.AddMinutes(-30)
+                )
+            }
+        };
+
+        Services.AddSingleton<IWizardDraftService>(stub);
+
+        var cut = Render<WizardDraftsDrawer>(parameters => parameters
+            .Add(p => p.IsOpen, true)
+            .Add(p => p.CurrentUserId, "TestUser")
+        );
+
+        Assert.Contains("In-progress drafts", cut.Markup);
+        Assert.Contains("Discretionary Grant Application", cut.Markup);
+        Assert.Contains("Section 32 Inter-SETA transfer application", cut.Markup);
+        Assert.Contains("DRAFT-DG-2026-001", cut.Markup);
+        Assert.Contains("DRAFT-SEC32-2026-002", cut.Markup);
+        Assert.Contains("Resume", cut.Markup);
+        Assert.Contains("Discard", cut.Markup);
+    }
+
+    private class StubWizardDraftService : IWizardDraftService
+    {
+        public List<WizardDraftSummaryDto> Drafts { get; set; } = new();
+        public string? DiscardedDraftKey { get; private set; }
+
+        public Task<WizardDraftSession> SaveDraftAsync<TModel>(
+            string candidateKey, string wizardTitle, string route, string userId,
+            int? organisationId, int currentStepIndex, int totalStepCount,
+            TModel model, string? existingDraftKey = null, CancellationToken cancellationToken = default) where TModel : class
+        {
+            var session = new WizardDraftSession
+            {
+                DraftKey = existingDraftKey ?? "DRAFT-TEST-001",
+                CandidateKey = candidateKey,
+                WizardTitle = wizardTitle,
+                Route = route,
+                UserId = userId,
+                OrganisationId = organisationId,
+                CurrentStepIndex = currentStepIndex,
+                TotalStepCount = totalStepCount,
+                Status = "Active",
+                IsActive = true
+            };
+            return Task.FromResult(session);
+        }
+
+        public Task<WizardDraftSession?> GetActiveDraftAsync(string candidateKey, string userId, int? organisationId = null, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<WizardDraftSession?>(null);
+        }
+
+        public TModel? DeserializeDraftModel<TModel>(WizardDraftSession session) where TModel : class => null;
+
+        public Task MarkAsSubmittedAsync(string draftKey, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task DiscardDraftAsync(string draftKey, CancellationToken cancellationToken = default)
+        {
+            DiscardedDraftKey = draftKey;
+            Drafts.RemoveAll(d => d.DraftKey == draftKey);
+            return Task.CompletedTask;
+        }
+
+        public Task<List<WizardDraftSummaryDto>> GetActiveDraftsForUserAsync(string userId, int? organisationId = null, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(Drafts.Where(d => d.UserId == userId).ToList());
+        }
+
+        public Task<int> CleanupExpiredDraftsAsync(CancellationToken cancellationToken = default) => Task.FromResult(0);
+    }
 }
+

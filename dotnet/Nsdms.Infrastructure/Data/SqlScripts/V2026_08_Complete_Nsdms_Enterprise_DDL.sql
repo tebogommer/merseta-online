@@ -1381,6 +1381,36 @@ BEGIN
     PRINT 'Created statutory view dbo.vw_SetmisCompanyLearner in Master DDL.';
 END
 
+-- Wizard Draft Persistence & Resume Lifecycle Engine
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = N'WizardDraftSession' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE [dbo].[WizardDraftSession] (
+        [Id] INT IDENTITY(1,1) NOT NULL,
+        [DraftKey] NVARCHAR(100) NOT NULL,
+        [CandidateKey] NVARCHAR(50) NOT NULL,
+        [WizardTitle] NVARCHAR(150) NOT NULL,
+        [Route] NVARCHAR(250) NOT NULL,
+        [UserId] NVARCHAR(100) NOT NULL,
+        [OrganisationId] INT NULL,
+        [CurrentStepIndex] INT NOT NULL CONSTRAINT [DF_WizardDraftSession_Step] DEFAULT 0,
+        [CompletedStepCount] INT NOT NULL CONSTRAINT [DF_WizardDraftSession_Completed] DEFAULT 0,
+        [TotalStepCount] INT NOT NULL CONSTRAINT [DF_WizardDraftSession_Total] DEFAULT 5,
+        [DraftModelJson] NVARCHAR(MAX) NOT NULL,
+        [Status] NVARCHAR(30) NOT NULL CONSTRAINT [DF_WizardDraftSession_Status] DEFAULT N'Active',
+        [ExpiresAtUtc] DATETIME2 NOT NULL,
+        [IsActive] BIT NOT NULL CONSTRAINT [DF_WizardDraftSession_IsActive] DEFAULT 1,
+        [CreatedAt] DATETIME2 NOT NULL CONSTRAINT [DF_WizardDraftSession_CreatedAt] DEFAULT SYSUTCDATETIME(),
+        [CreatedBy] NVARCHAR(100) NOT NULL CONSTRAINT [DF_WizardDraftSession_CreatedBy] DEFAULT N'SYSTEM',
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL,
+        CONSTRAINT [PK_WizardDraftSession] PRIMARY KEY CLUSTERED ([Id] ASC)
+    );
+    CREATE UNIQUE NONCLUSTERED INDEX [UQ_WizardDraftSession_DraftKey] ON [dbo].[WizardDraftSession] ([DraftKey]);
+    CREATE NONCLUSTERED INDEX [IX_WizardDraftSession_Lookup] ON [dbo].[WizardDraftSession] ([UserId], [CandidateKey], [IsActive]) INCLUDE ([DraftKey], [CurrentStepIndex], [ExpiresAtUtc], [ModifiedAt]);
+    CREATE NONCLUSTERED INDEX [IX_WizardDraftSession_Organisation] ON [dbo].[WizardDraftSession] ([OrganisationId]) WHERE [OrganisationId] IS NOT NULL;
+    PRINT 'Created table [dbo].[WizardDraftSession].';
+END
+
 PRINT 'Complete Idempotent Enterprise DDL Deployment Succeeded!';
 
 

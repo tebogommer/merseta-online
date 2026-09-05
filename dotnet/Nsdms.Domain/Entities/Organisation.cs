@@ -54,6 +54,21 @@ public class Organisation : BaseEntity
     /// </summary>
     public string? OrganisationStatusCode { get; set; } = "ACTIVE";
 
+    /// <summary>
+    /// Indicates whether this entity is a non-employer delivery partner (TVET, CET, HEI, NGO, CBO, Public Entity).
+    /// </summary>
+    public bool IsNonEmployerEntity { get; set; } = false;
+
+    /// <summary>
+    /// Non-employer delivery partner classification (e.g. TVET, CET, HEI, NGO, NPO, CBO, PublicEntity, GovtDept, EmployerAssoc, OrganisedLabour).
+    /// </summary>
+    public string? NonEmployerEntityType { get; set; }
+
+    /// <summary>
+    /// External SETA classification for entities paying levies to other SETAs (e.g. 10 for ETDPSETA, 23 for Services SETA).
+    /// </summary>
+    public string? ExternalSetaId { get; set; }
+
     [NotMapped]
     public string? StatusCode { get => OrganisationStatusCode; set => OrganisationStatusCode = value; }
 
@@ -85,6 +100,17 @@ public class Organisation : BaseEntity
     /// MerSETA chamber allocation code (references lookup.ChamberType: AUTO, METAL, PLASTICS, MOTOR, NEW_TYRE, OTHER).
     /// </summary>
     public string? ChamberCode { get; set; }
+
+    /// <summary>
+    /// Indicates whether this organisation lacks a valid merSETA Chamber or GP Vendor Class mapping,
+    /// blocking downstream Discretionary Grant submissions, WSP submissions, MoAs, and ERP payment batches.
+    /// </summary>
+    public bool HasMissingChamberMapping { get; set; } = false;
+
+    /// <summary>
+    /// Resolved Microsoft Dynamics GP Vendor Class code (AUTO, METAL, MOTOR, NEW TYRE, PLASTICS, SETA).
+    /// </summary>
+    public string? GpVendorClass { get; set; }
 
     /// <summary>
     /// Standard Industrial Classification (SIC) 5-digit economic activity code (references lookup.SicCodeType).

@@ -14,6 +14,7 @@
 @inject ITrainingProviderService ProviderService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IWizardDraftService DraftService
 @rendermode InteractiveServer
 
 <div class="mb-4">
@@ -65,6 +66,11 @@ else
                  ActiveStepIndexChanged="OnStepChanged"
                  FinishButtonText="Submit trade test application"
                  IsBusy="@_isProcessing"
+                 HasDraftToResume="@_hasDraftToResume"
+                 DraftStepIndex="@_draftStepIndex"
+                 DraftSavedTimeAgo="@_draftSavedTimeAgo"
+                 OnResumeDraft="ResumeDraftAsync"
+                 OnDiscardDraft="DiscardDraftAsync"
                  OnCancel="GoBack"
                  OnSaveDraft="SaveDraftAsync"
                  OnFinish="SubmitApplicationAsync">
@@ -212,6 +218,38 @@ else
 
     private List<WizardReviewGroup> _reviewGroups = new();
 
+    // Draft Persistence & Resume Lifecycle Engine
+    private bool _hasDraftToResume = false;
+    private int _draftStepIndex = 0;
+    private string? _draftSavedTimeAgo;
+    private string? _activeDraftKey;
+    private WizardDraftSession? _loadedDraft;
+
+    private record TradeTestDraftModel
+    {
+        public int? CompanyLearnerId { get; init; }
+        public string ApplicationTypeCode { get; init; } = "Section26D";
+        public string TradeTitle { get; init; } = "Fitter and Turner";
+        public string? TradeOfoCode { get; init; } = "653306";
+        public int AttemptNumber { get; init; } = 1;
+        public string TheoryQualificationTitle { get; init; } = string.Empty;
+        public string TheoryInstitutionName { get; init; } = string.Empty;
+        public string TheorySubjectsPassed { get; init; } = string.Empty;
+        public DateTime? TheoryCompletionDate { get; init; }
+        public bool IsCurricularPrerequisitesMet { get; init; } = true;
+        public string CurrentEmployerName { get; init; } = string.Empty;
+        public int LogbookWeeksCompleted { get; init; } = 120;
+        public string WorkplaceMentorName { get; init; } = string.Empty;
+        public string? MentorArtisanTradeNumber { get; init; }
+        public string EmployerContactPhone { get; init; } = string.Empty;
+        public bool IsLogbookAttestationVerified { get; init; } = true;
+        public int? TrainingProviderId { get; init; }
+        public DateTime? PreferredAssessmentDate { get; init; }
+        public string SubsidyCategory { get; init; } = "merSETA Subsidised";
+        public bool IsToolAndPpeReady { get; init; } = true;
+        public bool IsDeclarationAccepted { get; init; } = true;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -235,6 +273,9 @@ else
             }
 
             UpdateReviewGroups();
+
+            // Check for available in-progress draft for the candidate
+            await CheckForActiveDraftAsync();
         }
         catch (Exception ex)
         {
@@ -414,10 +455,130 @@ else
         return Task.FromResult(true);
     }
 
+    private async Task CheckForActiveDraftAsync()
+    {
+        try
+        {
+            var draft = await DraftService.GetActiveDraftAsync("TradeTestApplication", "CandidateUser");
+            if (draft != null && draft.CurrentStepIndex > 0)
+            {
+                _loadedDraft = draft;
+                _activeDraftKey = draft.DraftKey;
+                _draftStepIndex = draft.CurrentStepIndex;
+                var delta = DateTime.UtcNow - (draft.ModifiedAt ?? draft.CreatedAt);
+                _draftSavedTimeAgo = delta.TotalHours >= 1 ? $"{(int)delta.TotalHours}h ago" : $"{(int)delta.TotalMinutes}m ago";
+                _hasDraftToResume = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Non-blocking draft lookup
+            Console.WriteLine($"Draft check skipped: {ex.Message}");
+        }
+    }
+
+    private async Task ResumeDraftAsync()
+    {
+        if (_loadedDraft == null) return;
+
+        var model = DraftService.DeserializeDraftModel<TradeTestDraftModel>(_loadedDraft);
+        if (model != null)
+        {
+            _companyLearnerId = model.CompanyLearnerId;
+            _applicationTypeCode = model.ApplicationTypeCode;
+            _tradeTitle = model.TradeTitle;
+            _tradeOfoCode = model.TradeOfoCode;
+            _attemptNumber = model.AttemptNumber;
+            _theoryQualificationTitle = model.TheoryQualificationTitle;
+            _theoryInstitutionName = model.TheoryInstitutionName;
+            _theorySubjectsPassed = model.TheorySubjectsPassed;
+            _theoryCompletionDate = model.TheoryCompletionDate;
+            _isCurricularPrerequisitesMet = model.IsCurricularPrerequisitesMet;
+            _currentEmployerName = model.CurrentEmployerName;
+            _logbookWeeksCompleted = model.LogbookWeeksCompleted;
+            _workplaceMentorName = model.WorkplaceMentorName;
+            _mentorArtisanTradeNumber = model.MentorArtisanTradeNumber;
+            _employerContactPhone = model.EmployerContactPhone;
+            _isLogbookAttestationVerified = model.IsLogbookAttestationVerified;
+            _trainingProviderId = model.TrainingProviderId;
+            _preferredAssessmentDate = model.PreferredAssessmentDate;
+            _subsidyCategory = model.SubsidyCategory;
+            _isToolAndPpeReady = model.IsToolAndPpeReady;
+            _isDeclarationAccepted = model.IsDeclarationAccepted;
+
+            _activeStep = _loadedDraft.CurrentStepIndex;
+            _hasDraftToResume = false;
+            UpdateReviewGroups();
+            Snackbar.Add($"Resumed trade test application draft from Step {_activeStep + 1}.", Severity.Info);
+        }
+    }
+
+    private async Task DiscardDraftAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+        {
+            await DraftService.DiscardDraftAsync(_activeDraftKey);
+            _hasDraftToResume = false;
+            _activeDraftKey = null;
+            _loadedDraft = null;
+            Snackbar.Add("Draft discarded. You are starting a clean trade test application.", Severity.Normal);
+        }
+    }
+
     private async Task SaveDraftAsync()
     {
-        Snackbar.Add("Trade test application draft saved locally.", Severity.Info);
-        await Task.CompletedTask;
+        _isProcessing = true;
+        try
+        {
+            var draftModel = new TradeTestDraftModel
+            {
+                CompanyLearnerId = _companyLearnerId,
+                ApplicationTypeCode = _applicationTypeCode,
+                TradeTitle = _tradeTitle,
+                TradeOfoCode = _tradeOfoCode,
+                AttemptNumber = _attemptNumber,
+                TheoryQualificationTitle = _theoryQualificationTitle,
+                TheoryInstitutionName = _theoryInstitutionName,
+                TheorySubjectsPassed = _theorySubjectsPassed,
+                TheoryCompletionDate = _theoryCompletionDate,
+                IsCurricularPrerequisitesMet = _isCurricularPrerequisitesMet,
+                CurrentEmployerName = _currentEmployerName,
+                LogbookWeeksCompleted = _logbookWeeksCompleted,
+                WorkplaceMentorName = _workplaceMentorName,
+                MentorArtisanTradeNumber = _mentorArtisanTradeNumber,
+                EmployerContactPhone = _employerContactPhone,
+                IsLogbookAttestationVerified = _isLogbookAttestationVerified,
+                TrainingProviderId = _trainingProviderId,
+                PreferredAssessmentDate = _preferredAssessmentDate,
+                SubsidyCategory = _subsidyCategory,
+                IsToolAndPpeReady = _isToolAndPpeReady,
+                IsDeclarationAccepted = _isDeclarationAccepted
+            };
+
+            var session = await DraftService.SaveDraftAsync(
+                "TradeTestApplication",
+                "Artisan trade test & ARPL application",
+                "/trade-tests/apply",
+                "CandidateUser",
+                null,
+                _activeStep,
+                5,
+                draftModel,
+                _activeDraftKey
+            );
+
+            _activeDraftKey = session.DraftKey;
+            _hasDraftToResume = false;
+            Snackbar.Add($"Draft saved at Step {_activeStep + 1} ('{session.DraftKey}').", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Could not save draft: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
     }
 
     private async Task SubmitApplicationAsync()
@@ -457,6 +618,12 @@ else
                     portfolioScorePercentage: 75m,
                     currentUsername: "CurrentArtisanOfficer"
                 );
+            }
+
+            // Clear submitted draft
+            if (!string.IsNullOrWhiteSpace(_activeDraftKey))
+            {
+                await DraftService.MarkAsSubmittedAsync(_activeDraftKey);
             }
 
             _isSuccess = true;

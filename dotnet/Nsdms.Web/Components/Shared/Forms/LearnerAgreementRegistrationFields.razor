@@ -75,6 +75,66 @@
                     <MudSelectItem Value="@("Other")">Other</MudSelectItem>
                 </MudSelect>
             </MudItem>
+            
+            <MudItem xs="12">
+                <MudDivider Class="my-2" />
+                <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mb-1">Residential &amp; Postal Address</MudText>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string" Label="Residential address line 1" Value="@AddressLine1" ValueChanged="OnAddressLine1Changed" Variant="Variant.Outlined" Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string" Label="Residential address line 2" Value="@AddressLine2" ValueChanged="OnAddressLine2Changed" Variant="Variant.Outlined" Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string" Label="City / Suburb" Value="@City" ValueChanged="OnCityChanged" Variant="Variant.Outlined" Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string" Label="Postal code" Value="@PostalCode" ValueChanged="OnPostalCodeChanged" Variant="Variant.Outlined" Class="font-mono" Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudCheckBox T="bool" Label="Postal address is identical to residential address" Value="@IsPostalSameAsResidential" ValueChanged="OnIsPostalSameChanged" Color="Color.Primary" Disabled="@IsReadOnly" />
+            </MudItem>
+            @if (!IsPostalSameAsResidential)
+            {
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string" Label="Postal address line 1" Value="@PostalAddressLine1" ValueChanged="OnPostalAddressLine1Changed" Variant="Variant.Outlined" Disabled="@IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string" Label="Postal address line 2 / PO Box" Value="@PostalAddressLine2" ValueChanged="OnPostalAddressLine2Changed" Variant="Variant.Outlined" Disabled="@IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string" Label="Postal city" Value="@PostalCity" ValueChanged="OnPostalCityChanged" Variant="Variant.Outlined" Disabled="@IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string" Label="Postal code" Value="@PostalAddressCode" ValueChanged="OnPostalAddressCodeChanged" Variant="Variant.Outlined" Class="font-mono" Disabled="@IsReadOnly" />
+                </MudItem>
+            }
+            @if (IsMinor)
+            {
+                <MudItem xs="12">
+                    <MudDivider Class="my-2" />
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-1">
+                        Minor Applicant Notice: Candidate is under 18 years of age. Parent / legal guardian capture is statutory mandatory per merSETA registration regulations.
+                    </MudAlert>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string" Label="Parent / Guardian full name" Value="@GuardianFullName" ValueChanged="OnGuardianFullNameChanged" Variant="Variant.Outlined" Required="true" Disabled="@IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string" Label="Guardian ID / Passport number" Value="@GuardianIdNumber" ValueChanged="OnGuardianIdNumberChanged" Variant="Variant.Outlined" Required="true" Class="font-mono" Disabled="@IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string" Label="Guardian contact telephone" Value="@GuardianContactNumber" ValueChanged="OnGuardianContactNumberChanged" Variant="Variant.Outlined" Required="true" Disabled="@IsReadOnly" Placeholder="082 123 4567" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" Label="Relationship to minor learner" Value="@GuardianRelationship" ValueChanged="OnGuardianRelationshipChanged" Variant="Variant.Outlined" Required="true" Disabled="@IsReadOnly">
+                        <MudSelectItem Value="@("Parent")">Parent (Mother / Father)</MudSelectItem>
+                        <MudSelectItem Value="@("LegalGuardian")">Court-Appointed Legal Guardian</MudSelectItem>
+                        <MudSelectItem Value="@("Sponsor")">Legal Custodian / Sponsor</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+            }
         </FormRow>
     </div>
 }
@@ -92,11 +152,29 @@
                            Required="true"
                            Disabled="@IsReadOnly">
                     <MudSelectItem Value="@("Learnership")">Learnership (18.1 / 18.2)</MudSelectItem>
-                    <MudSelectItem Value="@("Apprenticeship")">Artisan Apprenticeship</MudSelectItem>
+                    <MudSelectItem Value="@("Apprenticeship")">Artisan Apprenticeship (Section 13 / 26D)</MudSelectItem>
+                    <MudSelectItem Value="@("Candidacy")">Engineering Candidacy Programme</MudSelectItem>
                     <MudSelectItem Value="@("Internship")">Graduate Internship</MudSelectItem>
-                    <MudSelectItem Value="@("SkillsProgramme")">Accredited Skills Programme</MudSelectItem>
+                    <MudSelectItem Value="@("SkillsProgramme")">Accredited Skills Programme &amp; Unit Standards</MudSelectItem>
+                    <MudSelectItem Value="@("HeiWil")">Higher Education Institution (HEI) WIL</MudSelectItem>
+                    <MudSelectItem Value="@("TvetWil")">TVET College Work-Integrated Learning (WIL N6)</MudSelectItem>
+                    <MudSelectItem Value="@("Aet")">Adult Education &amp; Training (AET Level 1-4)</MudSelectItem>
                 </MudSelect>
             </MudItem>
+            @if (ProgrammeType == "Candidacy" || ProgrammeType == "06")
+            {
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Professional Council registration number"
+                                  Value="@ProfessionalRegistrationNumber"
+                                  ValueChanged="OnProfessionalRegistrationNumberChanged"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  Disabled="@IsReadOnly"
+                                  Class="font-mono"
+                                  HelperText="Statutory council registration number for Candidacy graduates (e.g. ECSA Ref)" />
+                </MudItem>
+            }
             <MudItem xs="12" md="6">
                 <MudTextField T="string"
                               Label="Learnership registration / OFO code"
@@ -291,6 +369,149 @@
 
     [Parameter] public List<Organisation>? Organisations { get; set; }
     [Parameter] public List<TrainingProvider>? TrainingProviders { get; set; }
+
+    // Address Parameters
+    [Parameter] public string AddressLine1 { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> AddressLine1Changed { get; set; }
+
+    [Parameter] public string AddressLine2 { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> AddressLine2Changed { get; set; }
+
+    [Parameter] public string City { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> CityChanged { get; set; }
+
+    [Parameter] public string PostalCode { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> PostalCodeChanged { get; set; }
+
+    [Parameter] public bool IsPostalSameAsResidential { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsPostalSameAsResidentialChanged { get; set; }
+
+    [Parameter] public string PostalAddressLine1 { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> PostalAddressLine1Changed { get; set; }
+
+    [Parameter] public string PostalAddressLine2 { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> PostalAddressLine2Changed { get; set; }
+
+    [Parameter] public string PostalCity { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> PostalCityChanged { get; set; }
+
+    [Parameter] public string PostalAddressCode { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> PostalAddressCodeChanged { get; set; }
+
+    // Minor Guardian Parameters
+    [Parameter] public string GuardianFullName { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> GuardianFullNameChanged { get; set; }
+
+    [Parameter] public string GuardianIdNumber { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> GuardianIdNumberChanged { get; set; }
+
+    [Parameter] public string GuardianContactNumber { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> GuardianContactNumberChanged { get; set; }
+
+    [Parameter] public string GuardianRelationship { get; set; } = "Parent";
+    [Parameter] public EventCallback<string> GuardianRelationshipChanged { get; set; }
+
+    // Candidacy Council Registration Number
+    [Parameter] public string ProfessionalRegistrationNumber { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ProfessionalRegistrationNumberChanged { get; set; }
+
+    public bool IsMinor
+    {
+        get
+        {
+            if (DateTime.TryParse(DateOfBirthText, out var dob))
+            {
+                var age = DateTime.Today.Year - dob.Year;
+                if (dob.Date > DateTime.Today.AddYears(-age)) age--;
+                return age < 18;
+            }
+            return false;
+        }
+    }
+
+    private async Task OnAddressLine1Changed(string val)
+    {
+        AddressLine1 = val;
+        await AddressLine1Changed.InvokeAsync(val);
+    }
+
+    private async Task OnAddressLine2Changed(string val)
+    {
+        AddressLine2 = val;
+        await AddressLine2Changed.InvokeAsync(val);
+    }
+
+    private async Task OnCityChanged(string val)
+    {
+        City = val;
+        await CityChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPostalCodeChanged(string val)
+    {
+        PostalCode = val;
+        await PostalCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsPostalSameChanged(bool val)
+    {
+        IsPostalSameAsResidential = val;
+        await IsPostalSameAsResidentialChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPostalAddressLine1Changed(string val)
+    {
+        PostalAddressLine1 = val;
+        await PostalAddressLine1Changed.InvokeAsync(val);
+    }
+
+    private async Task OnPostalAddressLine2Changed(string val)
+    {
+        PostalAddressLine2 = val;
+        await PostalAddressLine2Changed.InvokeAsync(val);
+    }
+
+    private async Task OnPostalCityChanged(string val)
+    {
+        PostalCity = val;
+        await PostalCityChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPostalAddressCodeChanged(string val)
+    {
+        PostalAddressCode = val;
+        await PostalAddressCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnGuardianFullNameChanged(string val)
+    {
+        GuardianFullName = val;
+        await GuardianFullNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnGuardianIdNumberChanged(string val)
+    {
+        GuardianIdNumber = val;
+        await GuardianIdNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnGuardianContactNumberChanged(string val)
+    {
+        GuardianContactNumber = val;
+        await GuardianContactNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnGuardianRelationshipChanged(string val)
+    {
+        GuardianRelationship = val;
+        await GuardianRelationshipChanged.InvokeAsync(val);
+    }
+
+    private async Task OnProfessionalRegistrationNumberChanged(string val)
+    {
+        ProfessionalRegistrationNumber = val;
+        await ProfessionalRegistrationNumberChanged.InvokeAsync(val);
+    }
 
     private async Task OnRsaIdChanged(string val)
     {
