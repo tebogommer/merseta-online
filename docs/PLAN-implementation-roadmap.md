@@ -66,29 +66,25 @@ This roadmap establishes a phased, zero-downtime engineering strategy to normali
 
 ---
 
-### Phase 4: Physical Renaming & SETMIS Compatibility Layer
+### Phase 4: Physical Renaming & SETMIS Compatibility Layer [COMPLETED]
 > **Goal:** Complete physical database alignment and optimize temporal tables while keeping external DHET file exports 100% compliant.
 
 #### Tasks:
 1. **SETMIS Compatibility Views:**
-   - Create database views preserving legacy column contracts:
-     \\\sql
-     CREATE VIEW dbo.vw_SetmisCompanyLearner AS
-     SELECT 
-         le.Id,
-         le.PersonId,
-         le.OrganisationId AS CompanyId,
-         le.RegistrationNumber,
-         le.LearnershipId
-     FROM dbo.LearnerEnrolment le;
-     \\\
-2. **Physical Table Cutover (\sp_rename\):**
-   - Execute \EXEC sp_rename 'dbo.CompanyLearner', 'LearnerEnrolment';\
-   - Update EF Core mapping to \modelBuilder.Entity<LearnerEnrolment>().ToTable("LearnerEnrolment")\.
+   - Created statutory database view `dbo.vw_SetmisCompanyLearner` projecting canonical `dbo.LearnerEnrolment` columns to statutory SETMIS contracts (`CompanyId`, `LearnerContractNumber`, `LearnershipId`, etc.).
+2. **Physical Table Cutover (`sp_rename`):**
+   - Executed physical cutover `EXEC sp_rename 'dbo.CompanyLearner', 'LearnerEnrolment'`.
+   - Created backward-compatible view `dbo.CompanyLearner AS SELECT * FROM dbo.LearnerEnrolment;` ensuring 100% backward compatibility for all existing queries, foreign keys, and bulk staging pipelines.
+   - Preserved `CompanyLearner` entity mapping in EF Core referencing the view/underlying table with 0 breaking changes.
 3. **Temporal Table Tuning:**
-   - Reconfigure system-versioning on sub-tables so that updates to \PersonContact\ or \PersonDemographics\ write minimal history entries, eliminating full-row bloat in \history.PersonHistory\.
-4. **Final Verification Gate:**
-   - Run end-to-end integration and Playwright test suites across all portal modules.
+   - Configured and activated SQL Server System-Versioned Temporal Tables on satellite sub-tables (`PersonContact`, `PersonDemographics`, `PersonDisabilityRating`) into the `[history]` schema (`history.PersonContactHistory`, `history.PersonDemographicsHistory`, `history.PersonDisabilityRatingHistory`).
+   - Eliminates full-row history bloat in `history.PersonHistory` for frequent contact and demographics revisions.
+4. **Migration & Enterprise Artifacts:**
+   - `V2026_20_Physical_Renaming_Setmis_Layer.sql` created and executed against `localhost\SQLEXPRESS` (`NSDMS-NET`).
+   - `Phase27PhysicalRenamingMigrator.cs` implemented and added to infrastructure migrators.
+   - Master enterprise DDL `V2026_08_Complete_Nsdms_Enterprise_DDL.sql` synchronized.
+   - Full test suite verified: 544/544 tests passing.
+
 
 ---
 

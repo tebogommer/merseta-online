@@ -1273,6 +1273,116 @@ BEGIN
     PRINT 'Created table [dbo].[PersonDisabilityRating].';
 END
 
+-- 81. Non-Levy Organisation Number Sequence & Chamber Derivation Governance
+IF NOT EXISTS (SELECT 1 FROM sys.sequences WHERE name = 'seq_NonLevyOrganisationNumber')
+BEGIN
+    CREATE SEQUENCE [dbo].[seq_NonLevyOrganisationNumber]
+    AS INT
+    START WITH 100001
+    INCREMENT BY 1
+    MINVALUE 100000
+    MAXVALUE 999999999
+    NO CYCLE
+    CACHE 10;
+    PRINT 'Created sequence [dbo].[seq_NonLevyOrganisationNumber].';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Organisation]') AND name = 'HasMissingChamberMapping')
+BEGIN
+    ALTER TABLE [dbo].[Organisation] ADD [HasMissingChamberMapping] BIT NOT NULL CONSTRAINT DF_Organisation_HasMissingChamberMapping DEFAULT (0);
+    PRINT 'Added [HasMissingChamberMapping] to [dbo].[Organisation].';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Organisation]') AND name = 'GpVendorClass')
+BEGIN
+    ALTER TABLE [dbo].[Organisation] ADD [GpVendorClass] NVARCHAR(50) NULL;
+    PRINT 'Added [GpVendorClass] to [dbo].[Organisation].';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UQ_Organisation_SdlNumber')
+BEGIN
+    CREATE UNIQUE NONCLUSTERED INDEX [UQ_Organisation_SdlNumber]
+    ON [dbo].[Organisation] ([SdlNumber])
+    WHERE [SdlNumber] IS NOT NULL AND [SdlNumber] <> '';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Organisation_HasMissingChamberMapping')
+BEGIN
+    CREATE NONCLUSTERED INDEX [IX_Organisation_HasMissingChamberMapping]
+    ON [dbo].[Organisation] ([HasMissingChamberMapping])
+    INCLUDE ([ChamberCode], [GpVendorClass], [SicCode]);
+END
+
+-- Phase 4: LearnerEnrolment Cutover & Compatibility Views
+IF EXISTS (SELECT 1 FROM sys.tables WHERE name = N'CompanyLearner' AND schema_id = SCHEMA_ID(N'dbo'))
+   AND NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = N'LearnerEnrolment' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    EXEC sp_rename 'dbo.CompanyLearner', 'LearnerEnrolment';
+    PRINT 'Renamed dbo.CompanyLearner to dbo.LearnerEnrolment in Master DDL.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = N'CompanyLearner' AND schema_id = SCHEMA_ID(N'dbo'))
+   AND NOT EXISTS (SELECT 1 FROM sys.views WHERE name = N'CompanyLearner' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    EXEC('CREATE VIEW dbo.CompanyLearner AS SELECT * FROM dbo.LearnerEnrolment;');
+    PRINT 'Created backward-compatible view dbo.CompanyLearner in Master DDL.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.views WHERE name = N'vw_SetmisCompanyLearner' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    EXEC('
+    CREATE VIEW dbo.vw_SetmisCompanyLearner AS
+    SELECT 
+        le.Id,
+        le.PersonId,
+        le.OrganisationId AS CompanyId,
+        le.OrganisationSiteId,
+        le.TrainingProviderId,
+        le.LearnerContractNumber,
+        le.QualificationTitle,
+        le.SaqaQualificationId,
+        le.NqfLevel,
+        le.LearningProgrammeTypeCode,
+        le.LearnershipId,
+        le.NonNqfInterventionCode,
+        le.PartOfId,
+        le.EnrolmentTypeId,
+        le.EnrolmentStatusId,
+        le.EnrolmentStatusDate,
+        le.EnrolmentStatusReasonId,
+        le.AssessorRegistrationNumber,
+        le.AssessorEtqaId,
+        le.PracticalProviderCode,
+        le.PracticalProviderEtqaId,
+        le.OfoCode,
+        le.EconomicStatusId,
+        le.UrbanRuralId,
+        le.CumulativeSpend,
+        le.CertificateNumber,
+        le.PriorQualificationId,
+        le.PriorQualificationAchievementDate,
+        le.InternshipStatusId,
+        le.FundingTypeCode,
+        le.FundingId,
+        le.EnrolmentStatusCode,
+        le.RegistrationDate,
+        le.CommencementDate,
+        le.ExpectedCompletionDate,
+        le.CompletionDate,
+        le.SetaRegion,
+        le.ChamberCode,
+        le.IsActive,
+        le.CreatedAt,
+        le.CreatedBy,
+        le.ModifiedAt,
+        le.ModifiedBy
+    FROM dbo.LearnerEnrolment le;
+    ');
+    PRINT 'Created statutory view dbo.vw_SetmisCompanyLearner in Master DDL.';
+END
+
 PRINT 'Complete Idempotent Enterprise DDL Deployment Succeeded!';
+
+
 
 
