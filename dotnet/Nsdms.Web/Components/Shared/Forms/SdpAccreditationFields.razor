@@ -1,0 +1,707 @@
+@namespace Nsdms.Web.Components.Shared.Forms
+@using MudBlazor
+@using Nsdms.Domain.Entities
+
+@if (Section == "Profile" || Section == "All")
+{
+    <div class="nsdms-section-profile mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Skills Development Provider (SDP) legal entity name"
+                              Value="@ProviderLegalName"
+                              ValueChanged="OnProviderLegalNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Registered corporate or institutional name per CIPC records" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Trading name (if different from legal entity)"
+                              Value="@TradingName"
+                              ValueChanged="OnTradingNameChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly"
+                              HelperText="Commercial or campus trading title (T/A)" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="CIPC company or trust registration number"
+                              Value="@RegistrationNumber"
+                              ValueChanged="OnRegistrationNumberChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="e.g. 2018/123456/07 or IT 1234/2015" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="SARS tax compliance PIN"
+                              Value="@TaxNumber"
+                              ValueChanged="OnTaxNumberChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="10-digit SARS Tax Compliance Status PIN" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect T="string"
+                           Label="Provider institutional classification"
+                           Value="@ProviderClassId"
+                           ValueChanged="OnProviderClassIdChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="Statutory institutional class for SETMIS reporting">
+                    <MudSelectItem Value="@("01")">01 Public TVET College</MudSelectItem>
+                    <MudSelectItem Value="@("02")">02 Private Training College / Academy</MudSelectItem>
+                    <MudSelectItem Value="@("03")">03 Higher Education / University</MudSelectItem>
+                    <MudSelectItem Value="@("04")">04 Non-Profit / Community Training Centre</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect T="string"
+                           Label="Provider operational functional type"
+                           Value="@ProviderTypeId"
+                           ValueChanged="OnProviderTypeIdChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="Functional accreditation category">
+                    <MudSelectItem Value="@("01")">01 Education and Training Institution</MudSelectItem>
+                    <MudSelectItem Value="@("02")">02 Workplace Employer Provider</MudSelectItem>
+                    <MudSelectItem Value="@("03")">03 Industry Training Board / Association</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Physical training campus address"
+                              Value="@PhysicalAddress"
+                              ValueChanged="OnPhysicalAddressChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Main delivery site inspected for physical verification" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect T="string"
+                           Label="Campus province"
+                           Value="@Province"
+                           ValueChanged="OnProvinceChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="Geographical jurisdiction">
+                    <MudSelectItem Value="@("Gauteng")">Gauteng</MudSelectItem>
+                    <MudSelectItem Value="@("KwaZulu-Natal")">KwaZulu-Natal</MudSelectItem>
+                    <MudSelectItem Value="@("Western Cape")">Western Cape</MudSelectItem>
+                    <MudSelectItem Value="@("Eastern Cape")">Eastern Cape</MudSelectItem>
+                    <MudSelectItem Value="@("Free State")">Free State</MudSelectItem>
+                    <MudSelectItem Value="@("Mpumalanga")">Mpumalanga</MudSelectItem>
+                    <MudSelectItem Value="@("Limpopo")">Limpopo</MudSelectItem>
+                    <MudSelectItem Value="@("North West")">North West</MudSelectItem>
+                    <MudSelectItem Value="@("Northern Cape")">Northern Cape</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Head of Institution / Principal full name"
+                              Value="@PrincipalFullName"
+                              ValueChanged="OnPrincipalFullNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Designated chief executive or academic principal" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Official campus email address"
+                              Value="@ContactEmail"
+                              ValueChanged="OnContactEmailChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Accreditation correspondence email" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Official telephone contact number"
+                              Value="@ContactPhone"
+                              ValueChanged="OnContactPhoneChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Primary landline or switchboard number" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Scope" || Section == "All")
+{
+    <div class="nsdms-section-scope mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
+                           Label="Accreditation application scope category"
+                           Value="@AccreditationScopeType"
+                           ValueChanged="OnAccreditationScopeTypeChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="Primary quality assurance or secondary scope extension">
+                    <MudSelectItem Value="@("Primary")">Primary Institutional Accreditation (merSETA Lead QA)</MudSelectItem>
+                    <MudSelectItem Value="@("Secondary")">Secondary Accreditation / Extension of Programme Scope</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Primary designated occupational qualification / trade"
+                              Value="@PrimaryQualificationTitle"
+                              ValueChanged="OnPrimaryQualificationTitleChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="e.g. Occupational Certificate: Automotive Body Repairer" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="SAQA qualification registration ID"
+                              Value="@SaqaQualificationId"
+                              ValueChanged="OnSaqaQualificationIdChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="National SAQA reference number (e.g. 97542)" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect T="int"
+                           Label="Target NQF level descriptor"
+                           Value="@NqfLevel"
+                           ValueChanged="OnNqfLevelChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="National Qualifications Framework level">
+                    <MudSelectItem Value="2">NQF Level 2 (Elementary)</MudSelectItem>
+                    <MudSelectItem Value="3">NQF Level 3 (Intermediate)</MudSelectItem>
+                    <MudSelectItem Value="4">NQF Level 4 (National Certificate / Trade)</MudSelectItem>
+                    <MudSelectItem Value="5">NQF Level 5 (Higher Certificate / Specialist)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect T="string"
+                           Label="Approved instructional delivery mode"
+                           Value="@DeliveryMode"
+                           ValueChanged="OnDeliveryModeChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="Modal structure for learning delivery">
+                    <MudSelectItem Value="@("FullTimeContact")">Full-Time Contact Learning</MudSelectItem>
+                    <MudSelectItem Value="@("Blended")">Blended Learning (Online Theory + Practical Workshop)</MudSelectItem>
+                    <MudSelectItem Value="@("WorkplaceIntegrated")">Workplace-Integrated Learning (Dual System)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField T="int"
+                                 Label="Maximum concurrent learner intake capacity"
+                                 Value="@MaxLearnerCapacity"
+                                 ValueChanged="OnMaxLearnerCapacityChanged"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Min="5"
+                                 Max="500"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Maximum simultaneous enrolment supported by facility infrastructure" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string?"
+                              Label="Occupational framework OFO code"
+                              Value="@OfoCode"
+                              ValueChanged="OnOfoCodeChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly"
+                              HelperText="6-digit Organising Framework for Occupations reference" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Staffing" || Section == "All")
+{
+    <div class="nsdms-section-staffing mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Nominated registered assessor full name"
+                              Value="@AssessorFullName"
+                              ValueChanged="OnAssessorFullNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="ETQA-accredited practitioner registered for this qualification scope" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Assessor ETQA registration number"
+                              Value="@AssessorRegNumber"
+                              ValueChanged="OnAssessorRegNumberChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Valid 3-year statutory registration certificate reference" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Nominated internal moderator full name"
+                              Value="@ModeratorFullName"
+                              ValueChanged="OnModeratorFullNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Registered internal moderator ensuring quality assurance" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Moderator ETQA registration number"
+                              Value="@ModeratorRegNumber"
+                              ValueChanged="OnModeratorRegNumberChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Independent registered moderator verification number" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Lead technical facilitator full name"
+                              Value="@FacilitatorFullName"
+                              ValueChanged="OnFacilitatorFullNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Senior workshop trade artisan facilitator" />
+            </MudItem>
+            <MudItem xs="12" md="6" Class="d-flex align-center">
+                <MudSwitch T="bool"
+                           Label="Staff-to-learner ratios compliant (1:20 Theory, 1:15 Workshop)"
+                           Value="@IsStaffRatioCompliant"
+                           ValueChanged="OnIsStaffRatioCompliantChanged"
+                           Color="Color.Success"
+                           Disabled="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Qms" || Section == "All")
+{
+    <div class="nsdms-section-qms mb-4">
+        <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mb-2 font-weight-bold">
+            Quality Management System (QMS) Policy Checklist
+        </MudText>
+        <FormRow>
+            <MudItem xs="12" md="6" Class="d-flex align-center">
+                <MudSwitch T="bool"
+                           Label="Learner admissions, selection &amp; RPL policy adopted"
+                           Value="@HasAdmissionsPolicy"
+                           ValueChanged="OnHasAdmissionsPolicyChanged"
+                           Color="Color.Primary"
+                           Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6" Class="d-flex align-center">
+                <MudSwitch T="bool"
+                           Label="Assessment, re-assessment &amp; moderation policy in place"
+                           Value="@HasAssessmentPolicy"
+                           ValueChanged="OnHasAssessmentPolicyChanged"
+                           Color="Color.Primary"
+                           Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6" Class="d-flex align-center">
+                <MudSwitch T="bool"
+                           Label="Learner appeals &amp; grievance procedure approved"
+                           Value="@HasAppealsPolicy"
+                           ValueChanged="OnHasAppealsPolicyChanged"
+                           Color="Color.Primary"
+                           Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6" Class="d-flex align-center">
+                <MudSwitch T="bool"
+                           Label="Public liability insurance &amp; financial viability verified"
+                           Value="@HasFinancialInsurance"
+                           ValueChanged="OnHasFinancialInsuranceChanged"
+                           Color="Color.Primary"
+                           Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Occupational Health &amp; Safety (OHS) compliance certificate number"
+                              Value="@OhsCertificateNumber"
+                              ValueChanged="OnOhsCertificateNumberChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Municipal or certified OHS auditor safety clearance" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="QMS institutional manual reference document"
+                              Value="@QmsManualReference"
+                              ValueChanged="OnQmsManualReferenceChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Master QMS document archive (e.g. DOC-SDP-2026-QMS-01.pdf)" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Declaration" || Section == "All")
+{
+    <div class="nsdms-section-declaration mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Authorized representative full name"
+                              Value="@AuthorizedRepFullName"
+                              ValueChanged="OnAuthorizedRepFullNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Authorized director or academic dean submitting application" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Authorized representative designation / role"
+                              Value="@AuthorizedRepDesignation"
+                              ValueChanged="OnAuthorizedRepDesignationChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Official institutional title (e.g. Managing Director, Campus Principal)" />
+            </MudItem>
+        </FormRow>
+
+        <MudAlert Severity="Severity.Info" Class="mb-3">
+            In terms of Section 26I of the Skills Development Act (Act 97 of 1998), the National Qualifications Framework Act, and QCTO Policy on Accreditation of Skills Development Providers, all information supplied will be independently verified by ETQA Quality Assurance Officers during formal desktop review and site evaluation.
+        </MudAlert>
+
+        <MudCheckBox T="bool"
+                     Label="I solemnly declare that the information provided in this accreditation application is true, authentic, and complete. I consent to merSETA ETQA desktop review, on-site physical facility inspections, and data processing under POPIA."
+                     Value="@IsDeclarationAccepted"
+                     ValueChanged="OnIsDeclarationAcceptedChanged"
+                     Color="Color.Primary"
+                     Disabled="@IsReadOnly"
+                     Required="true" />
+    </div>
+}
+
+@code {
+    [Parameter] public string Section { get; set; } = "All";
+    [Parameter] public bool IsReadOnly { get; set; } = false;
+
+    // Section 1: Profile
+    [Parameter] public string ProviderLegalName { get; set; } = "Apex Technical Training Academy (Pty) Ltd";
+    [Parameter] public EventCallback<string> ProviderLegalNameChanged { get; set; }
+
+    [Parameter] public string TradingName { get; set; } = "Apex Institute of Technology";
+    [Parameter] public EventCallback<string> TradingNameChanged { get; set; }
+
+    [Parameter] public string RegistrationNumber { get; set; } = "2018/489123/07";
+    [Parameter] public EventCallback<string> RegistrationNumberChanged { get; set; }
+
+    [Parameter] public string TaxNumber { get; set; } = "9823471029";
+    [Parameter] public EventCallback<string> TaxNumberChanged { get; set; }
+
+    [Parameter] public string ProviderClassId { get; set; } = "02";
+    [Parameter] public EventCallback<string> ProviderClassIdChanged { get; set; }
+
+    [Parameter] public string ProviderTypeId { get; set; } = "01";
+    [Parameter] public EventCallback<string> ProviderTypeIdChanged { get; set; }
+
+    [Parameter] public string PhysicalAddress { get; set; } = "142 Heidelberg Road, City Deep, Johannesburg";
+    [Parameter] public EventCallback<string> PhysicalAddressChanged { get; set; }
+
+    [Parameter] public string Province { get; set; } = "Gauteng";
+    [Parameter] public EventCallback<string> ProvinceChanged { get; set; }
+
+    [Parameter] public string PrincipalFullName { get; set; } = "Dr. Pieter de Villiers";
+    [Parameter] public EventCallback<string> PrincipalFullNameChanged { get; set; }
+
+    [Parameter] public string ContactEmail { get; set; } = "accreditation@apexacademy.co.za";
+    [Parameter] public EventCallback<string> ContactEmailChanged { get; set; }
+
+    [Parameter] public string ContactPhone { get; set; } = "011 402 8800";
+    [Parameter] public EventCallback<string> ContactPhoneChanged { get; set; }
+
+    // Section 2: Scope
+    [Parameter] public string AccreditationScopeType { get; set; } = "Primary";
+    [Parameter] public EventCallback<string> AccreditationScopeTypeChanged { get; set; }
+
+    [Parameter] public string PrimaryQualificationTitle { get; set; } = "Occupational Certificate: Automotive Body Repairer";
+    [Parameter] public EventCallback<string> PrimaryQualificationTitleChanged { get; set; }
+
+    [Parameter] public string SaqaQualificationId { get; set; } = "97542";
+    [Parameter] public EventCallback<string> SaqaQualificationIdChanged { get; set; }
+
+    [Parameter] public int NqfLevel { get; set; } = 4;
+    [Parameter] public EventCallback<int> NqfLevelChanged { get; set; }
+
+    [Parameter] public string DeliveryMode { get; set; } = "FullTimeContact";
+    [Parameter] public EventCallback<string> DeliveryModeChanged { get; set; }
+
+    [Parameter] public int MaxLearnerCapacity { get; set; } = 60;
+    [Parameter] public EventCallback<int> MaxLearnerCapacityChanged { get; set; }
+
+    [Parameter] public string? OfoCode { get; set; } = "684901";
+    [Parameter] public EventCallback<string?> OfoCodeChanged { get; set; }
+
+    // Section 3: Staffing
+    [Parameter] public string AssessorFullName { get; set; } = "Johannes Maluleke";
+    [Parameter] public EventCallback<string> AssessorFullNameChanged { get; set; }
+
+    [Parameter] public string AssessorRegNumber { get; set; } = "ASS-MER-2024-0891";
+    [Parameter] public EventCallback<string> AssessorRegNumberChanged { get; set; }
+
+    [Parameter] public string ModeratorFullName { get; set; } = "Grace Khumalo";
+    [Parameter] public EventCallback<string> ModeratorFullNameChanged { get; set; }
+
+    [Parameter] public string ModeratorRegNumber { get; set; } = "MOD-MER-2023-0412";
+    [Parameter] public EventCallback<string> ModeratorRegNumberChanged { get; set; }
+
+    [Parameter] public string FacilitatorFullName { get; set; } = "David Henderson (Red Seal Fitter)";
+    [Parameter] public EventCallback<string> FacilitatorFullNameChanged { get; set; }
+
+    [Parameter] public bool IsStaffRatioCompliant { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsStaffRatioCompliantChanged { get; set; }
+
+    // Section 4: QMS
+    [Parameter] public bool HasAdmissionsPolicy { get; set; } = true;
+    [Parameter] public EventCallback<bool> HasAdmissionsPolicyChanged { get; set; }
+
+    [Parameter] public bool HasAssessmentPolicy { get; set; } = true;
+    [Parameter] public EventCallback<bool> HasAssessmentPolicyChanged { get; set; }
+
+    [Parameter] public bool HasAppealsPolicy { get; set; } = true;
+    [Parameter] public EventCallback<bool> HasAppealsPolicyChanged { get; set; }
+
+    [Parameter] public bool HasFinancialInsurance { get; set; } = true;
+    [Parameter] public EventCallback<bool> HasFinancialInsuranceChanged { get; set; }
+
+    [Parameter] public string OhsCertificateNumber { get; set; } = "OHS-JHB-2026-0941";
+    [Parameter] public EventCallback<string> OhsCertificateNumberChanged { get; set; }
+
+    [Parameter] public string QmsManualReference { get; set; } = "DOC-SDP-2026-QMS-01.pdf";
+    [Parameter] public EventCallback<string> QmsManualReferenceChanged { get; set; }
+
+    // Section 5: Declaration
+    [Parameter] public string AuthorizedRepFullName { get; set; } = "Dr. Pieter de Villiers";
+    [Parameter] public EventCallback<string> AuthorizedRepFullNameChanged { get; set; }
+
+    [Parameter] public string AuthorizedRepDesignation { get; set; } = "Managing Director";
+    [Parameter] public EventCallback<string> AuthorizedRepDesignationChanged { get; set; }
+
+    [Parameter] public bool IsDeclarationAccepted { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsDeclarationAcceptedChanged { get; set; }
+
+    // Handlers
+    private async Task OnProviderLegalNameChanged(string val)
+    {
+        ProviderLegalName = val;
+        await ProviderLegalNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTradingNameChanged(string val)
+    {
+        TradingName = val;
+        await TradingNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnRegistrationNumberChanged(string val)
+    {
+        RegistrationNumber = val;
+        await RegistrationNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTaxNumberChanged(string val)
+    {
+        TaxNumber = val;
+        await TaxNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnProviderClassIdChanged(string val)
+    {
+        ProviderClassId = val;
+        await ProviderClassIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnProviderTypeIdChanged(string val)
+    {
+        ProviderTypeId = val;
+        await ProviderTypeIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPhysicalAddressChanged(string val)
+    {
+        PhysicalAddress = val;
+        await PhysicalAddressChanged.InvokeAsync(val);
+    }
+
+    private async Task OnProvinceChanged(string val)
+    {
+        Province = val;
+        await ProvinceChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPrincipalFullNameChanged(string val)
+    {
+        PrincipalFullName = val;
+        await PrincipalFullNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnContactEmailChanged(string val)
+    {
+        ContactEmail = val;
+        await ContactEmailChanged.InvokeAsync(val);
+    }
+
+    private async Task OnContactPhoneChanged(string val)
+    {
+        ContactPhone = val;
+        await ContactPhoneChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAccreditationScopeTypeChanged(string val)
+    {
+        AccreditationScopeType = val;
+        await AccreditationScopeTypeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPrimaryQualificationTitleChanged(string val)
+    {
+        PrimaryQualificationTitle = val;
+        await PrimaryQualificationTitleChanged.InvokeAsync(val);
+    }
+
+    private async Task OnSaqaQualificationIdChanged(string val)
+    {
+        SaqaQualificationId = val;
+        await SaqaQualificationIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnNqfLevelChanged(int val)
+    {
+        NqfLevel = val;
+        await NqfLevelChanged.InvokeAsync(val);
+    }
+
+    private async Task OnDeliveryModeChanged(string val)
+    {
+        DeliveryMode = val;
+        await DeliveryModeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnMaxLearnerCapacityChanged(int val)
+    {
+        MaxLearnerCapacity = val;
+        await MaxLearnerCapacityChanged.InvokeAsync(val);
+    }
+
+    private async Task OnOfoCodeChanged(string? val)
+    {
+        OfoCode = val;
+        await OfoCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAssessorFullNameChanged(string val)
+    {
+        AssessorFullName = val;
+        await AssessorFullNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAssessorRegNumberChanged(string val)
+    {
+        AssessorRegNumber = val;
+        await AssessorRegNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnModeratorFullNameChanged(string val)
+    {
+        ModeratorFullName = val;
+        await ModeratorFullNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnModeratorRegNumberChanged(string val)
+    {
+        ModeratorRegNumber = val;
+        await ModeratorRegNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnFacilitatorFullNameChanged(string val)
+    {
+        FacilitatorFullName = val;
+        await FacilitatorFullNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsStaffRatioCompliantChanged(bool val)
+    {
+        IsStaffRatioCompliant = val;
+        await IsStaffRatioCompliantChanged.InvokeAsync(val);
+    }
+
+    private async Task OnHasAdmissionsPolicyChanged(bool val)
+    {
+        HasAdmissionsPolicy = val;
+        await HasAdmissionsPolicyChanged.InvokeAsync(val);
+    }
+
+    private async Task OnHasAssessmentPolicyChanged(bool val)
+    {
+        HasAssessmentPolicy = val;
+        await HasAssessmentPolicyChanged.InvokeAsync(val);
+    }
+
+    private async Task OnHasAppealsPolicyChanged(bool val)
+    {
+        HasAppealsPolicy = val;
+        await HasAppealsPolicyChanged.InvokeAsync(val);
+    }
+
+    private async Task OnHasFinancialInsuranceChanged(bool val)
+    {
+        HasFinancialInsurance = val;
+        await HasFinancialInsuranceChanged.InvokeAsync(val);
+    }
+
+    private async Task OnOhsCertificateNumberChanged(string val)
+    {
+        OhsCertificateNumber = val;
+        await OhsCertificateNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnQmsManualReferenceChanged(string val)
+    {
+        QmsManualReference = val;
+        await QmsManualReferenceChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAuthorizedRepFullNameChanged(string val)
+    {
+        AuthorizedRepFullName = val;
+        await AuthorizedRepFullNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAuthorizedRepDesignationChanged(string val)
+    {
+        AuthorizedRepDesignation = val;
+        await AuthorizedRepDesignationChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsDeclarationAcceptedChanged(bool val)
+    {
+        IsDeclarationAccepted = val;
+        await IsDeclarationAcceptedChanged.InvokeAsync(val);
+    }
+}

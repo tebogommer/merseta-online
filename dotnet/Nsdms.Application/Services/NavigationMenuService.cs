@@ -555,7 +555,7 @@ public class NavigationMenuService : INavigationMenuService
             new() { Id = "act-courseware", Title = "Request Training Courseware", Href = "curriculum/courseware", Icon = "MenuBook", Category = "Quick Actions", Description = "Request official MerSETA learning modules and curriculum materials", ItemType = "QuickAction" },
             new() { Id = "act-schedule-visit", Title = "Schedule Employer Monitoring Visit", Href = "monitoring", Icon = "FactCheck", Category = "Quick Actions", Description = "Plan an on-site workplace verification with designated contact person", ItemType = "QuickAction" },
             new() { Id = "act-sars-recon", Title = "Run SARS Levy Reconciliation Audit", Href = "finance/levy-audits", Icon = "Calculate", Category = "Quick Actions", Description = "Audit SARS levy monthly file against DHET distribution", ItemType = "QuickAction" },
-            new() { Id = "act-inter-seta", Title = "Initiate Inter-SETA Transfer", Href = "inter-seta-transfers", Icon = "SwapHoriz", Category = "Quick Actions", Description = "Transfer organisation across SETAs due to business scope shift", ItemType = "QuickAction" },
+            new() { Id = "act-inter-seta", Title = "Initiate Inter-SETA Transfer", Href = "inter-seta/transfer-request", Icon = "SwapHoriz", Category = "Quick Actions", Description = "Transfer organisation across SETAs due to business scope shift", ItemType = "QuickAction" },
             new() { Id = "act-banking-details", Title = "Submit / Verify Banking Details", Href = "finance/banking-details", Icon = "AccountBalance", Category = "Quick Actions", Description = "Upload verified bank confirmation letter for GP vendor sync", ItemType = "QuickAction" },
             new() { Id = "act-verify-doc", Title = "Verify Document Authenticity", Href = "verify", Icon = "VerifiedUser", Category = "Quick Actions", Description = "Verify cryptographic certificate or MoA digital security seal", ItemType = "QuickAction" }
         };
@@ -664,6 +664,21 @@ public class NavigationMenuService : INavigationMenuService
             },
             new()
             {
+                Id = "nav-sdp-wizard",
+                Title = "Apply for SDP accreditation wizard",
+                Href = "providers/apply-accreditation",
+                Icon = "AccountBalance",
+                Category = "Registries & stakeholders",
+                Description = "Multi-step Skills Development Provider primary accreditation and scope registration wizard",
+                RequiredModule = AppPermissions.ModuleOrganisations,
+                RequiredAction = AppPermissions.ActionEdit,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "SDP", "CLO" },
+                PersonaTags = new() { "Admin", "SDP", "CLO" },
+                DisplayOrder = 4,
+                Keywords = new() { "sdp wizard", "accreditation wizard", "apply sdp", "training provider accreditation" }
+            },
+            new()
+            {
                 Id = "nav-people",
                 Title = "People & demographics",
                 Href = "people",
@@ -674,7 +689,7 @@ public class NavigationMenuService : INavigationMenuService
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "CLO", "SDF" },
                 PersonaTags = new() { "Admin", "CLO", "SDF" },
-                DisplayOrder = 4,
+                DisplayOrder = 5,
                 Keywords = new() { "people", "citizens", "demographics", "rsa id", "contacts", "setmis" }
             },
             new()
@@ -978,6 +993,21 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "Admin", "Finance" },
                 DisplayOrder = 14,
                 Keywords = new() { "inter-seta", "transfers", "sic codes", "seta transfer" }
+            },
+            new()
+            {
+                Id = "nav-interseta-wizard",
+                Title = "Section 32 transfer wizard",
+                Href = "inter-seta/transfer-request",
+                Icon = "CompareArrows",
+                Category = "Grants, levies & finance",
+                Description = "Multi-step Section 32 employer chamber reclassification and accumulated levy funds migration wizard",
+                RequiredModule = AppPermissions.ModuleFinance,
+                RequiredAction = AppPermissions.ActionTransfer,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Finance" },
+                PersonaTags = new() { "Admin", "Finance" },
+                DisplayOrder = 15,
+                Keywords = new() { "inter-seta wizard", "section 32 wizard", "transfer request", "sic reclassification" }
             },
 
             // 4. Learner & artisan development

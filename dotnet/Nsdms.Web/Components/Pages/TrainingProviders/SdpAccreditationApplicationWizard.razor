@@ -1,0 +1,537 @@
+@page "/providers/apply-accreditation"
+@page "/sdp/apply-accreditation"
+@page "/providers/apply"
+@page "/sdp/create"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using Nsdms.Web.Components.Shared.Forms
+@using Nsdms.Web.Components.Shared.Wizard
+@using MudBlazor
+@inject ITrainingProviderService ProviderService
+@inject IOrganisationService OrgService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="mb-4">
+    <div class="d-flex align-center gap-2 mb-2">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="GoBack">
+            Back to Skills Development Providers
+        </MudButton>
+        <MudBreadcrumbs Items="_breadcrumbs" Separator=">" Class="pa-0 ma-0" />
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="d-flex justify-center align-center py-12">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else if (_isSuccess)
+{
+    <MudCard Elevation="2" Class="pa-6 rounded-lg text-center">
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" Class="mb-3" />
+        <h1 class="text-h5 font-weight-bold text-primary mb-2">SDP accreditation application lodged</h1>
+        <p class="text-body1 text-secondary mb-4">
+            Institutional accreditation application reference <strong class="font-mono">@_submittedAccNumber</strong> has been successfully registered and queued for merSETA ETQA desktop review and site verification scheduling.
+        </p>
+        <div class="d-flex justify-center gap-3">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.AccountBalance"
+                       OnClick="ViewSubmittedProvider">
+                View provider record
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       OnClick="GoBack">
+                Return to SDP register
+            </MudButton>
+        </div>
+    </MudCard>
+}
+else
+{
+    <WizardShell Title="SDP institutional accreditation application"
+                 Subtitle="Statutory Skills Development Provider primary accreditation and occupational programme registration"
+                 ActiveStepIndex="@_activeStep"
+                 ActiveStepIndexChanged="OnStepChanged"
+                 FinishButtonText="Submit accreditation application"
+                 IsBusy="@_isProcessing"
+                 OnCancel="GoBack"
+                 OnSaveDraft="SaveDraftAsync"
+                 OnFinish="SubmitApplicationAsync">
+
+        <!-- STEP 1: Provider Profile & Legal Entity -->
+        <WizardStep Label="Provider profile"
+                    Heading="Provider profile &amp; legal entity"
+                    Description="Verify corporate registration with CIPC, SARS tax standing, institutional classification, and physical campus facility"
+                    ValidateAsync="ValidateStep1Async">
+            <SdpAccreditationFields Section="Profile"
+                                    ProviderLegalName="@_providerLegalName"
+                                    ProviderLegalNameChanged="@((val) => { _providerLegalName = val; UpdateReviewGroups(); })"
+                                    TradingName="@_tradingName"
+                                    TradingNameChanged="@((val) => { _tradingName = val; UpdateReviewGroups(); })"
+                                    RegistrationNumber="@_registrationNumber"
+                                    RegistrationNumberChanged="@((val) => { _registrationNumber = val; UpdateReviewGroups(); })"
+                                    TaxNumber="@_taxNumber"
+                                    TaxNumberChanged="@((val) => { _taxNumber = val; UpdateReviewGroups(); })"
+                                    ProviderClassId="@_providerClassId"
+                                    ProviderClassIdChanged="@((val) => { _providerClassId = val; UpdateReviewGroups(); })"
+                                    ProviderTypeId="@_providerTypeId"
+                                    ProviderTypeIdChanged="@((val) => { _providerTypeId = val; UpdateReviewGroups(); })"
+                                    PhysicalAddress="@_physicalAddress"
+                                    PhysicalAddressChanged="@((val) => { _physicalAddress = val; UpdateReviewGroups(); })"
+                                    Province="@_province"
+                                    ProvinceChanged="@((val) => { _province = val; UpdateReviewGroups(); })"
+                                    PrincipalFullName="@_principalFullName"
+                                    PrincipalFullNameChanged="@((val) => { _principalFullName = val; UpdateReviewGroups(); })"
+                                    ContactEmail="@_contactEmail"
+                                    ContactEmailChanged="@((val) => { _contactEmail = val; UpdateReviewGroups(); })"
+                                    ContactPhone="@_contactPhone"
+                                    ContactPhoneChanged="@((val) => { _contactPhone = val; UpdateReviewGroups(); })" />
+        </WizardStep>
+
+        <!-- STEP 2: Proposed Scope of Accreditation -->
+        <WizardStep Label="Accreditation scope"
+                    Heading="Proposed scope of accreditation &amp; qualifications"
+                    Description="Select primary or secondary accreditation scope, designated occupational qualification, SAQA reference, and maximum capacity"
+                    ValidateAsync="ValidateStep2Async">
+            <SdpAccreditationFields Section="Scope"
+                                    AccreditationScopeType="@_accreditationScopeType"
+                                    AccreditationScopeTypeChanged="@((val) => { _accreditationScopeType = val; UpdateReviewGroups(); })"
+                                    PrimaryQualificationTitle="@_primaryQualificationTitle"
+                                    PrimaryQualificationTitleChanged="@((val) => { _primaryQualificationTitle = val; UpdateReviewGroups(); })"
+                                    SaqaQualificationId="@_saqaQualificationId"
+                                    SaqaQualificationIdChanged="@((val) => { _saqaQualificationId = val; UpdateReviewGroups(); })"
+                                    NqfLevel="@_nqfLevel"
+                                    NqfLevelChanged="@((val) => { _nqfLevel = val; UpdateReviewGroups(); })"
+                                    DeliveryMode="@_deliveryMode"
+                                    DeliveryModeChanged="@((val) => { _deliveryMode = val; UpdateReviewGroups(); })"
+                                    MaxLearnerCapacity="@_maxLearnerCapacity"
+                                    MaxLearnerCapacityChanged="@((val) => { _maxLearnerCapacity = val; UpdateReviewGroups(); })"
+                                    OfoCode="@_ofoCode"
+                                    OfoCodeChanged="@((val) => { _ofoCode = val; UpdateReviewGroups(); })" />
+        </WizardStep>
+
+        <!-- STEP 3: Staffing (Assessor / Moderator) -->
+        <WizardStep Label="Staffing"
+                    Heading="Academic &amp; workshop artisan staffing"
+                    Description="Link ETQA-registered assessor and internal moderator practitioners, and verify staff-to-learner ratios"
+                    ValidateAsync="ValidateStep3Async">
+            <SdpAccreditationFields Section="Staffing"
+                                    AssessorFullName="@_assessorFullName"
+                                    AssessorFullNameChanged="@((val) => { _assessorFullName = val; UpdateReviewGroups(); })"
+                                    AssessorRegNumber="@_assessorRegNumber"
+                                    AssessorRegNumberChanged="@((val) => { _assessorRegNumber = val; UpdateReviewGroups(); })"
+                                    ModeratorFullName="@_moderatorFullName"
+                                    ModeratorFullNameChanged="@((val) => { _moderatorFullName = val; UpdateReviewGroups(); })"
+                                    ModeratorRegNumber="@_moderatorRegNumber"
+                                    ModeratorRegNumberChanged="@((val) => { _moderatorRegNumber = val; UpdateReviewGroups(); })"
+                                    FacilitatorFullName="@_facilitatorFullName"
+                                    FacilitatorFullNameChanged="@((val) => { _facilitatorFullName = val; UpdateReviewGroups(); })"
+                                    IsStaffRatioCompliant="@_isStaffRatioCompliant"
+                                    IsStaffRatioCompliantChanged="@((val) => { _isStaffRatioCompliant = val; UpdateReviewGroups(); })" />
+        </WizardStep>
+
+        <!-- STEP 4: QMS Policies & Self-Audit -->
+        <WizardStep Label="QMS &amp; Compliance"
+                    Heading="Quality Management System (QMS) &amp; OHS clearance"
+                    Description="Audit mandatory institutional policies, OHS workshop safety clearance, and upload master QMS manual"
+                    ValidateAsync="ValidateStep4Async">
+            <SdpAccreditationFields Section="Qms"
+                                    HasAdmissionsPolicy="@_hasAdmissionsPolicy"
+                                    HasAdmissionsPolicyChanged="@((val) => { _hasAdmissionsPolicy = val; UpdateReviewGroups(); })"
+                                    HasAssessmentPolicy="@_hasAssessmentPolicy"
+                                    HasAssessmentPolicyChanged="@((val) => { _hasAssessmentPolicy = val; UpdateReviewGroups(); })"
+                                    HasAppealsPolicy="@_hasAppealsPolicy"
+                                    HasAppealsPolicyChanged="@((val) => { _hasAppealsPolicy = val; UpdateReviewGroups(); })"
+                                    HasFinancialInsurance="@_hasFinancialInsurance"
+                                    HasFinancialInsuranceChanged="@((val) => { _hasFinancialInsurance = val; UpdateReviewGroups(); })"
+                                    OhsCertificateNumber="@_ohsCertificateNumber"
+                                    OhsCertificateNumberChanged="@((val) => { _ohsCertificateNumber = val; UpdateReviewGroups(); })"
+                                    QmsManualReference="@_qmsManualReference"
+                                    QmsManualReferenceChanged="@((val) => { _qmsManualReference = val; UpdateReviewGroups(); })" />
+        </WizardStep>
+
+        <!-- STEP 5: Review & Statutory Declaration -->
+        <WizardReviewStep Heading="Accreditation application review &amp; desktop audit dispatch"
+                          Description="Review provider credentials, proposed qualification scope, and dispatch for ETQA desktop evaluation"
+                          ReviewGroups="@_reviewGroups"
+                          OnEditStep="@((idx) => _activeStep = idx)">
+            <ChildContent>
+                <SdpAccreditationFields Section="Declaration"
+                                        AuthorizedRepFullName="@_authorizedRepFullName"
+                                        AuthorizedRepFullNameChanged="@((val) => _authorizedRepFullName = val)"
+                                        AuthorizedRepDesignation="@_authorizedRepDesignation"
+                                        AuthorizedRepDesignationChanged="@((val) => _authorizedRepDesignation = val)"
+                                        IsDeclarationAccepted="@_isDeclarationAccepted"
+                                        IsDeclarationAcceptedChanged="@((val) => _isDeclarationAccepted = val)" />
+            </ChildContent>
+        </WizardReviewStep>
+    </WizardShell>
+}
+
+@code {
+    private int _activeStep = 0;
+    private bool _loading = true;
+    private bool _isProcessing = false;
+    private bool _isSuccess = false;
+    private int _createdProviderId = 0;
+    private string _submittedAccNumber = string.Empty;
+
+    // Step 1: Profile
+    private string _providerLegalName = "Apex Technical Training Academy (Pty) Ltd";
+    private string _tradingName = "Apex Institute of Technology";
+    private string _registrationNumber = "2018/489123/07";
+    private string _taxNumber = "9823471029";
+    private string _providerClassId = "02";
+    private string _providerTypeId = "01";
+    private string _physicalAddress = "142 Heidelberg Road, City Deep, Johannesburg";
+    private string _province = "Gauteng";
+    private string _principalFullName = "Dr. Pieter de Villiers";
+    private string _contactEmail = "accreditation@apexacademy.co.za";
+    private string _contactPhone = "011 402 8800";
+
+    // Step 2: Scope
+    private string _accreditationScopeType = "Primary";
+    private string _primaryQualificationTitle = "Occupational Certificate: Automotive Body Repairer";
+    private string _saqaQualificationId = "97542";
+    private int _nqfLevel = 4;
+    private string _deliveryMode = "FullTimeContact";
+    private int _maxLearnerCapacity = 60;
+    private string? _ofoCode = "684901";
+
+    // Step 3: Staffing
+    private string _assessorFullName = "Johannes Maluleke";
+    private string _assessorRegNumber = "ASS-MER-2024-0891";
+    private string _moderatorFullName = "Grace Khumalo";
+    private string _moderatorRegNumber = "MOD-MER-2023-0412";
+    private string _facilitatorFullName = "David Henderson (Red Seal Fitter)";
+    private bool _isStaffRatioCompliant = true;
+
+    // Step 4: QMS
+    private bool _hasAdmissionsPolicy = true;
+    private bool _hasAssessmentPolicy = true;
+    private bool _hasAppealsPolicy = true;
+    private bool _hasFinancialInsurance = true;
+    private string _ohsCertificateNumber = "OHS-JHB-2026-0941";
+    private string _qmsManualReference = "DOC-SDP-2026-QMS-01.pdf";
+
+    // Step 5: Declaration
+    private string _authorizedRepFullName = "Dr. Pieter de Villiers";
+    private string _authorizedRepDesignation = "Managing Director";
+    private bool _isDeclarationAccepted = true;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Quality assurance & ETQA", href: "/sdp"),
+        new BreadcrumbItem("Skills Development Providers", href: "/sdp"),
+        new BreadcrumbItem("Initial accreditation application", href: null, disabled: true)
+    };
+
+    private List<WizardReviewGroup> _reviewGroups = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _loading = true;
+            await Task.Delay(50);
+            UpdateReviewGroups();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error initializing SDP accreditation wizard: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void OnStepChanged(int newStep)
+    {
+        _activeStep = newStep;
+        UpdateReviewGroups();
+    }
+
+    private void UpdateReviewGroups()
+    {
+        var classTitle = _providerClassId switch
+        {
+            "01" => "01 Public TVET College",
+            "02" => "02 Private Training College",
+            "03" => "03 Higher Education / University",
+            _ => "04 Non-Profit / Community Training Centre"
+        };
+
+        var deliveryTitle = _deliveryMode switch
+        {
+            "FullTimeContact" => "Full-Time Contact Learning",
+            "Blended" => "Blended Learning (Theory + Workshop)",
+            _ => "Workplace-Integrated Learning"
+        };
+
+        _reviewGroups = new List<WizardReviewGroup>
+        {
+            new()
+            {
+                Title = "Provider Profile & Legal Entity",
+                Icon = Icons.Material.Filled.AccountBalance,
+                TargetStepIndex = 0,
+                Items = new()
+                {
+                    new("Legal entity name", _providerLegalName),
+                    new("Trading title", string.IsNullOrWhiteSpace(_tradingName) ? "Same as legal name" : _tradingName),
+                    new("CIPC registration number", _registrationNumber, isMonospace: true),
+                    new("SARS tax compliance PIN", _taxNumber, isMonospace: true),
+                    new("Institutional classification", classTitle),
+                    new("Physical campus site", $"{_physicalAddress}, {_province}"),
+                    new("Head of Institution", $"{_principalFullName} ({_contactEmail})")
+                }
+            },
+            new()
+            {
+                Title = "Proposed Scope of Accreditation",
+                Icon = Icons.Material.Filled.School,
+                TargetStepIndex = 1,
+                Items = new()
+                {
+                    new("Accreditation category", _accreditationScopeType == "Primary" ? "Primary merSETA QA" : "Secondary Scope Extension"),
+                    new("Primary qualification title", _primaryQualificationTitle),
+                    new("SAQA registration ID", _saqaQualificationId, isMonospace: true),
+                    new("Target NQF level", $"NQF Level {_nqfLevel}"),
+                    new("Delivery mode", deliveryTitle),
+                    new("Max learner capacity", $"{_maxLearnerCapacity} concurrent learners")
+                }
+            },
+            new()
+            {
+                Title = "Academic & Workshop Staffing",
+                Icon = Icons.Material.Filled.Badge,
+                TargetStepIndex = 2,
+                Items = new()
+                {
+                    new("Nominated assessor", $"{_assessorFullName} ({_assessorRegNumber})"),
+                    new("Nominated internal moderator", $"{_moderatorFullName} ({_moderatorRegNumber})"),
+                    new("Lead technical facilitator", _facilitatorFullName),
+                    new("Staff-to-learner ratio", _isStaffRatioCompliant ? "Compliant (1:20 Theory / 1:15 Practical)" : "Exemption Requested")
+                }
+            },
+            new()
+            {
+                Title = "QMS Policies & Safety Compliance",
+                Icon = Icons.Material.Filled.Policy,
+                TargetStepIndex = 3,
+                Items = new()
+                {
+                    new("Admissions & RPL policy", _hasAdmissionsPolicy ? "Adopted & Verified" : "Pending"),
+                    new("Assessment & moderation policy", _hasAssessmentPolicy ? "Adopted & Verified" : "Pending"),
+                    new("Learner appeals procedure", _hasAppealsPolicy ? "Approved" : "Pending"),
+                    new("Public liability insurance", _hasFinancialInsurance ? "Active & Insured" : "Pending"),
+                    new("OHS audit certificate number", _ohsCertificateNumber, isMonospace: true),
+                    new("Master QMS manual reference", _qmsManualReference, isMonospace: true)
+                }
+            }
+        };
+    }
+
+    private Task<bool> ValidateStep1Async()
+    {
+        if (string.IsNullOrWhiteSpace(_providerLegalName))
+        {
+            Snackbar.Add("Please enter the provider legal entity name.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_registrationNumber))
+        {
+            Snackbar.Add("Please enter the CIPC registration number.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_taxNumber))
+        {
+            Snackbar.Add("Please enter the SARS tax compliance PIN.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_physicalAddress))
+        {
+            Snackbar.Add("Please provide the physical training campus address.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep2Async()
+    {
+        if (string.IsNullOrWhiteSpace(_primaryQualificationTitle))
+        {
+            Snackbar.Add("Please provide the primary qualification title.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_saqaQualificationId))
+        {
+            Snackbar.Add("Please enter the SAQA qualification ID.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (_maxLearnerCapacity <= 0)
+        {
+            Snackbar.Add("Maximum learner capacity must be greater than zero.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep3Async()
+    {
+        if (string.IsNullOrWhiteSpace(_assessorFullName) || string.IsNullOrWhiteSpace(_assessorRegNumber))
+        {
+            Snackbar.Add("Please provide the nominated assessor name and ETQA registration number.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_moderatorFullName) || string.IsNullOrWhiteSpace(_moderatorRegNumber))
+        {
+            Snackbar.Add("Please provide the nominated internal moderator name and registration number.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep4Async()
+    {
+        if (!_hasAdmissionsPolicy || !_hasAssessmentPolicy)
+        {
+            Snackbar.Add("Learner admissions and assessment policies are mandatory for QCTO accreditation.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_ohsCertificateNumber))
+        {
+            Snackbar.Add("Please provide an OHS compliance certificate number.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private async Task SaveDraftAsync()
+    {
+        try
+        {
+            _isProcessing = true;
+            await Task.Delay(300);
+            Snackbar.Add("SDP accreditation application draft saved.", Severity.Info);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task SubmitApplicationAsync()
+    {
+        if (!_isDeclarationAccepted)
+        {
+            Snackbar.Add("Please accept the statutory accreditation declaration.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _isProcessing = true;
+
+            // Generate statutory accreditation number reference
+            var accNumber = $"SDP-{DateTime.UtcNow:yyyy}-{new Random().Next(1000, 9999)}";
+
+            // Resolve or create parent Organisation record
+            var orgs = await OrgService.GetAllAsync(_providerLegalName);
+            var parentOrg = orgs.FirstOrDefault();
+
+            if (parentOrg == null)
+            {
+                parentOrg = await OrgService.CreateAsync(new Organisation
+                {
+                    CompanyName = _providerLegalName,
+                    TradingName = _tradingName,
+                    RegistrationNumber = _registrationNumber,
+                    TaxNumber = _taxNumber,
+                    OrganisationStatusCode = "ACTIVE",
+                    SdlNumber = "L" + new Random().Next(100000000, 999999999),
+                    PhysicalAddress = _physicalAddress,
+                    ProvinceCode = _province
+                }, "ETQA-Admin");
+            }
+
+            // Create TrainingProvider
+            var provider = new TrainingProvider
+            {
+                OrganisationId = parentOrg.Id,
+                AccreditationNumber = accNumber,
+                ProviderCode = $"PRV-{parentOrg.Id:D5}",
+                ProviderClassId = _providerClassId,
+                ProviderTypeId = _providerTypeId,
+                ProviderStatusId = "02", // Provisional
+                ProviderStatusCode = "PROVISIONAL",
+                MaxLearnerCapacity = _maxLearnerCapacity,
+                AccreditationStartDate = DateTime.UtcNow,
+                AccreditationEndDate = DateTime.UtcNow.AddYears(5),
+                EtqaId = "17",
+                EtqaDecisionNumber = $"ETQA-MIN-{DateTime.UtcNow:yyyy}-{new Random().Next(100, 999)}",
+                IsActive = true
+            };
+
+            var created = await ProviderService.CreateAsync(provider, "ETQA-Admin");
+
+            // Register qualification scope
+            int.TryParse(_saqaQualificationId, out var parsedSaqaId);
+            await ProviderService.AddQualificationAsync(created.Id, new TrainingProviderQualification
+            {
+                TrainingProviderId = created.Id,
+                SaqaQualificationId = parsedSaqaId,
+                QualificationTitle = _primaryQualificationTitle,
+                NqfLevel = _nqfLevel,
+                AccreditationStatusCode = "Provisional",
+                ExpiryDate = DateTime.UtcNow.AddYears(5)
+            }, "ETQA-Admin");
+
+            _createdProviderId = created.Id;
+            _submittedAccNumber = accNumber;
+            _isSuccess = true;
+
+            Snackbar.Add($"SDP accreditation application {accNumber} registered successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Accreditation submission failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void ViewSubmittedProvider()
+    {
+        NavManager.NavigateTo($"/sdp/{_createdProviderId}");
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo("/sdp");
+    }
+}

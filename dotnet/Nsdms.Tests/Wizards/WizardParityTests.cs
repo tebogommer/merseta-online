@@ -149,6 +149,8 @@ public class WizardParityTests : BunitContext, IAsyncLifetime
                 "TradeTestApplicationWizard.razor",
                 "DgTrancheClaimWizard.razor",
                 "WspAtrSubmissionWizard.razor",
+                "SdpAccreditationApplicationWizard.razor",
+                "InterSetaTransferWizard.razor",
                 // WspSignoffWizard.razor is documented as an attestation status board rather than a sequential stepper
                 "WspSignoffWizard.razor"
             };
@@ -311,5 +313,73 @@ public class WizardParityTests : BunitContext, IAsyncLifetime
         Assert.Contains("Primary SDF full name", cut.Markup, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("CEO / Accounting Authority full name", cut.Markup, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("solemnly declare", cut.Markup, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void SdpAccreditationFields_RendersExpectedStatutoryFields()
+    {
+        var cut = Render<SdpAccreditationFields>(parameters => parameters
+            .Add(p => p.Section, "All")
+            .Add(p => p.ProviderLegalName, "Apex Technical Training Academy (Pty) Ltd")
+            .Add(p => p.RegistrationNumber, "2018/489123/07")
+            .Add(p => p.TaxNumber, "9823471029")
+            .Add(p => p.PrimaryQualificationTitle, "Occupational Certificate: Automotive Body Repairer")
+            .Add(p => p.SaqaQualificationId, "97542")
+            .Add(p => p.AssessorFullName, "Johannes Maluleke")
+            .Add(p => p.AssessorRegNumber, "ASS-MER-2024-0891")
+            .Add(p => p.ModeratorFullName, "Grace Khumalo")
+            .Add(p => p.ModeratorRegNumber, "MOD-MER-2023-0412")
+            .Add(p => p.OhsCertificateNumber, "OHS-JHB-2026-0941")
+            .Add(p => p.QmsManualReference, "DOC-SDP-2026-QMS-01.pdf")
+        );
+
+        Assert.Contains("Skills Development Provider (SDP) legal entity name", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CIPC company or trust registration number", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("SARS tax compliance PIN", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Provider institutional classification", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Accreditation application scope category", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Primary designated occupational qualification", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("SAQA qualification registration ID", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Nominated registered assessor full name", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Assessor ETQA registration number", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Nominated internal moderator full name", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Staff-to-learner ratios compliant", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Learner admissions, selection", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Assessment, re-assessment", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("OHS", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("QMS institutional manual reference document", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("solemnly declare", cut.Markup, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void InterSetaTransferFields_RendersExpectedStatutoryFields()
+    {
+        var cut = Render<InterSetaTransferFields>(parameters => parameters
+            .Add(p => p.Section, "All")
+            .Add(p => p.SdlNumber, "L789123456")
+            .Add(p => p.CurrentSicCode, "38100")
+            .Add(p => p.TargetSicCode, "33400")
+            .Add(p => p.TransferAmount, 185000m)
+            .Add(p => p.Emp103DocRef, "DOC-SARS-EMP103-CORROB.pdf")
+            .Add(p => p.CipcDocRef, "DOC-CIPC-CORPOBJECTS.pdf")
+            .Add(p => p.LabourDocRef, "DOC-UNION-CONSULTATION.pdf")
+            .Add(p => p.BoardResolutionDocRef, "DOC-BOARD-RESOLUTION.pdf")
+            .Add(p => p.SignatoryFullName, "Morné van Zyl")
+        );
+
+        Assert.Contains("Migrating employer organisation", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Skills Development Levy (SDL) registration number", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Current originating SETA", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Transfer direction", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Counterpart counterpart SETA", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Primary statutory transfer justification", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Current reported SARS 5-digit SIC code", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Target destination 5-digit SIC code", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Accumulated uncommitted levy funds", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("SARS EMP103", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CIPC core business objects", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Organised labour / consultative committee endorsement", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Board resolution", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Section 32", cut.Markup, StringComparison.OrdinalIgnoreCase);
     }
 }

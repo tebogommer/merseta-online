@@ -1,0 +1,430 @@
+@page "/inter-seta/transfer-request"
+@page "/interseta/transfer-request"
+@page "/inter-seta/create"
+@page "/interseta/create"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using Nsdms.Web.Components.Shared.Forms
+@using Nsdms.Web.Components.Shared.Wizard
+@using MudBlazor
+@inject IFinanceService FinanceService
+@inject IOrganisationService OrgService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="mb-4">
+    <div class="d-flex align-center gap-2 mb-2">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="GoBack">
+            Back to Inter-SETA Transfers
+        </MudButton>
+        <MudBreadcrumbs Items="_breadcrumbs" Separator=">" Class="pa-0 ma-0" />
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="d-flex justify-center align-center py-12">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else if (_isSuccess)
+{
+    <MudCard Elevation="2" Class="pa-6 rounded-lg text-center">
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" Class="mb-3" />
+        <h1 class="text-h5 font-weight-bold text-primary mb-2">Section 32 Inter-SETA transfer request lodged</h1>
+        <p class="text-body1 text-secondary mb-4">
+            Transfer request reference <strong class="font-mono">@_submittedTransferRef</strong> for <strong class="font-mono">@_submittedOrgName</strong> has been formally registered and dispatched for DHET ministerial gazetting and counterpart SETA accounting concurrence.
+        </p>
+        <div class="d-flex justify-center gap-3">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.SwapHoriz"
+                       OnClick="GoBack">
+                View transfer register
+            </MudButton>
+        </div>
+    </MudCard>
+}
+else
+{
+    <WizardShell Title="Section 32 Inter-SETA transfer application"
+                 Subtitle="Statutory employer chamber reclassification, counterpart SETA transfer, and accumulated levy migration"
+                 ActiveStepIndex="@_activeStep"
+                 ActiveStepIndexChanged="OnStepChanged"
+                 FinishButtonText="Submit transfer application"
+                 IsBusy="@_isProcessing"
+                 OnCancel="GoBack"
+                 OnSaveDraft="SaveDraftAsync"
+                 OnFinish="SubmitTransferAsync">
+
+        <!-- STEP 1: Employer Profile & SDL Verification -->
+        <WizardStep Label="Employer &amp; SDL"
+                    Heading="Employer profile &amp; SDL standing"
+                    Description="Select migrating employer organisation, verify SDL registration number, and operating industrial chamber"
+                    ValidateAsync="ValidateStep1Async">
+            <InterSetaTransferFields Section="Profile"
+                                     Organisations="@_organisations"
+                                     OrganisationId="@_organisationId"
+                                     OrganisationIdChanged="OnOrganisationChanged"
+                                     SdlNumber="@_sdlNumber"
+                                     SdlNumberChanged="@((val) => { _sdlNumber = val; UpdateReviewGroups(); })"
+                                     Chamber="@_chamber"
+                                     ChamberChanged="@((val) => { _chamber = val; UpdateReviewGroups(); })"
+                                     EmployeeCount="@_employeeCount"
+                                     EmployeeCountChanged="@((val) => { _employeeCount = val; UpdateReviewGroups(); })" />
+        </WizardStep>
+
+        <!-- STEP 2: Transfer Direction & Justification -->
+        <WizardStep Label="Transfer direction"
+                    Heading="Transfer direction &amp; statutory justification"
+                    Description="Establish migration flow (incoming vs outgoing), counterpart SETA, and Section 32 legal motivation"
+                    ValidateAsync="ValidateStep2Async">
+            <InterSetaTransferFields Section="Direction"
+                                     TransferType="@_transferType"
+                                     TransferTypeChanged="@((val) => { _transferType = val; UpdateReviewGroups(); })"
+                                     OtherSetaCode="@_otherSetaCode"
+                                     OtherSetaCodeChanged="@((val) => { _otherSetaCode = val; UpdateReviewGroups(); })"
+                                     TransferReason="@_transferReason"
+                                     TransferReasonChanged="@((val) => { _transferReason = val; UpdateReviewGroups(); })"
+                                     EffectiveDate="@_effectiveDate"
+                                     EffectiveDateChanged="@((val) => { _effectiveDate = val; UpdateReviewGroups(); })"
+                                     Motivation="@_motivation"
+                                     MotivationChanged="@((val) => { _motivation = val; UpdateReviewGroups(); })" />
+        </WizardStep>
+
+        <!-- STEP 3: SIC Code Corroboration & Supporting Evidence -->
+        <WizardStep Label="SIC &amp; Evidence"
+                    Heading="SARS SIC code corroboration &amp; statutory documentation"
+                    Description="Corroborate 5-digit industrial classification codes, accumulated levy funds balance, and upload statutory evidence"
+                    ValidateAsync="ValidateStep3Async">
+            <InterSetaTransferFields Section="Corroboration"
+                                     CurrentSicCode="@_currentSicCode"
+                                     CurrentSicCodeChanged="@((val) => { _currentSicCode = val; UpdateReviewGroups(); })"
+                                     TargetSicCode="@_targetSicCode"
+                                     TargetSicCodeChanged="@((val) => { _targetSicCode = val; UpdateReviewGroups(); })"
+                                     TransferAmount="@_transferAmount"
+                                     TransferAmountChanged="@((val) => { _transferAmount = val; UpdateReviewGroups(); })"
+                                     Emp103DocRef="@_emp103DocRef"
+                                     Emp103DocRefChanged="@((val) => { _emp103DocRef = val; UpdateReviewGroups(); })"
+                                     CipcDocRef="@_cipcDocRef"
+                                     CipcDocRefChanged="@((val) => { _cipcDocRef = val; UpdateReviewGroups(); })"
+                                     LabourDocRef="@_labourDocRef"
+                                     LabourDocRefChanged="@((val) => { _labourDocRef = val; UpdateReviewGroups(); })"
+                                     BoardResolutionDocRef="@_boardResolutionDocRef"
+                                     BoardResolutionDocRefChanged="@((val) => { _boardResolutionDocRef = val; UpdateReviewGroups(); })" />
+        </WizardStep>
+
+        <!-- STEP 4: Review & Section 32 Declaration -->
+        <WizardReviewStep Heading="Inter-SETA transfer review &amp; Section 32 declaration"
+                          Description="Inspect employer profile, counterpart SETA details, SIC code alignment, and execute statutory declaration"
+                          ReviewGroups="@_reviewGroups"
+                          OnEditStep="@((idx) => _activeStep = idx)">
+            <ChildContent>
+                <InterSetaTransferFields Section="Declaration"
+                                         SignatoryFullName="@_signatoryFullName"
+                                         SignatoryFullNameChanged="@((val) => _signatoryFullName = val)"
+                                         SignatoryDesignation="@_signatoryDesignation"
+                                         SignatoryDesignationChanged="@((val) => _signatoryDesignation = val)"
+                                         IsDeclarationAccepted="@_isDeclarationAccepted"
+                                         IsDeclarationAcceptedChanged="@((val) => _isDeclarationAccepted = val)" />
+            </ChildContent>
+        </WizardReviewStep>
+    </WizardShell>
+}
+
+@code {
+    private int _activeStep = 0;
+    private bool _loading = true;
+    private bool _isProcessing = false;
+    private bool _isSuccess = false;
+    private string _submittedTransferRef = string.Empty;
+    private string _submittedOrgName = string.Empty;
+
+    // Data collections
+    private List<Organisation> _organisations = new();
+
+    // Step 1: Profile
+    private int? _organisationId;
+    private string _sdlNumber = "L789123456";
+    private string _chamber = "Automotive";
+    private int _employeeCount = 250;
+
+    // Step 2: Direction
+    private string _transferType = "Outgoing";
+    private string _otherSetaCode = "CHIETA";
+    private string _transferReason = "Predominant Business Activity Realignment";
+    private DateTime? _effectiveDate = DateTime.UtcNow.AddMonths(1);
+    private string _motivation = "Enterprise core business has transitioned predominantly to chemical coatings and synthetic polymer manufacturing, necessitating alignment with CHIETA jurisdiction.";
+
+    // Step 3: Corroboration
+    private string _currentSicCode = "38100";
+    private string _targetSicCode = "33400";
+    private decimal _transferAmount = 185000m;
+    private string _emp103DocRef = "DOC-SARS-EMP103-CORROB.pdf";
+    private string _cipcDocRef = "DOC-CIPC-CORPOBJECTS.pdf";
+    private string _labourDocRef = "DOC-UNION-CONSULTATION.pdf";
+    private string _boardResolutionDocRef = "DOC-BOARD-RESOLUTION.pdf";
+
+    // Step 4: Declaration
+    private string _signatoryFullName = "Morné van Zyl";
+    private string _signatoryDesignation = "Chief Executive Officer";
+    private bool _isDeclarationAccepted = true;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Grants, levies & finance", href: "/inter-seta-transfers"),
+        new BreadcrumbItem("Inter-SETA transfers", href: "/inter-seta-transfers"),
+        new BreadcrumbItem("Section 32 transfer request", href: null, disabled: true)
+    };
+
+    private List<WizardReviewGroup> _reviewGroups = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _loading = true;
+            _organisations = await OrgService.GetAllAsync();
+
+            if (_organisations.Any())
+            {
+                var o = _organisations.First();
+                _organisationId = o.Id;
+                _sdlNumber = o.SdlNumber;
+            }
+
+            UpdateReviewGroups();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading transfer reference data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void OnStepChanged(int newStep)
+    {
+        _activeStep = newStep;
+        UpdateReviewGroups();
+    }
+
+    private void OnOrganisationChanged(int? id)
+    {
+        _organisationId = id;
+        if (id.HasValue && _organisations != null)
+        {
+            var o = _organisations.FirstOrDefault(x => x.Id == id.Value);
+            if (o != null)
+            {
+                _sdlNumber = o.SdlNumber;
+            }
+        }
+        UpdateReviewGroups();
+    }
+
+    private void UpdateReviewGroups()
+    {
+        var orgName = "Not selected";
+        if (_organisationId.HasValue && _organisations != null)
+        {
+            var o = _organisations.FirstOrDefault(x => x.Id == _organisationId.Value);
+            if (o != null)
+            {
+                orgName = o.CompanyName;
+            }
+        }
+
+        var directionLabel = _transferType == "Outgoing"
+            ? $"Outgoing (merSETA \u2192 {_otherSetaCode})"
+            : $"Incoming ({_otherSetaCode} \u2192 merSETA)";
+
+        _reviewGroups = new List<WizardReviewGroup>
+        {
+            new()
+            {
+                Title = "Employer & Originating Standing",
+                Icon = Icons.Material.Filled.Business,
+                TargetStepIndex = 0,
+                Items = new()
+                {
+                    new("Employer organisation", orgName),
+                    new("SDL registration number", _sdlNumber, isMonospace: true),
+                    new("Current originating SETA", "SETA 17 - merSETA"),
+                    new("Operating chamber", _chamber),
+                    new("Workforce headcount", $"{_employeeCount} employees")
+                }
+            },
+            new()
+            {
+                Title = "Transfer Flow & Justification",
+                Icon = Icons.Material.Filled.CompareArrows,
+                TargetStepIndex = 1,
+                Items = new()
+                {
+                    new("Transfer direction", directionLabel),
+                    new("Counterpart SETA code", _otherSetaCode, isMonospace: true),
+                    new("Statutory transfer reason", _transferReason),
+                    new("Target effective date", _effectiveDate?.ToString("yyyy-MM-dd") ?? "Pending")
+                }
+            },
+            new()
+            {
+                Title = "SIC Corroboration & Financials",
+                Icon = Icons.Material.Filled.FactCheck,
+                TargetStepIndex = 2,
+                Items = new()
+                {
+                    new("Current SARS SIC code", _currentSicCode, isMonospace: true),
+                    new("Target destination SIC code", _targetSicCode, isMonospace: true),
+                    new("Accumulated levy balance", $"R {_transferAmount:N2}"),
+                    new("SARS EMP103 evidence", _emp103DocRef, isMonospace: true),
+                    new("CIPC core business objects", _cipcDocRef, isMonospace: true),
+                    new("Labour consultation letter", _labourDocRef, isMonospace: true),
+                    new("Board resolution document", _boardResolutionDocRef, isMonospace: true)
+                }
+            }
+        };
+    }
+
+    private Task<bool> ValidateStep1Async()
+    {
+        if (!_organisationId.HasValue || _organisationId.Value <= 0)
+        {
+            Snackbar.Add("Please select a migrating employer organisation.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_sdlNumber))
+        {
+            Snackbar.Add("Skills Development Levy (SDL) registration number is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep2Async()
+    {
+        if (string.IsNullOrWhiteSpace(_otherSetaCode))
+        {
+            Snackbar.Add("Please select the counterpart counterpart SETA.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_motivation))
+        {
+            Snackbar.Add("Please provide an operational motivation for the transfer.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep3Async()
+    {
+        if (string.IsNullOrWhiteSpace(_currentSicCode) || string.IsNullOrWhiteSpace(_targetSicCode))
+        {
+            Snackbar.Add("Both current and target SARS 5-digit SIC codes are required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_emp103DocRef) || string.IsNullOrWhiteSpace(_cipcDocRef))
+        {
+            Snackbar.Add("SARS EMP103 and CIPC business objects corroboration documents are required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private async Task SaveDraftAsync()
+    {
+        try
+        {
+            _isProcessing = true;
+            await Task.Delay(300);
+            Snackbar.Add("Section 32 transfer draft saved.", Severity.Info);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task SubmitTransferAsync()
+    {
+        if (!_isDeclarationAccepted)
+        {
+            Snackbar.Add("Please accept the statutory Section 32 declaration.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _isProcessing = true;
+
+            var org = _organisations.FirstOrDefault(x => x.Id == (_organisationId ?? 1));
+            var transferRef = $"SEC32-{DateTime.UtcNow:yyyy}-{new Random().Next(1000, 9999)}";
+
+            var transfer = new InterSetaTransfer
+            {
+                OrganisationId = _organisationId ?? 1,
+                TransferType = _transferType,
+                OtherSetaCode = _otherSetaCode,
+                OtherSetaName = GetSetaFullName(_otherSetaCode),
+                TransferReason = _transferReason,
+                EffectiveDate = _effectiveDate ?? DateTime.UtcNow.AddMonths(1),
+                TransferStatusCode = "Initiated",
+                TransferAmount = _transferAmount,
+                SetaApprovalReference = transferRef,
+                DhetReferenceNumber = $"DHET-SEC32-{DateTime.UtcNow:yyyy}-{new Random().Next(100, 999)}",
+                Comments = $"SIC Reclassification: {_currentSicCode} -> {_targetSicCode}. Motivation: {_motivation}. Signatory: {_signatoryFullName} ({_signatoryDesignation})."
+            };
+
+            await FinanceService.SaveInterSetaTransferAsync(transfer, "Admin");
+
+            _submittedTransferRef = transferRef;
+            _submittedOrgName = org?.CompanyName ?? "Employer Organisation";
+            _isSuccess = true;
+
+            Snackbar.Add($"Section 32 transfer application {transferRef} submitted successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Transfer submission failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo("/inter-seta-transfers");
+    }
+
+    private static string GetSetaFullName(string? code) => code switch
+    {
+        "CHIETA" => "Chemical Industries Education & Training Authority",
+        "TETA" => "Transport Education & Training Authority",
+        "SERVICES" => "Services Sector Education & Training Authority",
+        "MQA" => "Mining Qualifications Authority",
+        "EWSETA" => "Energy & Water Sector Education & Training Authority",
+        "W&RSETA" => "Wholesale & Retail Sector Education & Training Authority",
+        "FASSET" => "Financial & Accounting Services Sector Education & Training Authority",
+        "CETA" => "Construction Education & Training Authority",
+        "AGRISETA" => "Agricultural Sector Education & Training Authority",
+        "FOODBEV" => "Food & Beverages Manufacturing Industry Sector Education & Training Authority",
+        _ => $"{code} Sector Education & Training Authority"
+    };
+}

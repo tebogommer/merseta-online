@@ -1,0 +1,505 @@
+@namespace Nsdms.Web.Components.Shared.Forms
+@using MudBlazor
+@using Nsdms.Domain.Entities
+
+@if (Section == "Profile" || Section == "All")
+{
+    <div class="nsdms-section-profile mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int?"
+                           Label="Migrating employer organisation"
+                           Value="@OrganisationId"
+                           ValueChanged="OnOrganisationChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           ToStringFunc="@(id => GetOrganisationDisplayText(id))"
+                           HelperText="Select the employer organisation requesting Inter-SETA transfer">
+                    @if (Organisations != null)
+                    {
+                        @foreach (var org in Organisations)
+                        {
+                            <MudSelectItem Value="@((int?)org.Id)">
+                                @($"{org.CompanyName} (SDL: {org.SdlNumber})")
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Skills Development Levy (SDL) registration number"
+                              Value="@SdlNumber"
+                              ValueChanged="OnSdlNumberChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Statutory SARS L-prefixed registration reference" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Current originating SETA"
+                              Value="@CurrentSeta"
+                              Variant="Variant.Outlined"
+                              ReadOnly="true"
+                              HelperText="Existing jurisdictional skills development authority" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect T="string"
+                           Label="Current operating chamber"
+                           Value="@Chamber"
+                           ValueChanged="OnChamberChanged"
+                           Variant="Variant.Outlined"
+                           Disabled="@IsReadOnly"
+                           HelperText="merSETA industrial sub-sector chamber">
+                    <MudSelectItem Value="@("Automotive")">Automotive Manufacturing &amp; Assembly</MudSelectItem>
+                    <MudSelectItem Value="@("Metal")">Metal &amp; Engineering</MudSelectItem>
+                    <MudSelectItem Value="@("Plastics")">Plastics Manufacturing</MudSelectItem>
+                    <MudSelectItem Value="@("NewTyre")">New Tyre Manufacturing</MudSelectItem>
+                    <MudSelectItem Value="@("AutoComponents")">Automotive Components</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="int"
+                                 Label="Total workforce headcount"
+                                 Value="@EmployeeCount"
+                                 ValueChanged="OnEmployeeCountChanged"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Min="1"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Total employees affected by the statutory transfer" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Direction" || Section == "All")
+{
+    <div class="nsdms-section-direction mb-4">
+        <FormRow>
+            <MudItem xs="12" md="4">
+                <MudSelect T="string"
+                           Label="Transfer direction"
+                           Value="@TransferType"
+                           ValueChanged="OnTransferTypeChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="Statutory movement direction">
+                    <MudSelectItem Value="@("Outgoing")">Outgoing (Transferring out of merSETA to another SETA)</MudSelectItem>
+                    <MudSelectItem Value="@("Incoming")">Incoming (Transferring into merSETA from another SETA)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect T="string"
+                           Label="Counterpart counterpart SETA"
+                           Value="@OtherSetaCode"
+                           ValueChanged="OnOtherSetaCodeChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="Counterpart authority involved in transfer">
+                    <MudSelectItem Value="@("CHIETA")">CHIETA (Chemical Industries Education &amp; Training)</MudSelectItem>
+                    <MudSelectItem Value="@("TETA")">TETA (Transport Education &amp; Training Authority)</MudSelectItem>
+                    <MudSelectItem Value="@("SERVICES")">SERVICES SETA (Services Sector)</MudSelectItem>
+                    <MudSelectItem Value="@("MQA")">MQA (Mining Qualifications Authority)</MudSelectItem>
+                    <MudSelectItem Value="@("EWSETA")">EWSETA (Energy &amp; Water Sector)</MudSelectItem>
+                    <MudSelectItem Value="@("W&RSETA")">W&amp;RSETA (Wholesale &amp; Retail Sector)</MudSelectItem>
+                    <MudSelectItem Value="@("FASSET")">FASSET (Finance &amp; Accounting Services)</MudSelectItem>
+                    <MudSelectItem Value="@("CETA")">CETA (Construction Education &amp; Training)</MudSelectItem>
+                    <MudSelectItem Value="@("AGRISETA")">AGRISETA (Agricultural Sector)</MudSelectItem>
+                    <MudSelectItem Value="@("FOODBEV")">FOODBEV (Food &amp; Beverages Manufacturing)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Counterpart SETA statutory full title"
+                              Value="@OtherSetaName"
+                              Variant="Variant.Outlined"
+                              ReadOnly="true"
+                              HelperText="Official title of counterpart statutory body" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
+                           Label="Primary statutory transfer justification"
+                           Value="@TransferReason"
+                           ValueChanged="OnTransferReasonChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="Legal ground under Section 32 of Skills Development Act">
+                    <MudSelectItem Value="@("Predominant Business Activity Realignment")">Predominant Business Activity Realignment</MudSelectItem>
+                    <MudSelectItem Value="@("Corporate Restructuring / Divisional Merger")">Corporate Restructuring / Divisional Merger</MudSelectItem>
+                    <MudSelectItem Value="@("SARS Erroneous Initial Classification / SIC Code Correction")">SARS Erroneous Initial Classification / SIC Code Correction</MudSelectItem>
+                    <MudSelectItem Value="@("Consolidated Group Skills Development Scheme")">Consolidated Group Skills Development Scheme</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="Effective gazetted transfer date"
+                               Date="@EffectiveDate"
+                               DateChanged="OnEffectiveDateChanged"
+                               Variant="Variant.Outlined"
+                               Required="true"
+                               Disabled="@IsReadOnly"
+                               HelperText="Target effective date for financial &amp; levy migration" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string"
+                              Label="Detailed operational motivation &amp; business activities summary"
+                              Value="@Motivation"
+                              ValueChanged="OnMotivationChanged"
+                              Variant="Variant.Outlined"
+                              Lines="3"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Detailed description of primary manufacturing, assembly, or service activities justifying transfer" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Corroboration" || Section == "All")
+{
+    <div class="nsdms-section-corroboration mb-4">
+        <FormRow>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Current reported SARS 5-digit SIC code"
+                              Value="@CurrentSicCode"
+                              ValueChanged="OnCurrentSicCodeChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Standard Industrial Classification currently on SARS EMP201" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Target destination 5-digit SIC code"
+                              Value="@TargetSicCode"
+                              ValueChanged="OnTargetSicCodeChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Destination SIC code aligned with counterpart SETA scope" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="decimal"
+                                 Label="Accumulated uncommitted levy funds (ZAR)"
+                                 Value="@TransferAmount"
+                                 ValueChanged="OnTransferAmountChanged"
+                                 Variant="Variant.Outlined"
+                                 Format="N2"
+                                 Adornment="Adornment.Start"
+                                 AdornmentText="R"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Uncommitted levy balances to be transferred between SETAs" />
+            </MudItem>
+        </FormRow>
+
+        <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mb-2 font-weight-bold">
+            Supporting Statutory Corroboration Documents
+        </MudText>
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="SARS EMP103 / EMP201 registration confirmation reference"
+                              Value="@Emp103DocRef"
+                              ValueChanged="OnEmp103DocRefChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="e.g. DOC-SARS-EMP103-CORROB.pdf" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="CIPC core business objects registration document"
+                              Value="@CipcDocRef"
+                              ValueChanged="OnCipcDocRefChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="e.g. DOC-CIPC-CORPOBJECTS.pdf" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Organised labour / consultative committee endorsement letter"
+                              Value="@LabourDocRef"
+                              ValueChanged="OnLabourDocRefChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="e.g. DOC-UNION-CONSULTATION.pdf" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Accounting Authority / Board resolution document"
+                              Value="@BoardResolutionDocRef"
+                              ValueChanged="OnBoardResolutionDocRefChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="e.g. DOC-BOARD-RESOLUTION.pdf" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Declaration" || Section == "All")
+{
+    <div class="nsdms-section-declaration mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Authorized signatory full name"
+                              Value="@SignatoryFullName"
+                              ValueChanged="OnSignatoryFullNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Chief Executive Officer, Managing Director, or appointed SDF" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Signatory official designation / capacity"
+                              Value="@SignatoryDesignation"
+                              ValueChanged="OnSignatoryDesignationChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Executive title (e.g. Chief Executive Officer, Primary SDF)" />
+            </MudItem>
+        </FormRow>
+
+        <MudAlert Severity="Severity.Info" Class="mb-3">
+            In terms of Section 32 of the Skills Development Act (Act 97 of 1998) and Government Gazette Regulations governing SETA establishment and boundaries, the transfer of an employer organisation between SETAs requires verification of primary trading activity and is subject to ministerial gazetting and counterpart SETA concurrence.
+        </MudAlert>
+
+        <MudCheckBox T="bool"
+                     Label="I solemnly declare that the operational justification and business activity documentation submitted for this Inter-SETA transfer are true and correct. I confirm compliance with Section 32 of the Skills Development Act and acknowledge that transfer of accumulated levy funds is subject to Ministerial gazette and counterpart SETA accounting concurrence."
+                     Value="@IsDeclarationAccepted"
+                     ValueChanged="OnIsDeclarationAcceptedChanged"
+                     Color="Color.Primary"
+                     Disabled="@IsReadOnly"
+                     Required="true" />
+    </div>
+}
+
+@code {
+    [Parameter] public string Section { get; set; } = "All";
+    [Parameter] public bool IsReadOnly { get; set; } = false;
+
+    // Data Sources
+    [Parameter] public List<Organisation>? Organisations { get; set; }
+
+    // Section 1: Profile
+    [Parameter] public int? OrganisationId { get; set; }
+    [Parameter] public EventCallback<int?> OrganisationIdChanged { get; set; }
+
+    [Parameter] public string SdlNumber { get; set; } = "L789123456";
+    [Parameter] public EventCallback<string> SdlNumberChanged { get; set; }
+
+    [Parameter] public string CurrentSeta { get; set; } = "SETA 17 - merSETA (Manufacturing, Engineering & Related Services)";
+    [Parameter] public string Chamber { get; set; } = "Automotive";
+    [Parameter] public EventCallback<string> ChamberChanged { get; set; }
+
+    [Parameter] public int EmployeeCount { get; set; } = 250;
+    [Parameter] public EventCallback<int> EmployeeCountChanged { get; set; }
+
+    // Section 2: Direction
+    [Parameter] public string TransferType { get; set; } = "Outgoing";
+    [Parameter] public EventCallback<string> TransferTypeChanged { get; set; }
+
+    [Parameter] public string OtherSetaCode { get; set; } = "CHIETA";
+    [Parameter] public EventCallback<string> OtherSetaCodeChanged { get; set; }
+
+    public string OtherSetaName => GetSetaFullName(OtherSetaCode);
+
+    [Parameter] public string TransferReason { get; set; } = "Predominant Business Activity Realignment";
+    [Parameter] public EventCallback<string> TransferReasonChanged { get; set; }
+
+    [Parameter] public DateTime? EffectiveDate { get; set; } = DateTime.UtcNow.AddMonths(1);
+    [Parameter] public EventCallback<DateTime?> EffectiveDateChanged { get; set; }
+
+    [Parameter] public string Motivation { get; set; } = "Enterprise core business has transitioned predominantly to chemical coatings and synthetic polymer manufacturing, necessitating alignment with CHIETA jurisdiction.";
+    [Parameter] public EventCallback<string> MotivationChanged { get; set; }
+
+    // Section 3: Corroboration
+    [Parameter] public string CurrentSicCode { get; set; } = "38100";
+    [Parameter] public EventCallback<string> CurrentSicCodeChanged { get; set; }
+
+    [Parameter] public string TargetSicCode { get; set; } = "33400";
+    [Parameter] public EventCallback<string> TargetSicCodeChanged { get; set; }
+
+    [Parameter] public decimal TransferAmount { get; set; } = 185000m;
+    [Parameter] public EventCallback<decimal> TransferAmountChanged { get; set; }
+
+    [Parameter] public string Emp103DocRef { get; set; } = "DOC-SARS-EMP103-CORROB.pdf";
+    [Parameter] public EventCallback<string> Emp103DocRefChanged { get; set; }
+
+    [Parameter] public string CipcDocRef { get; set; } = "DOC-CIPC-CORPOBJECTS.pdf";
+    [Parameter] public EventCallback<string> CipcDocRefChanged { get; set; }
+
+    [Parameter] public string LabourDocRef { get; set; } = "DOC-UNION-CONSULTATION.pdf";
+    [Parameter] public EventCallback<string> LabourDocRefChanged { get; set; }
+
+    [Parameter] public string BoardResolutionDocRef { get; set; } = "DOC-BOARD-RESOLUTION.pdf";
+    [Parameter] public EventCallback<string> BoardResolutionDocRefChanged { get; set; }
+
+    // Section 4: Declaration
+    [Parameter] public string SignatoryFullName { get; set; } = "Morné van Zyl";
+    [Parameter] public EventCallback<string> SignatoryFullNameChanged { get; set; }
+
+    [Parameter] public string SignatoryDesignation { get; set; } = "Chief Executive Officer";
+    [Parameter] public EventCallback<string> SignatoryDesignationChanged { get; set; }
+
+    [Parameter] public bool IsDeclarationAccepted { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsDeclarationAcceptedChanged { get; set; }
+
+    // Handlers
+    private async Task OnOrganisationChanged(int? val)
+    {
+        OrganisationId = val;
+        if (val.HasValue && Organisations != null)
+        {
+            var o = Organisations.FirstOrDefault(x => x.Id == val.Value);
+            if (o != null)
+            {
+                SdlNumber = o.SdlNumber;
+                await SdlNumberChanged.InvokeAsync(SdlNumber);
+            }
+        }
+        await OrganisationIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnSdlNumberChanged(string val)
+    {
+        SdlNumber = val;
+        await SdlNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnChamberChanged(string val)
+    {
+        Chamber = val;
+        await ChamberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnEmployeeCountChanged(int val)
+    {
+        EmployeeCount = val;
+        await EmployeeCountChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTransferTypeChanged(string val)
+    {
+        TransferType = val;
+        await TransferTypeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnOtherSetaCodeChanged(string val)
+    {
+        OtherSetaCode = val;
+        await OtherSetaCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTransferReasonChanged(string val)
+    {
+        TransferReason = val;
+        await TransferReasonChanged.InvokeAsync(val);
+    }
+
+    private async Task OnEffectiveDateChanged(DateTime? val)
+    {
+        EffectiveDate = val;
+        await EffectiveDateChanged.InvokeAsync(val);
+    }
+
+    private async Task OnMotivationChanged(string val)
+    {
+        Motivation = val;
+        await MotivationChanged.InvokeAsync(val);
+    }
+
+    private async Task OnCurrentSicCodeChanged(string val)
+    {
+        CurrentSicCode = val;
+        await CurrentSicCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTargetSicCodeChanged(string val)
+    {
+        TargetSicCode = val;
+        await TargetSicCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTransferAmountChanged(decimal val)
+    {
+        TransferAmount = val;
+        await TransferAmountChanged.InvokeAsync(val);
+    }
+
+    private async Task OnEmp103DocRefChanged(string val)
+    {
+        Emp103DocRef = val;
+        await Emp103DocRefChanged.InvokeAsync(val);
+    }
+
+    private async Task OnCipcDocRefChanged(string val)
+    {
+        CipcDocRef = val;
+        await CipcDocRefChanged.InvokeAsync(val);
+    }
+
+    private async Task OnLabourDocRefChanged(string val)
+    {
+        LabourDocRef = val;
+        await LabourDocRefChanged.InvokeAsync(val);
+    }
+
+    private async Task OnBoardResolutionDocRefChanged(string val)
+    {
+        BoardResolutionDocRef = val;
+        await BoardResolutionDocRefChanged.InvokeAsync(val);
+    }
+
+    private async Task OnSignatoryFullNameChanged(string val)
+    {
+        SignatoryFullName = val;
+        await SignatoryFullNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnSignatoryDesignationChanged(string val)
+    {
+        SignatoryDesignation = val;
+        await SignatoryDesignationChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsDeclarationAcceptedChanged(bool val)
+    {
+        IsDeclarationAccepted = val;
+        await IsDeclarationAcceptedChanged.InvokeAsync(val);
+    }
+
+    private string GetOrganisationDisplayText(int? id)
+    {
+        if (!id.HasValue || Organisations == null) return "Select employer organisation";
+        var o = Organisations.FirstOrDefault(x => x.Id == id.Value);
+        return o == null ? "Select employer organisation" : $"{o.CompanyName} (SDL: {o.SdlNumber})";
+    }
+
+    private static string GetSetaFullName(string? code) => code switch
+    {
+        "CHIETA" => "Chemical Industries Education & Training Authority",
+        "TETA" => "Transport Education & Training Authority",
+        "SERVICES" => "Services Sector Education & Training Authority",
+        "MQA" => "Mining Qualifications Authority",
+        "EWSETA" => "Energy & Water Sector Education & Training Authority",
+        "W&RSETA" => "Wholesale & Retail Sector Education & Training Authority",
+        "FASSET" => "Financial & Accounting Services Sector Education & Training Authority",
+        "CETA" => "Construction Education & Training Authority",
+        "AGRISETA" => "Agricultural Sector Education & Training Authority",
+        "FOODBEV" => "Food & Beverages Manufacturing Industry Sector Education & Training Authority",
+        _ => $"{code} Sector Education & Training Authority"
+    };
+}
