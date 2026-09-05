@@ -1,4 +1,4 @@
-﻿# Phased Implementation Roadmap: Database Normalization & Convention Alignment
+# Phased Implementation Roadmap: Database Normalization & Convention Alignment
 
 ## Executive Summary
 This roadmap establishes a phased, zero-downtime engineering strategy to normalize the 16 wide tables (> 20 columns) in the \NSDMS-NET\ database, resolve the \CompanyLearner\ convention breach, segregate sensitive POPIA/banking data, and optimize system-versioned temporal table performance.
@@ -46,21 +46,23 @@ This roadmap establishes a phased, zero-downtime engineering strategy to normali
 
 ---
 
-### Phase 3: Vertical Partitioning of Core Monoliths
+### Phase 3: Vertical Partitioning of Core Monoliths [COMPLETED]
 > **Goal:** Decompose 40+ column tables into normalized, secure 1:1 sub-tables with idempotent T-SQL migrations.
 
 #### Tasks:
-1. **\Person\ (49 → 14 columns):**
-   - Create \PersonContact\ (1:1): \Email\, \PhoneNumber\, \CellNumber\, \FaxNumber\, \PhysicalAddress\, \PostalAddress\, \ProvinceCode\.
-   - Create \PersonDisabilityRating\ (1:1): 6 Washington Group ratings (\SeeingRatingId\, \HearingRatingId\, \WalkingRatingId\, \RememberingRatingId\, \CommunicatingRatingId\, \SelfCareRatingId\).
-   - Create \PersonDemographics\ (1:1): \EquityCode\, \HomeLanguageCode\, \NationalityCode\, \CitizenStatusCode\, \PopiActStatusId\, \PopiActConsentDate\.
-   - Create \PersonSetmisLegacy\ (1:1): \LastSchoolEmisNumber\, \LastSchoolYear\, \PreviousProviderCode\, \PreviousProviderEtqaId\, \StatssaAreaCode\.
-2. **\WorkplaceMonitoringSiteVisit\ (34 → 15 columns):**
-   - Extract \SiteVisitNonCompliance\ (1:N) for non-compliance holding area notes and finding flags.
-   - Extract multi-officer approval chains into standard \WorkflowHistory\ records.
-3. **Migration & Idempotent Backfill Scripts:**
-   - Author transactional T-SQL scripts in \Nsdms.Infrastructure/Data/V2026_09_Vertical_Partitioning.sql\.
-   - Include rollback safety scripts and data verification checks.
+1. **`Person` Vertical Partitioning:**
+   - Partitioned into 1:1 satellite entities:
+     - `PersonContact` (1:1): `Email`, `PhoneNumber`, `CellNumber`, `FaxNumber`, `PhysicalAddress`, `PostalAddress`, `ProvinceCode`, `StatssaAreaCode`.
+     - `PersonDisabilityRating` (1:1, POPIA secured): 6 Washington Group ratings (`SeeingRatingId`, `HearingRatingId`, `WalkingRatingId`, `RememberingRatingId`, `CommunicatingRatingId`, `SelfCareRatingId`), `DisabilitySupportNotes`, assessment records.
+     - `PersonDemographics` (1:1): `EquityCode`, `HomeLanguageCode`, `NationalityCode`, `CitizenStatusCode`, `PopiActStatusId`, `PopiActConsentDate`, school metadata.
+2. **Zero-Breaking SQL Views & Compatibility Layer:**
+   - Created `vw_PersonComplete` (denormalized 360-degree composite view).
+   - Created `vw_PersonSetmis` (projection tailored for DHET SETMIS File 400 Person Demographics).
+3. **Migration & Idempotent Backfill:**
+   - `V2026_19_Vertical_Partitioning.sql` deployed and executed against `localhost\SQLEXPRESS` (`NSDMS-NET`).
+   - `Phase25VerticalPartitioningMigrator.cs` registered in `Program.cs`.
+   - Master enterprise DDL `V2026_08_Complete_Nsdms_Enterprise_DDL.sql` synchronized.
+   - Comprehensive test suite in `PersonServiceTests.cs` (21/21 passing, 531/531 solution-wide).
 
 ---
 

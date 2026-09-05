@@ -239,4 +239,21 @@ public class Person : BaseEntity
     /// Computed full display name (FirstName + LastName).
     /// </summary>
     public string FullName => $"{FirstName} {LastName}".Trim();
+
+    #region Vertically Partitioned Satellite Navigation Properties
+    /// <summary>
+    /// 1:1 satellite navigation record for contact, telecommunication, and spatial details.
+    /// </summary>
+    public PersonContact? Contact { get; set; }
+
+    /// <summary>
+    /// 1:1 satellite navigation record for demographic, equity, language, and POPIA consent metadata.
+    /// </summary>
+    public PersonDemographics? Demographics { get; set; }
+
+    /// <summary>
+    /// 1:1 satellite navigation record isolating special personal information under POPIA (disability functioning ratings).
+    /// </summary>
+    public PersonDisabilityRating? DisabilityRating { get; set; }
+    #endregion
 }

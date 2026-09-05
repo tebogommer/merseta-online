@@ -434,4 +434,279 @@ public class PersonServiceTests
     }
 
     #endregion
+
+    #region Phase 3 Vertical Partitioning Tests
+
+    [Fact]
+    public async Task CreateAsync_AutomaticallySynchronizesAllThreeSatellites()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        var person = new Person
+        {
+            FirstName = "Kagiso",
+            LastName = "Dlamini",
+            RsaIdNumber = "8001015009087", // Proven valid RSA ID (1980-01-01, Male, SA Citizen)
+            Email = "kagiso.dlamini@autoworks.co.za",
+            PhoneNumber = "0112345678",
+            CellNumber = "0823456789",
+            PhysicalAddress = "42 Artisan Road, Rosslyn",
+            PhysicalAddressPostalCode = "0200",
+            PostalAddress = "PO Box 1234, Rosslyn",
+            PostalAddressPostalCode = "0200",
+            ProvinceCode = "GP",
+            StatssaAreaCode = "TSH-01",
+            EquityCode = "BA",
+            NationalityCode = "SA",
+            HomeLanguageCode = "ZUL",
+            DisabilityCode = "01",
+            SeeingRatingId = "03",
+            HearingRatingId = "01",
+            WalkingRatingId = "01",
+            RememberingRatingId = "01",
+            CommunicatingRatingId = "01",
+            SelfCareRatingId = "01",
+            PopiActStatusId = "01",
+            PopiActConsentDate = new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Utc),
+            LastSchoolEmisNumber = "EMIS-998877",
+            LastSchoolYear = "2003"
+        };
+
+        // Act
+        var created = await service.CreateAsync(person, "OfficerTest");
+
+        // Assert - Satellites attached to returned entity
+        Assert.NotNull(created.Contact);
+        Assert.Equal("kagiso.dlamini@autoworks.co.za", created.Contact.Email);
+        Assert.Equal("42 Artisan Road, Rosslyn", created.Contact.PhysicalAddress);
+        Assert.Equal("GP", created.Contact.ProvinceCode);
+
+        Assert.NotNull(created.Demographics);
+        Assert.Equal("BA", created.Demographics.EquityCode);
+        Assert.Equal("ZUL", created.Demographics.HomeLanguageCode);
+        Assert.Equal("EMIS-998877", created.Demographics.LastSchoolEmisNumber);
+
+        Assert.NotNull(created.DisabilityRating);
+        Assert.Equal("01", created.DisabilityRating.DisabilityCode);
+        Assert.Equal("03", created.DisabilityRating.SeeingRatingId);
+
+        // Assert - Satellites persisted in database
+        var contactInDb = await db.PersonContacts.FirstOrDefaultAsync(c => c.PersonId == created.Id);
+        Assert.NotNull(contactInDb);
+        Assert.Equal("kagiso.dlamini@autoworks.co.za", contactInDb.Email);
+        Assert.Equal("0823456789", contactInDb.CellNumber);
+
+        var demoInDb = await db.PersonDemographics.FirstOrDefaultAsync(d => d.PersonId == created.Id);
+        Assert.NotNull(demoInDb);
+        Assert.Equal("BA", demoInDb.EquityCode);
+        Assert.Equal("01", demoInDb.PopiActStatusId);
+
+        var disabInDb = await db.PersonDisabilityRatings.FirstOrDefaultAsync(r => r.PersonId == created.Id);
+        Assert.NotNull(disabInDb);
+        Assert.Equal("03", disabInDb.SeeingRatingId);
+        Assert.Equal("01", disabInDb.HearingRatingId);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_EagerlyLoadsAllSatellites()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        var person = new Person
+        {
+            FirstName = "Nombulelo",
+            LastName = "Zulu",
+            RsaIdNumber = "9005200123081", // Proven valid RSA ID (1990-05-20, Female, SA Citizen)
+            Email = "nombulelo.zulu@precisiontool.co.za",
+            PhoneNumber = "0314445555",
+            ProvinceCode = "KZN",
+            EquityCode = "BA",
+            DisabilityCode = "00"
+        };
+        var created = await service.CreateAsync(person, "HrOfficer");
+
+        // Act
+        var loaded = await service.GetByIdAsync(created.Id);
+
+        // Assert
+        Assert.NotNull(loaded);
+        Assert.NotNull(loaded.Contact);
+        Assert.Equal("nombulelo.zulu@precisiontool.co.za", loaded.Contact.Email);
+        Assert.Equal("KZN", loaded.Contact.ProvinceCode);
+
+        Assert.NotNull(loaded.Demographics);
+        Assert.Equal("BA", loaded.Demographics.EquityCode);
+
+        Assert.NotNull(loaded.DisabilityRating);
+        Assert.Equal("00", loaded.DisabilityRating.DisabilityCode);
+        Assert.Equal("01", loaded.DisabilityRating.SeeingRatingId);
+    }
+
+    [Fact]
+    public async Task UpdateContactAsync_UpdatesSatelliteAndKeepsParentPersonSynchronized()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        var person = new Person
+        {
+            FirstName = "David",
+            LastName = "Botha",
+            RsaIdNumber = "0512150123184", // Proven valid RSA ID (2005-12-15, Female, PR)
+            Email = "david.botha@oldmail.co.za",
+            PhoneNumber = "0123334444",
+            ProvinceCode = "GP"
+        };
+        var created = await service.CreateAsync(person, "Admin");
+
+        // Act - Mutate contact via satellite service
+        var updatedContact = new PersonContact
+        {
+            Email = "david.botha@newdomain.co.za",
+            PhoneNumber = "0129998888",
+            CellNumber = "0711112222",
+            PhysicalAddress = "78 Steelworks Boulevard, Vanderbijlpark",
+            PhysicalAddressPostalCode = "1900",
+            PostalAddress = "Private Bag X01, Vanderbijlpark",
+            PostalAddressPostalCode = "1900",
+            ProvinceCode = "GP",
+            StatssaAreaCode = "SED-01"
+        };
+        var result = await service.UpdateContactAsync(created.Id, updatedContact, "FieldOfficer");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("david.botha@newdomain.co.za", result.Email);
+        Assert.Equal("0711112222", result.CellNumber);
+
+        // Verify parent Person was synchronized for backward compatibility
+        var parentInDb = await db.People.FindAsync(created.Id);
+        Assert.NotNull(parentInDb);
+        Assert.Equal("david.botha@newdomain.co.za", parentInDb.Email);
+        Assert.Equal("0711112222", parentInDb.CellNumber);
+        Assert.Equal("78 Steelworks Boulevard, Vanderbijlpark", parentInDb.PhysicalAddress);
+
+        // Verify audit log
+        var auditEntry = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "PersonContact" && a.RecordId == result.Id);
+        Assert.NotNull(auditEntry);
+        Assert.Equal("Update", auditEntry.ActionName);
+        Assert.Equal("FieldOfficer", auditEntry.Actor);
+    }
+
+    [Fact]
+    public async Task UpdateDisabilityRatingAsync_IsolatesPopiaSpecialDataAndLogsAudit()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        var person = new Person
+        {
+            FirstName = "Lerato",
+            LastName = "Maseko",
+            RsaIdNumber = "0211156543186", // Proven valid RSA ID (2002-11-15, Male, PR)
+            Email = "lerato.maseko@auto.co.za",
+            ProvinceCode = "MP"
+        };
+        var created = await service.CreateAsync(person, "Clinician");
+
+        // Act - Record formal occupational therapist assessment with special accommodations
+        var assessedRating = new PersonDisabilityRating
+        {
+            DisabilityCode = "02", // Hearing
+            SeeingRatingId = "01",
+            HearingRatingId = "03", // Some difficulty
+            WalkingRatingId = "01",
+            RememberingRatingId = "01",
+            CommunicatingRatingId = "02",
+            SelfCareRatingId = "01",
+            DisabilitySupportNotes = "Candidate requires sound amplification assistive headset in workshop classroom sessions.",
+            IsDisabilityAssessed = true,
+            AssessedDate = new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Utc),
+            AssessedBy = "Dr. S. Naidoo (OT Reg #778899)"
+        };
+        var ratingResult = await service.UpdateDisabilityRatingAsync(created.Id, assessedRating, "DrNaidoo");
+
+        // Assert
+        Assert.NotNull(ratingResult);
+        Assert.True(ratingResult.IsDisabilityAssessed);
+        Assert.Equal("03", ratingResult.HearingRatingId);
+        Assert.Equal("Dr. S. Naidoo (OT Reg #778899)", ratingResult.AssessedBy);
+        Assert.Contains("sound amplification assistive headset", ratingResult.DisabilitySupportNotes);
+
+        // Verify satellite stored in database
+        var ratingInDb = await db.PersonDisabilityRatings.FirstOrDefaultAsync(r => r.PersonId == created.Id);
+        Assert.NotNull(ratingInDb);
+        Assert.True(ratingInDb.IsDisabilityAssessed);
+        Assert.Equal("03", ratingInDb.HearingRatingId);
+
+        // Verify audit log captured the clinician mutation
+        var auditEntry = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "PersonDisabilityRating" && a.RecordId == ratingResult.Id);
+        Assert.NotNull(auditEntry);
+        Assert.Equal("Update", auditEntry.ActionName);
+        Assert.Equal("DrNaidoo", auditEntry.Actor);
+    }
+
+    [Fact]
+    public async Task PersonDeletion_CascadesToSatellites()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        var person = new Person
+        {
+            FirstName = "Temporary",
+            LastName = "Record",
+            RsaIdNumber = "9602295001089", // Proven valid RSA ID (1996-02-29, Male, SA Citizen)
+            Email = "temp.record@test.org.za"
+        };
+        var created = await service.CreateAsync(person, "Tester");
+
+        // Act - Load person with satellite navigations attached and remove
+        var personInDb = await db.People
+            .Include(p => p.Contact)
+            .Include(p => p.Demographics)
+            .Include(p => p.DisabilityRating)
+            .FirstOrDefaultAsync(p => p.Id == created.Id);
+
+        Assert.NotNull(personInDb);
+        db.People.Remove(personInDb);
+        await db.SaveChangesAsync();
+
+        // Assert - Satellites removed by cascade
+        var contactAfter = await db.PersonContacts.FirstOrDefaultAsync(c => c.PersonId == created.Id);
+        var demoAfter = await db.PersonDemographics.FirstOrDefaultAsync(d => d.PersonId == created.Id);
+        var ratingAfter = await db.PersonDisabilityRatings.FirstOrDefaultAsync(r => r.PersonId == created.Id);
+
+        Assert.Null(contactAfter);
+        Assert.Null(demoAfter);
+        Assert.Null(ratingAfter);
+    }
+
+    [Fact]
+    public async Task SoftDeleteAsync_SetsIsActiveFalseAndLeavesSatellitesAudited()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        var person = new Person
+        {
+            FirstName = "Soft",
+            LastName = "DeleteTest",
+            RsaIdNumber = "8001015009087",
+            Email = "soft.delete@test.org.za"
+        };
+        var created = await service.CreateAsync(person, "OfficerDeleter");
+
+        // Act
+        var deleted = await service.DeleteAsync(created.Id, "OfficerDeleter");
+
+        // Assert
+        Assert.True(deleted);
+        var personInDb = await db.People.FindAsync(created.Id);
+        Assert.NotNull(personInDb);
+        Assert.False(personInDb.IsActive);
+
+        // Satellites remain intact with historical audit trail
+        var contact = await service.GetContactAsync(created.Id);
+        Assert.NotNull(contact);
+        Assert.Equal("soft.delete@test.org.za", contact.Email);
+    }
+
+    #endregion
 }

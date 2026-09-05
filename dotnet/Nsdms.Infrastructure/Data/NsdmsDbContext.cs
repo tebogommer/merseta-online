@@ -27,6 +27,9 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
 
     public DbSet<Organisation> Organisations => Set<Organisation>();
     public DbSet<Person> People => Set<Person>();
+    public DbSet<PersonContact> PersonContacts => Set<PersonContact>();
+    public DbSet<PersonDemographics> PersonDemographics => Set<PersonDemographics>();
+    public DbSet<PersonDisabilityRating> PersonDisabilityRatings => Set<PersonDisabilityRating>();
     public DbSet<OrganisationContact> OrganisationContacts => Set<OrganisationContact>();
     public DbSet<OrganisationSite> OrganisationSites => Set<OrganisationSite>();
     public DbSet<Visit> Visits => Set<Visit>();
@@ -371,6 +374,77 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(p => p.StatssaAreaCode);
             entity.HasIndex(p => p.PopiActStatusId);
             entity.HasIndex(p => p.IsActive);
+
+            entity.HasOne(p => p.Contact)
+                .WithOne(c => c.Person)
+                .HasForeignKey<PersonContact>(c => c.PersonId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(p => p.Demographics)
+                .WithOne(d => d.Person)
+                .HasForeignKey<PersonDemographics>(d => d.PersonId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(p => p.DisabilityRating)
+                .WithOne(r => r.Person)
+                .HasForeignKey<PersonDisabilityRating>(r => r.PersonId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // PersonContact satellite table & indexes
+        modelBuilder.Entity<PersonContact>(entity =>
+        {
+            entity.ToTable("PersonContact");
+            entity.HasIndex(c => c.PersonId).IsUnique();
+            entity.Property(c => c.Email).HasMaxLength(150);
+            entity.Property(c => c.PhoneNumber).HasMaxLength(30);
+            entity.Property(c => c.CellNumber).HasMaxLength(30);
+            entity.Property(c => c.FaxNumber).HasMaxLength(30);
+            entity.Property(c => c.PhysicalAddress).HasMaxLength(500);
+            entity.Property(c => c.PhysicalAddressPostalCode).HasMaxLength(20);
+            entity.Property(c => c.PostalAddress).HasMaxLength(500);
+            entity.Property(c => c.PostalAddressPostalCode).HasMaxLength(20);
+            entity.Property(c => c.ProvinceCode).HasMaxLength(15);
+            entity.Property(c => c.StatssaAreaCode).HasMaxLength(50);
+            entity.HasIndex(c => c.Email);
+            entity.HasIndex(c => c.ProvinceCode);
+            entity.HasIndex(c => c.StatssaAreaCode);
+        });
+
+        // PersonDemographics satellite table & indexes
+        modelBuilder.Entity<PersonDemographics>(entity =>
+        {
+            entity.ToTable("PersonDemographics");
+            entity.HasIndex(d => d.PersonId).IsUnique();
+            entity.Property(d => d.EquityCode).HasMaxLength(15);
+            entity.Property(d => d.DisabilityCode).HasMaxLength(15);
+            entity.Property(d => d.NationalityCode).HasMaxLength(15);
+            entity.Property(d => d.HomeLanguageCode).HasMaxLength(15);
+            entity.Property(d => d.CitizenStatusCode).HasMaxLength(15);
+            entity.Property(d => d.PopiActStatusId).HasMaxLength(10);
+            entity.Property(d => d.LastSchoolEmisNumber).HasMaxLength(50);
+            entity.Property(d => d.LastSchoolYear).HasMaxLength(10);
+            entity.HasIndex(d => d.EquityCode);
+            entity.HasIndex(d => d.NationalityCode);
+            entity.HasIndex(d => d.CitizenStatusCode);
+            entity.HasIndex(d => d.PopiActStatusId);
+        });
+
+        // PersonDisabilityRating satellite table & indexes (POPIA Isolated)
+        modelBuilder.Entity<PersonDisabilityRating>(entity =>
+        {
+            entity.ToTable("PersonDisabilityRating");
+            entity.HasIndex(r => r.PersonId).IsUnique();
+            entity.Property(r => r.DisabilityCode).HasMaxLength(15);
+            entity.Property(r => r.SeeingRatingId).HasMaxLength(10);
+            entity.Property(r => r.HearingRatingId).HasMaxLength(10);
+            entity.Property(r => r.WalkingRatingId).HasMaxLength(10);
+            entity.Property(r => r.RememberingRatingId).HasMaxLength(10);
+            entity.Property(r => r.CommunicatingRatingId).HasMaxLength(10);
+            entity.Property(r => r.SelfCareRatingId).HasMaxLength(10);
+            entity.Property(r => r.DisabilitySupportNotes).HasMaxLength(1000);
+            entity.Property(r => r.AssessedBy).HasMaxLength(150);
+            entity.HasIndex(r => r.DisabilityCode);
         });
 
         // Organisation table & indexes

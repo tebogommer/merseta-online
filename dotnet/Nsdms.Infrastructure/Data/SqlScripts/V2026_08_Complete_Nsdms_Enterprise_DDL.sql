@@ -1193,6 +1193,86 @@ BEGIN
     PRINT 'Created table [dbo].[ErpOutboxMessage].';
 END
 
+-- 78. Enterprise Vertical Partitioning: Person Satellite Tables
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'PersonContact' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.PersonContact (
+        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_PersonContact PRIMARY KEY CLUSTERED,
+        PersonId INT NOT NULL CONSTRAINT FK_PersonContact_Person REFERENCES dbo.Person(Id) ON DELETE CASCADE,
+        Email NVARCHAR(150) NULL,
+        PhoneNumber NVARCHAR(30) NULL,
+        CellNumber NVARCHAR(30) NULL,
+        FaxNumber NVARCHAR(30) NULL,
+        PhysicalAddress NVARCHAR(500) NULL,
+        PhysicalAddressPostalCode NVARCHAR(20) NULL,
+        PostalAddress NVARCHAR(500) NULL,
+        PostalAddressPostalCode NVARCHAR(20) NULL,
+        ProvinceCode NVARCHAR(15) NULL,
+        StatssaAreaCode NVARCHAR(50) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_PersonContact_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE UNIQUE NONCLUSTERED INDEX IX_PersonContact_PersonId ON dbo.PersonContact (PersonId);
+    CREATE NONCLUSTERED INDEX IX_PersonContact_Email ON dbo.PersonContact (Email);
+    CREATE NONCLUSTERED INDEX IX_PersonContact_ProvinceCode ON dbo.PersonContact (ProvinceCode);
+    CREATE NONCLUSTERED INDEX IX_PersonContact_StatssaAreaCode ON dbo.PersonContact (StatssaAreaCode);
+    PRINT 'Created table [dbo].[PersonContact].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'PersonDemographics' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.PersonDemographics (
+        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_PersonDemographics PRIMARY KEY CLUSTERED,
+        PersonId INT NOT NULL CONSTRAINT FK_PersonDemographics_Person REFERENCES dbo.Person(Id) ON DELETE CASCADE,
+        EquityCode NVARCHAR(15) NULL,
+        DisabilityCode NVARCHAR(15) NULL,
+        NationalityCode NVARCHAR(15) NULL,
+        HomeLanguageCode NVARCHAR(15) NULL,
+        CitizenStatusCode NVARCHAR(15) NULL,
+        PopiActStatusId NVARCHAR(10) NULL CONSTRAINT DF_PersonDemographics_PopiStatus DEFAULT '01',
+        PopiActConsentDate DATETIME2(7) NULL,
+        LastSchoolEmisNumber NVARCHAR(50) NULL,
+        LastSchoolYear NVARCHAR(10) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_PersonDemographics_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE UNIQUE NONCLUSTERED INDEX IX_PersonDemographics_PersonId ON dbo.PersonDemographics (PersonId);
+    CREATE NONCLUSTERED INDEX IX_PersonDemographics_EquityCode ON dbo.PersonDemographics (EquityCode);
+    CREATE NONCLUSTERED INDEX IX_PersonDemographics_NationalityCode ON dbo.PersonDemographics (NationalityCode);
+    CREATE NONCLUSTERED INDEX IX_PersonDemographics_PopiActStatusId ON dbo.PersonDemographics (PopiActStatusId);
+    PRINT 'Created table [dbo].[PersonDemographics].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'PersonDisabilityRating' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.PersonDisabilityRating (
+        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_PersonDisabilityRating PRIMARY KEY CLUSTERED,
+        PersonId INT NOT NULL CONSTRAINT FK_PersonDisabilityRating_Person REFERENCES dbo.Person(Id) ON DELETE CASCADE,
+        DisabilityCode NVARCHAR(15) NULL CONSTRAINT DF_PersonDisabilityRating_DisabilityCode DEFAULT '00',
+        SeeingRatingId NVARCHAR(10) NULL CONSTRAINT DF_PersonDisabilityRating_Seeing DEFAULT '01',
+        HearingRatingId NVARCHAR(10) NULL CONSTRAINT DF_PersonDisabilityRating_Hearing DEFAULT '01',
+        WalkingRatingId NVARCHAR(10) NULL CONSTRAINT DF_PersonDisabilityRating_Walking DEFAULT '01',
+        RememberingRatingId NVARCHAR(10) NULL CONSTRAINT DF_PersonDisabilityRating_Remembering DEFAULT '01',
+        CommunicatingRatingId NVARCHAR(10) NULL CONSTRAINT DF_PersonDisabilityRating_Communicating DEFAULT '01',
+        SelfCareRatingId NVARCHAR(10) NULL CONSTRAINT DF_PersonDisabilityRating_SelfCare DEFAULT '01',
+        DisabilitySupportNotes NVARCHAR(1000) NULL,
+        IsDisabilityAssessed BIT NOT NULL CONSTRAINT DF_PersonDisabilityRating_Assessed DEFAULT 0,
+        AssessedDate DATETIME2(7) NULL,
+        AssessedBy NVARCHAR(150) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_PersonDisabilityRating_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE UNIQUE NONCLUSTERED INDEX IX_PersonDisabilityRating_PersonId ON dbo.PersonDisabilityRating (PersonId);
+    CREATE NONCLUSTERED INDEX IX_PersonDisabilityRating_DisabilityCode ON dbo.PersonDisabilityRating (DisabilityCode);
+    PRINT 'Created table [dbo].[PersonDisabilityRating].';
+END
+
 PRINT 'Complete Idempotent Enterprise DDL Deployment Succeeded!';
 
 

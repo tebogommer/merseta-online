@@ -12,6 +12,9 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DatabaseFacade Database { get; }
     DbSet<Organisation> Organisations { get; }
     DbSet<Person> People { get; }
+    DbSet<PersonContact> PersonContacts { get; }
+    DbSet<PersonDemographics> PersonDemographics { get; }
+    DbSet<PersonDisabilityRating> PersonDisabilityRatings { get; }
     DbSet<OrganisationContact> OrganisationContacts { get; }
     DbSet<OrganisationSite> OrganisationSites { get; }
     DbSet<ApplicationUser> Users { get; }

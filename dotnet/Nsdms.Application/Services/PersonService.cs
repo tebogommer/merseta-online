@@ -16,6 +16,14 @@ public interface IPersonService
     Task<Person> UpdateAsync(Person person, string currentUsername = "SYSTEM");
     Task<bool> DeleteAsync(int id, string currentUsername = "SYSTEM");
 
+    // Partitioned Satellite Operations
+    Task<PersonContact?> GetContactAsync(int personId);
+    Task<PersonContact> UpdateContactAsync(int personId, PersonContact contact, string currentUsername = "SYSTEM");
+    Task<PersonDemographics?> GetDemographicsAsync(int personId);
+    Task<PersonDemographics> UpdateDemographicsAsync(int personId, PersonDemographics demographics, string currentUsername = "SYSTEM");
+    Task<PersonDisabilityRating?> GetDisabilityRatingAsync(int personId);
+    Task<PersonDisabilityRating> UpdateDisabilityRatingAsync(int personId, PersonDisabilityRating rating, string currentUsername = "SYSTEM");
+
     // 360-Degree Relational Queries
     Task<List<Nsdms.Application.Common.Models.PersonLearnerDto>> GetPersonLearnersAsync(int personId);
     Task<List<Nsdms.Application.Common.Models.PersonEmployerLinkDto>> GetPersonEmployersAsync(int personId);
@@ -113,13 +121,21 @@ public class PersonService : IPersonService
     public async Task<Person?> GetByIdAsync(int id)
     {
         using var db = await _contextFactory.CreateDbContextAsync();
-        return await db.People.FirstOrDefaultAsync(p => p.Id == id);
+        return await db.People
+            .Include(p => p.Contact)
+            .Include(p => p.Demographics)
+            .Include(p => p.DisabilityRating)
+            .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<Person?> GetByRsaIdAsync(string rsaId)
     {
         using var db = await _contextFactory.CreateDbContextAsync();
-        return await db.People.FirstOrDefaultAsync(p => p.RsaIdNumber == rsaId);
+        return await db.People
+            .Include(p => p.Contact)
+            .Include(p => p.Demographics)
+            .Include(p => p.DisabilityRating)
+            .FirstOrDefaultAsync(p => p.RsaIdNumber == rsaId);
     }
 
     public async Task<Person> CreateAsync(Person person, string currentUsername = "SYSTEM")
@@ -149,6 +165,63 @@ public class PersonService : IPersonService
 
         db.People.Add(person);
         await db.SaveChangesAsync();
+
+        // Synchronize initial satellite records
+        var contact = new PersonContact
+        {
+            PersonId = person.Id,
+            Email = person.Email,
+            PhoneNumber = person.PhoneNumber,
+            CellNumber = person.CellNumber,
+            FaxNumber = person.FaxNumber,
+            PhysicalAddress = person.PhysicalAddress,
+            PhysicalAddressPostalCode = person.PhysicalAddressPostalCode,
+            PostalAddress = person.PostalAddress,
+            PostalAddressPostalCode = person.PostalAddressPostalCode,
+            ProvinceCode = person.ProvinceCode,
+            StatssaAreaCode = person.StatssaAreaCode,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        };
+
+        var demographics = new PersonDemographics
+        {
+            PersonId = person.Id,
+            EquityCode = person.EquityCode,
+            DisabilityCode = person.DisabilityCode,
+            NationalityCode = person.NationalityCode,
+            HomeLanguageCode = person.HomeLanguageCode,
+            CitizenStatusCode = person.CitizenStatusCode,
+            PopiActStatusId = person.PopiActStatusId ?? "01",
+            PopiActConsentDate = person.PopiActConsentDate ?? DateTime.UtcNow,
+            LastSchoolEmisNumber = person.LastSchoolEmisNumber,
+            LastSchoolYear = person.LastSchoolYear,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        };
+
+        var disabilityRating = new PersonDisabilityRating
+        {
+            PersonId = person.Id,
+            DisabilityCode = person.DisabilityCode ?? "00",
+            SeeingRatingId = person.SeeingRatingId ?? "01",
+            HearingRatingId = person.HearingRatingId ?? "01",
+            WalkingRatingId = person.WalkingRatingId ?? "01",
+            RememberingRatingId = person.RememberingRatingId ?? "01",
+            CommunicatingRatingId = person.CommunicatingRatingId ?? "01",
+            SelfCareRatingId = person.SelfCareRatingId ?? "01",
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        };
+
+        db.PersonContacts.Add(contact);
+        db.PersonDemographics.Add(demographics);
+        db.PersonDisabilityRatings.Add(disabilityRating);
+        await db.SaveChangesAsync();
+
+        person.Contact = contact;
+        person.Demographics = demographics;
+        person.DisabilityRating = disabilityRating;
 
         // Double-write audit log
         _audit.LogAction(db, "Person", person.Id, "Create", currentUsername, null, person);
@@ -260,8 +333,66 @@ public class PersonService : IPersonService
         existing.ModifiedAt = DateTime.UtcNow;
         existing.ModifiedBy = currentUsername;
 
+        // Synchronize satellite records
+        var contact = await db.PersonContacts.FirstOrDefaultAsync(c => c.PersonId == existing.Id);
+        if (contact == null)
+        {
+            contact = new PersonContact { PersonId = existing.Id, CreatedAt = DateTime.UtcNow, CreatedBy = currentUsername };
+            db.PersonContacts.Add(contact);
+        }
+        contact.Email = existing.Email;
+        contact.PhoneNumber = existing.PhoneNumber;
+        contact.CellNumber = existing.CellNumber;
+        contact.FaxNumber = existing.FaxNumber;
+        contact.PhysicalAddress = existing.PhysicalAddress;
+        contact.PhysicalAddressPostalCode = existing.PhysicalAddressPostalCode;
+        contact.PostalAddress = existing.PostalAddress;
+        contact.PostalAddressPostalCode = existing.PostalAddressPostalCode;
+        contact.ProvinceCode = existing.ProvinceCode;
+        contact.StatssaAreaCode = existing.StatssaAreaCode;
+        contact.ModifiedAt = DateTime.UtcNow;
+        contact.ModifiedBy = currentUsername;
+
+        var demographics = await db.PersonDemographics.FirstOrDefaultAsync(d => d.PersonId == existing.Id);
+        if (demographics == null)
+        {
+            demographics = new PersonDemographics { PersonId = existing.Id, CreatedAt = DateTime.UtcNow, CreatedBy = currentUsername };
+            db.PersonDemographics.Add(demographics);
+        }
+        demographics.EquityCode = existing.EquityCode;
+        demographics.DisabilityCode = existing.DisabilityCode;
+        demographics.NationalityCode = existing.NationalityCode;
+        demographics.HomeLanguageCode = existing.HomeLanguageCode;
+        demographics.CitizenStatusCode = existing.CitizenStatusCode;
+        demographics.PopiActStatusId = existing.PopiActStatusId ?? "01";
+        demographics.PopiActConsentDate = existing.PopiActConsentDate;
+        demographics.LastSchoolEmisNumber = existing.LastSchoolEmisNumber;
+        demographics.LastSchoolYear = existing.LastSchoolYear;
+        demographics.ModifiedAt = DateTime.UtcNow;
+        demographics.ModifiedBy = currentUsername;
+
+        var disabilityRating = await db.PersonDisabilityRatings.FirstOrDefaultAsync(r => r.PersonId == existing.Id);
+        if (disabilityRating == null)
+        {
+            disabilityRating = new PersonDisabilityRating { PersonId = existing.Id, CreatedAt = DateTime.UtcNow, CreatedBy = currentUsername };
+            db.PersonDisabilityRatings.Add(disabilityRating);
+        }
+        disabilityRating.DisabilityCode = existing.DisabilityCode ?? "00";
+        disabilityRating.SeeingRatingId = existing.SeeingRatingId ?? "01";
+        disabilityRating.HearingRatingId = existing.HearingRatingId ?? "01";
+        disabilityRating.WalkingRatingId = existing.WalkingRatingId ?? "01";
+        disabilityRating.RememberingRatingId = existing.RememberingRatingId ?? "01";
+        disabilityRating.CommunicatingRatingId = existing.CommunicatingRatingId ?? "01";
+        disabilityRating.SelfCareRatingId = existing.SelfCareRatingId ?? "01";
+        disabilityRating.ModifiedAt = DateTime.UtcNow;
+        disabilityRating.ModifiedBy = currentUsername;
+
         _audit.LogAction(db, "Person", existing.Id, "Update", currentUsername, beforeState, existing);
         await db.SaveChangesAsync();
+
+        existing.Contact = contact;
+        existing.Demographics = demographics;
+        existing.DisabilityRating = disabilityRating;
 
         return existing;
     }
@@ -323,6 +454,231 @@ public class PersonService : IPersonService
             }
         }
     }
+
+    #region Partitioned Satellite Operations
+
+    public async Task<PersonContact?> GetContactAsync(int personId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.PersonContacts.FirstOrDefaultAsync(c => c.PersonId == personId);
+    }
+
+    public async Task<PersonContact> UpdateContactAsync(int personId, PersonContact contact, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.PersonContacts.FirstOrDefaultAsync(c => c.PersonId == personId);
+        var parentPerson = await db.People.FirstOrDefaultAsync(p => p.Id == personId);
+        if (parentPerson == null)
+        {
+            throw new KeyNotFoundException($"Parent Person with ID {personId} was not found.");
+        }
+
+        var isNew = existing == null;
+        if (isNew)
+        {
+            existing = new PersonContact
+            {
+                PersonId = personId,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = currentUsername
+            };
+            db.PersonContacts.Add(existing);
+        }
+
+        var beforeState = isNew ? null : (object)new
+        {
+            existing!.Email,
+            existing.PhoneNumber,
+            existing.CellNumber,
+            existing.FaxNumber,
+            existing.PhysicalAddress,
+            existing.PhysicalAddressPostalCode,
+            existing.PostalAddress,
+            existing.PostalAddressPostalCode,
+            existing.ProvinceCode,
+            existing.StatssaAreaCode
+        };
+
+        existing!.Email = contact.Email;
+        existing.PhoneNumber = contact.PhoneNumber;
+        existing.CellNumber = contact.CellNumber;
+        existing.FaxNumber = contact.FaxNumber;
+        existing.PhysicalAddress = contact.PhysicalAddress;
+        existing.PhysicalAddressPostalCode = contact.PhysicalAddressPostalCode;
+        existing.PostalAddress = contact.PostalAddress;
+        existing.PostalAddressPostalCode = contact.PostalAddressPostalCode;
+        existing.ProvinceCode = contact.ProvinceCode;
+        existing.StatssaAreaCode = contact.StatssaAreaCode;
+        existing.ModifiedAt = DateTime.UtcNow;
+        existing.ModifiedBy = currentUsername;
+
+        // Keep parent Person in sync for zero-breaking backward compatibility
+        parentPerson.Email = contact.Email;
+        parentPerson.PhoneNumber = contact.PhoneNumber;
+        parentPerson.CellNumber = contact.CellNumber;
+        parentPerson.FaxNumber = contact.FaxNumber;
+        parentPerson.PhysicalAddress = contact.PhysicalAddress;
+        parentPerson.PhysicalAddressPostalCode = contact.PhysicalAddressPostalCode;
+        parentPerson.PostalAddress = contact.PostalAddress;
+        parentPerson.PostalAddressPostalCode = contact.PostalAddressPostalCode;
+        parentPerson.ProvinceCode = contact.ProvinceCode;
+        parentPerson.StatssaAreaCode = contact.StatssaAreaCode;
+        parentPerson.ModifiedAt = DateTime.UtcNow;
+        parentPerson.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "PersonContact", existing.Id, isNew ? "Create" : "Update", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
+
+        return existing;
+    }
+
+    public async Task<PersonDemographics?> GetDemographicsAsync(int personId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.PersonDemographics.FirstOrDefaultAsync(d => d.PersonId == personId);
+    }
+
+    public async Task<PersonDemographics> UpdateDemographicsAsync(int personId, PersonDemographics demographics, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.PersonDemographics.FirstOrDefaultAsync(d => d.PersonId == personId);
+        var parentPerson = await db.People.FirstOrDefaultAsync(p => p.Id == personId);
+        if (parentPerson == null)
+        {
+            throw new KeyNotFoundException($"Parent Person with ID {personId} was not found.");
+        }
+
+        var isNew = existing == null;
+        if (isNew)
+        {
+            existing = new PersonDemographics
+            {
+                PersonId = personId,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = currentUsername
+            };
+            db.PersonDemographics.Add(existing);
+        }
+
+        var beforeState = isNew ? null : (object)new
+        {
+            existing!.EquityCode,
+            existing.DisabilityCode,
+            existing.NationalityCode,
+            existing.HomeLanguageCode,
+            existing.CitizenStatusCode,
+            existing.PopiActStatusId,
+            existing.PopiActConsentDate,
+            existing.LastSchoolEmisNumber,
+            existing.LastSchoolYear
+        };
+
+        existing!.EquityCode = demographics.EquityCode;
+        existing.DisabilityCode = demographics.DisabilityCode;
+        existing.NationalityCode = demographics.NationalityCode;
+        existing.HomeLanguageCode = demographics.HomeLanguageCode;
+        existing.CitizenStatusCode = demographics.CitizenStatusCode;
+        existing.PopiActStatusId = demographics.PopiActStatusId ?? "01";
+        existing.PopiActConsentDate = demographics.PopiActConsentDate;
+        existing.LastSchoolEmisNumber = demographics.LastSchoolEmisNumber;
+        existing.LastSchoolYear = demographics.LastSchoolYear;
+        existing.ModifiedAt = DateTime.UtcNow;
+        existing.ModifiedBy = currentUsername;
+
+        // Keep parent Person in sync for zero-breaking backward compatibility
+        parentPerson.EquityCode = demographics.EquityCode;
+        parentPerson.DisabilityCode = demographics.DisabilityCode;
+        parentPerson.NationalityCode = demographics.NationalityCode;
+        parentPerson.HomeLanguageCode = demographics.HomeLanguageCode;
+        parentPerson.CitizenStatusCode = demographics.CitizenStatusCode;
+        parentPerson.PopiActStatusId = demographics.PopiActStatusId ?? "01";
+        parentPerson.PopiActConsentDate = demographics.PopiActConsentDate;
+        parentPerson.LastSchoolEmisNumber = demographics.LastSchoolEmisNumber;
+        parentPerson.LastSchoolYear = demographics.LastSchoolYear;
+        parentPerson.ModifiedAt = DateTime.UtcNow;
+        parentPerson.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "PersonDemographics", existing.Id, isNew ? "Create" : "Update", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
+
+        return existing;
+    }
+
+    public async Task<PersonDisabilityRating?> GetDisabilityRatingAsync(int personId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.PersonDisabilityRatings.FirstOrDefaultAsync(r => r.PersonId == personId);
+    }
+
+    public async Task<PersonDisabilityRating> UpdateDisabilityRatingAsync(int personId, PersonDisabilityRating rating, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.PersonDisabilityRatings.FirstOrDefaultAsync(r => r.PersonId == personId);
+        var parentPerson = await db.People.FirstOrDefaultAsync(p => p.Id == personId);
+        if (parentPerson == null)
+        {
+            throw new KeyNotFoundException($"Parent Person with ID {personId} was not found.");
+        }
+
+        var isNew = existing == null;
+        if (isNew)
+        {
+            existing = new PersonDisabilityRating
+            {
+                PersonId = personId,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = currentUsername
+            };
+            db.PersonDisabilityRatings.Add(existing);
+        }
+
+        var beforeState = isNew ? null : (object)new
+        {
+            existing!.DisabilityCode,
+            existing.SeeingRatingId,
+            existing.HearingRatingId,
+            existing.WalkingRatingId,
+            existing.RememberingRatingId,
+            existing.CommunicatingRatingId,
+            existing.SelfCareRatingId,
+            existing.DisabilitySupportNotes,
+            existing.IsDisabilityAssessed,
+            existing.AssessedDate,
+            existing.AssessedBy
+        };
+
+        existing!.DisabilityCode = rating.DisabilityCode ?? "00";
+        existing.SeeingRatingId = rating.SeeingRatingId ?? "01";
+        existing.HearingRatingId = rating.HearingRatingId ?? "01";
+        existing.WalkingRatingId = rating.WalkingRatingId ?? "01";
+        existing.RememberingRatingId = rating.RememberingRatingId ?? "01";
+        existing.CommunicatingRatingId = rating.CommunicatingRatingId ?? "01";
+        existing.SelfCareRatingId = rating.SelfCareRatingId ?? "01";
+        existing.DisabilitySupportNotes = rating.DisabilitySupportNotes;
+        existing.IsDisabilityAssessed = rating.IsDisabilityAssessed;
+        existing.AssessedDate = rating.AssessedDate;
+        existing.AssessedBy = rating.AssessedBy;
+        existing.ModifiedAt = DateTime.UtcNow;
+        existing.ModifiedBy = currentUsername;
+
+        // Keep parent Person in sync for zero-breaking backward compatibility
+        parentPerson.DisabilityCode = rating.DisabilityCode ?? "00";
+        parentPerson.SeeingRatingId = rating.SeeingRatingId ?? "01";
+        parentPerson.HearingRatingId = rating.HearingRatingId ?? "01";
+        parentPerson.WalkingRatingId = rating.WalkingRatingId ?? "01";
+        parentPerson.RememberingRatingId = rating.RememberingRatingId ?? "01";
+        parentPerson.CommunicatingRatingId = rating.CommunicatingRatingId ?? "01";
+        parentPerson.SelfCareRatingId = rating.SelfCareRatingId ?? "01";
+        parentPerson.ModifiedAt = DateTime.UtcNow;
+        parentPerson.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "PersonDisabilityRating", existing.Id, isNew ? "Create" : "Update", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
+
+        return existing;
+    }
+
+    #endregion
 
     #region 360-Degree Relational Queries
 

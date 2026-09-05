@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-05 11:12:10 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 184
+> **Generated:** 2026-09-05 11:40:27 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 187
 
 ---
 
@@ -78,6 +78,9 @@
 | `dbo` | [`OrganisationContact`](#organisationcontact) | `OrganisationContact` | 12 | `Id` | Liaison contact person link associating an individual Person with an Employer Organisation. |
 | `dbo` | [`OrganisationSite`](#organisationsite) | `OrganisationSite` | 25 | `Id` | Operational branch facility, plant, or training site belonging to an Employer Organisation, supporting multi-site mapping and GPS geolocation for SETMIS File 200 reporting. |
 | `dbo` | [`Person`](#person) | `Person` | 47 | `Id` | Core demographic profile storing individual identity, SA ID/Passport, Washington Group functioning, POPIA compliance, educational background, and contact details for SETMIS statutory reporting. |
+| `dbo` | [`PersonContact`](#personcontact) | `PersonContact` | 16 | `Id` | Vertically partitioned satellite entity storing residential, postal, and telecommunications contact data for an individual. |
+| `dbo` | [`PersonDemographics`](#persondemographics) | `PersonDemographics` | 15 | `Id` | Vertically partitioned satellite entity storing demographic, language, equity, and statutory POPIA consent metadata. |
+| `dbo` | [`PersonDisabilityRating`](#persondisabilityrating) | `PersonDisabilityRating` | 17 | `Id` | Vertically partitioned satellite entity isolating special personal information under POPIA: Washington Group Functioning disability difficulty ratings, assessment records, and support notes. |
 | `dbo` | [`PipLearnerAllocation`](#piplearnerallocation) | `PipLearnerAllocation` | 12 | `Id` | Breakdown of awarded learner interventions and allowance budgets in a PIP. |
 | `dbo` | [`ProjectImplementationPlan`](#projectimplementationplan) | `ProjectImplementationPlan` | 17 | `Id` | Discretionary Grant Project Implementation Plan (PIP) and contracting governance. |
 | `dbo` | [`QualificationsCurriculumDevelopment`](#qualificationscurriculumdevelopment) | `QualificationsCurriculumDevelopment` | 31 | `Id` | Qualifications Curriculum Development (QCD) Application for QCTO Occupational Qualifications and Realignment. |
@@ -3212,6 +3215,137 @@
 | `IX_Person_ProvinceCode` | `ProvinceCode` | No |
 | `IX_Person_RsaIdNumber` | `RsaIdNumber` | No |
 | `IX_Person_StatssaAreaCode` | `StatssaAreaCode` | No |
+
+---
+
+### <a id="personcontact"></a> `dbo.PersonContact`
+
+**Description:** Vertically partitioned satellite entity storing residential, postal, and telecommunications contact data for an individual.  
+**CLR Model:** `Nsdms.Domain.Entities.PersonContact`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CellNumber` | `nvarchar(30)` | NULL |  | Mobile / cellular phone number. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `Email` | `nvarchar(150)` | NULL |  | Primary email contact address. |
+| `FaxNumber` | `nvarchar(30)` | NULL |  | Facsimile contact number. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent Person record. |
+| `PhoneNumber` | `nvarchar(30)` | NULL |  | Primary telephone contact number. |
+| `PhysicalAddress` | `nvarchar(500)` | NULL |  | Physical residential street address line 1. |
+| `PhysicalAddressPostalCode` | `nvarchar(20)` | NULL |  | Physical residential address postal code. |
+| `PostalAddress` | `nvarchar(500)` | NULL |  | Postal delivery address. |
+| `PostalAddressPostalCode` | `nvarchar(20)` | NULL |  | Postal address delivery code. |
+| `ProvinceCode` | `nvarchar(15)` | NULL |  | South African province code of primary residence (references lookup.ProvinceType: GP, KZN, WC, EC, FS, MP, NW, NC, LP). |
+| `StatssaAreaCode` | `nvarchar(50)` | NULL |  | Statistics South Africa Spatial Area Code (references lookup.StatssaAreaCodeType). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_PersonContact_Person_PersonId` | `PersonId` | `dbo.Person` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_PersonContact_Email` | `Email` | No |
+| `IX_PersonContact_PersonId` | `PersonId` | ✅ Yes |
+| `IX_PersonContact_ProvinceCode` | `ProvinceCode` | No |
+| `IX_PersonContact_StatssaAreaCode` | `StatssaAreaCode` | No |
+
+---
+
+### <a id="persondemographics"></a> `dbo.PersonDemographics`
+
+**Description:** Vertically partitioned satellite entity storing demographic, language, equity, and statutory POPIA consent metadata.  
+**CLR Model:** `Nsdms.Domain.Entities.PersonDemographics`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CitizenStatusCode` | `nvarchar(15)` | NULL |  | Citizen status lookup code (references lookup.CitizenStatusType: SA, PR, D, O, U). |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DisabilityCode` | `nvarchar(15)` | NULL |  | Legacy disability classification lookup code (references lookup.DisabilityType). |
+| `EquityCode` | `nvarchar(15)` | NULL |  | BBBEE / SETMIS statutory equity classification code (references lookup.EquityType: BA, BC, BI, WH, OTH). |
+| `HomeLanguageCode` | `nvarchar(15)` | NULL |  | Home / native language classification code (references lookup.HomeLanguageType: ENG, AFR, ZUL, XHO, SASL, etc.). |
+| `LastSchoolEmisNumber` | `nvarchar(50)` | NULL |  | Department of Basic Education EMIS School Registration Number. |
+| `LastSchoolYear` | `nvarchar(10)` | NULL |  | Year in which individual exited / matriculated from last school attended (YYYY format). |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `NationalityCode` | `nvarchar(15)` | NULL |  | Country nationality lookup code (references lookup.NationalityType: SA, SDC, NAM, ZIM, etc.). |
+| `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent Person record. |
+| `PopiActConsentDate` | `datetime2` | NULL |  | Date when POPIA data processing consent was recorded. |
+| `PopiActStatusId` | `nvarchar(10)` | NULL |  | Protection of Personal Information Act Statutory Consent Status (references lookup.PopiActStatusType: 01 Agreed, 02 Declined, 98 Unknown). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_PersonDemographics_Person_PersonId` | `PersonId` | `dbo.Person` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_PersonDemographics_CitizenStatusCode` | `CitizenStatusCode` | No |
+| `IX_PersonDemographics_EquityCode` | `EquityCode` | No |
+| `IX_PersonDemographics_NationalityCode` | `NationalityCode` | No |
+| `IX_PersonDemographics_PersonId` | `PersonId` | ✅ Yes |
+| `IX_PersonDemographics_PopiActStatusId` | `PopiActStatusId` | No |
+
+---
+
+### <a id="persondisabilityrating"></a> `dbo.PersonDisabilityRating`
+
+**Description:** Vertically partitioned satellite entity isolating special personal information under POPIA: Washington Group Functioning disability difficulty ratings, assessment records, and support notes.  
+**CLR Model:** `Nsdms.Domain.Entities.PersonDisabilityRating`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AssessedBy` | `nvarchar(150)` | NULL |  | Name or registration number of the assessing medical practitioner / occupational specialist. |
+| `AssessedDate` | `datetime2` | NULL |  | Date when the formal disability assessment took place. |
+| `CommunicatingRatingId` | `nvarchar(10)` | NULL |  | Washington Group Communication functional difficulty rating (references lookup.CommunicatingRatingType: 01 None to 06 Cannot determine). |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DisabilityCode` | `nvarchar(15)` | NULL |  | Legacy disability classification lookup code (references lookup.DisabilityType: 00 None, 01 Sight, 02 Hearing, etc.). |
+| `DisabilitySupportNotes` | `nvarchar(1000)` | NULL |  | Workplace or learning environment special accommodation and support requirements. |
+| `HearingRatingId` | `nvarchar(10)` | NULL |  | Washington Group Hearing functional difficulty rating (references lookup.HearingRatingType: 01 None to 06 Cannot determine). |
+| `IsDisabilityAssessed` | `bit` | **NOT NULL** |  | Indicates whether a formal medical practitioner or occupational therapist disability assessment was conducted. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent Person record. |
+| `RememberingRatingId` | `nvarchar(10)` | NULL |  | Washington Group Memory / Cognitive functional difficulty rating (references lookup.RememberingRatingType: 01 None to 06 Cannot determine). |
+| `SeeingRatingId` | `nvarchar(10)` | NULL |  | Washington Group Seeing functional difficulty rating (references lookup.SeeingRatingType: 01 None to 06 Cannot determine). |
+| `SelfCareRatingId` | `nvarchar(10)` | NULL |  | Washington Group Self-Care functional difficulty rating (references lookup.SelfCareRatingType: 01 None to 06 Cannot determine). |
+| `WalkingRatingId` | `nvarchar(10)` | NULL |  | Washington Group Mobility / Walking functional difficulty rating (references lookup.WalkingRatingType: 01 None to 06 Cannot determine). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_PersonDisabilityRating_Person_PersonId` | `PersonId` | `dbo.Person` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_PersonDisabilityRating_DisabilityCode` | `DisabilityCode` | No |
+| `IX_PersonDisabilityRating_PersonId` | `PersonId` | ✅ Yes |
 
 ---
 

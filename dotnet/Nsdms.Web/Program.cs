@@ -383,6 +383,7 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase22SarsLevyStreamingStaging", () => Phase22SarsLevyStreamingStagingMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase23LookupIndexes", () => Phase23LookupIndexesMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase24ErpOutboxQueue", () => Phase24ErpOutboxQueueMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase25VerticalPartitioning", () => Phase25VerticalPartitioningMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
     RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
     RunMigrator("RolePermissions", () => scope.ServiceProvider.GetRequiredService<IRolePermissionService>().SeedDefaultRolePermissionsAsync().GetAwaiter().GetResult());
