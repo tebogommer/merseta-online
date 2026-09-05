@@ -294,4 +294,17 @@ Every page must pass all 16 items before being declared complete:
 2. **Accredited TTC Scheduling**: Assessment booking must strictly target accredited Trade Test Centres (`TrainingProviderId`) with confirmed examination dates and candidate safety tooling/PPE readiness verification.
 3. **DOFA CFO Gating for DG Claims**: All Discretionary Grant tranche claims reaching or exceeding R 500,000 must automatically flag `RequiresCfoApproval = true` and route through the Tier 3 dual authorization chain prior to payment voucher serialization (`PV-{yyyy}-DG-{id:D5}`).
 
+---
+
+### 🛡️ Dynamics GP Transactional Outbox & Priority Execution Governance
+1. **Mandatory Outbox Routing**:
+   - All external Microsoft Dynamics GP web service mutations (Vendor Creation/Sync, Bank Details Verification, DG Tranche Payments, MG Rebate Disbursements) MUST route through `IErpOutboxQueueService.EnqueueAsync`. Direct, un-staged synchronous HTTP/SOAP calls to GP web services are strictly prohibited.
+2. **Execution Priority Order**:
+   - Outbox processing must enforce business priority: Priority 1 (`OrganisationVendorSync`, `BankingDetailsUpdate`) MUST always execute before Priority 2 (`DiscretionaryGrantPayment`, `MandatoryGrantPayment`) to prevent `EntityNotFoundException` on missing vendors or outdated bank details.
+3. **Outage Resilience & Circuit Breaker**:
+   - Before draining outbox batches, `CheckGpHealthAsync` must verify GP availability. Any connection failure mid-batch must immediately abort remaining messages in the batch, pause the queue, and record exponential backoff on retryable failures.
+4. **Audit Double-Write**:
+   - Every message state transition (`Pending` -> `InFlight` -> `Delivered` / `FailedRetryable` / `DeadLetter`) must perform an audited change log write to `audit_logs`.
+
+
 

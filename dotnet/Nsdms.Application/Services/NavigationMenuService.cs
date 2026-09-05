@@ -711,6 +711,21 @@ public class NavigationMenuService : INavigationMenuService
             },
             new()
             {
+                Id = "nav-wsp-wizard",
+                Title = "Submit WSP/ATR wizard",
+                Href = "wsp/submit",
+                Icon = "AssignmentTurnedIn",
+                Category = "Grants, levies & finance",
+                Description = "Multi-step Workplace Skills Plan, Annual Training Report, and Mandatory Grant submission wizard",
+                RequiredModule = AppPermissions.ModuleWsp,
+                RequiredAction = AppPermissions.ActionEdit,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "CLO" },
+                PersonaTags = new() { "Admin", "SDF", "CLO" },
+                DisplayOrder = 2,
+                Keywords = new() { "wsp wizard", "atr wizard", "submit wsp", "annual submission", "mandatory grant wizard" }
+            },
+            new()
+            {
                 Id = "nav-wsp-committees",
                 Title = "Training committees",
                 Href = "wsp/committees",
@@ -721,7 +736,7 @@ public class NavigationMenuService : INavigationMenuService
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "CLO" },
                 PersonaTags = new() { "Admin", "SDF", "CLO" },
-                DisplayOrder = 2,
+                DisplayOrder = 3,
                 Keywords = new() { "committees", "training committee", "labour", "union", "consultation" }
             },
             new()
@@ -736,7 +751,7 @@ public class NavigationMenuService : INavigationMenuService
                 RequiredAction = AppPermissions.ActionEdit,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "SDF", "CLO" },
                 PersonaTags = new() { "Admin", "SDF", "CLO" },
-                DisplayOrder = 3,
+                DisplayOrder = 4,
                 Keywords = new() { "extension", "deadline extension", "wsp extension", "late filing", "postponement" }
             },
             new()
@@ -843,6 +858,21 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "All", "Admin", "Finance", "SDF" },
                 DisplayOrder = 9,
                 Keywords = new() { "claim wizard", "tranche claim", "payment voucher", "dofa", "invoice" }
+            },
+            new()
+            {
+                Id = "nav-erp-outbox",
+                Title = "Dynamics GP integration outbox",
+                Href = "finance/erp-outbox",
+                Icon = "SendAndArchive",
+                Category = "Grants, levies & finance",
+                Description = "Resilient ERP outbox queue with automated pause on GP downtime and FIFO resumption",
+                RequiredModule = AppPermissions.ModuleFinance,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Finance" },
+                PersonaTags = new() { "Admin", "Finance" },
+                DisplayOrder = 10,
+                Keywords = new() { "outbox", "gp", "dynamics", "queue", "erp", "webservices", "offline", "resume" }
             },
             new()
             {

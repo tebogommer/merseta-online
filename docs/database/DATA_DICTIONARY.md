@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-05 05:50:01 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 183
+> **Generated:** 2026-09-05 06:41:58 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 184
 
 ---
 
@@ -46,6 +46,7 @@
 | `dbo` | [`DocumentTemplate`](#documenttemplate) | `DocumentTemplate` | 20 | `Id` | Universal enterprise document template for statutory letters, certificates, agreements, and notices. |
 | `dbo` | [`DocumentTemplateSection`](#documenttemplatesection) | `DocumentTemplateSection` | 12 | `Id` | Ordered section mapping a reusable clause to a document template. |
 | `dbo` | [`EisaAssessmentEntry`](#eisaassessmententry) | `EisaAssessmentEntry` | 15 | `Id` | External Integrated Summative Assessment (EISA) exam entry for QCTO occupational qualifications. |
+| `dbo` | [`ErpOutboxMessage`](#erpoutboxmessage) | `ErpOutboxMessage` | 22 | `Id` | Transactional Outbox message entity for Microsoft Dynamics GP and ERP Web Services integration. Ensures resilient, decoupled asynchronous execution with automatic pause on GP outage and resumption upon recovery. |
 | `dbo` | [`ErpPaymentBatchEntry`](#erppaymentbatchentry) | `ErpPaymentBatchEntry` | 17 | `Id` | Individual line item voucher within an ERP payment batch. |
 | `dbo` | [`ErpPaymentBatchHeader`](#erppaymentbatchheader) | `ErpPaymentBatchHeader` | 14 | `Id` | ERP Payment Batch Header for staging mandatory/discretionary grant disbursements to Dynamics GP / Sage. |
 | `dbo` | [`EtqaAssessor`](#etqaassessor) | `EtqaAssessor` | 17 | `Id` | Registered ETQA Assessors and Moderators with approved qualification scopes, capturing all statutory fields required for SETMIS File 401 (Person Designation) reporting. |
@@ -1701,6 +1702,58 @@
 | :--- | :--- | :--- |
 | `IX_EisaAssessmentEntry_AssessmentPaperCode` | `AssessmentPaperCode` | No |
 | `IX_EisaAssessmentEntry_SummativeAssessmentReportId` | `SummativeAssessmentReportId` | No |
+
+---
+
+### <a id="erpoutboxmessage"></a> `dbo.ErpOutboxMessage`
+
+**Description:** Transactional Outbox message entity for Microsoft Dynamics GP and ERP Web Services integration. Ensures resilient, decoupled asynchronous execution with automatic pause on GP outage and resumption upon recovery.  
+**CLR Model:** `Nsdms.Domain.Entities.ErpOutboxMessage`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DeliveredAtUtc` | `datetime2` | NULL |  | UTC timestamp when the GP transaction was confirmed delivered. |
+| `ExecutionPriority` | `int` | **NOT NULL** |  | Execution priority order: 1 = Pre-requisite (VendorSync, BankingDetails), 2 = Standard (Disbursements). |
+| `GpBatchNumber` | `nvarchar(100)` | NULL |  | GP Payment Batch reference assigned to this transaction (e.g. GP-LIVE-YYYYMMDD-XXXX). |
+| `LastAttemptAtUtc` | `datetime2` | NULL |  | UTC timestamp of the last attempted invocation. |
+| `LastError` | `nvarchar(max)` | NULL |  | Diagnostic error message or stack trace if the last attempt failed. |
+| `LockExpiresAtUtc` | `datetime2` | NULL |  | UTC expiration time for worker lock token. |
+| `LockToken` | `nvarchar(100)` | NULL |  | Concurrency lock token to ensure safe single-worker processing. |
+| `MaxRetries` | `int` | **NOT NULL** |  | Maximum retry attempts before escalating to DeadLetter. |
+| `MessageCorrelationId` | `nvarchar(64)` | **NOT NULL** |  | Unique correlation ID for tracking and idempotency across ERP boundaries. |
+| `MessageType` | `nvarchar(50)` | **NOT NULL** |  | Type of GP operation: VendorSync, BankingDetailsUpdate, DgTrancheDisbursement, MgRebateDisbursement, PaymentDisbursement. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `NextAttemptAtUtc` | `datetime2` | NULL |  | UTC timestamp when the message is eligible for next delivery attempt. |
+| `OrganisationId` | `int` | NULL | 🔗 **FK** | Associated Organisation ID if applicable. |
+| `PayloadJson` | `nvarchar(max)` | **NOT NULL** |  | Serialized JSON payload containing parameters for the GP Web Service invocation. |
+| `QueueStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Queue status: Pending, Processing, Delivered, FailedRetryable, DeadLetter, Suspended. |
+| `ReferenceKey` | `nvarchar(100)` | **NOT NULL** |  | Business reference key (e.g. SDL number, MoA number, Voucher number, or statutory reference). |
+| `RetryCount` | `int` | **NOT NULL** |  | Current count of retry attempts. |
+| `TransactionReference` | `nvarchar(100)` | NULL |  | Transaction reference returned by Dynamics GP (e.g. TRX-XXXXXX or voucher reference). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_ErpOutboxMessage_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `ClientSetNull` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ErpOutboxMessage_MessageCorrelationId` | `MessageCorrelationId` | ✅ Yes |
+| `IX_ErpOutboxMessage_MessageType` | `MessageType` | No |
+| `IX_ErpOutboxMessage_NextAttemptAtUtc` | `NextAttemptAtUtc` | No |
+| `IX_ErpOutboxMessage_OrganisationId` | `OrganisationId` | No |
+| `IX_ErpOutboxMessage_QueueStatusCode` | `QueueStatusCode` | No |
+| `IX_ErpOutboxMessage_ReferenceKey` | `ReferenceKey` | No |
 
 ---
 

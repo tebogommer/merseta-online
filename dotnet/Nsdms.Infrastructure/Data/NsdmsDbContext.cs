@@ -185,6 +185,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<CompanyLearnerChangeRequest> CompanyLearnerChangeRequests => Set<CompanyLearnerChangeRequest>();
     public DbSet<ErpPaymentBatchHeader> ErpPaymentBatchHeaders => Set<ErpPaymentBatchHeader>();
     public DbSet<ErpPaymentBatchEntry> ErpPaymentBatchEntries => Set<ErpPaymentBatchEntry>();
+    public DbSet<ErpOutboxMessage> ErpOutboxMessages => Set<ErpOutboxMessage>();
 
     // Phase 4: ETQA Assessor 3-Year Re-registration & CPD
     public DbSet<AssessorReRegistrationApplication> AssessorReRegistrationApplications => Set<AssessorReRegistrationApplication>();
@@ -2799,6 +2800,24 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(e => e.GrantPaymentClaimId);
             entity.HasIndex(e => e.OrganisationId);
             entity.HasIndex(e => e.PaymentVoucherNumber);
+        });
+
+        modelBuilder.Entity<ErpOutboxMessage>(entity =>
+        {
+            entity.ToTable("ErpOutboxMessage");
+            entity.Property(e => e.MessageCorrelationId).HasMaxLength(64).IsRequired();
+            entity.Property(e => e.MessageType).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.ReferenceKey).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.QueueStatusCode).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.TransactionReference).HasMaxLength(100);
+            entity.Property(e => e.GpBatchNumber).HasMaxLength(100);
+            entity.Property(e => e.LockToken).HasMaxLength(100);
+            entity.HasIndex(e => e.QueueStatusCode);
+            entity.HasIndex(e => e.NextAttemptAtUtc);
+            entity.HasIndex(e => e.MessageType);
+            entity.HasIndex(e => e.ReferenceKey);
+            entity.HasIndex(e => e.OrganisationId);
+            entity.HasIndex(e => e.MessageCorrelationId).IsUnique();
         });
 
         // AssessorReRegistrationApplication

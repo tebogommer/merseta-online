@@ -148,6 +148,7 @@ public class WizardParityTests : BunitContext, IAsyncLifetime
                 "WorkplaceApprovalWizard.razor",
                 "TradeTestApplicationWizard.razor",
                 "DgTrancheClaimWizard.razor",
+                "WspAtrSubmissionWizard.razor",
                 // WspSignoffWizard.razor is documented as an attestation status board rather than a sequential stepper
                 "WspSignoffWizard.razor"
             };
@@ -276,5 +277,39 @@ public class WizardParityTests : BunitContext, IAsyncLifetime
         Assert.Contains("SARS tax compliance PIN", cut.Markup, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Beneficiary bank name", cut.Markup, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("PFMA", cut.Markup, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void WspAtrSubmissionFields_RendersExpectedStatutoryFields()
+    {
+        var cut = Render<WspAtrSubmissionFields>(parameters => parameters
+            .Add(p => p.Section, "All")
+            .Add(p => p.FinYear, 2026)
+            .Add(p => p.PayrollAnnualTotal, 25000000m)
+            .Add(p => p.EstimatedLevy, 250000m)
+            .Add(p => p.EmployeeCount, 120)
+            .Add(p => p.PlannedTrainingBudget, 450000m)
+            .Add(p => p.WspPlannedBeneficiaries, 60)
+            .Add(p => p.SdfFullName, "Thabo Molefe (Primary SDF)")
+            .Add(p => p.CeoFullName, "Sarah Jenkins (Managing Director)")
+        );
+
+        Assert.Contains("Submitting employer organisation", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Financial scheme year", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Annual payroll total (EMP201)", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Estimated 1% SDL levy paid", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Estimated 20% Mandatory Grant (MG) rebate", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Total employee headcount", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Actual training expenditure", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Total trained beneficiaries", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Prior year training interventions count", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Planned training budget", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Planned beneficiary headcount", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Consultative training committee met", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Required sign-off count", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Trade union represented in workplace", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Primary SDF full name", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CEO / Accounting Authority full name", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("solemnly declare", cut.Markup, StringComparison.OrdinalIgnoreCase);
     }
 }

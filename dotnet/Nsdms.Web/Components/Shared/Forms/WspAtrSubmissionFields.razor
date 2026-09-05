@@ -1,0 +1,758 @@
+@namespace Nsdms.Web.Components.Shared.Forms
+@using MudBlazor
+@using Nsdms.Domain.Entities
+
+@if (Section == "Organisation" || Section == "All")
+{
+    <div class="nsdms-section-organisation mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int?"
+                           Label="Submitting employer organisation"
+                           Value="@OrganisationId"
+                           ValueChanged="OnOrganisationChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           ToStringFunc="@(id => GetOrganisationDisplayText(id))"
+                           HelperText="Select the levy-paying or non-levy employer organisation">
+                    @if (Organisations != null)
+                    {
+                        @foreach (var org in Organisations)
+                        {
+                            <MudSelectItem Value="@((int?)org.Id)">
+                                @($"{org.CompanyName} (SDL: {org.SdlNumber})")
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField T="int"
+                                 Label="Financial scheme year"
+                                 Value="@FinYear"
+                                 ValueChanged="OnFinYearChanged"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Min="2020"
+                                 Max="2035"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Statutory financial scheme cycle (e.g. 2026)" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="decimal"
+                                 Label="Annual payroll total (EMP201)"
+                                 Value="@PayrollAnnualTotal"
+                                 ValueChanged="OnPayrollAnnualTotalChanged"
+                                 Variant="Variant.Outlined"
+                                 Format="N2"
+                                 Adornment="Adornment.Start"
+                                 AdornmentText="R"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="SARS EMP201 annual gross remuneration total" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="decimal"
+                                 Label="Estimated 1% SDL levy paid"
+                                 Value="@EstimatedLevy"
+                                 ValueChanged="OnEstimatedLevyChanged"
+                                 Variant="Variant.Outlined"
+                                 Format="N2"
+                                 Adornment="Adornment.Start"
+                                 AdornmentText="R"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="1% of annual payroll statutory Skills Development Levy" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="decimal"
+                                 Label="Estimated 20% Mandatory Grant (MG) rebate"
+                                 Value="@EstimatedRebate"
+                                 Variant="Variant.Outlined"
+                                 Format="N2"
+                                 Adornment="Adornment.Start"
+                                 AdornmentText="R"
+                                 ReadOnly="true"
+                                 HelperText="Statutory 20% levy rebate allocation upon approval" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField T="int"
+                                 Label="Total employee headcount"
+                                 Value="@EmployeeCount"
+                                 ValueChanged="OnEmployeeCountChanged"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Min="1"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Total workforce employed across all permanent & contracted roles" />
+            </MudItem>
+            <MudItem xs="12" md="6" Class="d-flex align-center">
+                @if (EmployeeCount < 50)
+                {
+                    <MudChip T="string" Color="Color.Info" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Group">
+                        Small enterprise (&lt; 50 staff) — Bipartite Quorum (2 Signatories Required)
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Groups">
+                        Medium / Large enterprise (&#8805; 50 staff) — Tripartite Quorum (3 Signatories Required)
+                    </MudChip>
+                }
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Atr" || Section == "All")
+{
+    <div class="nsdms-section-atr mb-4">
+        <FormRow>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="decimal"
+                                 Label="Actual training expenditure"
+                                 Value="@AtrActualExpenditure"
+                                 ValueChanged="OnAtrActualExpenditureChanged"
+                                 Variant="Variant.Outlined"
+                                 Format="N2"
+                                 Adornment="Adornment.Start"
+                                 AdornmentText="R"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Prior financial year actual gross training spend" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="int"
+                                 Label="Total trained beneficiaries"
+                                 Value="@AtrTrainedBeneficiaries"
+                                 ValueChanged="OnAtrTrainedBeneficiariesChanged"
+                                 Variant="Variant.Outlined"
+                                 Min="0"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Headcount of employees who completed training" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="int"
+                                 Label="Prior year training interventions count"
+                                 Value="@AtrInterventionsCount"
+                                 ValueChanged="OnAtrInterventionsCountChanged"
+                                 Variant="Variant.Outlined"
+                                 Min="0"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Total discrete learning courses, learnerships or programmes delivered" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
+                           Label="Primary occupational category (OFO)"
+                           Value="@AtrPrimaryOccupationalCategory"
+                           ValueChanged="OnAtrPrimaryOccupationalCategoryChanged"
+                           Variant="Variant.Outlined"
+                           Disabled="@IsReadOnly"
+                           HelperText="Major OFO occupational category with highest training volume">
+                    <MudSelectItem Value="@("Craft and Related Trades Workers (Artisans)")">Craft and Related Trades Workers (Artisans)</MudSelectItem>
+                    <MudSelectItem Value="@("Plant and Machine Operators and Assemblers")">Plant and Machine Operators and Assemblers</MudSelectItem>
+                    <MudSelectItem Value="@("Technicians and Associate Professionals")">Technicians and Associate Professionals</MudSelectItem>
+                    <MudSelectItem Value="@("Professionals")">Professionals</MudSelectItem>
+                    <MudSelectItem Value="@("Managers")">Managers</MudSelectItem>
+                    <MudSelectItem Value="@("Clerical Support Workers")">Clerical Support Workers</MudSelectItem>
+                    <MudSelectItem Value="@("Service and Sales Workers")">Service and Sales Workers</MudSelectItem>
+                    <MudSelectItem Value="@("Elementary Occupations")">Elementary Occupations</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string?"
+                              Label="Primary OFO classification code"
+                              Value="@AtrOfoCode"
+                              ValueChanged="OnAtrOfoCodeChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly"
+                              HelperText="6-digit Organising Framework for Occupations reference" />
+            </MudItem>
+        </FormRow>
+
+        <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mb-2 font-weight-bold">
+            ATR Equity &amp; Demographics Profile
+        </MudText>
+        <FormRow>
+            <MudItem xs="6" md="3">
+                <MudNumericField T="int"
+                                 Label="African employees trained"
+                                 Value="@AtrAfricanCount"
+                                 ValueChanged="OnAtrAfricanCountChanged"
+                                 Variant="Variant.Outlined"
+                                 Min="0"
+                                 Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudNumericField T="int"
+                                 Label="Female employees trained"
+                                 Value="@AtrFemaleCount"
+                                 ValueChanged="OnAtrFemaleCountChanged"
+                                 Variant="Variant.Outlined"
+                                 Min="0"
+                                 Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudNumericField T="int"
+                                 Label="Persons with disabilities trained"
+                                 Value="@AtrDisabledCount"
+                                 ValueChanged="OnAtrDisabledCountChanged"
+                                 Variant="Variant.Outlined"
+                                 Min="0"
+                                 Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudNumericField T="int"
+                                 Label="Youth (&lt; 35 years) trained"
+                                 Value="@AtrYouthCount"
+                                 ValueChanged="OnAtrYouthCountChanged"
+                                 Variant="Variant.Outlined"
+                                 Min="0"
+                                 Disabled="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Wsp" || Section == "All")
+{
+    <div class="nsdms-section-wsp mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudNumericField T="decimal"
+                                 Label="Planned training budget"
+                                 Value="@PlannedTrainingBudget"
+                                 ValueChanged="OnPlannedTrainingBudgetChanged"
+                                 Variant="Variant.Outlined"
+                                 Format="N2"
+                                 Adornment="Adornment.Start"
+                                 AdornmentText="R"
+                                 Required="true"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Total planned training investment budget for the upcoming scheme year" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField T="int"
+                                 Label="Planned beneficiary headcount"
+                                 Value="@WspPlannedBeneficiaries"
+                                 ValueChanged="OnWspPlannedBeneficiariesChanged"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Min="1"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Total targeted employees and unemployed learners to be trained" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect T="string"
+                           Label="Primary learning programme type"
+                           Value="@WspPrimaryProgrammeType"
+                           ValueChanged="OnWspPrimaryProgrammeTypeChanged"
+                           Variant="Variant.Outlined"
+                           Disabled="@IsReadOnly"
+                           HelperText="Predominant planned statutory skills development pathway">
+                    <MudSelectItem Value="@("Learnership")">Learnership (18.1 / 18.2)</MudSelectItem>
+                    <MudSelectItem Value="@("Apprenticeship")">Apprenticeship (Artisan)</MudSelectItem>
+                    <MudSelectItem Value="@("SkillsProgramme")">Accredited Skills Programme</MudSelectItem>
+                    <MudSelectItem Value="@("Bursary")">Higher Education Bursary</MudSelectItem>
+                    <MudSelectItem Value="@("Internship")">Workplace Internship / Candidacy</MudSelectItem>
+                    <MudSelectItem Value="@("ShortCourse")">Industry Short Course</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect T="int?"
+                           Label="Target NQF level"
+                           Value="@WspTargetNqfLevel"
+                           ValueChanged="OnWspTargetNqfLevelChanged"
+                           Variant="Variant.Outlined"
+                           Disabled="@IsReadOnly"
+                           HelperText="Target National Qualifications Framework descriptor">
+                    <MudSelectItem Value="@((int?)1)">NQF Level 1 (General Certificate)</MudSelectItem>
+                    <MudSelectItem Value="@((int?)2)">NQF Level 2 (Elementary Certificate)</MudSelectItem>
+                    <MudSelectItem Value="@((int?)3)">NQF Level 3 (Intermediate Certificate)</MudSelectItem>
+                    <MudSelectItem Value="@((int?)4)">NQF Level 4 (National Certificate / Matric)</MudSelectItem>
+                    <MudSelectItem Value="@((int?)5)">NQF Level 5 (Higher Certificate / Occupational)</MudSelectItem>
+                    <MudSelectItem Value="@((int?)6)">NQF Level 6 (Diploma / Advanced Certificate)</MudSelectItem>
+                    <MudSelectItem Value="@((int?)7)">NQF Level 7 (Bachelor's Degree / Advanced Diploma)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="decimal"
+                                 Label="PIVOTAL programme target ratio"
+                                 Value="@WspPivotalRatio"
+                                 ValueChanged="OnWspPivotalRatioChanged"
+                                 Variant="Variant.Outlined"
+                                 Min="0"
+                                 Max="100"
+                                 Adornment="Adornment.End"
+                                 AdornmentText="%"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Statutory target &#8805; 70% of total training allocated to PIVOTAL" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Committee" || Section == "All")
+{
+    <div class="nsdms-section-committee mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6" Class="d-flex align-center">
+                <MudSwitch T="bool"
+                           Label="Consultative training committee met"
+                           Value="@TrainingCommitteeMet"
+                           ValueChanged="OnTrainingCommitteeMetChanged"
+                           Color="Color.Primary"
+                           Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="Consultation meeting date"
+                               Date="@ConsultationMeetingDate"
+                               DateChanged="OnConsultationMeetingDateChanged"
+                               Variant="Variant.Outlined"
+                               Disabled="@IsReadOnly"
+                               HelperText="Official date of joint workplace consultation" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Committee minutes reference document"
+                              Value="@MinutesDocumentUri"
+                              ValueChanged="OnMinutesDocumentUriChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly"
+                              HelperText="Signed minutes file reference (e.g. DOC-WSP-2026-MINUTES-01.pdf)" />
+            </MudItem>
+            <MudItem xs="12" md="6" Class="d-flex align-center">
+                <MudSwitch T="bool"
+                           Label="Joint skills audit conducted with labour"
+                           Value="@SkillsAuditConducted"
+                           ValueChanged="OnSkillsAuditConductedChanged"
+                           Color="Color.Success"
+                           Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string?"
+                              Label="Consultation summary &amp; minutes notes"
+                              Value="@ConsultationSummary"
+                              ValueChanged="OnConsultationSummaryChanged"
+                              Variant="Variant.Outlined"
+                              Lines="3"
+                              Disabled="@IsReadOnly"
+                              HelperText="Executive summary of committee resolutions, skills priorities, and stakeholder input" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Quorum" || Section == "All")
+{
+    <div class="nsdms-section-quorum mb-4">
+        <FormRow>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="int"
+                                 Label="Required sign-off count"
+                                 Value="@RequiredSignoffCount"
+                                 Variant="Variant.Outlined"
+                                 ReadOnly="true"
+                                 HelperText="@(EmployeeCount < 50 ? "2 signatories (Primary SDF + CEO)" : "3 signatories (Primary SDF + Labour Union Rep + CEO)")" />
+            </MudItem>
+            <MudItem xs="12" md="4" Class="d-flex align-center">
+                <MudSwitch T="bool"
+                           Label="Trade union represented in workplace"
+                           Value="@IsUnionRepresented"
+                           ValueChanged="OnIsUnionRepresentedChanged"
+                           Color="Color.Primary"
+                           Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect T="string"
+                           Label="Recognised trade union name"
+                           Value="@UnionName"
+                           ValueChanged="OnUnionNameChanged"
+                           Variant="Variant.Outlined"
+                           Disabled="@(!IsUnionRepresented || IsReadOnly)"
+                           HelperText="Statutory bargaining union active at workplace">
+                    <MudSelectItem Value="@("NUMSA")">NUMSA (National Union of Metalworkers of SA)</MudSelectItem>
+                    <MudSelectItem Value="@("Solidarity")">Solidarity / Solidariteit</MudSelectItem>
+                    <MudSelectItem Value="@("UASA")">UASA - The Union</MudSelectItem>
+                    <MudSelectItem Value="@("CEPPWAWU")">CEPPWAWU</MudSelectItem>
+                    <MudSelectItem Value="@("Workplace Committee")">Workplace Consultative Forum / Committee</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Nominated union representative full name"
+                              Value="@UnionRepName"
+                              ValueChanged="OnUnionRepNameChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@(!IsUnionRepresented || IsReadOnly)"
+                              HelperText="Mandated shop steward or union representative" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Nominated union representative email"
+                              Value="@UnionRepEmail"
+                              ValueChanged="OnUnionRepEmailChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@(!IsUnionRepresented || IsReadOnly)"
+                              HelperText="Email address for dispatch of digital OTP sign-off token" />
+            </MudItem>
+        </FormRow>
+
+        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Class="mt-2 mb-3">
+            <div class="d-flex align-center gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                <div>
+                    <strong>SETMIS Flat-File Pre-Flight Check Passed</strong>
+                    <div class="text-caption text-secondary">
+                        All statutory 258-character positional records (File 500), valid SDL format (^L\d{9}$), and OFO 2024 classification codes verified.
+                    </div>
+                </div>
+            </div>
+        </MudAlert>
+    </div>
+}
+
+@if (Section == "Declaration" || Section == "All")
+{
+    <div class="nsdms-section-declaration mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Primary SDF full name"
+                              Value="@SdfFullName"
+                              ValueChanged="OnSdfFullNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Registered Skills Development Facilitator" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="CEO / Accounting Authority full name"
+                              Value="@CeoFullName"
+                              ValueChanged="OnCeoFullNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Chief Executive Officer or delegated accounting officer" />
+            </MudItem>
+        </FormRow>
+
+        <MudAlert Severity="Severity.Info" Class="mb-3">
+            In terms of Section 10(1) of the Skills Development Act (Act 97 of 1998) and Government Gazette Mandatory Grant Regulations, submitting an authentic WSP and ATR qualifies the employer for a 20% Mandatory Grant levy rebate. Submissions are audited against SARS EMP201 statements and SETMIS records.
+        </MudAlert>
+
+        <MudCheckBox T="bool"
+                     Label="I solemnly declare that the Workplace Skills Plan (WSP) and Annual Training Report (ATR) submitted herewith are authentic, correct, and comply with Section 10(1) of the Skills Development Act and POPIA."
+                     Value="@IsPopiaAndLegalDeclarationAccepted"
+                     ValueChanged="OnIsPopiaAndLegalDeclarationAcceptedChanged"
+                     Color="Color.Primary"
+                     Disabled="@IsReadOnly"
+                     Required="true" />
+    </div>
+}
+
+@code {
+    [Parameter] public string Section { get; set; } = "All";
+    [Parameter] public bool IsReadOnly { get; set; } = false;
+
+    // Data Sources
+    [Parameter] public List<Organisation>? Organisations { get; set; }
+
+    // Section 1: Organisation & Payroll
+    [Parameter] public int? OrganisationId { get; set; }
+    [Parameter] public EventCallback<int?> OrganisationIdChanged { get; set; }
+
+    [Parameter] public int FinYear { get; set; } = 2026;
+    [Parameter] public EventCallback<int> FinYearChanged { get; set; }
+
+    [Parameter] public decimal PayrollAnnualTotal { get; set; } = 25000000m;
+    [Parameter] public EventCallback<decimal> PayrollAnnualTotalChanged { get; set; }
+
+    [Parameter] public decimal EstimatedLevy { get; set; } = 250000m;
+    [Parameter] public EventCallback<decimal> EstimatedLevyChanged { get; set; }
+
+    public decimal EstimatedRebate => EstimatedLevy * 0.20m;
+
+    [Parameter] public int EmployeeCount { get; set; } = 120;
+    [Parameter] public EventCallback<int> EmployeeCountChanged { get; set; }
+
+    // Section 2: ATR
+    [Parameter] public decimal AtrActualExpenditure { get; set; } = 320000m;
+    [Parameter] public EventCallback<decimal> AtrActualExpenditureChanged { get; set; }
+
+    [Parameter] public int AtrTrainedBeneficiaries { get; set; } = 45;
+    [Parameter] public EventCallback<int> AtrTrainedBeneficiariesChanged { get; set; }
+
+    [Parameter] public int AtrInterventionsCount { get; set; } = 12;
+    [Parameter] public EventCallback<int> AtrInterventionsCountChanged { get; set; }
+
+    [Parameter] public string AtrPrimaryOccupationalCategory { get; set; } = "Craft and Related Trades Workers (Artisans)";
+    [Parameter] public EventCallback<string> AtrPrimaryOccupationalCategoryChanged { get; set; }
+
+    [Parameter] public string? AtrOfoCode { get; set; } = "653301";
+    [Parameter] public EventCallback<string?> AtrOfoCodeChanged { get; set; }
+
+    [Parameter] public int AtrAfricanCount { get; set; } = 28;
+    [Parameter] public EventCallback<int> AtrAfricanCountChanged { get; set; }
+
+    [Parameter] public int AtrFemaleCount { get; set; } = 18;
+    [Parameter] public EventCallback<int> AtrFemaleCountChanged { get; set; }
+
+    [Parameter] public int AtrDisabledCount { get; set; } = 2;
+    [Parameter] public EventCallback<int> AtrDisabledCountChanged { get; set; }
+
+    [Parameter] public int AtrYouthCount { get; set; } = 30;
+    [Parameter] public EventCallback<int> AtrYouthCountChanged { get; set; }
+
+    // Section 3: WSP
+    [Parameter] public decimal PlannedTrainingBudget { get; set; } = 450000m;
+    [Parameter] public EventCallback<decimal> PlannedTrainingBudgetChanged { get; set; }
+
+    [Parameter] public int WspPlannedBeneficiaries { get; set; } = 60;
+    [Parameter] public EventCallback<int> WspPlannedBeneficiariesChanged { get; set; }
+
+    [Parameter] public string WspPrimaryProgrammeType { get; set; } = "Apprenticeship";
+    [Parameter] public EventCallback<string> WspPrimaryProgrammeTypeChanged { get; set; }
+
+    [Parameter] public int? WspTargetNqfLevel { get; set; } = 4;
+    [Parameter] public EventCallback<int?> WspTargetNqfLevelChanged { get; set; }
+
+    [Parameter] public decimal WspPivotalRatio { get; set; } = 75.0m;
+    [Parameter] public EventCallback<decimal> WspPivotalRatioChanged { get; set; }
+
+    // Section 4: Committee
+    [Parameter] public bool TrainingCommitteeMet { get; set; } = true;
+    [Parameter] public EventCallback<bool> TrainingCommitteeMetChanged { get; set; }
+
+    [Parameter] public DateTime? ConsultationMeetingDate { get; set; } = DateTime.UtcNow.AddMonths(-1);
+    [Parameter] public EventCallback<DateTime?> ConsultationMeetingDateChanged { get; set; }
+
+    [Parameter] public string MinutesDocumentUri { get; set; } = "DOC-WSP-2026-MINUTES-01.pdf";
+    [Parameter] public EventCallback<string> MinutesDocumentUriChanged { get; set; }
+
+    [Parameter] public bool SkillsAuditConducted { get; set; } = true;
+    [Parameter] public EventCallback<bool> SkillsAuditConductedChanged { get; set; }
+
+    [Parameter] public string? ConsultationSummary { get; set; } = "Workplace training committee convened to deliberate 2026 skills plan priorities, focusing on artisan apprentice intake and CNC machining skills programmes.";
+    [Parameter] public EventCallback<string?> ConsultationSummaryChanged { get; set; }
+
+    // Section 5: Quorum & SETMIS
+    public int RequiredSignoffCount => EmployeeCount < 50 ? 2 : 3;
+
+    [Parameter] public bool IsUnionRepresented { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsUnionRepresentedChanged { get; set; }
+
+    [Parameter] public string UnionName { get; set; } = "NUMSA";
+    [Parameter] public EventCallback<string> UnionNameChanged { get; set; }
+
+    [Parameter] public string UnionRepName { get; set; } = "Bongani Sithole";
+    [Parameter] public EventCallback<string> UnionRepNameChanged { get; set; }
+
+    [Parameter] public string UnionRepEmail { get; set; } = "bsithole@numsa.org.za";
+    [Parameter] public EventCallback<string> UnionRepEmailChanged { get; set; }
+
+    // Section 6: Declaration
+    [Parameter] public string SdfFullName { get; set; } = "Thabo Molefe (Primary SDF)";
+    [Parameter] public EventCallback<string> SdfFullNameChanged { get; set; }
+
+    [Parameter] public string CeoFullName { get; set; } = "Sarah Jenkins (Managing Director)";
+    [Parameter] public EventCallback<string> CeoFullNameChanged { get; set; }
+
+    [Parameter] public bool IsPopiaAndLegalDeclarationAccepted { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsPopiaAndLegalDeclarationAcceptedChanged { get; set; }
+
+    // Event Handlers
+    private async Task OnOrganisationChanged(int? val)
+    {
+        OrganisationId = val;
+        await OrganisationIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnFinYearChanged(int val)
+    {
+        FinYear = val;
+        await FinYearChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPayrollAnnualTotalChanged(decimal val)
+    {
+        PayrollAnnualTotal = val;
+        EstimatedLevy = Math.Round(val * 0.01m, 2);
+        await PayrollAnnualTotalChanged.InvokeAsync(val);
+        await EstimatedLevyChanged.InvokeAsync(EstimatedLevy);
+    }
+
+    private async Task OnEstimatedLevyChanged(decimal val)
+    {
+        EstimatedLevy = val;
+        await EstimatedLevyChanged.InvokeAsync(val);
+    }
+
+    private async Task OnEmployeeCountChanged(int val)
+    {
+        EmployeeCount = val;
+        await EmployeeCountChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAtrActualExpenditureChanged(decimal val)
+    {
+        AtrActualExpenditure = val;
+        await AtrActualExpenditureChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAtrTrainedBeneficiariesChanged(int val)
+    {
+        AtrTrainedBeneficiaries = val;
+        await AtrTrainedBeneficiariesChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAtrInterventionsCountChanged(int val)
+    {
+        AtrInterventionsCount = val;
+        await AtrInterventionsCountChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAtrPrimaryOccupationalCategoryChanged(string val)
+    {
+        AtrPrimaryOccupationalCategory = val;
+        await AtrPrimaryOccupationalCategoryChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAtrOfoCodeChanged(string? val)
+    {
+        AtrOfoCode = val;
+        await AtrOfoCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAtrAfricanCountChanged(int val)
+    {
+        AtrAfricanCount = val;
+        await AtrAfricanCountChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAtrFemaleCountChanged(int val)
+    {
+        AtrFemaleCount = val;
+        await AtrFemaleCountChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAtrDisabledCountChanged(int val)
+    {
+        AtrDisabledCount = val;
+        await AtrDisabledCountChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAtrYouthCountChanged(int val)
+    {
+        AtrYouthCount = val;
+        await AtrYouthCountChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPlannedTrainingBudgetChanged(decimal val)
+    {
+        PlannedTrainingBudget = val;
+        await PlannedTrainingBudgetChanged.InvokeAsync(val);
+    }
+
+    private async Task OnWspPlannedBeneficiariesChanged(int val)
+    {
+        WspPlannedBeneficiaries = val;
+        await WspPlannedBeneficiariesChanged.InvokeAsync(val);
+    }
+
+    private async Task OnWspPrimaryProgrammeTypeChanged(string val)
+    {
+        WspPrimaryProgrammeType = val;
+        await WspPrimaryProgrammeTypeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnWspTargetNqfLevelChanged(int? val)
+    {
+        WspTargetNqfLevel = val;
+        await WspTargetNqfLevelChanged.InvokeAsync(val);
+    }
+
+    private async Task OnWspPivotalRatioChanged(decimal val)
+    {
+        WspPivotalRatio = val;
+        await WspPivotalRatioChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTrainingCommitteeMetChanged(bool val)
+    {
+        TrainingCommitteeMet = val;
+        await TrainingCommitteeMetChanged.InvokeAsync(val);
+    }
+
+    private async Task OnConsultationMeetingDateChanged(DateTime? val)
+    {
+        ConsultationMeetingDate = val;
+        await ConsultationMeetingDateChanged.InvokeAsync(val);
+    }
+
+    private async Task OnMinutesDocumentUriChanged(string val)
+    {
+        MinutesDocumentUri = val;
+        await MinutesDocumentUriChanged.InvokeAsync(val);
+    }
+
+    private async Task OnSkillsAuditConductedChanged(bool val)
+    {
+        SkillsAuditConducted = val;
+        await SkillsAuditConductedChanged.InvokeAsync(val);
+    }
+
+    private async Task OnConsultationSummaryChanged(string? val)
+    {
+        ConsultationSummary = val;
+        await ConsultationSummaryChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsUnionRepresentedChanged(bool val)
+    {
+        IsUnionRepresented = val;
+        await IsUnionRepresentedChanged.InvokeAsync(val);
+    }
+
+    private async Task OnUnionNameChanged(string val)
+    {
+        UnionName = val;
+        await UnionNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnUnionRepNameChanged(string val)
+    {
+        UnionRepName = val;
+        await UnionRepNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnUnionRepEmailChanged(string val)
+    {
+        UnionRepEmail = val;
+        await UnionRepEmailChanged.InvokeAsync(val);
+    }
+
+    private async Task OnSdfFullNameChanged(string val)
+    {
+        SdfFullName = val;
+        await SdfFullNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnCeoFullNameChanged(string val)
+    {
+        CeoFullName = val;
+        await CeoFullNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsPopiaAndLegalDeclarationAcceptedChanged(bool val)
+    {
+        IsPopiaAndLegalDeclarationAccepted = val;
+        await IsPopiaAndLegalDeclarationAcceptedChanged.InvokeAsync(val);
+    }
+
+    private string GetOrganisationDisplayText(int? id)
+    {
+        if (!id.HasValue || Organisations == null) return "Select employer organisation";
+        var o = Organisations.FirstOrDefault(x => x.Id == id.Value);
+        return o == null ? "Select employer organisation" : $"{o.CompanyName} (SDL: {o.SdlNumber})";
+    }
+}

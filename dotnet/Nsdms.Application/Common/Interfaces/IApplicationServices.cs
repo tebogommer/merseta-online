@@ -55,5 +55,10 @@ public interface IErpIntegrationService
     Task<ErpDisbursementResult> DisbursePaymentAsync(string vendorReference, decimal amount, string paymentDescription, string currentUsername = "SYSTEM");
     Task<bool> SyncVendorDetailsAsync(int organisationId, string currentUsername = "SYSTEM");
     Task<bool> VerifyBankingDetailsAsync(int organisationId, string currentUsername = "SYSTEM");
+    Task<ErpOutboxMessage> EnqueueTranchePaymentBatchAsync(int tranchePaymentId, string currentUsername = "SYSTEM");
+    Task<ErpOutboxMessage> EnqueueMandatoryRebateDisbursementAsync(int rebateDisbursementId, string currentUsername = "SYSTEM");
+    Task<ErpOutboxMessage> EnqueueVendorSyncAsync(int organisationId, string currentUsername = "SYSTEM");
+    Task<ErpOutboxMessage> EnqueueBankingDetailsVerificationAsync(int organisationId, string currentUsername = "SYSTEM");
+    Task<ErpOutboxMessage> EnqueuePaymentDisbursementAsync(string vendorReference, decimal amount, string paymentDescription, string currentUsername = "SYSTEM");
     string GetActiveProviderName();
 }

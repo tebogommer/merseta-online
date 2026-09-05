@@ -186,4 +186,117 @@ public class ErpIntegrationService : IErpIntegrationService
         await db.SaveChangesAsync();
         return true;
     }
+
+    public async Task<ErpOutboxMessage> EnqueueTranchePaymentBatchAsync(int tranchePaymentId, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var payment = await db.GrantTranchePayments.Include(p => p.GrantApplication).FirstOrDefaultAsync(p => p.Id == tranchePaymentId);
+
+        var message = new ErpOutboxMessage
+        {
+            MessageType = "DgTrancheDisbursement",
+            ReferenceKey = tranchePaymentId.ToString(),
+            OrganisationId = payment?.GrantApplication?.OrganisationId,
+            PayloadJson = System.Text.Json.JsonSerializer.Serialize(new { tranchePaymentId }),
+            QueueStatusCode = "Pending",
+            ExecutionPriority = 2,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        };
+
+        db.ErpOutboxMessages.Add(message);
+        _audit.LogAction(db, "ErpOutboxMessage", message.Id, "EnqueueTranchePayment", currentUsername, null, message);
+        await db.SaveChangesAsync();
+        return message;
+    }
+
+    public async Task<ErpOutboxMessage> EnqueueMandatoryRebateDisbursementAsync(int rebateDisbursementId, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var rebate = await db.MandatoryGrantDisbursements.FindAsync(rebateDisbursementId);
+
+        var message = new ErpOutboxMessage
+        {
+            MessageType = "MgRebateDisbursement",
+            ReferenceKey = rebateDisbursementId.ToString(),
+            OrganisationId = rebate?.OrganisationId,
+            PayloadJson = System.Text.Json.JsonSerializer.Serialize(new { rebateDisbursementId }),
+            QueueStatusCode = "Pending",
+            ExecutionPriority = 2,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        };
+
+        db.ErpOutboxMessages.Add(message);
+        _audit.LogAction(db, "ErpOutboxMessage", message.Id, "EnqueueMandatoryRebate", currentUsername, null, message);
+        await db.SaveChangesAsync();
+        return message;
+    }
+
+    public async Task<ErpOutboxMessage> EnqueueVendorSyncAsync(int organisationId, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var org = await db.Organisations.FindAsync(organisationId);
+
+        var message = new ErpOutboxMessage
+        {
+            MessageType = "VendorSync",
+            ReferenceKey = organisationId.ToString(),
+            OrganisationId = organisationId,
+            PayloadJson = System.Text.Json.JsonSerializer.Serialize(new { organisationId, org?.CompanyName, org?.SdlNumber }),
+            QueueStatusCode = "Pending",
+            ExecutionPriority = 1,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        };
+
+        db.ErpOutboxMessages.Add(message);
+        _audit.LogAction(db, "ErpOutboxMessage", message.Id, "EnqueueVendorSync", currentUsername, null, message);
+        await db.SaveChangesAsync();
+        return message;
+    }
+
+    public async Task<ErpOutboxMessage> EnqueueBankingDetailsVerificationAsync(int organisationId, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var org = await db.Organisations.FindAsync(organisationId);
+
+        var message = new ErpOutboxMessage
+        {
+            MessageType = "BankingDetailsUpdate",
+            ReferenceKey = organisationId.ToString(),
+            OrganisationId = organisationId,
+            PayloadJson = System.Text.Json.JsonSerializer.Serialize(new { organisationId, org?.BankAccountNumber, org?.BankBranchCode }),
+            QueueStatusCode = "Pending",
+            ExecutionPriority = 1,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        };
+
+        db.ErpOutboxMessages.Add(message);
+        _audit.LogAction(db, "ErpOutboxMessage", message.Id, "EnqueueBankingDetailsVerification", currentUsername, null, message);
+        await db.SaveChangesAsync();
+        return message;
+    }
+
+    public async Task<ErpOutboxMessage> EnqueuePaymentDisbursementAsync(string vendorReference, decimal amount, string paymentDescription, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+
+        var message = new ErpOutboxMessage
+        {
+            MessageType = "PaymentDisbursement",
+            ReferenceKey = vendorReference,
+            PayloadJson = System.Text.Json.JsonSerializer.Serialize(new { vendorReference, amount, paymentDescription }),
+            QueueStatusCode = "Pending",
+            ExecutionPriority = 2,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        };
+
+        db.ErpOutboxMessages.Add(message);
+        _audit.LogAction(db, "ErpOutboxMessage", message.Id, "EnqueuePaymentDisbursement", currentUsername, null, message);
+        await db.SaveChangesAsync();
+        return message;
+    }
 }

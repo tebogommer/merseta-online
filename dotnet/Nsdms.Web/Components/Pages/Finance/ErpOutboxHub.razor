@@ -1,0 +1,447 @@
+﻿@page "/finance/erp-outbox"
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@attribute [Authorize]
+@inject IErpOutboxQueueService OutboxService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+<PageTitle>Dynamics GP Integration Outbox Hub - NSDMS</PageTitle>
+
+<EntityHeader Title="Dynamics GP integration outbox hub"
+              Subtitle="Universal resilient queue with automatic pause on GP outage and FIFO resumption"
+              ReferenceKey="A2-ERP-OUTBOX"
+              Status="@(_stats?.GpHealth.IsAvailable == true ? "Queue operational" : "Queue paused (GP offline)")"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="@(() => NavManager.NavigateTo("/finance/dg-claims"))"
+                   aria-label="Back to Claims Hub">
+            Back to claims
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.PlayCircleFilled"
+                   OnClick="ResumeQueueNow"
+                   Disabled="_isProcessing"
+                   aria-label="Check GP connectivity and resume queue">
+            @(_isProcessing ? "Processing..." : "Check GP & resume queue now")
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<div class="mt-4">
+    @if (_stats != null && !_stats.GpHealth.IsAvailable)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="mb-4" Elevation="2">
+            <div class="d-flex justify-space-between align-center">
+                <div>
+                    <strong>Dynamics GP Web Services Paused:</strong> @_stats.GpHealth.StatusMessage
+                </div>
+                <MudButton Variant="Variant.Outlined" Color="Color.Surface" Size="Size.Small" OnClick="CheckHealth">
+                    Re-check GP connectivity
+                </MudButton>
+            </div>
+        </MudAlert>
+    }
+
+    <!-- KPI Operational Cards -->
+    <MudGrid Spacing="3" Class="mb-4">
+        <MudItem xs="12" sm="6" md="2">
+            <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Total messages</MudText>
+                <MudText Typo="Typo.h6" Class="fw-bold">@(_stats?.TotalCount ?? 0)</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Pending &amp; queued</MudText>
+                <MudText Typo="Typo.h6" Class="fw-bold text-warning">@(_stats?.PendingCount ?? 0)</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Processing</MudText>
+                <MudText Typo="Typo.h6" Class="fw-bold text-primary">@(_stats?.ProcessingCount ?? 0)</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Delivered (GP confirmed)</MudText>
+                <MudText Typo="Typo.h6" Class="fw-bold text-success">@(_stats?.DeliveredCount ?? 0)</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Dead-letter / errors</MudText>
+                <MudText Typo="Typo.h6" Class="fw-bold text-danger">@((_stats?.DeadLetterCount ?? 0) + (_stats?.FailedRetryableCount ?? 0))</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">GP connectivity</MudText>
+                <div>
+                    @if (_stats?.GpHealth.IsAvailable == true)
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Online</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">Paused / Offline</MudChip>
+                    }
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Outbox Queue Data Table -->
+    <MudCard Elevation="2" Class="rounded-lg">
+        <MudCardHeader Class="pb-2">
+            <CardHeaderAvatar>
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                    <MudIcon Icon="@Icons.Material.Filled.SendAndArchive" />
+                </MudAvatar>
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Dynamics GP outbox message queue</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Transactional queue items waiting for or confirmed delivered to Dynamics GP</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <div class="d-flex align-center gap-2">
+                    <MudSelect T="string" Value="_statusFilter" ValueChanged="OnStatusFilterChanged" Label="Filter status" Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width: 160px;">
+                        <MudSelectItem Value="@("")">All statuses</MudSelectItem>
+                        <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
+                        <MudSelectItem Value="@("Processing")">Processing</MudSelectItem>
+                        <MudSelectItem Value="@("Delivered")">Delivered</MudSelectItem>
+                        <MudSelectItem Value="@("FailedRetryable")">Failed (retryable)</MudSelectItem>
+                        <MudSelectItem Value="@("DeadLetter")">Dead-letter</MudSelectItem>
+                    </MudSelect>
+                    <MudTextField @bind-Value="_searchString"
+                                  Placeholder="Search correlation ID or reference..."
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Small"
+                                  Margin="Margin.Dense"
+                                  Clearable="true"
+                                  Immediate="true" />
+                </div>
+            </CardHeaderActions>
+        </MudCardHeader>
+
+        <MudCardContent Class="pa-0">
+            @if (_loading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+            }
+            else
+            {
+                <MudTable Items="@FilteredMessages" Hover="true" Dense="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Correlation ID</MudTh>
+                        <MudTh>Operation type</MudTh>
+                        <MudTh>Reference key</MudTh>
+                        <MudTh>Organisation</MudTh>
+                        <MudTh>Priority</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Retries</MudTh>
+                        <MudTh>Next attempt / delivered</MudTh>
+                        <MudTh>GP transaction ref</MudTh>
+                        <MudTh Style="text-align: right;">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Correlation ID">
+                            <span class="font-mono text-muted small">@context.MessageCorrelationId[..Math.Min(12, context.MessageCorrelationId.Length)]...</span>
+                        </MudTd>
+                        <MudTd DataLabel="Operation type">
+                            <MudChip T="string" Size="Size.Small" Color="@GetMessageTypeColor(context.MessageType)" Variant="Variant.Outlined">
+                                @FormatMessageType(context.MessageType)
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Reference key">
+                            <strong class="font-mono">@context.ReferenceKey</strong>
+                        </MudTd>
+                        <MudTd DataLabel="Organisation">
+                            @(context.Organisation?.CompanyName ?? "System / N/A")
+                        </MudTd>
+                        <MudTd DataLabel="Priority">
+                            @if (context.ExecutionPriority == 1)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Filled">Pre-requisite</MudChip>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">Standard</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.QueueStatusCode)" Variant="Variant.Filled">
+                                @context.QueueStatusCode
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Retries">
+                            @context.RetryCount / @context.MaxRetries
+                        </MudTd>
+                        <MudTd DataLabel="Next attempt / delivered">
+                            @if (context.QueueStatusCode == "Delivered" && context.DeliveredAtUtc.HasValue)
+                            {
+                                <span class="text-success small">@context.DeliveredAtUtc.Value.ToString("yyyy-MM-dd HH:mm")</span>
+                            }
+                            else if (context.NextAttemptAtUtc.HasValue)
+                            {
+                                <span class="small">@context.NextAttemptAtUtc.Value.ToString("yyyy-MM-dd HH:mm:ss")</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="GP transaction ref">
+                            @if (!string.IsNullOrEmpty(context.TransactionReference))
+                            {
+                                <span class="font-mono text-info">@context.TransactionReference</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Actions" Style="text-align: right;">
+                            <div class="d-flex justify-end gap-1">
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                               Size="Size.Small"
+                                               Color="Color.Default"
+                                               OnClick="@(() => InspectMessage(context))"
+                                               aria-label="Inspect payload and diagnostics" />
+                                @if (context.QueueStatusCode == "FailedRetryable" || context.QueueStatusCode == "DeadLetter")
+                                {
+                                    <MudIconButton Icon="@Icons.Material.Filled.Replay"
+                                                   Size="Size.Small"
+                                                   Color="Color.Primary"
+                                                   OnClick="@(() => RetryMessage(context.Id))"
+                                                   aria-label="Retry message" />
+                                }
+                            </div>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-8 text-center text-muted">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Size="Size.Large" Class="mb-2 text-success" />
+                            <MudText Typo="Typo.body1">No outbox queue items match the current filter.</MudText>
+                            <MudText Typo="Typo.caption">All Dynamics GP messages have been successfully processed or the queue is clear.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                </MudTable>
+            }
+        </MudCardContent>
+    </MudCard>
+</div>
+
+<!-- Inspect Message Dialog -->
+<MudDialog @bind-Visible="_dialogVisible" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Code" Class="mr-2" />
+            Outbox message diagnostics
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_inspectedMessage != null)
+        {
+            <div class="d-flex flex-column gap-3">
+                <div>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Correlation ID</MudText>
+                    <div class="font-mono fw-bold">@_inspectedMessage.MessageCorrelationId</div>
+                </div>
+                <div>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Operation &amp; Reference</MudText>
+                    <div>@_inspectedMessage.MessageType (Reference: @_inspectedMessage.ReferenceKey)</div>
+                </div>
+                @if (!string.IsNullOrEmpty(_inspectedMessage.LastError))
+                {
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Error">Diagnostic error</MudText>
+                        <MudPaper Class="pa-2 bg-light text-danger font-mono small" Elevation="0">
+                            @_inspectedMessage.LastError
+                        </MudPaper>
+                    </div>
+                }
+                <div>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Serialized payload JSON</MudText>
+                    <MudPaper Class="pa-3 bg-dark text-white font-mono small rounded" Elevation="0" Style="max-height: 200px; overflow-y: auto;">
+                        <pre style="margin: 0; white-space: pre-wrap;">@_inspectedMessage.PayloadJson</pre>
+                    </MudPaper>
+                </div>
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _dialogVisible = false)">
+            Close
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private bool _loading = true;
+    private bool _isProcessing = false;
+    private string _statusFilter = string.Empty;
+    private string _searchString = string.Empty;
+
+    private ErpOutboxQueueStats? _stats;
+    private List<ErpOutboxMessage> _messages = new();
+
+    private bool _dialogVisible = false;
+    private ErpOutboxMessage? _inspectedMessage;
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Grants, Levies & Finance", href: "/finance/dg-claims"),
+        new BreadcrumbItem("Dynamics GP Outbox Hub", href: "/finance/erp-outbox", disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        try
+        {
+            _stats = await OutboxService.GetQueueStatsAsync();
+            _messages = await OutboxService.GetMessagesAsync(string.IsNullOrEmpty(_statusFilter) ? null : _statusFilter, 100);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading outbox queue: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task CheckHealth()
+    {
+        try
+        {
+            var health = await OutboxService.CheckGpHealthAsync();
+            if (health.IsAvailable)
+            {
+                Snackbar.Add($"GP connectivity confirmed: {health.StatusMessage}", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"GP is currently unavailable: {health.StatusMessage}", Severity.Warning);
+            }
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error testing GP health: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ResumeQueueNow()
+    {
+        _isProcessing = true;
+        try
+        {
+            var result = await OutboxService.ResumeQueueManuallyAsync("FinanceAdmin");
+            if (result.PausedDueToGpOutage)
+            {
+                Snackbar.Add($"Queue paused: {result.SummaryMessage}", Severity.Warning);
+            }
+            else
+            {
+                Snackbar.Add($"Queue processed {result.TotalProcessed} items ({result.SuccessCount} delivered, {result.FailedCount} failed).", Severity.Success);
+            }
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error resuming outbox queue: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task RetryMessage(int messageId)
+    {
+        try
+        {
+            var ok = await OutboxService.RetryMessageAsync(messageId, "FinanceAdmin");
+            if (ok)
+            {
+                Snackbar.Add($"Message {messageId} reset to Pending.", Severity.Success);
+                await LoadData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error retrying message: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void InspectMessage(ErpOutboxMessage msg)
+    {
+        _inspectedMessage = msg;
+        _dialogVisible = true;
+    }
+
+    private async Task OnStatusFilterChanged(string val)
+    {
+        _statusFilter = val;
+        await LoadData();
+    }
+
+    private IEnumerable<ErpOutboxMessage> FilteredMessages =>
+        string.IsNullOrWhiteSpace(_searchString)
+            ? _messages
+            : _messages.Where(m =>
+                m.MessageCorrelationId.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                m.ReferenceKey.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                m.MessageType.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                (m.Organisation?.CompanyName?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Delivered" => Color.Success,
+        "Processing" => Color.Primary,
+        "Pending" => Color.Warning,
+        "FailedRetryable" => Color.Warning,
+        "DeadLetter" => Color.Error,
+        _ => Color.Default
+    };
+
+    private Color GetMessageTypeColor(string type) => type switch
+    {
+        "VendorSync" => Color.Info,
+        "BankingDetailsUpdate" => Color.Secondary,
+        "DgTrancheDisbursement" => Color.Success,
+        "MgRebateDisbursement" => Color.Primary,
+        _ => Color.Default
+    };
+
+    private string FormatMessageType(string type) => type switch
+    {
+        "VendorSync" => "Vendor Master Sync",
+        "BankingDetailsUpdate" => "Banking Details Update",
+        "DgTrancheDisbursement" => "DG Tranche Disbursement",
+        "MgRebateDisbursement" => "MG Rebate Disbursement",
+        "PaymentDisbursement" => "Ad-hoc Disbursement",
+        _ => type
+    };
+}

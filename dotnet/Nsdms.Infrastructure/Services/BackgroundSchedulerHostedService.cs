@@ -48,6 +48,18 @@ public class BackgroundSchedulerHostedService : BackgroundService
                             await statutoryScheduler.ExecuteSetmisMonthlyDeltaJobAsync("SYSTEM_SCHEDULER", stoppingToken);
                         }
 
+                        // Process Microsoft Dynamics GP Resilient Outbox Queue
+                        var outboxService = scope.ServiceProvider.GetService<IErpOutboxQueueService>();
+                        if (outboxService != null)
+                        {
+                            var outboxResult = await outboxService.ProcessNextBatchAsync(20, stoppingToken);
+                            if (outboxResult.TotalProcessed > 0)
+                            {
+                                _logger.LogInformation("ERP Outbox Worker: Processed {Total} messages ({Success} delivered, {Failed} failed, Paused={Paused})",
+                                    outboxResult.TotalProcessed, outboxResult.SuccessCount, outboxResult.FailedCount, outboxResult.PausedDueToGpOutage);
+                            }
+                        }
+
                         // Automated SLA Task check and maintenance logic
                         var lastRun = DateTime.UtcNow;
                         await configService.SetConfigAsync("Scheduler.LastHeartbeat", lastRun.ToString("o"), "Scheduler", "Last recorded background scheduler execution timestamp", "String", "SYSTEM");

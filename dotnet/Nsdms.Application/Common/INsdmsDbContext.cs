@@ -236,6 +236,7 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<CompanyLearnerChangeRequest> CompanyLearnerChangeRequests { get; }
     DbSet<ErpPaymentBatchHeader> ErpPaymentBatchHeaders { get; }
     DbSet<ErpPaymentBatchEntry> ErpPaymentBatchEntries { get; }
+    DbSet<ErpOutboxMessage> ErpOutboxMessages { get; }
 
     // Phase 4: ETQA Assessor 3-Year Re-registration & CPD
     DbSet<AssessorReRegistrationApplication> AssessorReRegistrationApplications { get; }

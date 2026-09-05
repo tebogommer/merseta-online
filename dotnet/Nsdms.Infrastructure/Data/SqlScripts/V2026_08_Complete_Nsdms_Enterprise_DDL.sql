@@ -1159,5 +1159,40 @@ BEGIN
     PRINT 'Created table [dbo].[SarsLevyStaging].';
 END
 
+-- ErpOutboxMessage: Transactional Outbox Queue for Microsoft Dynamics GP Web Services Integration
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = N'ErpOutboxMessage' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE [dbo].[ErpOutboxMessage] (
+        [Id] INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_ErpOutboxMessage PRIMARY KEY CLUSTERED,
+        [MessageCorrelationId] NVARCHAR(64) NOT NULL,
+        [MessageType] NVARCHAR(50) NOT NULL,
+        [ReferenceKey] NVARCHAR(100) NOT NULL,
+        [OrganisationId] INT NULL,
+        [PayloadJson] NVARCHAR(MAX) NOT NULL CONSTRAINT DF_ErpOutboxMessage_Payload DEFAULT '{}',
+        [QueueStatusCode] NVARCHAR(50) NOT NULL CONSTRAINT DF_ErpOutboxMessage_Status DEFAULT 'Pending',
+        [RetryCount] INT NOT NULL CONSTRAINT DF_ErpOutboxMessage_Retry DEFAULT 0,
+        [MaxRetries] INT NOT NULL CONSTRAINT DF_ErpOutboxMessage_MaxRetries DEFAULT 5,
+        [NextAttemptAtUtc] DATETIME2 NOT NULL CONSTRAINT DF_ErpOutboxMessage_NextAttempt DEFAULT SYSUTCDATETIME(),
+        [LastAttemptAtUtc] DATETIME2 NULL,
+        [DeliveredAtUtc] DATETIME2 NULL,
+        [LastError] NVARCHAR(MAX) NULL,
+        [TransactionReference] NVARCHAR(100) NULL,
+        [GpBatchNumber] NVARCHAR(100) NULL,
+        [LockToken] NVARCHAR(100) NULL,
+        [LockExpiresAtUtc] DATETIME2 NULL,
+        [ExecutionPriority] INT NOT NULL CONSTRAINT DF_ErpOutboxMessage_Priority DEFAULT 2,
+        [CreatedAt] DATETIME2 NOT NULL CONSTRAINT DF_ErpOutboxMessage_CreatedAt DEFAULT SYSUTCDATETIME(),
+        [CreatedBy] NVARCHAR(100) NULL,
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX [IX_ErpOutboxMessage_Status_NextAttempt] ON [dbo].[ErpOutboxMessage] ([QueueStatusCode], [NextAttemptAtUtc], [ExecutionPriority]);
+    CREATE UNIQUE NONCLUSTERED INDEX [IX_ErpOutboxMessage_CorrelationId] ON [dbo].[ErpOutboxMessage] ([MessageCorrelationId]);
+    CREATE NONCLUSTERED INDEX [IX_ErpOutboxMessage_Type_Ref] ON [dbo].[ErpOutboxMessage] ([MessageType], [ReferenceKey]);
+    CREATE NONCLUSTERED INDEX [IX_ErpOutboxMessage_OrganisationId] ON [dbo].[ErpOutboxMessage] ([OrganisationId]);
+    PRINT 'Created table [dbo].[ErpOutboxMessage].';
+END
+
 PRINT 'Complete Idempotent Enterprise DDL Deployment Succeeded!';
+
 
