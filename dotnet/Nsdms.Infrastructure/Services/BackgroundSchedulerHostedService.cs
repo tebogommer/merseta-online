@@ -61,6 +61,12 @@ public class BackgroundSchedulerHostedService : BackgroundService
                         }
 
                         // Automated SLA Task check and maintenance logic
+                        var slaMonitoringService = scope.ServiceProvider.GetService<ISlaMonitoringService>();
+                        if (slaMonitoringService != null)
+                        {
+                            await slaMonitoringService.CheckTaskSlasAsync(stoppingToken);
+                        }
+
                         var lastRun = DateTime.UtcNow;
                         await configService.SetConfigAsync("Scheduler.LastHeartbeat", lastRun.ToString("o"), "Scheduler", "Last recorded background scheduler execution timestamp", "String", "SYSTEM");
                     }

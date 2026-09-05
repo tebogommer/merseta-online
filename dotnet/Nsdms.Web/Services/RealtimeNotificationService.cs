@@ -15,6 +15,7 @@ public class RealtimeNotificationService : IRealtimeNotificationService, ISignal
     public static event Action<string, string, string, string>? GlobalTaskAssigned;
     public static event Action<string, int, string, string, string>? GlobalWorkflowTransition;
     public static event Action<SystemNotificationDto>? GlobalUserNotification;
+    public static event Action<string, int>? GlobalSlaWarning;
 
     public event Action<string, string, string, string>? TaskAssignedReceived
     {
@@ -32,6 +33,12 @@ public class RealtimeNotificationService : IRealtimeNotificationService, ISignal
     {
         add => GlobalUserNotification += value;
         remove => GlobalUserNotification -= value;
+    }
+
+    public event Action<string, int>? SlaWarningReceived
+    {
+        add => GlobalSlaWarning += value;
+        remove => GlobalSlaWarning -= value;
     }
 
     public RealtimeNotificationService(
@@ -91,8 +98,10 @@ public class RealtimeNotificationService : IRealtimeNotificationService, ISignal
             {
                 var group = $"role_{assignedRole.Trim().ToLowerInvariant()}";
                 await _hubContext.Clients.Group(group).ReceiveTaskNotification(taskId, taskTitle, assignedRole, priority);
+                await _hubContext.Clients.Group(group).ReceiveTaskAssignment(taskId, taskTitle, assignedRole);
             }
             await _hubContext.Clients.All.ReceiveTaskNotification(taskId, taskTitle, assignedRole, priority);
+            await _hubContext.Clients.All.ReceiveTaskAssignment(taskId, taskTitle, assignedRole);
             _logger.LogInformation("SignalR: Dispatched task assignment notification for '{Title}' to role '{Role}'", taskTitle, assignedRole);
         }
         catch (Exception ex)
@@ -116,11 +125,32 @@ public class RealtimeNotificationService : IRealtimeNotificationService, ISignal
         }
     }
 
+    public async Task NotifySlaWarningAsync(string taskTitle, int hoursRemaining)
+    {
+        try
+        {
+            GlobalSlaWarning?.Invoke(taskTitle, hoursRemaining);
+
+            await _hubContext.Clients.All.ReceiveSlaWarning(taskTitle, hoursRemaining);
+            _logger.LogWarning("SignalR: Dispatched SLA warning alert for '{Title}' ({Hours}h remaining)", taskTitle, hoursRemaining);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to broadcast SignalR SLA warning.");
+        }
+    }
+
+    public async Task BroadcastSlaWarningAsync(string taskTitle, int hoursRemaining)
+    {
+        await NotifySlaWarningAsync(taskTitle, hoursRemaining);
+    }
+
     public async Task BroadcastAlertAsync(string message, string severity)
     {
         try
         {
             await _hubContext.Clients.All.ReceiveSystemAlert(message, severity);
+            await _hubContext.Clients.All.ReceiveBroadcastAlert(message, severity);
             _logger.LogInformation("SignalR: Dispatched system-wide alert: {Message}", message);
         }
         catch (Exception ex)

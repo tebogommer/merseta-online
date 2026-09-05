@@ -337,7 +337,7 @@
                     <MudText Typo="Typo.caption" Color="Color.Secondary">
                         Total Tasks: <strong class="font-monospace">@FilteredTasks.Count</strong>
                     </MudText>
-                    <MudTablePager PageSizeOptions="new int[] { 10, 20, 50, 100 }" />
+                    <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
                 </div>
             </PagerContent>
         </MudTable>
@@ -366,6 +366,9 @@
     protected override async Task OnInitializedAsync()
     {
         NotificationService.TaskAssignedReceived += OnTaskAssignedEvent;
+        NotificationService.WorkflowTransitionReceived += OnWorkflowTransitionEvent;
+        NotificationService.UserNotificationReceived += OnUserNotificationEvent;
+        NotificationService.SlaWarningReceived += OnSlaWarningEvent;
         await LoadTasksAsync();
     }
 
@@ -520,6 +523,45 @@
     {
         InvokeAsync(async () =>
         {
+            Snackbar.Add($"📋 New task assigned: '{taskTitle}' ({priority})", Severity.Info);
+            await LoadTasksAsync();
+            StateHasChanged();
+        });
+    }
+
+    private void OnWorkflowTransitionEvent(string entityType, int entityId, string fromState, string toState, string actor)
+    {
+        InvokeAsync(async () =>
+        {
+            await LoadTasksAsync();
+            StateHasChanged();
+        });
+    }
+
+    private void OnUserNotificationEvent(SystemNotificationDto notification)
+    {
+        InvokeAsync(async () =>
+        {
+            if (notification.NotificationType.Equals("WorkflowTask", StringComparison.OrdinalIgnoreCase))
+            {
+                await LoadTasksAsync();
+                StateHasChanged();
+            }
+        });
+    }
+
+    private void OnSlaWarningEvent(string taskTitle, int hoursRemaining)
+    {
+        InvokeAsync(async () =>
+        {
+            if (hoursRemaining <= 0)
+            {
+                Snackbar.Add($"🚨 Statutory SLA Breach: Task '{taskTitle}' is overdue!", Severity.Error);
+            }
+            else
+            {
+                Snackbar.Add($"⚠️ SLA Alert: Task '{taskTitle}' has {hoursRemaining}h remaining!", Severity.Warning);
+            }
             await LoadTasksAsync();
             StateHasChanged();
         });
@@ -528,5 +570,8 @@
     public void Dispose()
     {
         NotificationService.TaskAssignedReceived -= OnTaskAssignedEvent;
+        NotificationService.WorkflowTransitionReceived -= OnWorkflowTransitionEvent;
+        NotificationService.UserNotificationReceived -= OnUserNotificationEvent;
+        NotificationService.SlaWarningReceived -= OnSlaWarningEvent;
     }
 }

@@ -245,6 +245,7 @@
         NotificationService.TaskAssignedReceived += HandleTaskAssigned;
         NotificationService.WorkflowTransitionReceived += HandleWorkflowTransition;
         NotificationService.UserNotificationReceived += HandleUserNotification;
+        NotificationService.SlaWarningReceived += HandleSlaWarning;
 
         await RefreshNotificationsAsync();
     }
@@ -305,6 +306,22 @@
         });
     }
 
+    private void HandleSlaWarning(string taskTitle, int hoursRemaining)
+    {
+        InvokeAsync(async () =>
+        {
+            if (hoursRemaining <= 0)
+            {
+                Snackbar.Add($"🚨 Statutory SLA Breach: Task '{taskTitle}' has expired!", Severity.Error);
+            }
+            else
+            {
+                Snackbar.Add($"⚠️ SLA Warning: Task '{taskTitle}' has {hoursRemaining}h remaining before statutory breach!", Severity.Warning);
+            }
+            await RefreshNotificationsAsync();
+        });
+    }
+
     private async Task HandleNotificationClickAsync(SystemNotificationDto notification)
     {
         if (!notification.IsRead)
@@ -352,6 +369,7 @@
         NotificationService.TaskAssignedReceived -= HandleTaskAssigned;
         NotificationService.WorkflowTransitionReceived -= HandleWorkflowTransition;
         NotificationService.UserNotificationReceived -= HandleUserNotification;
+        NotificationService.SlaWarningReceived -= HandleSlaWarning;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

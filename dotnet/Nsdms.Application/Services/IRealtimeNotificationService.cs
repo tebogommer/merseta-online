@@ -21,6 +21,11 @@ public interface IRealtimeNotificationService
     event Action<Nsdms.Domain.Entities.SystemNotificationDto>? UserNotificationReceived;
 
     /// <summary>
+    /// Event fired when a task is approaching statutory SLA deadline or has breached.
+    /// </summary>
+    event Action<string, int>? SlaWarningReceived;
+
+    /// <summary>
     /// Broadcasts an instant task assignment event to the assigned role group.
     /// </summary>
     Task NotifyTaskAssignedAsync(string taskId, string taskTitle, string assignedRole, string priority);
@@ -29,6 +34,11 @@ public interface IRealtimeNotificationService
     /// Broadcasts a workflow state transition event across active connected clients.
     /// </summary>
     Task NotifyWorkflowTransitionAsync(string entityType, int entityId, string fromState, string toState, string actor);
+
+    /// <summary>
+    /// Broadcasts an SLA warning event for tasks nearing or exceeding their statutory completion window.
+    /// </summary>
+    Task NotifySlaWarningAsync(string taskTitle, int hoursRemaining);
 
     /// <summary>
     /// Broadcasts a high-priority system-wide alert.

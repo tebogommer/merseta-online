@@ -154,9 +154,10 @@ public class WorkflowEngineService : IWorkflowEngineService
         await context.SaveChangesAsync();
 
         // Create initial task if initial state assigns to a group
+        WorkflowTask? initialTask = null;
         if (!string.IsNullOrEmpty(initialState.AllowedGroupRole))
         {
-            var task = new WorkflowTask
+            initialTask = new WorkflowTask
             {
                 WorkflowInstanceId = instance.Id,
                 TaskTitle = $"{def.Name}: {entityTitle}",
@@ -167,7 +168,7 @@ public class WorkflowEngineService : IWorkflowEngineService
                 DueDate = DateTime.UtcNow.AddDays(7),
                 TargetRoute = GetTargetRoute(def.TargetEntityName, entityId)
             };
-            context.WorkflowTasks.Add(task);
+            context.WorkflowTasks.Add(initialTask);
             await context.SaveChangesAsync();
         }
 
@@ -182,6 +183,15 @@ public class WorkflowEngineService : IWorkflowEngineService
             MetadataJson = $"{{\"processCode\":\"{processCode}\",\"entityId\":{entityId},\"initialState\":\"{initialState.StateName}\"}}"
         });
         await context.SaveChangesAsync();
+
+        if (_notificationService != null)
+        {
+            _ = _notificationService.NotifyWorkflowTransitionAsync(def.TargetEntityName, entityId, string.Empty, initialState.StateName, initiatorName);
+            if (initialTask != null)
+            {
+                _ = _notificationService.NotifyTaskAssignedAsync(initialTask.Id.ToString(), initialTask.TaskTitle, initialTask.AssignedGroupRole ?? "All", initialTask.Priority);
+            }
+        }
 
         return new WorkflowActionResult(true, "Workflow started successfully.", instance, initialState.StateName);
     }
@@ -398,6 +408,12 @@ public class WorkflowEngineService : IWorkflowEngineService
         });
 
         await context.SaveChangesAsync();
+
+        if (_notificationService != null)
+        {
+            _ = _notificationService.NotifyTaskAssignedAsync(task.Id.ToString(), task.TaskTitle, task.AssignedGroupRole ?? "All", task.Priority);
+        }
+
         return task;
     }
 

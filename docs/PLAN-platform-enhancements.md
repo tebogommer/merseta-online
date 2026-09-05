@@ -50,35 +50,44 @@ This plan outlines the end-to-end architecture, technical design, database updat
 
 ---
 
-### Enhancement 2: Real-time SignalR Event Matrix & Live Task Sync
+### Enhancement 2: Real-time SignalR Event Matrix & Live Task Sync [COMPLETED - 100%]
 
 #### 2.1 Technical Stack & Protocols
-- **ASP.NET Core SignalR**: WebSocket transport with Long-Polling fallback.
-- **Circuit Lifecycle Synchronization**: Integration with Blazor Server circuits without circuit disconnection.
+- **ASP.NET Core SignalR**: WebSocket transport with Long-Polling fallback (`/hubs/notifications`).
+- **Circuit Lifecycle Synchronization**: Integration with Blazor Server circuits via `IRealtimeNotificationService` and `RealtimeNotificationService`.
 
 #### 2.2 Hub & Event Architecture
-- **Hub Definition**: `NsdmsNotificationHub : Hub` at `/hubs/notifications`.
+- **Hub Definition**: `NsdmsNotificationHub : Hub<INsdmsNotificationClient>` at `/hubs/notifications`.
 - **Event Contracts**:
   ```csharp
   public interface INsdmsNotificationClient
   {
+      Task ReceiveTaskNotification(string taskId, string taskTitle, string assignedRole, string priority);
       Task ReceiveTaskAssignment(string taskId, string title, string assignedRole);
-      Task ReceiveWorkflowTransition(string entityType, int entityId, string fromState, string toState);
+      Task ReceiveWorkflowTransition(string entityType, int entityId, string fromState, string toState, string actor);
       Task ReceiveSlaWarning(string taskTitle, int hoursRemaining);
+      Task ReceiveSystemAlert(string message, string severity);
       Task ReceiveBroadcastAlert(string message, string severity);
+      Task ReceiveUserNotification(SystemNotificationDto notification);
+      Task ReceiveNotificationCount(int unreadCount);
   }
   ```
 - **Server Action Bridge Hook**:
-  - `WorkflowEngineService` injects `IHubContext<NsdmsNotificationHub, INsdmsNotificationClient>`.
-  - On `ExecuteTransitionAsync`, the engine dispatches a typed broadcast to targeted user/role groups.
+  - `WorkflowEngineService` dispatches real-time events on `StartWorkflowAsync`, `AdvanceWorkflowAsync`, and `ClaimTaskAsync`.
+  - Dispatches typed broadcasts to targeted user/role groups via `IRealtimeNotificationService`.
+- **Automated SLA Monitoring Service**:
+  - `ISlaMonitoringService` / `SlaMonitoringService` continuously scans open tasks, calculates remaining hours, broadcasts real-time SLA alerts, and logs statutory notifications.
+  - Hooked into `BackgroundSchedulerHostedService` for automated periodic background evaluations.
 
 #### 2.3 UI Touchpoints
 - **MainLayout AppBar**:
-  - Live animated notification bell badge with unread count.
-  - Dropdown drawer previewing incoming real-time notifications.
+  - Live animated notification bell badge with unread count and real-time counter updates.
+  - Subscribes to `TaskAssignedReceived`, `WorkflowTransitionReceived`, `UserNotificationReceived`, and `SlaWarningReceived`.
+  - Dropdown drawer previewing incoming real-time notifications with "Mark all read" action.
 - **Universal Task Inbox** (`/tasks`):
-  - Table auto-refreshes seamlessly when a new task is routed to the current user's role.
-  - Instant toast confirmation: *"New Task Assigned: Review WSP Submission #WSP-2026-004"*.
+  - Standard 7-tier page sizes (`5, 10, 20, 50, 100, 250, 500`).
+  - Table auto-refreshes seamlessly when new tasks are assigned, claimed, or transitioned across roles without manual page reloads.
+  - Instant toast confirmations for new task assignments, workflow state updates, and statutory SLA breach warnings.
 
 ---
 

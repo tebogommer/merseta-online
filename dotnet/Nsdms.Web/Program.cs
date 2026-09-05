@@ -218,6 +218,9 @@ builder.Services.AddSingleton<ISignalRNotificationPublisher>(sp => sp.GetRequire
 // Persistent Notification Inbox Service
 builder.Services.AddScoped<INotificationService, Nsdms.Infrastructure.Services.NotificationService>();
 
+// SLA Monitoring & Statutory Deadline Alert Engine
+builder.Services.AddScoped<ISlaMonitoringService, Nsdms.Infrastructure.Services.SlaMonitoringService>();
+
 // Background Scheduler Hosted Service (Off by default)
 builder.Services.AddHostedService<Nsdms.Infrastructure.Services.BackgroundSchedulerHostedService>();
 

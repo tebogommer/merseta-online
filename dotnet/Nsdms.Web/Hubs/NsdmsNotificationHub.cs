@@ -6,8 +6,11 @@ namespace Nsdms.Web.Hubs;
 public interface INsdmsNotificationClient
 {
     Task ReceiveTaskNotification(string taskId, string taskTitle, string assignedRole, string priority);
+    Task ReceiveTaskAssignment(string taskId, string title, string assignedRole);
     Task ReceiveWorkflowTransition(string entityType, int entityId, string fromState, string toState, string actor);
+    Task ReceiveSlaWarning(string taskTitle, int hoursRemaining);
     Task ReceiveSystemAlert(string message, string severity);
+    Task ReceiveBroadcastAlert(string message, string severity);
     Task ReceiveUserNotification(SystemNotificationDto notification);
     Task ReceiveNotificationCount(int unreadCount);
 }
