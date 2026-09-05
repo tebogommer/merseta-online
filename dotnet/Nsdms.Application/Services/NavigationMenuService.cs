@@ -548,6 +548,7 @@ public class NavigationMenuService : INavigationMenuService
             new() { Id = "act-learner-signoff", Title = "Learner OTP Sign-off Portal", Href = "signoff/learner", Icon = "Draw", Category = "Quick Actions", Description = "Electronic tripartite agreement execution via digital OTP token", ItemType = "QuickAction" },
             new() { Id = "act-new-tradetest", Title = "Apply for Artisan Trade Test (26D)", Href = "tradetests/create", Icon = "FactCheck", Category = "Quick Actions", Description = "Contracted apprentice summative assessment booking", ItemType = "QuickAction" },
             new() { Id = "act-new-arpl", Title = "Apply for Section 28 ARPL Evaluation", Href = "tradetests/create?type=arpl", Icon = "Handyman", Category = "Quick Actions", Description = "Artisan Recognition of Prior Learning portfolio submission", ItemType = "QuickAction" },
+            new() { Id = "act-new-claim", Title = "Submit DG Tranche Claim & Voucher", Href = "finance/claims/create", Icon = "Payments", Category = "Quick Actions", Description = "Submit milestone deliverable invoice and generate payment voucher", ItemType = "QuickAction" },
             new() { Id = "act-new-wpa", Title = "Apply for Workplace Approval", Href = "workplace-approvals/create", Icon = "DomainAdd", Category = "Quick Actions", Description = "Register training workshop site and artisan mentor ratios", ItemType = "QuickAction" },
             new() { Id = "act-new-assessor-mod", Title = "Register as Assessor / Moderator", Href = "etqa/create", Icon = "VerifiedUser", Category = "Quick Actions", Description = "Submit new ETQA practitioner accreditation application", ItemType = "QuickAction" },
             new() { Id = "act-new-sdp", Title = "Apply for Training Provider (SDP) Accreditation", Href = "sdp/create", Icon = "AccountBalance", Category = "Quick Actions", Description = "Submit primary or secondary training provider accreditation", ItemType = "QuickAction" },
@@ -830,6 +831,21 @@ public class NavigationMenuService : INavigationMenuService
             },
             new()
             {
+                Id = "nav-dg-claim-wizard",
+                Title = "Submit tranche claim wizard",
+                Href = "finance/claims/create",
+                Icon = "Payments",
+                Category = "Grants, levies & finance",
+                Description = "Multi-step Discretionary Grant tranche milestone claim and serialized payment voucher wizard",
+                RequiredModule = AppPermissions.ModuleFinance,
+                RequiredAction = AppPermissions.ActionCreate,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Finance", "SDF" },
+                PersonaTags = new() { "All", "Admin", "Finance", "SDF" },
+                DisplayOrder = 9,
+                Keywords = new() { "claim wizard", "tranche claim", "payment voucher", "dofa", "invoice" }
+            },
+            new()
+            {
                 Id = "nav-finance-banking",
                 Title = "Banking details",
                 Href = "finance/banking-details",
@@ -979,6 +995,21 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "Admin", "Assessor", "SDP", "CLO" },
                 DisplayOrder = 2,
                 Keywords = new() { "trade tests", "arpl", "artisans", "red seal", "certification" }
+            },
+            new()
+            {
+                Id = "nav-tradetest-wizard",
+                Title = "Trade test application wizard",
+                Href = "trade-tests/apply",
+                Icon = "Construction",
+                Category = "Learner & artisan development",
+                Description = "Multi-step artisan trade test and ARPL Section 28 assessment booking wizard",
+                RequiredModule = AppPermissions.ModuleLearners,
+                RequiredAction = AppPermissions.ActionCreate,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "SDP", "SDF" },
+                PersonaTags = new() { "All", "Admin", "Assessor", "SDP", "SDF" },
+                DisplayOrder = 3,
+                Keywords = new() { "trade test wizard", "arpl wizard", "apply trade test", "red seal", "exam" }
             },
             new()
             {

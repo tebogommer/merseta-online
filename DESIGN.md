@@ -225,6 +225,7 @@ None. All multi-step flows strictly adhere to `WizardShell`.
 ---
 
 ## 11. Revision History & Changelog
+- **v1.4 (2026-09-05)**: Deployed Candidates #5 (`TradeTestApplicationWizard.razor`) and #6 (`DgTrancheClaimWizard.razor`) with shared forms (`TradeTestApplicationFields`, `DgTrancheClaimFields`), DOFA CFO dual authorization gating, serialized payment vouchers (`PV-{yyyy}-DG-{id:D5}`), and bUnit parity tests.
 - **v1.3 (2026-09-04)**: Codified and deployed the **Strategic Wizard Candidate Matrix** (Section 10.4). Implemented candidates #2 (`DgGrantApplicationWizard`), #3 (`LearnerAgreementRegistrationWizard`), #4 (`WorkplaceApprovalWizard`), and built the administrative `WizardCandidateMatrixHub` (`/wizards`). Added automated discovery and bUnit parity tests for all newly registered multi-step wizards.
 - **v1.2 (2026-09-04)**: Installed Enterprise Multi-Step Wizard Standard (Section 10). Implemented shared components (`WizardShell`, `WizardStepper`, `WizardStep`, `WizardReviewStep`), build-time guard `[NSDMS0001]`, rebuilt `AssessorReRegistrationWizard` with zero raw stepper tags, added bUnit parity tests and automated discovery tests.
 - **v1.1**: Added SARS Monthly Levy Reactive Streaming & SqlBulkCopy Staging Standard.

@@ -1,0 +1,482 @@
+﻿@namespace Nsdms.Web.Components.Shared.Forms
+@using MudBlazor
+@using Nsdms.Domain.Entities
+
+@if (Section == "Moa" || Section == "All")
+{
+    <div class="nsdms-section-moa mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int?"
+                           Label="Memorandum of Agreement (MoA)"
+                           Value="@GrantMoaId"
+                           ValueChanged="OnGrantMoaChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           ToStringFunc="@(id => GetMoaDisplayText(id))"
+                           HelperText="Select approved Discretionary Grant contracting instrument">
+                    @if (Moas != null)
+                    {
+                        @foreach (var m in Moas)
+                        {
+                            <MudSelectItem Value="@((int?)m.Id)">
+                                @($"{m.MoaNumber} - {m.GrantApplication?.Organisation?.CompanyName ?? "Beneficiary"} ({m.TotalContractValue:C0})")
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int?"
+                           Label="Project Implementation Plan (PIP)"
+                           Value="@ProjectImplementationPlanId"
+                           ValueChanged="OnPipChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           ToStringFunc="@(id => GetPipDisplayText(id))"
+                           HelperText="Associated implementation plan and learner batch">
+                    @if (Pips != null)
+                    {
+                        @foreach (var p in Pips)
+                        {
+                            <MudSelectItem Value="@((int?)p.Id)">
+                                @($"{p.PlanReferenceNumber} - Total Awarded: {p.TotalAwardedAmount:C0} ({p.TotalLearnersAwarded} Learners)")
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int?"
+                           Label="Milestone deliverable tranche"
+                           Value="@GrantMoaMilestoneId"
+                           ValueChanged="OnMilestoneChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           ToStringFunc="@(id => GetMilestoneDisplayText(id))"
+                           HelperText="Contractual tranche milestone per signed MoA schedule">
+                    @if (Milestones != null)
+                    {
+                        @foreach (var ms in Milestones)
+                        {
+                            <MudSelectItem Value="@((int?)ms.Id)">
+                                @($"Milestone #{ms.MilestoneNumber}: {ms.MilestoneName} ({ms.PaymentPercentage}% - {ms.MilestoneAmount:C0})")
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudCard Outlined="true" Class="pa-3 rounded-lg bg-surface">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Contract Budget Envelope Headroom</MudText>
+                    <div class="d-flex justify-space-between align-center mt-1">
+                        <MudText Typo="Typo.body2">Total MoA: <strong>@TotalMoaAllocation.ToString("C0")</strong></MudText>
+                        <MudText Typo="Typo.body2">Claimed: <strong>@TotalClaimedAmount.ToString("C0")</strong></MudText>
+                        <MudChip T="string" Color="@(RemainingEnvelopeBalance > 0 ? Color.Success : Color.Error)" Size="Size.Small" Variant="Variant.Filled">
+                            Headroom: @RemainingEnvelopeBalance.ToString("C0")
+                        </MudChip>
+                    </div>
+                </MudCard>
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Deliverables" || Section == "All")
+{
+    <div class="nsdms-section-deliverables mb-4">
+        <FormRow>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="int"
+                                 Label="Verified learner headcount"
+                                 Value="@LearnerDeliverableHeadcount"
+                                 ValueChanged="OnLearnerDeliverableHeadcountChanged"
+                                 Variant="Variant.Outlined"
+                                 Min="1"
+                                 Required="true"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Number of learners who completed this specific deliverable milestone" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudDatePicker Label="Milestone completion date"
+                               Date="@MilestoneCompletionDate"
+                               DateChanged="OnMilestoneCompletionDateChanged"
+                               Variant="Variant.Outlined"
+                               Required="true"
+                               Disabled="@IsReadOnly"
+                               HelperText="Official date deliverable was achieved" />
+            </MudItem>
+            <MudItem xs="12" md="4" Class="d-flex align-center">
+                <MudCheckBox T="bool"
+                             Label="Deliverable inspected &amp; signed off by CLO"
+                             Value="@IsDeliverableInspectedByClo"
+                             ValueChanged="OnIsDeliverableInspectedByCloChanged"
+                             Color="Color.Primary"
+                             Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string"
+                              Label="Deliverable description &amp; progress narrative"
+                              Value="@DeliverableDescription"
+                              ValueChanged="OnDeliverableDescriptionChanged"
+                              Variant="Variant.Outlined"
+                              Lines="3"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Detailed description of milestone deliverables completed (e.g. theoretical modular pass rate, workplace logbook progress, stipend disbursement confirmation)" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Finance" || Section == "All")
+{
+    <div class="nsdms-section-finance mb-4">
+        <FormRow>
+            <MudItem xs="12" md="4">
+                <MudSelect T="int"
+                           Label="Tranche number"
+                           Value="@TrancheNumber"
+                           ValueChanged="OnTrancheNumberChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="1 (Advance), 2 (Midpoint), 3 (Progress), 4 (Final)">
+                    <MudSelectItem Value="1">Tranche 1 (Advance Allocation)</MudSelectItem>
+                    <MudSelectItem Value="2">Tranche 2 (Midpoint Deliverable)</MudSelectItem>
+                    <MudSelectItem Value="3">Tranche 3 (Progress Assessment)</MudSelectItem>
+                    <MudSelectItem Value="4">Tranche 4 (Final Closeout)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="decimal"
+                                 Label="Claim amount (ZAR)"
+                                 Value="@ClaimAmount"
+                                 ValueChanged="OnClaimAmountChanged"
+                                 Variant="Variant.Outlined"
+                                 Format="N2"
+                                 Required="true"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Invoice amount excluding VAT where applicable" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="SARS tax compliance PIN"
+                              Value="@TaxCompliancePin"
+                              ValueChanged="OnTaxCompliancePinChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Active SARS Tax Compliance Status PIN" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Beneficiary bank name"
+                              Value="@BankName"
+                              ValueChanged="OnBankNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="e.g. Standard Bank, FNB, ABSA, Nedbank" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Bank account number"
+                              Value="@BankAccountNumber"
+                              ValueChanged="OnBankAccountNumberChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Verified commercial banking account number" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Branch / routing code"
+                              Value="@BranchCode"
+                              ValueChanged="OnBranchCodeChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Universal clearing code" />
+            </MudItem>
+            <MudItem xs="12" Class="d-flex align-center">
+                <MudCheckBox T="bool"
+                             Label="Verified FICA entity banking details match National Treasury Central Supplier Database (CSD)"
+                             Value="@IsBankingDetailsVerified"
+                             ValueChanged="OnIsBankingDetailsVerifiedChanged"
+                             Color="Color.Primary"
+                             Disabled="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Audit" || Section == "All")
+{
+    <div class="nsdms-section-audit mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string?"
+                              Label="Proof of delivery / invoice document reference"
+                              Value="@ProofOfDeliveryDocumentUri"
+                              ValueChanged="OnProofOfDeliveryDocumentUriChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Storage reference or document upload identifier (e.g. DOC-2026-CLAIM-0042.pdf)" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Supporting evidence bundle summary"
+                              Value="@EvidenceTypeSummary"
+                              ValueChanged="OnEvidenceTypeSummaryChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly"
+                              HelperText="List attached evidence items (e.g. Learner attendance registers, stipend bank receipts, assessor moderation reports)" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string?"
+                              Label="Audit compliance notes"
+                              Value="@AuditNotes"
+                              ValueChanged="OnAuditNotesChanged"
+                              Variant="Variant.Outlined"
+                              Lines="2"
+                              Disabled="@IsReadOnly"
+                              HelperText="Any special DOFA remarks, contract variation references, or auditor inspection memos" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Declaration" || Section == "All")
+{
+    <div class="nsdms-section-declaration mb-4">
+        @if (ClaimAmount >= 500000m)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-3" Icon="@Icons.Material.Filled.Security">
+                <strong>Delegation of Financial Authority (DOFA) High-Value Alert:</strong> This claim amount of <strong>@ClaimAmount.ToString("C2")</strong> reaches or exceeds the statutory R 500,000 threshold. It will automatically enforce a Tier 3 dual approval gate requiring the Chief Financial Officer (CFO) authorization prior to ERP payment batch export.
+            </MudAlert>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-3">
+                This claim is within the standard DOFA Tier 2 threshold (&lt; R 500,000). It will be routed through Client Liaison Officer (CLO) deliverable inspection and Finance Officer verification.
+            </MudAlert>
+        }
+
+        <MudCheckBox T="bool"
+                     Label="I declare that this milestone claim is compliant with the Public Finance Management Act (PFMA), merSETA Discretionary Grant regulations, and the signed Memorandum of Agreement (MoA)."
+                     Value="@IsPfmaAndMoaAttestationAccepted"
+                     ValueChanged="OnIsPfmaAndMoaAttestationAcceptedChanged"
+                     Color="Color.Primary"
+                     Disabled="@IsReadOnly"
+                     Required="true" />
+    </div>
+}
+
+@code {
+    [Parameter] public string Section { get; set; } = "All";
+    [Parameter] public bool IsReadOnly { get; set; } = false;
+
+    // Data Sources
+    [Parameter] public List<GrantMoa>? Moas { get; set; }
+    [Parameter] public List<ProjectImplementationPlan>? Pips { get; set; }
+    [Parameter] public List<GrantMoaMilestone>? Milestones { get; set; }
+
+    // Envelope Totals
+    [Parameter] public decimal TotalMoaAllocation { get; set; }
+    [Parameter] public decimal TotalClaimedAmount { get; set; }
+    [Parameter] public decimal RemainingEnvelopeBalance { get; set; }
+
+    // MoA Selection
+    [Parameter] public int? GrantMoaId { get; set; }
+    [Parameter] public EventCallback<int?> GrantMoaIdChanged { get; set; }
+
+    [Parameter] public int? ProjectImplementationPlanId { get; set; }
+    [Parameter] public EventCallback<int?> ProjectImplementationPlanIdChanged { get; set; }
+
+    [Parameter] public int? GrantMoaMilestoneId { get; set; }
+    [Parameter] public EventCallback<int?> GrantMoaMilestoneIdChanged { get; set; }
+
+    // Deliverables
+    [Parameter] public int LearnerDeliverableHeadcount { get; set; } = 25;
+    [Parameter] public EventCallback<int> LearnerDeliverableHeadcountChanged { get; set; }
+
+    [Parameter] public DateTime? MilestoneCompletionDate { get; set; } = DateTime.UtcNow.AddDays(-7);
+    [Parameter] public EventCallback<DateTime?> MilestoneCompletionDateChanged { get; set; }
+
+    [Parameter] public bool IsDeliverableInspectedByClo { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsDeliverableInspectedByCloChanged { get; set; }
+
+    [Parameter] public string DeliverableDescription { get; set; } = "Tranche milestone deliverable: 25 learners completed practical workplace rotation modules with verified artisan mentor logbook attestations.";
+    [Parameter] public EventCallback<string> DeliverableDescriptionChanged { get; set; }
+
+    // Finance
+    [Parameter] public int TrancheNumber { get; set; } = 2;
+    [Parameter] public EventCallback<int> TrancheNumberChanged { get; set; }
+
+    [Parameter] public decimal ClaimAmount { get; set; } = 350000.00m;
+    [Parameter] public EventCallback<decimal> ClaimAmountChanged { get; set; }
+
+    [Parameter] public string TaxCompliancePin { get; set; } = "9823471029";
+    [Parameter] public EventCallback<string> TaxCompliancePinChanged { get; set; }
+
+    [Parameter] public string BankName { get; set; } = "Standard Bank";
+    [Parameter] public EventCallback<string> BankNameChanged { get; set; }
+
+    [Parameter] public string BankAccountNumber { get; set; } = "0219482910";
+    [Parameter] public EventCallback<string> BankAccountNumberChanged { get; set; }
+
+    [Parameter] public string BranchCode { get; set; } = "051001";
+    [Parameter] public EventCallback<string> BranchCodeChanged { get; set; }
+
+    [Parameter] public bool IsBankingDetailsVerified { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsBankingDetailsVerifiedChanged { get; set; }
+
+    // Audit
+    [Parameter] public string? ProofOfDeliveryDocumentUri { get; set; } = "DOC-2026-CLAIM-0042.pdf";
+    [Parameter] public EventCallback<string?> ProofOfDeliveryDocumentUriChanged { get; set; }
+
+    [Parameter] public string EvidenceTypeSummary { get; set; } = "Learner attendance registers, stipend bank receipts, and CLO milestone sign-off letter.";
+    [Parameter] public EventCallback<string> EvidenceTypeSummaryChanged { get; set; }
+
+    [Parameter] public string? AuditNotes { get; set; } = "Audited and confirmed against parent MoA deliverable schedule.";
+    [Parameter] public EventCallback<string?> AuditNotesChanged { get; set; }
+
+    // Declaration
+    [Parameter] public bool IsPfmaAndMoaAttestationAccepted { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsPfmaAndMoaAttestationAcceptedChanged { get; set; }
+
+    // Handlers
+    private async Task OnGrantMoaChanged(int? val)
+    {
+        GrantMoaId = val;
+        await GrantMoaIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPipChanged(int? val)
+    {
+        ProjectImplementationPlanId = val;
+        await ProjectImplementationPlanIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnMilestoneChanged(int? val)
+    {
+        GrantMoaMilestoneId = val;
+        await GrantMoaMilestoneIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnLearnerDeliverableHeadcountChanged(int val)
+    {
+        LearnerDeliverableHeadcount = val;
+        await LearnerDeliverableHeadcountChanged.InvokeAsync(val);
+    }
+
+    private async Task OnMilestoneCompletionDateChanged(DateTime? val)
+    {
+        MilestoneCompletionDate = val;
+        await MilestoneCompletionDateChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsDeliverableInspectedByCloChanged(bool val)
+    {
+        IsDeliverableInspectedByClo = val;
+        await IsDeliverableInspectedByCloChanged.InvokeAsync(val);
+    }
+
+    private async Task OnDeliverableDescriptionChanged(string val)
+    {
+        DeliverableDescription = val;
+        await DeliverableDescriptionChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTrancheNumberChanged(int val)
+    {
+        TrancheNumber = val;
+        await TrancheNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnClaimAmountChanged(decimal val)
+    {
+        ClaimAmount = val;
+        await ClaimAmountChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTaxCompliancePinChanged(string val)
+    {
+        TaxCompliancePin = val;
+        await TaxCompliancePinChanged.InvokeAsync(val);
+    }
+
+    private async Task OnBankNameChanged(string val)
+    {
+        BankName = val;
+        await BankNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnBankAccountNumberChanged(string val)
+    {
+        BankAccountNumber = val;
+        await BankAccountNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnBranchCodeChanged(string val)
+    {
+        BranchCode = val;
+        await BranchCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsBankingDetailsVerifiedChanged(bool val)
+    {
+        IsBankingDetailsVerified = val;
+        await IsBankingDetailsVerifiedChanged.InvokeAsync(val);
+    }
+
+    private async Task OnProofOfDeliveryDocumentUriChanged(string? val)
+    {
+        ProofOfDeliveryDocumentUri = val;
+        await ProofOfDeliveryDocumentUriChanged.InvokeAsync(val);
+    }
+
+    private async Task OnEvidenceTypeSummaryChanged(string val)
+    {
+        EvidenceTypeSummary = val;
+        await EvidenceTypeSummaryChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAuditNotesChanged(string? val)
+    {
+        AuditNotes = val;
+        await AuditNotesChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsPfmaAndMoaAttestationAcceptedChanged(bool val)
+    {
+        IsPfmaAndMoaAttestationAccepted = val;
+        await IsPfmaAndMoaAttestationAcceptedChanged.InvokeAsync(val);
+    }
+
+    private string GetMoaDisplayText(int? id)
+    {
+        if (!id.HasValue || Moas == null) return "Select Memorandum of Agreement";
+        var m = Moas.FirstOrDefault(x => x.Id == id.Value);
+        return m == null ? "Select Memorandum of Agreement" : $"{m.MoaNumber} - {m.GrantApplication?.Organisation?.CompanyName ?? "Beneficiary"} ({m.TotalContractValue:C0})";
+    }
+
+    private string GetPipDisplayText(int? id)
+    {
+        if (!id.HasValue || Pips == null) return "Select Project Implementation Plan";
+        var p = Pips.FirstOrDefault(x => x.Id == id.Value);
+        return p == null ? "Select Project Implementation Plan" : $"{p.PlanReferenceNumber} ({p.TotalAwardedAmount:C0} - {p.TotalLearnersAwarded} Learners)";
+    }
+
+    private string GetMilestoneDisplayText(int? id)
+    {
+        if (!id.HasValue || Milestones == null) return "Select contractual milestone";
+        var ms = Milestones.FirstOrDefault(x => x.Id == id.Value);
+        return ms == null ? "Select contractual milestone" : $"Milestone #{ms.MilestoneNumber}: {ms.MilestoneName} ({ms.MilestoneAmount:C0})";
+    }
+}

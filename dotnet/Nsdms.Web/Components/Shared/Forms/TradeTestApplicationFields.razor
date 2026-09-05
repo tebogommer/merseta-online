@@ -1,0 +1,489 @@
+﻿@namespace Nsdms.Web.Components.Shared.Forms
+@using MudBlazor
+@using Nsdms.Domain.Entities
+
+@if (Section == "Route" || Section == "All")
+{
+    <div class="nsdms-section-route mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int?"
+                           Label="Candidate learner"
+                           Value="@CompanyLearnerId"
+                           ValueChanged="OnCompanyLearnerChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           ToStringFunc="@(id => GetLearnerDisplayText(id))"
+                           HelperText="Select the registered apprentice or ARPL candidate">
+                    @if (Learners != null)
+                    {
+                        @foreach (var l in Learners)
+                        {
+                            <MudSelectItem Value="@((int?)l.Id)">
+                                @($"{l.Person?.FirstName} {l.Person?.LastName} (ID: {l.Person?.RsaIdNumber ?? "N/A"}) - {l.LearnerContractNumber ?? "Apprentice"}")
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
+                           Label="Application route"
+                           Value="@ApplicationTypeCode"
+                           ValueChanged="OnApplicationTypeCodeChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="Statutory route under the Skills Development Act">
+                    <MudSelectItem Value="@("Section26D")">Section 26D (Contracted Apprenticeship)</MudSelectItem>
+                    <MudSelectItem Value="@("Section28")">Section 28 (ARPL - Recognition of Prior Learning)</MudSelectItem>
+                    <MudSelectItem Value="@("Section26F")">Section 26F (National Artisan Moderation Body Special Direct)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Designated trade title"
+                              Value="@TradeTitle"
+                              ValueChanged="OnTradeTitleChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Statutory trade title (e.g. Fitter and Turner, Boilermaker, Electrician)" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField T="string?"
+                              Label="Trade OFO code"
+                              Value="@TradeOfoCode"
+                              ValueChanged="OnTradeOfoCodeChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly"
+                              HelperText="6-digit Organising Framework for Occupations code" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudNumericField T="int"
+                                 Label="Attempt number"
+                                 Value="@AttemptNumber"
+                                 ValueChanged="OnAttemptNumberChanged"
+                                 Variant="Variant.Outlined"
+                                 Min="1"
+                                 Max="5"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="1 for initial attempt; >1 for re-assessment" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Theory" || Section == "All")
+{
+    <div class="nsdms-section-theory mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Technical qualification title"
+                              Value="@TheoryQualificationTitle"
+                              ValueChanged="OnTheoryQualificationTitleChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="e.g. National Technical Certificate N2, NCV Level 4, Technical Matric" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Training institution"
+                              Value="@TheoryInstitutionName"
+                              ValueChanged="OnTheoryInstitutionNameChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly"
+                              HelperText="TVET college, private technical college, or accredited SDP" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string"
+                              Label="Compulsory technical subjects passed"
+                              Value="@TheorySubjectsPassed"
+                              ValueChanged="OnTheorySubjectsPassedChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="List completed subjects (e.g. Mathematics N2, Engineering Science N2, Trade Theory N2, Engineering Drawing N2)" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="Theory completion date"
+                               Date="@TheoryCompletionDate"
+                               DateChanged="OnTheoryCompletionDateChanged"
+                               Variant="Variant.Outlined"
+                               Disabled="@IsReadOnly"
+                               HelperText="Date theoretical modular certification was achieved" />
+            </MudItem>
+            <MudItem xs="12" md="6" Class="d-flex align-center">
+                <MudCheckBox T="bool"
+                             Label="Candidate meets all statutory N2 / NCV Level 4 credit prerequisites"
+                             Value="@IsCurricularPrerequisitesMet"
+                             ValueChanged="OnIsCurricularPrerequisitesMetChanged"
+                             Color="Color.Primary"
+                             Disabled="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Logbook" || Section == "All")
+{
+    <div class="nsdms-section-logbook mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Current employer name"
+                              Value="@CurrentEmployerName"
+                              ValueChanged="OnCurrentEmployerNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Employer organisation where practical workplace experience was gained" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField T="int"
+                                 Label="Workplace practical duration (weeks)"
+                                 Value="@LogbookWeeksCompleted"
+                                 ValueChanged="OnLogbookWeeksCompletedChanged"
+                                 Variant="Variant.Outlined"
+                                 Min="1"
+                                 Max="300"
+                                 Required="true"
+                                 Disabled="@IsReadOnly"
+                                 HelperText="Minimum 80 weeks (approx. 3,200 hours) required for Section 28 ARPL entry" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Workplace artisan mentor full name"
+                              Value="@WorkplaceMentorName"
+                              ValueChanged="OnWorkplaceMentorNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Qualified artisan responsible for workplace logbook supervision" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string?"
+                              Label="Mentor Red Seal certificate number"
+                              Value="@MentorArtisanTradeNumber"
+                              ValueChanged="OnMentorArtisanTradeNumberChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly"
+                              HelperText="Mentor's Red Seal Trade Certificate serial number" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Employer contact phone number"
+                              Value="@EmployerContactPhone"
+                              ValueChanged="OnEmployerContactPhoneChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly"
+                              HelperText="Direct telephone for workplace logbook verification" />
+            </MudItem>
+            <MudItem xs="12" md="6" Class="d-flex align-center">
+                <MudCheckBox T="bool"
+                             Label="Verified employer logbook &amp; Portfolio of Evidence (PoE) attached"
+                             Value="@IsLogbookAttestationVerified"
+                             ValueChanged="OnIsLogbookAttestationVerifiedChanged"
+                             Color="Color.Primary"
+                             Disabled="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Centre" || Section == "All")
+{
+    <div class="nsdms-section-centre mb-4">
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int?"
+                           Label="Accredited Trade Test Centre (TTC)"
+                           Value="@TrainingProviderId"
+                           ValueChanged="OnTrainingProviderChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           ToStringFunc="@(id => GetProviderDisplayText(id))"
+                           HelperText="Select the NAMB-accredited testing facility">
+                    @if (TrainingProviders != null)
+                    {
+                        @foreach (var p in TrainingProviders)
+                        {
+                            <MudSelectItem Value="@((int?)p.Id)">
+                                @($"{p.ProviderName} (Accreditation: {p.AccreditationNumber ?? "Active"})")
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="Preferred assessment date"
+                               Date="@PreferredAssessmentDate"
+                               DateChanged="OnPreferredAssessmentDateChanged"
+                               Variant="Variant.Outlined"
+                               Required="true"
+                               Disabled="@IsReadOnly"
+                               HelperText="Earliest candidate availability for trade test practical examination" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
+                           Label="Assessment funding subsidy category"
+                           Value="@SubsidyCategory"
+                           ValueChanged="OnSubsidyCategoryChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="Trade test examination fee funding mechanism">
+                    <MudSelectItem Value="@("merSETA Subsidised")">merSETA Funded Grant Subsidy</MudSelectItem>
+                    <MudSelectItem Value="@("Employer Funded")">Host Employer Funded</MudSelectItem>
+                    <MudSelectItem Value="@("Private Candidate")">Private Candidate Self-Funded</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6" Class="d-flex align-center">
+                <MudCheckBox T="bool"
+                             Label="Candidate equipped with SABS-approved safety PPE and trade artisan toolkit"
+                             Value="@IsToolAndPpeReady"
+                             ValueChanged="OnIsToolAndPpeReadyChanged"
+                             Color="Color.Primary"
+                             Disabled="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Declaration" || Section == "All")
+{
+    <div class="nsdms-section-declaration mb-4">
+        <MudAlert Severity="Severity.Info" Class="mb-3">
+            In terms of Section 26D and Section 28 of the Skills Development Act (Act 97 of 1998) and NAMB Trade Test Regulations, all information supplied will be cross-referenced with national databases. Candidates achieving at least 70% in practical evaluations and 100% in compulsory safety modules qualify for Red Seal serial certification.
+        </MudAlert>
+        <MudCheckBox T="bool"
+                     Label="I solemnly declare that all educational certificates, workplace logbooks, and candidate identity credentials submitted are authentic and correct."
+                     Value="@IsPopiaAndCandidateDeclarationAccepted"
+                     ValueChanged="OnIsPopiaAndCandidateDeclarationAcceptedChanged"
+                     Color="Color.Primary"
+                     Disabled="@IsReadOnly"
+                     Required="true" />
+    </div>
+}
+
+@code {
+    [Parameter] public string Section { get; set; } = "All";
+    [Parameter] public bool IsReadOnly { get; set; } = false;
+
+    // Data Sources
+    [Parameter] public List<CompanyLearner>? Learners { get; set; }
+    [Parameter] public List<TrainingProvider>? TrainingProviders { get; set; }
+
+    // Route Parameters
+    [Parameter] public int? CompanyLearnerId { get; set; }
+    [Parameter] public EventCallback<int?> CompanyLearnerIdChanged { get; set; }
+
+    [Parameter] public string ApplicationTypeCode { get; set; } = "Section26D";
+    [Parameter] public EventCallback<string> ApplicationTypeCodeChanged { get; set; }
+
+    [Parameter] public string TradeTitle { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> TradeTitleChanged { get; set; }
+
+    [Parameter] public string? TradeOfoCode { get; set; }
+    [Parameter] public EventCallback<string?> TradeOfoCodeChanged { get; set; }
+
+    [Parameter] public int AttemptNumber { get; set; } = 1;
+    [Parameter] public EventCallback<int> AttemptNumberChanged { get; set; }
+
+    // Theory Parameters
+    [Parameter] public string TheoryQualificationTitle { get; set; } = "National Technical Certificate N2";
+    [Parameter] public EventCallback<string> TheoryQualificationTitleChanged { get; set; }
+
+    [Parameter] public string TheoryInstitutionName { get; set; } = "Ekurhuleni East TVET College";
+    [Parameter] public EventCallback<string> TheoryInstitutionNameChanged { get; set; }
+
+    [Parameter] public string TheorySubjectsPassed { get; set; } = "Mathematics N2, Engineering Science N2, Trade Theory N2, Engineering Drawing N2";
+    [Parameter] public EventCallback<string> TheorySubjectsPassedChanged { get; set; }
+
+    [Parameter] public DateTime? TheoryCompletionDate { get; set; } = DateTime.UtcNow.AddMonths(-12);
+    [Parameter] public EventCallback<DateTime?> TheoryCompletionDateChanged { get; set; }
+
+    [Parameter] public bool IsCurricularPrerequisitesMet { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsCurricularPrerequisitesMetChanged { get; set; }
+
+    // Logbook Parameters
+    [Parameter] public string CurrentEmployerName { get; set; } = "Toyota SA Manufacturing";
+    [Parameter] public EventCallback<string> CurrentEmployerNameChanged { get; set; }
+
+    [Parameter] public int LogbookWeeksCompleted { get; set; } = 120;
+    [Parameter] public EventCallback<int> LogbookWeeksCompletedChanged { get; set; }
+
+    [Parameter] public string WorkplaceMentorName { get; set; } = "Johan van der Merwe";
+    [Parameter] public EventCallback<string> WorkplaceMentorNameChanged { get; set; }
+
+    [Parameter] public string? MentorArtisanTradeNumber { get; set; } = "TT-NAMB-2018-0941";
+    [Parameter] public EventCallback<string?> MentorArtisanTradeNumberChanged { get; set; }
+
+    [Parameter] public string EmployerContactPhone { get; set; } = "011 884 9000";
+    [Parameter] public EventCallback<string> EmployerContactPhoneChanged { get; set; }
+
+    [Parameter] public bool IsLogbookAttestationVerified { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsLogbookAttestationVerifiedChanged { get; set; }
+
+    // Centre Parameters
+    [Parameter] public int? TrainingProviderId { get; set; }
+    [Parameter] public EventCallback<int?> TrainingProviderIdChanged { get; set; }
+
+    [Parameter] public DateTime? PreferredAssessmentDate { get; set; } = DateTime.UtcNow.AddDays(30);
+    [Parameter] public EventCallback<DateTime?> PreferredAssessmentDateChanged { get; set; }
+
+    [Parameter] public string SubsidyCategory { get; set; } = "merSETA Subsidised";
+    [Parameter] public EventCallback<string> SubsidyCategoryChanged { get; set; }
+
+    [Parameter] public bool IsToolAndPpeReady { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsToolAndPpeReadyChanged { get; set; }
+
+    // Declaration Parameter
+    [Parameter] public bool IsPopiaAndCandidateDeclarationAccepted { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsPopiaAndCandidateDeclarationAcceptedChanged { get; set; }
+
+    // Event Handlers
+    private async Task OnCompanyLearnerChanged(int? val)
+    {
+        CompanyLearnerId = val;
+        await CompanyLearnerIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnApplicationTypeCodeChanged(string val)
+    {
+        ApplicationTypeCode = val;
+        await ApplicationTypeCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTradeTitleChanged(string val)
+    {
+        TradeTitle = val;
+        await TradeTitleChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTradeOfoCodeChanged(string? val)
+    {
+        TradeOfoCode = val;
+        await TradeOfoCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAttemptNumberChanged(int val)
+    {
+        AttemptNumber = val;
+        await AttemptNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTheoryQualificationTitleChanged(string val)
+    {
+        TheoryQualificationTitle = val;
+        await TheoryQualificationTitleChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTheoryInstitutionNameChanged(string val)
+    {
+        TheoryInstitutionName = val;
+        await TheoryInstitutionNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTheorySubjectsPassedChanged(string val)
+    {
+        TheorySubjectsPassed = val;
+        await TheorySubjectsPassedChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTheoryCompletionDateChanged(DateTime? val)
+    {
+        TheoryCompletionDate = val;
+        await TheoryCompletionDateChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsCurricularPrerequisitesMetChanged(bool val)
+    {
+        IsCurricularPrerequisitesMet = val;
+        await IsCurricularPrerequisitesMetChanged.InvokeAsync(val);
+    }
+
+    private async Task OnCurrentEmployerNameChanged(string val)
+    {
+        CurrentEmployerName = val;
+        await CurrentEmployerNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnLogbookWeeksCompletedChanged(int val)
+    {
+        LogbookWeeksCompleted = val;
+        await LogbookWeeksCompletedChanged.InvokeAsync(val);
+    }
+
+    private async Task OnWorkplaceMentorNameChanged(string val)
+    {
+        WorkplaceMentorName = val;
+        await WorkplaceMentorNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnMentorArtisanTradeNumberChanged(string? val)
+    {
+        MentorArtisanTradeNumber = val;
+        await MentorArtisanTradeNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnEmployerContactPhoneChanged(string val)
+    {
+        EmployerContactPhone = val;
+        await EmployerContactPhoneChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsLogbookAttestationVerifiedChanged(bool val)
+    {
+        IsLogbookAttestationVerified = val;
+        await IsLogbookAttestationVerifiedChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTrainingProviderChanged(int? val)
+    {
+        TrainingProviderId = val;
+        await TrainingProviderIdChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPreferredAssessmentDateChanged(DateTime? val)
+    {
+        PreferredAssessmentDate = val;
+        await PreferredAssessmentDateChanged.InvokeAsync(val);
+    }
+
+    private async Task OnSubsidyCategoryChanged(string val)
+    {
+        SubsidyCategory = val;
+        await SubsidyCategoryChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsToolAndPpeReadyChanged(bool val)
+    {
+        IsToolAndPpeReady = val;
+        await IsToolAndPpeReadyChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsPopiaAndCandidateDeclarationAcceptedChanged(bool val)
+    {
+        IsPopiaAndCandidateDeclarationAccepted = val;
+        await IsPopiaAndCandidateDeclarationAcceptedChanged.InvokeAsync(val);
+    }
+
+    private string GetLearnerDisplayText(int? id)
+    {
+        if (!id.HasValue || Learners == null) return "Select candidate learner";
+        var l = Learners.FirstOrDefault(x => x.Id == id.Value);
+        return l == null ? "Select candidate learner" : $"{l.Person?.FirstName} {l.Person?.LastName} ({l.LearnerContractNumber ?? "Apprentice"})";
+    }
+
+    private string GetProviderDisplayText(int? id)
+    {
+        if (!id.HasValue || TrainingProviders == null) return "Select Trade Test Centre";
+        var p = TrainingProviders.FirstOrDefault(x => x.Id == id.Value);
+        return p == null ? "Select Trade Test Centre" : $"{p.ProviderName} ({p.AccreditationNumber ?? "Accredited"})";
+    }
+}

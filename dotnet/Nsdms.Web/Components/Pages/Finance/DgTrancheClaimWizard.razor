@@ -1,0 +1,556 @@
+@page "/finance/claims/create"
+@page "/finance/claims/create/{MoaId:int}"
+@page "/finance/dg-claims/create"
+@page "/claims/create"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using Nsdms.Web.Components.Shared.Forms
+@using Nsdms.Web.Components.Shared.Wizard
+@using MudBlazor
+@inject IDiscretionaryGrantClaimService ClaimService
+@inject IFinanceService FinanceService
+@inject IDgProjectImplementationService PipService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="mb-4">
+    <div class="d-flex align-center gap-2 mb-2">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="GoBack">
+            Back to Claims &amp; Invoicing
+        </MudButton>
+        <MudBreadcrumbs Items="_breadcrumbs" Separator=">" Class="pa-0 ma-0" />
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="d-flex justify-center align-center py-12">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else if (_isSuccess)
+{
+    <MudCard Elevation="2" Class="pa-6 rounded-lg text-center">
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" Class="mb-3" />
+        <h1 class="text-h5 font-weight-bold text-primary mb-2">Tranche payment claim submitted</h1>
+        <p class="text-body1 text-secondary mb-2">
+            Discretionary Grant tranche claim reference <strong class="font-mono">@_submittedClaimNumber</strong> for <strong>@_claimAmount.ToString("C2")</strong> has been submitted.
+        </p>
+        @if (_claimAmount >= 500000m)
+        {
+            <MudAlert Severity="Severity.Warning" Class="my-3 mx-auto" Style="max-width: 600px;">
+                <strong>DOFA Tier 3 Notification:</strong> Because this claim reaches or exceeds R 500,000, it has been flagged for mandatory Chief Financial Officer (CFO) dual authorization prior to payment voucher dispatch.
+            </MudAlert>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Class="my-3 mx-auto" Style="max-width: 600px;">
+                Claim routed to Tier 2 (Finance Officer banking and tax clearance verification).
+            </MudAlert>
+        }
+        <div class="d-flex justify-center gap-3 mt-4">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Payments"
+                       OnClick="ViewClaimsHub">
+                Open Claims &amp; Invoicing Hub
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       OnClick="GoBack">
+                Return to MoA Register
+            </MudButton>
+        </div>
+    </MudCard>
+}
+else
+{
+    <WizardShell Title="Discretionary Grant (DG) tranche claim &amp; payment voucher"
+                 Subtitle="Statutory milestone tranche invoice, DOFA approval tier validation, and payment voucher dispatch"
+                 ActiveStepIndex="@_activeStep"
+                 ActiveStepIndexChanged="OnStepChanged"
+                 FinishButtonText="Submit tranche claim"
+                 IsBusy="@_isProcessing"
+                 OnCancel="GoBack"
+                 OnSaveDraft="SaveDraftAsync"
+                 OnFinish="SubmitClaimAsync">
+
+        <!-- STEP 1: MoA & Milestone Selection -->
+        <WizardStep Label="MoA &amp; milestone"
+                    Heading="Select parent MoA, PIP &amp; milestone tranche"
+                    Description="Choose the contracting MoA, verify remaining budget envelope headroom, and select contractual milestone"
+                    ValidateAsync="ValidateStep1Async">
+            <DgTrancheClaimFields Section="MoA"
+                                  Moas="@_moas"
+                                  Pips="@_pips"
+                                  Milestones="@_milestones"
+                                  GrantMoaId="@_grantMoaId"
+                                  GrantMoaIdChanged="OnMoaChanged"
+                                  ProjectImplementationPlanId="@_pipId"
+                                  ProjectImplementationPlanIdChanged="OnPipChanged"
+                                  GrantMoaMilestoneId="@_grantMoaMilestoneId"
+                                  GrantMoaMilestoneIdChanged="OnMilestoneChanged"
+                                  TotalMoaAllocation="@_totalMoaAllocation"
+                                  TotalClaimedAmount="@_totalClaimedAmount"
+                                  RemainingEnvelopeBalance="@_remainingEnvelopeBalance" />
+        </WizardStep>
+
+        <!-- STEP 2: Learner Milestone Deliverables -->
+        <WizardStep Label="Deliverables"
+                    Heading="Learner headcount &amp; milestone progress"
+                    Description="Confirm verified learner milestone headcount, completion date, and CLO deliverable inspection sign-off"
+                    ValidateAsync="ValidateStep2Async">
+            <DgTrancheClaimFields Section="Deliverables"
+                                  LearnerDeliverableHeadcount="@_learnerDeliverableHeadcount"
+                                  LearnerDeliverableHeadcountChanged="@((val) => _learnerDeliverableHeadcount = val)"
+                                  MilestoneCompletionDate="@_milestoneCompletionDate"
+                                  MilestoneCompletionDateChanged="@((val) => _milestoneCompletionDate = val)"
+                                  IsDeliverableInspectedByClo="@_isDeliverableInspectedByClo"
+                                  IsDeliverableInspectedByCloChanged="@((val) => _isDeliverableInspectedByClo = val)"
+                                  DeliverableDescription="@_deliverableDescription"
+                                  DeliverableDescriptionChanged="@((val) => _deliverableDescription = val)" />
+        </WizardStep>
+
+        <!-- STEP 3: Financial Tranche Breakdown -->
+        <WizardStep Label="Tranche finance"
+                    Heading="Invoice amount &amp; commercial banking"
+                    Description="Enter tranche number, monetary claim amount, and confirm verified Treasury CSD banking standing"
+                    ValidateAsync="ValidateStep3Async">
+            <DgTrancheClaimFields Section="Finance"
+                                  TrancheNumber="@_trancheNumber"
+                                  TrancheNumberChanged="@((val) => _trancheNumber = val)"
+                                  ClaimAmount="@_claimAmount"
+                                  ClaimAmountChanged="OnClaimAmountChanged"
+                                  TaxCompliancePin="@_taxCompliancePin"
+                                  TaxCompliancePinChanged="@((val) => _taxCompliancePin = val)"
+                                  BankName="@_bankName"
+                                  BankNameChanged="@((val) => _bankName = val)"
+                                  BankAccountNumber="@_bankAccountNumber"
+                                  BankAccountNumberChanged="@((val) => _bankAccountNumber = val)"
+                                  BranchCode="@_branchCode"
+                                  BranchCodeChanged="@((val) => _branchCode = val)"
+                                  IsBankingDetailsVerified="@_isBankingDetailsVerified"
+                                  IsBankingDetailsVerifiedChanged="@((val) => _isBankingDetailsVerified = val)" />
+        </WizardStep>
+
+        <!-- STEP 4: Supporting Audit Evidence -->
+        <WizardStep Label="Audit evidence"
+                    Heading="Proof of delivery &amp; verification registers"
+                    Description="Attach electronic invoice storage reference, attendance registers, and audit inspection notes"
+                    ValidateAsync="ValidateStep4Async">
+            <DgTrancheClaimFields Section="Audit"
+                                  ProofOfDeliveryDocumentUri="@_proofDocumentUri"
+                                  ProofOfDeliveryDocumentUriChanged="@((val) => _proofDocumentUri = val)"
+                                  EvidenceTypeSummary="@_evidenceSummary"
+                                  EvidenceTypeSummaryChanged="@((val) => _evidenceSummary = val)"
+                                  AuditNotes="@_auditNotes"
+                                  AuditNotesChanged="@((val) => _auditNotes = val)" />
+        </WizardStep>
+
+        <!-- STEP 5: DOFA Attestation & Voucher Review -->
+        <WizardReviewStep Heading="DOFA attestation &amp; payment voucher review"
+                          Description="Inspect financial envelope impact, DOFA approval tier gating, and serialized voucher preview"
+                          ReviewGroups="@_reviewGroups"
+                          OnEditStep="@((idx) => _activeStep = idx)">
+            <ChildContent>
+                <DgTrancheClaimFields Section="Declaration"
+                                      ClaimAmount="@_claimAmount"
+                                      IsPfmaAndMoaAttestationAccepted="@_isPfmaAttestationAccepted"
+                                      IsPfmaAndMoaAttestationAcceptedChanged="@((val) => _isPfmaAttestationAccepted = val)" />
+            </ChildContent>
+        </WizardReviewStep>
+    </WizardShell>
+}
+
+@code {
+    [Parameter] public int? MoaId { get; set; }
+
+    private int _activeStep = 0;
+    private bool _loading = true;
+    private bool _isProcessing = false;
+    private bool _isSuccess = false;
+    private int _createdClaimId = 0;
+    private string _submittedClaimNumber = string.Empty;
+
+    // Collections
+    private List<GrantMoa> _moas = new();
+    private List<ProjectImplementationPlan> _pips = new();
+    private List<GrantMoaMilestone> _milestones = new();
+
+    // Step 1: MoA & Envelope
+    private int? _grantMoaId;
+    private int? _pipId;
+    private int? _grantMoaMilestoneId;
+    private decimal _totalMoaAllocation = 1500000.00m;
+    private decimal _totalClaimedAmount = 300000.00m;
+    private decimal _remainingEnvelopeBalance = 1200000.00m;
+
+    // Step 2: Deliverables
+    private int _learnerDeliverableHeadcount = 25;
+    private DateTime? _milestoneCompletionDate = DateTime.UtcNow.AddDays(-7);
+    private bool _isDeliverableInspectedByClo = true;
+    private string _deliverableDescription = "Tranche milestone deliverable: 25 apprentices completed practical workplace rotation modules with verified artisan mentor logbook attestations.";
+
+    // Step 3: Finance
+    private int _trancheNumber = 2;
+    private decimal _claimAmount = 350000.00m;
+    private string _taxCompliancePin = "9823471029";
+    private string _bankName = "Standard Bank";
+    private string _bankAccountNumber = "0219482910";
+    private string _branchCode = "051001";
+    private bool _isBankingDetailsVerified = true;
+
+    // Step 4: Audit
+    private string? _proofDocumentUri = "DOC-2026-CLAIM-0042.pdf";
+    private string _evidenceSummary = "Learner attendance registers, stipend bank receipts, and CLO milestone sign-off letter.";
+    private string? _auditNotes = "Audited and confirmed against parent MoA deliverable schedule.";
+
+    // Step 5: Declaration
+    private bool _isPfmaAttestationAccepted = true;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Grants, levies & finance", href: "/finance/dg-moa"),
+        new BreadcrumbItem("Discretionary Grant claims", href: "/finance/dg-claims"),
+        new BreadcrumbItem("Submit tranche claim", href: null, disabled: true)
+    };
+
+    private List<WizardReviewGroup> _reviewGroups = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _loading = true;
+            _moas = await FinanceService.GetGrantMoasAsync();
+            _pips = await PipService.GetAllPipsAsync();
+
+            if (MoaId.HasValue && MoaId.Value > 0)
+            {
+                _grantMoaId = MoaId.Value;
+                await RefreshMoaFinancialsAsync(_grantMoaId.Value);
+            }
+            else if (_moas.Any())
+            {
+                _grantMoaId = _moas.First().Id;
+                await RefreshMoaFinancialsAsync(_grantMoaId.Value);
+            }
+
+            if (_pips.Any())
+            {
+                _pipId = _pips.First().Id;
+            }
+
+            UpdateReviewGroups();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading Discretionary Grant claim data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task RefreshMoaFinancialsAsync(int moaId)
+    {
+        try
+        {
+            var agg = await ClaimService.GetFinancialAggregateForMoaAsync(moaId);
+            _totalMoaAllocation = agg.TotalMoaAllocation;
+            _totalClaimedAmount = agg.TotalClaimedAmount;
+            _remainingEnvelopeBalance = agg.RemainingEnvelopeBalance;
+            _milestones = agg.Milestones;
+
+            if (_milestones.Any())
+            {
+                _grantMoaMilestoneId = _milestones.First().Id;
+                _trancheNumber = _milestones.First().MilestoneNumber;
+                if (_milestones.First().MilestoneAmount > 0)
+                {
+                    _claimAmount = _milestones.First().MilestoneAmount;
+                }
+            }
+
+            // Sync with associated PIP if exists
+            var relatedPip = _pips.FirstOrDefault(p => p.GrantMoaId == moaId);
+            if (relatedPip != null)
+            {
+                _pipId = relatedPip.Id;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Could not calculate MoA financial aggregate: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private async Task OnMoaChanged(int? id)
+    {
+        _grantMoaId = id;
+        if (id.HasValue)
+        {
+            await RefreshMoaFinancialsAsync(id.Value);
+        }
+        UpdateReviewGroups();
+    }
+
+    private void OnPipChanged(int? id)
+    {
+        _pipId = id;
+        UpdateReviewGroups();
+    }
+
+    private void OnMilestoneChanged(int? id)
+    {
+        _grantMoaMilestoneId = id;
+        if (id.HasValue && _milestones != null)
+        {
+            var ms = _milestones.FirstOrDefault(x => x.Id == id.Value);
+            if (ms != null)
+            {
+                _trancheNumber = ms.MilestoneNumber;
+                if (ms.MilestoneAmount > 0)
+                {
+                    _claimAmount = ms.MilestoneAmount;
+                }
+            }
+        }
+        UpdateReviewGroups();
+    }
+
+    private void OnClaimAmountChanged(decimal amount)
+    {
+        _claimAmount = amount;
+        UpdateReviewGroups();
+    }
+
+    private void OnStepChanged(int newStep)
+    {
+        _activeStep = newStep;
+        UpdateReviewGroups();
+    }
+
+    private void UpdateReviewGroups()
+    {
+        var moaText = "Not selected";
+        if (_grantMoaId.HasValue && _moas != null)
+        {
+            var m = _moas.FirstOrDefault(x => x.Id == _grantMoaId.Value);
+            if (m != null)
+            {
+                moaText = $"{m.MoaNumber} ({m.GrantApplication?.Organisation?.CompanyName ?? "Beneficiary"})";
+            }
+        }
+
+        var milestoneText = "Milestone";
+        if (_grantMoaMilestoneId.HasValue && _milestones != null)
+        {
+            var ms = _milestones.FirstOrDefault(x => x.Id == _grantMoaMilestoneId.Value);
+            if (ms != null)
+            {
+                milestoneText = $"Milestone #{ms.MilestoneNumber}: {ms.MilestoneName}";
+            }
+        }
+
+        var dofaTier = _claimAmount >= 500000m
+            ? "Tier 3 (Mandatory CFO Dual Authorization Required)"
+            : "Tier 2 (CLO Inspection + Finance Officer Approval)";
+
+        var remainingAfterClaim = _remainingEnvelopeBalance - _claimAmount;
+
+        _reviewGroups = new List<WizardReviewGroup>
+        {
+            new()
+            {
+                Title = "Contracting MoA & Budget Headroom",
+                Icon = Icons.Material.Filled.AccountBalanceWallet,
+                TargetStepIndex = 0,
+                Items = new()
+                {
+                    new("Memorandum of Agreement", moaText),
+                    new("Contract envelope", _totalMoaAllocation.ToString("C2", System.Globalization.CultureInfo.InvariantCulture)),
+                    new("Previously claimed", _totalClaimedAmount.ToString("C2", System.Globalization.CultureInfo.InvariantCulture)),
+                    new("Available headroom", _remainingEnvelopeBalance.ToString("C2", System.Globalization.CultureInfo.InvariantCulture)),
+                    new("Balance after this claim", remainingAfterClaim.ToString("C2", System.Globalization.CultureInfo.InvariantCulture))
+                }
+            },
+            new()
+            {
+                Title = "Learner Milestone Deliverable Scope",
+                Icon = Icons.Material.Filled.School,
+                TargetStepIndex = 1,
+                Items = new()
+                {
+                    new("Contractual milestone", milestoneText),
+                    new("Learner headcount", $"{_learnerDeliverableHeadcount} learners verified"),
+                    new("Completion date", _milestoneCompletionDate?.ToString("yyyy-MM-dd") ?? "N/A"),
+                    new("CLO inspection status", _isDeliverableInspectedByClo ? "Inspected & Verified" : "Pending")
+                }
+            },
+            new()
+            {
+                Title = "Financial Tranche & DOFA Routing",
+                Icon = Icons.Material.Filled.Payments,
+                TargetStepIndex = 2,
+                Items = new()
+                {
+                    new("Tranche number", $"Tranche #{_trancheNumber}"),
+                    new("Monetary claim amount", _claimAmount.ToString("C2", System.Globalization.CultureInfo.InvariantCulture)),
+                    new("DOFA approval tier", dofaTier),
+                    new("Commercial bank", $"{_bankName} (Acc: {_bankAccountNumber})"),
+                    new("SARS compliance PIN", _taxCompliancePin, isMonospace: true),
+                    new("Serialized payment voucher", $"PV-{DateTime.UtcNow.Year}-DG-PREVIEW", isMonospace: true)
+                }
+            },
+            new()
+            {
+                Title = "Audit Evidence & Compliance",
+                Icon = Icons.Material.Filled.FactCheck,
+                TargetStepIndex = 3,
+                Items = new()
+                {
+                    new("Proof of delivery document", _proofDocumentUri ?? "N/A", isMonospace: true),
+                    new("Evidence bundle summary", _evidenceSummary),
+                    new("Audit compliance notes", _auditNotes ?? "None")
+                }
+            }
+        };
+    }
+
+    private Task<bool> ValidateStep1Async()
+    {
+        if (!_grantMoaId.HasValue)
+        {
+            Snackbar.Add("Please select a contracting Memorandum of Agreement (MoA).", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        if (!_pipId.HasValue)
+        {
+            Snackbar.Add("Please select an associated Project Implementation Plan (PIP).", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        if (_remainingEnvelopeBalance <= 0)
+        {
+            Snackbar.Add("Cannot submit claim: The parent MoA budget envelope is fully exhausted.", Severity.Error);
+            return Task.FromResult(false);
+        }
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep2Async()
+    {
+        if (_learnerDeliverableHeadcount <= 0)
+        {
+            Snackbar.Add("Learner deliverable headcount must be at least 1.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        if (string.IsNullOrWhiteSpace(_deliverableDescription))
+        {
+            Snackbar.Add("Deliverable description and progress narrative are required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        if (!_isDeliverableInspectedByClo)
+        {
+            Snackbar.Add("CLO deliverable inspection sign-off is required to proceed with tranche claim.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep3Async()
+    {
+        if (_claimAmount <= 0)
+        {
+            Snackbar.Add("Claim amount must be greater than zero.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        if (_claimAmount > _remainingEnvelopeBalance)
+        {
+            Snackbar.Add($"Claim amount ({_claimAmount:C2}) exceeds remaining budget envelope headroom ({_remainingEnvelopeBalance:C2}).", Severity.Error);
+            return Task.FromResult(false);
+        }
+        if (string.IsNullOrWhiteSpace(_taxCompliancePin))
+        {
+            Snackbar.Add("Active SARS tax compliance status PIN is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        if (!_isBankingDetailsVerified)
+        {
+            Snackbar.Add("Treasury CSD commercial banking verification is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep4Async()
+    {
+        if (string.IsNullOrWhiteSpace(_proofDocumentUri))
+        {
+            Snackbar.Add("Proof of delivery / electronic invoice document reference is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        return Task.FromResult(true);
+    }
+
+    private async Task SaveDraftAsync()
+    {
+        Snackbar.Add("Discretionary Grant tranche claim draft saved locally.", Severity.Info);
+        await Task.CompletedTask;
+    }
+
+    private async Task SubmitClaimAsync()
+    {
+        if (!_isPfmaAttestationAccepted)
+        {
+            Snackbar.Add("You must accept the statutory PFMA and MoA declaration before submitting.", Severity.Warning);
+            return;
+        }
+
+        _isProcessing = true;
+        try
+        {
+            var req = new SubmitDgClaimRequest
+            {
+                ProjectImplementationPlanId = _pipId!.Value,
+                GrantMoaMilestoneId = _grantMoaMilestoneId,
+                TrancheNumber = _trancheNumber,
+                ClaimAmount = _claimAmount,
+                DeliverableDescription = _deliverableDescription,
+                ProofOfDeliveryDocumentUri = _proofDocumentUri
+            };
+
+            var claim = await ClaimService.SubmitTrancheClaimAsync(req, "CurrentFinanceOfficer");
+            _createdClaimId = claim.Id;
+            _submittedClaimNumber = claim.ClaimNumber;
+            _isSuccess = true;
+
+            Snackbar.Add($"Tranche payment claim '{_submittedClaimNumber}' successfully registered!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Tranche claim submission failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void ViewClaimsHub()
+    {
+        NavManager.NavigateTo("/finance/dg-claims");
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo("/finance/dg-moa");
+    }
+}

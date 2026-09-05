@@ -169,6 +169,9 @@ public class GrantMoaMilestone : BaseEntity
     public decimal PaymentAmount { get => TrancheAmount; set => TrancheAmount = value; }
 
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public decimal MilestoneAmount { get => TrancheAmount; set => TrancheAmount = value; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public DateTime TargetCompletionDate { get => TargetDueDate; set => TargetDueDate = value; }
 
     /// <summary>

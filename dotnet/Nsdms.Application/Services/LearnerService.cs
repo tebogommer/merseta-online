@@ -9,6 +9,7 @@ public interface ILearnerService
 {
     // Company Learners
     Task<List<CompanyLearner>> GetAllLearnersAsync(string? search = null, string? status = null, int? organisationId = null, string? programmeType = null);
+    Task<List<CompanyLearner>> GetAllAsync(string? search = null);
     Task<PagedResult<LearnerListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default);
     Task<CompanyLearner?> GetLearnerByIdAsync(int id);
     Task<CompanyLearner> RegisterLearnerAsync(CompanyLearner learner, string currentUsername = "SYSTEM");
@@ -94,6 +95,8 @@ public class LearnerService : ILearnerService
 
         return new PagedResult<LearnerListDto>(items, totalCount, query.PageIndex, query.PageSize);
     }
+
+    public Task<List<CompanyLearner>> GetAllAsync(string? search = null) => GetAllLearnersAsync(search);
 
     public async Task<List<CompanyLearner>> GetAllLearnersAsync(string? search = null, string? status = null, int? organisationId = null, string? programmeType = null)
     {

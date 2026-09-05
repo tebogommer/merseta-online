@@ -146,6 +146,8 @@ public class WizardParityTests : BunitContext, IAsyncLifetime
                 "DgGrantApplicationWizard.razor",
                 "LearnerAgreementRegistrationWizard.razor",
                 "WorkplaceApprovalWizard.razor",
+                "TradeTestApplicationWizard.razor",
+                "DgTrancheClaimWizard.razor",
                 // WspSignoffWizard.razor is documented as an attestation status board rather than a sequential stepper
                 "WspSignoffWizard.razor"
             };
@@ -222,5 +224,57 @@ public class WizardParityTests : BunitContext, IAsyncLifetime
         Assert.Contains("Lead mentor artisan full name", cut.Markup, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Artisan trade test certificate number", cut.Markup, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("OHS", cut.Markup, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void TradeTestApplicationFields_RendersExpectedStatutoryFields()
+    {
+        var cut = Render<TradeTestApplicationFields>(parameters => parameters
+            .Add(p => p.Section, "All")
+            .Add(p => p.TradeTitle, "Fitter and Turner")
+            .Add(p => p.TheoryQualificationTitle, "National Technical Certificate N2")
+            .Add(p => p.TheorySubjectsPassed, "Mathematics N2, Engineering Science N2")
+            .Add(p => p.CurrentEmployerName, "Toyota SA Manufacturing")
+            .Add(p => p.WorkplaceMentorName, "Johan van der Merwe")
+        );
+
+        Assert.Contains("Candidate learner", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Application route", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Designated trade title", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Technical qualification title", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Compulsory technical subjects passed", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Current employer name", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Workplace practical duration", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Workplace artisan mentor full name", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Accredited Trade Test Centre (TTC)", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Preferred assessment date", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("declare", cut.Markup, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void DgTrancheClaimFields_RendersExpectedStatutoryFields()
+    {
+        var cut = Render<DgTrancheClaimFields>(parameters => parameters
+            .Add(p => p.Section, "All")
+            .Add(p => p.TotalMoaAllocation, 1500000m)
+            .Add(p => p.TotalClaimedAmount, 300000m)
+            .Add(p => p.RemainingEnvelopeBalance, 1200000m)
+            .Add(p => p.LearnerDeliverableHeadcount, 25)
+            .Add(p => p.DeliverableDescription, "25 apprentices completed modular theory")
+            .Add(p => p.ClaimAmount, 350000m)
+            .Add(p => p.TaxCompliancePin, "9823471029")
+            .Add(p => p.BankName, "Standard Bank")
+        );
+
+        Assert.Contains("Memorandum of Agreement (MoA)", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Project Implementation Plan (PIP)", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Milestone deliverable tranche", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Verified learner headcount", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Deliverable description", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Tranche number", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Claim amount", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("SARS tax compliance PIN", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Beneficiary bank name", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("PFMA", cut.Markup, StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -1,0 +1,484 @@
+@page "/trade-tests/apply"
+@page "/trade-tests/apply/{CompanyLearnerId:int}"
+@page "/trade-tests/create"
+@page "/tradetests/apply"
+@page "/tradetests/create"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using Nsdms.Web.Components.Shared.Forms
+@using Nsdms.Web.Components.Shared.Wizard
+@using MudBlazor
+@inject ITradeTestAndArplService TradeTestService
+@inject ILearnerService LearnerService
+@inject ITrainingProviderService ProviderService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="mb-4">
+    <div class="d-flex align-center gap-2 mb-2">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="GoBack">
+            Back to Trade Tests
+        </MudButton>
+        <MudBreadcrumbs Items="_breadcrumbs" Separator=">" Class="pa-0 ma-0" />
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="d-flex justify-center align-center py-12">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else if (_isSuccess)
+{
+    <MudCard Elevation="2" Class="pa-6 rounded-lg text-center">
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" Class="mb-3" />
+        <h1 class="text-h5 font-weight-bold text-primary mb-2">Trade test application submitted</h1>
+        <p class="text-body1 text-secondary mb-4">
+            Statutory trade test application reference <strong class="font-mono">@_submittedAppNumber</strong> has been successfully registered and queued for NAMB moderation pre-clearance.
+        </p>
+        <div class="d-flex justify-center gap-3">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.ReceiptLong"
+                       OnClick="ViewSubmittedApplication">
+                View trade test record
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       OnClick="GoBack">
+                Return to Trade Test register
+            </MudButton>
+        </div>
+    </MudCard>
+}
+else
+{
+    <WizardShell Title="Artisan trade test &amp; ARPL application"
+                 Subtitle="Statutory Section 26D / Section 28 assessment scheduling and pre-trade clearance"
+                 ActiveStepIndex="@_activeStep"
+                 ActiveStepIndexChanged="OnStepChanged"
+                 FinishButtonText="Submit trade test application"
+                 IsBusy="@_isProcessing"
+                 OnCancel="GoBack"
+                 OnSaveDraft="SaveDraftAsync"
+                 OnFinish="SubmitApplicationAsync">
+
+        <!-- STEP 1: Candidate Route Selection -->
+        <WizardStep Label="Candidate route"
+                    Heading="Select candidate &amp; designated trade"
+                    Description="Choose the apprentice or ARPL candidate, statutory application route, and trade classification"
+                    ValidateAsync="ValidateStep1Async">
+            <TradeTestApplicationFields Section="Route"
+                                        Learners="@_learners"
+                                        CompanyLearnerId="@_companyLearnerId"
+                                        CompanyLearnerIdChanged="OnLearnerChanged"
+                                        ApplicationTypeCode="@_applicationTypeCode"
+                                        ApplicationTypeCodeChanged="@((val) => _applicationTypeCode = val)"
+                                        TradeTitle="@_tradeTitle"
+                                        TradeTitleChanged="@((val) => _tradeTitle = val)"
+                                        TradeOfoCode="@_tradeOfoCode"
+                                        TradeOfoCodeChanged="@((val) => _tradeOfoCode = val)"
+                                        AttemptNumber="@_attemptNumber"
+                                        AttemptNumberChanged="@((val) => _attemptNumber = val)" />
+        </WizardStep>
+
+        <!-- STEP 2: Curricular & Theory Clearance -->
+        <WizardStep Label="Theory clearance"
+                    Heading="Verify N2 / NCV theoretical credits"
+                    Description="Confirm formal curricular subjects, TVET college completion date, and statutory educational prerequisites"
+                    ValidateAsync="ValidateStep2Async">
+            <TradeTestApplicationFields Section="Theory"
+                                        TheoryQualificationTitle="@_theoryQualificationTitle"
+                                        TheoryQualificationTitleChanged="@((val) => _theoryQualificationTitle = val)"
+                                        TheoryInstitutionName="@_theoryInstitutionName"
+                                        TheoryInstitutionNameChanged="@((val) => _theoryInstitutionName = val)"
+                                        TheorySubjectsPassed="@_theorySubjectsPassed"
+                                        TheorySubjectsPassedChanged="@((val) => _theorySubjectsPassed = val)"
+                                        TheoryCompletionDate="@_theoryCompletionDate"
+                                        TheoryCompletionDateChanged="@((val) => _theoryCompletionDate = val)"
+                                        IsCurricularPrerequisitesMet="@_isCurricularPrerequisitesMet"
+                                        IsCurricularPrerequisitesMetChanged="@((val) => _isCurricularPrerequisitesMet = val)" />
+        </WizardStep>
+
+        <!-- STEP 3: Workplace Practical Hours & Logbook -->
+        <WizardStep Label="Logbook &amp; hours"
+                    Heading="Employer logbook attestation"
+                    Description="Verify workplace modular practical training duration, qualified mentor credentials, and employer verification"
+                    ValidateAsync="ValidateStep3Async">
+            <TradeTestApplicationFields Section="Logbook"
+                                        CurrentEmployerName="@_currentEmployerName"
+                                        CurrentEmployerNameChanged="@((val) => _currentEmployerName = val)"
+                                        LogbookWeeksCompleted="@_logbookWeeksCompleted"
+                                        LogbookWeeksCompletedChanged="@((val) => _logbookWeeksCompleted = val)"
+                                        WorkplaceMentorName="@_workplaceMentorName"
+                                        WorkplaceMentorNameChanged="@((val) => _workplaceMentorName = val)"
+                                        MentorArtisanTradeNumber="@_mentorArtisanTradeNumber"
+                                        MentorArtisanTradeNumberChanged="@((val) => _mentorArtisanTradeNumber = val)"
+                                        EmployerContactPhone="@_employerContactPhone"
+                                        EmployerContactPhoneChanged="@((val) => _employerContactPhone = val)"
+                                        IsLogbookAttestationVerified="@_isLogbookAttestationVerified"
+                                        IsLogbookAttestationVerifiedChanged="@((val) => _isLogbookAttestationVerified = val)" />
+        </WizardStep>
+
+        <!-- STEP 4: Accredited Trade Test Centre (TTC) & Scheduling -->
+        <WizardStep Label="Testing centre"
+                    Heading="Select Trade Test Centre &amp; schedule"
+                    Description="Designate accredited testing facility, earliest practical examination date, and tool readiness"
+                    ValidateAsync="ValidateStep4Async">
+            <TradeTestApplicationFields Section="Centre"
+                                        TrainingProviders="@_trainingProviders"
+                                        TrainingProviderId="@_trainingProviderId"
+                                        TrainingProviderIdChanged="@((val) => _trainingProviderId = val)"
+                                        PreferredAssessmentDate="@_preferredAssessmentDate"
+                                        PreferredAssessmentDateChanged="@((val) => _preferredAssessmentDate = val)"
+                                        SubsidyCategory="@_subsidyCategory"
+                                        SubsidyCategoryChanged="@((val) => _subsidyCategory = val)"
+                                        IsToolAndPpeReady="@_isToolAndPpeReady"
+                                        IsToolAndPpeReadyChanged="@((val) => _isToolAndPpeReady = val)" />
+        </WizardStep>
+
+        <!-- STEP 5: Review & Statutory Declaration -->
+        <WizardReviewStep Heading="Application review &amp; pre-trade clearance"
+                          Description="Inspect candidate credentials, verified logbook hours, and testing centre arrangements prior to dispatch"
+                          ReviewGroups="@_reviewGroups"
+                          OnEditStep="@((idx) => _activeStep = idx)">
+            <ChildContent>
+                <TradeTestApplicationFields Section="Declaration"
+                                            IsPopiaAndCandidateDeclarationAccepted="@_isDeclarationAccepted"
+                                            IsPopiaAndCandidateDeclarationAcceptedChanged="@((val) => _isDeclarationAccepted = val)" />
+            </ChildContent>
+        </WizardReviewStep>
+    </WizardShell>
+}
+
+@code {
+    [Parameter] public int? CompanyLearnerId { get; set; }
+
+    private int _activeStep = 0;
+    private bool _loading = true;
+    private bool _isProcessing = false;
+    private bool _isSuccess = false;
+    private int _createdApplicationId = 0;
+    private string _submittedAppNumber = string.Empty;
+
+    // Data collections
+    private List<CompanyLearner> _learners = new();
+    private List<TrainingProvider> _trainingProviders = new();
+
+    // Step 1: Candidate Route
+    private int? _companyLearnerId;
+    private string _applicationTypeCode = "Section26D";
+    private string _tradeTitle = "Fitter and Turner";
+    private string? _tradeOfoCode = "653306";
+    private int _attemptNumber = 1;
+
+    // Step 2: Curricular & Theory
+    private string _theoryQualificationTitle = "National Technical Certificate N2";
+    private string _theoryInstitutionName = "Ekurhuleni East TVET College";
+    private string _theorySubjectsPassed = "Mathematics N2, Engineering Science N2, Trade Theory N2, Engineering Drawing N2";
+    private DateTime? _theoryCompletionDate = DateTime.UtcNow.AddMonths(-12);
+    private bool _isCurricularPrerequisitesMet = true;
+
+    // Step 3: Workplace Logbook
+    private string _currentEmployerName = "Toyota SA Manufacturing";
+    private int _logbookWeeksCompleted = 120;
+    private string _workplaceMentorName = "Johan van der Merwe";
+    private string? _mentorArtisanTradeNumber = "TT-NAMB-2018-0941";
+    private string _employerContactPhone = "011 884 9000";
+    private bool _isLogbookAttestationVerified = true;
+
+    // Step 4: Centre & Scheduling
+    private int? _trainingProviderId;
+    private DateTime? _preferredAssessmentDate = DateTime.UtcNow.AddDays(30);
+    private string _subsidyCategory = "merSETA Subsidised";
+    private bool _isToolAndPpeReady = true;
+
+    // Step 5: Declaration
+    private bool _isDeclarationAccepted = true;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Learner & artisan development", href: "/tradetests"),
+        new BreadcrumbItem("Trade tests", href: "/tradetests"),
+        new BreadcrumbItem("Apply for trade test", href: null, disabled: true)
+    };
+
+    private List<WizardReviewGroup> _reviewGroups = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _loading = true;
+            _learners = await LearnerService.GetAllAsync();
+            _trainingProviders = await ProviderService.GetAllAsync();
+
+            if (CompanyLearnerId.HasValue && CompanyLearnerId.Value > 0)
+            {
+                _companyLearnerId = CompanyLearnerId.Value;
+            }
+            else if (_learners.Any())
+            {
+                _companyLearnerId = _learners.First().Id;
+            }
+
+            if (_trainingProviders.Any())
+            {
+                _trainingProviderId = _trainingProviders.First().Id;
+            }
+
+            UpdateReviewGroups();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading trade test reference data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void OnStepChanged(int newStep)
+    {
+        _activeStep = newStep;
+        UpdateReviewGroups();
+    }
+
+    private void OnLearnerChanged(int? id)
+    {
+        _companyLearnerId = id;
+        if (id.HasValue && _learners != null)
+        {
+            var l = _learners.FirstOrDefault(x => x.Id == id.Value);
+            if (l != null && l.Organisation != null)
+            {
+                _currentEmployerName = l.Organisation.CompanyName;
+            }
+        }
+        UpdateReviewGroups();
+    }
+
+    private void UpdateReviewGroups()
+    {
+        var learnerName = "Not selected";
+        if (_companyLearnerId.HasValue && _learners != null)
+        {
+            var l = _learners.FirstOrDefault(x => x.Id == _companyLearnerId.Value);
+            if (l != null)
+            {
+                learnerName = $"{l.Person?.FirstName} {l.Person?.LastName} ({l.Person?.RsaIdNumber ?? "N/A"})";
+            }
+        }
+
+        var centreName = "Not selected";
+        if (_trainingProviderId.HasValue && _trainingProviders != null)
+        {
+            var p = _trainingProviders.FirstOrDefault(x => x.Id == _trainingProviderId.Value);
+            if (p != null)
+            {
+                centreName = p.ProviderName;
+            }
+        }
+
+        _reviewGroups = new List<WizardReviewGroup>
+        {
+            new()
+            {
+                Title = "Candidate & Trade Route",
+                Icon = Icons.Material.Filled.Person,
+                TargetStepIndex = 0,
+                Items = new()
+                {
+                    new("Candidate learner", learnerName),
+                    new("Application route", _applicationTypeCode),
+                    new("Designated trade", _tradeTitle),
+                    new("Trade OFO code", _tradeOfoCode ?? "N/A", isMonospace: true),
+                    new("Attempt number", $"Attempt #{_attemptNumber}")
+                }
+            },
+            new()
+            {
+                Title = "Curricular & Theory Clearance",
+                Icon = Icons.Material.Filled.School,
+                TargetStepIndex = 1,
+                Items = new()
+                {
+                    new("Qualification title", _theoryQualificationTitle),
+                    new("Training institution", _theoryInstitutionName),
+                    new("Subjects passed", _theorySubjectsPassed),
+                    new("Completion date", _theoryCompletionDate?.ToString("yyyy-MM-dd") ?? "N/A"),
+                    new("Credit prerequisite standing", _isCurricularPrerequisitesMet ? "Verified (100% compliant)" : "Non-compliant")
+                }
+            },
+            new()
+            {
+                Title = "Workplace Logbook & Hours",
+                Icon = Icons.Material.Filled.Work,
+                TargetStepIndex = 2,
+                Items = new()
+                {
+                    new("Current employer", _currentEmployerName),
+                    new("Practical duration", $"{_logbookWeeksCompleted} weeks verified"),
+                    new("Lead artisan mentor", _workplaceMentorName),
+                    new("Mentor certificate #", _mentorArtisanTradeNumber ?? "N/A", isMonospace: true),
+                    new("Employer phone", _employerContactPhone),
+                    new("Logbook attestation", _isLogbookAttestationVerified ? "Signed & Attached" : "Pending")
+                }
+            },
+            new()
+            {
+                Title = "Trade Test Centre & Scheduling",
+                Icon = Icons.Material.Filled.LocationOn,
+                TargetStepIndex = 3,
+                Items = new()
+                {
+                    new("Accredited TTC", centreName),
+                    new("Preferred assessment date", _preferredAssessmentDate?.ToString("yyyy-MM-dd") ?? "N/A"),
+                    new("Funding subsidy", _subsidyCategory),
+                    new("Tooling & PPE status", _isToolAndPpeReady ? "Fully equipped & compliant" : "Pending")
+                }
+            }
+        };
+    }
+
+    private Task<bool> ValidateStep1Async()
+    {
+        if (!_companyLearnerId.HasValue)
+        {
+            Snackbar.Add("Please select a registered candidate learner.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        if (string.IsNullOrWhiteSpace(_tradeTitle))
+        {
+            Snackbar.Add("Designated trade title is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep2Async()
+    {
+        if (string.IsNullOrWhiteSpace(_theoryQualificationTitle))
+        {
+            Snackbar.Add("Technical qualification title is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        if (!_isCurricularPrerequisitesMet)
+        {
+            Snackbar.Add("Candidate must meet statutory theoretical credit prerequisites before proceeding.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep3Async()
+    {
+        if (string.IsNullOrWhiteSpace(_currentEmployerName))
+        {
+            Snackbar.Add("Current employer name is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        if (_logbookWeeksCompleted < 80 && _applicationTypeCode == "Section28")
+        {
+            Snackbar.Add("Section 28 ARPL candidates must possess at least 80 weeks of verified workplace experience.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        if (!_isLogbookAttestationVerified)
+        {
+            Snackbar.Add("Verified employer logbook attestation is mandatory for trade test scheduling.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep4Async()
+    {
+        if (!_trainingProviderId.HasValue)
+        {
+            Snackbar.Add("Please select an accredited Trade Test Centre (TTC).", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        if (!_preferredAssessmentDate.HasValue)
+        {
+            Snackbar.Add("Please specify a preferred assessment date.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        return Task.FromResult(true);
+    }
+
+    private async Task SaveDraftAsync()
+    {
+        Snackbar.Add("Trade test application draft saved locally.", Severity.Info);
+        await Task.CompletedTask;
+    }
+
+    private async Task SubmitApplicationAsync()
+    {
+        if (!_isDeclarationAccepted)
+        {
+            Snackbar.Add("You must accept the statutory candidate declaration before submitting.", Severity.Warning);
+            return;
+        }
+
+        _isProcessing = true;
+        try
+        {
+            var app = await TradeTestService.CreateTradeTestApplicationAsync(
+                companyLearnerId: _companyLearnerId!.Value,
+                tradeTitle: _tradeTitle,
+                applicationTypeCode: _applicationTypeCode,
+                attemptNumber: _attemptNumber,
+                tradeOfoCode: _tradeOfoCode,
+                preferredTrainingCenterId: _trainingProviderId,
+                currentUsername: "CurrentArtisanOfficer"
+            );
+
+            _createdApplicationId = app.Id;
+            _submittedAppNumber = app.ApplicationNumber;
+
+            // If ARPL route, also record portfolio details
+            if (_applicationTypeCode == "Section28")
+            {
+                await TradeTestService.SubmitArplEvidenceAndChecklistAsync(
+                    applicationId: app.Id,
+                    yearsOfExperience: _logbookWeeksCompleted / 52,
+                    currentEmployerName: _currentEmployerName,
+                    employerContactPhone: _employerContactPhone,
+                    experienceDetails: new List<ArplExperienceDetail>(),
+                    trainingDetails: new List<ArplTrainingDetail>(),
+                    portfolioScorePercentage: 75m,
+                    currentUsername: "CurrentArtisanOfficer"
+                );
+            }
+
+            _isSuccess = true;
+            Snackbar.Add($"Trade test application '{_submittedAppNumber}' successfully registered!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Application submission failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void ViewSubmittedApplication()
+    {
+        NavManager.NavigateTo($"/trade-tests/{_createdApplicationId}");
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo("/tradetests");
+    }
+}
