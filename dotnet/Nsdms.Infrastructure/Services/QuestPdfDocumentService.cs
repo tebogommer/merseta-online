@@ -8,7 +8,7 @@ using QuestPDF.Infrastructure;
 
 namespace Nsdms.Infrastructure.Services;
 
-public class QuestPdfDocumentService : IPdfDocumentService
+public partial class QuestPdfDocumentService : IPdfDocumentService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IFeatureFlagService _featureFlags;
@@ -597,6 +597,7 @@ public class QuestPdfDocumentService : IPdfDocumentService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var moa = await db.GrantMoas
+            .IgnoreQueryFilters()
             .Include(m => m.GrantApplication)
                 .ThenInclude(ga => ga!.Organisation)
             .Include(m => m.Milestones)
@@ -614,6 +615,7 @@ public class QuestPdfDocumentService : IPdfDocumentService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var app = await db.LearnerTradeTestApplications
+            .IgnoreQueryFilters()
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == tradeTestId);
 
@@ -621,20 +623,21 @@ public class QuestPdfDocumentService : IPdfDocumentService
         {
             if (app.PersonId > 0)
             {
-                app.Person = await db.People.AsNoTracking().FirstOrDefaultAsync(p => p.Id == app.PersonId);
+                app.Person = await db.People.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(p => p.Id == app.PersonId);
             }
             else if (app.CompanyLearnerId > 0)
             {
-                var cl = await db.CompanyLearners.AsNoTracking().FirstOrDefaultAsync(c => c.Id == app.CompanyLearnerId);
+                var cl = await db.CompanyLearners.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(c => c.Id == app.CompanyLearnerId);
                 if (cl != null)
                 {
-                    app.Person = await db.People.AsNoTracking().FirstOrDefaultAsync(p => p.Id == cl.PersonId);
+                    app.Person = await db.People.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(p => p.Id == cl.PersonId);
                 }
             }
             return await GenerateArtisanTradeCertificatePdfAsync(app);
         }
 
         var legacyTest = await db.LearnerTradeTests
+            .IgnoreQueryFilters()
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == tradeTestId);
 
@@ -642,10 +645,10 @@ public class QuestPdfDocumentService : IPdfDocumentService
         {
             if (legacyTest.CompanyLearnerId > 0)
             {
-                var cl = await db.CompanyLearners.AsNoTracking().FirstOrDefaultAsync(c => c.Id == legacyTest.CompanyLearnerId);
+                var cl = await db.CompanyLearners.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(c => c.Id == legacyTest.CompanyLearnerId);
                 if (cl != null)
                 {
-                    cl.Person = await db.People.AsNoTracking().FirstOrDefaultAsync(p => p.Id == cl.PersonId);
+                    cl.Person = await db.People.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(p => p.Id == cl.PersonId);
                     legacyTest.CompanyLearner = cl;
                 }
             }
@@ -659,6 +662,7 @@ public class QuestPdfDocumentService : IPdfDocumentService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var wsp = await db.WspSubmissions
+            .IgnoreQueryFilters()
             .Include(w => w.Organisation)
             .FirstOrDefaultAsync(w => w.Id == wspSubmissionId);
 
@@ -674,6 +678,7 @@ public class QuestPdfDocumentService : IPdfDocumentService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var disb = await db.MandatoryGrantDisbursements
+            .IgnoreQueryFilters()
             .Include(m => m.Organisation)
             .Include(m => m.WspSubmission)
             .FirstOrDefaultAsync(m => m.Id == disbursementId);

@@ -33,6 +33,12 @@ public interface ILearnerService
     Task<List<LearnerTradeTest>> GetTradeTestsForLearnerAsync(int companyLearnerId);
     Task<bool> DeleteTradeTestAsync(int id, string currentUsername = "SYSTEM");
 
+    // Canonical Learner Enrolment Methods (Phase 2 Aliasing)
+    Task<CompanyLearner?> GetEnrolmentByIdAsync(int id);
+    Task<CompanyLearner> RegisterEnrolmentAsync(CompanyLearner enrolment, string currentUsername = "SYSTEM");
+    Task<CompanyLearner> UpdateEnrolmentAsync(CompanyLearner enrolment, string currentUsername = "SYSTEM");
+    Task<bool> DeleteEnrolmentAsync(int id, string currentUsername = "SYSTEM");
+
     // 360-Degree Learner Relational Queries
     Task<List<LearnerEnrolmentDto>> GetLearnerEnrolmentsAsync(int personId);
     Task<List<LearnerEmployerLinkDto>> GetLearnerEmployersAsync(int personId);
@@ -499,6 +505,11 @@ public class LearnerService : ILearnerService
 
         return true;
     }
+
+    public Task<CompanyLearner?> GetEnrolmentByIdAsync(int id) => GetLearnerByIdAsync(id);
+    public Task<CompanyLearner> RegisterEnrolmentAsync(CompanyLearner enrolment, string currentUsername = "SYSTEM") => RegisterLearnerAsync(enrolment, currentUsername);
+    public Task<CompanyLearner> UpdateEnrolmentAsync(CompanyLearner enrolment, string currentUsername = "SYSTEM") => UpdateLearnerAsync(enrolment, currentUsername);
+    public Task<bool> DeleteEnrolmentAsync(int id, string currentUsername = "SYSTEM") => DeleteLearnerAsync(id, currentUsername);
 
     public async Task<LearnerTradeTest> ScheduleTradeTestAsync(LearnerTradeTest tradeTest, string currentUsername = "SYSTEM")
     {

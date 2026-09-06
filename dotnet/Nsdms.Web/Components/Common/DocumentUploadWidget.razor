@@ -1,7 +1,9 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Forms
 @using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @inject IFileStorageService FileStorage
+@inject ISystemConfigurationService ConfigService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
 
@@ -30,7 +32,7 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" md="8">
-                <MudFileUpload T="IBrowserFile" FilesChanged="UploadFilesAsync" Accept=".pdf,.png,.jpg,.jpeg,.docx,.xlsx" MaximumFileCount="1">
+                <MudFileUpload T="IBrowserFile" FilesChanged="UploadFilesAsync" Accept="@_allowedExtensions" MaximumFileCount="1">
                     <ActivatorContent>
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" Disabled="@_isUploading">
                             @if (_isUploading)
@@ -102,6 +104,9 @@
     private string _selectedCategory = "GENERAL";
     private bool _isLoading = true;
     private bool _isUploading = false;
+    private long _maxUploadSizeBytes = 26214400; // 25MB default
+    private string _allowedExtensions = ".pdf,.png,.jpg,.jpeg,.docx,.xlsx";
+    private bool _configsLoaded = false;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -113,6 +118,13 @@
         _isLoading = true;
         try
         {
+            if (!_configsLoaded)
+            {
+                _maxUploadSizeBytes = await ConfigService.GetValueAsync<long>("Storage:MaxUploadSizeBytes", 26214400);
+                _allowedExtensions = await ConfigService.GetValueAsync<string>("Storage:AllowedExtensions", ".pdf,.png,.jpg,.jpeg,.docx,.xlsx");
+                _configsLoaded = true;
+            }
+
             if (TargetEntityId > 0 && !string.IsNullOrWhiteSpace(TargetEntityName))
             {
                 _attachments = await FileStorage.GetAttachmentsAsync(TargetEntityName, TargetEntityId);
@@ -135,8 +147,13 @@
 
         try
         {
-            const long maxFileSize = 15 * 1024 * 1024; // 15MB limit
-            using var stream = file.OpenReadStream(maxFileSize);
+            if (file.Size > _maxUploadSizeBytes)
+            {
+                Snackbar.Add($"File size exceeds the maximum limit of {FormatBytes(_maxUploadSizeBytes)}.", Severity.Warning);
+                return;
+            }
+
+            using var stream = file.OpenReadStream(_maxUploadSizeBytes);
             var attachment = await FileStorage.SaveFileAsync(
                 TargetEntityName,
                 TargetEntityId,

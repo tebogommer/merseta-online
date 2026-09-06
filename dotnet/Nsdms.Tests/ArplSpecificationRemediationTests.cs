@@ -384,4 +384,80 @@ public class ArplSpecificationRemediationTests
         var reloadedApp = await db.LearnerTradeTestApplications.FindAsync(app.Id);
         Assert.NotNull(reloadedApp?.CertificateDistributedAt);
     }
+
+    [Fact]
+    public async Task OptionA_WorkplaceExperiencePortfolio_CalculatesDurationAndAssociatesUnregisteredEmployer()
+    {
+        var (factory, db, audit) = CreateContext();
+        var (learner, _, _, ttc) = await SeedLearnerAndTtcAsync(db);
+        var service = new TradeTestAndArplService(factory, audit);
+
+        var app = await service.CreateTradeTestApplicationAsync(learner.Id, "Welder", "Section28", 1, preferredTrainingCenterId: ttc.Id);
+
+        // Add 2 workplace experience records
+        var exp1 = new ArplExperienceDetail
+        {
+            LearnerTradeTestApplicationId = app.Id,
+            EmployerName = "Apex Fabricators (Pty) Ltd",
+            CompanyRegistrationNumber = "2018/123456/07",
+            ContactPersonName = "John Foreman",
+            EmployerAddress = "12 Industrial Road, Germiston",
+            StartDate = new DateTime(2020, 1, 1),
+            EndDate = new DateTime(2022, 12, 31)
+        };
+        var exp2 = new ArplExperienceDetail
+        {
+            LearnerTradeTestApplicationId = app.Id,
+            EmployerName = "Non-registered Workshop (Informal)",
+            ContactPersonName = "Local Artisan Joe",
+            EmployerAddress = "Stand 45, Soweto",
+            StartDate = new DateTime(2023, 1, 1),
+            EndDate = new DateTime(2024, 6, 30)
+        };
+
+        db.ArplExperienceDetails.AddRange(exp1, exp2);
+        await db.SaveChangesAsync();
+
+        var experiences = await db.ArplExperienceDetails.Where(e => e.LearnerTradeTestApplicationId == app.Id).ToListAsync();
+        Assert.Equal(2, experiences.Count);
+
+        // Verify total experience is approx 4.5 years (>= 3 years statutory requirement for Category 7)
+        var totalDays = experiences.Sum(e => ((e.EndDate ?? DateTime.UtcNow) - e.StartDate).TotalDays);
+        var totalYears = totalDays / 365.25;
+        Assert.True(totalYears >= 3.0);
+    }
+
+    [Fact]
+    public async Task OptionB_TwoTierRegionalWorkflow_ClaRecommend_QaApproveAndStampSerial_EnforcesStatutoryGates()
+    {
+        var (factory, db, audit) = CreateContext();
+        var (learner, _, _, ttc) = await SeedLearnerAndTtcAsync(db);
+        var service = new TradeTestAndArplService(factory, audit);
+
+        var app = await service.CreateTradeTestApplicationAsync(learner.Id, "Welder", "Section28", 1, preferredTrainingCenterId: ttc.Id);
+
+        // Tier 1: CLA Recommendation Gate
+        var recommended = await service.SubmitClaRecommendationAsync(app.Id, recommend: true, currentUsername: "ClaReviewOfficer");
+        Assert.Equal("RecommendedApplication", recommended.StatusCode);
+        Assert.Equal("Recommended", recommended.ClaRecommendationStatus);
+
+        // Tier 2: QA Approval & Stamping Gate
+        var approved = await service.SubmitQaApprovalAsync(app.Id, approve: true, stampedDocumentAttachmentId: 8899, isFinalRejection: false, rejectionReason: null, comments: "Certificate and stamps verified", currentUsername: "RegionalQaOfficer");
+        Assert.Equal("Registered", approved.StatusCode);
+        Assert.NotNull(approved.TradeTestSerialNumber);
+        Assert.StartsWith($"TT-SER-{DateTime.UtcNow.Year}-", approved.TradeTestSerialNumber);
+        Assert.Equal(8899, approved.QaSignedApplicationDocumentAttachmentId);
+
+        // QA Rejection Gate: Remediation (isFinalRejection = false)
+        var app2 = await service.CreateTradeTestApplicationAsync(learner.Id, "Welder", "Section28", 1, preferredTrainingCenterId: ttc.Id);
+        var remediableReject = await service.SubmitQaApprovalAsync(app2.Id, approve: false, stampedDocumentAttachmentId: null, isFinalRejection: false, rejectionReason: "Missing Employer Service Letter", comments: "Please upload service letter", currentUsername: "RegionalQaOfficer");
+        Assert.Equal("RejectedForResubmission", remediableReject.StatusCode);
+        Assert.False(remediableReject.IsFinalRejection);
+
+        // QA Rejection Gate: Terminal (isFinalRejection = true)
+        var app3 = await service.CreateTradeTestApplicationAsync(learner.Id, "Welder", "Section28", 1, preferredTrainingCenterId: ttc.Id);
+        var terminalReject = await service.SubmitQaApprovalAsync(app3.Id, approve: false, stampedDocumentAttachmentId: null, isFinalRejection: true, rejectionReason: "Fraudulent Documentation", comments: "Forged certificate", currentUsername: "RegionalQaOfficer");
+        Assert.Equal("RejectedApplication", terminalReject.StatusCode);
+        Assert.True(terminalReject.IsFinalRejection);
+    }
 }

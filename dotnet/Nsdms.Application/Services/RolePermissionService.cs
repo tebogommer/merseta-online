@@ -427,6 +427,10 @@ public class RolePermissionService : IRolePermissionService
                 AppPermissions.Create(AppPermissions.ModuleCompliance, AppPermissions.ActionView)
             });
 
+        // 7. Standard User (Self-Registered Applicant)
+        await EnsureRoleWithPermissionsAsync(db, "User", "Standard registered user with basic profile access and rights to apply for statutory stakeholder roles (SDF, SDP Contact, Organisation Contact, Assessor, Moderator).",
+            new List<string>());
+
         await db.SaveChangesAsync();
     }
 

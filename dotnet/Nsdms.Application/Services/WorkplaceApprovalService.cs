@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Interfaces;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
@@ -68,19 +69,22 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
     private readonly IMentorRatioPolicyEngine _ratioEngine;
     private readonly IStorageService? _storageService;
     private readonly Nsdms.Application.Common.Interfaces.IPdfDocumentService? _pdfService;
+    private readonly ISystemConfigurationService? _configService;
 
     public WorkplaceApprovalService(
         INsdmsDbContextFactory contextFactory,
         IAuditService audit,
         IMentorRatioPolicyEngine ratioEngine,
         IStorageService? storageService = null,
-        Nsdms.Application.Common.Interfaces.IPdfDocumentService? pdfService = null)
+        Nsdms.Application.Common.Interfaces.IPdfDocumentService? pdfService = null,
+        ISystemConfigurationService? configService = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
         _ratioEngine = ratioEngine;
         _storageService = storageService;
         _pdfService = pdfService;
+        _configService = configService;
     }
 
     public async Task<MentorRatioEvaluationResult> GetRatioEvaluationAsync(int workplaceApprovalId)
@@ -345,8 +349,12 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         if (existing == null) throw new KeyNotFoundException($"WorkplaceApproval with ID {id} not found.");
 
         var beforeState = new { existing.ApprovalStatusCode, existing.InspectionDueDate };
+        var slaDays = _configService != null 
+            ? await _configService.GetValueAsync<int>("WorkplaceApproval:InspectionSlaBusinessDays", 20) 
+            : 20;
+
         existing.ApprovalStatusCode = "APPLICATION";
-        existing.InspectionDueDate = AddBusinessDays(DateTime.UtcNow, 20);
+        existing.InspectionDueDate = AddBusinessDays(DateTime.UtcNow, slaDays);
         existing.ModifiedAt = DateTime.UtcNow;
         existing.ModifiedBy = currentUsername;
 
@@ -449,7 +457,10 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
 
         if (isApproved)
         {
-            var years = validityYears.HasValue && validityYears.Value is >= 1 and <= 5 ? validityYears.Value : 3;
+            var defaultValidity = _configService != null 
+                ? await _configService.GetValueAsync<int>("WorkplaceApproval:DefaultValidityYears", 3) 
+                : 3;
+            var years = validityYears.HasValue && validityYears.Value is >= 1 and <= 5 ? validityYears.Value : defaultValidity;
             existing.ApprovalStatusCode = "APPROVED";
             existing.ApprovalDate = DateTime.UtcNow;
             existing.ExpiryDate = DateTime.UtcNow.AddYears(years);

@@ -1,5 +1,7 @@
 @page "/learners/register-bursary"
 @page "/bursaries/register"
+@page "/bursaries"
+@page "/learners/bursaries/register"
 @using Microsoft.AspNetCore.Authorization
 @using Nsdms.Application.Services
 @using Nsdms.Application.Common.Utilities
@@ -130,7 +132,7 @@ else
                         <MudItem xs="12" md="6">
                             <MudSelect T="int"
                                        Label="Select Active Bursary to Continue *"
-                                       Value="@_previousCompanyLearnerId"
+                                       Value="@_previousEnrolmentId"
                                        ValueChanged="OnActiveBursarySelected"
                                        Variant="Variant.Outlined"
                                        Required="true">
@@ -478,7 +480,7 @@ else
                                    Required="true" />
 
                     @{
-                        var workingDays = CompanyLearnerDomainValidator.CalculateWorkingDays(_learnerSignatureDate ?? DateTime.UtcNow, DateTime.UtcNow);
+                        var workingDays = LearnerEnrolmentDomainValidator.CalculateWorkingDays(_learnerSignatureDate ?? DateTime.UtcNow, DateTime.UtcNow);
                     }
                     <div class="d-flex align-center gap-2">
                         <MudText Typo="Typo.body2">Submission Window Elapsed:</MudText>
@@ -515,7 +517,8 @@ else
     private bool _isContinuation => _applicationType == "Continuation";
     private string _employmentStatus = "Unemployed";
     private int _selectedPersonId = 0;
-    private int _previousCompanyLearnerId = 0;
+    private int _previousEnrolmentId = 0;
+    private int _previousCompanyLearnerId => _previousEnrolmentId;
     private CompanyLearner? _selectedPriorBursary = null;
 
     // Learner Demographics
@@ -584,7 +587,7 @@ else
         _applicationType = val;
         if (_applicationType == "New")
         {
-            _previousCompanyLearnerId = 0;
+            _previousEnrolmentId = 0;
             _selectedPriorBursary = null;
             _activeBursariesForLearner.Clear();
         }
@@ -597,7 +600,7 @@ else
         _selectedPersonId = personId;
         _activeBursariesForLearner.Clear();
         _selectedPriorBursary = null;
-        _previousCompanyLearnerId = 0;
+        _previousEnrolmentId = 0;
 
         if (_selectedPersonId > 0)
         {
@@ -620,7 +623,7 @@ else
 
     private void OnActiveBursarySelected(int bursaryId)
     {
-        _previousCompanyLearnerId = bursaryId;
+        _previousEnrolmentId = bursaryId;
         _selectedPriorBursary = _activeBursariesForLearner.FirstOrDefault(b => b.Id == bursaryId);
         if (_selectedPriorBursary != null)
         {
@@ -657,7 +660,7 @@ else
 
     private void UpdateDocumentChecklist()
     {
-        _requiredDocuments = CompanyLearnerDomainValidator.GetRequiredBursaryDocuments(_applicationType, _employmentStatus);
+        _requiredDocuments = LearnerEnrolmentDomainValidator.GetRequiredBursaryDocuments(_applicationType, _employmentStatus);
     }
 
     private void OnDocumentToggle(string code, bool attached)
@@ -682,7 +685,7 @@ else
                 Snackbar.Add("Please select a registered learner for continuation.", Severity.Warning);
                 return Task.FromResult(false);
             }
-            if (_previousCompanyLearnerId <= 0)
+            if (_previousEnrolmentId <= 0)
             {
                 Snackbar.Add("Please select an active bursary to continue.", Severity.Warning);
                 return Task.FromResult(false);
@@ -801,14 +804,14 @@ else
                 personId = createdPerson.Id;
             }
 
-            var companyLearner = new CompanyLearner
+            var enrolment = new LearnerEnrolment
             {
                 PersonId = personId,
                 OrganisationId = _selectedOrganisationId,
                 LearningProgrammeTypeCode = "05",
                 BursaryApplicationTypeCode = _applicationType,
                 IsContinuation = _isContinuation,
-                PreviousCompanyLearnerId = _previousCompanyLearnerId > 0 ? _previousCompanyLearnerId : null,
+                PreviousEnrolmentId = _previousEnrolmentId > 0 ? _previousEnrolmentId : null,
                 QualificationTitle = _qualificationTitle,
                 SaqaQualificationId = _saqaQualificationId,
                 InstitutionName = _institutionName,
@@ -826,7 +829,7 @@ else
                 IsActive = true
             };
 
-            var registered = await LearnerService.RegisterBursaryApplicationAsync(companyLearner);
+            var registered = await LearnerService.RegisterBursaryApplicationAsync(enrolment);
             _registeredContractNo = registered.LearnerContractNumber ?? ("BUR-" + registered.Id);
             _createdLearnerId = registered.Id;
             _isSuccess = true;

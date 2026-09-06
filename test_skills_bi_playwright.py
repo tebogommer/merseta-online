@@ -18,6 +18,15 @@ def test_bi_suite():
 
         base_url = "http://localhost:5121"
 
+        # Authenticate as SuperAdmin
+        print("[AUTH] Logging in as SuperAdmin...")
+        page.goto(f"{base_url}/login", wait_until="networkidle")
+        page.fill("input#username", "sysadmin@merseta.org.za")
+        page.fill("input#password", "MerSETA@2026!")
+        page.click("button[type='submit']")
+        page.wait_for_load_state("networkidle")
+        print("[AUTH] Successfully authenticated!")
+
         # 1. Test Executive Skills Intelligence & BI Dashboard (/reports/bi)
         print("\n--- 1. Testing Executive Skills Intelligence & BI Dashboard (/reports/bi) ---")
         page.goto(f"{base_url}/reports/bi", wait_until="networkidle")

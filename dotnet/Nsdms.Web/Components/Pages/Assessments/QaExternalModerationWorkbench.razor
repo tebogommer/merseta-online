@@ -1,0 +1,602 @@
+@page "/assessments/qa-workbench"
+@using Microsoft.EntityFrameworkCore
+@using Nsdms.Application.Common
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject ISummativeAssessmentAndModerationService AssessmentService
+@inject IPdfDocumentService PdfService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>QA External Moderation Workbench | merSETA NSDMS</PageTitle>
+
+<div class="mb-4">
+    <!-- Sticky Top Action Bar -->
+    <MudCard Elevation="2" Class="mb-4" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
+        <MudCardContent Class="d-flex flex-wrap align-center justify-space-between gap-3 py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">QA External Moderation Workbench</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    ETQA statutory site audit, stratified sample review, ETQ-TP-043 checklist, and VACS adjudication (Use Case 4.2.2).
+                </MudText>
+            </div>
+            <MudStack Row="true" Spacing="2" Class="align-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
+                    Refresh
+                </MudButton>
+                @if (_selectedBatch != null)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Filled.CalendarMonth" OnClick="OpenScheduleVisitDialog">
+                        Schedule Site Visit
+                    </MudButton>
+                    @if (_selectedBatch.StatusCode != "Upheld")
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Close" OnClick="OpenRejectDialog">
+                            VACS Rejection
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ConfirmUpheldBatchAsync" Disabled="_isAdjudicating">
+                            @if (_isAdjudicating)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-1" />
+                                <span>Adjudicating...</span>
+                            }
+                            else
+                            {
+                                <span>Uphold & Certify Batch</span>
+                            }
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Print" OnClick="@(() => Nav.NavigateTo("/assessments/printing-hub"))">
+                            Printing Hub
+                        </MudButton>
+                    }
+                }
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+
+    <MudGrid>
+        <!-- Left Panel: Batch Queue & Selection -->
+        <MudItem xs="12" md="4">
+            <MudCard Elevation="2" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.subtitle1" Class="fw-bold">
+                            <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Small" Class="mr-2" />
+                            External Moderation Queue (@_batches.Count)
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent Class="pa-2">
+                    <MudTextField @bind-Value="_batchSearch" Placeholder="Filter batch #, provider..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small" Immediate="true" Class="mb-2 px-2" />
+
+                    <MudList T="AssessmentBatch" SelectedValue="_selectedBatch" SelectedValueChanged="OnBatchSelected" Dense="true">
+                        @foreach (var b in FilteredBatches)
+                        {
+                            <MudListItem T="AssessmentBatch" Value="@b">
+                                <div class="d-flex justify-space-between align-center">
+                                    <div>
+                                        <MudText Typo="Typo.body2" Class="fw-bold font-mono">@b.BatchNumber</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block text-truncate" Style="max-width: 200px;">
+                                            @b.TrainingProvider?.ProviderName
+                                        </MudText>
+                                        <MudText Typo="Typo.caption">
+                                            @b.SamplePercentage% sample (@b.SampledLearnersCount / @b.TotalLearnersCount learners)
+                                        </MudText>
+                                    </div>
+                                    <div>
+                                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(b.StatusCode)">
+                                            @b.StatusCode
+                                        </MudChip>
+                                    </div>
+                                </div>
+                            </MudListItem>
+                            <MudDivider />
+                        }
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Right Panel: Batch Detail, Stratified Sample & Checklist -->
+        <MudItem xs="12" md="8">
+            @if (_selectedBatch == null)
+            {
+                <MudPaper Elevation="2" Class="pa-8 text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.TouchApp" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+                    <MudText Typo="Typo.h6">Select a Moderation Batch</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Select an external moderation batch from the queue on the left to audit evidence and record ETQ-TP-043 findings.</MudText>
+                </MudPaper>
+            }
+            else
+            {
+                <!-- Batch Header & Site Visit Summary -->
+                <MudCard Elevation="2" Class="mb-4">
+                    <MudCardContent>
+                        <div class="d-flex justify-space-between align-start mb-2">
+                            <div>
+                                <MudText Typo="Typo.h6" Class="fw-bold font-mono">@_selectedBatch.BatchNumber</MudText>
+                                <MudText Typo="Typo.body2"><strong>SDP:</strong> @_selectedBatch.TrainingProvider?.ProviderName (Accreditation: @(_selectedBatch.TrainingProvider?.AccreditationNumber ?? "N/A"))</MudText>
+                                <MudText Typo="Typo.body2"><strong>Qualification:</strong> @_selectedBatch.QualificationTitle (SAQA ID: @(_selectedBatch.SaqaQualificationId ?? "N/A"))</MudText>
+                            </div>
+                            <div class="text-right">
+                                <MudChip T="string" Color="@GetStatusColor(_selectedBatch.StatusCode)" Class="mb-1">@_selectedBatch.StatusCode</MudChip>
+                                <MudText Typo="Typo.caption" Class="d-block">Stage: @_selectedBatch.AssessmentStageCode</MudText>
+                                <MudText Typo="Typo.caption" Class="d-block">Sample Size: @_selectedBatch.SamplePercentage% (@_selectedBatch.SampledLearnersCount/@_selectedBatch.TotalLearnersCount)</MudText>
+                            </div>
+                        </div>
+
+                        <MudPaper Elevation="0" Class="pa-3 rounded border" Style="background-color: var(--mud-palette-background-grey);">
+                            <MudGrid Spacing="2">
+                                <MudItem xs="12" sm="4">
+                                    <MudText Typo="Typo.caption" Class="text-uppercase fw-bold">Site Visit Status</MudText>
+                                    <MudText Typo="Typo.body2">
+                                        @if (_selectedBatch.ScheduledSiteVisitDate.HasValue)
+                                        {
+                                            <span class="fw-bold text-success">Scheduled: @_selectedBatch.ScheduledSiteVisitDate.Value.ToString("yyyy-MM-dd")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-warning">Desktop Evaluation Pending</span>
+                                        }
+                                    </MudText>
+                                </MudItem>
+                                <MudItem xs="12" sm="4">
+                                    <MudText Typo="Typo.caption" Class="text-uppercase fw-bold">Internal Moderation</MudText>
+                                    <MudText Typo="Typo.body2">@(_selectedBatch.LastInternalModerationDate?.ToString("yyyy-MM-dd") ?? "Verified")</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Ref: @(_selectedBatch.InternalModerationReportDocumentRef ?? "Annexure 3 On File")</MudText>
+                                </MudItem>
+                                <MudItem xs="12" sm="4">
+                                    <MudText Typo="Typo.caption" Class="text-uppercase fw-bold">Controlled Documents</MudText>
+                                    <MudStack Row="true" Spacing="1" Class="mt-1">
+                                        <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="DownloadEtqTp043Async">
+                                            ETQ-TP-043
+                                        </MudButton>
+                                    </MudStack>
+                                </MudItem>
+                            </MudGrid>
+                        </MudPaper>
+                    </MudCardContent>
+                </MudCard>
+
+                <!-- Stratified Sampled Learners Card -->
+                <MudCard Elevation="2" Class="mb-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold">
+                                <MudIcon Icon="@Icons.Material.Filled.FilterAlt" Size="Size.Small" Class="mr-2" />
+                                Stratified Audit Sample (@_selectedBatch.SampledLearnersCount Sampled of @_selectedBatch.TotalLearnersCount Total)
+                            </MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudTable Items="_batchLearners" Hover="true" Dense="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Sample Tag</MudTh>
+                                <MudTh>Learner Name</MudTh>
+                                <MudTh>RSA ID / Passport</MudTh>
+                                <MudTh>Credits</MudTh>
+                                <MudTh>Assessor</MudTh>
+                                <MudTh>Internal Moderator</MudTh>
+                                <MudTh>Audit Outcome</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Sample">
+                                    @if (context.IsSelectedInSample)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">In Sample</MudChip>
+                                    }
+                                    else
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">Excluded</MudChip>
+                                    }
+                                </MudTd>
+                                <MudTd DataLabel="Learner">
+                                    <MudText Typo="Typo.body2" Class="fw-bold">@context.SummativeAssessmentReport?.Person?.FirstName @context.SummativeAssessmentReport?.Person?.LastName</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">SAR-@context.SummativeAssessmentReportId.ToString("D5")</MudText>
+                                </MudTd>
+                                <MudTd DataLabel="ID"><span class="font-mono">@(context.SummativeAssessmentReport?.Person?.RsaIdNumber ?? context.SummativeAssessmentReport?.Person?.PassportNumber ?? "N/A")</span></MudTd>
+                                <MudTd DataLabel="Credits">@context.SummativeAssessmentReport?.TotalCreditsEarned / @context.SummativeAssessmentReport?.TotalCreditsRequired</MudTd>
+                                <MudTd DataLabel="Assessor">@(context.SummativeAssessmentReport?.AssessorPerson?.FirstName) @(context.SummativeAssessmentReport?.AssessorPerson?.LastName)</MudTd>
+                                <MudTd DataLabel="Moderator">@(context.SummativeAssessmentReport?.InternalModeratorPerson?.FirstName) @(context.SummativeAssessmentReport?.InternalModeratorPerson?.LastName)</MudTd>
+                                <MudTd DataLabel="Outcome">
+                                    <MudChip T="string" Size="Size.Small" Color="@(context.LearnerOutcomeStatus == "Upheld" ? Color.Success : (context.LearnerOutcomeStatus == "Rejected" ? Color.Error : Color.Warning))">
+                                        @context.LearnerOutcomeStatus
+                                    </MudChip>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudCardContent>
+                </MudCard>
+
+                <!-- Interactive ETQ-TP-043 Checklist Audit Card -->
+                <MudCard Elevation="2" Class="mb-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold">
+                                <MudIcon Icon="@Icons.Material.Filled.Checklist" Size="Size.Small" Class="mr-2" />
+                                ETQ-TP-043 Moderation & Validation Checklist (10 Statutory Points)
+                            </MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudTable Items="_checklistItems" Hover="true" Dense="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh Style="width: 30px;">#</MudTh>
+                                <MudTh>Verification Criteria</MudTh>
+                                <MudTh Style="width: 140px;">Compliance</MudTh>
+                                <MudTh>Auditor Comments & Evidence Notes</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="#">@context.Number</MudTd>
+                                <MudTd DataLabel="Criteria">
+                                    <MudText Typo="Typo.body2" Class="fw-bold">@context.Title</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Description</MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Compliance">
+                                    <MudToggleGroup T="bool" @bind-Value="context.IsCompliant" Dense="true" Outlined="true" Size="Size.Small" Color="Color.Success">
+                                        <MudToggleItem Value="true" Text="Yes" />
+                                        <MudToggleItem Value="false" Text="No" />
+                                    </MudToggleGroup>
+                                </MudTd>
+                                <MudTd DataLabel="Comments">
+                                    <MudTextField @bind-Value="context.Comments" Placeholder="Enter finding..." Dense="true" Margin="Margin.Dense" />
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudCardContent>
+                </MudCard>
+            }
+        </MudItem>
+    </MudGrid>
+</div>
+
+<!-- Schedule Site Visit Dialog -->
+<MudDialog @bind-Visible="_isScheduleDialogOpen" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Class="mr-2" />
+            Schedule External Moderation Site Visit
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudAlert Severity="Severity.Info" Dense="true">
+                Scheduling official ETQA on-site verification visit for batch <strong>@_selectedBatch?.BatchNumber</strong>.
+            </MudAlert>
+
+            <MudDatePicker Label="Scheduled Inspection Date" @bind-Date="_visitDate" Dense="true" Outlined="true" Editable="true" />
+
+            <!-- Mandatory Contact Person selection invariant -->
+            <MudSelect T="int?" Label="Employer / SDP Contact Person *" @bind-Value="_contactPersonId" Dense="true" Outlined="true" Required="true" HelperText="Statutory requirement: You must link a verified contact person.">
+                <MudSelectItem T="int?" Value="@((int?)null)">-- Select Verified Contact Person --</MudSelectItem>
+                @foreach (var cp in _contactPersons)
+                {
+                    <MudSelectItem T="int?" Value="@((int?)cp.Id)">
+                        @cp.FirstName @cp.LastName (RSA ID: @(string.IsNullOrEmpty(cp.RsaIdNumber) ? "N/A" : cp.RsaIdNumber))
+                    </MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudTextField Label="Inspection Scope & Logistics Comments" @bind-Value="_visitComments" Lines="3" Dense="true" Outlined="true" Placeholder="Specify tooling, PoE files, and room requirements..." />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _isScheduleDialogOpen = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="ConfirmScheduleVisitAsync" Disabled="!_contactPersonId.HasValue">
+            Confirm & Dispatch Notification
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- VACS Rejection Dialog -->
+<MudDialog @bind-Visible="_isRejectDialogOpen" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Error">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
+            External Moderation Formal Rejection (Remedial Action)
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudAlert Severity="Severity.Error" Dense="true">
+                Issuing a formal ETQA rejection will route batch <strong>@_selectedBatch?.BatchNumber</strong> for 14-day remedial action.
+            </MudAlert>
+
+            <MudSelect T="string" Label="Primary Rejection Reason Category" @bind-Value="_primaryRejectionCategory" Dense="true" Outlined="true">
+                <MudSelectItem T="string" Value="@("VacsNonCompliant")">VACS Principle Violation (Assessment Evidence Deficient)</MudSelectItem>
+                <MudSelectItem T="string" Value="@("AssessmentGuidesNonCompliant")">Assessment Guides / Instruments Non-Compliant</MudSelectItem>
+                <MudSelectItem T="string" Value="@("ResultsIncorrectlyCaptured")">Results or Scores Incorrectly Captured</MudSelectItem>
+            </MudSelect>
+
+            @if (_primaryRejectionCategory == "VacsNonCompliant")
+            {
+                <MudSelect T="string" Label="VACS Statutory Principle Violated" @bind-Value="_vacsPrinciple" Dense="true" Outlined="true">
+                    <MudSelectItem T="string" Value="@("NotValid")">Not Valid (Evidence does not match standard)</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("NotAuthentic")">Not Authentic (Learner own work doubtful)</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("NotCurrent")">Not Current (Evidence expired / outdated)</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("NotSufficient")">Not Sufficient (Inadequate portfolio proof)</MudSelectItem>
+                </MudSelect>
+            }
+
+            <MudTextField Label="Detailed Remedial Action Required (Mandatory)" @bind-Value="_remedialDescription" Lines="4" Dense="true" Outlined="true" Placeholder="Clearly specify what remedial evidence the provider must re-submit within 14 working days..." Required="true" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _isRejectDialogOpen = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Gavel" OnClick="ConfirmRejectBatchAsync" Disabled="@(string.IsNullOrWhiteSpace(_remedialDescription))">
+            Issue Formal Rejection
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int? BatchId { get; set; }
+
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Overview & tasks", href: "/"),
+        new BreadcrumbItem("Summative assessments", href: "/assessments/summative"),
+        new BreadcrumbItem("QA moderation workbench", href: null, disabled: true)
+    };
+
+    private bool _isLoading = false;
+    private bool _isAdjudicating = false;
+    private bool _isScheduleDialogOpen = false;
+    private bool _isRejectDialogOpen = false;
+
+    private string _batchSearch = string.Empty;
+    private List<AssessmentBatch> _batches = new();
+    private AssessmentBatch? _selectedBatch;
+    private List<AssessmentBatchLearner> _batchLearners = new();
+    private List<Person> _contactPersons = new();
+
+    private DateTime? _visitDate = DateTime.UtcNow.AddDays(7);
+    private int? _contactPersonId;
+    private string _visitComments = string.Empty;
+
+    private string _primaryRejectionCategory = "VacsNonCompliant";
+    private string _vacsPrinciple = "NotSufficient";
+    private string _remedialDescription = string.Empty;
+
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
+
+    private class ChecklistItemVm
+    {
+        public int Number { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public bool IsCompliant { get; set; } = true;
+        public string? Comments { get; set; }
+    }
+
+    private List<ChecklistItemVm> _checklistItems = new()
+    {
+        new() { Number = 1, Title = "Assessor Registration & Scope", Description = "Verified assessor registration is active and qualification scope approved by ETQA." },
+        new() { Number = 2, Title = "Internal Moderator Scope", Description = "Verified internal moderator is registered and accredited for specified qualification." },
+        new() { Number = 3, Title = "Segregation of Duties", Description = "Confirmed assessor and internal moderator are distinct certified individuals." },
+        new() { Number = 4, Title = "Learner Evidence Files (PoE)", Description = "Portfolio of evidence files are complete, signed, and physically or digitally accessible." },
+        new() { Number = 5, Title = "Assessment Instruments", Description = "Assessment guides, marking matrices, and exemplar instruments meet SAQA standards." },
+        new() { Number = 6, Title = "Formative Assessment Record", Description = "Formative milestone logs and remedial feedback properly completed before summative." },
+        new() { Number = 7, Title = "Validity Principle (VACS)", Description = "Assessment directly measures prescribed learning outcomes and unit standard criteria." },
+        new() { Number = 8, Title = "Authenticity Principle (VACS)", Description = "Evidence produced is indisputably candidate's own original performance." },
+        new() { Number = 9, Title = "Currency Principle (VACS)", Description = "Assessment evidence relates to contemporary occupational industrial practice." },
+        new() { Number = 10, Title = "Sufficiency Principle (VACS)", Description = "Quantum and breadth of evidence is adequate to justify definitive competency call." }
+    };
+
+    private List<AssessmentBatch> FilteredBatches =>
+        _batches.Where(b => string.IsNullOrEmpty(_batchSearch) ||
+                            b.BatchNumber.Contains(_batchSearch, StringComparison.OrdinalIgnoreCase) ||
+                            (b.TrainingProvider?.ProviderName?.Contains(_batchSearch, StringComparison.OrdinalIgnoreCase) ?? false))
+                .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _batches = await AssessmentService.GetAssessmentBatchesAsync();
+
+            if (BatchId.HasValue)
+            {
+                _selectedBatch = _batches.FirstOrDefault(b => b.Id == BatchId.Value);
+            }
+            else if (_selectedBatch == null && _batches.Count > 0)
+            {
+                _selectedBatch = _batches.First();
+            }
+
+            if (_selectedBatch != null)
+            {
+                await LoadSelectedBatchDetailsAsync(_selectedBatch.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading workbench data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnBatchSelected(AssessmentBatch batch)
+    {
+        _selectedBatch = batch;
+        if (batch != null)
+        {
+            await LoadSelectedBatchDetailsAsync(batch.Id);
+        }
+    }
+
+    private async Task LoadSelectedBatchDetailsAsync(int batchId)
+    {
+        var details = await AssessmentService.GetBatchCredentialsDetailsAsync(batchId);
+        _batchLearners = details.Learners;
+
+        if (_selectedBatch != null)
+        {
+            _contactPersons = await AssessmentService.GetContactPersonsForProviderAsync(_selectedBatch.TrainingProviderId);
+            if (_contactPersons.Count > 0)
+            {
+                _contactPersonId = _contactPersons.First().Id;
+            }
+        }
+    }
+
+    private void OpenScheduleVisitDialog()
+    {
+        _visitDate = DateTime.UtcNow.AddDays(7);
+        _visitComments = $"ETQA On-site moderation visit for batch {_selectedBatch?.BatchNumber}.";
+        _isScheduleDialogOpen = true;
+    }
+
+    private async Task ConfirmScheduleVisitAsync()
+    {
+        if (_selectedBatch == null || !_contactPersonId.HasValue || !_visitDate.HasValue) return;
+
+        try
+        {
+            await AssessmentService.ScheduleSiteVisitAsync(
+                _selectedBatch.Id,
+                _visitDate.Value,
+                true,
+                _visitComments,
+                _contactPersonId,
+                "SYSTEM");
+
+            Snackbar.Add($"Site visit scheduled for {_visitDate:yyyy-MM-dd}. Notification dispatched to provider contact.", Severity.Success);
+            _isScheduleDialogOpen = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error scheduling visit: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ConfirmUpheldBatchAsync()
+    {
+        if (_selectedBatch == null) return;
+
+        _isAdjudicating = true;
+        try
+        {
+            var checklistDtos = _checklistItems.Select(c => new ModerationChecklistItemDto
+            {
+                SectionNumber = 1,
+                CriteriaTitle = c.Title,
+                EvidenceRequirements = c.Description,
+                IsCompliant = c.IsCompliant,
+                Comments = c.Comments
+            }).ToList();
+
+            var result = await AssessmentService.RecordExternalModerationOutcomeAsync(
+                _selectedBatch.Id,
+                true,
+                null,
+                null,
+                "External moderation audit passed all statutory criteria.",
+                null,
+                checklistDtos,
+                "merSETA External QA Specialist");
+
+            Snackbar.Add($"Batch {_selectedBatch.BatchNumber} formally Upheld and Certified! Qualification certificates & SORs generated.", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error upholding batch: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isAdjudicating = false;
+        }
+    }
+
+    private void OpenRejectDialog()
+    {
+        _primaryRejectionCategory = "VacsNonCompliant";
+        _vacsPrinciple = "NotSufficient";
+        _remedialDescription = string.Empty;
+        _isRejectDialogOpen = true;
+    }
+
+    private async Task ConfirmRejectBatchAsync()
+    {
+        if (_selectedBatch == null) return;
+
+        try
+        {
+            var checklistDtos = _checklistItems.Select(c => new ModerationChecklistItemDto
+            {
+                SectionNumber = 1,
+                CriteriaTitle = c.Title,
+                EvidenceRequirements = c.Description,
+                IsCompliant = c.IsCompliant,
+                Comments = c.Comments
+            }).ToList();
+
+            var result = await AssessmentService.RecordExternalModerationOutcomeAsync(
+                _selectedBatch.Id,
+                false,
+                _primaryRejectionCategory,
+                _vacsPrinciple,
+                "ETQA Remedial Action Required",
+                _remedialDescription,
+                checklistDtos,
+                "merSETA External QA Specialist");
+
+            Snackbar.Add($"Formal rejection issued for batch {_selectedBatch.BatchNumber}. Remedial tasks routed to provider.", Severity.Warning);
+            _isRejectDialogOpen = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error rejecting batch: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DownloadEtqTp043Async()
+    {
+        if (_selectedBatch == null) return;
+        try
+        {
+            var pdfBytes = await PdfService.GenerateModerationValidationReportPdfAsync(_selectedBatch.Id);
+            var base64 = Convert.ToBase64String(pdfBytes);
+            await JS.InvokeVoidAsync("downloadFile", $"ETQ-TP-043_{_selectedBatch.BatchNumber}.pdf", "application/pdf", base64);
+            Snackbar.Add("ETQ-TP-043 validation report downloaded.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error downloading report: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Upheld" => Color.Success,
+        "Finalised" => Color.Success,
+        "InExternalModerationPool" => Color.Warning,
+        "SiteVisitScheduled" => Color.Info,
+        "RejectedRemedialRequired" => Color.Error,
+        _ => Color.Default
+    };
+}

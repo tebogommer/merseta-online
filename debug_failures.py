@@ -1,20 +1,59 @@
+import sys
 from playwright.sync_api import sync_playwright
 
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
-    page = browser.new_page()
+BASE_URL = "http://localhost:5121"
 
-    for url in ["http://localhost:5121/people/1", "http://localhost:5121/finance/banking-details/1"]:
-        print(f"\n--- Visiting {url} ---")
-        page.on("console", lambda m: print(f"Console: {m.type}: {m.text}"))
-        page.on("pageerror", lambda e: print(f"PageError: {e}"))
-        try:
-            resp = page.goto(url, wait_until="networkidle", timeout=10000)
-            print(f"Status: {resp.status if resp else 'None'}")
-            text = page.inner_text("body")
-            print("Body Text (first 500 chars):")
-            print(text[:500])
-        except Exception as ex:
-            print(f"Exception: {ex}")
+FAILING_PAGES = [
+    "/people/1",
+    "/sdp/create",
+    "/wsp/create",
+    "/learners/1",
+    "/learners/agreement-wizard",
+    "/bursaries",
+    "/tradetests",
+    "/assessments/summative/1",
+    "/workplace-approvals"
+]
 
-    browser.close()
+def debug_failures():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context()
+        page = context.new_page()
+
+        # Login
+        page.goto(f"{BASE_URL}/login")
+        page.fill("input#username", "sysadmin@merseta.org.za")
+        page.fill("input#password", "MerSETA@2026!")
+        page.click("button[type='submit']")
+        page.wait_for_load_state("networkidle")
+
+        for url in FAILING_PAGES:
+            print(f"\n==================================================")
+            print(f"DEBUGGING: {url}")
+            print(f"==================================================")
+            try:
+                res = page.goto(f"{BASE_URL}{url}", wait_until="networkidle", timeout=10000)
+                status = res.status if res else "None"
+                print(f"Status: {status} | Final URL: {page.url}")
+
+                body_text = page.locator("body").inner_text()
+                # If there's an exception, print snippet
+                lines = [line.strip() for line in body_text.split("\n") if line.strip()]
+                print("Body preview (first 10 non-empty lines):")
+                for line in lines[:10]:
+                    print("  >", line)
+
+                # Check if there's raw exception details or stack trace
+                if "exception" in body_text.lower() or "error" in body_text.lower():
+                    for line in lines:
+                        if any(k in line.lower() for k in ["exception:", "at nsdms", "at system", "invalidoperationexception", "nullreferenceexception", "sqlexception", "keynotfoundexception"]):
+                            print("  [STACK/ERROR LINE]:", line)
+
+            except Exception as e:
+                print(f"Exception navigating to {url}: {e}")
+
+        browser.close()
+
+if __name__ == "__main__":
+    debug_failures()

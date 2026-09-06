@@ -1,0 +1,361 @@
+@page "/assessments/batching"
+@using Microsoft.EntityFrameworkCore
+@using Nsdms.Application.Common
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject ISummativeAssessmentAndModerationService AssessmentService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>Assessment Holding Room & Batching | merSETA NSDMS</PageTitle>
+
+<div class="mb-4">
+    <!-- Sticky Top Action Bar -->
+    <MudCard Elevation="2" Class="mb-4" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
+        <MudCardContent Class="d-flex flex-wrap align-center justify-space-between gap-3 py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">Assessment Holding Room & Batching</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Aggregation of verified summative assessments into statutory moderation batches with sample size calculation (Use Case 4.2.1).
+                </MudText>
+            </div>
+            <MudStack Row="true" Spacing="2" Class="align-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
+                    Refresh
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Nav.NavigateTo("/assessments/summative/capture"))">
+                    Capture New Results
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Layers" OnClick="OpenCreateBatchDialog" Disabled="@(_selectedReportIds.Count == 0)">
+                    Batch Selected (@_selectedReportIds.Count)
+                </MudButton>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+        <!-- TAB 1: Holding Room Inventory -->
+        <MudTabPanel Text="Holding Room Inventory" Icon="@Icons.Material.Filled.MeetingRoom" BadgeData="@_holdingRoomReports.Count" BadgeColor="Color.Primary">
+            <MudPaper Elevation="0" Class="d-flex flex-wrap align-center gap-3 mb-3">
+                <MudSelect T="string" Label="Filter by Qualification" @bind-Value="_qualFilter" Dense="true" Outlined="true" Style="max-width: 320px;">
+                    <MudSelectItem T="string" Value="@string.Empty">All Qualifications</MudSelectItem>
+                    @foreach (var q in _availableQualifications)
+                    {
+                        <MudSelectItem T="string" Value="@q">@q</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSelect T="string" Label="Filter by Stage" @bind-Value="_stageFilter" Dense="true" Outlined="true" Style="max-width: 200px;">
+                    <MudSelectItem T="string" Value="@string.Empty">All Stages</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("Completion")">Completion</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("Progress")">Progress</MudSelectItem>
+                </MudSelect>
+
+                <MudSpacer />
+
+                <MudTextField @bind-Value="_holdingSearch" Placeholder="Search learner, ID, assessor..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small" Immediate="true" Style="max-width: 280px;" />
+            </MudPaper>
+
+            @if (FilteredHoldingReports.Count == 0)
+            {
+                <div class="pa-8 text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Size="Size.Large" Color="Color.Success" Class="mb-2" />
+                    <MudText Typo="Typo.h6">Holding Room is Empty</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">All committed summative assessments have been batched for external moderation.</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Nav.NavigateTo("/assessments/capture"))">
+                        Capture Assessment Results
+                    </MudButton>
+                </div>
+            }
+            else
+            {
+                <MudTable Items="FilteredHoldingReports" Hover="true" Dense="true" Elevation="0" MultiSelection="true" @bind-SelectedItems="_selectedHoldingReports">
+                    <HeaderContent>
+                        <MudTh>Learner</MudTh>
+                        <MudTh>RSA ID / Passport</MudTh>
+                        <MudTh>Qualification</MudTh>
+                        <MudTh>Stage</MudTh>
+                        <MudTh>Credits</MudTh>
+                        <MudTh>Assessor</MudTh>
+                        <MudTh>Internal Moderator</MudTh>
+                        <MudTh>Assessment Date</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Learner">
+                            <MudText Typo="Typo.body2" Class="fw-bold">@context.Person?.FirstName @context.Person?.LastName</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">SAR-@context.Id.ToString("D5")</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="ID"><span class="font-mono">@(context.Person?.RsaIdNumber ?? context.Person?.PassportNumber ?? "N/A")</span></MudTd>
+                        <MudTd DataLabel="Qualification">@context.QualificationTitle</MudTd>
+                        <MudTd DataLabel="Stage">
+                            <MudChip T="string" Size="Size.Small" Color="@(context.AssessmentStageCode == "Completion" ? Color.Primary : Color.Secondary)">
+                                @context.AssessmentStageCode
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Credits"><span class="fw-bold">@context.TotalCreditsEarned</span> / @context.TotalCreditsRequired</MudTd>
+                        <MudTd DataLabel="Assessor">@(context.AssessorPerson?.FirstName) @(context.AssessorPerson?.LastName)</MudTd>
+                        <MudTd DataLabel="Moderator">@(context.InternalModeratorPerson?.FirstName) @(context.InternalModeratorPerson?.LastName)</MudTd>
+                        <MudTd DataLabel="Date">@context.AssessmentDate.ToString("yyyy-MM-dd")</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudTabPanel>
+
+        <!-- TAB 2: Generated Batches -->
+        <MudTabPanel Text="External Moderation Batches" Icon="@Icons.Material.Filled.Layers" BadgeData="@_batches.Count" BadgeColor="Color.Info">
+            @if (_batches.Count == 0)
+            {
+                <div class="pa-8 text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">No moderation batches created yet. Select learners from the Holding Room to create a batch.</MudText>
+                </div>
+            }
+            else
+            {
+                <MudTable Items="_batches" Hover="true" Dense="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Batch #</MudTh>
+                        <MudTh>Provider</MudTh>
+                        <MudTh>Qualification</MudTh>
+                        <MudTh>Stage</MudTh>
+                        <MudTh>Sample Size</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Moderation Date</MudTh>
+                        <MudTh Class="text-right">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Batch #">
+                            <MudLink Href="@($"/assessments/qa-workbench?batchId={context.Id}")" Underline="Underline.Hover">
+                                <span class="font-mono fw-bold">@context.BatchNumber</span>
+                            </MudLink>
+                        </MudTd>
+                        <MudTd DataLabel="Provider">@context.TrainingProvider?.ProviderName</MudTd>
+                        <MudTd DataLabel="Qualification">@context.QualificationTitle</MudTd>
+                        <MudTd DataLabel="Stage">@context.AssessmentStageCode</MudTd>
+                        <MudTd DataLabel="Sample">
+                            <MudText Typo="Typo.body2"><strong>@context.SamplePercentage%</strong> (@context.SampledLearnersCount / @context.TotalLearnersCount learners)</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.StatusCode)">
+                                @context.StatusCode
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Date">@(context.LastInternalModerationDate?.ToString("yyyy-MM-dd") ?? "Pending")</MudTd>
+                        <MudTd DataLabel="Actions" Class="text-right">
+                            <MudStack Row="true" Spacing="1" Class="justify-end">
+                                @if (context.StatusCode == "Batched")
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Info" Size="Size.Small" StartIcon="@Icons.Material.Filled.Send" OnClick="@(() => SubmitToQaPoolAsync(context.Id))">
+                                        Dispatch to QA Pool
+                                    </MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.RemoveRedEye" OnClick="@(() => Nav.NavigateTo($"/assessments/qa-workbench?batchId={context.Id}"))">
+                                        View in Workbench
+                                    </MudButton>
+                                }
+                            </MudStack>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudTabPanel>
+    </MudTabs>
+</div>
+
+<!-- Create Moderation Batch Dialog -->
+<MudDialog @bind-Visible="_isCreateBatchDialogOpen" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Layers" Class="mr-2" />
+            Create External Moderation Batch (Use Case 4.2.1)
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudAlert Severity="Severity.Info" Dense="true">
+                Packaging <strong>@_selectedHoldingReports.Count learners</strong> into an official ETQA external moderation batch.
+            </MudAlert>
+
+            <MudTextField Label="Generated Batch Reference" Value="_batchNumberPreview" ReadOnly="true" Dense="true" Outlined="true" HelperText="Official format: MOD-BATCH-{yyyy}-{id:D5}" />
+
+            <MudSelect T="int" Label="Statutory Sample Size Percentage" @bind-Value="_batchSamplePercentage" Dense="true" Outlined="true" HelperText="Prescribed ETQA audit ratio: 10%, 30%, 50%, or 100%">
+                <MudSelectItem T="int" Value="10">10% Sample (@CalculatedSampleCount of @_selectedHoldingReports.Count learners)</MudSelectItem>
+                <MudSelectItem T="int" Value="30">30% Sample (@CalculatedSampleCount of @_selectedHoldingReports.Count learners)</MudSelectItem>
+                <MudSelectItem T="int" Value="50">50% Sample (@CalculatedSampleCount of @_selectedHoldingReports.Count learners)</MudSelectItem>
+                <MudSelectItem T="int" Value="100">100% Comprehensive Audit (@_selectedHoldingReports.Count learners)</MudSelectItem>
+            </MudSelect>
+
+            <MudDatePicker Label="Last Date of Internal Moderation" @bind-Date="_lastModerationDate" Dense="true" Outlined="true" Editable="true" />
+
+            <MudTextField Label="Internal Moderation Report Reference (Annexure 3)" @bind-Value="_internalReportDocRef" Dense="true" Outlined="true" Placeholder="e.g. DOC-IMR-2026-08412" HelperText="Verified report signed by accredited internal moderator." />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _isCreateBatchDialogOpen = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Check" OnClick="ConfirmCreateBatchAsync" Disabled="_isCreatingBatch">
+            @if (_isCreatingBatch)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-1" />
+                <span>Creating Batch...</span>
+            }
+            else
+            {
+                <span>Create Batch & Dispatch</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Overview & tasks", href: "/"),
+        new BreadcrumbItem("Summative assessments", href: "/assessments/summative"),
+        new BreadcrumbItem("Batching & holding room", href: null, disabled: true)
+    };
+
+    private bool _isLoading = false;
+    private bool _isCreateBatchDialogOpen = false;
+    private bool _isCreatingBatch = false;
+
+    private string _qualFilter = string.Empty;
+    private string _stageFilter = string.Empty;
+    private string _holdingSearch = string.Empty;
+
+    private List<SummativeAssessmentReport> _holdingRoomReports = new();
+    private HashSet<SummativeAssessmentReport> _selectedHoldingReports = new();
+    private List<AssessmentBatch> _batches = new();
+    private List<string> _availableQualifications = new();
+
+    private HashSet<int> _selectedReportIds => _selectedHoldingReports.Select(r => r.Id).ToHashSet();
+
+    private string _batchNumberPreview = $"MOD-BATCH-{DateTime.UtcNow.Year}-PENDING";
+    private int _batchSamplePercentage = 10;
+    private DateTime? _lastModerationDate = DateTime.UtcNow;
+    private string _internalReportDocRef = $"IMR-{DateTime.UtcNow:yyyyMMdd}-{Random.Shared.Next(1000, 9999)}";
+
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
+
+    private int CalculatedSampleCount =>
+        Math.Max(1, (int)Math.Ceiling(_selectedHoldingReports.Count * _batchSamplePercentage / 100.0));
+
+    private List<SummativeAssessmentReport> FilteredHoldingReports =>
+        _holdingRoomReports
+            .Where(r => string.IsNullOrEmpty(_qualFilter) || r.QualificationTitle == _qualFilter)
+            .Where(r => string.IsNullOrEmpty(_stageFilter) || r.AssessmentStageCode == _stageFilter)
+            .Where(r => string.IsNullOrEmpty(_holdingSearch) ||
+                        (r.Person?.FirstName?.Contains(_holdingSearch, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                        (r.Person?.LastName?.Contains(_holdingSearch, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                        (r.Person?.RsaIdNumber?.Contains(_holdingSearch, StringComparison.OrdinalIgnoreCase) ?? false))
+            .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _holdingRoomReports = await AssessmentService.GetHoldingRoomReportsAsync();
+            _batches = await AssessmentService.GetAssessmentBatchesAsync();
+
+            _availableQualifications = _holdingRoomReports
+                .Select(r => r.QualificationTitle)
+                .Distinct()
+                .ToList();
+
+            _selectedHoldingReports.Clear();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading batching data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenCreateBatchDialog()
+    {
+        if (_selectedHoldingReports.Count == 0) return;
+
+        var sampleYear = DateTime.UtcNow.Year;
+        _batchNumberPreview = $"MOD-BATCH-{sampleYear}-{Random.Shared.Next(10000, 99999)}";
+        _isCreateBatchDialogOpen = true;
+    }
+
+    private async Task ConfirmCreateBatchAsync()
+    {
+        if (_selectedHoldingReports.Count == 0) return;
+
+        _isCreatingBatch = true;
+        try
+        {
+            var firstReport = _selectedHoldingReports.First();
+            int providerId = firstReport.TrainingProviderId ?? 1;
+
+            var batch = await AssessmentService.CreateAssessmentBatchAsync(
+                providerId,
+                firstReport.QualificationTitle,
+                firstReport.SaqaQualificationId,
+                firstReport.AssessmentStageCode,
+                _batchSamplePercentage,
+                _selectedReportIds.ToList(),
+                _internalReportDocRef,
+                "SYSTEM");
+
+            Snackbar.Add($"Batch {batch.BatchNumber} successfully generated with {batch.SampledLearnersCount} sampled learners.", Severity.Success);
+            _isCreateBatchDialogOpen = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating batch: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isCreatingBatch = false;
+        }
+    }
+
+    private async Task SubmitToQaPoolAsync(int batchId)
+    {
+        try
+        {
+            var success = await AssessmentService.SubmitBatchToQaPoolAsync(batchId);
+            if (success != null)
+            {
+                Snackbar.Add("Batch submitted to merSETA QA pool.", Severity.Success);
+                await LoadDataAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error submitting batch: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Upheld" => Color.Success,
+        "Finalised" => Color.Success,
+        "InExternalModerationPool" => Color.Warning,
+        "SiteVisitScheduled" => Color.Info,
+        "RejectedRemedialRequired" => Color.Error,
+        _ => Color.Default
+    };
+}

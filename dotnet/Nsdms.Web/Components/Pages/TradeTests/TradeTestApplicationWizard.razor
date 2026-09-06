@@ -1,5 +1,6 @@
 @page "/trade-tests/apply"
 @page "/trade-tests/apply/{CompanyLearnerId:int}"
+@page "/trade-tests/apply/enrolment/{EnrolmentId:int}"
 @page "/trade-tests/create"
 @page "/tradetests/apply"
 @page "/tradetests/create"
@@ -198,6 +199,7 @@ else
 
 @code {
     [Parameter] public int? CompanyLearnerId { get; set; }
+    [Parameter] public int? EnrolmentId { get; set; }
 
     private int _activeStep = 0;
     private bool _loading = true;
@@ -335,9 +337,10 @@ else
             _learners = await LearnerService.GetAllAsync();
             _trainingProviders = await ProviderService.GetAllAsync();
 
-            if (CompanyLearnerId.HasValue && CompanyLearnerId.Value > 0)
+            var targetId = EnrolmentId ?? CompanyLearnerId;
+            if (targetId.HasValue && targetId.Value > 0)
             {
-                _companyLearnerId = CompanyLearnerId.Value;
+                _companyLearnerId = targetId.Value;
             }
             else if (_learners.Any())
             {

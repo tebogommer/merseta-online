@@ -1,0 +1,527 @@
+@page "/sdp/review-queue"
+@page "/sdp/qa-queue"
+@page "/etqa/sdp-queue"
+@using Microsoft.AspNetCore.Authorization
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@attribute [Authorize]
+@inject ITrainingProviderService ProviderService
+@inject ISdpDisciplinaryService DisciplinaryService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A2 (Work Queue - SDP Accreditation Maker-Checker Evaluation & Committee Pipeline)
+  Signed 2023 SDP Application Specification Section 2 & Table 7 Steps F through N.
+*@
+
+<PageTitle>SDP Accreditation Review Queue | merSETA NSDMS</PageTitle>
+
+<EntityHeader Title="SDP Accreditation Review Queue"
+              Subtitle="Multi-stage maker-checker verification, 5-day inspection SLA dispatch, and ETQA Review Committee adjudication pipeline"
+              ReferenceKey="A2-SDP-QA-QUEUE"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="LoadDataAsync"
+                   aria-label="Refresh SDP Review Queue">
+            Refresh
+        </MudButton>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.AssignmentTurnedIn"
+                   OnClick="@(() => Nav.NavigateTo("/etqa/scope-extensions"))"
+                   aria-label="Scope Extensions Queue">
+            Scope extensions
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.School"
+                   OnClick="@(() => Nav.NavigateTo("/sdp"))"
+                   aria-label="Back to SDP Register">
+            SDP register
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<!-- Metrics Overview -->
+<MudGrid Class="mb-4">
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="1" Class="pa-3 rounded-lg border-l-4" Style="border-left: 4px solid var(--mud-palette-info);">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Active review queue</MudText>
+            <MudText Typo="Typo.h5" Class="fw-bold text-info">@_providers.Count</MudText>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="1" Class="pa-3 rounded-lg border-l-4" Style="border-left: 4px solid var(--mud-palette-warning);">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">5-Day SLA inspections due</MudText>
+            <MudText Typo="Typo.h5" Class="fw-bold text-warning">@_providers.Count(p => p.InspectionDueDate.HasValue && p.InspectionDueDate.Value <= DateTime.UtcNow.AddDays(2))</MudText>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="1" Class="pa-3 rounded-lg border-l-4" Style="border-left: 4px solid var(--mud-palette-primary);">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Committee adjudication docket</MudText>
+            <MudText Typo="Typo.h5" Class="fw-bold text-primary">@_providers.Count(p => p.ProviderStatusCode == "PROVISIONAL" || p.ProviderStatusCode == "QMS_SUBMITTED")</MudText>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="1" Class="pa-3 rounded-lg border-l-4" Style="border-left: 4px solid var(--mud-palette-success);">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Re-accreditations underway</MudText>
+            <MudText Typo="Typo.h5" Class="fw-bold text-success">@_providers.Count(p => p.ReAccreditationUnderway)</MudText>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<!-- Filter & Search Controls -->
+<MudPaper Elevation="1" Class="pa-3 mb-4 rounded-lg">
+    <MudGrid Spacing="2" AlignItems="AlignItems.Center">
+        <MudItem xs="12" md="4">
+            <MudTextField @bind-Value="_searchQuery"
+                          Placeholder="Search accreditation no, provider legal name, or SDL..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          Clearable="true"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          TextChanged="ApplyFilter" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudSelect T="string"
+                       Value="_stageFilter"
+                       ValueChanged="OnStageFilterChanged"
+                       Label="Workflow Stage Filter"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense">
+                <MudSelectItem Value="@("ALL")">All Pipeline Stages</MudSelectItem>
+                <MudSelectItem Value="@("STAGE1")">Stage 1: Document &amp; QMS Verification</MudSelectItem>
+                <MudSelectItem Value="@("STAGE2")">Stage 2: 5-Day SLA Inspection Due</MudSelectItem>
+                <MudSelectItem Value="@("STAGE3")">Stage 3: Review Committee Adjudication</MudSelectItem>
+                <MudSelectItem Value="@("STAGE4")">Stage 4: Senior QA Manager Endorsement</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudSelect T="string"
+                       Value="_streamFilter"
+                       ValueChanged="OnStreamFilterChanged"
+                       Label="Accreditation Stream"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense">
+                <MudSelectItem Value="@("ALL")">All 5 Streams</MudSelectItem>
+                <MudSelectItem Value="@("PrimaryAccreditation")">Primary merSETA</MudSelectItem>
+                <MudSelectItem Value="@("ProgrammeApproval")">Programme Approval</MudSelectItem>
+                <MudSelectItem Value="@("QctoSkillsDevelopmentProvider")">QCTO SDP</MudSelectItem>
+                <MudSelectItem Value="@("QctoTradeTestCentre")">QCTO Trade Test Centre (TTC)</MudSelectItem>
+                <MudSelectItem Value="@("NonMerSetaScope")">Non-merSETA Scope</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="2" Class="d-flex justify-end">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.AddCircle"
+                       OnClick="@(() => Nav.NavigateTo("/sdp/register"))"
+                       aria-label="New SDP Application">
+                New SDP intake
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+<!-- Work Queue Data Grid -->
+@if (_isLoading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else
+{
+    <MudTable Items="@_filteredProviders"
+              Dense="true"
+              Hover="true"
+              Striped="true"
+              Bordered="false"
+              Elevation="1"
+              Class="rounded-lg"
+              T="TrainingProvider">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<TrainingProvider, object>(x => x.AccreditationNumber ?? string.Empty)">Accreditation number</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<TrainingProvider, object>(x => x.Organisation?.CompanyName ?? string.Empty)">Provider legal name</MudTableSortLabel></MudTh>
+            <MudTh>Stream &amp; Partner</MudTh>
+            <MudTh>5-Day SLA inspection</MudTh>
+            <MudTh>Contacts &amp; Quorum</MudTh>
+            <MudTh>Workflow stage</MudTh>
+            <MudTh Style="text-align: right;">Review actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Accreditation number">
+                <MudLink Href="@($"/sdp/{context.Id}")" Color="Color.Primary" Class="fw-bold font-mono">
+                    @(string.IsNullOrWhiteSpace(context.AccreditationNumber) ? $"PRV-{context.Id:D5}" : context.AccreditationNumber)
+                </MudLink>
+                @if (context.ReAccreditationUnderway)
+                {
+                    <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined" Class="ml-1">
+                        Renewal underway
+                    </MudChip>
+                }
+            </MudTd>
+            <MudTd DataLabel="Provider legal name">
+                <MudText Typo="Typo.body2" Class="fw-bold">@context.Organisation?.CompanyName</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">SDL: @(context.Organisation?.SdlNumber ?? "N/A") | Class: @(context.ProviderClassId == "01" ? "Public TVET" : "Private")</MudText>
+            </MudTd>
+            <MudTd DataLabel="Stream & Partner">
+                <MudChip T="string" Color="@GetStreamColor(context.AccreditationStream)" Size="Size.Small" Variant="Variant.Filled">
+                    @GetStreamDisplay(context.AccreditationStream)
+                </MudChip>
+                @if (!string.IsNullOrWhiteSpace(context.PrimaryEtqaName))
+                {
+                    <MudText Typo="Typo.caption" Class="d-block text-secondary">ETQA: @context.PrimaryEtqaName</MudText>
+                }
+                @if (!string.IsNullOrWhiteSpace(context.NambRegistrationNumber))
+                {
+                    <MudText Typo="Typo.caption" Class="d-block text-info">NAMB: @context.NambRegistrationNumber</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="5-Day SLA inspection">
+                @if (context.InspectionDueDate.HasValue)
+                {
+                    var daysLeft = (context.InspectionDueDate.Value.Date - DateTime.UtcNow.Date).Days;
+                    @if (daysLeft < 0)
+                    {
+                        <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Warning">
+                            Overdue by @Math.Abs(daysLeft) day(s)
+                        </MudChip>
+                    }
+                    else if (daysLeft <= 2)
+                    {
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Alarm">
+                            Due in @daysLeft day(s)
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.CheckCircle">
+                            @daysLeft business day(s)
+                        </MudChip>
+                    }
+                    <MudText Typo="Typo.caption" Class="d-block text-secondary">Target: @context.InspectionDueDate.Value.ToString("yyyy-MM-dd")</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Not scheduled</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="Contacts & Quorum">
+                <div class="d-flex align-center gap-1">
+                    <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Small" Color="Color.Default" />
+                    <MudText Typo="Typo.body2">@context.Contacts.Count active</MudText>
+                </div>
+                @if (context.Contacts.Any(c => c.IsBankingConfirmationAuthorized))
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Success">Banking authorized</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Warning">No banking sign-off</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="Workflow stage">
+                <MudChip T="string" Color="@GetStatusColor(context.ProviderStatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                    @(context.ProviderStatusCode ?? "PROVISIONAL")
+                </MudChip>
+                @if (!string.IsNullOrWhiteSpace(context.EtqaDecisionNumber))
+                {
+                    <MudText Typo="Typo.caption" Class="d-block text-secondary">Minute: @context.EtqaDecisionNumber</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="Review actions" Style="text-align: right;">
+                <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small">
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   OnClick="@(() => Nav.NavigateTo($"/sdp/{context.Id}"))"
+                                   Title="View provider detail record" />
+                    <MudIconButton Icon="@Icons.Material.Filled.FactCheck"
+                                   Color="Color.Info"
+                                   Size="Size.Small"
+                                   OnClick="@(() => OpenAdjudicationDialog(context))"
+                                   Title="Adjudicate application gate" />
+                </MudButtonGroup>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
+        </PagerContent>
+        <NoRecordsContent>
+            <div class="pa-8 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+                <MudText Typo="Typo.h6">No applications matching queue criteria</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">All Skills Development Provider accreditation files are currently processed or meet selected filter.</MudText>
+            </div>
+        </NoRecordsContent>
+    </MudTable>
+}
+
+<!-- Maker-Checker Adjudication Modal Dialog -->
+<MudDialog @bind-Visible="_dialogVisible" Options="_dialogOptions">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Gavel" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">Adjudicate SDP Accreditation Gate</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        @if (_selectedProvider != null)
+        {
+            <MudText Typo="Typo.subtitle1" Class="fw-bold mb-1">
+                @_selectedProvider.Organisation?.CompanyName (@(_selectedProvider.AccreditationNumber ?? "Pending No"))
+            </MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-4 d-block">
+                Stream: @_selectedProvider.AccreditationStream | Current Status: @(_selectedProvider.ProviderStatusCode ?? "PROVISIONAL")
+            </MudText>
+
+            <MudSelect T="string" @bind-Value="_adjudicationOutcome" Label="Adjudication Determination" Variant="Variant.Outlined" Class="mb-3">
+                <MudSelectItem Value="@("RECOMMEND_INSPECTION")">Stage 1: Recommend for Physical Site Inspection</MudSelectItem>
+                <MudSelectItem Value="@("COMMITTEE_APPROVE")">Stage 3: ETQA Review Committee Full Approval (Accredited)</MudSelectItem>
+                <MudSelectItem Value="@("REJECT_RESUBMISSION")">Stage 3: Return for Candidate Resubmission (Non-Terminal)</MudSelectItem>
+                <MudSelectItem Value="@("REJECT_TERMINAL")">Stage 3: Terminal Application Rejection (Final)</MudSelectItem>
+            </MudSelect>
+
+            @if (_adjudicationOutcome == "COMMITTEE_APPROVE")
+            {
+                <MudTextField @bind-Value="_committeeMinuteNumber"
+                              Label="Review Committee Decision Minute Reference"
+                              Placeholder="e.g. ETQA-MIN-2026-042"
+                              Required="true"
+                              Variant="Variant.Outlined"
+                              Class="mb-3" />
+
+                <MudDatePicker @bind-Date="_committeeMeetingDate"
+                               Label="Ratification Meeting Date"
+                               Variant="Variant.Outlined"
+                               Class="mb-3" />
+            }
+
+            <MudTextField @bind-Value="_adjudicationNotes"
+                          Label="Evaluation Officer Justification &amp; Notes"
+                          Lines="3"
+                          Variant="Variant.Outlined"
+                          Class="mb-2" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => _dialogVisible = false)">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAdjudicationDecisionAsync" Disabled="_isProcessingDecision">
+            @(_isProcessingDecision ? "Submitting..." : "Ratify determination")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Quality Assurance", href: "/etqa"),
+        new BreadcrumbItem("SDP Review Queue", href: null, disabled: true)
+    };
+
+    private List<TrainingProvider> _providers = new();
+    private List<TrainingProvider> _filteredProviders = new();
+    private bool _isLoading = true;
+    private string _searchQuery = string.Empty;
+    private string _stageFilter = "ALL";
+    private string _streamFilter = "ALL";
+
+    // Adjudication Modal State
+    private bool _dialogVisible = false;
+    private bool _isProcessingDecision = false;
+    private TrainingProvider? _selectedProvider;
+    private string _adjudicationOutcome = "RECOMMEND_INSPECTION";
+    private string _committeeMinuteNumber = string.Empty;
+    private DateTime? _committeeMeetingDate = DateTime.Today;
+    private string _adjudicationNotes = string.Empty;
+
+    private DialogOptions _dialogOptions = new()
+    {
+        MaxWidth = MaxWidth.Medium,
+        FullWidth = true,
+        CloseButton = true
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _providers = await ProviderService.GetAllAsync();
+            ApplyFilter();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load SDP review queue: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void ApplyFilter()
+    {
+        var query = _providers.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            var s = _searchQuery.Trim().ToLowerInvariant();
+            query = query.Where(p =>
+                (p.AccreditationNumber != null && p.AccreditationNumber.ToLowerInvariant().Contains(s)) ||
+                (p.Organisation?.CompanyName != null && p.Organisation.CompanyName.ToLowerInvariant().Contains(s)) ||
+                (p.Organisation?.SdlNumber != null && p.Organisation.SdlNumber.ToLowerInvariant().Contains(s))
+            );
+        }
+
+        if (_streamFilter != "ALL")
+        {
+            query = query.Where(p => p.AccreditationStream == _streamFilter);
+        }
+
+        if (_stageFilter == "STAGE1")
+        {
+            query = query.Where(p => p.ProviderStatusCode == "PROVISIONAL" || p.ProviderStatusCode == "Pending");
+        }
+        else if (_stageFilter == "STAGE2")
+        {
+            query = query.Where(p => p.InspectionDueDate.HasValue);
+        }
+        else if (_stageFilter == "STAGE3")
+        {
+            query = query.Where(p => p.ProviderStatusCode == "QMS_SUBMITTED" || p.ProviderStatusCode == "PROVISIONAL");
+        }
+        else if (_stageFilter == "STAGE4")
+        {
+            query = query.Where(p => p.ProviderStatusCode == "Accredited");
+        }
+
+        _filteredProviders = query.ToList();
+    }
+
+    private void OnStageFilterChanged(string val)
+    {
+        _stageFilter = val;
+        ApplyFilter();
+    }
+
+    private void OnStreamFilterChanged(string val)
+    {
+        _streamFilter = val;
+        ApplyFilter();
+    }
+
+    private void OpenAdjudicationDialog(TrainingProvider provider)
+    {
+        _selectedProvider = provider;
+        _adjudicationOutcome = "RECOMMEND_INSPECTION";
+        _committeeMinuteNumber = provider.EtqaDecisionNumber ?? $"ETQA-MIN-{DateTime.UtcNow:yyyy}-{new Random().Next(100, 999)}";
+        _committeeMeetingDate = DateTime.Today;
+        _adjudicationNotes = string.Empty;
+        _dialogVisible = true;
+    }
+
+    private async Task SaveAdjudicationDecisionAsync()
+    {
+        if (_selectedProvider == null) return;
+
+        _isProcessingDecision = true;
+        try
+        {
+            if (_adjudicationOutcome == "RECOMMEND_INSPECTION")
+            {
+                _selectedProvider.InspectionDueDate = ProviderService.Calculate5WorkingDaysDueDate(DateTime.UtcNow);
+                _selectedProvider.ProviderStatusCode = "QMS_SUBMITTED";
+                await ProviderService.UpdateAsync(_selectedProvider, "QA_OFFICER");
+                Snackbar.Add($"Inspection scheduled for {_selectedProvider.Organisation?.CompanyName} with 5-day SLA.", Severity.Success);
+            }
+            else if (_adjudicationOutcome == "COMMITTEE_APPROVE")
+            {
+                _selectedProvider.ProviderStatusCode = "Accredited";
+                _selectedProvider.ProviderStatusId = "01";
+                _selectedProvider.EtqaDecisionNumber = _committeeMinuteNumber;
+                _selectedProvider.EtqaCommitteeDecisionNumber = _committeeMinuteNumber;
+                _selectedProvider.EtqaCommitteeMeetingDate = _committeeMeetingDate;
+                _selectedProvider.AccreditationStartDate = DateTime.UtcNow;
+                _selectedProvider.AccreditationEndDate = DateTime.UtcNow.AddYears(5);
+                _selectedProvider.DigitalSecuritySeal = ProviderService.GenerateAccreditationSecuritySeal(_selectedProvider);
+                await ProviderService.UpdateAsync(_selectedProvider, "REVIEW_COMMITTEE");
+                Snackbar.Add($"Accreditation ratified under resolution {_committeeMinuteNumber}. Certificate unlocked.", Severity.Success);
+            }
+            else if (_adjudicationOutcome == "REJECT_RESUBMISSION")
+            {
+                _selectedProvider.ProviderStatusCode = "RejectedForResubmission";
+                await ProviderService.UpdateAsync(_selectedProvider, "REVIEW_COMMITTEE");
+                Snackbar.Add($"Application returned to provider contact for corrective resubmission.", Severity.Warning);
+            }
+            else if (_adjudicationOutcome == "REJECT_TERMINAL")
+            {
+                _selectedProvider.ProviderStatusCode = "RejectedApplication";
+                _selectedProvider.IsActive = false;
+                await ProviderService.UpdateAsync(_selectedProvider, "REVIEW_COMMITTEE");
+                Snackbar.Add($"Terminal rejection recorded. File archived.", Severity.Error);
+            }
+
+            _dialogVisible = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to record adjudication determination: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessingDecision = false;
+        }
+    }
+
+    private Color GetStreamColor(string stream) => stream switch
+    {
+        "PrimaryAccreditation" => Color.Primary,
+        "ProgrammeApproval" => Color.Info,
+        "QctoSkillsDevelopmentProvider" => Color.Success,
+        "QctoTradeTestCentre" => Color.Warning,
+        "NonMerSetaScope" => Color.Secondary,
+        _ => Color.Default
+    };
+
+    private string GetStreamDisplay(string stream) => stream switch
+    {
+        "PrimaryAccreditation" => "Primary merSETA",
+        "ProgrammeApproval" => "Programme Approval",
+        "QctoSkillsDevelopmentProvider" => "QCTO SDP",
+        "QctoTradeTestCentre" => "QCTO TTC",
+        "NonMerSetaScope" => "Non-merSETA Scope",
+        _ => stream
+    };
+
+    private Color GetStatusColor(string? status) => (status ?? "").ToUpperInvariant() switch
+    {
+        "ACCREDITED" => Color.Success,
+        "PROVISIONAL" => Color.Warning,
+        "QMS_SUBMITTED" => Color.Info,
+        "SUSPENDED" => Color.Error,
+        "DE-ACCREDITED" => Color.Error,
+        "REJECTEDFORRESUBMISSION" => Color.Warning,
+        "REJECTEDAPPLICATION" => Color.Error,
+        _ => Color.Default
+    };
+}

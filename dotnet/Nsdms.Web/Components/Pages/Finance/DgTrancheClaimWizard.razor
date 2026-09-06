@@ -45,7 +45,7 @@ else if (_isSuccess)
         @if (_claimAmount >= 500000m)
         {
             <MudAlert Severity="Severity.Warning" Class="my-3 mx-auto" Style="max-width: 600px;">
-                <strong>DOFA Tier 3 Notification:</strong> Because this claim reaches or exceeds R 500,000, it has been flagged for mandatory Chief Financial Officer (CFO) dual authorization prior to payment voucher dispatch.
+                <strong>High-Value Authorization Notification:</strong> Because this claim reaches or exceeds R 500,000, it has been flagged for mandatory Chief Financial Officer (CFO) dual authorization prior to payment voucher dispatch.
             </MudAlert>
         }
         else
@@ -72,7 +72,7 @@ else if (_isSuccess)
 else
 {
     <WizardShell Title="Discretionary Grant (DG) tranche claim &amp; payment voucher"
-                 Subtitle="Statutory milestone tranche invoice, DOFA approval tier validation, and payment voucher dispatch"
+                 Subtitle="Statutory milestone tranche invoice, approval tier validation, and payment voucher dispatch"
                  ActiveStepIndex="@_activeStep"
                  ActiveStepIndexChanged="OnStepChanged"
                  FinishButtonText="Submit tranche claim"
@@ -158,9 +158,9 @@ else
                                   AuditNotesChanged="@((val) => _auditNotes = val)" />
         </WizardStep>
 
-        <!-- STEP 5: DOFA Attestation & Voucher Review -->
-        <WizardReviewStep Heading="DOFA attestation &amp; payment voucher review"
-                          Description="Inspect financial envelope impact, DOFA approval tier gating, and serialized voucher preview"
+        <!-- STEP 5: Financial Attestation & Voucher Review -->
+        <WizardReviewStep Heading="Financial attestation &amp; payment voucher review"
+                          Description="Inspect financial envelope impact, executive approval tier gating, and serialized voucher preview"
                           ReviewGroups="@_reviewGroups"
                           OnEditStep="@((idx) => _activeStep = idx)">
             <ChildContent>
@@ -398,7 +398,7 @@ else
             }
         }
 
-        var dofaTier = _claimAmount >= 500000m
+        var approvalTier = _claimAmount >= 500000m
             ? "Tier 3 (Mandatory CFO Dual Authorization Required)"
             : "Tier 2 (CLO Inspection + Finance Officer Approval)";
 
@@ -435,14 +435,14 @@ else
             },
             new()
             {
-                Title = "Financial Tranche & DOFA Routing",
+                Title = "Financial Tranche & Approval Routing",
                 Icon = Icons.Material.Filled.Payments,
                 TargetStepIndex = 2,
                 Items = new()
                 {
                     new("Tranche number", $"Tranche #{_trancheNumber}"),
                     new("Monetary claim amount", _claimAmount.ToString("C2", System.Globalization.CultureInfo.InvariantCulture)),
-                    new("DOFA approval tier", dofaTier),
+                    new("Approval tier", approvalTier),
                     new("Commercial bank", $"{_bankName} (Acc: {_bankAccountNumber})"),
                     new("SARS compliance PIN", _taxCompliancePin, isMonospace: true),
                     new("Serialized payment voucher", $"PV-{DateTime.UtcNow.Year}-DG-PREVIEW", isMonospace: true)

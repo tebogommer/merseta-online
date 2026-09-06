@@ -498,7 +498,7 @@ public class CoreStatutoryWorkflowTests
             ClaimId = claim.Id,
             ApprovalRole = "CFO",
             ApproverName = "Chief Financial Officer",
-            Comments = "Approved per DOFA delegation"
+            Comments = "Approved per executive authorization"
         });
         Assert.Equal("CfoApproved", cfoApproved.StatusCode);
         Assert.NotNull(cfoApproved.PaymentVoucherNumber);

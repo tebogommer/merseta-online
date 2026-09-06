@@ -10,6 +10,12 @@ namespace Nsdms.Domain.Entities;
 public class CompanyLearner : BaseEntity
 {
     /// <summary>
+    /// Canonical statutory alias matching DHET SETMIS specifications and clean naming.
+    /// </summary>
+    [NotMapped]
+    public int EnrolmentId { get => Id; set => Id = value; }
+
+    /// <summary>
     /// Foreign key referencing the demographic Person record (names, RSA ID, contact details).
     /// </summary>
     public int PersonId { get; set; }
@@ -318,6 +324,8 @@ public class CompanyLearner : BaseEntity
     /// Foreign key referencing the preceding active CompanyLearner bursary record when IsContinuation is true.
     /// </summary>
     public int? PreviousCompanyLearnerId { get; set; }
+    [NotMapped]
+    public int? PreviousEnrolmentId { get => PreviousCompanyLearnerId; set => PreviousCompanyLearnerId = value; }
 
     /// <summary>
     /// Navigational reference to the previous academic year bursary record.

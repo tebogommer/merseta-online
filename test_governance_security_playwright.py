@@ -14,6 +14,15 @@ def test_governance_suite():
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
 
+        # Authenticate as SuperAdmin
+        print("[AUTH] Logging in as SuperAdmin...")
+        page.goto(f"{BASE_URL}/login", wait_until="networkidle")
+        page.fill("input#username", "sysadmin@merseta.org.za")
+        page.fill("input#password", "MerSETA@2026!")
+        page.click("button[type='submit']")
+        page.wait_for_load_state("networkidle")
+        print("[AUTH] Successfully authenticated!")
+
         # 1. Test Delegations Master List
         print("\n[1/3] Testing Delegations Registry (/governance/delegations)...")
         response = page.goto(f"{BASE_URL}/governance/delegations", wait_until="networkidle")

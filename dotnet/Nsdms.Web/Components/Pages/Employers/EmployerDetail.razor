@@ -2,12 +2,16 @@
 @page "/employers/{id:int}/edit"
 @page "/employers/create"
 @using Nsdms.Application.Common.Models
+@using Nsdms.Application.Common.Interfaces
 @using Nsdms.Application.Services
 @inject IOrganisationService OrgService
 @inject IPersonService PersonService
 @inject IBrandAssetService BrandAssetService
 @inject IVisitService VisitService
 @inject ILookupService LookupService
+@inject IPortfolioDispatchService PortfolioDispatchService
+@inject IZoneAndCaseloadService ZoneService
+@inject IJSRuntime JS
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -1124,7 +1128,211 @@ else
                 </MudTable>
             </MudTabPanel>
 
-            <!-- TAB 9: Evidence Vault & Audit Logs -->
+            <!-- TAB 9: Relationship Officer & Regional Portfolio (Option B Dynamic Engine) -->
+            @if (Id > 0)
+            {
+                <MudTabPanel Text="Relationship Portfolio" Icon="@Icons.Material.Filled.FolderShared">
+                    <MudGrid Spacing="3" Class="mt-2">
+                        <MudItem xs="12" md="6">
+                            <MudCard Elevation="2">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Badge" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Active Assigned Relationship Officer</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Current officer managing this employer account</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    @if (_activePortfolio != null)
+                                    {
+                                        <div class="d-flex flex-column gap-3">
+                                            <ReadOnlyField Label="Officer Name">
+                                                <MudText Typo="Typo.body1" Class="font-weight-bold">@_activePortfolio.RelationshipOfficerName</MudText>
+                                            </ReadOnlyField>
+                                            <ReadOnlyField Label="Officer Email">
+                                                <MudText Typo="Typo.body2">@_activePortfolio.RelationshipOfficerEmail</MudText>
+                                            </ReadOnlyField>
+                                            <ReadOnlyField Label="Portfolio Role">
+                                                <MudChip T="string" Color="Color.Info" Size="Size.Small">@_activePortfolio.PortfolioRoleCode</MudChip>
+                                            </ReadOnlyField>
+                                            <ReadOnlyField Label="Managing Region">
+                                                <MudText Typo="Typo.body2">@_activePortfolio.ManagingRegionCode</MudText>
+                                            </ReadOnlyField>
+                                            <ReadOnlyField Label="Assignment Type">
+                                                @if (_activePortfolio.IsCrossRegionalAssignment)
+                                                {
+                                                    <MudChip T="string" Color="Color.Warning" Size="Size.Small" Icon="@Icons.Material.Filled.AltRoute">
+                                                        Direct Cross-Regional Override
+                                                    </MudChip>
+                                                }
+                                                else
+                                                {
+                                                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircle">
+                                                        Territory Demarcation Aligned
+                                                    </MudChip>
+                                                }
+                                            </ReadOnlyField>
+                                            <ReadOnlyField Label="Assignment Reason">
+                                                <MudText Typo="Typo.body2">@_activePortfolio.AssignmentReason</MudText>
+                                            </ReadOnlyField>
+                                            <ReadOnlyField Label="Effective From">
+                                                <MudText Typo="Typo.body2">@_activePortfolio.EffectiveFrom.ToString("yyyy-MM-dd HH:mm")</MudText>
+                                            </ReadOnlyField>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                                            No active relationship officer assigned yet. Default territory demarcation mapping applies.
+                                        </MudAlert>
+                                    }
+                                </MudCardContent>
+                                <MudCardActions Class="px-4 pb-4">
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                                               Disabled="@(_activePortfolio == null || _isDownloadingLetter)"
+                                               OnClick="DownloadIntroLetterAsync"
+                                               aria-label="Download Official Letter of Introduction PDF">
+                                        @(_isDownloadingLetter ? "Generating PDF..." : "Download Letter of Introduction")
+                                    </MudButton>
+                                </MudCardActions>
+                            </MudCard>
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudCard Elevation="2">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Tertiary" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Map" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Territory Demarcation Jurisdiction</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Municipal &amp; regional boundary alignment</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    @if (_demarcation != null)
+                                    {
+                                        <div class="d-flex flex-column gap-3">
+                                            <ReadOnlyField Label="Resolved Town / Suburb">
+                                                <MudText Typo="Typo.body1" Class="font-weight-bold">@_demarcation.TownName</MudText>
+                                            </ReadOnlyField>
+                                            <ReadOnlyField Label="Sub-Regional Industrial Zone">
+                                                @if (!string.IsNullOrWhiteSpace(_demarcation.ZoneCode) || !string.IsNullOrWhiteSpace(_demarcation.Zone?.ZoneName))
+                                                {
+                                                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.Layers">
+                                                        @(_demarcation.Zone?.ZoneName ?? _demarcation.ZoneCode) (@(_demarcation.Zone?.ZoneCode ?? _demarcation.ZoneCode))
+                                                    </MudChip>
+                                                }
+                                                else
+                                                {
+                                                    <MudChip T="string" Color="Color.Default" Size="Size.Small">General Regional Pool</MudChip>
+                                                }
+                                            </ReadOnlyField>
+                                            <ReadOnlyField Label="Regional Office Jurisdiction">
+                                                <MudText Typo="Typo.body2">@_demarcation.RegionName (@_demarcation.RegionCode)</MudText>
+                                            </ReadOnlyField>
+                                            <ReadOnlyField Label="Province">
+                                                <MudText Typo="Typo.body2">@_demarcation.ProvinceCode</MudText>
+                                            </ReadOnlyField>
+                                            <ReadOnlyField Label="Municipal Boundary Type">
+                                                <MudChip T="string" Color="Color.Default" Size="Size.Small">@(_demarcation.TownName ?? "Statutory Zone")</MudChip>
+                                            </ReadOnlyField>
+                                            <ReadOnlyField Label="Demarcation Validity">
+                                                <MudText Typo="Typo.body2">Effective @_demarcation.EffectiveFrom.ToString("yyyy-MM-dd") @(_demarcation.EffectiveTo.HasValue ? $"to {_demarcation.EffectiveTo.Value:yyyy-MM-dd}" : "(Current)")</MudText>
+                                            </ReadOnlyField>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                            Town not specified or demarcation resolving based on Province: @(_organisation.ProvinceCode ?? "National").
+                                        </MudText>
+                                    }
+                                </MudCardContent>
+                                <MudCardActions Class="px-4 pb-4">
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Secondary"
+                                               Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.Autorenew"
+                                               Disabled="_isEvaluatingDemarcation"
+                                               OnClick="ReEvaluateDemarcationAsync"
+                                               aria-label="Re-Evaluate Address Demarcation and Zone Allocation">
+                                        @(_isEvaluatingDemarcation ? "Evaluating..." : "Re-Evaluate Demarcation")
+                                    </MudButton>
+                                </MudCardActions>
+                            </MudCard>
+                        </MudItem>
+
+                        <!-- Historical Relationship Officers Timeline -->
+                        <MudItem xs="12">
+                            <MudCard Elevation="2">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Portfolio Assignment &amp; Succession History</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Immutable audit ledger of relationship officer transitions and reassignments</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudTable Items="@_portfolioHistory" Dense="true" Hover="true" Elevation="0">
+                                        <HeaderContent>
+                                            <MudTh>Officer Name</MudTh>
+                                            <MudTh>Role</MudTh>
+                                            <MudTh>Region</MudTh>
+                                            <MudTh>Type</MudTh>
+                                            <MudTh>Effective Period</MudTh>
+                                            <MudTh>Status</MudTh>
+                                            <MudTh>Reason</MudTh>
+                                        </HeaderContent>
+                                        <RowTemplate>
+                                            <MudTd>@context.RelationshipOfficerName</MudTd>
+                                            <MudTd>@context.PortfolioRoleCode</MudTd>
+                                            <MudTd>@context.ManagingRegionCode</MudTd>
+                                            <MudTd>
+                                                @if (context.IsCrossRegionalAssignment)
+                                                {
+                                                    <MudChip T="string" Color="Color.Warning" Size="Size.Small">Cross-Regional</MudChip>
+                                                }
+                                                else
+                                                {
+                                                    <MudChip T="string" Color="Color.Default" Size="Size.Small">Regional</MudChip>
+                                                }
+                                            </MudTd>
+                                            <MudTd>@context.EffectiveFrom.ToString("yyyy-MM-dd") @(context.EffectiveTo.HasValue ? $"- {context.EffectiveTo.Value:yyyy-MM-dd}" : "- Present")</MudTd>
+                                            <MudTd>
+                                                @if (context.IsActive)
+                                                {
+                                                    <MudChip T="string" Color="Color.Success" Size="Size.Small">Active</MudChip>
+                                                }
+                                                else
+                                                {
+                                                    <MudChip T="string" Color="Color.Default" Size="Size.Small">Successor Replaced</MudChip>
+                                                }
+                                            </MudTd>
+                                            <MudTd>@context.AssignmentReason</MudTd>
+                                        </RowTemplate>
+                                        <NoRecordsContent>
+                                            <div class="pa-4 text-center">
+                                                <MudText Typo="Typo.body2" Color="Color.Secondary">No prior portfolio reassignments recorded.</MudText>
+                                            </div>
+                                        </NoRecordsContent>
+                                    </MudTable>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudTabPanel>
+            }
+
+            <!-- TAB 10: Evidence Vault & Audit Logs -->
             @if (Id > 0)
             {
                 <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
@@ -1229,6 +1437,13 @@ else
     private bool _showScheduleVisitForm = false;
     private Visit _newVisit = new();
     private DateTime? _visitDate = DateTime.Today;
+
+    // Portfolio & Demarcation State
+    private OrganisationPortfolio? _activePortfolio;
+    private List<OrganisationPortfolio> _portfolioHistory = new();
+    private TerritoryDemarcation? _demarcation;
+    private bool _isDownloadingLetter;
+    private bool _isEvaluatingDemarcation;
 
     private List<BreadcrumbItem> _breadcrumbItems = new();
     private bool _isEditMode;
@@ -1407,6 +1622,20 @@ else
 
             _committeeMembers = await OrgService.GetTrainingCommitteeMembersAsync(Id);
             _levyRecons = await OrgService.GetLevyReconHistoryAsync(Id);
+
+            // Load Option B Portfolio & Demarcation details
+            try
+            {
+                _activePortfolio = await PortfolioDispatchService.GetActivePortfolioAsync(Id);
+                _portfolioHistory = await PortfolioDispatchService.GetPortfolioHistoryAsync(Id);
+                var townToResolve = _organisation.PhysicalAddress ?? _organisation.PostalAddress ?? string.Empty;
+                _demarcation = await PortfolioDispatchService.ResolveTerritoryForTownAsync(townToResolve);
+            }
+            catch (Exception ex)
+            {
+                // Non-critical background telemetry log
+                Console.WriteLine($"Portfolio resolution notice: {ex.Message}");
+            }
         }
         else
         {
@@ -1440,6 +1669,16 @@ else
             var saved = await OrgService.SaveAsync(_organisation, "Admin");
             Snackbar.Add($"Employer '{saved.CompanyName}' saved successfully with audit log.", Severity.Success);
 
+            // Trigger event-driven auto-demarcation on address creation/update
+            try
+            {
+                await ZoneService.AutoDemarcateOrganisationAsync(saved.Id, forceReassignment: false, currentUsername: "Admin");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Auto-demarcation hook notice: {ex.Message}");
+            }
+
             if (Id == 0)
             {
                 NavManager.NavigateTo($"/employers/{saved.Id}");
@@ -1456,6 +1695,62 @@ else
         finally
         {
             _isSaving = false;
+        }
+    }
+
+    private async Task DownloadIntroLetterAsync()
+    {
+        if (_activePortfolio == null)
+        {
+            Snackbar.Add("No active portfolio assignment found for this organisation.", Severity.Warning);
+            return;
+        }
+
+        _isDownloadingLetter = true;
+        try
+        {
+            var pdfBytes = await ZoneService.GenerateLetterOfIntroductionPdfAsync(Id, "SDF_USER");
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var filename = $"LetterOfIntroduction_{_organisation.SdlNumber ?? Id.ToString()}.pdf";
+            await JS.InvokeVoidAsync("downloadFileFromBytes", filename, "application/pdf", base64);
+            Snackbar.Add("Statutory Letter of Introduction (ETQ-TP-012) downloaded successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Download failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isDownloadingLetter = false;
+        }
+    }
+
+    private async Task ReEvaluateDemarcationAsync()
+    {
+        _isEvaluatingDemarcation = true;
+        try
+        {
+            var result = await ZoneService.AutoDemarcateOrganisationAsync(Id, forceReassignment: false, currentUsername: "AdminUser");
+            if (result.ActionTaken != "TownNotFound")
+            {
+                Snackbar.Add($"Demarcation updated: {result.ResolvedZoneName ?? "General Region"} ({result.ResolvedRegionCode}). Officer: {result.AssignedOfficerName ?? "None"}", Severity.Success);
+                _activePortfolio = await PortfolioDispatchService.GetActivePortfolioAsync(Id);
+                _portfolioHistory = await PortfolioDispatchService.GetPortfolioHistoryAsync(Id);
+                var townToResolve = _organisation.PhysicalAddress ?? _organisation.PostalAddress ?? string.Empty;
+                _demarcation = await PortfolioDispatchService.ResolveTerritoryForTownAsync(townToResolve);
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Demarcation re-evaluation failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isEvaluatingDemarcation = false;
         }
     }
 

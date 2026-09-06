@@ -90,7 +90,7 @@ BEGIN
         HomeLanguageCode NVARCHAR(15) NULL,
         ProvinceCode NVARCHAR(15) NULL,
         Email NVARCHAR(150) NOT NULL,
-        PhoneNumber NVARCHAR(50) NOT NULL,
+        PhoneNumber NVARCHAR(50) NULL,
         CellNumber NVARCHAR(50) NULL,
         PhysicalAddress NVARCHAR(500) NULL,
         PostalAddress NVARCHAR(500) NULL,
@@ -1409,6 +1409,677 @@ BEGIN
     CREATE NONCLUSTERED INDEX [IX_WizardDraftSession_Lookup] ON [dbo].[WizardDraftSession] ([UserId], [CandidateKey], [IsActive]) INCLUDE ([DraftKey], [CurrentStepIndex], [ExpiresAtUtc], [ModifiedAt]);
     CREATE NONCLUSTERED INDEX [IX_WizardDraftSession_Organisation] ON [dbo].[WizardDraftSession] ([OrganisationId]) WHERE [OrganisationId] IS NOT NULL;
     PRINT 'Created table [dbo].[WizardDraftSession].';
+END
+
+-- ==============================================================================================
+-- Phase 35: Summative Assessment, Moderation, Batching & Certification Statutory Governance Alignment
+-- Reference: Signed Specification (18 Nov 2022) - Assessments and Moderation Use Case (MerSeta\NSDMS\LMS\ASM\12)
+-- ==============================================================================================
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'AssessmentBatch')
+BEGIN
+    CREATE TABLE dbo.AssessmentBatch (
+        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        BatchNumber NVARCHAR(50) NOT NULL,
+        TrainingProviderId INT NOT NULL,
+        QualificationTitle NVARCHAR(250) NOT NULL,
+        SaqaQualificationId NVARCHAR(50) NULL,
+        AssessmentStageCode NVARCHAR(50) NOT NULL DEFAULT 'Completion',
+        SamplePercentage INT NOT NULL DEFAULT 10,
+        TotalLearnersCount INT NOT NULL DEFAULT 0,
+        SampledLearnersCount INT NOT NULL DEFAULT 0,
+        InternalModerationReportDocumentRef NVARCHAR(500) NULL,
+        LastInternalModerationDate DATETIME2 NULL,
+        StatusCode NVARCHAR(50) NOT NULL DEFAULT 'Batched',
+        ScheduledSiteVisitDate DATETIME2 NULL,
+        IsSiteVisitRequired BIT NOT NULL DEFAULT 1,
+        SiteVisitSchedulingComments NVARCHAR(1000) NULL,
+        AssignedQaUserId NVARCHAR(100) NULL,
+        ContactPersonId INT NULL,
+        CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_AssessmentBatch_TrainingProvider FOREIGN KEY (TrainingProviderId) REFERENCES dbo.TrainingProvider(Id)
+    );
+    CREATE UNIQUE INDEX IX_AssessmentBatch_BatchNumber ON dbo.AssessmentBatch(BatchNumber);
+    CREATE INDEX IX_AssessmentBatch_TrainingProviderId ON dbo.AssessmentBatch(TrainingProviderId);
+    CREATE INDEX IX_AssessmentBatch_StatusCode ON dbo.AssessmentBatch(StatusCode);
+    PRINT 'Created table dbo.AssessmentBatch.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'AssessmentBatchLearner')
+BEGIN
+    CREATE TABLE dbo.AssessmentBatchLearner (
+        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        AssessmentBatchId INT NOT NULL,
+        SummativeAssessmentReportId INT NOT NULL,
+        IsSelectedInSample BIT NOT NULL DEFAULT 0,
+        LearnerOutcomeStatus NVARCHAR(50) NOT NULL DEFAULT 'Pending',
+        RejectionReasonCodes NVARCHAR(500) NULL,
+        CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_AssessmentBatchLearner_Batch FOREIGN KEY (AssessmentBatchId) REFERENCES dbo.AssessmentBatch(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_AssessmentBatchLearner_Report FOREIGN KEY (SummativeAssessmentReportId) REFERENCES dbo.SummativeAssessmentReport(Id)
+    );
+    CREATE INDEX IX_AssessmentBatchLearner_BatchId ON dbo.AssessmentBatchLearner(AssessmentBatchId);
+    CREATE INDEX IX_AssessmentBatchLearner_ReportId ON dbo.AssessmentBatchLearner(SummativeAssessmentReportId);
+    PRINT 'Created table dbo.AssessmentBatchLearner.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'ModerationChecklistEtqTp043')
+BEGIN
+    CREATE TABLE dbo.ModerationChecklistEtqTp043 (
+        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        AssessmentBatchId INT NOT NULL,
+        ValidationBatchNumber NVARCHAR(50) NOT NULL,
+        QualityAssurorUserId NVARCHAR(100) NOT NULL,
+        DateOfModeration DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        StageOfModerationCode NVARCHAR(50) NOT NULL DEFAULT 'Completion',
+        ValidationDecisionCode NVARCHAR(50) NOT NULL DEFAULT 'Upheld',
+        PrimaryRejectionReasonCode NVARCHAR(100) NULL,
+        VacsPrincipleViolatedCode NVARCHAR(50) NULL,
+        RejectionRemarks NVARCHAR(MAX) NULL,
+        RemedialActionRequired NVARCHAR(MAX) NULL,
+        ReportDocumentReference NVARCHAR(500) NULL,
+        TamperProofHashSha256 NVARCHAR(100) NOT NULL DEFAULT '',
+        CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_ModerationChecklist_Batch FOREIGN KEY (AssessmentBatchId) REFERENCES dbo.AssessmentBatch(Id) ON DELETE CASCADE
+    );
+    CREATE INDEX IX_ModerationChecklist_BatchId ON dbo.ModerationChecklistEtqTp043(AssessmentBatchId);
+    PRINT 'Created table dbo.ModerationChecklistEtqTp043.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'ModerationChecklistItem')
+BEGIN
+    CREATE TABLE dbo.ModerationChecklistItem (
+        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        ModerationChecklistEtqTp043Id INT NOT NULL,
+        SectionNumber INT NOT NULL DEFAULT 1,
+        CriteriaTitle NVARCHAR(250) NOT NULL,
+        EvidenceRequirements NVARCHAR(500) NOT NULL,
+        IsCompliant BIT NOT NULL DEFAULT 1,
+        Comments NVARCHAR(1000) NULL,
+        CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_ModerationChecklistItem_Checklist FOREIGN KEY (ModerationChecklistEtqTp043Id) REFERENCES dbo.ModerationChecklistEtqTp043(Id) ON DELETE CASCADE
+    );
+    CREATE INDEX IX_ModerationChecklistItem_ChecklistId ON dbo.ModerationChecklistItem(ModerationChecklistEtqTp043Id);
+    PRINT 'Created table dbo.ModerationChecklistItem.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'CertificatePrintingBatch')
+BEGIN
+    CREATE TABLE dbo.CertificatePrintingBatch (
+        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        PrintingBatchNumber NVARCHAR(50) NOT NULL,
+        BatchGeneratedDate DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        TotalCertificatesCount INT NOT NULL DEFAULT 0,
+        ConsolidatedPdfDocumentRef NVARCHAR(500) NULL,
+        ConsolidatedDistributionLettersPdfRef NVARCHAR(500) NULL,
+        StatusCode NVARCHAR(50) NOT NULL DEFAULT 'QueuedForPrinting',
+        CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE UNIQUE INDEX IX_CertificatePrintingBatch_BatchNumber ON dbo.CertificatePrintingBatch(PrintingBatchNumber);
+    PRINT 'Created table dbo.CertificatePrintingBatch.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'LearnerCertificate')
+BEGIN
+    CREATE TABLE dbo.LearnerCertificate (
+        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        CompanyLearnerId INT NOT NULL,
+        PersonId INT NOT NULL,
+        CertificatePrintingBatchId INT NULL,
+        SummativeAssessmentReportId INT NOT NULL,
+        CertificateNumber NVARCHAR(50) NOT NULL,
+        QualificationTitle NVARCHAR(250) NOT NULL,
+        SaqaQualificationId NVARCHAR(50) NULL,
+        NqfLevel INT NOT NULL DEFAULT 4,
+        IssueDate DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        TamperProofHashSha256 NVARCHAR(100) NOT NULL DEFAULT '',
+        IsReprintOrReplacement BIT NOT NULL DEFAULT 0,
+        ReplacementReason NVARCHAR(500) NULL,
+        CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_LearnerCertificate_CompanyLearner FOREIGN KEY (CompanyLearnerId) REFERENCES dbo.CompanyLearner(Id),
+        CONSTRAINT FK_LearnerCertificate_Person FOREIGN KEY (PersonId) REFERENCES dbo.Person(Id),
+        CONSTRAINT FK_LearnerCertificate_Batch FOREIGN KEY (CertificatePrintingBatchId) REFERENCES dbo.CertificatePrintingBatch(Id) ON DELETE SET NULL,
+        CONSTRAINT FK_LearnerCertificate_Report FOREIGN KEY (SummativeAssessmentReportId) REFERENCES dbo.SummativeAssessmentReport(Id)
+    );
+    CREATE UNIQUE INDEX IX_LearnerCertificate_CertificateNumber ON dbo.LearnerCertificate(CertificateNumber);
+    PRINT 'Created table dbo.LearnerCertificate.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'DistributionLetter')
+BEGIN
+    CREATE TABLE dbo.DistributionLetter (
+        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        CertificatePrintingBatchId INT NOT NULL,
+        TrainingProviderId INT NOT NULL,
+        ProviderAccreditationNumber NVARCHAR(50) NOT NULL,
+        LetterReferenceNumber NVARCHAR(50) NOT NULL,
+        DocumentReferenceUrl NVARCHAR(500) NULL,
+        GeneratedDate DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_DistributionLetter_Batch FOREIGN KEY (CertificatePrintingBatchId) REFERENCES dbo.CertificatePrintingBatch(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_DistributionLetter_Provider FOREIGN KEY (TrainingProviderId) REFERENCES dbo.TrainingProvider(Id)
+    );
+    CREATE UNIQUE INDEX IX_DistributionLetter_LetterRefNumber ON dbo.DistributionLetter(LetterReferenceNumber);
+    PRINT 'Created table dbo.DistributionLetter.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'ScannedCertificateAttachment')
+BEGIN
+    CREATE TABLE dbo.ScannedCertificateAttachment (
+        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        LearnerCertificateId INT NOT NULL,
+        PersonId INT NOT NULL,
+        DocumentStorageKey NVARCHAR(500) NOT NULL,
+        FileName NVARCHAR(255) NOT NULL,
+        FileSizeBytes BIGINT NOT NULL DEFAULT 0,
+        ScannedByUserId NVARCHAR(100) NOT NULL,
+        ScannedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        OcrExtractedIdNumber NVARCHAR(50) NULL,
+        OcrExtractedCertificateNumber NVARCHAR(50) NULL,
+        IsVerifiedMatch BIT NOT NULL DEFAULT 0,
+        CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_ScannedCert_Certificate FOREIGN KEY (LearnerCertificateId) REFERENCES dbo.LearnerCertificate(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_ScannedCert_Person FOREIGN KEY (PersonId) REFERENCES dbo.Person(Id)
+    );
+    PRINT 'Created table dbo.ScannedCertificateAttachment.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'AssessmentCertificateDistributionEvent')
+BEGIN
+    CREATE TABLE dbo.AssessmentCertificateDistributionEvent (
+        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        LearnerCertificateId INT NOT NULL,
+        DistributionMethodCode NVARCHAR(50) NOT NULL DEFAULT 'RegisteredMail',
+        WaybillOrTrackingNumber NVARCHAR(100) NULL,
+        DispatchedDate DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        RecipientName NVARCHAR(150) NULL,
+        RecipientIdNumber NVARCHAR(50) NULL,
+        ReceivedDate DATETIME2 NULL,
+        DispatchNotes NVARCHAR(1000) NULL,
+        CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_AssessmentCertDist_Certificate FOREIGN KEY (LearnerCertificateId) REFERENCES dbo.LearnerCertificate(Id) ON DELETE CASCADE
+    );
+    PRINT 'Created table dbo.AssessmentCertificateDistributionEvent.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.sequences WHERE name = 'Seq_StatutoryCertificateNumber')
+BEGIN
+    CREATE SEQUENCE dbo.Seq_StatutoryCertificateNumber
+        AS INT
+        START WITH 1
+        INCREMENT BY 1
+        MINVALUE 1
+        MAXVALUE 999999
+        CYCLE;
+    PRINT 'Created sequence dbo.Seq_StatutoryCertificateNumber.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_SummativeAssessmentReport_Batch_Status' AND object_id = OBJECT_ID('dbo.SummativeAssessmentReport'))
+BEGIN
+    CREATE INDEX IX_SummativeAssessmentReport_Batch_Status ON dbo.SummativeAssessmentReport(AssessmentBatchId, StatusCode);
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_AssessmentBatchLearner_Batch_Report' AND object_id = OBJECT_ID('dbo.AssessmentBatchLearner'))
+BEGIN
+    CREATE UNIQUE INDEX IX_AssessmentBatchLearner_Batch_Report ON dbo.AssessmentBatchLearner(AssessmentBatchId, SummativeAssessmentReportId);
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_LearnerCertificate_SummativeAssessmentReportId' AND object_id = OBJECT_ID('dbo.LearnerCertificate'))
+BEGIN
+    CREATE INDEX IX_LearnerCertificate_SummativeAssessmentReportId ON dbo.LearnerCertificate(SummativeAssessmentReportId);
+END
+
+-- 49. Option B: Unified Dynamic Portfolio & Capability Dispatch Engine
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'TerritoryZone')
+BEGIN
+    CREATE TABLE dbo.TerritoryZone (
+        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_TerritoryZone PRIMARY KEY CLUSTERED,
+        ZoneCode NVARCHAR(50) NOT NULL,
+        ZoneName NVARCHAR(150) NOT NULL,
+        RegionCode NVARCHAR(50) NOT NULL,
+        RegionName NVARCHAR(150) NOT NULL,
+        ProvinceCode NVARCHAR(10) NOT NULL,
+        DefaultOfficerUserId NVARCHAR(100) NULL,
+        DefaultOfficerName NVARCHAR(150) NULL,
+        DefaultOfficerEmail NVARCHAR(150) NULL,
+        Description NVARCHAR(500) NULL,
+        IsActive BIT NOT NULL CONSTRAINT DF_TerritoryZone_IsActive DEFAULT 1,
+        CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_TerritoryZone_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+
+    CREATE UNIQUE NONCLUSTERED INDEX IX_TerritoryZone_ZoneCode ON dbo.TerritoryZone (ZoneCode);
+    CREATE NONCLUSTERED INDEX IX_TerritoryZone_RegionCode ON dbo.TerritoryZone (RegionCode);
+    CREATE NONCLUSTERED INDEX IX_TerritoryZone_DefaultOfficerUserId ON dbo.TerritoryZone (DefaultOfficerUserId);
+    CREATE NONCLUSTERED INDEX IX_TerritoryZone_IsActive ON dbo.TerritoryZone (IsActive);
+    PRINT 'Created table dbo.TerritoryZone.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'TerritoryDemarcation')
+BEGIN
+    CREATE TABLE dbo.TerritoryDemarcation (
+        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_TerritoryDemarcation PRIMARY KEY CLUSTERED,
+        TownName NVARCHAR(150) NOT NULL,
+        RegionCode NVARCHAR(50) NOT NULL,
+        RegionName NVARCHAR(150) NOT NULL,
+        ProvinceCode NVARCHAR(10) NOT NULL,
+        StatssaAreaCode NVARCHAR(50) NULL,
+        ZoneId INT NULL CONSTRAINT FK_TerritoryDemarcation_Zone REFERENCES dbo.TerritoryZone(Id) ON DELETE SET NULL,
+        ZoneCode NVARCHAR(50) NULL,
+        EffectiveFrom DATETIME2 NOT NULL CONSTRAINT DF_TerritoryDemarcation_EffectiveFrom DEFAULT '2020-01-01T00:00:00',
+        EffectiveTo DATETIME2 NULL,
+        BoundaryGazetteReference NVARCHAR(250) NULL,
+        PostalCodePrefix NVARCHAR(20) NULL,
+        MunicipalityName NVARCHAR(150) NULL,
+        IsActive BIT NOT NULL CONSTRAINT DF_TerritoryDemarcation_IsActive DEFAULT 1,
+        CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_TerritoryDemarcation_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+
+    CREATE NONCLUSTERED INDEX IX_TerritoryDemarcation_TownName ON dbo.TerritoryDemarcation (TownName);
+    CREATE NONCLUSTERED INDEX IX_TerritoryDemarcation_RegionCode ON dbo.TerritoryDemarcation (RegionCode);
+    CREATE NONCLUSTERED INDEX IX_TerritoryDemarcation_ProvinceCode ON dbo.TerritoryDemarcation (ProvinceCode);
+    CREATE NONCLUSTERED INDEX IX_TerritoryDemarcation_ZoneId ON dbo.TerritoryDemarcation (ZoneId);
+    CREATE NONCLUSTERED INDEX IX_TerritoryDemarcation_ZoneCode ON dbo.TerritoryDemarcation (ZoneCode);
+    CREATE NONCLUSTERED INDEX IX_TerritoryDemarcation_TownName_IsActive ON dbo.TerritoryDemarcation (TownName, IsActive);
+    PRINT 'Created table dbo.TerritoryDemarcation.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'StaffCapability')
+BEGIN
+    CREATE TABLE dbo.StaffCapability (
+        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_StaffCapability PRIMARY KEY CLUSTERED,
+        UserId NVARCHAR(100) NOT NULL,
+        StaffName NVARCHAR(150) NOT NULL,
+        Email NVARCHAR(150) NOT NULL,
+        CapabilityCode NVARCHAR(50) NOT NULL,
+        CapabilityName NVARCHAR(150) NOT NULL,
+        StationedRegionCode NVARCHAR(50) NOT NULL,
+        EmploymentRole NVARCHAR(100) NOT NULL CONSTRAINT DF_StaffCapability_EmploymentRole DEFAULT 'Officer',
+        CertifiedDate DATETIME2 NOT NULL CONSTRAINT DF_StaffCapability_CertifiedDate DEFAULT SYSUTCDATETIME(),
+        ExpiryDate DATETIME2 NULL,
+        IsActive BIT NOT NULL CONSTRAINT DF_StaffCapability_IsActive DEFAULT 1,
+        CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_StaffCapability_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+
+    CREATE NONCLUSTERED INDEX IX_StaffCapability_UserId ON dbo.StaffCapability (UserId);
+    CREATE NONCLUSTERED INDEX IX_StaffCapability_CapabilityCode ON dbo.StaffCapability (CapabilityCode);
+    CREATE NONCLUSTERED INDEX IX_StaffCapability_StationedRegionCode ON dbo.StaffCapability (StationedRegionCode);
+    CREATE NONCLUSTERED INDEX IX_StaffCapability_IsActive ON dbo.StaffCapability (IsActive);
+    PRINT 'Created table dbo.StaffCapability.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'OrganisationPortfolio')
+BEGIN
+    CREATE TABLE dbo.OrganisationPortfolio (
+        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_OrganisationPortfolio PRIMARY KEY CLUSTERED,
+        OrganisationId INT NOT NULL CONSTRAINT FK_OrganisationPortfolio_Org FOREIGN KEY REFERENCES dbo.Organisation(Id) ON DELETE CASCADE,
+        RelationshipOfficerUserId NVARCHAR(100) NOT NULL,
+        RelationshipOfficerName NVARCHAR(150) NOT NULL,
+        RelationshipOfficerEmail NVARCHAR(150) NOT NULL,
+        PortfolioRoleCode NVARCHAR(50) NOT NULL CONSTRAINT DF_OrganisationPortfolio_Role DEFAULT 'PRIMARY_CLO',
+        ManagingRegionCode NVARCHAR(50) NOT NULL,
+        IsCrossRegionalAssignment BIT NOT NULL CONSTRAINT DF_OrganisationPortfolio_CrossRegional DEFAULT 0,
+        AssignmentReason NVARCHAR(500) NULL,
+        EffectiveFrom DATETIME2 NOT NULL CONSTRAINT DF_OrganisationPortfolio_EffectiveFrom DEFAULT SYSUTCDATETIME(),
+        EffectiveTo DATETIME2 NULL,
+        AssignedByUserId NVARCHAR(100) NOT NULL CONSTRAINT DF_OrganisationPortfolio_AssignedBy DEFAULT 'SYSTEM',
+        IsActive BIT NOT NULL CONSTRAINT DF_OrganisationPortfolio_IsActive DEFAULT 1,
+        CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_OrganisationPortfolio_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+
+    CREATE NONCLUSTERED INDEX IX_OrganisationPortfolio_Org ON dbo.OrganisationPortfolio (OrganisationId);
+    CREATE NONCLUSTERED INDEX IX_OrganisationPortfolio_Officer ON dbo.OrganisationPortfolio (RelationshipOfficerUserId);
+    CREATE NONCLUSTERED INDEX IX_OrganisationPortfolio_Region ON dbo.OrganisationPortfolio (ManagingRegionCode);
+    CREATE NONCLUSTERED INDEX IX_OrganisationPortfolio_Active ON dbo.OrganisationPortfolio (OrganisationId, IsActive);
+    PRINT 'Created table dbo.OrganisationPortfolio.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'FieldDispatchAssignment')
+BEGIN
+    CREATE TABLE dbo.FieldDispatchAssignment (
+        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_FieldDispatchAssignment PRIMARY KEY CLUSTERED,
+        OrganisationId INT NOT NULL CONSTRAINT FK_FieldDispatch_Org FOREIGN KEY REFERENCES dbo.Organisation(Id) ON DELETE CASCADE,
+        VisitId INT NULL CONSTRAINT FK_FieldDispatch_Visit FOREIGN KEY REFERENCES dbo.Visit(Id),
+        ContactPersonId INT NOT NULL CONSTRAINT FK_FieldDispatch_Contact FOREIGN KEY REFERENCES dbo.Person(Id),
+        ScheduledDate DATETIME2 NOT NULL,
+        ActivityTypeCode NVARCHAR(50) NOT NULL,
+        RequiredCapabilityCode NVARCHAR(50) NOT NULL,
+        DispatchedOfficerUserId NVARCHAR(100) NOT NULL,
+        DispatchedOfficerName NVARCHAR(150) NOT NULL,
+        ScheduledByCoordinatorUserId NVARCHAR(100) NOT NULL,
+        ScheduledByCoordinatorName NVARCHAR(150) NOT NULL,
+        DispatchStatus NVARCHAR(50) NOT NULL CONSTRAINT DF_FieldDispatch_Status DEFAULT 'Scheduled',
+        Priority NVARCHAR(20) NOT NULL CONSTRAINT DF_FieldDispatch_Priority DEFAULT 'Normal',
+        CoordinatorNotes NVARCHAR(1000) NULL,
+        OfficerAcceptanceNotes NVARCHAR(1000) NULL,
+        CompletedDate DATETIME2 NULL,
+        CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_FieldDispatch_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+
+    CREATE NONCLUSTERED INDEX IX_FieldDispatch_Org ON dbo.FieldDispatchAssignment (OrganisationId);
+    CREATE NONCLUSTERED INDEX IX_FieldDispatch_Visit ON dbo.FieldDispatchAssignment (VisitId);
+    CREATE NONCLUSTERED INDEX IX_FieldDispatch_Contact ON dbo.FieldDispatchAssignment (ContactPersonId);
+    CREATE NONCLUSTERED INDEX IX_FieldDispatch_Officer ON dbo.FieldDispatchAssignment (DispatchedOfficerUserId);
+    CREATE NONCLUSTERED INDEX IX_FieldDispatch_Status ON dbo.FieldDispatchAssignment (DispatchStatus);
+    CREATE NONCLUSTERED INDEX IX_FieldDispatch_Date ON dbo.FieldDispatchAssignment (ScheduledDate);
+    PRINT 'Created table dbo.FieldDispatchAssignment.';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'PortfolioHandoffLog')
+BEGIN
+    CREATE TABLE dbo.PortfolioHandoffLog (
+        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_PortfolioHandoffLog PRIMARY KEY CLUSTERED,
+        FromOfficerUserId NVARCHAR(100) NOT NULL,
+        FromOfficerName NVARCHAR(150) NOT NULL,
+        ToOfficerUserId NVARCHAR(100) NOT NULL,
+        ToOfficerName NVARCHAR(150) NOT NULL,
+        OrganisationId INT NOT NULL CONSTRAINT FK_PortfolioHandoff_Org FOREIGN KEY REFERENCES dbo.Organisation(Id) ON DELETE CASCADE,
+        AuthorizedByUserId NVARCHAR(100) NOT NULL,
+        AuthorizedByName NVARCHAR(150) NOT NULL,
+        HandoffReason NVARCHAR(500) NOT NULL,
+        ReassignedTasksCount INT NOT NULL CONSTRAINT DF_PortfolioHandoff_Tasks DEFAULT 0,
+        ReassignedTaskIdsJson NVARCHAR(MAX) NULL,
+        SecuritySealHash NVARCHAR(64) NOT NULL,
+        CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_PortfolioHandoff_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NULL,
+        ModifiedAt DATETIME2 NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+
+    CREATE NONCLUSTERED INDEX IX_PortfolioHandoff_FromOfficer ON dbo.PortfolioHandoffLog (FromOfficerUserId);
+    CREATE NONCLUSTERED INDEX IX_PortfolioHandoff_ToOfficer ON dbo.PortfolioHandoffLog (ToOfficerUserId);
+    CREATE NONCLUSTERED INDEX IX_PortfolioHandoff_Org ON dbo.PortfolioHandoffLog (OrganisationId);
+    CREATE NONCLUSTERED INDEX IX_PortfolioHandoff_Seal ON dbo.PortfolioHandoffLog (SecuritySealHash);
+    PRINT 'Created table dbo.PortfolioHandoffLog.';
+END
+
+-- ====================================================================================================
+-- ASSESSOR & MODERATOR REGISTRATION & LIFECYCLE TABLES
+-- ====================================================================================================
+
+-- 1. AssessorRegistrationApplication
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'AssessorRegistrationApplication' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE dbo.AssessorRegistrationApplication (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AssessorRegistrationApplication PRIMARY KEY CLUSTERED,
+        ApplicationNumber NVARCHAR(50) NOT NULL,
+        PractitionerType NVARCHAR(50) NOT NULL,
+        PersonId INT NOT NULL,
+        LastSchoolAttended NVARCHAR(150) NULL,
+        LastSchoolYear INT NULL,
+        EmploymentStatusCode NVARCHAR(30) NOT NULL CONSTRAINT DF_AssessorApp_EmploymentStatus DEFAULT ('Employed'),
+        DisabilityTypeCode NVARCHAR(50) NULL,
+        DisabilitySeverityCode NVARCHAR(50) NULL,
+        UrbanRuralArea NVARCHAR(20) NOT NULL CONSTRAINT DF_AssessorApp_UrbanRural DEFAULT ('Urban'),
+        NextOfKinName NVARCHAR(150) NULL,
+        NextOfKinContact NVARCHAR(50) NULL,
+        NextOfKinRelationship NVARCHAR(50) NULL,
+        HighestQualificationTitle NVARCHAR(250) NULL,
+        HighestQualificationObtainedDate DATETIME2(7) NULL,
+        ApplicationStatusCode NVARCHAR(40) NOT NULL CONSTRAINT DF_AssessorApp_Status DEFAULT ('Draft'),
+        IsDeclarationAcknowledged BIT NOT NULL CONSTRAINT DF_AssessorApp_IsAck DEFAULT (0),
+        SignedOffByUserId NVARCHAR(100) NULL,
+        SignedOffAt DATETIME2(7) NULL,
+        VerificationRecommendation NVARCHAR(50) NULL,
+        VerificationReason NVARCHAR(100) NULL,
+        VerificationExplanation NVARCHAR(MAX) NULL,
+        VerifiedByUserId NVARCHAR(100) NULL,
+        VerificationDate DATETIME2(7) NULL,
+        EvaluationRecommendation NVARCHAR(50) NULL,
+        EvaluationReason NVARCHAR(100) NULL,
+        EvaluationExplanation NVARCHAR(MAX) NULL,
+        EvaluatedByUserId NVARCHAR(100) NULL,
+        EvaluationDate DATETIME2(7) NULL,
+        ReviewCommitteeDecision NVARCHAR(50) NULL,
+        ReviewCommitteeDecisionNumber NVARCHAR(100) NULL,
+        ReviewCommitteeMeetingDate DATETIME2(7) NULL,
+        ReviewCommitteeNotes NVARCHAR(MAX) NULL,
+        IsFinalRejection BIT NOT NULL CONSTRAINT DF_AssessorApp_FinalRejection DEFAULT (0),
+        RejectionReason NVARCHAR(100) NULL,
+        RejectionComments NVARCHAR(MAX) NULL,
+        ApprovedByUserId NVARCHAR(100) NULL,
+        ApprovalDate DATETIME2(7) NULL,
+        ApprovalComments NVARCHAR(MAX) NULL,
+        DigitalSecuritySeal NVARCHAR(64) NULL,
+        RegisteredAssessorId INT NULL,
+        WithdrawalReason NVARCHAR(100) NULL,
+        WithdrawalComments NVARCHAR(MAX) NULL,
+        WithdrawnAt DATETIME2(7) NULL,
+        WithdrawnByUserId NVARCHAR(100) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_AssessorApp_CreatedAt DEFAULT (SYSUTCDATETIME()),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_AssessorApp_CreatedBy DEFAULT ('SYSTEM'),
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_AssessorRegistrationApplication_Person FOREIGN KEY (PersonId) REFERENCES dbo.Person (id) ON DELETE NO ACTION,
+        CONSTRAINT FK_AssessorRegistrationApplication_Assessor FOREIGN KEY (RegisteredAssessorId) REFERENCES dbo.EtqaAssessor (id) ON DELETE SET NULL
+    );
+
+    CREATE UNIQUE NONCLUSTERED INDEX UQ_AssessorRegistrationApplication_Number ON dbo.AssessorRegistrationApplication (ApplicationNumber);
+    CREATE NONCLUSTERED INDEX IX_AssessorRegistrationApplication_PersonId ON dbo.AssessorRegistrationApplication (PersonId);
+    CREATE NONCLUSTERED INDEX IX_AssessorRegistrationApplication_Status ON dbo.AssessorRegistrationApplication (ApplicationStatusCode);
+    CREATE NONCLUSTERED INDEX IX_AssessorRegistrationApplication_Type ON dbo.AssessorRegistrationApplication (PractitionerType);
+    CREATE NONCLUSTERED INDEX IX_AssessorRegistrationApplication_AssessorId ON dbo.AssessorRegistrationApplication (RegisteredAssessorId);
+    PRINT 'Created table dbo.AssessorRegistrationApplication.';
+END
+
+-- 2. AssessorApplicationScope
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'AssessorApplicationScope' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE dbo.AssessorApplicationScope (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AssessorApplicationScope PRIMARY KEY CLUSTERED,
+        AssessorRegistrationApplicationId INT NOT NULL,
+        SaqaQualificationId INT NOT NULL,
+        QualificationTitle NVARCHAR(250) NOT NULL,
+        QualificationObtainedDate DATETIME2(7) NOT NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_AssessorAppScope_CreatedAt DEFAULT (SYSUTCDATETIME()),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_AssessorAppScope_CreatedBy DEFAULT ('SYSTEM'),
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_AssessorApplicationScope_App FOREIGN KEY (AssessorRegistrationApplicationId) REFERENCES dbo.AssessorRegistrationApplication (id) ON DELETE CASCADE
+    );
+
+    CREATE NONCLUSTERED INDEX IX_AssessorApplicationScope_AppId ON dbo.AssessorApplicationScope (AssessorRegistrationApplicationId);
+    CREATE NONCLUSTERED INDEX IX_AssessorApplicationScope_SaqaId ON dbo.AssessorApplicationScope (SaqaQualificationId);
+    PRINT 'Created table dbo.AssessorApplicationScope.';
+END
+
+-- 3. AssessorApplicationUnitStandard
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'AssessorApplicationUnitStandard' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE dbo.AssessorApplicationUnitStandard (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AssessorApplicationUnitStandard PRIMARY KEY CLUSTERED,
+        AssessorApplicationScopeId INT NOT NULL,
+        UnitStandardCode NVARCHAR(20) NOT NULL,
+        UnitStandardTitle NVARCHAR(300) NOT NULL,
+        NqfLevel INT NOT NULL CONSTRAINT DF_AssessorAppUS_Nqf DEFAULT (4),
+        Credits INT NOT NULL CONSTRAINT DF_AssessorAppUS_Credits DEFAULT (15),
+        IsPopulatedFromQualification BIT NOT NULL CONSTRAINT DF_AssessorAppUS_IsPopulated DEFAULT (1),
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_AssessorAppUS_CreatedAt DEFAULT (SYSUTCDATETIME()),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_AssessorAppUS_CreatedBy DEFAULT ('SYSTEM'),
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_AssessorApplicationUnitStandard_Scope FOREIGN KEY (AssessorApplicationScopeId) REFERENCES dbo.AssessorApplicationScope (id) ON DELETE CASCADE
+    );
+
+    CREATE NONCLUSTERED INDEX IX_AssessorApplicationUnitStandard_ScopeId ON dbo.AssessorApplicationUnitStandard (AssessorApplicationScopeId);
+    CREATE NONCLUSTERED INDEX IX_AssessorApplicationUnitStandard_Code ON dbo.AssessorApplicationUnitStandard (UnitStandardCode);
+    PRINT 'Created table dbo.AssessorApplicationUnitStandard.';
+END
+
+-- 4. AssessorApplicationProviderLink
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'AssessorApplicationProviderLink' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE dbo.AssessorApplicationProviderLink (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AssessorApplicationProviderLink PRIMARY KEY CLUSTERED,
+        AssessorRegistrationApplicationId INT NOT NULL,
+        TrainingProviderId INT NOT NULL,
+        SlaDocumentRef NVARCHAR(500) NULL,
+        IsVerifiedByProvider BIT NOT NULL CONSTRAINT DF_AssessorAppProvider_IsVerified DEFAULT (0),
+        VerificationDate DATETIME2(7) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_AssessorAppProvider_CreatedAt DEFAULT (SYSUTCDATETIME()),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_AssessorAppProvider_CreatedBy DEFAULT ('SYSTEM'),
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_AssessorApplicationProviderLink_App FOREIGN KEY (AssessorRegistrationApplicationId) REFERENCES dbo.AssessorRegistrationApplication (id) ON DELETE CASCADE,
+        CONSTRAINT FK_AssessorApplicationProviderLink_Provider FOREIGN KEY (TrainingProviderId) REFERENCES dbo.TrainingProvider (id) ON DELETE NO ACTION
+    );
+
+    CREATE NONCLUSTERED INDEX IX_AssessorApplicationProviderLink_AppId ON dbo.AssessorApplicationProviderLink (AssessorRegistrationApplicationId);
+    CREATE NONCLUSTERED INDEX IX_AssessorApplicationProviderLink_ProviderId ON dbo.AssessorApplicationProviderLink (TrainingProviderId);
+    PRINT 'Created table dbo.AssessorApplicationProviderLink.';
+END
+
+-- 5. AssessorApplicationDocument
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'AssessorApplicationDocument' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE dbo.AssessorApplicationDocument (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AssessorApplicationDocument PRIMARY KEY CLUSTERED,
+        AssessorRegistrationApplicationId INT NOT NULL,
+        DocumentTypeCode NVARCHAR(50) NOT NULL,
+        DocumentTitle NVARCHAR(250) NOT NULL,
+        FileStoragePath NVARCHAR(500) NOT NULL,
+        VersionNumber INT NOT NULL CONSTRAINT DF_AssessorAppDoc_Version DEFAULT (1),
+        IsVerified BIT NOT NULL CONSTRAINT DF_AssessorAppDoc_IsVerified DEFAULT (0),
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_AssessorAppDoc_CreatedAt DEFAULT (SYSUTCDATETIME()),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_AssessorAppDoc_CreatedBy DEFAULT ('SYSTEM'),
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_AssessorApplicationDocument_App FOREIGN KEY (AssessorRegistrationApplicationId) REFERENCES dbo.AssessorRegistrationApplication (id) ON DELETE CASCADE
+    );
+
+    CREATE NONCLUSTERED INDEX IX_AssessorApplicationDocument_AppId ON dbo.AssessorApplicationDocument (AssessorRegistrationApplicationId);
+    CREATE NONCLUSTERED INDEX IX_AssessorApplicationDocument_Type ON dbo.AssessorApplicationDocument (DocumentTypeCode);
+    PRINT 'Created table dbo.AssessorApplicationDocument.';
+END
+
+-- 6. AssessorUnitStandardScope
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'AssessorUnitStandardScope' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE dbo.AssessorUnitStandardScope (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AssessorUnitStandardScope PRIMARY KEY CLUSTERED,
+        AssessorModeratorScopeId INT NOT NULL,
+        UnitStandardCode NVARCHAR(20) NOT NULL,
+        UnitStandardTitle NVARCHAR(300) NOT NULL,
+        NqfLevel INT NOT NULL CONSTRAINT DF_AssessorUSScope_Nqf DEFAULT (4),
+        Credits INT NOT NULL CONSTRAINT DF_AssessorUSScope_Credits DEFAULT (15),
+        IsPopulatedFromQualification BIT NOT NULL CONSTRAINT DF_AssessorUSScope_IsPopulated DEFAULT (1),
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_AssessorUSScope_CreatedAt DEFAULT (SYSUTCDATETIME()),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_AssessorUSScope_CreatedBy DEFAULT ('SYSTEM'),
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_AssessorUnitStandardScope_Scope FOREIGN KEY (AssessorModeratorScopeId) REFERENCES dbo.AssessorModeratorScope (id) ON DELETE CASCADE
+    );
+
+    CREATE NONCLUSTERED INDEX IX_AssessorUnitStandardScope_ScopeId ON dbo.AssessorUnitStandardScope (AssessorModeratorScopeId);
+    CREATE NONCLUSTERED INDEX IX_AssessorUnitStandardScope_Code ON dbo.AssessorUnitStandardScope (UnitStandardCode);
+    PRINT 'Created table dbo.AssessorUnitStandardScope.';
+END
+
+-- 7. AssessorProviderLink
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'AssessorProviderLink' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE dbo.AssessorProviderLink (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AssessorProviderLink PRIMARY KEY CLUSTERED,
+        EtqaAssessorId INT NOT NULL,
+        TrainingProviderId INT NOT NULL,
+        SlaDocumentRef NVARCHAR(500) NULL,
+        IsActive BIT NOT NULL CONSTRAINT DF_AssessorProviderLink_IsActive DEFAULT (1),
+        VerifiedDate DATETIME2(7) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_AssessorProviderLink_CreatedAt DEFAULT (SYSUTCDATETIME()),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_AssessorProviderLink_CreatedBy DEFAULT ('SYSTEM'),
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_AssessorProviderLink_Assessor FOREIGN KEY (EtqaAssessorId) REFERENCES dbo.EtqaAssessor (id) ON DELETE CASCADE,
+        CONSTRAINT FK_AssessorProviderLink_Provider FOREIGN KEY (TrainingProviderId) REFERENCES dbo.TrainingProvider (id) ON DELETE NO ACTION
+    );
+
+    CREATE NONCLUSTERED INDEX IX_AssessorProviderLink_AssessorId ON dbo.AssessorProviderLink (EtqaAssessorId);
+    CREATE NONCLUSTERED INDEX IX_AssessorProviderLink_ProviderId ON dbo.AssessorProviderLink (TrainingProviderId);
+    PRINT 'Created table dbo.AssessorProviderLink.';
+END
+
+-- 8. AssessorDisciplinaryCase
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'AssessorDisciplinaryCase' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE dbo.AssessorDisciplinaryCase (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AssessorDisciplinaryCase PRIMARY KEY CLUSTERED,
+        EtqaAssessorId INT NOT NULL,
+        CaseNumber NVARCHAR(50) NOT NULL,
+        CaseType NVARCHAR(50) NOT NULL,
+        ComplaintSummary NVARCHAR(2000) NOT NULL,
+        ComplaintDocumentRef NVARCHAR(500) NULL,
+        InvestigationStartDate DATETIME2(7) NULL,
+        InvestigationEndDate DATETIME2(7) NULL,
+        InvestigationReportSummary NVARCHAR(MAX) NULL,
+        ReviewCommitteeDecisionNumber NVARCHAR(100) NULL,
+        ReviewCommitteeDate DATETIME2(7) NULL,
+        OutcomeCode NVARCHAR(30) NOT NULL CONSTRAINT DF_AssessorDisciplinary_Outcome DEFAULT ('DEREGISTERED'),
+        SuspensionStartDate DATETIME2(7) NULL,
+        SuspensionEndDate DATETIME2(7) NULL,
+        DevelopmentPlanDetails NVARCHAR(MAX) NULL,
+        DecisionLetterDocumentRef NVARCHAR(500) NULL,
+        Status NVARCHAR(30) NOT NULL CONSTRAINT DF_AssessorDisciplinary_Status DEFAULT ('Open'),
+        ClosedAt DATETIME2(7) NULL,
+        ClosedByUserId NVARCHAR(100) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_AssessorDisciplinary_CreatedAt DEFAULT (SYSUTCDATETIME()),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_AssessorDisciplinary_CreatedBy DEFAULT ('SYSTEM'),
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL,
+        CONSTRAINT FK_AssessorDisciplinaryCase_Assessor FOREIGN KEY (EtqaAssessorId) REFERENCES dbo.EtqaAssessor (id) ON DELETE CASCADE
+    );
+
+    CREATE UNIQUE NONCLUSTERED INDEX UQ_AssessorDisciplinaryCase_Number ON dbo.AssessorDisciplinaryCase (CaseNumber);
+    CREATE NONCLUSTERED INDEX IX_AssessorDisciplinaryCase_AssessorId ON dbo.AssessorDisciplinaryCase (EtqaAssessorId);
+    CREATE NONCLUSTERED INDEX IX_AssessorDisciplinaryCase_Type ON dbo.AssessorDisciplinaryCase (CaseType);
+    CREATE NONCLUSTERED INDEX IX_AssessorDisciplinaryCase_Status ON dbo.AssessorDisciplinaryCase (Status);
+    PRINT 'Created table dbo.AssessorDisciplinaryCase.';
+END
+
+-- 9. Add DeRegistrationReason to EtqaAssessor if missing
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.EtqaAssessor') AND name = 'DeRegistrationReason')
+BEGIN
+    ALTER TABLE dbo.EtqaAssessor ADD DeRegistrationReason NVARCHAR(250) NULL;
 END
 
 PRINT 'Complete Idempotent Enterprise DDL Deployment Succeeded!';

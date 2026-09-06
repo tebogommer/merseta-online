@@ -1,0 +1,119 @@
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using MudBlazor
+@inject IBusinessRuleEngineService RuleService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">Create business rule workflow</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+            A workflow represents a unified decision pipeline evaluated against domain models (e.g. Straight-Through Processing, Financial Approval Limits).
+        </MudText>
+
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudGrid Spacing="3">
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  @bind-Value="_workflow.WorkflowName"
+                                  Label="Workflow programmatic identifier"
+                                  Placeholder="e.g. LearnerStpEvaluation"
+                                  Required="true"
+                                  RequiredError="Workflow identifier is required"
+                                  Class="font-monospace"
+                                  HelperText="Unique alphanumeric identifier referenced in service code" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               @bind-Value="_workflow.Category"
+                               Label="Category"
+                               Required="true">
+                        <MudSelectItem Value="@("LearnerRegistration")">Learner registration</MudSelectItem>
+                        <MudSelectItem Value="@("Finance")">Finance &amp; grants</MudSelectItem>
+                        <MudSelectItem Value="@("TradeAssessment")">Trade test &amp; ARPL</MudSelectItem>
+                        <MudSelectItem Value="@("QualityAssurance")">Quality assurance &amp; ETQA</MudSelectItem>
+                        <MudSelectItem Value="@("General")">General compliance</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string"
+                                  @bind-Value="_workflow.Title"
+                                  Label="Workflow display title"
+                                  Placeholder="e.g. Learner STP Straight-Through Processing Gates"
+                                  Required="true"
+                                  RequiredError="Title is required" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string"
+                                  @bind-Value="_workflow.Description"
+                                  Label="Statutory citation / description"
+                                  Placeholder="Statutory basis and purpose of this decision workflow..."
+                                  Lines="3" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="Cancel" StartIcon="@Icons.Material.Filled.Cancel">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_isValid || _isSaving)" OnClick="SaveAsync" StartIcon="@Icons.Material.Filled.Save">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Creating...</span>
+            }
+            else
+            {
+                <span>Create workflow</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private MudForm? _form;
+    private bool _isValid;
+    private bool _isSaving;
+
+    private readonly BusinessRuleWorkflow _workflow = new()
+    {
+        Category = "LearnerRegistration",
+        IsActive = true
+    };
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SaveAsync()
+    {
+        if (_form != null)
+        {
+            await _form.ValidateAsync();
+            if (!_form.IsValid) return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            var created = await RuleService.CreateWorkflowAsync(_workflow, "Admin");
+            Snackbar.Add($"Created business rule workflow '{created.Title}' successfully.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(created));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to create workflow: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

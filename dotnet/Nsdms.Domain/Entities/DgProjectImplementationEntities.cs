@@ -68,7 +68,7 @@ public class GrantPaymentClaim : BaseEntity
     public string DeliverableDescription { get; set; } = string.Empty;
     public string StatusCode { get; set; } = "PendingSubmission"; // PendingSubmission, CloVerified, FinanceApproved, CfoApproved, Paid, Rejected
     
-    // Multi-tier DOFA Approval Attestation Chain
+    // Multi-tier Financial Approval Attestation Chain
     public string? CloVerifiedBy { get; set; }
     public DateTime? CloVerifiedDate { get; set; }
 

@@ -1,0 +1,508 @@
+@page "/coordination/dispatch"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IPortfolioDispatchService DispatchService
+@inject IOrganisationService OrgService
+@inject IPersonService PersonService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A2 (Work Queue / Dispatch Hub - Coordinator Field Scheduling)
+  Role: Client Liaison Coordinator (CLC) & Regional Manager (CRM)
+  Governance: Option B Dynamic Portfolio & Capability Dispatch Engine
+*@
+
+<EntityHeader Title="Field Dispatch Hub (CLC)"
+              Subtitle="Client Liaison Coordinator dispatch console, officer workload balancing, and capability-certified field scheduling"
+              ReferenceKey="A2-DISPATCH-HUB"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="LoadDataAsync">
+            Refresh
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="OpenDispatchDialog">
+            Schedule &amp; Dispatch Visit
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<!-- Summary Metric Cards -->
+<StatCardRow Class="mb-4">
+    <StatCard Value="@_dispatches.Count.ToString("N0")"
+              Label="Total Scheduled Dispatches"
+              Context="Field visits across all regions" />
+    <StatCard Value="@_dispatches.Count(d => d.DispatchStatusCode == "Scheduled" || d.DispatchStatusCode == "Pending").ToString("N0")"
+              Label="Pending / Dispatched"
+              TrendColor="Color.Warning"
+              Context="Awaiting officer execution" />
+    <StatCard Value="@_dispatches.Count(d => d.DispatchStatusCode == "Completed").ToString("N0")"
+              Label="Completed &amp; Evidenced"
+              TrendColor="Color.Success"
+              Context="Outcome submitted to CRM" />
+    <StatCard Value="@_workloadSummary.Count.ToString("N0")"
+              Label="Active Field Officers"
+              TrendColor="Color.Info"
+              Context="Available for assignment" />
+</StatCardRow>
+
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" Class="mb-6">
+    <!-- TAB 1: Dispatch Queue -->
+    <MudTabPanel Text="Field Dispatch Queue" Icon="@Icons.Material.Filled.AltRoute">
+        <div class="pa-4">
+            <!-- Filter Bar -->
+            <FilterBar SearchPlaceholder="Search by organisation, officer name, activity type..."
+                       @bind-SearchText="_searchString"
+                       OnSearch="HandleFilterChanged"
+                       OnClear="ClearFilters">
+                <FilterContent>
+                    <MudSelect T="string"
+                               Label="Region"
+                               @bind-Value="_regionFilter"
+                               @bind-Value:after="HandleFilterChanged"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true">
+                        <MudSelectItem Value="@("All")">All Regions</MudSelectItem>
+                        <MudSelectItem Value="@("GAU")">Gauteng (GAU)</MudSelectItem>
+                        <MudSelectItem Value="@("KZN")">KwaZulu-Natal (KZN)</MudSelectItem>
+                        <MudSelectItem Value="@("WC")">Western Cape (WC)</MudSelectItem>
+                        <MudSelectItem Value="@("EC")">Eastern Cape (EC)</MudSelectItem>
+                        <MudSelectItem Value="@("MP")">Mpumalanga / Limpopo</MudSelectItem>
+                        <MudSelectItem Value="@("FS")">Free State / NC</MudSelectItem>
+                    </MudSelect>
+
+                    <MudSelect T="string"
+                               Label="Dispatch Status"
+                               @bind-Value="_statusFilter"
+                               @bind-Value:after="HandleFilterChanged"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true">
+                        <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
+                        <MudSelectItem Value="@("Scheduled")">Scheduled</MudSelectItem>
+                        <MudSelectItem Value="@("InTransit")">In Transit / En Route</MudSelectItem>
+                        <MudSelectItem Value="@("OnSite")">On-Site / In Progress</MudSelectItem>
+                        <MudSelectItem Value="@("Completed")">Completed</MudSelectItem>
+                        <MudSelectItem Value="@("Cancelled")">Cancelled</MudSelectItem>
+                    </MudSelect>
+                </FilterContent>
+                <ActiveFilterChips>
+                    @if (!string.IsNullOrWhiteSpace(_searchString))
+                    {
+                        <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; HandleFilterChanged(); })">
+                            Keyword: @_searchString
+                        </MudChip>
+                    }
+                    @if (_regionFilter != "All")
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _regionFilter = "All"; HandleFilterChanged(); })">
+                            Region: @_regionFilter
+                        </MudChip>
+                    }
+                    @if (_statusFilter != "All")
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Secondary" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
+                            Status: @_statusFilter
+                        </MudChip>
+                    }
+                </ActiveFilterChips>
+            </FilterBar>
+
+            <!-- Data Grid Shell -->
+            <DataGridShell TItem="FieldDispatchAssignment"
+                           GridKey="CoordinatorDispatchGrid"
+                           Items="@FilteredDispatches"
+                           IsLoading="@_isLoading"
+                           TotalItemsCount="@FilteredDispatches.Count"
+                           EmptyTitle="No Field Dispatches Found"
+                           EmptyMessage="No dispatch assignments match the selected filters."
+                           EmptyActionLabel="Schedule New Dispatch"
+                           OnEmptyAction="OpenDispatchDialog">
+                <ChildContent>
+                    <MudTable Items="@FilteredDispatches"
+                              Hover="true"
+                              Dense="true"
+                              Elevation="0"
+                              Breakpoint="Breakpoint.Sm"
+                              Class="border-default">
+                        <HeaderContent>
+                            <MudTh>Reference</MudTh>
+                            <MudTh>Organisation</MudTh>
+                            <MudTh>Scheduled Date</MudTh>
+                            <MudTh>Activity Type</MudTh>
+                            <MudTh>Assigned Officer</MudTh>
+                            <MudTh>Required Capability</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh Style="text-align: right;">Action</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Reference">
+                                <span class="font-monospace fw-bold text-primary">DSP-@context.Id.ToString("D5")</span>
+                            </MudTd>
+                            <MudTd DataLabel="Organisation">
+                                <a href="/employers/@context.OrganisationId" class="fw-bold text-decoration-none text-primary">
+                                    @(context.Organisation?.CompanyName ?? $"Organisation #{context.OrganisationId}")
+                                </a>
+                            </MudTd>
+                            <MudTd DataLabel="Scheduled Date">
+                                @context.ScheduledDate.ToString("yyyy-MM-dd")
+                            </MudTd>
+                            <MudTd DataLabel="Activity Type">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Default">@context.ActivityTypeCode</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Assigned Officer">
+                                <div class="d-flex align-center gap-1">
+                                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Color="Color.Primary" />
+                                    <span>@context.DispatchedOfficerName</span>
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="Required Capability">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">
+                                    @context.RequiredCapabilityCode
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Status">
+                                @if (context.DispatchStatusCode == "Completed")
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Success">Completed</MudChip>
+                                }
+                                else if (context.DispatchStatusCode == "InTransit" || context.DispatchStatusCode == "OnSite")
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning">@context.DispatchStatusCode</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Info">@context.DispatchStatusCode</MudChip>
+                                }
+                            </MudTd>
+                            <MudTd Style="text-align: right;" DataLabel="Action">
+                                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Dense="true">
+                                    <MudMenuItem Icon="@Icons.Material.Filled.DirectionsWalk"
+                                                 OnClick="@(() => UpdateStatusAsync(context.Id, "InTransit"))">
+                                        Mark In Transit
+                                    </MudMenuItem>
+                                    <MudMenuItem Icon="@Icons.Material.Filled.Place"
+                                                 OnClick="@(() => UpdateStatusAsync(context.Id, "OnSite"))">
+                                        Mark On-Site
+                                    </MudMenuItem>
+                                    <MudMenuItem Icon="@Icons.Material.Filled.CheckCircle"
+                                                 OnClick="@(() => UpdateStatusAsync(context.Id, "Completed"))">
+                                        Mark Completed
+                                    </MudMenuItem>
+                                    <MudMenuItem Icon="@Icons.Material.Filled.Cancel"
+                                                 OnClick="@(() => UpdateStatusAsync(context.Id, "Cancelled"))">
+                                        Cancel Dispatch
+                                    </MudMenuItem>
+                                </MudMenu>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </ChildContent>
+            </DataGridShell>
+        </div>
+    </MudTabPanel>
+
+    <!-- TAB 2: Officer Workload Balancing & Capability Matrix -->
+    <MudTabPanel Text="Officer Workload Balancing" Icon="@Icons.Material.Filled.Assessment">
+        <div class="pa-4">
+            <!-- Phase 12: Caseload Heatmap -->
+            <OfficerCaseloadCard />
+
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                Real-time officer workload distribution across active portfolios, open workflow tasks, and certified competencies. Role neutrality allows any qualified staff member to be dispatched.
+            </MudText>
+
+            <MudTable Items="@_workloadSummary" Dense="true" Hover="true" Elevation="1">
+                <HeaderContent>
+                    <MudTh>Officer Name</MudTh>
+                    <MudTh>Base Station</MudTh>
+                    <MudTh>Formal Job Role</MudTh>
+                    <MudTh>Certified Capabilities</MudTh>
+                    <MudTh Style="text-align: center;">Active Portfolios</MudTh>
+                    <MudTh Style="text-align: center;">Pending Dispatches</MudTh>
+                    <MudTh Style="text-align: center;">Open Tasks</MudTh>
+                    <MudTh Style="text-align: right;">Capacity Indicator</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>
+                        <div class="d-flex flex-column">
+                            <span class="fw-bold">@context.OfficerName</span>
+                            <span class="mud-text-secondary text-caption">@context.Email</span>
+                        </div>
+                    </MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary">@context.StationedRegionCode</MudChip>
+                    </MudTd>
+                    <MudTd>@context.EmploymentRole</MudTd>
+                    <MudTd>
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach (var cap in context.CertifiedCapabilities)
+                            {
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary">
+                                    @cap
+                                </MudChip>
+                            }
+                        </div>
+                    </MudTd>
+                    <MudTd Style="text-align: center;">
+                        <MudBadge Content="@context.ActivePortfolioAccountsCount" Color="Color.Info" Overlap="false" />
+                    </MudTd>
+                    <MudTd Style="text-align: center;">
+                        <MudBadge Content="@context.PendingScheduledDispatchesCount" Color="Color.Warning" Overlap="false" />
+                    </MudTd>
+                    <MudTd Style="text-align: center;">
+                        <MudBadge Content="@context.OpenWorkflowTasksCount" Color="Color.Error" Overlap="false" />
+                    </MudTd>
+                    <MudTd Style="text-align: right;">
+                        @{
+                            var loadScore = context.ActivePortfolioAccountsCount + context.PendingScheduledDispatchesCount + context.OpenWorkflowTasksCount;
+                        }
+                        @if (loadScore > 10)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Error">High Load (@loadScore)</MudChip>
+                        }
+                        else if (loadScore > 5)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">Moderate (@loadScore)</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success">Available (@loadScore)</MudChip>
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </div>
+    </MudTabPanel>
+</MudTabs>
+
+<!-- Schedule Dispatch Dialog -->
+<MudDialog @bind-Visible="_showDispatchDialog" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.AltRoute" Class="mr-2" /> Schedule &amp; Dispatch Field Verification
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_dispatchForm">
+            <MudGrid Spacing="2">
+                <MudItem xs="12">
+                    <MudSelect T="int" Label="Target Organisation" @bind-Value="_selectedOrgId" Variant="Variant.Outlined" Required="true" RequiredError="Organisation is mandatory">
+                        @foreach (var org in _organisations)
+                        {
+                            <MudSelectItem Value="@org.Id">@org.CompanyName (@(org.SdlNumber ?? "N-Number"))</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="int" Label="Designated Employer Contact Person" @bind-Value="_selectedContactId" Variant="Variant.Outlined" Required="true" RequiredError="Contact Person selection is statutorily enforced">
+                        @foreach (var p in _contacts)
+                        {
+                            <MudSelectItem Value="@p.Id">@p.FirstName @p.LastName (@p.Email)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudDatePicker Label="Scheduled Visit Date" @bind-Date="_scheduledDate" Variant="Variant.Outlined" Required="true" MinDate="DateTime.Today" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" Label="Activity Type" @bind-Value="_activityType" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("WorkplaceApprovalAudit")">Workplace Approval Site Audit</MudSelectItem>
+                        <MudSelectItem Value="@("AnnualMonitoringVisit")">Annual Monitoring &amp; Learner Safety</MudSelectItem>
+                        <MudSelectItem Value="@("TradeTestInspection")">Trade Test Centre Verification</MudSelectItem>
+                        <MudSelectItem Value="@("DisputeInvestigation")">Labour Dispute / Termination Investigation</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" Label="Required Capability" @bind-Value="_requiredCapability" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("CAP_WORKPLACE_AUDIT")">CAP_WORKPLACE_AUDIT (Site Inspection)</MudSelectItem>
+                        <MudSelectItem Value="@("CAP_TRADE_TEST_EVAL")">CAP_TRADE_TEST_EVAL (Artisan Trade Test)</MudSelectItem>
+                        <MudSelectItem Value="@("CAP_DISPUTE_MEDIATION")">CAP_DISPUTE_MEDIATION (Conciliation)</MudSelectItem>
+                        <MudSelectItem Value="@("CAP_SDP_ACCREDITATION")">CAP_SDP_ACCREDITATION (Provider Audit)</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSelect T="string" Label="Dispatched Officer (Capable &amp; Certified)" @bind-Value="_selectedOfficerUserId" Variant="Variant.Outlined" Required="true" RequiredError="Officer selection is mandatory">
+                        @foreach (var off in _workloadSummary)
+                        {
+                            <MudSelectItem Value="@off.OfficerUserId">
+                                @off.OfficerName (@off.EmploymentRole - @off.StationedRegionCode)
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Coordinator Instructions / Verification Notes" @bind-Value="_coordinatorNotes" Variant="Variant.Outlined" Lines="2" Placeholder="Provide specific focus areas, apprentice tool inventory review instructions, or risk points." />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => _showDispatchDialog = false)">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send" OnClick="SubmitDispatchAsync" Disabled="_isSubmitting">
+            @(_isSubmitting ? "Dispatching..." : "Confirm & Dispatch")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<FieldDispatchAssignment> _dispatches = new();
+    private List<OfficerWorkloadDto> _workloadSummary = new();
+    private List<Organisation> _organisations = new();
+    private List<Person> _contacts = new();
+
+    private bool _isLoading = true;
+    private string _searchString = string.Empty;
+    private string _regionFilter = "All";
+    private string _statusFilter = "All";
+
+    // Dialog state
+    private bool _showDispatchDialog = false;
+    private bool _isSubmitting = false;
+    private MudForm? _dispatchForm;
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+
+    private int _selectedOrgId;
+    private int _selectedContactId;
+    private DateTime? _scheduledDate = DateTime.Today.AddDays(2);
+    private string _activityType = "WorkplaceApprovalAudit";
+    private string _requiredCapability = "CAP_WORKPLACE_AUDIT";
+    private string _selectedOfficerUserId = string.Empty;
+    private string? _coordinatorNotes;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new("Home", href: "/"),
+        new("Coordination", href: null, disabled: true),
+        new("Field Dispatch Hub", href: "/coordination/dispatch", disabled: true)
+    };
+
+    private List<FieldDispatchAssignment> FilteredDispatches => _dispatches
+        .Where(d => _regionFilter == "All" || string.Equals(d.StationedRegionCode, _regionFilter, StringComparison.OrdinalIgnoreCase))
+        .Where(d => _statusFilter == "All" || string.Equals(d.DispatchStatusCode, _statusFilter, StringComparison.OrdinalIgnoreCase))
+        .Where(d => string.IsNullOrWhiteSpace(_searchString) ||
+                    (d.DispatchedOfficerName != null && d.DispatchedOfficerName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
+                    (d.ActivityTypeCode != null && d.ActivityTypeCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
+                    (d.Organisation != null && d.Organisation.CompanyName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _dispatches = await DispatchService.GetCoordinatorDispatchQueueAsync();
+            _workloadSummary = await DispatchService.GetOfficerWorkloadSummaryAsync();
+            _organisations = await OrgService.GetAllAsync();
+            _contacts = await PersonService.GetAllAsync();
+
+            if (_organisations.Any() && _selectedOrgId == 0)
+            {
+                _selectedOrgId = _organisations.First().Id;
+            }
+            if (_contacts.Any() && _selectedContactId == 0)
+            {
+                _selectedContactId = _contacts.First().Id;
+            }
+            if (_workloadSummary.Any() && string.IsNullOrEmpty(_selectedOfficerUserId))
+            {
+                _selectedOfficerUserId = _workloadSummary.First().OfficerUserId;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading dispatch queue: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void HandleFilterChanged() => StateHasChanged();
+
+    private void ClearFilters()
+    {
+        _searchString = string.Empty;
+        _regionFilter = "All";
+        _statusFilter = "All";
+    }
+
+    private void OpenDispatchDialog()
+    {
+        _showDispatchDialog = true;
+    }
+
+    private async Task SubmitDispatchAsync()
+    {
+        if (_selectedOrgId <= 0 || _selectedContactId <= 0 || string.IsNullOrEmpty(_selectedOfficerUserId) || !_scheduledDate.HasValue)
+        {
+            Snackbar.Add("Please complete all required dispatch fields, including mandatory Contact Person.", Severity.Warning);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var officer = _workloadSummary.FirstOrDefault(o => o.OfficerUserId == _selectedOfficerUserId);
+            var req = new CreateFieldDispatchDto(
+                OrganisationId: _selectedOrgId,
+                VisitId: null,
+                ContactPersonId: _selectedContactId,
+                ScheduledDate: _scheduledDate.Value,
+                ActivityTypeCode: _activityType,
+                RequiredCapabilityCode: _requiredCapability,
+                DispatchedOfficerUserId: _selectedOfficerUserId,
+                DispatchedOfficerName: officer?.OfficerName ?? _selectedOfficerUserId,
+                Priority: "Normal",
+                CoordinatorNotes: _coordinatorNotes
+            );
+
+            await DispatchService.DispatchFieldVisitAsync(req, "CoordinatorUser");
+            Snackbar.Add("Field visit dispatched successfully with non-repudiation audit trail.", Severity.Success);
+            _showDispatchDialog = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Dispatch rejected: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task UpdateStatusAsync(int dispatchId, string newStatus)
+    {
+        try
+        {
+            await DispatchService.UpdateDispatchStatusAsync(dispatchId, newStatus, null, "CoordinatorUser");
+            Snackbar.Add($"Dispatch DSP-{dispatchId:D5} status updated to {newStatus}.", Severity.Info);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Status update failed: {ex.Message}", Severity.Error);
+        }
+    }
+}

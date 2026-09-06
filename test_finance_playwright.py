@@ -18,10 +18,19 @@ def test_financial_governance_suite():
 
         base_url = "http://localhost:5121"
 
+        # Authenticate as SuperAdmin
+        print("[AUTH] Logging in as SuperAdmin...")
+        page.goto(f"{base_url}/login", wait_until="networkidle")
+        page.fill("input#username", "sysadmin@merseta.org.za")
+        page.fill("input#password", "MerSETA@2026!")
+        page.click("button[type='submit']")
+        page.wait_for_load_state("networkidle")
+        print("[AUTH] Successfully authenticated!")
+
         # 1. Test Grant MOAs List (/finance/grants)
         print("\n--- 1. Testing Grant MOAs List (/finance/grants) ---")
         page.goto(f"{base_url}/finance/grants", wait_until="networkidle")
-        page.wait_for_selector("text=Grant MOAs & Tranche Disbursements", timeout=10000)
+        page.wait_for_selector("text=Discretionary Grant (DG) MOAs", timeout=10000)
         print("  [PASS] /finance/grants header loaded")
         
         moa_rows = page.locator("tbody tr").count()
@@ -30,23 +39,23 @@ def test_financial_governance_suite():
 
         # 2. Test Grant MOA Detail View (/finance/grants/1)
         print("\n--- 2. Testing Grant MOA Detail View (/finance/grants/1) ---")
-        page.locator("tbody tr").first.click()
+        page.locator("tbody tr a[href*='/finance/']").first.click()
         page.wait_for_selector("text=Contract Terms", timeout=10000)
         print(f"  [PASS] MOA Detail loaded at {page.url}")
 
-        # Click Tranche Milestones Tab
-        ms_tab = page.locator("div.mud-tab:has-text('Tranche Milestones')")
+        # Click PIP Milestones Tab
+        ms_tab = page.locator("div.mud-tab:has-text('PIP Milestones')")
         if ms_tab.count() > 0:
             ms_tab.first.click()
-            page.wait_for_selector("text=Delivery Milestones & Tranche Allocation", timeout=5000)
-            print("  [PASS] Tranche Milestones Tab opened")
+            page.wait_for_selector("text=Project Implementation Plan", timeout=5000)
+            print("  [PASS] PIP Milestones Tab opened")
 
-        # Click Invoices & Payments Tab
-        inv_tab = page.locator("div.mud-tab:has-text('Invoices & Payments')")
+        # Click Disbursements & Claims Tab
+        inv_tab = page.locator("div.mud-tab:has-text('Disbursements')")
         if inv_tab.count() > 0:
             inv_tab.first.click()
-            page.wait_for_selector("text=Tranche Payment Requisitions", timeout=5000)
-            print("  [PASS] Invoices & Payment Requisitions Tab opened")
+            page.wait_for_selector("text=Disbursements", timeout=5000)
+            print("  [PASS] Disbursements & Claims Tab opened")
 
         # Click Evidence Vault Tab
         vault_tab = page.locator("div.mud-tab:has-text('Evidence Vault')")
@@ -58,7 +67,7 @@ def test_financial_governance_suite():
         # 3. Test Mandatory Grant 20% Rebates (/finance/levy-rebates)
         print("\n--- 3. Testing Mandatory Grant Rebates (/finance/levy-rebates) ---")
         page.goto(f"{base_url}/finance/levy-rebates", wait_until="networkidle")
-        page.wait_for_selector("text=Mandatory Grant 20% Rebate Payout Engine", timeout=10000)
+        page.wait_for_selector("text=Mandatory Grant (MG) 20% Rebate Payout Engine", timeout=10000)
         print("  [PASS] /finance/levy-rebates header loaded")
         rebate_rows = page.locator("tbody tr").count()
         print(f"  [PASS] Found {rebate_rows} Mandatory Rebate records")

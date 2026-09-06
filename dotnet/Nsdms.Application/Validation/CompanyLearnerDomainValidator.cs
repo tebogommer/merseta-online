@@ -4,7 +4,7 @@ namespace Nsdms.Application.Validation;
 
 public static class CompanyLearnerDomainValidator
 {
-    public static List<StatutoryValidationError> Validate(CompanyLearner learner, string fileId = "SETMIS_500")
+    public static List<StatutoryValidationError> Validate(CompanyLearner learner, string fileId = "SETMIS_500", int maxWorkingDays = 30)
     {
         var errors = new List<StatutoryValidationError>();
         string desc = $"Contract: {learner.LearnerContractNumber ?? "Draft"} (Learner ID: {learner.PersonId})";
@@ -146,11 +146,11 @@ public static class CompanyLearnerDomainValidator
             }
         }
 
-        // 6. 30 Working Days Statutory Submission Rule (Table 17 Item 2 & 4)
+        // 6. Max Working Days Statutory Submission Rule (Default 30 Working Days, Table 17 Item 2 & 4)
         if (learner.LearnerSignatureDate.HasValue && learner.SubmissionDate.HasValue)
         {
             var workingDays = CalculateWorkingDays(learner.LearnerSignatureDate.Value, learner.SubmissionDate.Value);
-            if (workingDays > 30)
+            if (workingDays > maxWorkingDays)
             {
                 errors.Add(new StatutoryValidationError
                 {
@@ -162,7 +162,7 @@ public static class CompanyLearnerDomainValidator
                     FieldValue = $"{workingDays} working days",
                     RuleCode = "SETMIS_500_30DAY_DEADLINE_EXCEEDED",
                     Severity = StatutoryValidationSeverity.Fatal,
-                    Message = $"Learner agreement was submitted {workingDays} working days after learner signature date. Maximum statutory submission window is 30 working days.",
+                    Message = $"Learner agreement was submitted {workingDays} working days after learner signature date. Maximum statutory submission window is {maxWorkingDays} working days.",
                     Remediation = "The agreement has lapsed; request a fresh bilateral agreement execution or upload condonation approval."
                 });
             }
@@ -274,7 +274,8 @@ public static class CompanyLearnerDomainValidator
     public static List<StatutoryValidationError> ValidateBursaryApplication(
         CompanyLearner learner, 
         CompanyLearner? previousBursary = null, 
-        string fileId = "BURSARY_APP")
+        string fileId = "BURSARY_APP",
+        int maxWorkingDays = 30)
     {
         var errors = new List<StatutoryValidationError>();
         string desc = $"Bursary: {learner.LearnerContractNumber ?? "Draft"} (Learner ID: {learner.PersonId})";
@@ -466,8 +467,8 @@ public static class CompanyLearnerDomainValidator
             }
         }
 
-        // 6. Inherit common statutory rules: Minor Guardian and 30-Working-Day submission
-        var commonErrors = Validate(learner, fileId);
+        // 6. Inherit common statutory rules: Minor Guardian and max working days submission
+        var commonErrors = Validate(learner, fileId, maxWorkingDays);
         foreach (var ce in commonErrors)
         {
             if (isUnemployed && ce.RuleCode.Contains("EMPLOYER", StringComparison.OrdinalIgnoreCase))
@@ -528,4 +529,19 @@ public static class CompanyLearnerDomainValidator
 /// Evidentiary document requirement descriptor for bursaries.
 /// </summary>
 public record BursaryDocumentRequirement(string DocumentCode, string DocumentName, bool IsMandatory);
+
+/// <summary>
+/// Canonical statutory alias for CompanyLearnerDomainValidator adhering to Clean Architecture terminology.
+/// </summary>
+public static class LearnerEnrolmentDomainValidator
+{
+    public static List<StatutoryValidationError> Validate(CompanyLearner enrolment, string fileId = "SETMIS_500") =>
+        CompanyLearnerDomainValidator.Validate(enrolment, fileId);
+
+    public static int CalculateWorkingDays(DateTime startDate, DateTime endDate) =>
+        CompanyLearnerDomainValidator.CalculateWorkingDays(startDate, endDate);
+
+    public static List<BursaryDocumentRequirement> GetRequiredBursaryDocuments(string applicationType, string employmentStatus) =>
+        CompanyLearnerDomainValidator.GetRequiredBursaryDocuments(applicationType, employmentStatus);
+}
 

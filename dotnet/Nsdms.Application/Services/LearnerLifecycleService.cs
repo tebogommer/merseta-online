@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Interfaces;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
@@ -138,15 +139,18 @@ public class LearnerLifecycleService : ILearnerLifecycleService
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
     private readonly IMentorRatioPolicyEngine? _mentorRatioEngine;
+    private readonly ISystemConfigurationService? _configService;
 
     public LearnerLifecycleService(
         INsdmsDbContextFactory contextFactory,
         IAuditService audit,
-        IMentorRatioPolicyEngine? mentorRatioEngine = null)
+        IMentorRatioPolicyEngine? mentorRatioEngine = null,
+        ISystemConfigurationService? configService = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
         _mentorRatioEngine = mentorRatioEngine;
+        _configService = configService;
     }
 
     #region Section 4.7: Transfer Operations
@@ -666,8 +670,11 @@ public class LearnerLifecycleService : ILearnerLifecycleService
         {
             termination.TerminationStatusCode = "InInvestigation";
             termination.InvestigationStartDate = DateTime.UtcNow;
-            // Statutory 14 working day SLA per Section 5 Business Rules
-            termination.InvestigationDueDate = WorkplaceApprovalService.AddBusinessDays(DateTime.UtcNow, 14);
+            // Statutory dispute investigation SLA per Section 5 Business Rules
+            var slaDays = _configService != null 
+                ? await _configService.GetValueAsync<int>("LearnerLifecycle:TerminationInvestigationSlaDays", 14) 
+                : 14;
+            termination.InvestigationDueDate = WorkplaceApprovalService.AddBusinessDays(DateTime.UtcNow, slaDays);
         }
         else
         {

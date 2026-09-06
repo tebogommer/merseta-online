@@ -8,12 +8,170 @@
 @inject IAnalyticsService AnalyticsService
 @inject NavigationManager Navigation
 @inject ILogger<Home> Logger
+@inject AuthenticationStateProvider AuthStateProvider
 
 @*
-  UI-STANDARD.md Archetype: A5 (Dashboard / Executive Operations Portal)
-  Focus: Operational intelligence, SLA urgent queues, and executive action items.
+  UI-STANDARD.md Archetype: A5 (Dashboard / Executive Operations Portal & Applicant Portal)
+  Focus: Operational intelligence, SLA urgent queues, and executive action items for admins; Stakeholder application portal for standard users.
 *@
 
+@if (_isStandardUserOnly)
+{
+    <PageTitle>Stakeholder Registration &amp; Applicant Portal - MerSETA NSDMS</PageTitle>
+
+    <EntityHeader Title="Stakeholder Registration &amp; Applications"
+                  Subtitle="Apply for statutory stakeholder roles including SDF, SDP Provider, Organisation Contact, Assessor, or Moderator"
+                  ReferenceKey="STAKEHOLDER-PORTAL"
+                  Status="Applicant Active"
+                  BreadcrumbItems="@_breadcrumbItems">
+        <ActionZone>
+            <MudChip T="string" Color="Color.Info" Variant="Variant.Filled" Size="Size.Small">
+                Role: Standard User
+            </MudChip>
+        </ActionZone>
+    </EntityHeader>
+
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-6 rounded-lg">
+        <div class="d-flex flex-column">
+            <span class="font-weight-bold mb-1">Welcome to the merSETA National Skills Development Management System.</span>
+            <span>Your personal profile is registered with standard user permissions. Use the statutory applications below to apply for official stakeholder recognition. Once verified by merSETA, your administrative privileges and linked organisation workspaces will be activated automatically.</span>
+        </div>
+    </MudAlert>
+
+    <div class="d-flex align-center justify-space-between mb-3">
+        <MudText Typo="Typo.h6" Class="fw-bold">Available Stakeholder Applications</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">Select an application category to proceed</MudText>
+    </div>
+
+    <MudGrid Spacing="3" Class="mb-6">
+        <!-- 1. SDF Appointment -->
+        <MudItem xs="12" md="6" lg="4">
+            <MudCard Elevation="2" Class="rounded-lg h-100 d-flex flex-column justify-space-between" Style="border: 1px solid var(--mud-palette-lines-default);">
+                <MudCardContent>
+                    <div class="d-flex align-center gap-2 mb-3">
+                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Medium">
+                            <MudIcon Icon="@Icons.Material.Filled.Work" Size="Size.Small" />
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold">Skills Development Facilitator</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">SDF Appointment</MudText>
+                        </div>
+                    </div>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                        Appoint as Primary, Secondary, or Labour SDF for a participating levy-paying employer to submit WSP/ATR and manage grant allocations.
+                    </MudText>
+                </MudCardContent>
+                <MudCardActions Class="pa-4 pt-0">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Href="/employers/sdf/create" StartIcon="@Icons.Material.Filled.AssignmentInd">
+                        Apply to be an SDF
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <!-- 2. SDP Provider / Contact -->
+        <MudItem xs="12" md="6" lg="4">
+            <MudCard Elevation="2" Class="rounded-lg h-100 d-flex flex-column justify-space-between" Style="border: 1px solid var(--mud-palette-lines-default);">
+                <MudCardContent>
+                    <div class="d-flex align-center gap-2 mb-3">
+                        <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Medium">
+                            <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" />
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold">Skills Development Provider</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">SDP Contact &amp; Accreditation</MudText>
+                        </div>
+                    </div>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                        Apply for training provider accreditation (Primary, Secondary, or QCTO Scope) or register as a contact person for an accredited training academy.
+                    </MudText>
+                </MudCardContent>
+                <MudCardActions Class="pa-4 pt-0">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" FullWidth="true" Href="/providers/apply-accreditation" StartIcon="@Icons.Material.Filled.AccountBalance">
+                        Apply for SDP Accreditation
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <!-- 3. Organisation Contact -->
+        <MudItem xs="12" md="6" lg="4">
+            <MudCard Elevation="2" Class="rounded-lg h-100 d-flex flex-column justify-space-between" Style="border: 1px solid var(--mud-palette-lines-default);">
+                <MudCardContent>
+                    <div class="d-flex align-center gap-2 mb-3">
+                        <MudAvatar Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Medium">
+                            <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" />
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold">Organisation Contact</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Employer Official Designation</MudText>
+                        </div>
+                    </div>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                        Register as an authorized contact person (CEO, HR Director, Finance Lead, or Workshop Manager) linked to a registered employer entity.
+                    </MudText>
+                </MudCardContent>
+                <MudCardActions Class="pa-4 pt-0">
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true" Href="/employers/sdf/create?type=contact" StartIcon="@Icons.Material.Filled.PersonAddAlt1">
+                        Register as Organisation Contact
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <!-- 4. Assessor Application -->
+        <MudItem xs="12" md="6" lg="6">
+            <MudCard Elevation="2" Class="rounded-lg h-100 d-flex flex-column justify-space-between" Style="border: 1px solid var(--mud-palette-lines-default);">
+                <MudCardContent>
+                    <div class="d-flex align-center gap-2 mb-3">
+                        <MudAvatar Color="Color.Success" Variant="Variant.Filled" Size="Size.Medium">
+                            <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold">ETQA Registered Assessor</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Occupational Assessment Scope</MudText>
+                        </div>
+                    </div>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                        Submit an application for registration as an accredited constituent Assessor under merSETA ETQA scope with unit standard mapping.
+                    </MudText>
+                </MudCardContent>
+                <MudCardActions Class="pa-4 pt-0">
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" Href="/etqa/register?type=Assessor" StartIcon="@Icons.Material.Filled.HowToReg">
+                        Apply to be an Assessor
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <!-- 5. Moderator Application -->
+        <MudItem xs="12" md="6" lg="6">
+            <MudCard Elevation="2" Class="rounded-lg h-100 d-flex flex-column justify-space-between" Style="border: 1px solid var(--mud-palette-lines-default);">
+                <MudCardContent>
+                    <div class="d-flex align-center gap-2 mb-3">
+                        <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Medium">
+                            <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Small" />
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold">ETQA Registered Moderator</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Quality Assurance &amp; Moderation Scope</MudText>
+                        </div>
+                    </div>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                        Apply for initial registration or scope extension as an accredited constituent Moderator for occupational qualifications and unit standards.
+                    </MudText>
+                </MudCardContent>
+                <MudCardActions Class="pa-4 pt-0">
+                    <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true" Href="/etqa/register?type=Moderator" StartIcon="@Icons.Material.Filled.Security">
+                        Apply to be a Moderator
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+}
+else
+{
 <PageTitle>Executive Operations Portal - MerSETA NSDMS</PageTitle>
 
 <EntityHeader Title="Executive Operations Portal"
@@ -252,8 +410,10 @@
         </MudCard>
     </MudItem>
 </MudGrid>
+}
 
 @code {
+    private bool _isStandardUserOnly = false;
     private int _employerCount = 0;
     private int _learnerCount = 0;
     private int _providerCount = 0;
@@ -264,19 +424,27 @@
     private List<BreadcrumbItem> _breadcrumbItems = new()
     {
         new BreadcrumbItem("Home", href: "/"),
-        new BreadcrumbItem("Executive Operations", href: null, disabled: true)
+        new BreadcrumbItem("Dashboard", href: null, disabled: true)
     };
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            var summary = await AnalyticsService.GetExecutiveDashboardSummaryAsync();
-            _employerCount = summary.EmployerCount;
-            _learnerCount = summary.LearnerCount;
-            _providerCount = summary.ProviderCount;
-            _grantCount = summary.GrantCount;
-            _actionItems = summary.ActionItems;
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var roles = user.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
+            _isStandardUserOnly = roles.Contains("User") && !roles.Any(r => r is "SuperAdmin" or "Admin" or "Executive" or "CLO" or "Finance" or "FinanceManager" or "Legal" or "Compliance" or "ReviewCommittee" or "SDF");
+
+            if (!_isStandardUserOnly)
+            {
+                var summary = await AnalyticsService.GetExecutiveDashboardSummaryAsync();
+                _employerCount = summary.EmployerCount;
+                _learnerCount = summary.LearnerCount;
+                _providerCount = summary.ProviderCount;
+                _grantCount = summary.GrantCount;
+                _actionItems = summary.ActionItems;
+            }
         }
         catch (Exception ex)
         {

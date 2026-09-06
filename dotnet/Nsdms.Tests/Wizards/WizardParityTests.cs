@@ -156,7 +156,8 @@ public class WizardParityTests : BunitContext, IAsyncLifetime
                 "SdpAccreditationApplicationWizard.razor",
                 "InterSetaTransferWizard.razor",
                 // WspSignoffWizard.razor is documented as an attestation status board rather than a sequential stepper
-                "WspSignoffWizard.razor"
+                "WspSignoffWizard.razor",
+                "SummativeAssessmentCaptureWizard.razor"
             };
 
             foreach (var wizard in wizardFiles)

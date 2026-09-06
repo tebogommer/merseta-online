@@ -1,4 +1,4 @@
-﻿using Nsdms.Domain.Common;
+using Nsdms.Domain.Common;
 
 namespace Nsdms.Domain.Entities;
 
@@ -8,6 +8,8 @@ namespace Nsdms.Domain.Entities;
 public class CompanyLearnerChangeRequest : BaseEntity
 {
     public int CompanyLearnerId { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public int EnrolmentId { get => CompanyLearnerId; set => CompanyLearnerId = value; }
     public CompanyLearner? CompanyLearner { get; set; }
 
     /// <summary>

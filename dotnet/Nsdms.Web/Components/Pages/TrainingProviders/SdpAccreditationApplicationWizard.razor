@@ -2,6 +2,7 @@
 @page "/sdp/apply-accreditation"
 @page "/providers/apply"
 @page "/sdp/create"
+@page "/sdp/register"
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
@@ -76,7 +77,7 @@ else
         <!-- STEP 1: Provider Profile & Legal Entity -->
         <WizardStep Label="Provider profile"
                     Heading="Provider profile &amp; legal entity"
-                    Description="Verify corporate registration with CIPC, SARS tax standing, institutional classification, and physical campus facility"
+                    Description="Verify corporate registration with CIPC, SARS tax standing, institutional classification, and physical delivery site facility"
                     ValidateAsync="ValidateStep1Async">
             <SdpAccreditationFields Section="Profile"
                                     ProviderLegalName="@_providerLegalName"
@@ -346,7 +347,7 @@ else
                     new("CIPC registration number", _registrationNumber, isMonospace: true),
                     new("SARS tax compliance PIN", _taxNumber, isMonospace: true),
                     new("Institutional classification", classTitle),
-                    new("Physical campus site", $"{_physicalAddress}, {_province}"),
+                    new("Physical delivery site", $"{_physicalAddress}, {_province}"),
                     new("Head of Institution", $"{_principalFullName} ({_contactEmail})")
                 }
             },
@@ -418,7 +419,7 @@ else
 
         if (string.IsNullOrWhiteSpace(_physicalAddress))
         {
-            Snackbar.Add("Please provide the physical training campus address.", Severity.Warning);
+            Snackbar.Add("Please provide the physical training delivery site address.", Severity.Warning);
             return Task.FromResult(false);
         }
 
@@ -696,6 +697,35 @@ else
                 NqfLevel = _nqfLevel,
                 AccreditationStatusCode = "Provisional",
                 ExpiryDate = DateTime.UtcNow.AddYears(5)
+            }, "ETQA-Admin");
+
+            // Seed Phase 34 Statutory Requirements: QMS Self-Evaluation, 5-Day SLA, Contact Quorum
+            await ProviderService.SeedDefaultSelfEvaluationsAsync(created.Id, "ETQA-Admin");
+            created.InspectionDueDate = ProviderService.Calculate5WorkingDaysDueDate(DateTime.UtcNow);
+            await ProviderService.UpdateAsync(created, "ETQA-Admin");
+
+            await ProviderService.SaveContactAsync(created.Id, new TrainingProviderContact
+            {
+                TrainingProviderId = created.Id,
+                FirstName = !string.IsNullOrWhiteSpace(_principalFullName) ? _principalFullName : "Principal Contact",
+                LastName = "Director",
+                Email = !string.IsNullOrWhiteSpace(_contactEmail) ? _contactEmail : "principal@sdp.co.za",
+                CellNumber = !string.IsNullOrWhiteSpace(_contactPhone) ? _contactPhone : "0820000001",
+                ContactDesignation = "Primary SDP Contact",
+                IsPrimaryContact = true,
+                IsBankingConfirmationAuthorized = false
+            }, "ETQA-Admin");
+
+            await ProviderService.SaveContactAsync(created.Id, new TrainingProviderContact
+            {
+                TrainingProviderId = created.Id,
+                FirstName = !string.IsNullOrWhiteSpace(_authorizedRepFullName) ? _authorizedRepFullName : "Finance Officer",
+                LastName = "Manager",
+                Email = !string.IsNullOrWhiteSpace(_contactEmail) ? _contactEmail : "finance@sdp.co.za",
+                CellNumber = !string.IsNullOrWhiteSpace(_contactPhone) ? _contactPhone : "0820000002",
+                ContactDesignation = "CFO / Finance Manager",
+                IsPrimaryContact = false,
+                IsBankingConfirmationAuthorized = true
             }, "ETQA-Admin");
 
             _createdProviderId = created.Id;

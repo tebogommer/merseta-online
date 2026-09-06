@@ -220,9 +220,15 @@ public class TrainingProvider : BaseEntity
     public ICollection<TrainingProviderUnitStandard> UnitStandards { get; set; } = new List<TrainingProviderUnitStandard>();
 
     /// <summary>
-    /// Physical delivery campuses and satellite training sites.
+    /// Physical delivery sites and satellite training locations.
     /// </summary>
     public ICollection<TrainingProviderCampus> Campuses { get; set; } = new List<TrainingProviderCampus>();
+
+    /// <summary>
+    /// Statutory alias for Delivery Sites.
+    /// </summary>
+    [NotMapped]
+    public ICollection<TrainingProviderCampus> DeliverySites { get => Campuses; set => Campuses = value; }
 
     /// <summary>
     /// Registered assessors and moderators linked to this provider.
@@ -238,4 +244,19 @@ public class TrainingProvider : BaseEntity
     /// Verified multi-contact quorum records including banking confirmation authorization.
     /// </summary>
     public ICollection<TrainingProviderContact> Contacts { get; set; } = new List<TrainingProviderContact>();
+
+    /// <summary>
+    /// Disciplinary, suspension, and compliance sanction records.
+    /// </summary>
+    public ICollection<SdpDisciplinaryCase> DisciplinaryCases { get; set; } = new List<SdpDisciplinaryCase>();
+
+    /// <summary>
+    /// Form ETQ-TP-012 physical site inspection and tool ratio audit records.
+    /// </summary>
+    public ICollection<SdpSiteInspection> SiteInspections { get; set; } = new List<SdpSiteInspection>();
+
+    /// <summary>
+    /// Multi-cycle 5-year re-accreditation historical application records.
+    /// </summary>
+    public ICollection<SdpReAccreditationApplication> ReAccreditationApplications { get; set; } = new List<SdpReAccreditationApplication>();
 }

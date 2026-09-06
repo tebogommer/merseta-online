@@ -1,0 +1,534 @@
+@page "/register"
+@page "/self-service-register"
+@layout Layout.AuthLayout
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@using Microsoft.AspNetCore.Components.Web
+@using Nsdms.Application.Common.Utilities
+@using Nsdms.Application.Services
+@using Nsdms.Application.Validation
+@using Nsdms.Domain.Entities
+@inject IPersonService PersonService
+@inject IIdentityService IdentityService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Self-Service Registration - merSETA NSDMS</PageTitle>
+
+<div class="d-flex align-center justify-center pa-2" style="width: 100%;">
+    <div style="width: 100%; max-width: 620px;">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <div class="d-inline-flex align-center justify-center rounded-circle pa-3 mb-2" 
+                 style="background-color: var(--mud-palette-primary-hover);">
+                <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Size="Size.Large" Color="Color.Primary" />
+            </div>
+            <MudText Typo="Typo.h5" Class="fw-bold">Self-Service User Registration</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">
+                Register your personal stakeholder account for access to the merSETA NSDMS portal.
+            </MudText>
+        </div>
+
+        @if (_isRegisteredSuccessfully)
+        {
+            <MudCard Elevation="4" Class="rounded-xl pa-6 bg-surface text-center" Style="border: 1px solid var(--mud-palette-warning);">
+                <div class="d-inline-flex align-center justify-center rounded-circle pa-3 mb-3" style="background-color: var(--mud-palette-warning-hover);">
+                    <MudIcon Icon="@Icons.Material.Filled.MarkEmailUnread" Size="Size.Large" Color="Color.Warning" />
+                </div>
+                <MudText Typo="Typo.h6" Class="fw-bold mb-2">Registration Successful — Verification Required</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                    Your personal stakeholder account for <strong>@_email</strong> has been successfully provisioned with the standard <strong>User</strong> role.
+                </MudText>
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4 text-start">
+                    <strong>Account Activation Required:</strong> A digital confirmation link has been issued. Per statutory security guidelines, your account will only become active once your email address is confirmed. Unconfirmed accounts cannot sign in.
+                </MudAlert>
+
+                <div class="d-flex flex-column gap-3">
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary" 
+                               FullWidth="true" 
+                               Href="@($"/confirm-email?userId={_registeredUserId}&token={Uri.EscapeDataString(_confirmationToken)}")"
+                               StartIcon="@Icons.Material.Filled.MarkEmailRead"
+                               Style="text-transform: none; font-weight: 600; height: 44px;">
+                        Confirm &amp; Activate Account Now
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Outlined" 
+                               Color="Color.Secondary" 
+                               FullWidth="true" 
+                               Href="/login"
+                               StartIcon="@Icons.Material.Filled.Login"
+                               Style="text-transform: none; font-weight: 600;">
+                        Proceed to Sign In
+                    </MudButton>
+                </div>
+            </MudCard>
+        }
+        else
+        {
+            <MudCard Elevation="4" Class="rounded-xl pa-6 bg-surface" Style="border: 1px solid var(--mud-palette-lines-default);">
+                <!-- STEP 1: IDENTITY VERIFICATION -->
+                <div class="mb-4">
+                    <div class="d-flex align-center gap-2 mb-1">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">Step 1</MudChip>
+                        <MudText Typo="Typo.subtitle1" Class="fw-bold">Identity Verification</MudText>
+                    </div>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Provide your official National ID or Passport to verify existing records and prevent duplicate profiles.
+                    </MudText>
+                </div>
+
+                <MudRadioGroup T="string" @bind-Value="_idType" Class="mb-3 d-flex gap-4">
+                    <MudRadio Value="@("RSA_ID")" Color="Color.Primary">South African National ID</MudRadio>
+                    <MudRadio Value="@("PASSPORT")" Color="Color.Primary">Foreign Passport</MudRadio>
+                </MudRadioGroup>
+
+                @if (_idType == "RSA_ID")
+                {
+                    <div class="mb-3">
+                        <MudTextField @bind-Value="_rsaIdNumber"
+                                      Label="13-Digit South African ID Number"
+                                      Placeholder="e.g. 8504125088085"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      MaxLength="13"
+                                      Immediate="true"
+                                      TextChanged="@OnIdNumberChanged"
+                                      HelperText="Auto-validates using the official 13-digit Luhn algorithm." />
+                    </div>
+                }
+                else
+                {
+                    <div class="mb-3">
+                        <MudTextField @bind-Value="_passportNumber"
+                                      Label="Foreign Passport Number"
+                                      Placeholder="e.g. A01234567"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      TextChanged="@OnPassportChanged"
+                                      HelperText="Enter your valid passport or foreign travel document number." />
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_idErrorMessage))
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-3 py-1" Dense="true">
+                        @_idErrorMessage
+                    </MudAlert>
+                }
+                else if (_isIdVerified && _idType == "RSA_ID")
+                {
+                    <MudPaper Elevation="0" Class="pa-3 mb-4 rounded-lg d-flex flex-wrap gap-2 align-center" 
+                              Style="background-color: var(--mud-palette-background); border: 1px solid var(--mud-palette-lines-default);">
+                        <MudIcon Icon="@Icons.Material.Filled.Verified" Color="Color.Success" Size="Size.Small" />
+                        <MudText Typo="Typo.caption" Class="fw-bold">Verified:</MudText>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
+                            DOB: @(_parsedDob?.ToString("yyyy-MM-dd") ?? "N/A")
+                        </MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
+                            Gender: @(_parsedGender ?? "N/A")
+                        </MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">
+                            @(_isSaCitizen == true ? "SA Citizen" : "Permanent Resident")
+                        </MudChip>
+                    </MudPaper>
+                }
+
+                @if (_existingAccountFound)
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mb-4">
+                        An active account or demographic profile already exists for this identification number. 
+                        <br />
+                        Please <MudLink Href="/login" Color="Color.Surface" Underline="Underline.Always"><strong>sign in here</strong></MudLink> or use password reset.
+                    </MudAlert>
+                }
+
+                <!-- STEP 2: PERSONAL & CONTACT DETAILS -->
+                @if (_isIdVerified && !_existingAccountFound)
+                {
+                    <MudDivider Class="my-4" />
+
+                    <div class="mb-4">
+                        <div class="d-flex align-center gap-2 mb-1">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">Step 2</MudChip>
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold">Personal &amp; Contact Details</MudText>
+                        </div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Please ensure your legal names strictly match your official identity document per SETMIS specifications.
+                        </MudText>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-12 col-md-6">
+                            <MudTextField @bind-Value="_firstName"
+                                          Label="First Name"
+                                          Required="true"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          HelperText="Official given name" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <MudTextField @bind-Value="_middleName"
+                                          Label="Middle Name (Optional)"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
+                        </div>
+                        <div class="col-12">
+                            <MudTextField @bind-Value="_lastName"
+                                          Label="Last Name / Surname"
+                                          Required="true"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          HelperText="Legal family surname" />
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <MudTextField @bind-Value="_email"
+                                          Label="Email Address"
+                                          Required="true"
+                                          InputType="InputType.Email"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          HelperText="This will be your primary username for logging in." />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <MudTextField @bind-Value="_cellNumber"
+                                          Label="Mobile Cellphone"
+                                          Required="true"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          MaxLength="10"
+                                          HelperText="10 digits (e.g. 0821234567)" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <MudTextField @bind-Value="_altPhone"
+                                          Label="Alternative Telephone"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          MaxLength="10" />
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: SECURITY CREDENTIALS -->
+                    <MudDivider Class="my-4" />
+
+                    <div class="mb-4">
+                        <div class="d-flex align-center gap-2 mb-1">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">Step 3</MudChip>
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold">Account Security</MudText>
+                        </div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Create a secure password with 8+ characters, including uppercase, lowercase, and a number.
+                        </MudText>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-12 col-md-6">
+                            <MudTextField @bind-Value="_password"
+                                          Label="Password"
+                                          Required="true"
+                                          InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <MudTextField @bind-Value="_confirmPassword"
+                                          Label="Confirm Password"
+                                          Required="true"
+                                          InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <MudButton Variant="Variant.Text" 
+                                   Color="Color.Primary" 
+                                   Size="Size.Small" 
+                                   OnClick="@(() => _showPassword = !_showPassword)"
+                                   Style="text-transform: none; font-size: 0.75rem;">
+                            @(_showPassword ? "Hide passwords" : "Show passwords")
+                        </MudButton>
+                    </div>
+
+                    <!-- POPIA Statutory Consent -->
+                    <div class="pa-3 mb-4 rounded-lg" style="background-color: var(--mud-palette-background); border: 1px solid var(--mud-palette-lines-default);">
+                        <MudCheckBox T="bool" @bind-Value="_acceptPopi" Color="Color.Primary" Dense="true">
+                            <span style="font-size: 0.82rem;">
+                                <strong>POPIA Statutory Declaration:</strong> I confirm that the information provided is accurate and consent to its collection and processing by merSETA in accordance with the Protection of Personal Information Act (POPIA No. 4 of 2013).
+                            </span>
+                        </MudCheckBox>
+                    </div>
+
+                    <!-- SUBMIT BUTTON -->
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               FullWidth="true"
+                               Disabled="@_isSaving"
+                               OnClick="@HandleSubmitRegistrationAsync"
+                               StartIcon="@Icons.Material.Filled.HowToReg"
+                               Style="text-transform: none; font-weight: 600; height: 44px;">
+                        @if (_isSaving)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                            <span>Processing Registration...</span>
+                        }
+                        else
+                        {
+                            <span>Complete Self-Service Registration</span>
+                        }
+                    </MudButton>
+                }
+
+                <div class="text-center mt-4">
+                    <MudLink Href="/login" Color="Color.Secondary" Style="font-size: 0.85rem;">
+                        Already registered? Back to Sign In
+                    </MudLink>
+                </div>
+            </MudCard>
+        }
+    </div>
+</div>
+
+@code {
+    private string _idType = "RSA_ID";
+    private string _rsaIdNumber = string.Empty;
+    private string _passportNumber = string.Empty;
+    private string? _idErrorMessage;
+    private bool _isIdVerified = false;
+    private bool _existingAccountFound = false;
+
+    // Parsed demographics
+    private DateTime? _parsedDob;
+    private string? _parsedGender;
+    private bool? _isSaCitizen;
+
+    // Profile form
+    private string _firstName = string.Empty;
+    private string _middleName = string.Empty;
+    private string _lastName = string.Empty;
+    private string _email = string.Empty;
+    private string _cellNumber = string.Empty;
+    private string _altPhone = string.Empty;
+
+    // Security & Compliance
+    private string _password = string.Empty;
+    private string _confirmPassword = string.Empty;
+    private bool _showPassword = false;
+    private bool _acceptPopi = true;
+
+    private bool _isSaving = false;
+    private bool _isRegisteredSuccessfully = false;
+    private int _registeredUserId = 0;
+    private string _confirmationToken = string.Empty;
+
+    private async Task OnIdNumberChanged(string value)
+    {
+        _rsaIdNumber = value?.Trim() ?? string.Empty;
+        _isIdVerified = false;
+        _existingAccountFound = false;
+        _idErrorMessage = null;
+
+        if (_rsaIdNumber.Length == 13)
+        {
+            var parseResult = RsaIdValidator.Parse(_rsaIdNumber);
+            if (!parseResult.IsValid)
+            {
+                _idErrorMessage = parseResult.ErrorMessage ?? "Invalid RSA ID Number.";
+                return;
+            }
+
+            _isIdVerified = true;
+            _parsedDob = parseResult.DateOfBirth;
+            _parsedGender = parseResult.Gender;
+            _isSaCitizen = parseResult.IsSouthAfricanCitizen;
+
+            // Check if existing person or account
+            try
+            {
+                var existingPerson = await PersonService.GetByRsaIdAsync(_rsaIdNumber);
+                if (existingPerson != null)
+                {
+                    _firstName = existingPerson.FirstName ?? string.Empty;
+                    _middleName = existingPerson.MiddleName ?? string.Empty;
+                    _lastName = existingPerson.LastName ?? string.Empty;
+                    _email = existingPerson.Email ?? string.Empty;
+                    _cellNumber = existingPerson.CellNumber ?? string.Empty;
+
+                    var existingUser = await IdentityService.GetUserByUsernameAsync(existingPerson.Email ?? string.Empty);
+                    if (existingUser != null)
+                    {
+                        _existingAccountFound = true;
+                    }
+                }
+            }
+            catch { }
+        }
+    }
+
+    private async Task OnPassportChanged(string value)
+    {
+        _passportNumber = value?.Trim() ?? string.Empty;
+        _isIdVerified = false;
+        _existingAccountFound = false;
+        _idErrorMessage = null;
+
+        if (_passportNumber.Length >= 6)
+        {
+            _isIdVerified = true;
+            _isSaCitizen = false;
+            try
+            {
+                var existingUser = await IdentityService.GetUserByUsernameAsync(_passportNumber);
+                if (existingUser != null)
+                {
+                    _existingAccountFound = true;
+                }
+            }
+            catch { }
+        }
+    }
+
+    private async Task HandleSubmitRegistrationAsync()
+    {
+        // 1. Mandatory Form Validations
+        if (string.IsNullOrWhiteSpace(_firstName) || string.IsNullOrWhiteSpace(_lastName))
+        {
+            Snackbar.Add("Please enter your official first name and surname.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_email) || !_email.Contains('@') || !_email.Contains('.'))
+        {
+            Snackbar.Add("Please provide a valid email address.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_cellNumber) || _cellNumber.Length < 10)
+        {
+            Snackbar.Add("Please provide a valid 10-digit cellphone number.", Severity.Warning);
+            return;
+        }
+
+        if (!_acceptPopi)
+        {
+            Snackbar.Add("Please review and accept the POPIA statutory declaration to proceed.", Severity.Warning);
+            return;
+        }
+
+        // 2. Password Validations
+        if (string.IsNullOrWhiteSpace(_password))
+        {
+            Snackbar.Add("Please enter a secure password.", Severity.Warning);
+            return;
+        }
+
+        if (_password != _confirmPassword)
+        {
+            Snackbar.Add("Passwords do not match.", Severity.Warning);
+            return;
+        }
+
+        var (isPwdValid, pwdErrors) = IdentityService.ValidatePasswordPolicy(_password);
+        if (!isPwdValid)
+        {
+            Snackbar.Add($"Password requirement: {string.Join(" ", pwdErrors)}", Severity.Warning);
+            return;
+        }
+
+        // 3. SETMIS Hygiene Checks
+        string[] prohibited = { "UNKNOWN", "AS ABOVE", "TEST", "DELETE", "N/A", "NONE" };
+        var upperFirst = _firstName.Trim().ToUpperInvariant();
+        var upperLast = _lastName.Trim().ToUpperInvariant();
+        if (prohibited.Any(p => upperFirst.Contains(p) || upperLast.Contains(p)))
+        {
+            Snackbar.Add("Names cannot contain placeholder values like 'UNKNOWN', 'TEST', or 'AS ABOVE'.", Severity.Error);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            // 4. Check if user email or username already taken
+            var emailUser = await IdentityService.GetUserByEmailAsync(_email.Trim());
+            if (emailUser != null)
+            {
+                Snackbar.Add("An account with this email address is already registered. Please sign in.", Severity.Warning);
+                return;
+            }
+
+            // 5. Create or Update Person Demographic Record
+            Person person;
+            if (_idType == "RSA_ID")
+            {
+                person = await PersonService.GetByRsaIdAsync(_rsaIdNumber.Trim()) ?? new Person();
+            }
+            else
+            {
+                person = new Person();
+            }
+
+            person.FirstName = _firstName.Trim();
+            person.MiddleName = string.IsNullOrWhiteSpace(_middleName) ? null : _middleName.Trim();
+            person.LastName = _lastName.Trim();
+            person.Email = _email.Trim();
+            person.CellNumber = _cellNumber.Trim();
+            person.PhoneNumber = string.IsNullOrWhiteSpace(_altPhone) ? (_cellNumber?.Trim() ?? string.Empty) : _altPhone.Trim();
+            person.PopiActConsentDate = DateTime.UtcNow;
+            person.IsActive = true;
+
+            if (_idType == "RSA_ID")
+            {
+                person.RsaIdNumber = _rsaIdNumber.Trim();
+                person.DateOfBirth = _parsedDob;
+                person.Gender = _parsedGender;
+                person.GenderCode = _parsedGender == "Female" ? "F" : "M";
+                person.IsSouthAfricanCitizen = _isSaCitizen ?? true;
+                person.CitizenStatusCode = (_isSaCitizen == false) ? "PR" : "SA";
+            }
+            else
+            {
+                person.PassportNumber = _passportNumber.Trim();
+                person.IsSouthAfricanCitizen = false;
+                person.CitizenStatusCode = "O";
+            }
+
+            if (person.Id == 0)
+            {
+                person = await PersonService.CreateAsync(person, _email.Trim());
+            }
+            else
+            {
+                person = await PersonService.UpdateAsync(person, _email.Trim());
+            }
+
+            // 6. Create Identity Account with Role: standard "User" role per statutory specification
+            var appUser = new ApplicationUser
+            {
+                UserName = _email.Trim(),
+                Email = _email.Trim(),
+                EmailConfirmed = false, // Must be confirmed to activate
+                IsActive = true,
+                SecurityStamp = Guid.NewGuid().ToString("N"),
+                PersonId = person.Id
+            };
+
+            await IdentityService.CreateUserAsync(appUser, _password, "User", "SELF_SERVICE", emailConfirmed: false);
+            _registeredUserId = appUser.Id;
+            _confirmationToken = await IdentityService.GenerateEmailConfirmationTokenAsync(appUser.Id);
+
+            _isRegisteredSuccessfully = true;
+            Snackbar.Add("Registration submitted. Please verify your email to activate your account.", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Registration error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

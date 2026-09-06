@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Interfaces;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
@@ -121,11 +122,16 @@ public class AssessorRegistrationService : IAssessorRegistrationService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
+    private readonly ISystemConfigurationService? _systemConfig;
 
-    public AssessorRegistrationService(INsdmsDbContextFactory contextFactory, IAuditService audit)
+    public AssessorRegistrationService(
+        INsdmsDbContextFactory contextFactory, 
+        IAuditService audit,
+        ISystemConfigurationService? systemConfig = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
+        _systemConfig = systemConfig;
     }
 
     public async Task<AssessorRegistrationApplication> CreateDraftApplicationAsync(CreateAssessorApplicationRequest request, string currentUsername = "SYSTEM")
@@ -248,11 +254,15 @@ public class AssessorRegistrationService : IAssessorRegistrationService
 
     public async Task<AssessorApplicationScope> AddQualificationScopeAsync(int applicationId, AddQualificationScopeRequest request, string currentUsername = "SYSTEM")
     {
-        // Enforce 3-year post-qualification experience invariant (Spec Section 5)
+        // Enforce post-qualification experience invariant (Spec Section 5)
+        var minYears = _systemConfig != null 
+            ? await _systemConfig.GetValueAsync("StatutorySlas.AssessorMinExperienceYears", 3.0)
+            : 3.0;
+
         var yearsSince = (DateTime.UtcNow - request.QualificationObtainedDate).TotalDays / 365.25;
-        if (yearsSince < 3.0)
+        if (yearsSince < minYears)
         {
-            throw new InvalidOperationException("Statutory Validation Failure: Practitioners must have at least 3 years of post-qualification industry experience before applying for assessor/moderator registration.");
+            throw new InvalidOperationException($"Statutory Validation Failure: Practitioners must have at least {minYears.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)} years (minimum {minYears:0} years) of post-qualification industry experience before applying for assessor/moderator registration.");
         }
 
         using var db = await _contextFactory.CreateDbContextAsync();

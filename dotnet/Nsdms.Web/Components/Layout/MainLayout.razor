@@ -36,11 +36,14 @@
     <MudLayout>
         <!-- Modernized 60px Enterprise Top Bar -->
         <MudAppBar Elevation="0" Dense="true" Fixed="true" role="banner" Class="app-header-modern px-4" Style="border-bottom: 1px solid var(--border); height: 60px;">
-            <MudIconButton Icon="@Icons.Material.Filled.Menu" 
-                           Color="Color.Default" 
-                           Edge="Edge.Start" 
-                           OnClick="@((e) => DrawerToggle())" 
-                           aria-label="Toggle navigation menu" />
+            @if (_isAuthenticated)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" 
+                               Color="Color.Default" 
+                               Edge="Edge.Start" 
+                               OnClick="@((e) => DrawerToggle())" 
+                               aria-label="Toggle navigation menu" />
+            }
 
             <!-- merSETA Brand & System Identity matching exact screenshot -->
             <div class="d-flex align-center ml-2">
@@ -51,194 +54,251 @@
 
             <MudSpacer />
 
-            <!-- Global Universal OmniSearch & Command Palette Launcher (Ctrl + K) -->
-            <div class="d-none d-md-flex align-center px-3 py-1 rounded mr-3" style="background: var(--surface-subtle); border: 1px solid var(--border); cursor: pointer;" @onclick="OpenCommandPalette" title="Search Everything &amp; Jump (Ctrl + K)">
-                <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" Style="opacity: 0.75; font-size: 1rem;" Class="mr-2 text-secondary" />
-                <span class="text-secondary" style="font-size: 0.78rem;">Search &amp; jump...</span>
-                <span class="kbd-shortcut ml-3">Ctrl + K</span>
-            </div>
+            @if (_isAuthenticated)
+            {
+                <!-- Global Universal OmniSearch & Command Palette Launcher (Ctrl + K) -->
+                <div class="d-none d-md-flex align-center px-3 py-1 rounded mr-3" style="background: var(--surface-subtle); border: 1px solid var(--border); cursor: pointer;" @onclick="OpenCommandPalette" title="Search Everything &amp; Jump (Ctrl + K)">
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" Style="opacity: 0.75; font-size: 1rem;" Class="mr-2 text-secondary" />
+                    <span class="text-secondary" style="font-size: 0.78rem;">Search &amp; jump...</span>
+                    <span class="kbd-shortcut ml-3">Ctrl + K</span>
+                </div>
 
-            <!-- In-Progress Statutory Wizard Drafts Launcher with Badge (Option A) -->
-            <MudBadge Content="@_activeDraftsCount" Color="Color.Warning" Overlap="true" Visible="@(_activeDraftsCount > 0)" Class="mr-2">
-                <MudTooltip Text="@(_activeDraftsCount > 0 ? $"{_activeDraftsCount} in-progress draft{(_activeDraftsCount == 1 ? "" : "s")}" : "In-progress application drafts")">
-                    <MudIconButton Icon="@Icons.Material.Filled.HistoryEdu"
-                                   Color="Color.Default"
-                                   Size="Size.Medium"
-                                   OnClick="@(() => _isDraftsDrawerOpen = true)"
-                                   aria-label="In-progress application drafts"
-                                   Title="In-progress application drafts" />
-                </MudTooltip>
-            </MudBadge>
+                <!-- In-Progress Statutory Wizard Drafts Launcher with Badge (Option A) -->
+                <MudBadge Content="@_activeDraftsCount" Color="Color.Warning" Overlap="true" Visible="@(_activeDraftsCount > 0)" Class="mr-2">
+                    <MudTooltip Text="@(_activeDraftsCount > 0 ? $"{_activeDraftsCount} in-progress draft{(_activeDraftsCount == 1 ? "" : "s")}" : "In-progress application drafts")">
+                        <MudIconButton Icon="@Icons.Material.Filled.HistoryEdu"
+                                       Color="Color.Default"
+                                       Size="Size.Medium"
+                                       OnClick="@(() => _isDraftsDrawerOpen = true)"
+                                       aria-label="In-progress application drafts"
+                                       Title="In-progress application drafts" />
+                    </MudTooltip>
+                </MudBadge>
 
-            <!-- Real-time Notifications Bell with Badge -->
-            <MudBadge Content="@_unreadCount" Color="Color.Error" Overlap="true" Visible="@(_unreadCount > 0)" Class="mr-2">
-                <MudMenu Icon="@Icons.Material.Filled.Notifications" Color="Color.Default" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" AriaLabel="Live Notifications Menu" Title="Live Notifications Menu">
-                    <div class="pa-3" style="min-width: 320px; max-width: 400px; background: var(--surface);">
-                        <div class="d-flex justify-space-between align-center mb-2">
-                            <div>
-                                <MudText Typo="Typo.subtitle2" Class="fw-bold" Color="Color.Primary">Operational Notifications</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Live Notifications</MudText>
+                <!-- Real-time Notifications Bell with Badge -->
+                <MudBadge Content="@_unreadCount" Color="Color.Error" Overlap="true" Visible="@(_unreadCount > 0)" Class="mr-2">
+                    <MudMenu Icon="@Icons.Material.Filled.Notifications" Color="Color.Default" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" AriaLabel="Live Notifications Menu" Title="Live Notifications Menu">
+                        <div class="pa-3" style="min-width: 320px; max-width: 400px; background: var(--surface);">
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <div>
+                                    <MudText Typo="Typo.subtitle2" Class="fw-bold" Color="Color.Primary">Operational Notifications</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Live Notifications</MudText>
+                                </div>
+                                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" OnClick="@MarkAllNotificationsReadAsync" Disabled="@(_unreadCount == 0)">
+                                    Mark all read
+                                </MudButton>
                             </div>
-                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" OnClick="@MarkAllNotificationsReadAsync" Disabled="@(_unreadCount == 0)">
-                                Mark all read
-                            </MudButton>
-                        </div>
-                        <MudDivider Class="my-2" />
-                        @if (!_userNotifications.Any())
-                        {
-                            <div class="pa-4 text-center">
-                                <MudIcon Icon="@Icons.Material.Outlined.NotificationsNone" Color="Color.Secondary" Size="Size.Large" Class="mb-1" />
-                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">No notifications at this time.</MudText>
-                            </div>
-                        }
-                        else
-                        {
-                            <MudList T="SystemNotificationDto" Dense="true">
-                                @foreach (var n in _userNotifications.Take(6))
-                                {
-                                    <MudListItem T="SystemNotificationDto" OnClick="@(() => HandleNotificationClickAsync(n))" Class="@(n.IsRead ? "opacity-75" : "bg-light rounded mb-1")">
-                                        <div class="d-flex align-start gap-2">
-                                            <MudIcon Icon="@GetNotificationIcon(n.NotificationType, n.Severity)" Color="@GetNotificationColor(n.Severity)" Size="Size.Small" Class="mt-1" />
-                                            <div style="flex: 1;">
-                                                <div class="d-flex justify-space-between">
-                                                    <MudText Typo="Typo.caption" Class="fw-bold">@n.Title</MudText>
-                                                    <MudText Typo="Typo.caption" Style="font-size: 0.65rem;" Color="Color.Secondary">@n.CreatedAt.ToString("HH:mm")</MudText>
+                            <MudDivider Class="my-2" />
+                            @if (!_userNotifications.Any())
+                            {
+                                <div class="pa-4 text-center">
+                                    <MudIcon Icon="@Icons.Material.Outlined.NotificationsNone" Color="Color.Secondary" Size="Size.Large" Class="mb-1" />
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">No notifications at this time.</MudText>
+                                </div>
+                            }
+                            else
+                            {
+                                <MudList T="SystemNotificationDto" Dense="true">
+                                    @foreach (var n in _userNotifications.Take(6))
+                                    {
+                                        <MudListItem T="SystemNotificationDto" OnClick="@(() => HandleNotificationClickAsync(n))" Class="@(n.IsRead ? "opacity-75" : "bg-light rounded mb-1")">
+                                            <div class="d-flex align-start gap-2">
+                                                <MudIcon Icon="@GetNotificationIcon(n.NotificationType, n.Severity)" Color="@GetNotificationColor(n.Severity)" Size="Size.Small" Class="mt-1" />
+                                                <div style="flex: 1;">
+                                                    <div class="d-flex justify-space-between">
+                                                        <MudText Typo="Typo.caption" Class="fw-bold">@n.Title</MudText>
+                                                        <MudText Typo="Typo.caption" Style="font-size: 0.65rem;" Color="Color.Secondary">@n.CreatedAt.ToString("HH:mm")</MudText>
+                                                    </div>
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block text-truncate" Style="max-width: 250px;">@n.Message</MudText>
                                                 </div>
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block text-truncate" Style="max-width: 250px;">@n.Message</MudText>
                                             </div>
-                                        </div>
-                                    </MudListItem>
-                                }
-                            </MudList>
-                        }
+                                        </MudListItem>
+                                    }
+                                </MudList>
+                            }
+                        </div>
+                    </MudMenu>
+                </MudBadge>
+                
+                <!-- Keyboard Shortcuts Helper Menu -->
+                <MudMenu Icon="@Icons.Material.Filled.Keyboard" Color="Color.Default" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" AriaLabel="Keyboard Shortcuts Guide" Title="Keyboard Shortcuts Guide" Class="mr-2">
+                    <div class="pa-4" style="min-width: 280px; background: var(--surface);">
+                        <div class="d-flex align-center gap-2 mb-2">
+                            <MudIcon Icon="@Icons.Material.Filled.Keyboard" Color="Color.Primary" />
+                            <MudText Typo="Typo.subtitle2" Class="fw-bold">Power-User Keybindings</MudText>
+                        </div>
+                        <MudDivider Class="mb-3" />
+                        <div class="d-flex flex-column gap-2">
+                            <div class="d-flex justify-space-between align-center">
+                                <MudText Typo="Typo.caption">Command Palette &amp; Jump</MudText>
+                                <span class="kbd-shortcut">Ctrl + K</span>
+                            </div>
+                            <div class="d-flex justify-space-between align-center">
+                                <MudText Typo="Typo.caption">Quick Save Record</MudText>
+                                <span class="kbd-shortcut">Ctrl + S</span>
+                            </div>
+                            <div class="d-flex justify-space-between align-center">
+                                <MudText Typo="Typo.caption">Focus Table Search</MudText>
+                                <span class="kbd-shortcut">/</span>
+                            </div>
+                            <div class="d-flex justify-space-between align-center">
+                                <MudText Typo="Typo.caption">Cancel / Go Back</MudText>
+                                <span class="kbd-shortcut">Esc</span>
+                            </div>
+                            <div class="d-flex justify-space-between align-center">
+                                <MudText Typo="Typo.caption">Skip Navigation</MudText>
+                                <span class="kbd-shortcut">Tab</span>
+                            </div>
+                        </div>
                     </div>
                 </MudMenu>
-            </MudBadge>
-            
-            <!-- Keyboard Shortcuts Helper Menu -->
-            <MudMenu Icon="@Icons.Material.Filled.Keyboard" Color="Color.Default" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" AriaLabel="Keyboard Shortcuts Guide" Title="Keyboard Shortcuts Guide" Class="mr-2">
-                <div class="pa-4" style="min-width: 280px; background: var(--surface);">
-                    <div class="d-flex align-center gap-2 mb-2">
-                        <MudIcon Icon="@Icons.Material.Filled.Keyboard" Color="Color.Primary" />
-                        <MudText Typo="Typo.subtitle2" Class="fw-bold">Power-User Keybindings</MudText>
-                    </div>
-                    <MudDivider Class="mb-3" />
-                    <div class="d-flex flex-column gap-2">
-                        <div class="d-flex justify-space-between align-center">
-                            <MudText Typo="Typo.caption">Command Palette &amp; Jump</MudText>
-                            <span class="kbd-shortcut">Ctrl + K</span>
-                        </div>
-                        <div class="d-flex justify-space-between align-center">
-                            <MudText Typo="Typo.caption">Quick Save Record</MudText>
-                            <span class="kbd-shortcut">Ctrl + S</span>
-                        </div>
-                        <div class="d-flex justify-space-between align-center">
-                            <MudText Typo="Typo.caption">Focus Table Search</MudText>
-                            <span class="kbd-shortcut">/</span>
-                        </div>
-                        <div class="d-flex justify-space-between align-center">
-                            <MudText Typo="Typo.caption">Cancel / Go Back</MudText>
-                            <span class="kbd-shortcut">Esc</span>
-                        </div>
-                        <div class="d-flex justify-space-between align-center">
-                            <MudText Typo="Typo.caption">Skip Navigation</MudText>
-                            <span class="kbd-shortcut">Tab</span>
-                        </div>
-                    </div>
-                </div>
-            </MudMenu>
 
-            <!-- Theme Toggle -->
-            <MudTooltip Text="@(_isDarkMode ? "Switch to light mode" : "Switch to dark mode")">
-                <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
-                               Color="Color.Default"
-                               Size="Size.Medium"
-                               OnClick="@ToggleTheme"
-                               Class="mr-1"
-                               aria-label="Toggle color theme" />
-            </MudTooltip>
+                <!-- Theme Toggle -->
+                <MudTooltip Text="@(_isDarkMode ? "Switch to light mode" : "Switch to dark mode")">
+                    <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                                   Color="Color.Default"
+                                   Size="Size.Medium"
+                                   OnClick="@ToggleTheme"
+                                   Class="mr-1"
+                                   aria-label="Toggle color theme" />
+                </MudTooltip>
 
-            <!-- Dedicated Top-Bar Organisation Context Switcher (Option C) -->
-            <OrganisationContextSwitcher @ref="_orgSwitcherRef"
-                                         CurrentUserEmail="@_currentUserEmail"
-                                         CurrentPersonName="@_currentUserDisplayName"
-                                         IsAdminUser="@_isCurrentUserAdmin"
-                                         OnOrganisationChanged="@HandleOrganisationChanged" />
+                <!-- Dedicated Top-Bar Organisation Context Switcher (Option C) -->
+                <OrganisationContextSwitcher @ref="_orgSwitcherRef"
+                                             CurrentUserEmail="@_currentUserEmail"
+                                             CurrentPersonName="@_currentUserDisplayName"
+                                             IsAdminUser="@_isCurrentUserAdmin"
+                                             OnOrganisationChanged="@HandleOrganisationChanged" />
 
-            <!-- Dedicated Top-Bar Persona Switcher Pill with Person Name (Option B Enhanced) -->
-            <PersonaSwitcher ActivePersona="@_activePersona" 
-                             OnPersonaChanged="@HandlePersonaChanged" 
-                             OnPersonaSelected="@HandlePersonaSelected" />
-
-            <!-- User Profile Avatar Pill & Menu matching active person identity -->
-            <MudMenu AnchorOrigin="Origin.BottomRight" 
-                     TransformOrigin="Origin.TopRight" 
-                     Dense="true" 
-                     AriaLabel="User profile and account session menu" 
-                     Title="User profile and account session">
-                <ActivatorContent Context="avatarCtx">
-                    <MudButton Variant="Variant.Text" 
-                               OnClick="@avatarCtx.ToggleAsync"
-                               Class="nsdms-user-pill-btn" 
-                               Style="text-transform: none !important; min-width: 0 !important; padding: 2px 8px !important;"
-                               aria-label="@($"User profile: {_currentUserDisplayName} ({_currentUserRoleBadge})")" 
-                               title="@($"User profile: {_currentUserDisplayName} ({_currentUserRoleBadge})")">
-                        <div class="nsdms-user-avatar">
-                            @_currentUserInitials
-                        </div>
-                        <div class="d-none d-md-flex flex-column text-left">
-                            <span class="nsdms-user-name">@_currentUserDisplayName</span>
-                            <span class="nsdms-user-role-badge">@_currentUserRoleBadge</span>
-                        </div>
-                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" Style="color: var(--mud-palette-text-secondary); font-size: 1rem;" />
-                    </MudButton>
-                </ActivatorContent>
-                <ChildContent>
-                    <div class="pa-3" style="min-width: 300px;">
-                        <div class="d-flex align-center gap-3 mb-2">
-                            <div class="nsdms-user-avatar" style="width: 38px; height: 38px; font-size: 0.9rem;">
+                <!-- User Profile Avatar Pill & Menu matching active person identity -->
+                <MudMenu AnchorOrigin="Origin.BottomRight" 
+                         TransformOrigin="Origin.TopRight" 
+                         Dense="true" 
+                         AriaLabel="User profile and account session menu" 
+                         Title="User profile and account session">
+                    <ActivatorContent Context="avatarCtx">
+                        <MudButton Variant="Variant.Text" 
+                                   OnClick="@avatarCtx.ToggleAsync"
+                                   Class="nsdms-user-pill-btn" 
+                                   Style="text-transform: none !important; min-width: 0 !important; padding: 2px 8px !important;"
+                                   aria-label="@($"User profile: {_currentUserDisplayName} ({_currentUserRoleBadge})")" 
+                                   title="@($"User profile: {_currentUserDisplayName} ({_currentUserRoleBadge})")">
+                            <div class="nsdms-user-avatar">
                                 @_currentUserInitials
                             </div>
-                            <div>
-                                <MudText Typo="Typo.subtitle2" Class="fw-bold" Style="color: var(--mud-palette-text-primary);">@_currentUserDisplayName</MudText>
+                            <div class="d-none d-md-flex flex-column text-left">
+                                <span class="nsdms-user-name">@_currentUserDisplayName</span>
                                 <span class="nsdms-user-role-badge">@_currentUserRoleBadge</span>
                             </div>
+                            <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" Style="color: var(--mud-palette-text-secondary); font-size: 1rem;" />
+                        </MudButton>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <div class="pa-3" style="min-width: 300px;">
+                            <div class="d-flex align-center gap-3 mb-2">
+                                <div class="nsdms-user-avatar" style="width: 38px; height: 38px; font-size: 0.9rem;">
+                                    @_currentUserInitials
+                                </div>
+                                <div>
+                                    <MudText Typo="Typo.subtitle2" Class="fw-bold" Style="color: var(--mud-palette-text-primary);">@_currentUserDisplayName</MudText>
+                                    <span class="nsdms-user-role-badge">@_currentUserRoleBadge</span>
+                                </div>
+                            </div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-1">
+                                Signed in as <strong>@_currentUserEmail</strong>
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size: 0.68rem;" Class="d-block mb-2">
+                                @_currentUserSubtitle
+                            </MudText>
+                            <MudDivider Class="my-2" />
+                            @if (_isInternalAdmin)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.Dashboard" Href="/">Executive dashboard</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Inbox" Href="/tasks">Universal task inbox</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Handyman" Href="/workplace-approvals">Workplace approvals</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Business" Href="/employers">Organisations &amp; employers</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Security" Href="/admin/audit-logs">Audit trail &amp; change logs</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.ManageAccounts" Href="/admin/users">Identity &amp; user accounts</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.MenuBook" Href="/developer/schema">Data dictionary &amp; schema</MudMenuItem>
+                            }
+                            else if (_isSdf)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.Dashboard" Href="/">Dashboard</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Inbox" Href="/tasks">Universal task inbox</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Business" Href="/employers">My organisation</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Handyman" Href="/workplace-approvals">Workplace approvals</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.School" Href="/learners">Learner registrations</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.AccountBalance" Href="/dg-grants">Discretionary grants (DG)</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.ReceiptLong" Href="/wsp">Mandatory grants (WSP/ATR)</MudMenuItem>
+                            }
+                            else if (_isClo)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.Dashboard" Href="/">Dashboard</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Inbox" Href="/tasks">Universal task inbox</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Handyman" Href="/workplace-approvals">Site inspections &amp; approvals</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Business" Href="/employers">Assigned organisations</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.School" Href="/learners">Learner verifications</MudMenuItem>
+                            }
+                            else if (_isFinance)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.Dashboard" Href="/">Dashboard</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Inbox" Href="/tasks">Universal task inbox</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Payments" Href="/finance/dg-claims">Discretionary grant claims</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Receipt" Href="/finance/mg-rebates">Mandatory grant disbursements</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Business" Href="/employers">Levy-paying employers</MudMenuItem>
+                            }
+                            else
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.Dashboard" Href="/">Dashboard</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Inbox" Href="/tasks">Universal task inbox</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Business" Href="/employers">Organisations</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.School" Href="/learners">Learners</MudMenuItem>
+                            }
+                            <MudDivider Class="my-2" />
+                            <MudMenuItem Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" OnClick="@HandleSignOut">
+                                Sign out
+                            </MudMenuItem>
                         </div>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-1">
-                            Signed in as <strong>@_currentUserEmail</strong>
-                        </MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size: 0.68rem;" Class="d-block mb-2">
-                            @_currentUserSubtitle
-                        </MudText>
-                        <MudDivider Class="my-2" />
-                        <MudMenuItem Icon="@Icons.Material.Filled.Dashboard" Href="/">Executive dashboard</MudMenuItem>
-                        <MudMenuItem Icon="@Icons.Material.Filled.Inbox" Href="/tasks">Universal task inbox</MudMenuItem>
-                        <MudMenuItem Icon="@Icons.Material.Filled.Handyman" Href="/workplace-approvals">Workplace approvals</MudMenuItem>
-                        <MudMenuItem Icon="@Icons.Material.Filled.Business" Href="/employers">Organisations &amp; employers</MudMenuItem>
-                        <MudMenuItem Icon="@Icons.Material.Filled.Security" Href="/admin/audit-logs">Audit trail &amp; change logs</MudMenuItem>
-                        <MudMenuItem Icon="@Icons.Material.Filled.MenuBook" Href="/developer/schema">Data dictionary &amp; schema</MudMenuItem>
-                        <MudDivider Class="my-2" />
-                        <MudMenuItem Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" OnClick="@HandleSignOut">
-                            Log out (Reset to Admin)
-                        </MudMenuItem>
-                    </div>
-                </ChildContent>
-            </MudMenu>
+                    </ChildContent>
+                </MudMenu>
+            }
+            else
+            {
+                <!-- Theme Toggle -->
+                <MudTooltip Text="@(_isDarkMode ? "Switch to light mode" : "Switch to dark mode")">
+                    <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                                   Color="Color.Default"
+                                   Size="Size.Medium"
+                                   OnClick="@ToggleTheme"
+                                   Class="mr-3"
+                                   aria-label="Toggle color theme" />
+                </MudTooltip>
+
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           Href="/login" 
+                           StartIcon="@Icons.Material.Filled.Login">
+                    Sign in
+                </MudButton>
+            }
         </MudAppBar>
 
-        <!-- Left Navigation Drawer -->
-        <MudDrawer @bind-Open="_drawerOpen" 
-                   Elevation="0" 
-                   ClipMode="DrawerClipMode.Always" 
-                   Width="280px"
-                   role="navigation" 
-                   aria-label="Main Navigation" 
-                   Style="border-right: 1px solid var(--border);">
-            <NavMenu @ref="_navMenuRef" 
-                     ActivePersona="@_activePersona" 
-                     CurrentUsername="@_currentUsername" 
-                     CurrentRoles="@_currentUserRoles" />
-        </MudDrawer>
+        <!-- Left Navigation Drawer (Authenticated Only) -->
+        @if (_isAuthenticated)
+        {
+            <MudDrawer @bind-Open="_drawerOpen" 
+                       Elevation="0" 
+                       ClipMode="DrawerClipMode.Always" 
+                       Width="280px"
+                       role="navigation" 
+                       aria-label="Main Navigation" 
+                       Style="border-right: 1px solid var(--border);">
+                <NavMenu @ref="_navMenuRef" 
+                         ActivePersona="@_activePersona" 
+                         CurrentUsername="@_currentUsername" 
+                         CurrentRoles="@_currentUserRoles" />
+            </MudDrawer>
+        }
 
         <!-- Main Content Area with Strict Screen Boundary Constraint per MudBlazor Invariant -->
         <MudMainContent Style="min-height: calc(100vh - 60px); min-width: 0; box-sizing: border-box;">
@@ -269,19 +329,24 @@
     private bool _isDraftsDrawerOpen = false;
     private int _activeDraftsCount = 0;
     private bool _isDarkMode = false;
+    private bool _isAuthenticated = false;
     private string _activePersona = "All Roles (Unified)";
     private MudTheme _customTheme = NsdmsTheme.CreateTheme();
     private List<SystemNotificationDto> _userNotifications = new();
     private int _unreadCount = 0;
-    private string _currentUsername = "System Administrator";
-    private string _currentUserDisplayName = "System Administrator";
-    private string _currentUserEmail = "sysadmin@merseta.org.za";
-    private string _currentUserInitials = "SA";
-    private string _currentUserRoleBadge = "SUPERADMIN";
-    private string _currentUserSubtitle = "Enterprise Super Administrator • ICT & Executive Directorate";
-    private List<string> _currentUserRoles = new() { "SuperAdmin", "Admin", "FinanceManager", "CLO" };
+    private string _currentUsername = string.Empty;
+    private string _currentUserDisplayName = string.Empty;
+    private string _currentUserEmail = string.Empty;
+    private string _currentUserInitials = string.Empty;
+    private string _currentUserRoleBadge = string.Empty;
+    private string _currentUserSubtitle = string.Empty;
+    private List<string> _currentUserRoles = new();
     private OrganisationContextSwitcher? _orgSwitcherRef;
-    private bool _isCurrentUserAdmin => _currentUserRoles.Any(r => r is "SuperAdmin" or "Admin" or "Executive" or "CLO" or "Finance" or "Legal" or "Compliance");
+    private bool _isCurrentUserAdmin => _currentUserRoles.Any(r => r is "SuperAdmin" or "Admin" or "Executive" or "CLO" or "Finance" or "FinanceManager" or "Legal" or "Compliance" or "ReviewCommittee");
+    private bool _isInternalAdmin => _currentUserRoles.Any(r => r is "SuperAdmin" or "Admin" or "SystemAdmin" or "Administrator");
+    private bool _isSdf => _currentUserRoles.Any(r => r is "SDF" or "SkillsDevelopmentFacilitator");
+    private bool _isClo => _currentUserRoles.Any(r => r is "CLO" or "ClientLiaisonOfficer");
+    private bool _isFinance => _currentUserRoles.Any(r => r is "Finance" or "FinanceOfficer" or "FinanceManager");
 
     public void OpenCommandPalette()
     {
@@ -294,60 +359,6 @@
         return Task.CompletedTask;
     }
 
-    private async Task HandlePersonaChanged(string newPersona)
-    {
-        var profile = NavService.GetPersonaProfile(newPersona);
-        if (profile != null)
-        {
-            await HandlePersonaSelected(profile);
-            return;
-        }
-
-        _activePersona = newPersona;
-        if (_navMenuRef != null)
-        {
-            await _navMenuRef.SetActivePersonaAsync(newPersona);
-        }
-        StateHasChanged();
-    }
-
-    private async Task HandlePersonaSelected(PersonaProfileDto profile)
-    {
-        _activePersona = profile.PersonaTitle;
-        _currentUsername = profile.PersonName;
-        _currentUserDisplayName = profile.PersonName;
-        _currentUserEmail = profile.Email;
-        _currentUserInitials = profile.Initials;
-        _currentUserRoleBadge = profile.RoleBadge;
-        _currentUserSubtitle = $"{profile.StatutoryRole} • {profile.OrganisationName}";
-        _currentUserRoles = profile.Roles;
-
-        if (AuthStateProvider is NsdmsAuthenticationStateProvider authProvider)
-        {
-            authProvider.SetUser(profile.Email, profile.PersonName, profile.Roles);
-        }
-
-        if (_navMenuRef != null)
-        {
-            await _navMenuRef.SetActivePersonaAsync(profile.PersonaTitle);
-        }
-
-        var isInternalAdmin = profile.Roles.Any(r => r is "SuperAdmin" or "Admin" or "Executive" or "CLO" or "Finance" or "Legal" or "Compliance");
-        if (_orgSwitcherRef != null)
-        {
-            await _orgSwitcherRef.ReloadAffiliationsAsync(profile.Email, profile.PersonName, isInternalAdmin);
-        }
-
-        try
-        {
-            await JS.InvokeVoidAsync("localStorage.setItem", "nsdms_active_persona", profile.PersonaTitle);
-        }
-        catch { }
-
-        await RefreshNotificationsAsync();
-        await RefreshDraftsCountAsync();
-        StateHasChanged();
-    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -356,9 +367,16 @@
         NotificationService.UserNotificationReceived += HandleUserNotification;
         NotificationService.SlaWarningReceived += HandleSlaWarning;
         TenantProvider.OnTenantChanged += HandleTenantContextChanged;
+        AuthStateProvider.AuthenticationStateChanged += HandleAuthStateChanged;
 
-        await RefreshNotificationsAsync();
-        await RefreshDraftsCountAsync();
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        UpdateUserState(authState.User);
+
+        if (_isAuthenticated)
+        {
+            await RefreshNotificationsAsync();
+            await RefreshDraftsCountAsync();
+        }
     }
 
     private async Task RefreshDraftsCountAsync()
@@ -498,6 +516,7 @@
         NotificationService.UserNotificationReceived -= HandleUserNotification;
         NotificationService.SlaWarningReceived -= HandleSlaWarning;
         TenantProvider.OnTenantChanged -= HandleTenantContextChanged;
+        AuthStateProvider.AuthenticationStateChanged -= HandleAuthStateChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -509,15 +528,15 @@
                 _isDarkMode = await JS.InvokeAsync<bool>("nsdmsTheme.isDark");
                 await ApplyThemeDomState(_isDarkMode);
 
-                var savedPersona = await JS.InvokeAsync<string?>("localStorage.getItem", "nsdms_active_persona");
-                if (!string.IsNullOrWhiteSpace(savedPersona) && !savedPersona.Equals("All Roles (Unified)", StringComparison.OrdinalIgnoreCase))
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                UpdateUserState(authState.User);
+
+                if (_orgSwitcherRef != null)
                 {
-                    var p = NavService.GetPersonaProfile(savedPersona);
-                    if (p != null)
-                    {
-                        await HandlePersonaSelected(p);
-                    }
+                    await _orgSwitcherRef.ReloadAffiliationsAsync(_currentUserEmail, _currentUserDisplayName, _isCurrentUserAdmin);
                 }
+
+                await JS.InvokeVoidAsync("localStorage.removeItem", "nsdms_active_persona");
 
                 StateHasChanged();
             }
@@ -526,6 +545,117 @@
                 // Graceful fallback during prerendering
             }
         }
+    }
+
+    private void UpdateUserState(System.Security.Claims.ClaimsPrincipal user)
+    {
+        _isAuthenticated = user.Identity?.IsAuthenticated == true;
+        if (_isAuthenticated)
+        {
+            _currentUserEmail = user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value 
+                ?? user.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value 
+                ?? _currentUserEmail;
+            _currentUserDisplayName = user.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value 
+                ?? user.Identity?.Name 
+                ?? (!string.IsNullOrWhiteSpace(_currentUserEmail) ? _currentUserEmail : "User");
+            _currentUsername = user.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value 
+                ?? user.Identity?.Name 
+                ?? _currentUserEmail;
+            _currentUserInitials = GetInitials(_currentUserDisplayName);
+            var roles = user.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
+            _currentUserRoles = roles;
+
+            var isAdmin = _currentUserRoles.Any(r => r is "SuperAdmin" or "Admin" or "Executive" or "CLO" or "Finance" or "FinanceManager" or "Legal" or "Compliance" or "ReviewCommittee");
+            if (isAdmin)
+            {
+                TenantProvider.ResetToGlobalAdmin();
+            }
+
+            if (roles.Contains("SuperAdmin") || roles.Contains("SystemAdmin") || roles.Contains("Administrator"))
+            {
+                _currentUserRoleBadge = "SUPERADMIN";
+                _currentUserSubtitle = "Enterprise Super Administrator • ICT & System Operations";
+            }
+            else if (roles.Contains("CLO") || roles.Contains("ClientLiaisonOfficer"))
+            {
+                _currentUserRoleBadge = "CLO OFFICER";
+                _currentUserSubtitle = "Client Liaison Officer • merSETA Regional Operations";
+            }
+            else if (roles.Contains("SDF") || roles.Contains("SkillsDevelopmentFacilitator"))
+            {
+                _currentUserRoleBadge = "SDF FACILITATOR";
+                _currentUserSubtitle = "Skills Development Facilitator • Registered Employer Representative";
+            }
+            else if (roles.Contains("Finance") || roles.Contains("FinanceOfficer") || roles.Contains("FinanceManager"))
+            {
+                _currentUserRoleBadge = "FINANCE";
+                _currentUserSubtitle = "Finance Officer • Grants & Financial Control";
+            }
+            else if (roles.Contains("ReviewCommittee") || roles.Contains("Committee"))
+            {
+                _currentUserRoleBadge = "COMMITTEE";
+                _currentUserSubtitle = "Review Committee Member • ETQA Statutory Governance";
+            }
+            else if (roles.Contains("Assessor") || roles.Contains("Moderator"))
+            {
+                _currentUserRoleBadge = "ASSESSOR";
+                _currentUserSubtitle = "Registered Assessor / Moderator • Quality Assurance & ETQA";
+            }
+            else if (roles.Contains("SDP") || roles.Contains("TrainingProvider"))
+            {
+                _currentUserRoleBadge = "SDP PROVIDER";
+                _currentUserSubtitle = "Skills Development Provider • Accredited Institution";
+            }
+            else if (roles.Contains("User"))
+            {
+                _currentUserRoleBadge = "APPLICANT / USER";
+                _currentUserSubtitle = "Registered Applicant • merSETA NSDMS";
+            }
+            else if (roles.Any())
+            {
+                _currentUserRoleBadge = roles.First().ToUpperInvariant();
+                _currentUserSubtitle = $"{roles.First()} • merSETA Authorised User";
+            }
+            else
+            {
+                _currentUserRoleBadge = "USER";
+                _currentUserSubtitle = "Authorised Stakeholder • merSETA NSDMS";
+            }
+        }
+        else
+        {
+            TenantProvider.SetTenant(null, null, null, isAdmin: false);
+            _currentUsername = string.Empty;
+            _currentUserDisplayName = string.Empty;
+            _currentUserEmail = string.Empty;
+            _currentUserInitials = string.Empty;
+            _currentUserRoleBadge = string.Empty;
+            _currentUserSubtitle = string.Empty;
+            _currentUserRoles = new();
+        }
+    }
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "U";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0].Length >= 2 ? parts[0][..2].ToUpperInvariant() : parts[0].ToUpperInvariant();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+
+    private void HandleAuthStateChanged(Task<AuthenticationState> task)
+    {
+        InvokeAsync(async () =>
+        {
+            var state = await task;
+            UpdateUserState(state.User);
+            if (_isAuthenticated)
+            {
+                await RefreshNotificationsAsync();
+                await RefreshDraftsCountAsync();
+            }
+            StateHasChanged();
+        });
     }
 
     private void DrawerToggle() => _drawerOpen = !_drawerOpen;
@@ -582,40 +712,23 @@
         return "merSETA National Skills Development Management System";
     }
 
+
     private async Task HandleSignOut()
     {
         try
         {
             await JS.InvokeVoidAsync("localStorage.removeItem", "nsdms_active_persona");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "nsdms_active_tenant");
         }
         catch { }
 
-        TenantProvider.ResetToGlobalAdmin();
-        if (_orgSwitcherRef != null)
+        if (AuthStateProvider is NsdmsAuthenticationStateProvider authProvider)
         {
-            await _orgSwitcherRef.ReloadAffiliationsAsync("sysadmin@merseta.org.za", "System Administrator", isAdmin: true);
+            authProvider.SignOutUser();
         }
 
-        var adminProfile = NavService.GetPersonaProfile("UnifiedAdmin");
-        if (adminProfile != null)
-        {
-            await HandlePersonaSelected(adminProfile);
-        }
-        else
-        {
-            _activePersona = "All Roles (Unified)";
-            _currentUserDisplayName = "System Administrator";
-            _currentUserEmail = "sysadmin@merseta.org.za";
-            _currentUserInitials = "SA";
-            _currentUserRoleBadge = "SUPERADMIN";
-            _currentUserRoles = new() { "SuperAdmin", "Admin" };
-            if (AuthStateProvider is NsdmsAuthenticationStateProvider authProvider)
-            {
-                authProvider.SetUser("sysadmin@merseta.org.za", "System Administrator", _currentUserRoles);
-            }
-        }
-        Snackbar.Add("Active session reset to System Administrator.", Severity.Info);
-        Nav.NavigateTo("/");
+        TenantProvider.ResetToGlobalAdmin();
+        Nav.NavigateTo("/api/auth/logout", forceLoad: true);
     }
 }
 

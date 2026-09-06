@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Interfaces;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
@@ -58,15 +59,20 @@ public interface IDiscretionaryGrantClaimService
 
 public class DiscretionaryGrantClaimService : IDiscretionaryGrantClaimService
 {
-    public const decimal CfoDualSignoffThreshold = 500000.00m; // DOFA R500k statutory threshold
+    public const decimal CfoDualSignoffThreshold = 500000.00m; // Executive R500k statutory threshold
 
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
+    private readonly ISystemConfigurationService? _systemConfig;
 
-    public DiscretionaryGrantClaimService(INsdmsDbContextFactory contextFactory, IAuditService audit)
+    public DiscretionaryGrantClaimService(
+        INsdmsDbContextFactory contextFactory, 
+        IAuditService audit,
+        ISystemConfigurationService? systemConfig = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
+        _systemConfig = systemConfig;
     }
 
     public async Task<DgMoaFinancialAggregateDto> GetFinancialAggregateForMoaAsync(int moaId)
@@ -143,7 +149,11 @@ public class DiscretionaryGrantClaimService : IDiscretionaryGrantClaimService
             throw new InvalidOperationException($"Claim amount R {request.ClaimAmount:N2} exceeds available budget envelope of R {availableBudget:N2} (Total Allocation: R {totalBudget:N2}, Previously Claimed: R {alreadyClaimed:N2}).");
         }
 
-        bool requiresCfo = request.ClaimAmount >= CfoDualSignoffThreshold;
+        decimal cfoThreshold = _systemConfig != null
+            ? await _systemConfig.GetValueAsync("FinancialRules.DualApprovalCfoThreshold", CfoDualSignoffThreshold)
+            : CfoDualSignoffThreshold;
+
+        bool requiresCfo = request.ClaimAmount >= cfoThreshold;
         string claimRef = $"CLM-DG-PIP{pip.Id}-T{request.TrancheNumber}-{DateTime.UtcNow:MMdd}";
 
         var claim = new GrantPaymentClaim
@@ -199,7 +209,7 @@ public class DiscretionaryGrantClaimService : IDiscretionaryGrantClaimService
                 claim.FinanceOfficerApprovedBy = request.ApproverName;
                 claim.FinanceOfficerApprovedDate = DateTime.UtcNow;
                 
-                // If claim requires CFO (DOFA threshold) and CFO hasn't signed yet, keep waiting for CFO
+                // If claim requires CFO (high-value threshold) and CFO hasn't signed yet, keep waiting for CFO
                 if (claim.RequiresCfoApproval)
                 {
                     claim.StatusCode = "PendingCfoApproval";

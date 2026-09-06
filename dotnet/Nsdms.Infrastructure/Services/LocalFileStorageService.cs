@@ -29,14 +29,19 @@ public class LocalFileStorageService : IFileStorageService
         string? categoryCode = null,
         string currentUsername = "SYSTEM")
     {
-        var baseDir = await _configService.GetValueAsync("Storage.UploadDirectory", "uploads");
-        var targetDir = Path.Combine(AppContext.BaseDirectory, baseDir, targetEntityName.ToLowerInvariant());
+        var baseDir = await _configService.GetValueAsync("Storage:LocalRootPath")
+                      ?? await _configService.GetValueAsync("Storage.UploadDirectory", "uploads");
+        var targetDir = Path.IsPathRooted(baseDir)
+            ? Path.Combine(baseDir, targetEntityName.ToLowerInvariant())
+            : Path.Combine(AppContext.BaseDirectory, baseDir, targetEntityName.ToLowerInvariant());
         Directory.CreateDirectory(targetDir);
 
         var safeFileName = Path.GetFileName(fileName);
         var uniqueFileName = $"{Guid.NewGuid():N}_{safeFileName}";
         var fullPath = Path.Combine(targetDir, uniqueFileName);
-        var relativePath = Path.Combine(baseDir, targetEntityName.ToLowerInvariant(), uniqueFileName);
+        var relativePath = Path.IsPathRooted(baseDir)
+            ? fullPath
+            : Path.Combine(baseDir, targetEntityName.ToLowerInvariant(), uniqueFileName);
 
         string hash;
         long totalBytes = 0;
@@ -89,7 +94,9 @@ public class LocalFileStorageService : IFileStorageService
         var attachment = await db.DocumentAttachments.FindAsync(documentAttachmentId);
         if (attachment == null || attachment.IsArchived) return null;
 
-        var fullPath = Path.Combine(AppContext.BaseDirectory, attachment.StoragePath);
+        var fullPath = Path.IsPathRooted(attachment.StoragePath)
+            ? attachment.StoragePath
+            : Path.Combine(AppContext.BaseDirectory, attachment.StoragePath);
         if (!File.Exists(fullPath)) return null;
 
         var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);

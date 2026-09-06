@@ -45,6 +45,21 @@ Every page must pass all 16 items before being declared complete:
 
 ---
 
+### 🛡️ Zero-Trust Default Authorization & Anonymous Whitelisting Standard
+1. **Directory-Wide Default Authorization (`Components/Pages/_Imports.razor`)**:
+   - All interactive pages and child routes under `dotnet/Nsdms.Web/Components/Pages/` are protected by default via `@attribute [Authorize]` declared in `Components/Pages/_Imports.razor`.
+   - Never rely on developers manually remembering to add `[Authorize]` to individual page components.
+2. **Explicit Anonymous Whitelisting**:
+   - Only genuinely public routes may bypass authentication (e.g. `/login`, `/register`, `/verify`, `/verify/document/{DocumentHash}`).
+   - Public pages MUST explicitly declare `@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]` and use `@layout Layout.AuthLayout` (or a dedicated public layout).
+   - Any new anonymous route MUST be added to the whitelist in `RouteAuthorizationSecurityTests.cs`.
+3. **Immediate Navigation Interception via `<RedirectToLogin />`**:
+   - In `Routes.razor`, unauthenticated access within `<NotAuthorized>` must NEVER render private DOM, cards, or metrics. It MUST render `<RedirectToLogin />` to immediately issue an HTTP 302 or client-side redirect to `/login?returnUrl={escapedUrl}`.
+4. **Continuous Automated Route Security Auditing**:
+   - The test suite in `Nsdms.Tests` includes `RouteAuthorizationSecurityTests` which scans every `@page` component in `Nsdms.Web` via reflection and fails the build if any route lacks authorization or is undocumented in the public whitelist.
+
+---
+
 ### 🛡️ Learner Management Lifecycle Statutory Governance Standard (Signed 2022 Specification)
 1. **In-State vs Overall Status Distinction**:
    - The operational workflow state (`InstateStatusCode`) tracks lifecycle amendments (`Active`, `Extension Requested`, `Transfer Application`, `Termination Pending`, `Requirements Not Met`, `Withdrawal`, `Transferred`) while preserving statutory registration and SETMIS reporting integrity (`EnrolmentStatusCode == "Registered"`).
@@ -68,19 +83,19 @@ Every page must pass all 16 items before being declared complete:
 
 ---
 
-### 🛡️ Dedicated Top-Bar Persona Switcher Architecture Invariant
-- The statutory workspace persona switcher (`PersonaSwitcher.razor`) resides on the top application bar (`MudAppBar`), positioned immediately preceding the user profile avatar menu.
-- It displays the active persona in a clean, themed pill button with role-specific icon, responsive label (`GetShortPersonaLabel` / `GetCompactPersonaLabel`), and dropdown chevron.
-- Selecting a persona updates `_activePersona`, fires an `ISnackbar` confirmation toast, and dynamically filters the 7 statutory navigation pillars in `NavMenu` via `INavigationMenuService`.
-- No nested persona switchers shall be embedded within the avatar profile popover; user account session actions (dashboard links, audit logs, sign out) remain strictly isolated from workspace persona filters.
+### 🛡️ Authentication-First User Session Architecture Invariant
+- **Zero Top-Bar Persona Simulation**: Do not embed client-side simulated persona switchers in the top application bar (`MudAppBar`). The active user's identity, roles, and authorization must be strictly governed by ASP.NET Core Identity authentication cookies and claims.
+- **Login-Form-Only Role Selection**: Quick test account selection chips (e.g. `SysAdmin`, `CLO Officer`, `SDF Facilitator`, `Finance`, `Committee`) reside exclusively on `/login` (`Login.razor`) to populate credentials and authenticate via `/api/auth/login`.
+- **Clean Profile Avatar**: The top application bar avatar pill reflects the actual authenticated user's name and statutory role badge (`SUPERADMIN`, `CLO OFFICER`, `SDF FACILITATOR`, `FINANCE`), with session actions (sign out) isolated from simulated identity switching.
 
 ---
 
-### 🛡️ Schema-Domain Synchronization Rule
-- Whenever new properties are added to an Entity class in `Nsdms.Domain/Entities/`, immediately:
-  1. Add corresponding `ALTER TABLE ... ADD [ColumnName] ...` clauses to the active Schema Migrator in `Nsdms.Infrastructure/Data/`.
-  2. Update the master DDL script (`V2026_08_Complete_Nsdms_Enterprise_DDL.sql`).
-  3. Verify column presence against `INFORMATION_SCHEMA.COLUMNS` before testing UI routes.
+### 🛡️ Schema-Domain & Database Migration Synchronization Standard
+- Whenever new Entity classes or persistent properties are added to `Nsdms.Domain/Entities/` or `NsdmsDbContext`:
+  1. **SQL Scripts & Copy to Output**: Ensure the SQL migration script exists under `dotnet/Nsdms.Infrastructure/Data/SqlScripts/` and that `Nsdms.Infrastructure.csproj` copies `.sql` files (`<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>`).
+  2. **Automated C# Migrator**: Create an accompanying C# `Phase*Migrator` in `Nsdms.Infrastructure/Data/` with robust multi-directory path resolution (`AppContext.BaseDirectory`, `Directory.GetCurrentDirectory()`, relative fallbacks), and register it in `Program.cs` via `RunMigrator(...)`.
+  3. **Master Enterprise DDL Synchronization**: Add corresponding table creation and `ALTER TABLE ... ADD [ColumnName] ...` clauses to `V2026_08_Complete_Nsdms_Enterprise_DDL.sql`.
+  4. **Pre-flight Schema Verification**: Verify table and column presence against `INFORMATION_SCHEMA.TABLES` and `INFORMATION_SCHEMA.COLUMNS` before testing UI routes. Never leave entities in `DbContext` without active migrations.
 
 ---
 
@@ -160,7 +175,7 @@ Every page must pass all 16 items before being declared complete:
 2. **Contracting via MoA**: The legal contracting instrument for Discretionary Grants is the **Memorandum of Agreement (MoA)**, never generic "Contracts".
 3. **Skills Development Providers (SDP)**: Refer to accredited training institutions as **Skills Development Providers (SDPs)** per QCTO statutory guidelines.
 4. **Artisan Mentorship Ratios**: Enforce NAMB / QCTO artisan mentor-to-apprentice ratios via `IMentorRatioPolicyEngine`, respecting trade-specific caps.
-5. **Governance & PFMA Controls**: Adhere to Delegation of Financial Authority (DOFA), Segregation of Duties (Maker-Checker), and non-repudiation audit logging for all approval gates.
+5. **Governance & PFMA Controls**: Adhere to financial approval delegation, Segregation of Duties (Maker-Checker), and non-repudiation audit logging for all approval gates.
 
 ---
 
@@ -231,10 +246,20 @@ Every page must pass all 16 items before being declared complete:
 
 ---
 
-### 🛡️ DOFA Discretionary Grant Claim & Payment Voucher Serialization Invariant
+### 🛡️ Demographic & Contact Field Nullability and Fallback Invariant
+1. **Zero Null Leakage on Non-Mandatory Contact Columns**:
+   - In all self-service registration wizards, employer contact intake forms, and assessor applications, non-mandatory telephone/contact fields (`PhoneNumber`, `FaxNumber`, `MiddleName`) MUST never write raw `null` to database columns that carry legacy or strict SQL `NOT NULL` constraints.
+   - When optional secondary telephone (`_altPhone`) is omitted by the user, the application code MUST safely fallback to the primary cellphone (`_cellNumber?.Trim() ?? string.Empty`) or `string.Empty` rather than `null`.
+2. **Schema & Migration Alignment**:
+   - The primary `dbo.Person` and `history.PersonHistory` tables must define `PhoneNumber NVARCHAR(50) NULL` to allow pure mobile-first registration without requiring fixed landlines.
+   - System migrators modifying column nullability on temporal tables must gracefully handle `SYSTEM_VERSIONING = OFF`, alter both the base table and `history.<Entity>History`, and restore system versioning.
+
+---
+
+### 🛡️ Discretionary Grant Claim & Payment Voucher Serialization Invariant
 1. **Budget Envelope Protection**:
    - Every Discretionary Grant tranche claim submission must validate remaining headroom against the parent MoA and PIP total awarded amount (`TotalAwardedAmount - TotalClaimedAmount`). Over-claims must be blocked with explicit domain exceptions.
-2. **Delegation of Financial Authority (DOFA) Chains**:
+2. **Financial Approval Delegation Chains**:
    - Tier 1: Client Liaison Officer (CLO) milestone deliverable inspection (`CloVerified`).
    - Tier 2: Finance Officer banking & tax compliance approval (`Approved` for standard claims).
    - Tier 3: Mandatory Chief Financial Officer (CFO) sign-off for claims $\ge$ R500,000 (`PendingCfoApproval` -> `CfoApproved`).
@@ -320,10 +345,10 @@ Every page must pass all 16 items before being declared complete:
 
 ---
 
-### 🛡️ Trade Testing & DOFA Gating Standard
+### 🛡️ Trade Testing & Executive Approval Gating Standard
 1. **Statutory Entry Clearance**: Trade test applications for contracted apprentices (`Section26D`) and ARPL recognition candidates (`Section28`) must enforce theoretical credit prerequisites (N2 / NCV Level 4) and employer logbook attestation ($\ge 80$ weeks / 3,200 hours verified experience).
 2. **Accredited TTC Scheduling**: Assessment booking must strictly target accredited Trade Test Centres (`TrainingProviderId`) with confirmed examination dates and candidate safety tooling/PPE readiness verification.
-3. **DOFA CFO Gating for DG Claims**: All Discretionary Grant tranche claims reaching or exceeding R 500,000 must automatically flag `RequiresCfoApproval = true` and route through the Tier 3 dual authorization chain prior to payment voucher serialization (`PV-{yyyy}-DG-{id:D5}`).
+3. **CFO Executive Gating for DG Claims**: All Discretionary Grant tranche claims reaching or exceeding R 500,000 must automatically flag `RequiresCfoApproval = true` and route through the Tier 3 dual authorization chain prior to payment voucher serialization (`PV-{yyyy}-DG-{id:D5}`).
 
 ---
 
@@ -503,4 +528,178 @@ Every page must pass all 16 items before being declared complete:
    - Provider registration requires a minimum of two (2) verified contact persons. At least one designated contact other than the primary SDF must be tagged with banking details confirmation authority.
 5. **Double-Write & Digital Security Seal**:
    - All approval gates (Regional QA, QA Manager, Review Committee, Senior QA Manager) must record atomic snapshots in `audit_logs` and stamp the generated Accreditation Certificate with an immutable SHA-256 digital security seal.
+
+---
+
+### 🛡️ Assessor and Moderator Registration Statutory Governance Standard (Signed 2023 Specification)
+1. **3-Year Post-Qualification Industry Practice Gate**:
+   - In accordance with merSETA ETQA regulations, applicants for Assessor or Moderator status MUST possess $\ge 3$ years of verifiable post-qualification occupational practice (`(DateTime.UtcNow - QualificationObtainedDate).TotalDays / 365.25 >= 3.0`). Registration of qualification scopes failing this threshold must be rejected immediately at intake.
+2. **Constituent Unit Standards Protection & Non-Removability**:
+   - Adding an accredited qualification scope automatically cascades all constituent unit standards with `IsPopulatedFromQualification = true`.
+   - Constituent unit standards derived from the parent qualification cannot be deleted individually. Only standalone unit standards may be added or removed independently.
+3. **4-Stage Maker-Checker Workflow with Two-Tier Rejection**:
+   - Initial applications must traverse 4 sequential gates: Stage 1 Document Verification (`VerificationOfficer`), Stage 2 Application Evaluation (`EvaluationOfficer`), Stage 3 ETQA Review Committee Adjudication, and Stage 4 Senior Manager Final Approval (`Approved`).
+   - Review Committee rejection enforces Maker-Checker distinction: `IsFinalRejection = false` routes the application for candidate correction (`RejectedForResubmission`); `IsFinalRejection = true` terminates the process (`RejectedApplication`).
+4. **Multi-SDP Affiliation & Service Level Agreement (SLA)**:
+   - Practitioners can affiliate with multiple accredited Skills Development Providers (SDPs). Each affiliation mandates capture of a verified Service Level Agreement document reference (`SlaDocumentRef`).
+5. **Disciplinary Sanctioning, DHA Deceased De-registration & QuestPDF Seal**:
+   - Disciplinary investigations (`AssessorDisciplinaryCase`) conclude with Review Committee sanctions: Suspension (`SUSPENDED`), De-registration (`DEREGISTERED`), or Dismissal (`DISMISSED`). Suspensions immediately set `AssessmentAbilitySuspended = true` and revoke operational assessment eligibility across all learner enrolments.
+   - Formal DHA death notifications (`RecordDeceasedAsync`) immediately transition practitioner status to `De-Registered`, stamp `DeRegistrationReason = "Deceased"`, and permanently suspend assessment abilities.
+   - All outcomes generate statutory QuestPDF certificates and outcome letters stamped with immutable SHA-256 digital security seals.
+
+---
+
+### 🛡️ Learner Registration Dual-Channel (ATM vs Teller) Statutory Invariant
+1. **Dual-Channel Coexistence**:
+   - The automated self-service bulk ingestion channel ("The ATM", `/learners/bulk-register`) MUST exist alongside the manual single-registration wizard workflows ("The Teller", `LearnerAgreementRegistrationWizard.razor` and `BursaryRegistrationWizard.razor`). Automated options must NEVER replace or deprecate manual teller routes.
+2. **Straight-Through Processing (STP) 6-Gate Safeguards**:
+   - Automated registration through `ILearnerStpRiskEngine` is strictly limited to 100% compliant submissions matching 6 gates: active levy-paying employer, verified workplace approval with mentor ratios (`IMentorRatioPolicyEngine`), active non-expired SAQA qualification, valid RSA ID Luhn algorithm check, mandatory guardian details for minors under 18, and execution date within 30 working days.
+3. **Graceful Exception Routing**:
+   - Any row failing any of the 6 STP criteria must NOT terminate the batch; instead, it is safely queued into `VerificationPending` for officer maker-checker review and manual condonation evaluation.
+4. **Digital Security Seal & Double-Write Audit Trail**:
+   - Ingested bulk batches must calculate an immutable SHA-256 digital security seal over payload contents. All STP auto-approvals must perform atomic double-writes into `audit_logs` with actor `SYSTEM_STP_GATEKEEPER`.
+
+---
+
+### 🛡️ Summative Assessment, External Moderation & Certification Statutory Governance Standard (Signed 2022 Specification MerSeta\NSDMS\LMS\ASM\12)
+1. **Segregation of Duties (Maker-Checker)**:
+   - An accredited assessor cannot internally moderate the same learner's assessment results (`AssessorPersonId != ModeratorPersonId`). Enforce validation across both single results and batch processing.
+2. **50% Earned Credit Gate for Funded Employers**:
+   - For merSETA-funded learners, Progress assessments require at least 50% of mandatory core/fundamental credits to have been earned (`totalEarned >= totalCreditsRequired / 2`) before assessment results can be committed to the Holding Room. Non-funded employers are statutorily exempt.
+3. **External Moderation Upheld Certificate Stamping**:
+   - When an external moderation batch is upheld by merSETA QA, `LearnerCertificate.IssueDate` is statutorily stamped with the exact external moderation approval date (`DateOfModeration`).
+4. **Statutory 12-Digit Certificate Numbering Formula**:
+   - Formula: Fixed prefix `17` (MerSETA statutory code) + Middle 4 digits (indices 5..8 of 13-digit RSA ID, or `MMYY` derived from `ddMMyyyy` foreign birth date) + 6 sequential/padded digits (`D6`). Total length is always exactly 12 digits.
+5. **VACS Rejection Taxonomy & Controlled Documents**:
+   - External moderation rejections must categorize evidentiary defects using the VACS framework: Validity, Authenticity, Currency, and Sufficiency, routing rejected batches for structured remediation.
+   - All statutory PDF instruments (ETQ-FM-005, ETQ-TP-043, National Qualification Certificate, ETQ-LT-012 Transmittal Letter) must render dynamic high-resolution QR verification seals and perform audited double-writes into `audit_logs`.
+6. **Zero Raw Database Access in Assessment UI**:
+   - Razor components managing Summative Assessments, Batching, QA External Moderation, and Certificate Printing MUST NEVER inject `IDbContextFactory` or `DbContext` directly. All entity lookups, scheduling, adjudication, batch submissions, and document triggers must pass through `ISummativeAssessmentAndModerationService` and `IPdfDocumentService`.
+7. **Consolidated Batch Certificate Printing & Stitching**:
+   - When printing batch qualification certificates, the system must generate a single consolidated multi-page A4 landscape PDF document via `IPdfDocumentService.GenerateBatchConsolidatedCertificatesPdfAsync(batchId)` rather than single-record downloads.
+
+---
+
+### 🛡️ Test DbContext Factory & In-Memory Entity Reload Invariant
+- In integration and unit tests using `TestDbContextFactory`, application services execute mutations within their own scoped DbContext instances (`using var db = await _contextFactory.CreateDbContextAsync();`).
+- When asserting post-mutation database state in tests, NEVER query entities from the test setup's original `db` instance (even with `.AsNoTracking()`), because the EF Core InMemory provider's local change tracker identity map can retain pre-mutation entity snapshots.
+- Always retrieve post-mutation assertions using a fresh context: `using var verifyDb = (NsdmsDbContext)factory.CreateDbContext(); await verifyDb.Entity.FindAsync(...)`.
+
+---
+
+### 🛡️ Unmapped Entity Convenience Properties Invariant
+- When adding backward-compatibility aliases or computed properties to domain entities in `Nsdms.Domain/Entities/`, decorate them with `[NotMapped]` AND explicitly configure `entity.Ignore(e => e.PropertyName)` in `NsdmsDbContext.cs` inside Fluent API.
+- Fluent API overrides CLR attributes. Calling `entity.Property(...)` on an unmapped property causes EF Core to query non-existent columns, leading to SQL Server runtime errors (`Invalid column name '...'`).
+
+---
+
+### 🛡️ Skills Development Provider (SDP) Delivery Sites vs Campuses Nomenclature Standard
+1. **Statutory Terminology Alignment**:
+   - In accordance with merSETA ETQA statutory governance, physical locations where Skills Development Providers (SDPs) conduct accredited training deliveries and assessments MUST be designated as **"Delivery Sites"** or **"Sites"** (e.g. *Main Site*, *Secondary Delivery Site*, *Site Code*, *Site Inspection*).
+   - Never use the term "Campus" or "Campuses" in user-facing labels, table headers, dialogs, button texts, toast messages, or navigation items.
+2. **Backward-Compatible Domain & Service Aliasing**:
+   - Underlying entity models and database tables may preserve physical storage columns (`TrainingProviderCampus`) while exposing `SiteName`, `SiteCode`, `SiteContactPersonName`, and `SiteContactPhone` via `[NotMapped]` aliases (with explicit `entity.Ignore(...)` in `NsdmsDbContext.cs`).
+   - Application service contracts must provide `ISdpSiteService` / `SdpSiteService` as the primary interface, with `ISdpCampusService` retained as an alias for non-breaking backward compatibility.
+
+---
+
+### 🛡️ Dynamic Business Rule Engine & Configurable Thresholds Standard
+1. **Separation of Hardcoded Logic vs Configurable Policy**:
+   - High-velocity policies, statutory gatekeeper rules, and risk evaluation workflows (e.g. Learner Straight-Through Processing `LearnerStpRiskEngine`, CFO financial approval thresholds, Assessor minimum practice years) must NOT be hardcoded as immutable C# constants.
+   - Dynamic numeric thresholds and operational settings must be resolved dynamically through `ISystemConfigurationService` (`lookup.system_config`).
+   - Multi-condition decision pipelines and statutory criteria must be modeled through `IBusinessRuleEngineService` using `Microsoft.RulesEngine` and persisted in `BusinessRuleWorkflow` and `BusinessRule` entities.
+2. **Compiled Engine Cache & Hot-Path Performance**:
+   - `IBusinessRuleEngineService` implementations must cache compiled `RulesEngine.RulesEngine` instances across executions using a thread-safe `ConcurrentDictionary<string, RulesEngine.RulesEngine>` keyed by workflow name and revision timestamp.
+   - High-throughput batch operations (e.g. bulk learner agreement ingestion) must never re-parse JSON or recompile expressions per record.
+3. **Statutory Fallback Invariant**:
+   - If the dynamic rule engine, database, or workflow definition is unavailable, services MUST execute a safe, compiled statutory fallback (e.g. in `LearnerStpRiskEngine`, verifying active employer, mentor ratios, valid SAQA qualification, and guardian consent for minors) to guarantee 100% operational continuity.
+4. **Interactive Sandbox & Non-Destructive Testing**:
+   - The UI under `/system-admin/rules/{id}` must provide an interactive evaluation sandbox enabling administrators and compliance officers to test expressions and JSON payloads without mutating live transactional records.
+5. **C# XML Documentation Entity Escaping**:
+   - In C# XML documentation comments (`/// <summary>`), comparison operators `<` and `>` must always be escaped as `&lt;` and `&gt;` to prevent XML parsing syntax errors under `GenerateDocumentationFile = true`.
+
+---
+
+### 🛡️ Dynamic Configuration & Zero-Hardcoding Invariant
+1. **Zero Hardcoded Business Rules**:
+   - Never hardcode statutory SLAs, approval validity durations, financial split percentages, mentor ratios, test attempt limits, file upload caps, or storage paths in service classes or UI components.
+2. **Standard Resolution Pattern**:
+   - Always inject `ISystemConfigurationService` and resolve parameters with `await _configService.GetValueAsync<T>("Category:KeyName", fallbackValue)`.
+   - Provide statutory constants strictly as fallback arguments.
+3. **Startup Seeding Requirement**:
+   - Any newly introduced configuration parameter MUST be added to `SystemConfigurationService.SeedDefaultConfigsAsync()` with its category, data type, description, and default value so it appears automatically in the System Settings administration portal.
+
+---
+
+### 🛡️ ASP.NET Core Identity & User Management Statutory Governance Standard
+1. **Separation of Authentication (`ApplicationUser`) vs Demographics (`Person`)**:
+   - `ApplicationUser` handles credentials, password hashes, security stamps, lockout tracking, and statutory role claims.
+   - `Person` manages statutory personal identity, RSA ID numbers, demographic equity profiles, disability ratings, and contact info.
+   - Users and Persons are decoupled; an optional foreign key link (`PersonId`) links an account to their demographic record without mandatory 1-to-1 co-creation.
+2. **Password Complexity & Account Lockout Invariant**:
+   - Minimum 8 characters, at least 1 uppercase letter, 1 lowercase letter, 1 digit, and 1 non-alphanumeric character.
+   - Failed logon attempts increment `AccessFailedCount`. 5 consecutive failed attempts trigger an automated 15-minute lockout (`LockoutEnd = UtcNow.AddMinutes(15)`).
+   - Successful logins reset `AccessFailedCount = 0` and clear `LockoutEnd`. Administrators can unlock accounts on demand via `UnlockUserAsync`.
+3. **Cookie-Based Authentication Endpoints**:
+   - Dedicated minimal API endpoints `POST /api/auth/login` and `GET/POST /api/auth/logout` manage the `NSDMS_AUTH_TICKET` cookie with `HttpOnly`, `SameSiteMode.Lax`, and `SecurePolicy = SameAsRequest`.
+   - `NsdmsAuthenticationStateProvider` reads cookie claims when present, while preserving seamless fallback for local persona testing.
+4. **Administrative User Management (`/admin/users`)**:
+   - Admin users have full CRUD capabilities: User creation, activation/deactivation, password resets, statutory role assignments, and demographic linking.
+   - User creation and modifications record atomic snapshots in `audit_logs`.
+5. **Idempotent Default Account Seeding**:
+   - Default statutory accounts (`sysadmin@merseta.org.za`, `clo.officer@merseta.org.za`, `sdf.employer@toyota.co.za`, `finance.officer@merseta.org.za`, `review.committee@merseta.org.za`) must be seeded idempotently on application startup via `IdentityService.SeedDefaultUsersAsync()`.
+
+---
+
+### 🛡️ Public Self-Service Registration, Email Activation & Non-Admin Tenant Isolation Standard
+1. **Standard "User" Role Invariant for Self-Registration**:
+   - Public self-service registrants (`/register`, `SelfServiceRegistration.razor`) MUST strictly receive the standard `"User"` role.
+   - Self-service registrants must NEVER be assigned privileged or organizational roles (`SDF`, `SDP`, `Assessor`, `Moderator`, `Admin`) at registration time.
+   - The standard `"User"` role grants access exclusively to the Applicant Portal (`/`), with permissions solely to submit applications for stakeholder appointments (Apply to be an SDF, SDP Contact, Organisation Contact, Assessor, or Moderator).
+2. **Email Confirmation Account Activation Gate**:
+   - Accounts created via self-service MUST have `EmailConfirmed = false`.
+   - `ValidateCredentialsExtendedAsync` and `/api/auth/login` MUST reject unconfirmed accounts with `IsEmailUnconfirmed = true` and prevent login until activated.
+   - Account activation occurs exclusively through cryptographic token verification at `/confirm-email?userId={id}&token={token}` (`ConfirmEmailAsync`).
+   - Internal administrative accounts and system seeds are created pre-confirmed (`EmailConfirmed = true`).
+3. **Strict Multi-Tenant Isolation for Non-Admin Stakeholders**:
+   - Non-admin users (including SDF, SDP, and Employer contacts) must NEVER possess global cross-tenant visibility.
+   - `DefaultTenantProvider.IsAdmin` must default to `false` (zero-trust architecture). Global admin status is granted exclusively to verified administrator roles (`SuperAdmin`, `Admin`, `SystemAdministrator`).
+   - In `NsdmsDbContext` query filters and `OrganisationService`, non-admin users only query organisations matching their explicit context (`CurrentOrganisationId != null && o.Id == CurrentOrganisationId`). If unlinked, queries must safely return zero organisations (`Where(o => false)`).
+   - SDF users have visibility strictly limited to their appointed employer organisation.
+
+---
+
+### 🛡️ User Identity, Role Resolution & UI Session State Invariant
+1. **Dynamic User Subtitle & Neutral Initial State**:
+   - In `MainLayout.razor` and all top-level layout shells, user identity fields (`_currentUsername`, `_currentUserDisplayName`, `_currentUserEmail`, `_currentUserRoleBadge`, `_currentUserSubtitle`, `_currentUserRoles`) MUST be initialized to neutral/empty values (`string.Empty`, `new()`).
+   - Never initialize layout session state to hardcoded SuperAdmin strings or roles.
+   - `_currentUserSubtitle` MUST be computed dynamically in `UpdateUserState` based on the active user's roles (e.g., `SDF` -> "Skills Development Facilitator • Registered Employer Representative"; `CLO` -> "Client Liaison Officer • merSETA Regional Operations"; `Finance` -> "Finance Officer • Grants & Financial Control").
+2. **Username vs Display Name Claim Disambiguation**:
+   - `_currentUsername` MUST be resolved from `user.FindFirst(ClaimTypes.Name)?.Value ?? user.Identity?.Name ?? _currentUserEmail` (the login username or email).
+   - Never set `_currentUsername = _currentUserDisplayName` (which contains GivenName / Full Name like "man user"). Doing so causes downstream services (`CaslAbilityService.GetUserContextByUsernameAsync`) to fail database user lookup, resulting in empty roles and unintended fallback to default roles.
+3. **Role-Aware Avatar Dropdown Navigation**:
+   - Navigation links within the user profile avatar popover menu MUST be strictly conditioned on the authenticated user's role.
+   - Internal administration links (Audit trail, User accounts, Data dictionary) must only render for verified system administrators (`_isInternalAdmin`).
+   - Stakeholders (such as SDFs) must only see relevant operational links (My organisation, Workplace approvals, Learner registrations, DG, WSP), preventing conflicting role navigation.
+
+---
+
+### 🛡️ Shared Wizard Component Resiliency & Endpoint Safety Standard
+1. **Unmatched Attribute Resiliency (`CaptureUnmatchedValues = true`)**:
+   - Shared wizard components (such as `WizardReviewStep.razor`) used across diverse statutory modules (Discretionary Grants, Trade Tests, SDP Accreditation, Mandatory Grants/WSP) MUST declare `[Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }`.
+   - This prevents Blazor's runtime component renderer from throwing unhandled reflection exceptions (`InvalidOperationException: Object of type '...' does not have a property matching the name '...'`) if any parent wizard passes supplementary attributes or template aliases.
+   - Dual parameter aliases (such as `Heading` / `Title` and `Subheading` / `Description`) must be declared as public auto-properties and coalesce safely in the markup (`Heading ?? Title`).
+2. **Statutory Document Download Endpoint Safety**:
+   - Statutory PDF and artifact minimal API endpoints in `Program.cs` (`/api/documents/{entity}/{id}/pdf`) MUST wrap document generation service calls in `try ... catch (KeyNotFoundException)` returning `Results.NotFound(new { message = ... })` rather than allowing unhandled 500 exceptions to bubble up when non-existent entity IDs are requested.
+
+---
+
+### 🛡️ EF Core Include on [NotMapped] Aliases & Minimal API Tenant Context Invariant
+1. **Never Call `.Include()` on `[NotMapped]` Alias Properties**:
+   - In EF Core LINQ queries, `.Include(x => x.Alias)` MUST ONLY target physically mapped navigation properties.
+   - If an entity exposes convenience properties or statutory aliases marked with `[NotMapped]` (e.g. `public ICollection<CertificateDistributionEvent> DistributionEvents => CertificateDistributions;`), calling `.Include(t => t.DistributionEvents)` will throw `InvalidOperationException: The expression '...' is invalid inside an 'Include' operation, since it does not represent a property access`.
+   - Always invoke `.Include()` on the underlying mapped collection property (`.Include(t => t.CertificateDistributions)`).
+2. **Minimal API Endpoints and ITenantProvider Identity Resolution**:
+   - In ASP.NET Core minimal APIs and background document generation services (`/api/documents/...`), the ambient scoped `ITenantProvider` must correctly parse authentication claims from `HttpContext.User`.
+   - Ensure `DefaultTenantProvider` marks `IsAdmin = true` when the user has `Role == "SuperAdmin"` or `"Admin"`. In system document download services (`IQuestPdfDocumentService`), append `.IgnoreQueryFilters()` when fetching approved statutory records (`GrantMoa`, `WspSubmission`, `LearnerTradeTestApplication`, `MandatoryGrantDisbursement`) to prevent multi-tenant query filters from suppressing valid documents for cross-tenant download requests.
 

@@ -18,6 +18,15 @@ def test_developer_docs_suite():
 
         base_url = "http://localhost:5121"
 
+        # Authenticate as SuperAdmin
+        print("[AUTH] Logging in as SuperAdmin...")
+        page.goto(f"{base_url}/login", wait_until="networkidle")
+        page.fill("input#username", "sysadmin@merseta.org.za")
+        page.fill("input#password", "MerSETA@2026!")
+        page.click("button[type='submit']")
+        page.wait_for_load_state("networkidle")
+        print("[AUTH] Successfully authenticated!")
+
         # 1. Test Developer Data Dictionary & Database Architecture (/developer/schema)
         print("\n--- 1. Testing Developer Schema Portal (/developer/schema) ---")
         page.goto(f"{base_url}/developer/schema", wait_until="networkidle")

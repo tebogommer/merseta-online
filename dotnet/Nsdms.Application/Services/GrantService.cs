@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Interfaces;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
@@ -150,11 +151,16 @@ public class GrantService : IGrantService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
+    private readonly ISystemConfigurationService? _configService;
 
-    public GrantService(INsdmsDbContextFactory contextFactory, IAuditService audit)
+    public GrantService(
+        INsdmsDbContextFactory contextFactory,
+        IAuditService audit,
+        ISystemConfigurationService? configService = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
+        _configService = configService;
     }
 
     public async Task<GrantFundingWindow> CreateFundingWindowAsync(GrantFundingWindow window, string currentUsername = "SYSTEM")
@@ -849,15 +855,25 @@ public class GrantService : IGrantService
             CreatedBy = currentUsername
         };
 
-        // Standard 4-Tranche Milestone Schedule
+        // Configurable 4-Tranche Milestone Schedule (Discretionary Grants defaults to 30%, 30%, 30%, 10%)
+        var pct1 = _configService != null ? await _configService.GetValueAsync<decimal>("Grant:Tranche1Percentage", 0.30m) : 0.30m;
+        var pct2 = _configService != null ? await _configService.GetValueAsync<decimal>("Grant:Tranche2Percentage", 0.30m) : 0.30m;
+        var pct3 = _configService != null ? await _configService.GetValueAsync<decimal>("Grant:Tranche3Percentage", 0.30m) : 0.30m;
+        var pct4 = _configService != null ? await _configService.GetValueAsync<decimal>("Grant:Tranche4Percentage", 0.10m) : 0.10m;
+
+        var t1 = Math.Round(contractValue * pct1, 2);
+        var t2 = Math.Round(contractValue * pct2, 2);
+        var t3 = Math.Round(contractValue * pct3, 2);
+        var t4 = contractValue - (t1 + t2 + t3); // Residual balancing guarantees 100.00% exact sum
+
         moa.Milestones.Add(new GrantMoaMilestone
         {
             MilestoneNumber = 1,
             MilestoneTitle = "Inception & Learner Registration",
             MilestoneDescription = "Bilateral MoA execution, proof of learner agreement upload, and project inception report.",
             DeliverableRequirement = "Signed MoA, Certified ID Copies, Proof of Enrolment on merSETA NSDMS.",
-            TranchePercentage = 30m,
-            TrancheAmount = Math.Round(contractValue * 0.30m, 2),
+            TranchePercentage = pct1 * 100m,
+            TrancheAmount = t1,
             TargetDueDate = DateTime.UtcNow.Date.AddMonths(3),
             MilestoneStatusCode = "Pending",
             CreatedAt = DateTime.UtcNow,
@@ -870,8 +886,8 @@ public class GrantService : IGrantService
             MilestoneTitle = "Midterm Structured Learning & Progress",
             MilestoneDescription = "Completion of foundational theory modules and formative workplace assessment logbooks.",
             DeliverableRequirement = "Midterm Progress Report, Logbook Assessment Records, Workplace Monitoring Signoff.",
-            TranchePercentage = 30m,
-            TrancheAmount = Math.Round(contractValue * 0.30m, 2),
+            TranchePercentage = pct2 * 100m,
+            TrancheAmount = t2,
             TargetDueDate = DateTime.UtcNow.Date.AddMonths(6),
             MilestoneStatusCode = "Pending",
             CreatedAt = DateTime.UtcNow,
@@ -884,8 +900,8 @@ public class GrantService : IGrantService
             MilestoneTitle = "Workplace Evidence & Practical Assessment",
             MilestoneDescription = "Practical workplace exposure verification and readiness for summative assessment.",
             DeliverableRequirement = "Workplace Mentor Signoff, Completed Logbooks, Trade Test / EISA Entry Forms.",
-            TranchePercentage = 30m,
-            TrancheAmount = Math.Round(contractValue * 0.30m, 2),
+            TranchePercentage = pct3 * 100m,
+            TrancheAmount = t3,
             TargetDueDate = DateTime.UtcNow.Date.AddMonths(9),
             MilestoneStatusCode = "Pending",
             CreatedAt = DateTime.UtcNow,
@@ -898,8 +914,8 @@ public class GrantService : IGrantService
             MilestoneTitle = "Final Project Closeout & Certification",
             MilestoneDescription = "Summative assessment completion, external moderation endorsement, and project closeout reconciliation.",
             DeliverableRequirement = "Statement of Results (SOR) / Trade Test Certificates, Final Closeout Expenditure Audit.",
-            TranchePercentage = 10m,
-            TrancheAmount = contractValue - (Math.Round(contractValue * 0.30m, 2) * 3),
+            TranchePercentage = pct4 * 100m,
+            TrancheAmount = t4,
             TargetDueDate = DateTime.UtcNow.Date.AddMonths(12),
             MilestoneStatusCode = "Pending",
             CreatedAt = DateTime.UtcNow,

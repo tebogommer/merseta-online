@@ -47,7 +47,7 @@ public class LearnerTradeTestApplication : BaseEntity
     /// <summary>
     /// Statutory employment status: Employed vs Unemployed (Section 4.2.3 of Signed Use Case).
     /// </summary>
-    public string EmploymentStatus { get; set; } = "Employed"; // Employed, Unemployed
+    public string? EmploymentStatus { get; set; } = "Employed"; // Employed, Unemployed
 
     /// <summary>
     /// Name of employer if non-registered or private provider context (Section 4.2.3).
@@ -81,7 +81,7 @@ public class LearnerTradeTestApplication : BaseEntity
     /// <summary>
     /// Section26D (Standard Apprenticeship), Section28 (ARPL - Recognition of Prior Learning), Section26F
     /// </summary>
-    public string ApplicationTypeCode { get; set; } = "Section26D";
+    public string? ApplicationTypeCode { get; set; } = "Section26D";
 
     public int AttemptNumber { get; set; } = 1;
 
@@ -143,18 +143,18 @@ public class LearnerTradeTestApplication : BaseEntity
     public string? NambSerialNumber { get; set; }
     public DateTime? NambSubmissionDate { get; set; }
     public DateTime? NambApprovalDate { get; set; }
-    public string NambDecisionStatusCode { get; set; } = "Pending"; // Pending, Approved, Rejected
+    public string? NambDecisionStatusCode { get; set; } = "Pending"; // Pending, Approved, Rejected
 
     /// <summary>
     /// Assessment outcome: Competent, NotYetCompetent, Absent, Deferred
     /// </summary>
-    public string CompetencyStatusCode { get; set; } = "Pending";
+    public string? CompetencyStatusCode { get; set; } = "Pending";
 
     /// <summary>
     /// Quality Assurance 10% achievement audit sampling flag (DFD Step 4.0).
     /// </summary>
     public bool IsSelectedForQaAuditSample { get; set; } = false;
-    public string QaAuditSampleStatus { get; set; } = "None"; // None, Selected, AuditedPassed, AuditedFailed
+    public string? QaAuditSampleStatus { get; set; } = "None"; // None, Selected, AuditedPassed, AuditedFailed
 
     /// <summary>
     /// Final Serial Number for the Trade Certificate.

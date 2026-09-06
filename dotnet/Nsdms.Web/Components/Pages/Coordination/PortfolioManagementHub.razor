@@ -1,0 +1,610 @@
+@page "/coordination/portfolios"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IPortfolioDispatchService DispatchService
+@inject IOrganisationService OrgService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A1 (Master List - Relationship Officer Portfolios & Temporal Demarcation)
+  Role: Client Liaison Officer (CLO), Regional Manager (CRM), and System Administrators
+  Governance: Option B Dynamic Portfolio & Capability Dispatch Engine
+*@
+
+<EntityHeader Title="Officer Portfolios &amp; Handoff Hub"
+              Subtitle="Dynamic employer account allocations, cross-regional assignments, and atomic predecessor-to-successor handoffs"
+              ReferenceKey="A1-PORTFOLIOS"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="LoadDataAsync">
+            Refresh
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Warning"
+                   StartIcon="@Icons.Material.Filled.SwapHoriz"
+                   OnClick="OpenHandoffDialog"
+                   Disabled="@(!_selectedPortfolios.Any())">
+            Initiate Successor Handoff (@_selectedPortfolios.Count)
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="OpenAssignDialog">
+            Assign Officer Portfolio
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<!-- Summary Metric Cards -->
+<StatCardRow Class="mb-4">
+    <StatCard Value="@_portfolios.Count.ToString("N0")"
+              Label="Active Portfolio Accounts"
+              Context="Assigned organisations" />
+    <StatCard Value="@_portfolios.Count(p => p.IsCrossRegionalAssignment).ToString("N0")"
+              Label="Cross-Regional Direct Accounts"
+              TrendColor="Color.Warning"
+              Context="Directly allocated outside home region" />
+    <StatCard Value="@_handoffLogs.Count.ToString("N0")"
+              Label="Audited Handoffs Executed"
+              TrendColor="Color.Success"
+              Context="Non-repudiable succession events" />
+    <StatCard Value="@_territoryDemarcations.Count.ToString("N0")"
+              Label="Territory Demarcations"
+              TrendColor="Color.Info"
+              Context="Active municipal boundary mappings" />
+</StatCardRow>
+
+<!-- Phase 12: Caseload & Capacity Heatmap -->
+<OfficerCaseloadCard OnOfficerRebalanceRequested="@((officerId) => OpenHandoffDialogForOfficer(officerId))" />
+
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" Class="mb-6">
+    <!-- TAB 1: Portfolios Master List -->
+    <MudTabPanel Text="Organisation Portfolios" Icon="@Icons.Material.Filled.FolderShared">
+        <div class="pa-4">
+            <!-- Filter Bar -->
+            <FilterBar SearchPlaceholder="Search by employer name, SDL number, officer, town..."
+                       @bind-SearchText="_searchString"
+                       OnSearch="HandleFilterChanged"
+                       OnClear="ClearFilters">
+                <FilterContent>
+                    <MudSelect T="string"
+                               Label="Managing Region"
+                               @bind-Value="_regionFilter"
+                               @bind-Value:after="HandleFilterChanged"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true">
+                        <MudSelectItem Value="@("All")">All Regions</MudSelectItem>
+                        <MudSelectItem Value="@("GAU")">Gauteng (GAU)</MudSelectItem>
+                        <MudSelectItem Value="@("KZN")">KwaZulu-Natal (KZN)</MudSelectItem>
+                        <MudSelectItem Value="@("WC")">Western Cape (WC)</MudSelectItem>
+                        <MudSelectItem Value="@("EC")">Eastern Cape (EC)</MudSelectItem>
+                        <MudSelectItem Value="@("MP")">Mpumalanga / Limpopo</MudSelectItem>
+                        <MudSelectItem Value="@("FS")">Free State / NC</MudSelectItem>
+                    </MudSelect>
+
+                    <MudSelect T="string"
+                               Label="Assignment Nature"
+                               @bind-Value="_crossRegionalFilter"
+                               @bind-Value:after="HandleFilterChanged"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true">
+                        <MudSelectItem Value="@("All")">All Types</MudSelectItem>
+                        <MudSelectItem Value="@("CrossRegional")">Cross-Regional Direct Only</MudSelectItem>
+                        <MudSelectItem Value="@("Standard")">Territory Aligned Only</MudSelectItem>
+                    </MudSelect>
+                </FilterContent>
+                <ActiveFilterChips>
+                    @if (!string.IsNullOrWhiteSpace(_searchString))
+                    {
+                        <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; HandleFilterChanged(); })">
+                            Keyword: @_searchString
+                        </MudChip>
+                    }
+                    @if (_regionFilter != "All")
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _regionFilter = "All"; HandleFilterChanged(); })">
+                            Region: @_regionFilter
+                        </MudChip>
+                    }
+                    @if (_crossRegionalFilter != "All")
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" OnClose="@(() => { _crossRegionalFilter = "All"; HandleFilterChanged(); })">
+                            Type: @_crossRegionalFilter
+                        </MudChip>
+                    }
+                </ActiveFilterChips>
+            </FilterBar>
+
+            <!-- Data Grid Shell -->
+            <DataGridShell TItem="OrganisationPortfolioDto"
+                           GridKey="OrganisationPortfolioGrid"
+                           Items="@FilteredPortfolios"
+                           IsLoading="@_isLoading"
+                           TotalItemsCount="@FilteredPortfolios.Count"
+                           SelectedItems="@_selectedPortfolios"
+                           SelectedItemsChanged="OnSelectedPortfoliosChanged"
+                           EmptyTitle="No Portfolios Found"
+                           EmptyMessage="No organization portfolios match the selected filters."
+                           EmptyActionLabel="Assign Organisation Portfolio"
+                           OnEmptyAction="OpenAssignDialog">
+                <ChildContent>
+                    <MudTable Items="@FilteredPortfolios"
+                              Hover="true"
+                              Dense="true"
+                              Elevation="0"
+                              MultiSelection="true"
+                              @bind-SelectedItems="_selectedPortfolios"
+                              Breakpoint="Breakpoint.Sm"
+                              Class="border-default">
+                        <HeaderContent>
+                            <MudTh>Organisation</MudTh>
+                            <MudTh>SDL Number</MudTh>
+                            <MudTh>Town / Demarcation</MudTh>
+                            <MudTh>Assigned Relationship Officer</MudTh>
+                            <MudTh>Region</MudTh>
+                            <MudTh>Nature</MudTh>
+                            <MudTh Style="text-align: center;">Open Tasks</MudTh>
+                            <MudTh Style="text-align: right;">Action</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Organisation">
+                                <a href="/employers/@context.OrganisationId" class="fw-bold text-decoration-none text-primary">
+                                    @context.OrganisationName
+                                </a>
+                            </MudTd>
+                            <MudTd DataLabel="SDL Number">
+                                <span class="font-monospace">@(context.SdlNumber ?? "NON-LEVY")</span>
+                            </MudTd>
+                            <MudTd DataLabel="Town">
+                                @(context.TownName ?? "Unspecified")
+                            </MudTd>
+                            <MudTd DataLabel="Assigned Officer">
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold">@context.RelationshipOfficerName</span>
+                                    <span class="mud-text-secondary text-caption">@context.RelationshipOfficerEmail</span>
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="Region">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Primary">@context.ManagingRegionCode</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Nature">
+                                @if (context.IsCrossRegionalAssignment)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Icon="@Icons.Material.Filled.AltRoute">
+                                        Cross-Regional
+                                    </MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Default">
+                                        Territory
+                                    </MudChip>
+                                }
+                            </MudTd>
+                            <MudTd Style="text-align: center;" DataLabel="Open Tasks">
+                                @if (context.ActiveOpenTasksCount > 0)
+                                {
+                                    <MudBadge Content="@context.ActiveOpenTasksCount" Color="Color.Error" Overlap="false" />
+                                }
+                                else
+                                {
+                                    <span class="text-caption text-secondary">0</span>
+                                }
+                            </MudTd>
+                            <MudTd Style="text-align: right;" DataLabel="Action">
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.Visibility"
+                                           OnClick="@(() => Navigation.NavigateTo($"/employers/{context.OrganisationId}"))">
+                                    View
+                                </MudButton>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </ChildContent>
+            </DataGridShell>
+        </div>
+    </MudTabPanel>
+
+    <!-- TAB 2: Predecessor-to-Successor Handoff Audit Trail -->
+    <MudTabPanel Text="Successor Handoff Audit Trail" Icon="@Icons.Material.Filled.HistoryEdu">
+        <div class="pa-4">
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                Non-repudiable audit ledger capturing predecessor-to-successor reassignments, inherited open workflow tasks, and cryptographic digital security seals. Historical audit credit of predecessors remains completely preserved.
+            </MudText>
+
+            <MudTable Items="@_handoffLogs" Dense="true" Hover="true" Elevation="1">
+                <HeaderContent>
+                    <MudTh>Timestamp</MudTh>
+                    <MudTh>Predecessor Officer</MudTh>
+                    <MudTh>Successor Officer</MudTh>
+                    <MudTh>Organisation</MudTh>
+                    <MudTh>Reassigned Tasks</MudTh>
+                    <MudTh>Transfer Reason</MudTh>
+                    <MudTh>Digital Security Seal</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.CreatedAt.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    <MudTd>
+                        <span class="fw-bold">@context.PredecessorOfficerName</span>
+                    </MudTd>
+                    <MudTd>
+                        <span class="fw-bold text-primary">@context.SuccessorOfficerName</span>
+                    </MudTd>
+                    <MudTd>
+                        <a href="/employers/@context.OrganisationId" class="text-decoration-none">
+                            @(context.Organisation?.CompanyName ?? $"Org #{context.OrganisationId}")
+                        </a>
+                    </MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Info">
+                            @context.OpenTasksTransferredCount tasks
+                        </MudChip>
+                    </MudTd>
+                    <MudTd>@context.HandoffReason</MudTd>
+                    <MudTd>
+                        <span class="font-monospace text-caption">@context.SecuritySealHash.Substring(0, 16)...</span>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <div class="pa-4 text-center">
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No succession handoff events recorded yet.</MudText>
+                    </div>
+                </NoRecordsContent>
+            </MudTable>
+        </div>
+    </MudTabPanel>
+
+    <!-- TAB 3: Territory Demarcation Registry -->
+    <MudTabPanel Text="Territory Demarcation (Temporal)" Icon="@Icons.Material.Filled.Map">
+        <div class="pa-4">
+            <div class="d-flex justify-space-between align-center mb-4">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Temporal mappings of towns/suburbs to regional offices and provinces. Accommodates municipal demarcations shifting over time without invalidating historical work.
+                </MudText>
+            </div>
+
+            <MudTable Items="@_territoryDemarcations" Dense="true" Hover="true" Elevation="1">
+                <HeaderContent>
+                    <MudTh>Town / City</MudTh>
+                    <MudTh>Municipality</MudTh>
+                    <MudTh>Province</MudTh>
+                    <MudTh>Managing Regional Office</MudTh>
+                    <MudTh>Postal Code Prefix</MudTh>
+                    <MudTh>Effective Period</MudTh>
+                    <MudTh>Status</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd><span class="fw-bold">@context.TownName</span></MudTd>
+                    <MudTd>@(context.MunicipalityName ?? "Statutory Zone")</MudTd>
+                    <MudTd>@context.ProvinceCode</MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary">
+                            @context.RegionName (@context.RegionCode)
+                        </MudChip>
+                    </MudTd>
+                    <MudTd><span class="font-monospace">@(context.PostalCodePrefix ?? "All")</span></MudTd>
+                    <MudTd>@context.EffectiveFrom.ToString("yyyy-MM-dd") @(context.EffectiveTo.HasValue ? $"- {context.EffectiveTo.Value:yyyy-MM-dd}" : "- Current")</MudTd>
+                    <MudTd>
+                        @if (context.IsActive)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success">Active</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default">Expired</MudChip>
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </div>
+    </MudTabPanel>
+</MudTabs>
+
+<!-- Successor Handoff Dialog -->
+<MudDialog @bind-Visible="_showHandoffDialog" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" Class="mr-2" /> Predecessor-to-Successor Portfolio Handoff
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Transferring <strong>@_selectedPortfolios.Count</strong> selected employer account(s) to a successor relationship officer.
+        </MudText>
+
+        <MudForm @ref="_handoffForm">
+            <MudGrid Spacing="2">
+                <MudItem xs="12">
+                    <MudSelect T="string" Label="Successor Officer (New Assignee)" @bind-Value="_successorOfficerUserId" Variant="Variant.Outlined" Required="true" RequiredError="Successor officer is mandatory">
+                        @foreach (var off in _availableOfficers)
+                        {
+                            <MudSelectItem Value="@off.OfficerUserId">
+                                @off.OfficerName (@off.EmploymentRole - @off.StationedRegionCode)
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Transfer Justification / Statutory Reason" @bind-Value="_handoffReason" Variant="Variant.Outlined" Required="true" RequiredError="Reason is required" Lines="2" Placeholder="e.g. Officer regional relocation, portfolio rebalancing, or retirement succession." />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSwitch T="bool" @bind-Value="_reassignOpenTasks" Color="Color.Primary" Label="Automatically reassign all open workflow tasks to the successor officer" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => _showHandoffDialog = false)">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.SwapHoriz" OnClick="ExecuteHandoffAsync" Disabled="_isHandoffSubmitting">
+            @(_isHandoffSubmitting ? "Executing..." : "Confirm & Execute Handoff")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- Assign Portfolio Dialog -->
+<MudDialog @bind-Visible="_showAssignDialog" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Badge" Class="mr-2" /> Assign Organisation Portfolio
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid Spacing="2">
+            <MudItem xs="12">
+                <MudSelect T="int" Label="Target Organisation" @bind-Value="_assignOrgId" Variant="Variant.Outlined">
+                    @foreach (var org in _allOrganisations)
+                    {
+                        <MudSelectItem Value="@org.Id">@org.CompanyName (@(org.SdlNumber ?? "N-Number"))</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12">
+                <MudSelect T="string" Label="Relationship Officer" @bind-Value="_assignOfficerUserId" Variant="Variant.Outlined">
+                    @foreach (var off in _availableOfficers)
+                    {
+                        <MudSelectItem Value="@off.OfficerUserId">@off.OfficerName (@off.EmploymentRole - @off.StationedRegionCode)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string" Label="Managing Region" @bind-Value="_assignRegionCode" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("GAU")">Gauteng (GAU)</MudSelectItem>
+                    <MudSelectItem Value="@("KZN")">KwaZulu-Natal (KZN)</MudSelectItem>
+                    <MudSelectItem Value="@("WC")">Western Cape (WC)</MudSelectItem>
+                    <MudSelectItem Value="@("EC")">Eastern Cape (EC)</MudSelectItem>
+                    <MudSelectItem Value="@("MP")">Mpumalanga</MudSelectItem>
+                    <MudSelectItem Value="@("FS")">Free State</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSwitch T="bool" @bind-Value="_isCrossRegional" Color="Color.Warning" Label="Cross-Regional Direct Allocation" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Assignment Motivation / Context" @bind-Value="_assignReason" Variant="Variant.Outlined" Lines="2" Placeholder="e.g. Strategic national automotive account requiring specialized OEM lead." />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => _showAssignDialog = false)">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveAssignmentAsync">
+            Save Assignment
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<OrganisationPortfolioDto> _portfolios = new();
+    private HashSet<OrganisationPortfolioDto> _selectedPortfolios = new();
+    private List<PortfolioHandoffLog> _handoffLogs = new();
+    private List<TerritoryDemarcation> _territoryDemarcations = new();
+    private List<OfficerWorkloadDto> _availableOfficers = new();
+    private List<Organisation> _allOrganisations = new();
+
+    private bool _isLoading = true;
+    private string _searchString = string.Empty;
+    private string _regionFilter = "All";
+    private string _crossRegionalFilter = "All";
+
+    // Handoff dialog
+    private bool _showHandoffDialog = false;
+    private bool _isHandoffSubmitting = false;
+    private MudForm? _handoffForm;
+    private string _successorOfficerUserId = string.Empty;
+    private string _handoffReason = string.Empty;
+    private bool _reassignOpenTasks = true;
+
+    // Assign dialog
+    private bool _showAssignDialog = false;
+    private int _assignOrgId;
+    private string _assignOfficerUserId = string.Empty;
+    private string _assignRegionCode = "GAU";
+    private bool _isCrossRegional = false;
+    private string _assignReason = "Strategic account alignment";
+
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new("Home", href: "/"),
+        new("Coordination", href: null, disabled: true),
+        new("Officer Portfolios & Handoffs", href: "/coordination/portfolios", disabled: true)
+    };
+
+    private List<OrganisationPortfolioDto> FilteredPortfolios => _portfolios
+        .Where(p => _regionFilter == "All" || string.Equals(p.ManagingRegionCode, _regionFilter, StringComparison.OrdinalIgnoreCase))
+        .Where(p => _crossRegionalFilter == "All" ||
+                    (_crossRegionalFilter == "CrossRegional" && p.IsCrossRegionalAssignment) ||
+                    (_crossRegionalFilter == "Standard" && !p.IsCrossRegionalAssignment))
+        .Where(p => string.IsNullOrWhiteSpace(_searchString) ||
+                    p.OrganisationName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                    (p.SdlNumber != null && p.SdlNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
+                    p.RelationshipOfficerName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                    (p.TownName != null && p.TownName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _portfolios = await DispatchService.GetAllPortfoliosAsync();
+            _handoffLogs = await DispatchService.GetHandoffLogsAsync();
+            _territoryDemarcations = await DispatchService.GetAllTerritoryDemarcationsAsync();
+            _availableOfficers = await DispatchService.GetOfficerWorkloadSummaryAsync();
+            _allOrganisations = await OrgService.GetAllAsync();
+
+            if (_availableOfficers.Any() && string.IsNullOrEmpty(_successorOfficerUserId))
+            {
+                _successorOfficerUserId = _availableOfficers.First().OfficerUserId;
+                _assignOfficerUserId = _availableOfficers.First().OfficerUserId;
+            }
+            if (_allOrganisations.Any() && _assignOrgId == 0)
+            {
+                _assignOrgId = _allOrganisations.First().Id;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading portfolios: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void HandleFilterChanged() => StateHasChanged();
+
+    private void ClearFilters()
+    {
+        _searchString = string.Empty;
+        _regionFilter = "All";
+        _crossRegionalFilter = "All";
+    }
+
+    private void OnSelectedPortfoliosChanged(HashSet<OrganisationPortfolioDto> selected)
+    {
+        _selectedPortfolios = selected;
+    }
+
+    private void OpenHandoffDialog()
+    {
+        if (!_selectedPortfolios.Any())
+        {
+            Snackbar.Add("Please select at least one organisation portfolio to hand off.", Severity.Warning);
+            return;
+        }
+        _showHandoffDialog = true;
+    }
+
+    private void OpenHandoffDialogForOfficer(string officerId)
+    {
+        _selectedPortfolios = _portfolios.Where(p => p.RelationshipOfficerUserId == officerId).ToHashSet();
+        if (!_selectedPortfolios.Any())
+        {
+            Snackbar.Add($"No active portfolios found for officer {officerId}.", Severity.Info);
+            return;
+        }
+        _showHandoffDialog = true;
+    }
+
+    private void OpenAssignDialog()
+    {
+        _showAssignDialog = true;
+    }
+
+    private async Task ExecuteHandoffAsync()
+    {
+        if (string.IsNullOrEmpty(_successorOfficerUserId) || string.IsNullOrWhiteSpace(_handoffReason))
+        {
+            Snackbar.Add("Please select a successor officer and provide a transfer reason.", Severity.Warning);
+            return;
+        }
+
+        _isHandoffSubmitting = true;
+        try
+        {
+            var successor = _availableOfficers.FirstOrDefault(o => o.OfficerUserId == _successorOfficerUserId);
+            var firstPortfolio = _selectedPortfolios.First();
+
+            var req = new SuccessorHandoffRequestDto(
+                FromOfficerUserId: firstPortfolio.RelationshipOfficerUserId,
+                FromOfficerName: firstPortfolio.RelationshipOfficerName,
+                ToOfficerUserId: _successorOfficerUserId,
+                ToOfficerName: successor?.OfficerName ?? _successorOfficerUserId,
+                OrganisationIds: _selectedPortfolios.Select(p => p.OrganisationId).ToList(),
+                Reason: _handoffReason,
+                ReassignOpenTasks: _reassignOpenTasks
+            );
+
+            var result = await DispatchService.ExecuteSuccessorHandoffAsync(req, "RegionalManagerUser");
+            Snackbar.Add($"Handoff complete! Transferred {result.TransferredOrganisationsCount} account(s) and reassigned {result.ReassignedTasksCount} open task(s).", Severity.Success);
+            _showHandoffDialog = false;
+            _selectedPortfolios.Clear();
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Handoff failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isHandoffSubmitting = false;
+        }
+    }
+
+    private async Task SaveAssignmentAsync()
+    {
+        if (_assignOrgId <= 0 || string.IsNullOrEmpty(_assignOfficerUserId))
+        {
+            Snackbar.Add("Please specify organisation and officer.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            var officer = _availableOfficers.FirstOrDefault(o => o.OfficerUserId == _assignOfficerUserId);
+            await DispatchService.AssignOrganisationOfficerAsync(
+                organisationId: _assignOrgId,
+                officerUserId: _assignOfficerUserId,
+                officerName: officer?.OfficerName ?? _assignOfficerUserId,
+                officerEmail: officer?.Email ?? $"{_assignOfficerUserId}@merseta.org.za",
+                roleCode: "RelationshipOfficer",
+                managingRegionCode: _assignRegionCode,
+                isCrossRegional: _isCrossRegional,
+                reason: _assignReason,
+                currentUsername: "AdminUser"
+            );
+
+            Snackbar.Add("Organisation portfolio relationship officer assigned.", Severity.Success);
+            _showAssignDialog = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Assignment failed: {ex.Message}", Severity.Error);
+        }
+    }
+}

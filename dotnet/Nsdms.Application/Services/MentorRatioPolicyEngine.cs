@@ -100,16 +100,31 @@ public class MentorRatioPolicyEngine : IMentorRatioPolicyEngine
         }
 
         // Fallback default policy if no match
-        tradePolicy ??= await db.TradeMentorRatioPolicies.FirstOrDefaultAsync(p => p.TradeCode == "GENERIC") ?? new TradeMentorRatioPolicy
+        if (tradePolicy == null)
         {
-            TradeCode = "GENERIC",
-            TradeTitle = "General Engineering Trade",
-            StandardRatio = 4,
-            MaxAllowedRatio = 6,
-            MinExperienceYearsRequired = 3,
-            EnforceStrictly = true,
-            IsActive = true
-        };
+            var fallback = await db.TradeMentorRatioPolicies.FirstOrDefaultAsync(p => p.TradeCode == "GENERIC");
+            if (fallback != null)
+            {
+                tradePolicy = fallback;
+            }
+            else
+            {
+                var defaultStandardRatio = await _systemConfig.GetValueAsync<int>("WorkplaceApproval:DefaultStandardMentorRatio", 4);
+                var defaultMaxRatio = await _systemConfig.GetValueAsync<int>("WorkplaceApproval:DefaultMaxMentorRatio", 6);
+                var defaultExpYears = await _systemConfig.GetValueAsync<int>("WorkplaceApproval:MinMentorExperienceYears", 3);
+
+                tradePolicy = new TradeMentorRatioPolicy
+                {
+                    TradeCode = "GENERIC",
+                    TradeTitle = "General Engineering Trade",
+                    StandardRatio = defaultStandardRatio,
+                    MaxAllowedRatio = defaultMaxRatio,
+                    MinExperienceYearsRequired = defaultExpYears,
+                    EnforceStrictly = true,
+                    IsActive = true
+                };
+            }
+        }
 
         result.TradeCode = tradePolicy.TradeCode;
         result.TradeTitle = tradePolicy.TradeTitle;

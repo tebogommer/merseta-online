@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Nsdms.Domain.Common;
 
 namespace Nsdms.Domain.Entities;
@@ -12,6 +13,8 @@ public class LearnerRegisteredUnitStandard : BaseEntity
     /// Foreign key referencing the parent CompanyLearner record.
     /// </summary>
     public int CompanyLearnerId { get; set; }
+    [NotMapped]
+    public int EnrolmentId { get => CompanyLearnerId; set => CompanyLearnerId = value; }
 
     /// <summary>
     /// Navigational reference to the parent CompanyLearner record.

@@ -51,11 +51,12 @@ When user's prompt is NOT in English:
 
 ---
 
-## 🛡️ Schema-Domain Synchronization Rule
-1. Whenever new properties are added to an Entity class in `Nsdms.Domain/Entities/`, immediately:
-   - Add corresponding `ALTER TABLE ... ADD [ColumnName] ...` clauses to the active Schema Migrator in `Nsdms.Infrastructure/Data/`.
-   - Update the master DDL script (`V2026_08_Complete_Nsdms_Enterprise_DDL.sql`).
-   - Verify column presence against `INFORMATION_SCHEMA.COLUMNS` before testing UI routes.
+## 🛡️ Schema-Domain & Database Migration Synchronization Standard
+1. Whenever new Entity classes or persistent properties are added to `Nsdms.Domain/Entities/` or `NsdmsDbContext`:
+   - Ensure the SQL migration script exists under `dotnet/Nsdms.Infrastructure/Data/SqlScripts/` and that `Nsdms.Infrastructure.csproj` copies `.sql` files (`<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>`).
+   - Create an accompanying C# `Phase*Migrator` in `Nsdms.Infrastructure/Data/` with robust multi-directory path resolution and register it in `Program.cs` via `RunMigrator(...)`.
+   - Add corresponding table creation and `ALTER TABLE ... ADD [ColumnName] ...` clauses to the master DDL script (`V2026_08_Complete_Nsdms_Enterprise_DDL.sql`).
+   - Verify table and column presence against `INFORMATION_SCHEMA.TABLES` and `INFORMATION_SCHEMA.COLUMNS` before testing UI routes. Never leave entities in `DbContext` without active migrations.
 
 ---
 
@@ -86,7 +87,7 @@ When user's prompt is NOT in English:
 2. **Contracting via MoA**: The legal contracting instrument for Discretionary Grants is the **Memorandum of Agreement (MoA)**, never generic "Contracts".
 3. **Skills Development Providers (SDP)**: Refer to accredited training institutions as **Skills Development Providers (SDPs)** per QCTO statutory guidelines.
 4. **Artisan Mentorship Ratios**: Enforce NAMB / QCTO artisan mentor-to-apprentice ratios via `IMentorRatioPolicyEngine`, respecting trade-specific caps.
-5. **Governance & PFMA Controls**: Adhere to Delegation of Financial Authority (DOFA), Segregation of Duties (Maker-Checker), and non-repudiation audit logging for all approval gates.
+5. **Governance & PFMA Controls**: Adhere to financial approval delegation, Segregation of Duties (Maker-Checker), and non-repudiation audit logging for all approval gates.
 
 ---
 

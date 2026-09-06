@@ -1,0 +1,656 @@
+@page "/admin/users"
+@using Microsoft.AspNetCore.Authorization
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Domain.Security
+@attribute [Authorize(Roles = "SuperAdmin,Admin")]
+@inject IIdentityService IdentityService
+@inject IRolePermissionService RoleService
+@inject IPersonService PersonService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>People &amp; Identity Accounts - merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+    <!-- STICKY TOP BAR -->
+    <MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg bg-surface d-flex justify-space-between align-center flex-wrap gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+        <div class="d-flex align-center gap-3">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" Href="/admin" aria-label="Back to Admin Hub" Title="Back to Admin Hub" />
+            <div class="d-inline-flex align-center justify-center rounded pa-2" style="background-color: var(--mud-palette-primary-hover);">
+                <MudIcon Icon="@Icons.Material.Filled.ManageAccounts" Color="Color.Primary" Size="Size.Medium" />
+            </div>
+            <div>
+                <MudText Typo="Typo.h5" Class="fw-bold">People &amp; Identity Accounts</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Manage ASP.NET Core Identity accounts, demographic linking, credential security, and lockout controls</MudText>
+            </div>
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="@LoadUsersAsync">
+                Refresh
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.PersonAdd"
+                       OnClick="@OpenCreateUserDialog">
+                Create User
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    <!-- SEARCH & FILTER BAR -->
+    <MudCard Elevation="2" Class="mb-4 pa-3">
+        <div class="d-flex align-center gap-4 flex-wrap">
+            <div style="min-width: 280px; flex: 1;">
+                <MudTextField @bind-Value="_searchString"
+                              Placeholder="Search username, email, or linked person..."
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Medium"
+                              Immediate="true"
+                              Clearable="true"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              TextChanged="@OnSearchChanged" />
+            </div>
+            <MudChipSet T="string" SelectedValue="@_statusFilter" SelectedValueChanged="@OnStatusFilterChanged">
+                <MudChip T="string" Value="@("All")" Text="All accounts" Color="Color.Default" Variant="Variant.Filled" />
+                <MudChip T="string" Value="@("Active")" Text="Active only" Color="Color.Success" Variant="Variant.Outlined" />
+                <MudChip T="string" Value="@("Locked")" Text="Locked out only" Color="Color.Error" Variant="Variant.Outlined" />
+                <MudChip T="string" Value="@("Inactive")" Text="Inactive only" Color="Color.Dark" Variant="Variant.Outlined" />
+            </MudChipSet>
+        </div>
+    </MudCard>
+
+    <!-- DATA TABLE -->
+    <MudCard Elevation="2" Class="rounded-lg">
+        @if (_isLoading)
+        {
+            <div class="pa-8 text-center">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium" />
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">Loading identity accounts...</MudText>
+            </div>
+        }
+        else if (!_filteredUsers.Any())
+        {
+            <div class="pa-8 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.SearchOff" Color="Color.Secondary" Size="Size.Large" Class="mb-2" />
+                <MudText Typo="Typo.subtitle1" Class="fw-bold">No identity accounts found</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Try adjusting your search criteria or filter options.</MudText>
+            </div>
+        }
+        else
+        {
+            <MudTable Items="@_filteredUsers" Dense="true" Hover="true" Striped="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>User</MudTh>
+                    <MudTh>Linked person profile</MudTh>
+                    <MudTh>Assigned roles</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Lockout</MudTh>
+                    <MudTh>Created</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>
+                        <div class="d-flex align-center gap-2">
+                            <MudAvatar Size="Size.Small" Color="Color.Primary" Style="font-size: 0.72rem; font-weight: 700;">
+                                @GetInitials(context.UserName)
+                            </MudAvatar>
+                            <div>
+                                <MudText Typo="Typo.body2" Class="fw-bold font-mono">@context.UserName</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Email</MudText>
+                            </div>
+                        </div>
+                    </MudTd>
+                    <MudTd>
+                        @if (context.Person != null)
+                        {
+                            <div>
+                                <MudText Typo="Typo.body2" Class="fw-bold">@context.Person.FirstName @context.Person.LastName</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    RSA ID: <span class="font-mono">@(context.Person.RsaIdNumber ?? "N/A")</span>
+                                </MudText>
+                            </div>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Default">Unlinked</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        <div class="d-flex flex-wrap gap-1">
+                            @if (_userRoleMap.TryGetValue(context.Id, out var roles) && roles.Any())
+                            {
+                                @foreach (var r in roles)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@GetRoleColor(r)">@r</MudChip>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-secondary" style="font-size: 0.75rem;">No roles</span>
+                            }
+                        </div>
+                    </MudTd>
+                    <MudTd>
+                        @if (context.IsActive)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">Active</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined">Inactive</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        @if (context.LockoutEnd.HasValue && context.LockoutEnd.Value > DateTimeOffset.UtcNow)
+                        {
+                            <div class="d-flex align-center gap-1">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled">Locked</MudChip>
+                                <MudIconButton Icon="@Icons.Material.Filled.LockOpen" 
+                                               Color="Color.Warning" 
+                                               Size="Size.Small" 
+                                               Title="Unlock account"
+                                               OnClick="@(() => HandleUnlockUserAsync(context.Id))" />
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-secondary" style="font-size: 0.78rem;">Normal</span>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @context.CreatedAt.ToString("yyyy-MM-dd")
+                        </MudText>
+                    </MudTd>
+                    <MudTd Style="text-align: right;">
+                        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Dense="true" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                            <MudMenuItem Icon="@Icons.Material.Filled.VpnKey" OnClick="@(() => OpenResetPasswordDialog(context))">
+                                Reset password
+                            </MudMenuItem>
+                            <MudMenuItem Icon="@Icons.Material.Filled.Security" OnClick="@(() => OpenManageRolesDialog(context))">
+                                Manage roles
+                            </MudMenuItem>
+                            <MudMenuItem Icon="@Icons.Material.Filled.PersonPin" OnClick="@(() => OpenLinkPersonDialog(context))">
+                                @(context.PersonId.HasValue ? "Change linked person" : "Link to person")
+                            </MudMenuItem>
+                            @if (context.LockoutEnd.HasValue && context.LockoutEnd.Value > DateTimeOffset.UtcNow)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.LockOpen" OnClick="@(() => HandleUnlockUserAsync(context.Id))">
+                                    Unlock account
+                                </MudMenuItem>
+                            }
+                            <MudDivider />
+                            @if (context.IsActive)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.Block" IconColor="Color.Error" OnClick="@(() => HandleToggleActiveAsync(context, false))">
+                                    Deactivate user
+                                </MudMenuItem>
+                            }
+                            else
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success" OnClick="@(() => HandleToggleActiveAsync(context, true))">
+                                    Activate user
+                                </MudMenuItem>
+                            }
+                        </MudMenu>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 10, 20, 50, 100 }" />
+                </PagerContent>
+            </MudTable>
+        }
+    </MudCard>
+</MudContainer>
+
+<!-- CREATE USER DIALOG -->
+<MudDialog @bind-Visible="_createDialogVisible" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Color="Color.Primary" />
+            <MudText Typo="Typo.h6" Class="fw-bold">Create New Identity Account</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="d-flex flex-column gap-3 pt-2">
+            <MudTextField @bind-Value="_newUsername" Label="Username" Required="true" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudTextField @bind-Value="_newEmail" Label="Email address" Required="true" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudTextField @bind-Value="_newPassword" Label="Initial password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="Must contain 8+ characters, uppercase, lowercase, and a number." />
+            <MudSelect @bind-Value="_newRole" Label="Primary role" Variant="Variant.Outlined" Margin="Margin.Dense">
+                @foreach (var role in _allRoles)
+                {
+                    <MudSelectItem Value="@role.Name">@role.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="@(() => _createDialogVisible = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitCreateUserAsync" Disabled="@_isSaving">Save User</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- RESET PASSWORD DIALOG -->
+<MudDialog @bind-Visible="_resetPwdDialogVisible" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.VpnKey" Color="Color.Warning" />
+            <MudText Typo="Typo.h6" Class="fw-bold">Reset Password for @_selectedUser?.UserName</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="pt-2">
+            <MudTextField @bind-Value="_resetPasswordValue" Label="New password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="Must contain 8+ characters, uppercase, lowercase, and a number." />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="@(() => _resetPwdDialogVisible = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="@SubmitResetPasswordAsync" Disabled="@_isSaving">Reset Password</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- MANAGE ROLES DIALOG -->
+<MudDialog @bind-Visible="_manageRolesDialogVisible" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Security" Color="Color.Primary" />
+            <MudText Typo="Typo.h6" Class="fw-bold">Manage Roles for @_selectedUser?.UserName</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="d-flex flex-column gap-2 pt-2">
+            @foreach (var role in _allRoles)
+            {
+                var isChecked = _selectedUserRoleNames.Contains(role.Name);
+                <MudCheckBox T="bool" Value="@isChecked" ValueChanged="@((bool val) => ToggleRoleSelection(role.Name, val))" Color="Color.Primary" Label="@role.Name" />
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="@(() => _manageRolesDialogVisible = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitRolesAsync" Disabled="@_isSaving">Save Roles</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- LINK PERSON DIALOG -->
+<MudDialog @bind-Visible="_linkPersonDialogVisible" Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.PersonPin" Color="Color.Primary" />
+            <MudText Typo="Typo.h6" Class="fw-bold">Link Demographic Person Profile</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="d-flex flex-column gap-3 pt-2">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                Select an individual from the central Person registry to bind with user @_selectedUser?.UserName.
+            </MudText>
+            <MudSelect @bind-Value="_selectedPersonId" Label="Select person profile" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                <MudSelectItem T="int?" Value="@((int?)null)">-- No linked profile (Unlink) --</MudSelectItem>
+                @foreach (var p in _availablePeople)
+                {
+                    <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.FirstName @p.LastName (@(p.RsaIdNumber ?? p.Email ?? "No ID"))</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="@(() => _linkPersonDialogVisible = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitLinkPersonAsync" Disabled="@_isSaving">Save Link</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<ApplicationUser> _allUsers = new();
+    private List<ApplicationUser> _filteredUsers = new();
+    private Dictionary<int, List<string>> _userRoleMap = new();
+    private List<RoleSummaryDto> _allRoles = new();
+    private List<Person> _availablePeople = new();
+
+    private bool _isLoading = true;
+    private bool _isSaving = false;
+    private string _searchString = string.Empty;
+    private string _statusFilter = "All";
+
+    // Dialog states
+    private bool _createDialogVisible = false;
+    private string _newUsername = string.Empty;
+    private string _newEmail = string.Empty;
+    private string _newPassword = string.Empty;
+    private string _newRole = "CLO";
+
+    private bool _resetPwdDialogVisible = false;
+    private ApplicationUser? _selectedUser;
+    private string _resetPasswordValue = string.Empty;
+
+    private bool _manageRolesDialogVisible = false;
+    private HashSet<string> _selectedUserRoleNames = new();
+
+    private bool _linkPersonDialogVisible = false;
+    private int? _selectedPersonId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsersAsync();
+        try
+        {
+            _allRoles = await RoleService.GetAllRolesAsync();
+            var peopleResult = await PersonService.GetAllAsync();
+            _availablePeople = peopleResult.Take(100).ToList();
+        }
+        catch { }
+    }
+
+    private async Task LoadUsersAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _allUsers = await IdentityService.GetAllUsersAsync();
+            _userRoleMap.Clear();
+            foreach (var user in _allUsers)
+            {
+                var roles = await IdentityService.GetUserRolesAsync(user.Id);
+                _userRoleMap[user.Id] = roles;
+            }
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading users: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        var query = _allUsers.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            var s = _searchString.Trim().ToLowerInvariant();
+            query = query.Where(u =>
+                (u.UserName != null && u.UserName.ToLowerInvariant().Contains(s)) ||
+                (u.Email != null && u.Email.ToLowerInvariant().Contains(s)) ||
+                (u.Person != null && (
+                    (u.Person.FirstName != null && u.Person.FirstName.ToLowerInvariant().Contains(s)) ||
+                    (u.Person.LastName != null && u.Person.LastName.ToLowerInvariant().Contains(s)) ||
+                    (u.Person.RsaIdNumber != null && u.Person.RsaIdNumber.Contains(s))
+                ))
+            );
+        }
+
+        if (_statusFilter == "Active")
+        {
+            query = query.Where(u => u.IsActive);
+        }
+        else if (_statusFilter == "Inactive")
+        {
+            query = query.Where(u => !u.IsActive);
+        }
+        else if (_statusFilter == "Locked")
+        {
+            query = query.Where(u => u.LockoutEnd.HasValue && u.LockoutEnd.Value > DateTimeOffset.UtcNow);
+        }
+
+        _filteredUsers = query.ToList();
+        StateHasChanged();
+    }
+
+    private void OnSearchChanged(string text)
+    {
+        _searchString = text;
+        ApplyFilters();
+    }
+
+    private void OnStatusFilterChanged(string filter)
+    {
+        _statusFilter = filter;
+        ApplyFilters();
+    }
+
+    private string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "U";
+        var parts = name.Split(new[] { ' ', '@', '.' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][0].ToString().ToUpperInvariant();
+        return $"{parts[0][0]}{parts[1][0]}".ToUpperInvariant();
+    }
+
+    private Color GetRoleColor(string role)
+    {
+        return role switch
+        {
+            "SuperAdmin" or "Admin" => Color.Primary,
+            "Finance" or "FinanceManager" => Color.Success,
+            "CLO" => Color.Warning,
+            "SDF" => Color.Info,
+            _ => Color.Default
+        };
+    }
+
+    private void OpenCreateUserDialog()
+    {
+        _newUsername = string.Empty;
+        _newEmail = string.Empty;
+        _newPassword = string.Empty;
+        _newRole = "CLO";
+        _createDialogVisible = true;
+    }
+
+    private async Task SubmitCreateUserAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newUsername) || string.IsNullOrWhiteSpace(_newEmail) || string.IsNullOrWhiteSpace(_newPassword))
+        {
+            Snackbar.Add("Please fill all required fields.", Severity.Warning);
+            return;
+        }
+
+        var (isValid, errors) = IdentityService.ValidatePasswordPolicy(_newPassword);
+        if (!isValid)
+        {
+            Snackbar.Add($"Password requirement: {string.Join(" ", errors)}", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            var user = new ApplicationUser
+            {
+                UserName = _newUsername.Trim(),
+                Email = _newEmail.Trim(),
+                IsActive = true
+            };
+
+            await IdentityService.CreateUserAsync(user, _newPassword, _newRole, "AdminUser");
+            Snackbar.Add($"User account {_newUsername} created successfully.", Severity.Success);
+            _createDialogVisible = false;
+            await LoadUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to create user: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void OpenResetPasswordDialog(ApplicationUser user)
+    {
+        _selectedUser = user;
+        _resetPasswordValue = string.Empty;
+        _resetPwdDialogVisible = true;
+    }
+
+    private async Task SubmitResetPasswordAsync()
+    {
+        if (_selectedUser == null || string.IsNullOrWhiteSpace(_resetPasswordValue)) return;
+
+        var (isValid, errors) = IdentityService.ValidatePasswordPolicy(_resetPasswordValue);
+        if (!isValid)
+        {
+            Snackbar.Add($"Password requirement: {string.Join(" ", errors)}", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            var res = await IdentityService.ResetPasswordAsync(_selectedUser.Id, _resetPasswordValue, "AdminUser");
+            if (res)
+            {
+                Snackbar.Add($"Password for {_selectedUser.UserName} has been reset successfully.", Severity.Success);
+                _resetPwdDialogVisible = false;
+                await LoadUsersAsync();
+            }
+            else
+            {
+                Snackbar.Add("Failed to reset password.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task HandleUnlockUserAsync(int userId)
+    {
+        try
+        {
+            var res = await IdentityService.UnlockUserAsync(userId, "AdminUser");
+            if (res)
+            {
+                Snackbar.Add("Account unlocked successfully.", Severity.Success);
+                await LoadUsersAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task HandleToggleActiveAsync(ApplicationUser user, bool activate)
+    {
+        try
+        {
+            bool res = activate 
+                ? await IdentityService.ActivateUserAsync(user.Id, "AdminUser")
+                : await IdentityService.DeactivateUserAsync(user.Id, "AdminUser");
+
+            if (res)
+            {
+                Snackbar.Add($"User account {(activate ? "activated" : "deactivated")} successfully.", Severity.Success);
+                await LoadUsersAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OpenManageRolesDialog(ApplicationUser user)
+    {
+        _selectedUser = user;
+        _selectedUserRoleNames = _userRoleMap.TryGetValue(user.Id, out var roles)
+            ? new HashSet<string>(roles)
+            : new HashSet<string>();
+        _manageRolesDialogVisible = true;
+    }
+
+    private void ToggleRoleSelection(string roleName, bool isSelected)
+    {
+        if (isSelected) _selectedUserRoleNames.Add(roleName);
+        else _selectedUserRoleNames.Remove(roleName);
+    }
+
+    private async Task SubmitRolesAsync()
+    {
+        if (_selectedUser == null) return;
+        _isSaving = true;
+        try
+        {
+            var currentRoles = _userRoleMap.TryGetValue(_selectedUser.Id, out var roles) ? roles : new List<string>();
+
+            // Roles to remove
+            foreach (var r in currentRoles.Where(r => !_selectedUserRoleNames.Contains(r)))
+            {
+                await IdentityService.RemoveRoleAsync(_selectedUser.Id, r, "AdminUser");
+            }
+
+            // Roles to add
+            foreach (var r in _selectedUserRoleNames.Where(r => !currentRoles.Contains(r)))
+            {
+                await IdentityService.AssignRoleAsync(_selectedUser.Id, r, "AdminUser");
+            }
+
+            Snackbar.Add($"Roles updated for {_selectedUser.UserName}.", Severity.Success);
+            _manageRolesDialogVisible = false;
+            await LoadUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating roles: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void OpenLinkPersonDialog(ApplicationUser user)
+    {
+        _selectedUser = user;
+        _selectedPersonId = user.PersonId;
+        _linkPersonDialogVisible = true;
+    }
+
+    private async Task SubmitLinkPersonAsync()
+    {
+        if (_selectedUser == null) return;
+        _isSaving = true;
+        try
+        {
+            if (_selectedPersonId.HasValue)
+            {
+                await IdentityService.LinkUserToPersonAsync(_selectedUser.Id, _selectedPersonId.Value, "AdminUser");
+                Snackbar.Add($"User {_selectedUser.UserName} linked to person profile.", Severity.Success);
+            }
+            else
+            {
+                await IdentityService.UnlinkUserFromPersonAsync(_selectedUser.Id, "AdminUser");
+                Snackbar.Add($"User {_selectedUser.UserName} unlinked from person profile.", Severity.Success);
+            }
+            _linkPersonDialogVisible = false;
+            await LoadUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

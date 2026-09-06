@@ -377,6 +377,23 @@ public class SdpReAccreditationApplication
     public string? CouncilDecisionNumber { get; set; }
     public DateTime? ReAccreditationDecisionDate { get; set; }
 
+    public string? PreviousAccreditationNumber { get; set; }
+    public DateTime? PreviousStartDate { get; set; }
+    public DateTime? PreviousEndDate { get; set; }
+    public DateTime? RequestedStartDate { get; set; }
+    public DateTime? RequestedEndDate { get; set; }
+    public string? CommitteeDecisionNumber { get; set; }
+    public DateTime? CommitteeMeetingDate { get; set; }
+    public string? RenewalAuditReportRef { get; set; }
+    [NotMapped]
+    public string Status { get => StatusCode; set => StatusCode = value; }
+
+    [NotMapped]
+    public DateTime ApplicationDate { get => CreatedAt; set => CreatedAt = value; }
+
+    [NotMapped]
+    public bool IsAuditPassed { get => QmsComplianceAudited; set => QmsComplianceAudited = value; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public string CreatedBy { get; set; } = "SYSTEM";
     public DateTime? ModifiedAt { get; set; }

@@ -85,13 +85,16 @@
     <!-- Tab 2: System Configurations -->
     <MudTabPanel Text="System Configurations" Icon="@Icons.Material.Filled.Settings">
         <div class="pa-4">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3" Spacing="2">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3" Spacing="2" Wrap="Wrap.Wrap">
                 <MudChipSet T="string" @bind-SelectedValue="_selectedCategory" SelectionMode="SelectionMode.SingleSelection">
                     <MudChip T="string" Value="@("All")" Color="Color.Primary" Variant="@(_selectedCategory == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
+                    <MudChip T="string" Value="@("Statutory SLAs")" Color="Color.Error" Variant="@(_selectedCategory == "Statutory SLAs" ? Variant.Filled : Variant.Outlined)">Statutory SLAs</MudChip>
                     <MudChip T="string" Value="@("Finance")" Color="Color.Success" Variant="@(_selectedCategory == "Finance" ? Variant.Filled : Variant.Outlined)">Finance</MudChip>
+                    <MudChip T="string" Value="@("Apprentice & Trade")" Color="Color.Tertiary" Variant="@(_selectedCategory == "Apprentice & Trade" ? Variant.Filled : Variant.Outlined)">Apprentice &amp; Trade</MudChip>
                     <MudChip T="string" Value="@("Governance")" Color="Color.Info" Variant="@(_selectedCategory == "Governance" ? Variant.Filled : Variant.Outlined)">Governance</MudChip>
                     <MudChip T="string" Value="@("Compliance")" Color="Color.Warning" Variant="@(_selectedCategory == "Compliance" ? Variant.Filled : Variant.Outlined)">Compliance</MudChip>
                     <MudChip T="string" Value="@("Storage")" Color="Color.Dark" Variant="@(_selectedCategory == "Storage" ? Variant.Filled : Variant.Outlined)">Storage</MudChip>
+                    <MudChip T="string" Value="@("UI & Display")" Color="Color.Secondary" Variant="@(_selectedCategory == "UI & Display" ? Variant.Filled : Variant.Outlined)">UI &amp; Display</MudChip>
                     <MudChip T="string" Value="@("Integrations")" Color="Color.Secondary" Variant="@(_selectedCategory == "Integrations" ? Variant.Filled : Variant.Outlined)">Integrations</MudChip>
                     <MudChip T="string" Value="@("General")" Color="Color.Default" Variant="@(_selectedCategory == "General" ? Variant.Filled : Variant.Outlined)">General</MudChip>
                 </MudChipSet>
@@ -122,7 +125,7 @@
                 <RowTemplate>
                     <MudTd DataLabel="Key" Class="font-monospace fw-semibold">@context.ConfigKey</MudTd>
                     <MudTd DataLabel="Category">
-                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text">@context.Category</MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="@GetCategoryColor(context.Category)" Variant="Variant.Text">@context.Category</MudChip>
                     </MudTd>
                     <MudTd DataLabel="Value">
                         <MudText Typo="Typo.body2" Class="font-monospace">@context.ConfigValue</MudText>
@@ -206,10 +209,13 @@
         
         <FieldGroup Label="Category">
             <MudSelect @bind-Value="_editModel.ConfigCategory" Variant="Variant.Outlined" Margin="Margin.Dense">
+                <MudSelectItem Value="@("Statutory SLAs")">Statutory SLAs</MudSelectItem>
                 <MudSelectItem Value="@("Finance")">Finance</MudSelectItem>
+                <MudSelectItem Value="@("Apprentice & Trade")">Apprentice & Trade</MudSelectItem>
                 <MudSelectItem Value="@("Governance")">Governance</MudSelectItem>
                 <MudSelectItem Value="@("Compliance")">Compliance</MudSelectItem>
                 <MudSelectItem Value="@("Storage")">Storage</MudSelectItem>
+                <MudSelectItem Value="@("UI & Display")">UI & Display</MudSelectItem>
                 <MudSelectItem Value="@("Integrations")">Integrations</MudSelectItem>
                 <MudSelectItem Value="@("General")">General</MudSelectItem>
             </MudSelect>
@@ -420,4 +426,17 @@
             Snackbar.Add($"PDF generation failed: {ex.Message}", Severity.Error);
         }
     }
+
+    private Color GetCategoryColor(string? category) => category switch
+    {
+        "Statutory SLAs" => Color.Error,
+        "Finance" => Color.Success,
+        "Apprentice & Trade" => Color.Tertiary,
+        "Governance" => Color.Info,
+        "Compliance" => Color.Warning,
+        "Storage" => Color.Dark,
+        "UI & Display" => Color.Secondary,
+        "Integrations" => Color.Secondary,
+        _ => Color.Default
+    };
 }

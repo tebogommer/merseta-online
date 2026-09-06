@@ -10,11 +10,11 @@ public class DefaultTenantProvider : ITenantProvider
     public int? CurrentOrganisationId { get; set; }
     public string? CurrentOrganisationName { get; set; }
     public string? CurrentOrganisationSdl { get; set; }
-    public bool IsAdmin { get; set; } = true; // Default to admin / system bypass
+    public bool IsAdmin { get; set; } = false; // Zero-trust default: non-admin unless explicitly assigned
 
     public event Action? OnTenantChanged;
 
-    public DefaultTenantProvider(int? organisationId = null, bool isAdmin = true)
+    public DefaultTenantProvider(int? organisationId = null, bool isAdmin = false)
     {
         CurrentOrganisationId = organisationId;
         IsAdmin = isAdmin;

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
@@ -10,6 +11,7 @@ using Nsdms.Infrastructure.Interceptors;
 using Nsdms.Infrastructure.Services;
 using Nsdms.Web.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,8 +24,9 @@ builder.Services.AddResponseCompression(options =>
     options.EnableForHttps = true;
 });
 
-// Password Hasher for Identity
+// Password Hasher & HttpContext Accessor
 builder.Services.AddScoped<PasswordHasher<ApplicationUser>>();
+builder.Services.AddHttpContextAccessor();
 
 // Authentication & Authorization Services
 builder.Services.AddCascadingAuthenticationState();
@@ -38,6 +41,11 @@ builder.Services.AddAuthentication(options =>
     options.Cookie.Name = "NSDMS_AUTH_TICKET";
     options.Cookie.HttpOnly = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
+    options.LoginPath = "/login";
+    options.LogoutPath = "/api/auth/logout";
+    options.AccessDeniedPath = "/login";
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    options.SlidingExpiration = true;
 });
 builder.Services.AddAuthorization();
 
@@ -56,7 +64,15 @@ builder.Services.AddDbContextFactory<NsdmsDbContext>((sp, options) =>
            .AddInterceptors(interceptor);
 });
 // Multi-Tenancy Provider
-builder.Services.AddScoped<ITenantProvider, DefaultTenantProvider>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ITenantProvider>(sp =>
+{
+    var httpContext = sp.GetService<IHttpContextAccessor>()?.HttpContext;
+    var user = httpContext?.User;
+    bool isAdmin = user?.Identity?.IsAuthenticated == true &&
+                   (user.IsInRole("Admin") || user.IsInRole("SuperAdmin") || user.IsInRole("SUPERADMIN") || user.HasClaim("Permission", "System.Admin"));
+    return new DefaultTenantProvider(null, isAdmin);
+});
 builder.Services.AddScoped<DefaultTenantProvider>(sp => (DefaultTenantProvider)sp.GetRequiredService<ITenantProvider>());
 
 builder.Services.AddScoped<NsdmsDbContext>(sp => new NsdmsDbContext(
@@ -66,6 +82,33 @@ builder.Services.AddScoped<NsdmsDbContext>(sp => new NsdmsDbContext(
 // Interface registration
 builder.Services.AddScoped<INsdmsDbContext>(sp => sp.GetRequiredService<NsdmsDbContext>());
 builder.Services.AddScoped<INsdmsDbContextFactory, NsdmsDbContextFactory>();
+
+// ASP.NET Core Identity Core registration with standard policies
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
+{
+    // Password policy
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 8;
+    options.Password.RequiredUniqueChars = 1;
+
+    // Lockout policy
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+
+    // User options
+    options.User.RequireUniqueEmail = false;
+    options.SignIn.RequireConfirmedAccount = false;
+})
+.AddRoles<ApplicationRole>()
+.AddRoleManager<RoleManager<ApplicationRole>>()
+.AddUserManager<UserManager<ApplicationUser>>()
+.AddSignInManager<SignInManager<ApplicationUser>>()
+.AddEntityFrameworkStores<NsdmsDbContext>()
+.AddDefaultTokenProviders();
 
 // Application Services
 builder.Services.AddScoped<AuditService>();
@@ -89,9 +132,13 @@ builder.Services.AddScoped<ILookupService>(sp => sp.GetRequiredService<LookupSer
 builder.Services.AddScoped<TrainingProviderService>();
 builder.Services.AddScoped<ITrainingProviderService>(sp => sp.GetRequiredService<TrainingProviderService>());
 
-// Phase 7: SDP Campus Infrastructure & Assessor Linking
+// Phase 7: SDP Delivery Site Infrastructure & Assessor Linking
+builder.Services.AddScoped<SdpSiteService>();
+builder.Services.AddScoped<ISdpSiteService>(sp => sp.GetRequiredService<SdpSiteService>());
 builder.Services.AddScoped<SdpCampusService>();
-builder.Services.AddScoped<ISdpCampusService>(sp => sp.GetRequiredService<SdpCampusService>());
+builder.Services.AddScoped<ISdpCampusService>(sp => sp.GetRequiredService<SdpSiteService>());
+builder.Services.AddScoped<SdpDisciplinaryService>();
+builder.Services.AddScoped<ISdpDisciplinaryService>(sp => sp.GetRequiredService<SdpDisciplinaryService>());
 builder.Services.AddScoped<WspService>();
 builder.Services.AddScoped<IWspService>(sp => sp.GetRequiredService<WspService>());
 builder.Services.AddScoped<GrantService>();
@@ -105,6 +152,7 @@ builder.Services.AddScoped<WorkplaceApprovalService>();
 builder.Services.AddScoped<IWorkplaceApprovalService>(sp => sp.GetRequiredService<WorkplaceApprovalService>());
 builder.Services.AddScoped<LearnerService>();
 builder.Services.AddScoped<ILearnerService>(sp => sp.GetRequiredService<LearnerService>());
+builder.Services.AddScoped<IBusinessRuleEngineService, BusinessRuleEngineService>();
 builder.Services.AddScoped<ILearnerStpRiskEngine, LearnerStpRiskEngine>();
 builder.Services.AddScoped<ILearnerBulkIngestionService, LearnerBulkIngestionService>();
 
@@ -241,6 +289,10 @@ builder.Services.AddScoped<ISqlBulkBatchIngestionService, Nsdms.Infrastructure.S
 builder.Services.AddScoped<IDocumentVerificationService, DocumentVerificationService>();
 builder.Services.AddScoped<IEnterpriseDocumentTemplateService, EnterpriseDocumentTemplateService>();
 
+// Option B: Dynamic Portfolio & Capability Dispatch Engine
+builder.Services.AddScoped<IPortfolioDispatchService, PortfolioDispatchService>();
+builder.Services.AddScoped<IZoneAndCaseloadService, ZoneAndCaseloadService>();
+
 // Real-time SignalR Notification Service & Transport Publisher
 builder.Services.AddSingleton<Nsdms.Web.Services.RealtimeNotificationService>();
 builder.Services.AddSingleton<IRealtimeNotificationService>(sp => sp.GetRequiredService<Nsdms.Web.Services.RealtimeNotificationService>());
@@ -279,44 +331,124 @@ app.MapHub<Nsdms.Web.Hubs.NsdmsNotificationHub>("/hubs/notifications");
 // PDF & Statutory Document Download Endpoints (Secured per POPIA & Statutory Governance)
 app.MapGet("/api/documents/moa/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
 {
-    var bytes = await pdf.GenerateGrantMoaContractPdfAsync(id);
-    return Results.File(bytes, "application/pdf", $"GrantMoa_Contract_{id}.pdf");
+    try
+    {
+        var bytes = await pdf.GenerateGrantMoaContractPdfAsync(id);
+        return Results.File(bytes, "application/pdf", $"GrantMoa_Contract_{id}.pdf");
+    }
+    catch (KeyNotFoundException)
+    {
+        return Results.NotFound(new { message = $"MoA contract #{id} not found." });
+    }
 }).RequireAuthorization();
 
 app.MapGet("/api/documents/tradetest/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
 {
-    var bytes = await pdf.GenerateTradeTestCertificatePdfAsync(id);
-    return Results.File(bytes, "application/pdf", $"TradeTest_Artisan_Certificate_{id}.pdf");
+    try
+    {
+        var bytes = await pdf.GenerateTradeTestCertificatePdfAsync(id);
+        return Results.File(bytes, "application/pdf", $"TradeTest_Artisan_Certificate_{id}.pdf");
+    }
+    catch (KeyNotFoundException)
+    {
+        return Results.NotFound(new { message = $"Trade test #{id} not found." });
+    }
 }).RequireAuthorization();
 
 app.MapGet("/api/documents/tradetest/{id:int}/form-pdf", async (int id, IPdfDocumentService pdf) =>
 {
-    var bytes = await pdf.GenerateArplApplicationFormPdfAsync(id);
-    return Results.File(bytes, "application/pdf", $"ARPL_Application_Form_ETQ_TP_ARPL_01_{id}.pdf");
+    try
+    {
+        var bytes = await pdf.GenerateArplApplicationFormPdfAsync(id);
+        return Results.File(bytes, "application/pdf", $"ARPL_Application_Form_ETQ_TP_ARPL_01_{id}.pdf");
+    }
+    catch (KeyNotFoundException)
+    {
+        return Results.NotFound(new { message = $"ARPL application #{id} not found." });
+    }
 }).RequireAuthorization();
 
 app.MapGet("/api/documents/wsp/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
 {
-    var bytes = await pdf.GenerateWspOutcomeLetterPdfAsync(id);
-    return Results.File(bytes, "application/pdf", $"WSP_Outcome_Letter_{id}.pdf");
+    try
+    {
+        var bytes = await pdf.GenerateWspOutcomeLetterPdfAsync(id);
+        return Results.File(bytes, "application/pdf", $"WSP_Outcome_Letter_{id}.pdf");
+    }
+    catch (KeyNotFoundException)
+    {
+        return Results.NotFound(new { message = $"WSP submission #{id} not found." });
+    }
 }).RequireAuthorization();
 
 app.MapGet("/api/documents/remittance/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
 {
-    var bytes = await pdf.GenerateMandatoryRebateRemittancePdfAsync(id);
-    return Results.File(bytes, "application/pdf", $"Mandatory_Rebate_Remittance_{id}.pdf");
+    try
+    {
+        var bytes = await pdf.GenerateMandatoryRebateRemittancePdfAsync(id);
+        return Results.File(bytes, "application/pdf", $"Mandatory_Rebate_Remittance_{id}.pdf");
+    }
+    catch (KeyNotFoundException)
+    {
+        return Results.NotFound(new { message = $"Disbursement #{id} not found." });
+    }
 }).RequireAuthorization();
 
 app.MapGet("/api/documents/workplace-approval/{id:int}/letter-pdf", async (int id, IPdfDocumentService pdf) =>
 {
-    var bytes = await pdf.GenerateWorkplaceApprovalLetterPdfAsync(id);
-    return Results.File(bytes, "application/pdf", $"WorkplaceApproval_Outcome_Letter_ETQ_TP_003_{id}.pdf");
+    try
+    {
+        var bytes = await pdf.GenerateWorkplaceApprovalLetterPdfAsync(id);
+        return Results.File(bytes, "application/pdf", $"WorkplaceApproval_Outcome_Letter_ETQ_TP_003_{id}.pdf");
+    }
+    catch (KeyNotFoundException)
+    {
+        return Results.NotFound(new { message = $"Workplace approval #{id} not found." });
+    }
 }).RequireAuthorization();
 
 app.MapGet("/api/documents/workplace-approval/{id:int}/report-pdf", async (int id, IPdfDocumentService pdf) =>
 {
-    var bytes = await pdf.GenerateWorkplaceApprovalReportPdfAsync(id);
-    return Results.File(bytes, "application/pdf", $"WorkplaceApproval_Report_ETQ_TP_054_{id}.pdf");
+    try
+    {
+        var bytes = await pdf.GenerateWorkplaceApprovalReportPdfAsync(id);
+        return Results.File(bytes, "application/pdf", $"WorkplaceApproval_Report_ETQ_TP_054_{id}.pdf");
+    }
+    catch (KeyNotFoundException)
+    {
+        return Results.NotFound(new { message = $"Workplace approval #{id} not found." });
+    }
+}).RequireAuthorization();
+
+// Phase 35: Summative Assessment & Certification Endpoints
+app.MapGet("/api/documents/summative/{id:int}/results-pdf", async (int id, IPdfDocumentService pdf) =>
+{
+    var bytes = await pdf.GenerateSummativeAssessmentResultsFormPdfAsync(id);
+    return Results.File(bytes, "application/pdf", $"ETQ_FM_005_SummativeResults_{id}.pdf");
+}).RequireAuthorization();
+
+app.MapGet("/api/documents/summative/batch/{id:int}/validation-report-pdf", async (int id, IPdfDocumentService pdf) =>
+{
+    var bytes = await pdf.GenerateModerationValidationReportPdfAsync(id);
+    return Results.File(bytes, "application/pdf", $"ETQ_TP_043_ModerationReport_Batch_{id}.pdf");
+}).RequireAuthorization();
+
+app.MapGet("/api/documents/summative/certificate/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
+{
+    var bytes = await pdf.GenerateLearnerQualificationCertificatePdfAsync(id);
+    return Results.File(bytes, "application/pdf", $"MerSETA_Certificate_{id}.pdf");
+}).RequireAuthorization();
+
+app.MapGet("/api/documents/summative/batch/{id:int}/distribution-letter-pdf", async (int id, IPdfDocumentService pdf) =>
+{
+    var bytes = await pdf.GenerateBatchDistributionLetterPdfAsync(id);
+    return Results.File(bytes, "application/pdf", $"ETQ_LT_012_DistributionLetter_Batch_{id}.pdf");
+}).RequireAuthorization();
+
+app.MapGet("/api/documents/summative/batch/{id:int}/consolidated-certificates-pdf", async (int id, IPdfDocumentService pdf) =>
+{
+    var bytes = await pdf.GenerateBatchConsolidatedCertificatesPdfAsync(id);
+    return Results.File(bytes, "application/pdf", $"MerSETA_Consolidated_Certificates_Batch_{id}.pdf");
 }).RequireAuthorization();
 
 
@@ -387,6 +519,102 @@ app.MapGet("/api/documents/moa-templates/{id:int}/simulation-pdf", async (int id
     return Results.File(bytes, "application/pdf", $"MoaTemplate_Simulation_{id}_{selectedScenario}.pdf");
 }).RequireAuthorization();
 
+// ASP.NET Core Identity & Cookie Authentication Endpoints
+app.MapPost("/api/auth/login", async (
+    HttpContext context,
+    IIdentityService identityService,
+    IRolePermissionService roleService,
+    IAuditService audit) =>
+{
+    var form = await context.Request.ReadFormAsync();
+    var username = form["username"].ToString()?.Trim() ?? string.Empty;
+    var password = form["password"].ToString() ?? string.Empty;
+    var returnUrl = form["returnUrl"].ToString();
+    var rememberMe = form["rememberMe"].ToString() == "true" || form["rememberMe"].ToString() == "on";
+
+    if (string.IsNullOrWhiteSpace(returnUrl) || !returnUrl.StartsWith('/'))
+    {
+        returnUrl = "/";
+    }
+
+    var authResult = await identityService.ValidateCredentialsExtendedAsync(username, password);
+    if (!authResult.Succeeded)
+    {
+        var errorMsg = authResult.IsLockedOut 
+            ? "Account is temporarily locked out due to multiple failed login attempts. Please try again in 15 minutes."
+            : (authResult.IsNotActive 
+                ? "Account has been deactivated. Please contact your system administrator." 
+                : (authResult.IsEmailUnconfirmed 
+                    ? "Email address has not been confirmed. Please check your email to activate your account." 
+                    : (authResult.ErrorMessage ?? "Invalid username/email or password.")));
+
+        return Results.Redirect($"/login?error={Uri.EscapeDataString(errorMsg)}&returnUrl={Uri.EscapeDataString(returnUrl)}");
+    }
+
+    var user = authResult.User!;
+    var roles = await identityService.GetUserRolesAsync(user.Id);
+    var userPermissions = await roleService.GetUserPermissionsAsync(user.Id);
+
+    var claims = new List<Claim>
+    {
+        new(ClaimTypes.Name, user.UserName ?? user.Email ?? "User"),
+        new(ClaimTypes.Email, user.Email ?? string.Empty),
+        new(ClaimTypes.GivenName, user.Person != null ? $"{user.Person.FirstName} {user.Person.LastName}" : (user.UserName ?? "User")),
+        new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new("PersonId", user.PersonId?.ToString() ?? string.Empty),
+        new("OrganisationId", user.DefaultOrganisationId?.ToString() ?? string.Empty)
+    };
+
+    foreach (var role in roles)
+    {
+        claims.Add(new Claim(ClaimTypes.Role, role));
+    }
+
+    foreach (var perm in userPermissions)
+    {
+        claims.Add(new Claim("Permission", perm));
+    }
+
+    var identity = new ClaimsIdentity(claims, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+    var principal = new ClaimsPrincipal(identity);
+
+    var authProperties = new AuthenticationProperties
+    {
+        IsPersistent = rememberMe,
+        ExpiresUtc = rememberMe ? DateTimeOffset.UtcNow.AddDays(14) : DateTimeOffset.UtcNow.AddHours(8),
+        IssuedUtc = DateTimeOffset.UtcNow
+    };
+
+    await context.SignInAsync(
+        Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme,
+        principal,
+        authProperties);
+
+    // Audit login action
+    await audit.LogActionAsync(
+        "ApplicationUser",
+        user.Id,
+        "InteractiveLogin",
+        user.UserName ?? user.Email ?? "SYSTEM",
+        null,
+        new { ClientIp = context.Connection.RemoteIpAddress?.ToString(), UserAgent = context.Request.Headers.UserAgent.ToString() }
+    );
+
+    return Results.Redirect(returnUrl);
+}).DisableAntiforgery();
+
+app.MapGet("/api/auth/logout", async (HttpContext context) =>
+{
+    await context.SignOutAsync(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+    return Results.Redirect("/login?loggedOut=true");
+});
+
+app.MapPost("/api/auth/logout", async (HttpContext context) =>
+{
+    await context.SignOutAsync(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+    return Results.Redirect("/login?loggedOut=true");
+});
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
@@ -429,6 +657,7 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase18CoreStatutoryWorkflows", () => Phase18CoreStatutoryWorkflowsMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase19EtqaReRegistration", () => Phase19EtqaReRegistrationMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase20NambBatch", () => Phase20NambBatchMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase21AssessorModeratorLifecycle", () => Phase21AssessorModeratorLifecycleMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase21SdpCampus", () => Phase21SdpCampusMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase22SarsLevyStreamingStaging", () => Phase22SarsLevyStreamingStagingMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase23LookupIndexes", () => Phase23LookupIndexesMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
@@ -444,9 +673,17 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase33LearnerLifecycleManagement", () => Phase33LearnerLifecycleManagementMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase33LearnerDualChannel", () => Phase33LearnerDualChannelMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase34SdpAccreditationGovernance", () => Phase34SdpAccreditationGovernanceMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase35AssessmentAndModerationGovernance", () => Phase35AssessmentAndModerationGovernanceMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase36SdpLifecycleAndDisciplinary", () => Phase36SdpLifecycleAndDisciplinaryMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase36PortfolioDispatch", () => Phase11PortfolioDispatchMigrator.MigratePortfolioDispatchSchemaAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase37ZoningAndCaseload", () => Phase12ZoningAndCaseloadMigrator.MigrateZoningAndCaseloadSchemaAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase38EnterpriseSchemaFix", () => Phase38EnterpriseSchemaFixMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase12BusinessRuleEngine", () => Phase12BusinessRuleEngineMigrator.MigrateBusinessRuleSchemaAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
     RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
+    RunMigrator("SystemConfigs", () => scope.ServiceProvider.GetRequiredService<ISystemConfigurationService>().SeedDefaultConfigsAsync().GetAwaiter().GetResult());
     RunMigrator("RolePermissions", () => scope.ServiceProvider.GetRequiredService<IRolePermissionService>().SeedDefaultRolePermissionsAsync().GetAwaiter().GetResult());
+    RunMigrator("DefaultUsers", () => scope.ServiceProvider.GetRequiredService<IIdentityService>().SeedDefaultUsersAsync().GetAwaiter().GetResult());
     app.Logger.LogInformation("SQL Server database verified with all entities, SETMIS lookups, sample data, workflow engine, financial governance, system configuration & security roles.");
 }
 

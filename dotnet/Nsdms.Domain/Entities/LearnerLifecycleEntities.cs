@@ -13,6 +13,8 @@ public class CompanyLearnerTransfer : BaseEntity
     /// Foreign key referencing the active CompanyLearner record.
     /// </summary>
     public int CompanyLearnerId { get; set; }
+    [NotMapped]
+    public int EnrolmentId { get => CompanyLearnerId; set => CompanyLearnerId = value; }
 
     /// <summary>
     /// Navigational reference to the transferred learner agreement.
@@ -168,6 +170,8 @@ public class CompanyLearnerLostTime : BaseEntity
     /// Foreign key referencing the affected CompanyLearner record.
     /// </summary>
     public int CompanyLearnerId { get; set; }
+    [NotMapped]
+    public int EnrolmentId { get => CompanyLearnerId; set => CompanyLearnerId = value; }
 
     /// <summary>
     /// Navigational reference to the affected learner agreement.
@@ -237,6 +241,8 @@ public class CompanyLearnerTermination : BaseEntity
     /// Foreign key referencing the terminated CompanyLearner record.
     /// </summary>
     public int CompanyLearnerId { get; set; }
+    [NotMapped]
+    public int EnrolmentId { get => CompanyLearnerId; set => CompanyLearnerId = value; }
 
     /// <summary>
     /// Navigational reference to the terminated learner agreement.
@@ -408,6 +414,8 @@ public class CompanyLearnerExtension : BaseEntity
     /// Foreign key referencing the CompanyLearner agreement record.
     /// </summary>
     public int CompanyLearnerId { get; set; }
+    [NotMapped]
+    public int EnrolmentId { get => CompanyLearnerId; set => CompanyLearnerId = value; }
 
     /// <summary>
     /// Navigational reference to the learner agreement.

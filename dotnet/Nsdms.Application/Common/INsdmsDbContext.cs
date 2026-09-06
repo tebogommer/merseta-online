@@ -154,6 +154,15 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<SummativeAssessmentUnitStandard> SummativeAssessmentUnitStandards { get; }
     DbSet<EisaAssessmentEntry> EisaAssessmentEntries { get; }
     DbSet<StatementOfResults> StatementOfResults { get; }
+    DbSet<AssessmentBatch> AssessmentBatches { get; }
+    DbSet<AssessmentBatchLearner> AssessmentBatchLearners { get; }
+    DbSet<ModerationChecklistEtqTp043> ModerationChecklists { get; }
+    DbSet<ModerationChecklistItem> ModerationChecklistItems { get; }
+    DbSet<CertificatePrintingBatch> CertificatePrintingBatches { get; }
+    DbSet<LearnerCertificate> LearnerCertificates { get; }
+    DbSet<DistributionLetter> DistributionLetters { get; }
+    DbSet<ScannedCertificateAttachment> ScannedCertificateAttachments { get; }
+    DbSet<AssessmentCertificateDistributionEvent> AssessmentCertificateDistributionEvents { get; }
 
     // Qualifications Curriculum Development & QDF (Area 15)
     DbSet<QualificationsCurriculumDevelopment> QualificationsCurriculumDevelopments { get; }
@@ -271,6 +280,20 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<TrainingProviderAssessorLink> TrainingProviderAssessorLinks { get; }
     DbSet<TrainingProviderSelfEvaluation> TrainingProviderSelfEvaluations { get; }
     DbSet<TrainingProviderContact> TrainingProviderContacts { get; }
+    DbSet<SdpDisciplinaryCase> SdpDisciplinaryCases { get; }
+    DbSet<SdpSiteInspection> SdpSiteInspections { get; }
+
+    // Phase 11: Dynamic Portfolio & Capability Dispatch Engine
+    DbSet<TerritoryZone> TerritoryZones { get; }
+    DbSet<TerritoryDemarcation> TerritoryDemarcations { get; }
+    DbSet<StaffCapability> StaffCapabilities { get; }
+    DbSet<OrganisationPortfolio> OrganisationPortfolios { get; }
+    DbSet<FieldDispatchAssignment> FieldDispatchAssignments { get; }
+    DbSet<PortfolioHandoffLog> PortfolioHandoffLogs { get; }
+
+    // Phase 12: Business Rule Engine & Dynamic Gatekeepers
+    DbSet<BusinessRuleWorkflow> BusinessRuleWorkflows { get; }
+    DbSet<BusinessRule> BusinessRules { get; }
 
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
     ValueTask<object?> FindAsync(Type entityType, params object?[]? keyValues);

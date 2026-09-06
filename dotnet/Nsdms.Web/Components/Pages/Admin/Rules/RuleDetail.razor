@@ -1,0 +1,568 @@
+@page "/system-admin/rules/{Id:int}"
+@using Nsdms.Application.Models
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IBusinessRuleEngineService RuleService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
+
+<PageTitle>@(_workflow?.Title ?? "Business Rule Workflow") | merSETA NSDMS</PageTitle>
+
+@*
+  UI-STANDARD.md Archetype: A3 (Entity Detail / Workflow Studio Hub)
+  16-Point Checklist Compliant
+*@
+
+@if (_isLoading)
+{
+    <div class="d-flex justify-center align-center pa-12">
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+    </div>
+}
+else if (_workflow == null)
+{
+    <MudAlert Severity="Severity.Error" Class="ma-4">
+        Business rule workflow not found. <MudLink Href="/system-admin/rules">Return to registry</MudLink>.
+    </MudAlert>
+}
+else
+{
+    <!-- Sticky Master-Detail Header -->
+    <div class="sticky-top-header pa-4 mb-4 rounded-lg" style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
+        <div class="d-flex flex-wrap align-center justify-space-between gap-4">
+            <div class="d-flex align-center gap-3">
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                               Variant="Variant.Outlined"
+                               Color="Color.Default"
+                               Size="Size.Small"
+                               OnClick="BackToList"
+                               aria-label="Back to business rules registry" />
+                <div>
+                    <div class="d-flex align-center gap-2">
+                        <MudText Typo="Typo.h5" Class="font-weight-bold">@_workflow.Title</MudText>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Class="font-monospace">
+                            @_workflow.WorkflowName
+                        </MudChip>
+                        @if (_workflow.IsActive)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Active</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">Inactive</MudChip>
+                        }
+                    </div>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Category: @FormatCategory(_workflow.Category) &bull; @_workflow.Rules.Count(r => r.IsActive) rules registered
+                    </MudText>
+                </div>
+            </div>
+
+            <div class="d-flex align-center gap-2">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Default"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           OnClick="OpenEditWorkflowDialogAsync">
+                    Edit workflow
+                </MudButton>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddRuleDialogAsync">
+                    Add rule
+                </MudButton>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Container -->
+    <MudTabs @bind-ActivePanelIndex="_activeTabIndex"
+             Elevation="0"
+             Rounded="true"
+             ApplyEffectsToContainer="true"
+             PanelClass="pa-4 rounded-b-lg"
+             Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default);">
+        
+        <!-- TAB 1: Configured Rules -->
+        <MudTabPanel Text="Configured rules" Icon="@Icons.Material.Filled.Rule">
+            <div class="d-flex justify-space-between align-center mb-4">
+                <div>
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Constituent decision rules</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Rules are evaluated in ascending order sequence. If any fatal rule fails, straight-through processing is blocked.
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddRuleDialogAsync">
+                    Add rule
+                </MudButton>
+            </div>
+
+            @if (!_workflow.Rules.Any(r => r.IsActive))
+            {
+                <MudAlert Severity="Severity.Info">
+                    No rules have been configured for this workflow yet. Click 'Add rule' above to create one.
+                </MudAlert>
+            }
+            else
+            {
+                <MudTable Items="@_workflow.Rules.Where(r => r.IsActive).OrderBy(r => r.OrderIndex)"
+                          Hover="true"
+                          Elevation="0"
+                          Dense="true"
+                          Style="border: 1px solid var(--mud-palette-lines-default);">
+                    <HeaderContent>
+                        <MudTh Style="width: 60px; text-align: center;">#</MudTh>
+                        <MudTh>Rule identifier</MudTh>
+                        <MudTh>Lambda expression</MudTh>
+                        <MudTh>Failure diagnostic message</MudTh>
+                        <MudTh Style="text-align: center;">Severity</MudTh>
+                        <MudTh Style="text-align: center;">Enabled</MudTh>
+                        <MudTh Style="text-align: right;">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="#" Style="text-align: center;" Class="font-monospace">
+                            @context.OrderIndex
+                        </MudTd>
+                        <MudTd DataLabel="Rule identifier">
+                            <MudText Typo="Typo.body2" Class="font-monospace fw-bold">@context.RuleName</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Lambda expression">
+                            <code class="pa-1 rounded" style="background-color: var(--mud-palette-background-grey); font-size: 0.85rem;">
+                                @context.Expression
+                            </code>
+                        </MudTd>
+                        <MudTd DataLabel="Failure diagnostic message">
+                            <MudText Typo="Typo.body2">@context.ErrorMessage</MudText>
+                            @if (!string.IsNullOrWhiteSpace(context.SuccessMessage))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Success">
+                                    <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Inline="true" />
+                                    @context.SuccessMessage
+                                </MudText>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Severity" Style="text-align: center;">
+                            <MudChip T="string" Size="Size.Small" Color="@GetSeverityColor(context.Severity)" Variant="Variant.Outlined">
+                                @context.Severity
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Enabled" Style="text-align: center;">
+                            <MudSwitch T="bool"
+                                       Value="@context.Enabled"
+                                       ValueChanged="@((bool val) => ToggleRuleEnabledAsync(context, val))"
+                                       Color="Color.Success"
+                                       Size="Size.Small" />
+                        </MudTd>
+                        <MudTd DataLabel="Actions" Style="text-align: right;">
+                            <div class="d-flex justify-end gap-1">
+                                <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
+                                               Color="Color.Secondary"
+                                               Size="Size.Small"
+                                               Title="Test this expression in sandbox"
+                                               OnClick="@(() => PreloadRuleInSandbox(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Default"
+                                               Size="Size.Small"
+                                               Title="Edit rule"
+                                               OnClick="@(() => OpenEditRuleDialogAsync(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               Title="Delete rule"
+                                               OnClick="@(() => ConfirmDeleteRuleAsync(context))" />
+                            </div>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudTabPanel>
+
+        <!-- TAB 2: Interactive Testing Sandbox -->
+        <MudTabPanel Text="Interactive testing sandbox" Icon="@Icons.Material.Filled.Science">
+            <div class="mb-4">
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Rule evaluation sandbox</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Simulate and verify dynamic C# lambda expressions against sample JSON payloads without affecting live database records.
+                </MudText>
+            </div>
+
+            <MudGrid Spacing="3">
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="0" Class="pa-4 rounded-lg" Style="background-color: var(--mud-palette-background-grey); border: 1px solid var(--mud-palette-lines-default);">
+                        <div class="d-flex justify-space-between align-center mb-2">
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Input test payload (JSON)</MudText>
+                            <MudSelect T="string"
+                                       Label="Load sample preset"
+                                       Dense="true"
+                                       Margin="Margin.Dense"
+                                       Style="max-width: 250px;"
+                                       ValueChanged="LoadPreset">
+                                <MudSelectItem Value="@("LearnerPass")">Learner STP: Compliant (Adult)</MudSelectItem>
+                                <MudSelectItem Value="@("LearnerMinorWithGuardian")">Learner STP: Minor with Guardian</MudSelectItem>
+                                <MudSelectItem Value="@("LearnerMinorNoGuardian")">Learner STP: Minor without Guardian</MudSelectItem>
+                                <MudSelectItem Value="@("LearnerOverdueSla")">Learner STP: Overdue SLA (>30 days)</MudSelectItem>
+                                <MudSelectItem Value="@("HighValueClaim")">Financial Claim: R600,000 (Requires CFO)</MudSelectItem>
+                                <MudSelectItem Value="@("StandardClaim")">Financial Claim: R250,000 (Standard)</MudSelectItem>
+                            </MudSelect>
+                        </div>
+
+                        <MudTextField T="string"
+                                      @bind-Value="_sandboxJson"
+                                      Lines="12"
+                                      Variant="Variant.Outlined"
+                                      Class="font-monospace"
+                                      HelperText="Input properties matching your rule variables (e.g. Age, WorkingDaysElapsed, ClaimAmount)" />
+
+                        <div class="d-flex justify-space-between align-center mt-3">
+                            <MudCheckBox T="bool" @bind-Value="_testWholeWorkflow" Color="Color.Primary" Label="Evaluate entire workflow (all active rules)" />
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.PlayCircleFilled"
+                                       Disabled="@_isEvaluating"
+                                       OnClick="ExecuteSandboxEvaluationAsync">
+                                @if (_isEvaluating)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                    <span>Evaluating...</span>
+                                }
+                                else
+                                {
+                                    <span>Evaluate in sandbox</span>
+                                }
+                            </MudButton>
+                        </div>
+
+                        @if (!_testWholeWorkflow)
+                        {
+                            <div class="mt-3">
+                                <MudTextField T="string"
+                                              @bind-Value="_singleExpression"
+                                              Label="Single expression to evaluate"
+                                              Class="font-monospace"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense" />
+                            </div>
+                        }
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="0" Class="pa-4 rounded-lg h-100" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default);">
+                        <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-3">Evaluation results</MudText>
+
+                        @if (_sandboxResult == null && _workflowResult == null)
+                        {
+                            <div class="pa-8 text-center" style="color: var(--mud-palette-text-secondary);">
+                                <MudIcon Icon="@Icons.Material.Filled.Science" Size="Size.Large" Class="mb-2" />
+                                <MudText Typo="Typo.body2">Select a preset or enter a JSON payload, then click 'Evaluate in sandbox' to view diagnostic results.</MudText>
+                            </div>
+                        }
+                        else if (_testWholeWorkflow && _workflowResult != null)
+                        {
+                            <MudAlert Severity="@(_workflowResult.IsSuccess ? Severity.Success : Severity.Error)" Class="mb-4" Variant="Variant.Filled">
+                                <div class="d-flex justify-space-between align-center">
+                                    <div>
+                                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
+                                            @(_workflowResult.IsSuccess ? "ALL RULES PASSED COMPLIANT" : "WORKFLOW EVALUATION FAILED")
+                                        </MudText>
+                                        <MudText Typo="Typo.caption">
+                                            Passed: @_workflowResult.PassedCount of @_workflowResult.TotalRulesEvaluated rules &bull; Duration: @_workflowResult.ExecutionDurationMs ms
+                                        </MudText>
+                                    </div>
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Surface" Variant="Variant.Filled">
+                                        @_workflowResult.ExecutionDurationMs ms
+                                    </MudChip>
+                                </div>
+                            </MudAlert>
+
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-2">Gate evaluation breakdown</MudText>
+                            <MudList T="string" Dense="true" Class="rounded border-default pa-2" Style="border: 1px solid var(--mud-palette-lines-default);">
+                                @foreach (var passed in _workflowResult.PassedRuleNames)
+                                {
+                                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                                        <div class="d-flex flex-column">
+                                            <MudText Typo="Typo.body2" Class="font-weight-bold font-monospace">@passed</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Success">Rule criteria satisfied</MudText>
+                                        </div>
+                                    </MudListItem>
+                                }
+                                @foreach (var failure in _workflowResult.Failures)
+                                {
+                                    <MudListItem Icon="@Icons.Material.Filled.Cancel" IconColor="Color.Error">
+                                        <div class="d-flex flex-column">
+                                            <MudText Typo="Typo.body2" Class="font-weight-bold font-monospace text-danger">@failure.RuleName</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Error">@failure.ErrorMessage</MudText>
+                                            <code class="mt-1 pa-1 rounded" style="background-color: var(--mud-palette-background-grey); font-size: 0.75rem;">
+                                                @failure.Expression
+                                            </code>
+                                        </div>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        }
+                        else if (!_testWholeWorkflow && _sandboxResult != null)
+                        {
+                            <MudAlert Severity="@(_sandboxResult.ExpressionEvaluatedToTrue ? Severity.Success : Severity.Error)" Class="mb-3" Variant="Variant.Filled">
+                                <div class="d-flex justify-space-between align-center">
+                                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
+                                        @(_sandboxResult.ExpressionEvaluatedToTrue ? "EXPRESSION EVALUATED TO TRUE" : "EXPRESSION EVALUATED TO FALSE")
+                                    </MudText>
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Surface" Variant="Variant.Filled">
+                                        @_sandboxResult.ExecutionDurationMs ms
+                                    </MudChip>
+                                </div>
+                            </MudAlert>
+
+                            <div class="pa-3 rounded mb-3" style="background-color: var(--mud-palette-background-grey); border: 1px solid var(--mud-palette-lines-default);">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Evaluated expression:</MudText>
+                                <code class="d-block font-monospace mt-1">@_singleExpression</code>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(_sandboxResult.ErrorMessage))
+                            {
+                                <MudAlert Severity="Severity.Warning" Class="mt-2">
+                                    @_sandboxResult.ErrorMessage
+                                </MudAlert>
+                            }
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudTabPanel>
+
+        <!-- TAB 3: Workflow Metadata -->
+        <MudTabPanel Text="Workflow metadata" Icon="@Icons.Material.Filled.Info">
+            <MudGrid Spacing="3" Class="mt-2">
+                <MudItem xs="12" md="6">
+                    <ReadOnlyField Label="Workflow identifier" Value="@_workflow.WorkflowName" IsMonospace="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <ReadOnlyField Label="Category" Value="@FormatCategory(_workflow.Category)" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                    <ReadOnlyField Label="Display title" Value="@_workflow.Title" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                    <ReadOnlyField Label="Statutory citation / description" Value="@(_workflow.Description ?? "No description provided")" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <ReadOnlyField Label="Created timestamp" Value="@_workflow.CreatedAt.ToString("yyyy-MM-dd HH:mm UTC")" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <ReadOnlyField Label="Created by" Value="@(_workflow.CreatedBy ?? "SYSTEM")" />
+                </MudItem>
+            </MudGrid>
+        </MudTabPanel>
+    </MudTabs>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    [SupplyParameterFromQuery]
+    private int? Tab { get; set; }
+
+    private BusinessRuleWorkflow? _workflow;
+    private bool _isLoading = true;
+    private int _activeTabIndex;
+
+    // Sandbox state
+    private string _sandboxJson = "{\n  \"Age\": 22.5,\n  \"HasMinorGuardian\": true,\n  \"HasValidEmployer\": true,\n  \"IsEmployerActive\": true,\n  \"IsUnemployedBursary\": false,\n  \"HasSaqaQualification\": true,\n  \"IsQualificationActive\": true,\n  \"WorkingDaysElapsed\": 12,\n  \"IsContinuationBursary\": false,\n  \"HasPredecessorBursary\": true,\n  \"HasPassedTranscripts\": true\n}";
+    private string _singleExpression = "Age >= 18 || HasMinorGuardian";
+    private bool _testWholeWorkflow = true;
+    private bool _isEvaluating;
+    private RuleSandboxTestResult? _sandboxResult;
+    private RuleWorkflowEvaluationResult? _workflowResult;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Tab.HasValue && Tab.Value >= 0 && Tab.Value <= 2)
+        {
+            _activeTabIndex = Tab.Value;
+        }
+
+        await LoadWorkflowAsync();
+    }
+
+    private async Task LoadWorkflowAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _workflow = await RuleService.GetWorkflowByIdAsync(Id);
+            if (_workflow != null && _workflow.Rules.Any())
+            {
+                var firstRule = _workflow.Rules.FirstOrDefault(r => r.IsActive);
+                if (firstRule != null)
+                {
+                    _singleExpression = firstRule.Expression;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load workflow details: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void BackToList() => Navigation.NavigateTo("/system-admin/rules");
+
+    private async Task OpenAddRuleDialogAsync()
+    {
+        if (_workflow == null) return;
+        var newRule = new BusinessRule
+        {
+            BusinessRuleWorkflowId = _workflow.Id,
+            OrderIndex = _workflow.Rules.Count(r => r.IsActive) + 1,
+            Severity = "Fatal",
+            Enabled = true,
+            IsActive = true
+        };
+
+        var parameters = new DialogParameters { ["Rule"] = newRule };
+        var dialog = await DialogService.ShowAsync<RuleEditDialog>("Add business rule", parameters);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled)
+        {
+            await LoadWorkflowAsync();
+        }
+    }
+
+    private async Task OpenEditRuleDialogAsync(BusinessRule rule)
+    {
+        var parameters = new DialogParameters { ["Rule"] = rule };
+        var dialog = await DialogService.ShowAsync<RuleEditDialog>("Edit business rule", parameters);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled)
+        {
+            await LoadWorkflowAsync();
+        }
+    }
+
+    private async Task OpenEditWorkflowDialogAsync()
+    {
+        if (_workflow == null) return;
+        // Simple inline update or re-use create dialog
+        Snackbar.Add("Workflow editing is enabled. Modify rules below.", Severity.Info);
+    }
+
+    private async Task ToggleRuleEnabledAsync(BusinessRule rule, bool enabled)
+    {
+        rule.Enabled = enabled;
+        await RuleService.UpsertRuleAsync(rule, "Admin");
+        Snackbar.Add($"Rule '{rule.RuleName}' is now {(enabled ? "enabled" : "disabled")}.", Severity.Info);
+    }
+
+    private async Task ConfirmDeleteRuleAsync(BusinessRule rule)
+    {
+        bool? confirm = await DialogService.ShowMessageBoxAsync(
+            "Delete rule confirmation",
+            $"Are you sure you want to delete rule '{rule.RuleName}'? This action is audited.",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (confirm == true)
+        {
+            await RuleService.DeleteRuleAsync(rule.Id, "Admin");
+            Snackbar.Add($"Rule '{rule.RuleName}' deleted.", Severity.Success);
+            await LoadWorkflowAsync();
+        }
+    }
+
+    private void PreloadRuleInSandbox(BusinessRule rule)
+    {
+        _singleExpression = rule.Expression;
+        _testWholeWorkflow = false;
+        _activeTabIndex = 1;
+    }
+
+    private void LoadPreset(string preset)
+    {
+        switch (preset)
+        {
+            case "LearnerPass":
+                _sandboxJson = "{\n  \"Age\": 22.0,\n  \"HasMinorGuardian\": false,\n  \"HasValidEmployer\": true,\n  \"IsEmployerActive\": true,\n  \"IsUnemployedBursary\": false,\n  \"HasSaqaQualification\": true,\n  \"IsQualificationActive\": true,\n  \"WorkingDaysElapsed\": 10,\n  \"IsContinuationBursary\": false,\n  \"HasPredecessorBursary\": true,\n  \"HasPassedTranscripts\": true\n}";
+                break;
+            case "LearnerMinorWithGuardian":
+                _sandboxJson = "{\n  \"Age\": 17.2,\n  \"HasMinorGuardian\": true,\n  \"HasValidEmployer\": true,\n  \"IsEmployerActive\": true,\n  \"IsUnemployedBursary\": false,\n  \"HasSaqaQualification\": true,\n  \"IsQualificationActive\": true,\n  \"WorkingDaysElapsed\": 8,\n  \"IsContinuationBursary\": false,\n  \"HasPredecessorBursary\": true,\n  \"HasPassedTranscripts\": true\n}";
+                break;
+            case "LearnerMinorNoGuardian":
+                _sandboxJson = "{\n  \"Age\": 16.8,\n  \"HasMinorGuardian\": false,\n  \"HasValidEmployer\": true,\n  \"IsEmployerActive\": true,\n  \"IsUnemployedBursary\": false,\n  \"HasSaqaQualification\": true,\n  \"IsQualificationActive\": true,\n  \"WorkingDaysElapsed\": 15,\n  \"IsContinuationBursary\": false,\n  \"HasPredecessorBursary\": true,\n  \"HasPassedTranscripts\": true\n}";
+                break;
+            case "LearnerOverdueSla":
+                _sandboxJson = "{\n  \"Age\": 20.0,\n  \"HasMinorGuardian\": false,\n  \"HasValidEmployer\": true,\n  \"IsEmployerActive\": true,\n  \"IsUnemployedBursary\": false,\n  \"HasSaqaQualification\": true,\n  \"IsQualificationActive\": true,\n  \"WorkingDaysElapsed\": 42,\n  \"IsContinuationBursary\": false,\n  \"HasPredecessorBursary\": true,\n  \"HasPassedTranscripts\": true\n}";
+                break;
+            case "HighValueClaim":
+                _sandboxJson = "{\n  \"ClaimAmount\": 650000.00,\n  \"RequiresCfoApproval\": false\n}";
+                break;
+            case "StandardClaim":
+                _sandboxJson = "{\n  \"ClaimAmount\": 250000.00,\n  \"RequiresCfoApproval\": false\n}";
+                break;
+        }
+    }
+
+    private async Task ExecuteSandboxEvaluationAsync()
+    {
+        _isEvaluating = true;
+        _sandboxResult = null;
+        _workflowResult = null;
+
+        try
+        {
+            if (_testWholeWorkflow && _workflow != null)
+            {
+                // Dynamic test of whole workflow
+                using var doc = System.Text.Json.JsonDocument.Parse(_sandboxJson);
+                var dict = System.Text.Json.JsonSerializer.Deserialize<System.Dynamic.ExpandoObject>(_sandboxJson);
+                _workflowResult = await RuleService.EvaluateWorkflowAsync(_workflow.WorkflowName, dict);
+            }
+            else
+            {
+                _sandboxResult = await RuleService.TestRuleExpressionAsync(new RuleSandboxTestRequest
+                {
+                    Expression = _singleExpression,
+                    SampleJsonPayload = _sandboxJson
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Sandbox evaluation error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isEvaluating = false;
+        }
+    }
+
+    private static Color GetSeverityColor(string severity) => severity switch
+    {
+        "Fatal" => Color.Error,
+        "Warning" => Color.Warning,
+        "Advisory" => Color.Info,
+        _ => Color.Default
+    };
+
+    private static string FormatCategory(string category) => category switch
+    {
+        "LearnerRegistration" => "Learner registration",
+        "Finance" => "Finance & grants",
+        "TradeAssessment" => "Trade test & ARPL",
+        "QualityAssurance" => "Quality assurance",
+        _ => category
+    };
+}

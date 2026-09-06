@@ -1,4 +1,4 @@
-﻿using Nsdms.Domain.Entities;
+using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
 
@@ -20,7 +20,7 @@ public record StpEvaluationResult(
 public interface ILearnerStpRiskEngine
 {
     /// <summary>
-    /// Evaluates a learner registration against statutory PFMA, DOFA, and SDA compliance invariants.
+    /// Evaluates a learner registration against statutory PFMA, QCTO, and SDA compliance invariants.
     /// </summary>
     Task<StpEvaluationResult> EvaluateRegistrationRiskAsync(CompanyLearner learner);
 }

@@ -18,6 +18,29 @@ public static class Phase12SchemaAlignmentMigrator
         if (context.Database.IsSqlServer())
         {
             const string ddlSql = @"
+                -- Person phone number nullability alignment (handling system-versioned temporal table)
+                IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Person') AND name = 'PhoneNumber' AND is_nullable = 0)
+                BEGIN
+                    DECLARE @isTemporal BIT = 0;
+                    IF EXISTS (SELECT * FROM sys.tables WHERE object_id = OBJECT_ID('dbo.Person') AND temporal_type = 2)
+                    BEGIN
+                        SET @isTemporal = 1;
+                        ALTER TABLE [dbo].[Person] SET (SYSTEM_VERSIONING = OFF);
+                    END;
+
+                    ALTER TABLE [dbo].[Person] ALTER COLUMN [PhoneNumber] NVARCHAR(50) NULL;
+
+                    IF OBJECT_ID('history.PersonHistory') IS NOT NULL
+                    BEGIN
+                        ALTER TABLE [history].[PersonHistory] ALTER COLUMN [PhoneNumber] NVARCHAR(50) NULL;
+                    END;
+
+                    IF @isTemporal = 1
+                    BEGIN
+                        ALTER TABLE [dbo].[Person] SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [history].[PersonHistory]));
+                    END;
+                END;
+
                 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TrainingCommittee')
                 BEGIN
                     CREATE TABLE [dbo].[TrainingCommittee] (

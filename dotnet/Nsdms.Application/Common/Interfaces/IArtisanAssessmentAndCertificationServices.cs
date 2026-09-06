@@ -124,6 +124,15 @@ public interface ITradeTestAndArplService
     Task<List<LearnerTradeTestApplication>> GetQaPendingApplicationsAsync();
 }
 
+public class ModerationChecklistItemDto
+{
+    public int SectionNumber { get; set; } = 1;
+    public string CriteriaTitle { get; set; } = string.Empty;
+    public string EvidenceRequirements { get; set; } = string.Empty;
+    public bool IsCompliant { get; set; } = true;
+    public string? Comments { get; set; }
+}
+
 public interface ISummativeAssessmentAndModerationService
 {
     Task<SummativeAssessmentReport> CreateSummativeAssessmentReportAsync(
@@ -132,6 +141,8 @@ public interface ISummativeAssessmentAndModerationService
         string? saqaQualId,
         int nqfLevel,
         string interventionTypeCode = "Learnership",
+        string assessmentStageCode = "Completion",
+        bool isFundedEmployer = true,
         int totalCreditsRequired = 120,
         string currentUsername = "SYSTEM");
 
@@ -147,6 +158,39 @@ public interface ISummativeAssessmentAndModerationService
         int moderatorPersonId,
         string moderatorRegNumber,
         Dictionary<int, (string Outcome, string? Comments)> moderationDecisions,
+        string currentUsername = "SYSTEM");
+
+    Task<List<SummativeAssessmentReport>> GetHoldingRoomReportsAsync(int? providerId = null, string? qualificationTitle = null);
+
+    Task<AssessmentBatch> CreateAssessmentBatchAsync(
+        int providerId,
+        string qualificationTitle,
+        string? saqaId,
+        string stageCode,
+        int samplePercentage,
+        List<int> reportIds,
+        string? internalReportDocRef,
+        string currentUsername = "SYSTEM");
+
+    Task<List<AssessmentBatch>> GetAssessmentBatchesAsync(string? statusCode = null, int? providerId = null);
+    Task<AssessmentBatch?> GetAssessmentBatchByIdAsync(int id);
+
+    Task<AssessmentBatch> ScheduleSiteVisitAsync(
+        int batchId,
+        DateTime visitDate,
+        bool isSiteVisitRequired,
+        string? comments,
+        int? contactPersonId,
+        string currentUsername = "SYSTEM");
+
+    Task<AssessmentBatch> RecordExternalModerationOutcomeAsync(
+        int batchId,
+        bool isUpheld,
+        string? primaryRejectionReason,
+        string? vacsViolation,
+        string? remarks,
+        string? remedialAction,
+        List<ModerationChecklistItemDto>? checklistItems,
         string currentUsername = "SYSTEM");
 
     Task<SummativeAssessmentReport> PerformEtqaExternalModerationAsync(
@@ -169,7 +213,55 @@ public interface ISummativeAssessmentAndModerationService
         int reportId,
         string currentUsername = "SYSTEM");
 
+    Task<StatementOfResults> IssueEarlyExitStatementOfResultsAsync(
+        int reportId,
+        string earlyExitReason,
+        string currentUsername = "SYSTEM");
+
+    Task<CertificatePrintingBatch> CreateCertificatePrintingBatchAsync(
+        List<int> batchIds,
+        string currentUsername = "SYSTEM");
+
+    Task<List<CertificatePrintingBatch>> GetCertificatePrintingBatchesAsync();
+    Task<CertificatePrintingBatch?> GetCertificatePrintingBatchByIdAsync(int id);
+
+    Task<AssessmentCertificateDistributionEvent> LogCertificateDistributionAsync(
+        int certificateId,
+        string method,
+        string? waybill,
+        string recipientName,
+        string? recipientId,
+        string? notes,
+        string currentUsername = "SYSTEM");
+
+    Task<ScannedCertificateAttachment> AttachScannedCertificateAsync(
+        int certificateId,
+        string storageKey,
+        string fileName,
+        long fileSize,
+        string? ocrId,
+        string? ocrCertNo,
+        string currentUsername = "SYSTEM");
+
+    Task<LearnerCertificate> ReissueSpoiledCertificateAsync(
+        int certificateId,
+        string replacementReason,
+        string currentUsername = "SYSTEM");
+
     Task<SummativeAssessmentReport?> GetReportByIdAsync(int id);
     Task<List<SummativeAssessmentReport>> GetReportsAsync(string? statusCode = null, string? qualificationTitle = null);
     Task<StatementOfResults?> VerifyStatementOfResultsAsync(string serialNumberOrHash);
+
+    // Modern UI Architecture Helpers & Lookup Endpoints
+    Task<List<TrainingProvider>> GetTrainingProvidersAsync();
+    Task<List<string>> GetQualificationsForProviderAsync(int providerId);
+    Task<List<CompanyLearner>> GetCompanyLearnersForProviderAsync(int providerId, string? qualificationTitle = null);
+    Task<List<EtqaAssessor>> GetAccreditedAssessorsAsync();
+    Task<List<EtqaAssessor>> GetAccreditedModeratorsAsync();
+    Task<List<Person>> GetContactPersonsForProviderAsync(int providerId);
+    Task<AssessmentBatch> SubmitBatchToQaPoolAsync(int batchId, string currentUsername = "SYSTEM");
+    Task<List<AssessmentBatch>> GetUpheldBatchesPendingPrintingAsync();
+    Task<CertificatePrintingBatch?> GetPrintingBatchDetailsAsync(int printingBatchId);
+    Task<List<ScannedCertificateAttachment>> GetScannedCertificatesAsync(int certificateId);
+    Task<(List<AssessmentBatchLearner> Learners, Dictionary<int, LearnerCertificate> Certificates, Dictionary<int, StatementOfResults> Sors)> GetBatchCredentialsDetailsAsync(int batchId);
 }

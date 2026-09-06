@@ -13,6 +13,10 @@ public class LearnerTradeTest : BaseEntity
     /// Foreign key referencing the registered CompanyLearner contract.
     /// </summary>
     public int CompanyLearnerId { get; set; }
+    [NotMapped]
+    public int EnrolmentId { get => CompanyLearnerId; set => CompanyLearnerId = value; }
+    [NotMapped]
+    public int LearnerEnrolmentId { get => CompanyLearnerId; set => CompanyLearnerId = value; }
 
     /// <summary>
     /// Navigational reference to the candidate CompanyLearner.

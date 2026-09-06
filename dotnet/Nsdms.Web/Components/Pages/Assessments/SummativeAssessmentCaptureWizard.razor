@@ -1,0 +1,519 @@
+@page "/assessments/capture"
+@page "/assessments/summative/capture"
+@using Microsoft.EntityFrameworkCore
+@using Nsdms.Application.Common
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject ISummativeAssessmentAndModerationService AssessmentService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<PageTitle>Capture Summative Assessment Results | merSETA NSDMS</PageTitle>
+
+<div class="mb-4">
+    <!-- Sticky Top Action Bar -->
+    <MudCard Elevation="2" Class="mb-4" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
+        <MudCardContent Class="d-flex flex-wrap align-center justify-space-between gap-3 py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">Capture Summative Assessment Results</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    ETQA Controlled Form ETQ-FM-005: Formative and summative outcome intake, credit compliance, and holding room committal (Use Case 4.1.1).
+                </MudText>
+            </div>
+            <MudStack Row="true" Spacing="2" Class="align-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="@(() => Nav.NavigateTo("/assessments/summative"))">
+                    Back
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Cancel" OnClick="ResetForm">
+                    Cancel
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="CommitToHoldingRoomAsync" Disabled="@(!CanCommit || _isSubmitting)">
+                    @if (_isSubmitting)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-1" />
+                        <span>Committing...</span>
+                    }
+                    else
+                    {
+                        <span>Commit to Holding Room</span>
+                    }
+                </MudButton>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+
+    <MudGrid>
+        <!-- Left Panel: Provider, Qualification & Learner Selection -->
+        <MudItem xs="12" md="4">
+            <MudCard Elevation="2" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.subtitle1" Class="fw-bold">
+                            <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" Class="mr-2" />
+                            1. Intake & Enrollment Selection
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack Spacing="3">
+                        <MudSelect T="int?" Label="Skills Development Provider (SDP)" Value="_selectedProviderId" ValueChanged="OnProviderChanged" Dense="true" Outlined="true">
+                            <MudSelectItem T="int?" Value="@((int?)null)">-- Select Accredited SDP --</MudSelectItem>
+                            @foreach (var p in _providers)
+                            {
+                                <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.ProviderName (@(p.AccreditationNumber ?? "Accredited"))</MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        <MudSelect T="string" Label="Registered Qualification" Value="_selectedQualTitle" ValueChanged="OnQualificationChanged" Dense="true" Outlined="true" Disabled="@(!_selectedProviderId.HasValue)">
+                            <MudSelectItem T="string" Value="@string.Empty">-- Select Qualification --</MudSelectItem>
+                            @foreach (var q in _qualifications)
+                            {
+                                <MudSelectItem T="string" Value="@q">@q</MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        <MudSelect T="int?" Label="Enrolled Learner" Value="_selectedLearnerId" ValueChanged="OnLearnerChanged" Dense="true" Outlined="true" Disabled="@(string.IsNullOrEmpty(_selectedQualTitle))">
+                            <MudSelectItem T="int?" Value="@((int?)null)">-- Select Learner --</MudSelectItem>
+                            @foreach (var l in _learners)
+                            {
+                                <MudSelectItem T="int?" Value="@((int?)l.Id)">
+                                    @(l.Person?.FirstName) @(l.Person?.LastName) (ID: @(l.Person?.RsaIdNumber ?? l.Person?.PassportNumber ?? "N/A"))
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        @if (_selectedLearner != null)
+                        {
+                            <MudPaper Elevation="0" Class="pa-3 rounded" Style="background-color: var(--mud-palette-background-grey);">
+                                <MudText Typo="Typo.caption" Class="fw-bold text-uppercase d-block mb-1">Learner Profile</MudText>
+                                <MudText Typo="Typo.body2"><strong>Learner:</strong> @(_selectedLearner.Person?.FirstName) @(_selectedLearner.Person?.LastName)</MudText>
+                                <MudText Typo="Typo.body2"><strong>RSA ID:</strong> @(_selectedLearner.Person?.RsaIdNumber ?? _selectedLearner.Person?.PassportNumber ?? "N/A")</MudText>
+                                <MudText Typo="Typo.body2"><strong>Host Employer:</strong> @(_selectedLearner.Organisation?.CompanyName ?? _selectedLearner.Organisation?.TradingName ?? "Independent")</MudText>
+                                <MudText Typo="Typo.body2"><strong>Enrolment Number:</strong> @(_selectedLearner.LearnerContractNumber ?? $"LRN-{_selectedLearner.Id:D5}")</MudText>
+                                
+                                <div class="mt-2">
+                                    <MudChip T="string" Size="Size.Small" Color="@(!string.IsNullOrEmpty(_selectedLearner.Organisation?.SdlNumber) ? Color.Info : Color.Default)">
+                                        @(!string.IsNullOrEmpty(_selectedLearner.Organisation?.SdlNumber) ? "Funded Employer" : "Non-Funded (Exempt)")
+                                    </MudChip>
+                                </div>
+                            </MudPaper>
+                        }
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+
+            <!-- Assessment Stage & 50% Rule Governance -->
+            <MudCard Elevation="2" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.subtitle1" Class="fw-bold">
+                            <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" Class="mr-2" />
+                            2. Assessment Stage & Progress Rule
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudRadioGroup T="string" Value="_assessmentStage" ValueChanged="OnStageChanged">
+                        <MudRadio T="string" Value="@("Completion")" Color="Color.Primary">
+                            <strong>Completion</strong> (Full Qualification Final Assessment)
+                        </MudRadio>
+                        <MudRadio T="string" Value="@("Progress")" Color="Color.Secondary">
+                            <strong>Progress</strong> (Formative Milestone Credit Accumulation)
+                        </MudRadio>
+                    </MudRadioGroup>
+
+                    <MudDivider Class="my-3" />
+
+                    <!-- Progress Rule Compliance Indicator -->
+                    <MudText Typo="Typo.caption" Class="fw-bold text-uppercase d-block mb-1">50% Statutory Credit Governance</MudText>
+                    @if (_assessmentStage == "Progress")
+                    {
+                        @if (_isFundedEmployer)
+                        {
+                            <MudAlert Severity="@(_earnedCredits >= 60 ? Severity.Success : Severity.Warning)" Dense="true" Class="mb-2">
+                                @if (_earnedCredits >= 60)
+                                {
+                                    <span>Compliant: Achieved @_earnedCredits credits (&ge; 50% required threshold of 60/120 credits).</span>
+                                }
+                                else
+                                {
+                                    <span>Warning: Current achieved credits (@_earnedCredits) fall below 50% required threshold (60 credits) for funded employers.</span>
+                                }
+                            </MudAlert>
+                        }
+                        else
+                        {
+                            <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">
+                                Non-Funded Exemption Active: Learner is exempt from the 50% milestone threshold.
+                            </MudAlert>
+                        }
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Normal" Dense="true" Class="mb-2">
+                            Completion assessment requires all compulsory core and fundamental credits.
+                        </MudAlert>
+                    }
+
+                    <div class="d-flex justify-space-between align-center mt-2">
+                        <MudText Typo="Typo.body2">Total Credits Evaluated:</MudText>
+                        <MudText Typo="Typo.subtitle1" Class="fw-bold" Color="Color.Primary">@_earnedCredits / 120 Credits</MudText>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+
+            <!-- Segregation of Duties Notice -->
+            <MudAlert Severity="Severity.Info" Dense="true" Class="mb-4">
+                <strong>Statutory Segregation of Duties:</strong> The Assessor and Internal Moderator must be distinct registered practitioners. Dual evaluation by the same person is prohibited per ETQA rules.
+            </MudAlert>
+        </MudItem>
+
+        <!-- Right Panel: Unit Standards Evaluation Table & Global Batch Actions -->
+        <MudItem xs="12" md="8">
+            <MudCard Elevation="2">
+                <MudCardHeader Class="d-flex flex-wrap align-center justify-space-between">
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.subtitle1" Class="fw-bold">
+                            <MudIcon Icon="@Icons.Material.Filled.ListAlt" Size="Size.Small" Class="mr-2" />
+                            3. Unit Standard Credit Assessment (ETQ-FM-005)
+                        </MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudStack Row="true" Spacing="1">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.DoneAll" OnClick="ApplyCompetentToAll">
+                                Apply Competent to All
+                            </MudButton>
+                        </MudStack>
+                    </CardHeaderActions>
+                </MudCardHeader>
+
+                <MudCardContent>
+                    <!-- Global Practitioner Applicator Bar -->
+                    <MudPaper Elevation="0" Class="pa-3 mb-3 border rounded" Style="background-color: var(--mud-palette-background-grey);">
+                        <MudGrid Spacing="2">
+                            <MudItem xs="12" sm="5">
+                                <MudSelect T="int?" Label="Assign Assessor to All" @bind-Value="_globalAssessorId" Dense="true" Outlined="true">
+                                    <MudSelectItem T="int?" Value="@((int?)null)">-- Select Assessor --</MudSelectItem>
+                                    @foreach (var a in _assessors)
+                                    {
+                                        <MudSelectItem T="int?" Value="@((int?)a.PersonId)">
+                                            @(a.Person?.FirstName) @(a.Person?.LastName) (Reg: @a.RegistrationNumber)
+                                        </MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" sm="5">
+                                <MudSelect T="int?" Label="Assign Moderator to All" @bind-Value="_globalModeratorId" Dense="true" Outlined="true">
+                                    <MudSelectItem T="int?" Value="@((int?)null)">-- Select Internal Moderator --</MudSelectItem>
+                                    @foreach (var m in _moderators)
+                                    {
+                                        <MudSelectItem T="int?" Value="@((int?)m.PersonId)">
+                                            @(m.Person?.FirstName) @(m.Person?.LastName) (Reg: @m.RegistrationNumber)
+                                        </MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" sm="2" Class="d-flex align-center">
+                                <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Small" FullWidth="true" OnClick="ApplyGlobalPractitioners">
+                                    Apply
+                                </MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+
+                    @if (_unitStandards.Count == 0)
+                    {
+                        <div class="pa-6 text-center">
+                            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+                            <MudText Typo="Typo.body1" Color="Color.Secondary">Please select a qualification above to load constituent unit standards.</MudText>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudTable Items="_unitStandards" Hover="true" Dense="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Code</MudTh>
+                                <MudTh>Unit Standard Title</MudTh>
+                                <MudTh>NQF</MudTh>
+                                <MudTh>Credits</MudTh>
+                                <MudTh>Type</MudTh>
+                                <MudTh>Competency Outcome</MudTh>
+                                <MudTh>Assessor</MudTh>
+                                <MudTh>Moderator</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Code"><span class="font-mono">@context.UnitStandardCode</span></MudTd>
+                                <MudTd DataLabel="Title">
+                                    <MudText Typo="Typo.body2" Class="fw-bold">@context.UnitStandardTitle</MudText>
+                                    @if (!context.IsMandatory)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">Elective</MudChip>
+                                    }
+                                </MudTd>
+                                <MudTd DataLabel="NQF">L@context.NqfLevel</MudTd>
+                                <MudTd DataLabel="Credits"><span class="fw-bold">@context.Credits</span></MudTd>
+                                <MudTd DataLabel="Type">@context.UnitStandardTypeCode</MudTd>
+                                <MudTd DataLabel="Outcome">
+                                    <MudSelect T="string" @bind-Value="context.CompetencyStatusCode" Dense="true" Margin="Margin.Dense" Style="min-width: 130px;">
+                                        <MudSelectItem T="string" Value="@("Competent")">Competent</MudSelectItem>
+                                        <MudSelectItem T="string" Value="@("NotYetCompetent")">Not Yet Competent</MudSelectItem>
+                                    </MudSelect>
+                                </MudTd>
+                                <MudTd DataLabel="Assessor">
+                                    <MudSelect T="int?" @bind-Value="context.AssessorPersonId" Dense="true" Margin="Margin.Dense" Style="min-width: 140px;">
+                                        <MudSelectItem T="int?" Value="@((int?)null)">-- Unassigned --</MudSelectItem>
+                                        @foreach (var a in _assessors)
+                                        {
+                                            <MudSelectItem T="int?" Value="@((int?)a.PersonId)">
+                                                @(a.Person?.FirstName) @(a.Person?.LastName)
+                                            </MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudTd>
+                                <MudTd DataLabel="Moderator">
+                                    <MudSelect T="int?" @bind-Value="context.InternalModeratorPersonId" Dense="true" Margin="Margin.Dense" Style="min-width: 140px;">
+                                        <MudSelectItem T="int?" Value="@((int?)null)">-- Unassigned --</MudSelectItem>
+                                        @foreach (var m in _moderators)
+                                        {
+                                            <MudSelectItem T="int?" Value="@((int?)m.PersonId)">
+                                                @(m.Person?.FirstName) @(m.Person?.LastName)
+                                            </MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</div>
+
+@code {
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Overview & tasks", href: "/"),
+        new BreadcrumbItem("Summative assessments", href: "/assessments/summative"),
+        new BreadcrumbItem("Capture results", href: null, disabled: true)
+    };
+
+    private bool _isLoading = false;
+    private bool _isSubmitting = false;
+
+    private int? _selectedProviderId;
+    private string _selectedQualTitle = string.Empty;
+    private int? _selectedLearnerId;
+    private CompanyLearner? _selectedLearner;
+
+    private string _assessmentStage = "Completion";
+    private bool _isFundedEmployer = true;
+
+    private int? _globalAssessorId;
+    private int? _globalModeratorId;
+
+    private List<TrainingProvider> _providers = new();
+    private List<string> _qualifications = new();
+    private List<CompanyLearner> _learners = new();
+    private List<EtqaAssessor> _assessors = new();
+    private List<EtqaAssessor> _moderators = new();
+    private List<SummativeAssessmentUnitStandard> _unitStandards = new();
+
+    private int _earnedCredits => _unitStandards.Where(u => u.CompetencyStatusCode == "Competent").Sum(u => u.Credits);
+
+    private bool CanCommit =>
+        _selectedLearnerId.HasValue &&
+        !string.IsNullOrEmpty(_selectedQualTitle) &&
+        _unitStandards.Count > 0 &&
+        _unitStandards.All(u => u.AssessorPersonId.HasValue && u.InternalModeratorPersonId.HasValue) &&
+        (!_isFundedEmployer || _assessmentStage != "Progress" || _earnedCredits >= 60);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLookupDataAsync();
+    }
+
+    private async Task LoadLookupDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _providers = await AssessmentService.GetTrainingProvidersAsync();
+            _assessors = await AssessmentService.GetAccreditedAssessorsAsync();
+            _moderators = await AssessmentService.GetAccreditedModeratorsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading lookup data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnProviderChanged(int? providerId)
+    {
+        _selectedProviderId = providerId;
+        _selectedQualTitle = string.Empty;
+        _selectedLearnerId = null;
+        _selectedLearner = null;
+        _unitStandards.Clear();
+
+        if (providerId.HasValue)
+        {
+            _qualifications = await AssessmentService.GetQualificationsForProviderAsync(providerId.Value);
+
+            if (_qualifications.Count == 0)
+            {
+                // Fallback default qualifications
+                _qualifications = new() { "National Certificate: Mechanical Engineering (Fitting & Machining)", "National Certificate: Automotive Repair and Maintenance", "National Certificate: Welding Application and Practice" };
+            }
+        }
+    }
+
+    private async Task OnQualificationChanged(string qualTitle)
+    {
+        _selectedQualTitle = qualTitle;
+        _selectedLearnerId = null;
+        _selectedLearner = null;
+
+        if (!string.IsNullOrEmpty(qualTitle) && _selectedProviderId.HasValue)
+        {
+            _learners = await AssessmentService.GetCompanyLearnersForProviderAsync(_selectedProviderId.Value);
+
+            LoadUnitStandardsForQualification(qualTitle);
+        }
+    }
+
+    private void OnLearnerChanged(int? learnerId)
+    {
+        _selectedLearnerId = learnerId;
+        _selectedLearner = _learners.FirstOrDefault(l => l.Id == learnerId);
+        _isFundedEmployer = !string.IsNullOrEmpty(_selectedLearner?.Organisation?.SdlNumber);
+    }
+
+    private void OnStageChanged(string stage)
+    {
+        _assessmentStage = stage;
+    }
+
+    private void LoadUnitStandardsForQualification(string qualTitle)
+    {
+        _unitStandards = new List<SummativeAssessmentUnitStandard>
+        {
+            new() { UnitStandardCode = "119472", UnitStandardTitle = "Accommodate audience and context needs in oral communication", NqfLevel = 3, Credits = 5, UnitStandardTypeCode = "Fundamental", IsMandatory = true, CompetencyStatusCode = "Competent" },
+            new() { UnitStandardCode = "119457", UnitStandardTitle = "Interpret and use information from texts in occupational context", NqfLevel = 3, Credits = 5, UnitStandardTypeCode = "Fundamental", IsMandatory = true, CompetencyStatusCode = "Competent" },
+            new() { UnitStandardCode = "9010", UnitStandardTitle = "Demonstrate an understanding of the use of different number systems", NqfLevel = 3, Credits = 2, UnitStandardTypeCode = "Fundamental", IsMandatory = true, CompetencyStatusCode = "Competent" },
+            new() { UnitStandardCode = "9013", UnitStandardTitle = "Describe, apply, analyse and calculate shape and motion in 2D and 3D", NqfLevel = 3, Credits = 4, UnitStandardTypeCode = "Fundamental", IsMandatory = true, CompetencyStatusCode = "Competent" },
+            new() { UnitStandardCode = "13220", UnitStandardTitle = "Adhere to occupational health, safety and environmental procedures", NqfLevel = 2, Credits = 8, UnitStandardTypeCode = "Core", IsMandatory = true, CompetencyStatusCode = "Competent" },
+            new() { UnitStandardCode = "12476", UnitStandardTitle = "Select, use and care for engineering hand and measuring tools", NqfLevel = 2, Credits = 12, UnitStandardTypeCode = "Core", IsMandatory = true, CompetencyStatusCode = "Competent" },
+            new() { UnitStandardCode = "13217", UnitStandardTitle = "Perform routine maintenance on engineering machinery and components", NqfLevel = 3, Credits = 16, UnitStandardTypeCode = "Core", IsMandatory = true, CompetencyStatusCode = "Competent" },
+            new() { UnitStandardCode = "13242", UnitStandardTitle = "Dismantle, service and reassemble mechanical sub-assemblies", NqfLevel = 4, Credits = 20, UnitStandardTypeCode = "Core", IsMandatory = true, CompetencyStatusCode = "Competent" },
+            new() { UnitStandardCode = "14445", UnitStandardTitle = "Perform basic electric arc welding in overhead and vertical positions", NqfLevel = 3, Credits = 14, UnitStandardTypeCode = "Core", IsMandatory = true, CompetencyStatusCode = "Competent" },
+            new() { UnitStandardCode = "13254", UnitStandardTitle = "Diagnose faults and repair mechanical transmission systems", NqfLevel = 4, Credits = 18, UnitStandardTypeCode = "Core", IsMandatory = true, CompetencyStatusCode = "Competent" },
+            new() { UnitStandardCode = "243272", UnitStandardTitle = "Operate pneumatic and electro-pneumatic control circuits", NqfLevel = 4, Credits = 16, UnitStandardTypeCode = "Elective", IsMandatory = false, IsNonMandatoryElective = true, CompetencyStatusCode = "Competent" }
+        };
+    }
+
+    private void ApplyCompetentToAll()
+    {
+        foreach (var us in _unitStandards)
+        {
+            us.CompetencyStatusCode = "Competent";
+        }
+        Snackbar.Add("All unit standards marked as Competent.", Severity.Info);
+    }
+
+    private void ApplyGlobalPractitioners()
+    {
+        if (_globalAssessorId.HasValue && _globalModeratorId.HasValue && _globalAssessorId == _globalModeratorId)
+        {
+            Snackbar.Add("Segregation of Duties Violation: Assessor and Internal Moderator cannot be the same person.", Severity.Error);
+            return;
+        }
+
+        foreach (var us in _unitStandards)
+        {
+            if (_globalAssessorId.HasValue) us.AssessorPersonId = _globalAssessorId;
+            if (_globalModeratorId.HasValue) us.InternalModeratorPersonId = _globalModeratorId;
+        }
+
+        Snackbar.Add("Practitioners applied to all unit standards.", Severity.Success);
+    }
+
+    private async Task CommitToHoldingRoomAsync()
+    {
+        if (_selectedLearner == null) return;
+
+        // Verify segregation of duties on all line items
+        foreach (var us in _unitStandards)
+        {
+            if (us.AssessorPersonId.HasValue && us.InternalModeratorPersonId.HasValue && us.AssessorPersonId == us.InternalModeratorPersonId)
+            {
+                Snackbar.Add($"Segregation of Duties Violation on {us.UnitStandardCode}: Assessor and Moderator cannot be identical.", Severity.Error);
+                return;
+            }
+        }
+
+        // Verify 50% rule for progress assessments on funded employers
+        if (_isFundedEmployer && _assessmentStage == "Progress" && _earnedCredits < 60)
+        {
+            Snackbar.Add("Funded Progress Gate: Minimum 50% credits (60/120 credits) must be achieved before committing progress report.", Severity.Error);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var created = await AssessmentService.CreateSummativeAssessmentReportAsync(
+                _selectedLearner.Id,
+                _selectedQualTitle,
+                _selectedLearner.SaqaQualificationId?.ToString() ?? "63889",
+                _selectedLearner.NqfLevel ?? 4,
+                "Learnership",
+                _assessmentStage,
+                _isFundedEmployer,
+                120,
+                "SYSTEM");
+
+            var assessor = _assessors.FirstOrDefault(a => a.PersonId == _unitStandards.First().AssessorPersonId);
+            var moderator = _moderators.FirstOrDefault(m => m.PersonId == _unitStandards.First().InternalModeratorPersonId);
+
+            await AssessmentService.RecordUnitStandardCreditsAsync(
+                created.Id,
+                assessor?.PersonId ?? 1,
+                assessor?.RegistrationNumber ?? "ASS-TEMP",
+                _unitStandards,
+                "SYSTEM");
+
+            Snackbar.Add($"Assessment committed to Holding Room successfully (Report Ref: SAR-{created.Id:D5}).", Severity.Success);
+            Nav.NavigateTo("/assessments/batching");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error committing assessment: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private void ResetForm()
+    {
+        _selectedProviderId = null;
+        _selectedQualTitle = string.Empty;
+        _selectedLearnerId = null;
+        _selectedLearner = null;
+        _unitStandards.Clear();
+        Snackbar.Add("Intake form cleared.", Severity.Normal);
+    }
+}

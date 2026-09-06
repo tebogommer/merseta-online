@@ -1,0 +1,66 @@
+﻿@inherits LayoutComponentBase
+@using Nsdms.Web.Themes
+@inject IJSRuntime JS
+
+<MudThemeProvider @ref="_mudThemeProvider" Theme="_customTheme" @bind-IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider FullWidth="true" MaxWidth="MaxWidth.Medium" CloseButton="true" />
+<MudSnackbarProvider />
+
+<div class="auth-layout" style="min-height: 100vh; background: var(--mud-palette-background); display: flex; flex-direction: column;">
+    <header class="d-flex justify-space-between align-center px-6 py-3" style="border-bottom: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); height: 60px;">
+        <div class="d-flex align-center">
+            <span style="font-weight: 800; font-size: 1.25rem; color: var(--mud-palette-primary); letter-spacing: -0.5px;">merSETA</span>
+            <span class="mx-2" style="color: var(--mud-palette-lines-default);">|</span>
+            <span style="font-size: 0.85rem; color: var(--mud-palette-text-secondary);">National Skills Development Management System</span>
+        </div>
+        <div>
+            <MudTooltip Text="@(_isDarkMode ? "Switch to light mode" : "Switch to dark mode")">
+                <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                               Color="Color.Default"
+                               Size="Size.Medium"
+                               OnClick="@ToggleTheme"
+                               aria-label="Toggle color theme" />
+            </MudTooltip>
+        </div>
+    </header>
+
+    <main class="flex-grow-1 d-flex align-center justify-center pa-4">
+        @Body
+    </main>
+
+    <footer class="text-center py-3" style="border-top: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); font-size: 0.75rem; color: var(--mud-palette-text-secondary);">
+        &copy; @DateTime.UtcNow.Year merSETA • Manufacturing, Engineering and Related Services SETA. All rights reserved.
+    </footer>
+</div>
+
+@code {
+    private MudThemeProvider _mudThemeProvider = default!;
+    private bool _isDarkMode = false;
+    private MudTheme _customTheme = NsdmsTheme.CreateTheme();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                _isDarkMode = await JS.InvokeAsync<bool>("nsdmsTheme.isDark");
+                StateHasChanged();
+            }
+            catch { }
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        _isDarkMode = !_isDarkMode;
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", "nsdms_dark_mode", _isDarkMode ? "true" : "false");
+            await JS.InvokeVoidAsync("localStorage.setItem", "app_theme", _isDarkMode ? "dark" : "light");
+            await JS.InvokeVoidAsync("nsdmsTheme.setTheme", _isDarkMode ? "dark" : "light");
+        }
+        catch { }
+    }
+}

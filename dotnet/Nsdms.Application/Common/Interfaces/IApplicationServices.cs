@@ -54,6 +54,22 @@ public interface IPdfDocumentService
     Task<byte[]> GenerateChecklist036InvestigationPdfAsync(int terminationId);
     Task<byte[]> GenerateLearnerAddendumPdfAsync(int extensionId);
     Task<byte[]> GenerateTerminationDecisionLetterPdfAsync(int terminationId);
+
+    // Phase 35: Assessments, Moderation & Certification Controlled Documents (Spec 18-11-2022)
+    Task<byte[]> GenerateSummativeAssessmentResultsFormPdfAsync(int reportId);
+    Task<byte[]> GenerateModerationValidationReportPdfAsync(int batchId);
+    Task<byte[]> GenerateLearnerQualificationCertificatePdfAsync(int certificateId);
+    Task<byte[]> GenerateBatchDistributionLetterPdfAsync(int batchId);
+    Task<byte[]> GenerateBatchConsolidatedCertificatesPdfAsync(int batchId);
+
+    // Phase 12: Spatial Zoning & Stakeholder Introduction
+    Task<byte[]> GenerateLetterOfIntroductionPdfAsync(int organisationId, int portfolioId);
+
+    // Phase 34/36: SDP Accreditation Certificate, Outcome Letter, Disciplinary Notice & Site Inspection Report
+    Task<byte[]> GenerateSdpAccreditationCertificatePdfAsync(int providerId);
+    Task<byte[]> GenerateSdpOutcomeLetterPdfAsync(int providerId);
+    Task<byte[]> GenerateSdpDisciplinaryNoticePdfAsync(int caseId);
+    Task<byte[]> GenerateSdpSiteInspectionReportPdfAsync(int inspectionId);
 }
 
 public class ErpDisbursementResult

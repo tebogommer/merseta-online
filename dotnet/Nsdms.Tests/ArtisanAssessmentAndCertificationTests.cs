@@ -194,12 +194,14 @@ public class ArtisanAssessmentAndCertificationTests
             "SAQA-65409",
             4,
             "Learnership",
+            "Completion",
+            true,
             120,
             "ProviderCoordinator");
 
         Assert.NotNull(report);
         Assert.StartsWith("SOR-REP-", report.ReportNumber);
-        Assert.Equal("Draft", report.StatusCode);
+        Assert.Equal("DraftHoldingRoom", report.StatusCode);
 
         // 2. Capture Unit Standard Credits (5 Unit Standards = 120 credits)
         var unitStandards = new List<SummativeAssessmentUnitStandard>

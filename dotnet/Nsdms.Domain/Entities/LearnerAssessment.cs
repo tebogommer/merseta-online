@@ -13,6 +13,10 @@ public class LearnerAssessment : BaseEntity
     /// Foreign key referencing the parent CompanyLearner agreement.
     /// </summary>
     public int? CompanyLearnerId { get; set; }
+    [NotMapped]
+    public int? EnrolmentId { get => CompanyLearnerId; set => CompanyLearnerId = value; }
+    [NotMapped]
+    public int? LearnerEnrolmentId { get => CompanyLearnerId; set => CompanyLearnerId = value; }
 
     /// <summary>
     /// Navigational reference to the candidate CompanyLearner agreement.

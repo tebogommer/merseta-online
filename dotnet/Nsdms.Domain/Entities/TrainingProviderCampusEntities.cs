@@ -1,9 +1,11 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Nsdms.Domain.Common;
 
 namespace Nsdms.Domain.Entities;
 
 /// <summary>
-/// Physical training site or delivery campus belonging to an accredited Skills Development Provider (SDP).
+/// Physical training site or delivery location belonging to an accredited Skills Development Provider (SDP).
+/// (Statutory nomenclature: Delivery Site / Site).
 /// </summary>
 public class TrainingProviderCampus : BaseEntity
 {
@@ -12,6 +14,22 @@ public class TrainingProviderCampus : BaseEntity
 
     public string CampusName { get; set; } = string.Empty;
     public string CampusCode { get; set; } = string.Empty;
+
+    // Statutory aliases for Delivery Site nomenclature
+    [NotMapped]
+    public string SiteName { get => CampusName; set => CampusName = value; }
+
+    [NotMapped]
+    public string SiteCode { get => CampusCode; set => CampusCode = value; }
+
+    [NotMapped]
+    public string? SiteContactPersonName { get => ContactPersonName; set => ContactPersonName = value; }
+
+    [NotMapped]
+    public string? SiteContactEmail { get => ContactEmail; set => ContactEmail = value; }
+
+    [NotMapped]
+    public string? SiteContactPhone { get => ContactPhone; set => ContactPhone = value; }
 
     public string? PhysicalAddressLine1 { get; set; }
     public string? PhysicalAddressLine2 { get; set; }
@@ -64,9 +82,22 @@ public class TrainingProviderAssessorLink : BaseEntity
     public DateTime? EndDate { get; set; }
 
     /// <summary>
-    /// Status: Active, Terminated, PendingVerification
+    /// Status: Active, Terminated, PendingVerification, PendingSla
     /// </summary>
     public string Status { get; set; } = "Active";
 
     public string? VerificationNotes { get; set; }
+
+    /// <summary>
+    /// Statutory SLA document reference signed between SDP and practitioner (Table 24 Step E & Assessor BR4).
+    /// </summary>
+    public string? SlaDocumentRef { get; set; }
+
+    public bool SignedByPrincipal { get; set; } = false;
+
+    public bool SignedByPractitioner { get; set; } = false;
+
+    public DateTime? SlaEffectiveDate { get; set; }
+
+    public DateTime? SlaExpiryDate { get; set; }
 }

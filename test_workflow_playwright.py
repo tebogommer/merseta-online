@@ -19,6 +19,15 @@ def test_workflow_and_document_suite():
 
         base_url = "http://localhost:5121"
 
+        # Authenticate as SuperAdmin
+        print("[AUTH] Logging in as SuperAdmin...")
+        page.goto(f"{base_url}/login", wait_until="networkidle")
+        page.fill("input#username", "sysadmin@merseta.org.za")
+        page.fill("input#password", "MerSETA@2026!")
+        page.click("button[type='submit']")
+        page.wait_for_load_state("networkidle")
+        print("[AUTH] Successfully authenticated!")
+
         # 1. Test Task Inbox Page
         print("\n--- 1. Testing Universal Task Inbox (/tasks) ---")
         page.goto(f"{base_url}/tasks", wait_until="networkidle")
@@ -99,16 +108,16 @@ def test_workflow_and_document_suite():
         # 8. Test Workflow Studio Master Grid (/admin/workflows)
         print("\n--- 8. Testing Workflow Studio Master Grid (/admin/workflows) ---")
         page.goto(f"{base_url}/admin/workflows", wait_until="networkidle")
-        page.wait_for_selector("text=Workflow Studio & State Machine Blueprints", timeout=10000)
+        page.wait_for_selector("text=Approval Process Lifecycles", timeout=10000)
         print("  [PASS] /admin/workflows loaded successfully")
         blueprint_count = page.locator("tbody tr").count()
-        print(f"  [PASS] Found {blueprint_count} workflow blueprints in studio")
-        assert blueprint_count > 0, "Expected at least 1 blueprint in studio"
+        print(f"  [PASS] Found {blueprint_count} workflow lifecycles in studio")
+        assert blueprint_count > 0, "Expected at least 1 lifecycle in studio"
 
         # 9. Test Workflow Blueprint Detail View & Tabs (/admin/workflows/1)
         print("\n--- 9. Testing Workflow Blueprint Detail View (/admin/workflows/1) ---")
         page.locator("tbody tr a[href^='/admin/workflows/']").first.click()
-        page.locator("div.mud-tab:has-text('Blueprint Metadata')").first.wait_for(state="visible", timeout=10000)
+        page.locator("div.mud-tab:has-text('Process Details')").first.wait_for(state="visible", timeout=10000)
         print(f"  [PASS] Blueprint Detail loaded at {page.url}")
 
         # Test Lifecycle States Tab
@@ -129,7 +138,7 @@ def test_workflow_and_document_suite():
         graph_tab = page.locator("div.mud-tab:has-text('Visual Flowchart')")
         if graph_tab.count() > 0:
             graph_tab.first.click()
-            page.locator("text=State Machine Topology").first.wait_for(state="visible", timeout=5000)
+            page.locator("text=Workflow Process Diagram").first.wait_for(state="visible", timeout=5000)
             print("  [PASS] Visual Flowchart DAG rendered")
 
         # Test Document Gate Rules Tab

@@ -1,0 +1,326 @@
+@page "/system-admin/rules"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IBusinessRuleEngineService RuleService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
+
+<PageTitle>Business Rule Engine Registry | merSETA NSDMS</PageTitle>
+
+@*
+  UI-STANDARD.md Archetype: A1 (Master List / Reference Data & Configuration Studio)
+  16-Point Checklist Compliant
+*@
+
+<EntityHeader Title="Business rule engine registry"
+              Subtitle="Dynamic statutory gatekeeper workflows, decision pipelines, and interactive testing sandbox"
+              BreadcrumbItems="@_breadcrumbItems">
+    <ActionZone>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="OpenCreateWorkflowDialogAsync">
+            New rule workflow
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<!-- Overview Statistics Row -->
+<div class="d-flex flex-wrap gap-4 mb-4">
+    <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
+        <div class="d-flex align-center justify-space-between">
+            <div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Rule workflows</MudText>
+                <MudText Typo="Typo.h5" Class="font-weight-bold mt-1">@_workflows.Count</MudText>
+            </div>
+            <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Medium">
+                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+            </MudAvatar>
+        </div>
+    </MudPaper>
+
+    <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
+        <div class="d-flex align-center justify-space-between">
+            <div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Active rules</MudText>
+                <MudText Typo="Typo.h5" Class="font-weight-bold mt-1" Color="Color.Success">
+                    @_workflows.Sum(w => w.Rules.Count(r => r.Enabled && r.IsActive))
+                </MudText>
+            </div>
+            <MudAvatar Color="Color.Success" Variant="Variant.Filled" Size="Size.Medium">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+            </MudAvatar>
+        </div>
+    </MudPaper>
+
+    <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
+        <div class="d-flex align-center justify-space-between">
+            <div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Active gatekeepers</MudText>
+                <MudText Typo="Typo.h5" Class="font-weight-bold mt-1" Color="Color.Info">
+                    @_workflows.Count(w => w.IsActive)
+                </MudText>
+            </div>
+            <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Medium">
+                <MudIcon Icon="@Icons.Material.Filled.Gavel" Size="Size.Small" />
+            </MudAvatar>
+        </div>
+    </MudPaper>
+
+    <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
+        <div class="d-flex align-center justify-space-between">
+            <div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Engine status</MudText>
+                <MudText Typo="Typo.h5" Class="font-weight-bold mt-1" Color="Color.Success">
+                    Live
+                </MudText>
+            </div>
+            <MudAvatar Color="Color.Tertiary" Variant="Variant.Filled" Size="Size.Medium">
+                <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" />
+            </MudAvatar>
+        </div>
+    </MudPaper>
+</div>
+
+<!-- Toolbar and Filter Area -->
+<MudPaper Elevation="0" Class="mb-4 pa-4 rounded-lg" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default);">
+    <div class="d-flex flex-wrap align-center justify-space-between gap-4">
+        <div class="d-flex align-center flex-grow-1 gap-2" style="max-width: 480px;">
+            <MudTextField T="string"
+                          @bind-Value="_searchString"
+                          Placeholder="Search workflows, titles, or descriptions..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          Clearable="true"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense" />
+        </div>
+
+        <div class="d-flex align-center gap-2">
+            <MudChip T="string"
+                     Color="@(_selectedCategory == "All" ? Color.Primary : Color.Default)"
+                     Variant="@(_selectedCategory == "All" ? Variant.Filled : Variant.Outlined)"
+                     OnClick="@(() => FilterCategory("All"))">
+                All
+            </MudChip>
+            <MudChip T="string"
+                     Color="@(_selectedCategory == "LearnerRegistration" ? Color.Primary : Color.Default)"
+                     Variant="@(_selectedCategory == "LearnerRegistration" ? Variant.Filled : Variant.Outlined)"
+                     OnClick="@(() => FilterCategory("LearnerRegistration"))">
+                Learner registration
+            </MudChip>
+            <MudChip T="string"
+                     Color="@(_selectedCategory == "Finance" ? Color.Primary : Color.Default)"
+                     Variant="@(_selectedCategory == "Finance" ? Variant.Filled : Variant.Outlined)"
+                     OnClick="@(() => FilterCategory("Finance"))">
+                Finance
+            </MudChip>
+            <MudChip T="string"
+                     Color="@(_selectedCategory == "TradeAssessment" ? Color.Primary : Color.Default)"
+                     Variant="@(_selectedCategory == "TradeAssessment" ? Variant.Filled : Variant.Outlined)"
+                     OnClick="@(() => FilterCategory("TradeAssessment"))">
+                Trade test &amp; ARPL
+            </MudChip>
+            <MudChip T="string"
+                     Color="@(_selectedCategory == "QualityAssurance" ? Color.Primary : Color.Default)"
+                     Variant="@(_selectedCategory == "QualityAssurance" ? Variant.Filled : Variant.Outlined)"
+                     OnClick="@(() => FilterCategory("QualityAssurance"))">
+                Quality assurance
+            </MudChip>
+        </div>
+    </div>
+</MudPaper>
+
+<!-- Master Data Grid -->
+<MudTable Items="@FilteredWorkflows"
+          Hover="true"
+          Striped="true"
+          Elevation="0"
+          Loading="@_isLoading"
+          LoadingProgressColor="Color.Primary"
+          Class="rounded-lg"
+          Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default);">
+    <HeaderContent>
+        <MudTh>Workflow identifier</MudTh>
+        <MudTh>Display title</MudTh>
+        <MudTh>Domain category</MudTh>
+        <MudTh Style="text-align: center;">Rule count</MudTh>
+        <MudTh Style="text-align: center;">Status</MudTh>
+        <MudTh Style="text-align: right;">Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Workflow identifier">
+            <MudLink Href="@($"/system-admin/rules/{context.Id}")" Class="font-monospace fw-bold text-primary">
+                @context.WorkflowName
+            </MudLink>
+        </MudTd>
+        <MudTd DataLabel="Display title">
+            <div class="d-flex flex-column">
+                <MudText Typo="Typo.body2" Class="font-weight-bold">@context.Title</MudText>
+                @if (!string.IsNullOrWhiteSpace(context.Description))
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-truncate" Style="max-width: 450px;">
+                        @context.Description
+                    </MudText>
+                }
+            </div>
+        </MudTd>
+        <MudTd DataLabel="Domain category">
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@GetCategoryColor(context.Category)">
+                @FormatCategory(context.Category)
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Rule count" Style="text-align: center;">
+            <MudBadge Content="@context.Rules.Count(r => r.IsActive)" Color="Color.Info" Overlap="false">
+                <MudIcon Icon="@Icons.Material.Filled.Rule" Size="Size.Small" Color="Color.Secondary" />
+            </MudBadge>
+        </MudTd>
+        <MudTd DataLabel="Status" Style="text-align: center;">
+            @if (context.IsActive)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Active</MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">Inactive</MudChip>
+            }
+        </MudTd>
+        <MudTd DataLabel="Actions" Style="text-align: right;">
+            <div class="d-flex justify-end gap-1">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Visibility"
+                           OnClick="@(() => Navigation.NavigateTo($"/system-admin/rules/{context.Id}"))">
+                    View
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.PlayArrow"
+                           OnClick="@(() => Navigation.NavigateTo($"/system-admin/rules/{context.Id}?tab=1"))">
+                    Test
+                </MudButton>
+            </div>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <div class="pa-8 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+            <MudText Typo="Typo.h6">No business rule workflows found</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                @if (!string.IsNullOrWhiteSpace(_searchString))
+                {
+                    <span>No workflows match the search criteria "@_searchString".</span>
+                }
+                else
+                {
+                    <span>No business rule workflows have been registered yet.</span>
+                }
+            </MudText>
+        </div>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="@(new int[] { 5, 10, 20, 50, 100 })" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private List<BusinessRuleWorkflow> _workflows = new();
+    private bool _isLoading = true;
+    private string _searchString = string.Empty;
+    private string _selectedCategory = "All";
+
+    private readonly List<BreadcrumbItem> _breadcrumbItems = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("System administration", href: "/admin"),
+        new BreadcrumbItem("Business rules", href: "/system-admin/rules")
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadWorkflowsAsync();
+    }
+
+    private async Task LoadWorkflowsAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _workflows = await RuleService.GetAllWorkflowsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load business rule workflows: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private IEnumerable<BusinessRuleWorkflow> FilteredWorkflows
+    {
+        get
+        {
+            var query = _workflows.AsEnumerable();
+
+            if (_selectedCategory != "All")
+            {
+                query = query.Where(w => w.Category.Equals(_selectedCategory, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(w =>
+                    w.WorkflowName.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    w.Title.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    (w.Description != null && w.Description.Contains(s, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return query;
+        }
+    }
+
+    private void FilterCategory(string category)
+    {
+        _selectedCategory = category;
+    }
+
+    private async Task OpenCreateWorkflowDialogAsync()
+    {
+        var dialog = await DialogService.ShowAsync<CreateRuleWorkflowDialog>("Create business rule workflow");
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled && result.Data is BusinessRuleWorkflow created)
+        {
+            await LoadWorkflowsAsync();
+            Navigation.NavigateTo($"/system-admin/rules/{created.Id}");
+        }
+    }
+
+    private static Color GetCategoryColor(string category) => category switch
+    {
+        "LearnerRegistration" => Color.Primary,
+        "Finance" => Color.Success,
+        "TradeAssessment" => Color.Warning,
+        "QualityAssurance" => Color.Info,
+        _ => Color.Default
+    };
+
+    private static string FormatCategory(string category) => category switch
+    {
+        "LearnerRegistration" => "Learner registration",
+        "Finance" => "Finance & grants",
+        "TradeAssessment" => "Trade test & ARPL",
+        "QualityAssurance" => "Quality assurance",
+        _ => category
+    };
+}

@@ -87,9 +87,16 @@ public class OrganisationService : IOrganisationService
             .Include(o => o.PrimaryContactPerson)
             .AsNoTracking();
 
-        if (_tenantProvider != null && !_tenantProvider.IsAdmin && _tenantProvider.CurrentOrganisationId != null)
+        if (_tenantProvider != null && !_tenantProvider.IsAdmin)
         {
-            baseQuery = baseQuery.Where(o => o.Id == _tenantProvider.CurrentOrganisationId.Value);
+            if (_tenantProvider.CurrentOrganisationId != null)
+            {
+                baseQuery = baseQuery.Where(o => o.Id == _tenantProvider.CurrentOrganisationId.Value);
+            }
+            else
+            {
+                baseQuery = baseQuery.Where(o => false);
+            }
         }
 
         if (query.FilterParams.TryGetValue("status", out var statusVal) && !string.IsNullOrWhiteSpace(statusVal) && statusVal != "All")
@@ -114,13 +121,13 @@ public class OrganisationService : IOrganisationService
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);
 
-        var pagedEntities = await baseQuery
+        var rawItems = await baseQuery
             .OrderByDescending(o => o.Id)
-            .Skip(query.PageIndex * query.PageSize)
+            .Skip((query.PageIndex - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
-        var items = pagedEntities.Select(o => new OrganisationListDto(
+        var items = rawItems.Select(o => new OrganisationListDto(
             o.Id,
             o.SdlNumber,
             o.CompanyName,
@@ -145,9 +152,16 @@ public class OrganisationService : IOrganisationService
             .Include(o => o.PrimaryContactPerson)
             .AsQueryable();
 
-        if (_tenantProvider != null && !_tenantProvider.IsAdmin && _tenantProvider.CurrentOrganisationId != null)
+        if (_tenantProvider != null && !_tenantProvider.IsAdmin)
         {
-            query = query.Where(o => o.Id == _tenantProvider.CurrentOrganisationId.Value);
+            if (_tenantProvider.CurrentOrganisationId != null)
+            {
+                query = query.Where(o => o.Id == _tenantProvider.CurrentOrganisationId.Value);
+            }
+            else
+            {
+                query = query.Where(o => false);
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -169,9 +183,12 @@ public class OrganisationService : IOrganisationService
 
     public async Task<Organisation?> GetByIdAsync(int id)
     {
-        if (_tenantProvider != null && !_tenantProvider.IsAdmin && _tenantProvider.CurrentOrganisationId != null && id != _tenantProvider.CurrentOrganisationId.Value)
+        if (_tenantProvider != null && !_tenantProvider.IsAdmin)
         {
-            return null;
+            if (_tenantProvider.CurrentOrganisationId == null || id != _tenantProvider.CurrentOrganisationId.Value)
+            {
+                return null;
+            }
         }
 
         using var db = await _contextFactory.CreateDbContextAsync();

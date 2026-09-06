@@ -1,4 +1,4 @@
-﻿-- V2026_13_Phase3_Core_Statutory_Workflows.sql
+-- V2026_13_Phase3_Core_Statutory_Workflows.sql
 -- Idempotent T-SQL schema update for Phase 3: Core Statutory Workflows
 
 -- 1. Alter WspSubmission to add multi-party quorum signoff fields
@@ -86,7 +86,7 @@ BEGIN
     CREATE INDEX [IX_CompanyLearnerChangeRequest_Status] ON [dbo].[CompanyLearnerChangeRequest] ([ChangeStatusCode]);
 END;
 
--- 4. Alter GrantPaymentClaim with Milestone & Multi-Tier DOFA Columns
+-- 4. Alter GrantPaymentClaim with Milestone & Multi-Tier Financial Approval Columns
 IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[GrantPaymentClaim]') AND name = 'GrantMoaMilestoneId')
 BEGIN
     ALTER TABLE [dbo].[GrantPaymentClaim] ADD [GrantMoaMilestoneId] INT NULL;

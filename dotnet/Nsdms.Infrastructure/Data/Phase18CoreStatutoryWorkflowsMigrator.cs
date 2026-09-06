@@ -9,7 +9,7 @@ namespace Nsdms.Infrastructure.Data;
 /// Applies schema updates for Phase 3 Core Statutory Workflows:
 /// - WSP Multi-Party Quorum Signoff Attestation (WspSignoffAttestation)
 /// - Learner Contract Lifecycle Amendment Requests (CompanyLearnerChangeRequest)
-/// - Grant Payment Claim Multi-Tier DOFA Approvals & ERP Payment Batch Staging (ErpPaymentBatchHeader/Entry)
+/// - Grant Payment Claim Multi-Tier Financial Approvals & ERP Payment Batch Staging (ErpPaymentBatchHeader/Entry)
 /// </summary>
 public static class Phase18CoreStatutoryWorkflowsMigrator
 {

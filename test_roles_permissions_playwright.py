@@ -19,8 +19,17 @@ def test_roles_and_permissions():
         context = browser.new_context(viewport={"width": 1440, "height": 900})
         page = context.new_page()
 
+        # Authenticate as SuperAdmin
+        print("[AUTH] Logging in as SuperAdmin...")
+        page.goto(f"{BASE_URL}/login", wait_until="networkidle")
+        page.fill("input#username", "sysadmin@merseta.org.za")
+        page.fill("input#password", "MerSETA@2026!")
+        page.click("button[type='submit']")
+        page.wait_for_load_state("networkidle")
+        print("[AUTH] Successfully authenticated!")
+
         # 1. Test Master Roles List (/admin/roles)
-        print("[1/3] Testing Roles Registry (/admin/roles)...")
+        print("\n[1/3] Testing Roles Registry (/admin/roles)...")
         page.goto(f"{BASE_URL}/admin/roles", wait_until="networkidle", timeout=15000)
         page.wait_for_selector("text=Security Roles & Permissions Matrix", timeout=10000)
         body = page.inner_text("body")
@@ -36,10 +45,10 @@ def test_roles_and_permissions():
         page.click("text=Module & Action Permissions")
         time.sleep(1)
         body = page.inner_text("body")
-        assert "Active Claims:" in body, "Expected Active Claims counter"
+        assert "Active Permissions:" in body, "Expected Active Permissions counter"
         assert "Grants Subsystem" in body, "Expected Grants Subsystem card"
         assert "Finance Subsystem" in body, "Expected Finance Subsystem card"
-        print("  --> Module & Action Permission matrix rendered with interactive claims!")
+        print("  --> Module & Action Permission matrix rendered with interactive permissions!")
 
         # 3. Test Create Role Page (/admin/roles/create)
         print("\n[3/3] Testing Create Role Page (/admin/roles/create)...")

@@ -1,0 +1,311 @@
+@page "/login"
+@layout Layout.AuthLayout
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Authorization
+@using Nsdms.Web.Services
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Sign In - merSETA NSDMS</PageTitle>
+
+<div class="d-flex align-center justify-center pa-2" style="width: 100%;">
+    <div style="width: 100%; max-width: 480px;">
+        <!-- Brand Header -->
+        <div class="text-center mb-6">
+            <div class="d-inline-flex align-center justify-center rounded-circle pa-3 mb-3" 
+                 style="background-color: var(--mud-palette-primary-hover);">
+                <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Large" Color="Color.Primary" />
+            </div>
+            <MudText Typo="Typo.h4" Class="fw-bold" Style="letter-spacing: -0.5px;">merSETA NSDMS</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">
+                National Skills Development Management System
+            </MudText>
+        </div>
+
+        <!-- Alert Notifications -->
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4 rounded-lg" Elevation="2">
+                @ErrorMessage
+            </MudAlert>
+        }
+        else if (IsLoggedOut)
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mb-4 rounded-lg" Elevation="2">
+                You have been successfully signed out.
+            </MudAlert>
+        }
+
+        <!-- Login Card -->
+        <MudCard Elevation="4" Class="rounded-xl pa-6 bg-surface" Style="border: 1px solid var(--mud-palette-lines-default);">
+            <div class="mb-4">
+                <MudText Typo="Typo.h6" Class="fw-bold">Sign in to your account</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Enter your authorized statutory credentials or select a workspace persona below.
+                </MudText>
+            </div>
+
+            <!-- Standard HTML form posting to /api/auth/login for reliable HTTP Cookie issuance -->
+            <form method="post" action="/api/auth/login">
+                <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+
+                <div class="mb-3">
+                    <label for="username" class="mud-input-label mud-typography-caption mb-1 d-block fw-bold">
+                        Username or email address
+                    </label>
+                    <input type="text"
+                           id="username"
+                           name="username"
+                           required
+                           value="@_username"
+                           placeholder="e.g. sysadmin@merseta.org.za"
+                           class="mud-input-slot mud-input-root mud-input-root-outlined py-2 px-3 w-100 rounded"
+                           style="width: 100%; height: 42px; border: 1px solid var(--mud-palette-lines-inputs); background: var(--mud-palette-background); color: var(--mud-palette-text-primary);" />
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-space-between align-center mb-1">
+                        <label for="password" class="mud-input-label mud-typography-caption fw-bold">
+                            Password
+                        </label>
+                    </div>
+                    <div class="d-flex align-center position-relative">
+                        <input type="@(_showPassword ? "text" : "password")"
+                               id="password"
+                               name="password"
+                               required
+                               value="@_password"
+                               placeholder="Enter your account password"
+                               class="mud-input-slot mud-input-root mud-input-root-outlined py-2 px-3 w-100 rounded"
+                               style="width: 100%; height: 42px; border: 1px solid var(--mud-palette-lines-inputs); background: var(--mud-palette-background); color: var(--mud-palette-text-primary);" />
+                    </div>
+                </div>
+
+                <div class="d-flex justify-space-between align-center mb-4">
+                    <label class="d-flex align-center gap-2 cursor-pointer" style="font-size: 0.85rem; color: var(--mud-palette-text-secondary);">
+                        <input type="checkbox" name="rememberMe" value="true" checked />
+                        <span>Keep me signed in</span>
+                    </label>
+                    <MudButton Variant="Variant.Text" 
+                               Color="Color.Primary" 
+                               Size="Size.Small" 
+                               OnClick="@TogglePasswordVisibility"
+                               Style="text-transform: none; font-size: 0.75rem;">
+                        @(_showPassword ? "Hide password" : "Show password")
+                    </MudButton>
+                </div>
+
+                <button type="submit" 
+                        class="mud-button-root mud-button mud-button-filled mud-button-filled-primary mud-ripple w-100 rounded py-2 fw-bold d-flex align-center justify-center gap-2"
+                        style="width: 100%; height: 44px; text-transform: none; font-weight: 600; cursor: pointer; border: none; background-color: var(--mud-palette-primary); color: var(--mud-palette-primary-contrast-text);">
+                    <svg style="width: 18px; height: 18px; fill: currentColor;" viewBox="0 0 24 24">
+                        <path d="M10 17l5-5-5-5v10zM2 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4h-2V5H4v14h12v-4h2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/>
+                    </svg>
+                    <span>Sign in</span>
+                </button>
+            </form>
+
+            <MudDivider Class="my-4" />
+
+            <!-- Self-Service Registration & Stakeholder Onboarding -->
+            <div class="mb-4 text-center">
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">
+                    New user or statutory stakeholder?
+                </MudText>
+                <div class="d-flex flex-column gap-2">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               FullWidth="true"
+                               StartIcon="@Icons.Material.Filled.PersonAdd"
+                               Href="/register"
+                               Style="text-transform: none; font-weight: 600; height: 40px;">
+                        Self-Service User Registration
+                    </MudButton>
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Secondary"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.AppRegistration"
+                               OnClick="@(() => _showRegistrationDialog = true)"
+                               Style="text-transform: none; font-size: 0.8rem;">
+                        View all stakeholder registration pathways
+                    </MudButton>
+                </div>
+            </div>
+
+            <MudDivider Class="my-4" />
+
+            <!-- Quick Demo Credentials for Fast Evaluation -->
+            <div>
+                <MudText Typo="Typo.caption" Class="fw-bold d-block mb-2" Color="Color.Secondary">
+                    Quick test accounts (Password: MerSETA@2026!)
+                </MudText>
+                <div class="d-flex flex-wrap gap-1">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" 
+                             OnClick="@(() => SetCredentials("sysadmin@merseta.org.za", "MerSETA@2026!"))">
+                        SysAdmin
+                    </MudChip>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" 
+                             OnClick="@(() => SetCredentials("clo.officer@merseta.org.za", "MerSETA@2026!"))">
+                        CLO Officer
+                    </MudChip>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" 
+                             OnClick="@(() => SetCredentials("sdf.employer@toyota.co.za", "MerSETA@2026!"))">
+                        SDF Facilitator
+                    </MudChip>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success" 
+                             OnClick="@(() => SetCredentials("finance.officer@merseta.org.za", "MerSETA@2026!"))">
+                        Finance
+                    </MudChip>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary" 
+                             OnClick="@(() => SetCredentials("review.committee@merseta.org.za", "MerSETA@2026!"))">
+                        Committee
+                    </MudChip>
+                </div>
+            </div>
+        </MudCard>
+
+        <!-- STAKEHOLDER REGISTRATION PATHWAYS DIALOG -->
+        <MudDialog @bind-Visible="_showRegistrationDialog" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true })">
+            <TitleContent>
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.AppRegistration" Color="Color.Primary" />
+                    <MudText Typo="Typo.h6" Class="fw-bold">Statutory Registration Pathways</MudText>
+                </div>
+            </TitleContent>
+            <DialogContent>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                    Select the statutory registration category matching your role or organisation:
+                </MudText>
+                <div class="d-flex flex-column gap-2">
+                    <MudPaper Elevation="0" Class="pa-3 rounded-lg cursor-pointer" 
+                              Style="border: 1px solid var(--mud-palette-lines-default); background-color: var(--mud-palette-background);"
+                              @onclick="@(() => NavigateTo("/register"))">
+                        <div class="d-flex align-center gap-3">
+                            <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Color="Color.Primary" />
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Individual Self-Service Registration</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Register a personal stakeholder profile with RSA ID or Passport verification</MudText>
+                            </div>
+                        </div>
+                    </MudPaper>
+
+                    <MudPaper Elevation="0" Class="pa-3 rounded-lg cursor-pointer" 
+                              Style="border: 1px solid var(--mud-palette-lines-default); background-color: var(--mud-palette-background);"
+                              @onclick="@(() => NavigateTo("/employers/sdfs/create"))">
+                        <div class="d-flex align-center gap-3">
+                            <MudIcon Icon="@Icons.Material.Filled.Business" Color="Color.Info" />
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Skills Development Facilitator (SDF)</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Register and appoint an SDF profile linked to an employer organisation</MudText>
+                            </div>
+                        </div>
+                    </MudPaper>
+
+                    <MudPaper Elevation="0" Class="pa-3 rounded-lg cursor-pointer" 
+                              Style="border: 1px solid var(--mud-palette-lines-default); background-color: var(--mud-palette-background);"
+                              @onclick="@(() => NavigateTo("/etqa/assessors/register"))">
+                        <div class="d-flex align-center gap-3">
+                            <MudIcon Icon="@Icons.Material.Filled.FactCheck" Color="Color.Warning" />
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Assessor &amp; Moderator Registration</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Apply for ETQA Assessor or Moderator accreditation with 3-year industry verification</MudText>
+                            </div>
+                        </div>
+                    </MudPaper>
+
+                    <MudPaper Elevation="0" Class="pa-3 rounded-lg cursor-pointer" 
+                              Style="border: 1px solid var(--mud-palette-lines-default); background-color: var(--mud-palette-background);"
+                              @onclick="@(() => NavigateTo("/learners/register"))">
+                        <div class="d-flex align-center gap-3">
+                            <MudIcon Icon="@Icons.Material.Filled.School" Color="Color.Success" />
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Learner &amp; Apprentice Agreement</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Register tripartite learnership or apprenticeship contracts</MudText>
+                            </div>
+                        </div>
+                    </MudPaper>
+
+                    <MudPaper Elevation="0" Class="pa-3 rounded-lg cursor-pointer" 
+                              Style="border: 1px solid var(--mud-palette-lines-default); background-color: var(--mud-palette-background);"
+                              @onclick="@(() => NavigateTo("/learners/bursaries/register"))">
+                        <div class="d-flex align-center gap-3">
+                            <MudIcon Icon="@Icons.Material.Filled.WorkspacePremium" Color="Color.Secondary" />
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Bursary Agreement Registration</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Apply for merSETA funded, institution, or donor bursaries</MudText>
+                            </div>
+                        </div>
+                    </MudPaper>
+                </div>
+            </DialogContent>
+            <DialogActions>
+                <MudButton Variant="Variant.Text" OnClick="@(() => _showRegistrationDialog = false)">Cancel</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+        <!-- Compliance & Security Seal Note -->
+        <div class="text-center mt-4">
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size: 0.72rem;">
+                Official system of the Manufacturing, Engineering and Related Services SETA.
+                <br />
+                Protected by ASP.NET Core Identity, PBKDF2 cryptography, and POPIA statutory controls.
+            </MudText>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? ErrorMessage { get; set; }
+
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; } = "/";
+
+    [SupplyParameterFromQuery(Name = "loggedOut")]
+    public bool IsLoggedOut { get; set; }
+
+    private string _username = "sysadmin@merseta.org.za";
+    private string _password = "MerSETA@2026!";
+    private bool _showPassword = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("localStorage.removeItem", "nsdms_active_persona");
+                await JS.InvokeVoidAsync("localStorage.removeItem", "nsdms_active_tenant");
+                if (AuthStateProvider is NsdmsAuthenticationStateProvider authProvider)
+                {
+                    authProvider.SignOutUser();
+                }
+            }
+            catch { }
+        }
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        _showPassword = !_showPassword;
+    }
+
+    private void SetCredentials(string username, string password)
+    {
+        _username = username;
+        _password = password;
+        Snackbar.Add($"Loaded credentials for {username}", Severity.Info);
+        StateHasChanged();
+    }
+
+    private bool _showRegistrationDialog = false;
+
+    private void NavigateTo(string url)
+    {
+        _showRegistrationDialog = false;
+        Navigation.NavigateTo(url);
+    }
+}

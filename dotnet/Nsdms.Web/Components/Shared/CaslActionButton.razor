@@ -1,8 +1,10 @@
 @namespace Nsdms.Web.Components.Shared
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Security
+@using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 @inject ICaslAbilityService CaslService
+@inject AuthenticationStateProvider AuthStateProvider
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
@@ -105,8 +107,13 @@
 
     private async Task EvaluateAuthorizationAsync()
     {
-        // Get user context (defaulting to current authenticated session or demo context)
-        var userContext = await CaslService.GetUserContextByUsernameAsync("Admin");
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var username = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value 
+            ?? authState.User.Identity?.Name;
+
+        var userContext = !string.IsNullOrEmpty(username)
+            ? await CaslService.GetUserContextByUsernameAsync(username)
+            : new CaslUserContext();
         _isAuthorized = CaslService.Can(userContext, Action, Subject, TargetOrganisationId);
     }
 

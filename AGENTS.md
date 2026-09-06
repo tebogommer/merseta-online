@@ -65,7 +65,7 @@ Every page must pass all 16 items before being declared complete:
 2. **Contracting via MoA**: The legal contracting instrument for Discretionary Grants is the **Memorandum of Agreement (MoA)**, never generic "Contracts".
 3. **Skills Development Providers (SDP)**: Refer to accredited training institutions as **Skills Development Providers (SDPs)** per QCTO statutory guidelines.
 4. **Artisan Mentorship Ratios**: Enforce NAMB / QCTO artisan mentor-to-apprentice ratios via `IMentorRatioPolicyEngine`, respecting trade-specific caps.
-5. **Governance & PFMA Controls**: Adhere to Delegation of Financial Authority (DOFA), Segregation of Duties (Maker-Checker), and non-repudiation audit logging for all approval gates.
+5. **Governance & PFMA Controls**: Adhere to financial approval delegation, Segregation of Duties (Maker-Checker), and non-repudiation audit logging for all approval gates.
 
 ---
 
@@ -168,4 +168,56 @@ The Option and Lookup Controls Standard v1.1 (Rules E.1 and E.2, OPT-001 through
    - Provider registration requires a minimum of two (2) verified contact persons. At least one designated contact other than the primary SDF must be tagged with banking details confirmation authority.
 5. **Double-Write & Digital Security Seal**:
    - All approval gates (Regional QA, QA Manager, Review Committee, Senior QA Manager) must record atomic snapshots in `audit_logs` and stamp the generated Accreditation Certificate with an immutable SHA-256 digital security seal.
+
+---
+
+### 🛡️ Assessor and Moderator Registration Statutory Governance Standard (Signed 2023 Specification)
+1. **3-Year Post-Qualification Industry Practice Gate**:
+   - In accordance with merSETA ETQA regulations, applicants for Assessor or Moderator status MUST possess $\ge 3$ years of verifiable post-qualification occupational practice (`(DateTime.UtcNow - QualificationObtainedDate).TotalDays / 365.25 >= 3.0`). Registration of qualification scopes failing this threshold must be rejected immediately at intake.
+2. **Constituent Unit Standards Protection & Non-Removability**:
+   - Adding an accredited qualification scope automatically cascades all constituent unit standards with `IsPopulatedFromQualification = true`.
+   - Constituent unit standards derived from the parent qualification cannot be deleted individually. Only standalone unit standards may be added or removed independently.
+3. **4-Stage Maker-Checker Workflow with Two-Tier Rejection**:
+   - Initial applications must traverse 4 sequential gates: Stage 1 Document Verification (`VerificationOfficer`), Stage 2 Application Evaluation (`EvaluationOfficer`), Stage 3 ETQA Review Committee Adjudication, and Stage 4 Senior Manager Final Approval (`Approved`).
+   - Review Committee rejection enforces Maker-Checker distinction: `IsFinalRejection = false` routes the application for candidate correction (`RejectedForResubmission`); `IsFinalRejection = true` terminates the process (`RejectedApplication`).
+4. **Multi-SDP Affiliation & Service Level Agreement (SLA)**:
+   - Practitioners can affiliate with multiple accredited Skills Development Providers (SDPs). Each affiliation mandates capture of a verified Service Level Agreement document reference (`SlaDocumentRef`).
+5. **Disciplinary Sanctioning, DHA Deceased De-registration & QuestPDF Seal**:
+   - Disciplinary investigations (`AssessorDisciplinaryCase`) conclude with Review Committee sanctions: Suspension (`SUSPENDED`), De-registration (`DEREGISTERED`), or Dismissal (`DISMISSED`). Suspensions immediately set `AssessmentAbilitySuspended = true` and revoke operational assessment eligibility across all learner enrolments.
+   - Formal DHA death notifications (`RecordDeceasedAsync`) immediately transition practitioner status to `De-Registered`, stamp `DeRegistrationReason = "Deceased"`, and permanently suspend assessment abilities.
+   - All outcomes generate statutory QuestPDF certificates and outcome letters stamped with immutable SHA-256 digital security seals.
+
+---
+
+### 🛡️ Learner Registration Dual-Channel (ATM vs Teller) Statutory Invariant
+1. **Dual-Channel Coexistence**:
+   - The automated self-service bulk ingestion channel ("The ATM", `/learners/bulk-register`) MUST exist alongside the manual single-registration wizard workflows ("The Teller", `LearnerAgreementRegistrationWizard.razor` and `BursaryRegistrationWizard.razor`). Automated options must NEVER replace or deprecate manual teller routes.
+2. **Straight-Through Processing (STP) 6-Gate Safeguards**:
+   - Automated registration through `ILearnerStpRiskEngine` is strictly limited to 100% compliant submissions matching 6 gates: active levy-paying employer, verified workplace approval with mentor ratios (`IMentorRatioPolicyEngine`), active non-expired SAQA qualification, valid RSA ID Luhn algorithm check, mandatory guardian details for minors under 18, and execution date within 30 working days.
+3. **Graceful Exception Routing**:
+   - Any row failing any of the 6 STP criteria must NOT terminate the batch; instead, it is safely queued into `VerificationPending` for officer maker-checker review and manual condonation evaluation.
+4. **Digital Security Seal & Double-Write Audit Trail**:
+   - Ingested bulk batches must calculate an immutable SHA-256 digital security seal over payload contents. All STP auto-approvals must perform atomic double-writes into `audit_logs` with actor `SYSTEM_STP_GATEKEEPER`.
+
+---
+
+### 🛡️ Skills Development Provider (SDP) Delivery Sites vs Campuses Nomenclature Standard
+1. **Statutory Terminology Alignment**:
+   - In accordance with merSETA ETQA statutory governance, physical locations where Skills Development Providers (SDPs) conduct accredited training deliveries and assessments MUST be designated as **"Delivery Sites"** or **"Sites"** (e.g. *Main Site*, *Secondary Delivery Site*, *Site Code*, *Site Inspection*).
+   - Never use the term "Campus" or "Campuses" in user-facing labels, table headers, dialogs, button texts, toast messages, or navigation items.
+2. **Backward-Compatible Domain & Service Aliasing**:
+   - Underlying entity models and database tables may preserve physical storage columns (`TrainingProviderCampus`) while exposing `SiteName`, `SiteCode`, `SiteContactPersonName`, and `SiteContactPhone` via `[NotMapped]` aliases (with explicit `entity.Ignore(...)` in `NsdmsDbContext.cs`).
+   - Application service contracts must provide `ISdpSiteService` / `SdpSiteService` as the primary interface, with `ISdpCampusService` retained as an alias for non-breaking backward compatibility.
+
+---
+
+### 🛡️ Dynamic Configuration & Zero-Hardcoding Invariant
+1. **Zero Hardcoded Business Rules**:
+   - Never hardcode statutory SLAs, approval validity durations, financial split percentages, mentor ratios, test attempt limits, file upload caps, or storage paths in service classes or UI components.
+2. **Standard Resolution Pattern**:
+   - Always inject `ISystemConfigurationService` and resolve parameters with `await _configService.GetValueAsync<T>("Category:KeyName", fallbackValue)`.
+   - Provide statutory constants strictly as fallback arguments.
+3. **Startup Seeding Requirement**:
+   - Any newly introduced configuration parameter MUST be added to `SystemConfigurationService.SeedDefaultConfigsAsync()` with its category, data type, description, and default value so it appears automatically in the System Settings administration portal.
+
 

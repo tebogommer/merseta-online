@@ -22,13 +22,19 @@ public class SystemConfigurationService : ISystemConfigurationService
     public async Task<string?> GetValueAsync(string key, string? defaultValue = null)
     {
         using var db = await _contextFactory.CreateDbContextAsync();
-        var config = await db.SystemConfigs.FirstOrDefaultAsync(c => c.ConfigKey == key && c.IsActive);
+        
+        var altKey = key.Contains(':') ? key.Replace(':', '.') : key.Replace('.', ':');
+        var config = await db.SystemConfigs.FirstOrDefaultAsync(c => (c.ConfigKey == key || c.ConfigKey == altKey) && c.IsActive);
         if (config != null && !string.IsNullOrEmpty(config.ConfigValue))
         {
             return config.ConfigValue;
         }
 
-        var appSettingsVal = _configuration[key];
+        var appSettingsVal = _configuration[key]
+            ?? _configuration[altKey]
+            ?? _configuration[$"NsdmsSettings:{key.Replace('.', ':')}"]
+            ?? _configuration[$"NsdmsSettings:{key}"];
+
         if (!string.IsNullOrEmpty(appSettingsVal))
         {
             return appSettingsVal;
@@ -161,7 +167,43 @@ public class SystemConfigurationService : ISystemConfigurationService
 
             // General
             ("General:CallCenterPhone", "086 163 7738", "General", "Official merSETA contact center telephone line.", "String"),
-            ("General:ApplicationTitle", "merSETA National Skills Development Management System", "General", "Enterprise portal application branding title.", "String")
+            ("General:ApplicationTitle", "merSETA National Skills Development Management System", "General", "Enterprise portal application branding title.", "String"),
+            ("System:BaseUrl", "https://nsdms.merseta.org.za", "General", "Canonical base URL for public document verification and QR code links.", "String"),
+
+            // Statutory SLAs & Lifecycles
+            ("WorkplaceApproval:InspectionSlaBusinessDays", "20", "Statutory SLAs", "Statutory turnaround time in business days for initial workplace audit inspection.", "Integer"),
+            ("WorkplaceApproval:DefaultValidityYears", "3", "Statutory SLAs", "Statutory accreditation validity tenure in years.", "Integer"),
+            ("LearnerLifecycle:TerminationInvestigationSlaDays", "14", "Statutory SLAs", "Dispute investigation SLA in business days for unilateral learner contract terminations.", "Integer"),
+            ("TrainingProvider:SiteInspectionSlaBusinessDays", "5", "Statutory SLAs", "SDP accreditation initial inspection SLA in business days.", "Integer"),
+            ("LearnerRegistration:MaxSignatureElapsedBusinessDays", "30", "Statutory SLAs", "Statutory window in business days for submitting executed tripartite learnership agreements.", "Integer"),
+            ("Etqa:AssessorRegistrationCycleYears", "3", "Statutory SLAs", "Assessor and Moderator accreditation renewal validity cycle in years.", "Integer"),
+            ("TradeTest:MaxAllowedAttempts", "3", "Statutory SLAs", "Maximum permitted attempts for trade test qualification assessments per NAMB regulations.", "Integer"),
+            ("TradeTest:ResultsUploadSlaDays", "5", "Statutory SLAs", "SLA in days for accredited trade test centres to upload practical assessment results.", "Integer"),
+            ("Banking:CoolingOffPeriodDays", "14", "Governance", "Mandatory cooling-off period in days for updating bank disbursement accounts.", "Integer"),
+            ("Banking:ConfirmationLetterMaxAgeDays", "90", "Compliance", "Maximum allowable age in days for uploaded bank confirmation letters (FICA/Treasury).", "Integer"),
+            ("Workflow:SlaWarningThresholdHours", "24", "Governance", "Lead time in hours before workflow task due date to trigger proactive escalation warnings.", "Integer"),
+
+            // Levies & Statutory Allocations
+            ("Levy:MandatoryGrantRate", "0.200", "Finance", "Statutory Mandatory Grant rebate rate (20% of 1% SDL levy).", "Decimal"),
+            ("Levy:DiscretionaryGrantRate", "0.495", "Finance", "Statutory Discretionary Grant strategic allocation rate (49.5% of 1% SDL levy).", "Decimal"),
+            ("Levy:AdminRate", "0.105", "Finance", "Statutory SETA administration levy expenditure rate (10.5% of 1% SDL levy).", "Decimal"),
+            ("Levy:QctoRate", "0.005", "Finance", "Statutory QCTO regulatory transfer levy rate (0.5% of 1% SDL levy).", "Decimal"),
+            ("Levy:SarsTrailerToleranceCents", "0.05", "Finance", "Allowable gross reconciliation discrepancy tolerance in ZAR for SARS monthly levy trailers.", "Decimal"),
+            ("Governance:SmallEmployerMaxEmployeeCount", "50", "Governance", "Headcount threshold exempting small employers from mandatory labour union training committee quorum.", "Integer"),
+
+            // Apprentice, Trade & Mentor Rules
+            ("WorkplaceApproval:DefaultStandardMentorRatio", "4", "Apprentice & Trade", "Statutory default mentor-to-apprentice ratio per qualified artisan.", "Integer"),
+            ("WorkplaceApproval:DefaultMaxMentorRatio", "6", "Apprentice & Trade", "Maximum allowable apprentice capacity per artisan under approved variance.", "Integer"),
+            ("WorkplaceApproval:MinMentorExperienceYears", "3", "Apprentice & Trade", "Minimum post-qualification artisan experience required before supervising apprentices.", "Integer"),
+            ("TradeTest:CreditRetentionPassRatePercentage", "50.0", "Apprentice & Trade", "Minimum evaluated practical task pass percentage to qualify for modular credit retention.", "Decimal"),
+            ("TradeTest:CreditRetentionWindowMonths", "18", "Apprentice & Trade", "Validity window in months for retained practical task credits across subsequent attempts.", "Integer"),
+            ("TradeTest:DefaultPassMarkPercentage", "70.0", "Apprentice & Trade", "National benchmark practical task pass mark percentage for artisan qualifications.", "Decimal"),
+            ("TradeTest:QaAuditSamplingPercentage", "10", "Apprentice & Trade", "Regional QA random audit inspection sampling rate percentage for trade test centres.", "Integer"),
+
+            // UI & Display Defaults
+            ("UiDefaults:DebounceIntervalMs", "300", "UI & Display", "Search input debouncing interval in milliseconds.", "Integer"),
+            ("UiDefaults:SearchMinCharacters", "2", "UI & Display", "Minimum characters required to trigger lookup and catalog autocomplete searches.", "Integer"),
+            ("UiDefaults:DefaultRowsPerPage", "20", "UI & Display", "Default pagination page size across enterprise data grids.", "Integer")
         };
 
         bool anyAdded = false;

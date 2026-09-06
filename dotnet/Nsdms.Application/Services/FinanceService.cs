@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Interfaces;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
@@ -7,10 +8,12 @@ namespace Nsdms.Application.Services;
 public class FinanceService : IFinanceService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
+    private readonly ISystemConfigurationService? _configService;
 
-    public FinanceService(INsdmsDbContextFactory contextFactory)
+    public FinanceService(INsdmsDbContextFactory contextFactory, ISystemConfigurationService? configService = null)
     {
         _contextFactory = contextFactory;
+        _configService = configService;
     }
 
     public async Task<List<GrantMoa>> GetGrantMoasAsync()
@@ -53,17 +56,22 @@ public class FinanceService : IFinanceService
         if (moa.Milestones == null || moa.Milestones.Count == 0)
         {
             var total = moa.TotalContractValue;
-            var t1 = Math.Round(total * 0.30m, 2);
-            var t2 = Math.Round(total * 0.30m, 2);
-            var t3 = Math.Round(total * 0.20m, 2);
+            var pct1 = _configService != null ? await _configService.GetValueAsync<decimal>("Finance:Tranche1Percentage", 0.30m) : 0.30m;
+            var pct2 = _configService != null ? await _configService.GetValueAsync<decimal>("Finance:Tranche2Percentage", 0.30m) : 0.30m;
+            var pct3 = _configService != null ? await _configService.GetValueAsync<decimal>("Finance:Tranche3Percentage", 0.20m) : 0.20m;
+            var pct4 = _configService != null ? await _configService.GetValueAsync<decimal>("Finance:Tranche4Percentage", 0.20m) : 0.20m;
+
+            var t1 = Math.Round(total * pct1, 2);
+            var t2 = Math.Round(total * pct2, 2);
+            var t3 = Math.Round(total * pct3, 2);
             var t4 = total - (t1 + t2 + t3); // Residual balancing guarantees 100.00% exact sum
 
             moa.Milestones = new List<GrantMoaMilestone>
             {
-                new() { MilestoneNumber = 1, MilestoneTitle = "Contracting & Learner Induction", DeliverableRequirement = "Signed tripartite agreements & certified learner IDs.", TranchePercentage = 30m, TrancheAmount = t1, TargetDueDate = moa.ContractStartDate.AddMonths(2), MilestoneStatusCode = "Pending", CreatedBy = userId },
-                new() { MilestoneNumber = 2, MilestoneTitle = "50% Theoretical & Practical Progress", DeliverableRequirement = "Midterm logbook assessments & accredited attendance registers.", TranchePercentage = 30m, TrancheAmount = t2, TargetDueDate = moa.ContractStartDate.AddMonths(6), MilestoneStatusCode = "Pending", CreatedBy = userId },
-                new() { MilestoneNumber = 3, MilestoneTitle = "Final Summative Assessment & Moderation", DeliverableRequirement = "Statement of results & ETQA moderation reports.", TranchePercentage = 20m, TrancheAmount = t3, TargetDueDate = moa.ContractStartDate.AddMonths(9), MilestoneStatusCode = "Pending", CreatedBy = userId },
-                new() { MilestoneNumber = 4, MilestoneTitle = "Trade Test Certification & Closeout Audit", DeliverableRequirement = "Trade test certificates & closeout financial expenditure report.", TranchePercentage = 20m, TrancheAmount = t4, TargetDueDate = moa.ContractEndDate, MilestoneStatusCode = "Pending", CreatedBy = userId }
+                new() { MilestoneNumber = 1, MilestoneTitle = "Contracting & Learner Induction", DeliverableRequirement = "Signed tripartite agreements & certified learner IDs.", TranchePercentage = pct1 * 100m, TrancheAmount = t1, TargetDueDate = moa.ContractStartDate.AddMonths(2), MilestoneStatusCode = "Pending", CreatedBy = userId },
+                new() { MilestoneNumber = 2, MilestoneTitle = "50% Theoretical & Practical Progress", DeliverableRequirement = "Midterm logbook assessments & accredited attendance registers.", TranchePercentage = pct2 * 100m, TrancheAmount = t2, TargetDueDate = moa.ContractStartDate.AddMonths(6), MilestoneStatusCode = "Pending", CreatedBy = userId },
+                new() { MilestoneNumber = 3, MilestoneTitle = "Final Summative Assessment & Moderation", DeliverableRequirement = "Statement of results & ETQA moderation reports.", TranchePercentage = pct3 * 100m, TrancheAmount = t3, TargetDueDate = moa.ContractStartDate.AddMonths(9), MilestoneStatusCode = "Pending", CreatedBy = userId },
+                new() { MilestoneNumber = 4, MilestoneTitle = "Trade Test Certification & Closeout Audit", DeliverableRequirement = "Trade test certificates & closeout financial expenditure report.", TranchePercentage = pct4 * 100m, TrancheAmount = t4, TargetDueDate = moa.ContractEndDate, MilestoneStatusCode = "Pending", CreatedBy = userId }
             };
         }
 
@@ -296,8 +304,12 @@ public class FinanceService : IFinanceService
         pay.ModifiedAt = DateTime.UtcNow;
         pay.ModifiedBy = userId;
 
-        // DOFA Dual Signoff: Claims >= R500,000 require mandatory CFO signoff
-        if (pay.ClaimedAmount >= 500000.00m)
+        var cfoDualSignoffThreshold = _configService != null 
+            ? await _configService.GetValueAsync<decimal>("Finance:MandatoryApprovalDualSignOffThreshold", 500000.00m)
+            : 500000.00m;
+
+        // Dual Signoff: Claims >= threshold require mandatory CFO signoff
+        if (pay.ClaimedAmount >= cfoDualSignoffThreshold)
         {
             pay.PaymentStatusCode = "PendingCfoApproval";
             context.AuditLogs.Add(new AuditLog
@@ -307,7 +319,7 @@ public class FinanceService : IFinanceService
                 ActionName = "SUBMIT_FOR_CFO_APPROVAL",
                 Actor = userId,
                 Timestamp = DateTime.UtcNow,
-                MetadataJson = $"{{\"status\":\"PendingCfoApproval\",\"batch\":\"{batchNumber}\",\"amount\":{pay.ApprovedPaymentAmount},\"reason\":\"DOFA threshold >= R500,000\"}}"
+                MetadataJson = $"{{\"status\":\"PendingCfoApproval\",\"batch\":\"{batchNumber}\",\"amount\":{pay.ApprovedPaymentAmount},\"reason\":\"Executive threshold >= {cfoDualSignoffThreshold:C}\"}}"
             });
         }
         else
@@ -337,7 +349,7 @@ public class FinanceService : IFinanceService
 
         pay.PaymentStatusCode = "CfoApproved";
         pay.PaymentReferenceNumber = $"PV-{DateTime.UtcNow.Year}-DG-{pay.Id:D5}";
-        pay.ApprovalComments = string.IsNullOrWhiteSpace(comments) ? "CFO executive approval per DOFA delegation." : comments;
+        pay.ApprovalComments = string.IsNullOrWhiteSpace(comments) ? "CFO executive approval confirmed." : comments;
         pay.ModifiedAt = DateTime.UtcNow;
         pay.ModifiedBy = userId;
 

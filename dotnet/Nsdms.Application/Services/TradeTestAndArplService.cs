@@ -11,15 +11,18 @@ public class TradeTestAndArplService : ITradeTestAndArplService
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly AuditService _audit;
     private readonly INotificationService? _notifications;
+    private readonly ISystemConfigurationService? _configService;
 
     public TradeTestAndArplService(
         INsdmsDbContextFactory contextFactory,
         AuditService audit,
-        INotificationService? notifications = null)
+        INotificationService? notifications = null,
+        ISystemConfigurationService? configService = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
         _notifications = notifications;
+        _configService = configService;
     }
 
     public async Task<LearnerTradeTestApplication> CreateTradeTestApplicationAsync(
@@ -42,9 +45,13 @@ public class TradeTestAndArplService : ITradeTestAndArplService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
 
-        if (attemptNumber > 3)
+        var maxAttempts = _configService != null 
+            ? await _configService.GetValueAsync<int>("TradeTest:MaxAllowedAttempts", 3) 
+            : 3;
+
+        if (attemptNumber > maxAttempts)
         {
-            throw new InvalidOperationException("Statutory maximum of 3 trade test attempts exceeded per Section 5.");
+            throw new InvalidOperationException($"Statutory maximum of {maxAttempts} trade test attempts exceeded per Section 5.");
         }
 
         var learner = await db.CompanyLearners
@@ -541,11 +548,18 @@ public class TradeTestAndArplService : ITradeTestAndArplService
         app.CompetencyStatusCode = allPassed ? "Competent" : "NotYetCompetent";
         app.StatusCode = allPassed ? "Competent" : "Assessed";
 
-        // Section 4.2.5: Assessment report SLA is 5 working days from test completion
-        app.ResultsUploadDeadlineDate = assessmentDate.AddDays(5);
+        // Section 4.2.5: Assessment report SLA from test completion
+        var resultsUploadDays = _configService != null 
+            ? await _configService.GetValueAsync<int>("TradeTest:ResultsUploadSlaDays", 5) 
+            : 5;
+        app.ResultsUploadDeadlineDate = assessmentDate.AddDays(resultsUploadDays);
 
-        // Section 4.0 / DFD: 10% QA achievement audit sampling
-        app.IsSelectedForQaAuditSample = (app.Id % 10 == 0);
+        // Section 4.0 / DFD: Configurable QA achievement audit sampling percentage
+        var samplePct = _configService != null 
+            ? await _configService.GetValueAsync<int>("TradeTest:QaAuditSamplingPercentage", 10) 
+            : 10;
+        int divisor = samplePct > 0 ? (100 / samplePct) : 10;
+        app.IsSelectedForQaAuditSample = (divisor > 0 && app.Id % divisor == 0);
 
         if (assessorComments != null)
         {
@@ -924,7 +938,7 @@ public class TradeTestAndArplService : ITradeTestAndArplService
             .Include(t => t.NambHistories)
             .Include(t => t.Withdrawals)
             .Include(t => t.DocumentChecklists)
-            .Include(t => t.DistributionEvents)
+            .Include(t => t.CertificateDistributions)
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 

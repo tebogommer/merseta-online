@@ -110,10 +110,10 @@
 
 @code {
     [Parameter]
-    public string CurrentUsername { get; set; } = "Admin";
+    public string CurrentUsername { get; set; } = string.Empty;
 
     [Parameter]
-    public List<string> CurrentRoles { get; set; } = new() { "SuperAdmin", "Admin", "FinanceManager", "CLO" };
+    public List<string> CurrentRoles { get; set; } = new();
 
     private bool _isOpen = false;
     private string _query = string.Empty;
@@ -165,7 +165,9 @@
         _isLoading = true;
         try
         {
-            var userContext = await CaslService.GetUserContextByUsernameAsync(CurrentUsername);
+            var userContext = !string.IsNullOrWhiteSpace(CurrentUsername)
+                ? await CaslService.GetUserContextByUsernameAsync(CurrentUsername)
+                : new CaslUserContext();
             var roles = userContext.Roles.Any() ? userContext.Roles : CurrentRoles;
             var perms = userContext.Permissions;
 
@@ -183,7 +185,9 @@
         _isLoading = true;
         try
         {
-            var userContext = await CaslService.GetUserContextByUsernameAsync(CurrentUsername);
+            var userContext = !string.IsNullOrWhiteSpace(CurrentUsername)
+                ? await CaslService.GetUserContextByUsernameAsync(CurrentUsername)
+                : new CaslUserContext();
             var roles = userContext.Roles.Any() ? userContext.Roles : CurrentRoles;
             var perms = userContext.Permissions;
 

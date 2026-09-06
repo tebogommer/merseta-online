@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Interfaces;
 using Nsdms.Application.Common.Models;
 using Nsdms.Domain.Entities;
 
@@ -57,11 +58,16 @@ public class TrainingProviderService : ITrainingProviderService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
+    private readonly ISystemConfigurationService? _configService;
 
-    public TrainingProviderService(INsdmsDbContextFactory contextFactory, IAuditService audit)
+    public TrainingProviderService(
+        INsdmsDbContextFactory contextFactory,
+        IAuditService audit,
+        ISystemConfigurationService? configService = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
+        _configService = configService;
     }
 
     public async Task<List<TrainingProvider>> GetAllAsync(string? search = null, string? providerType = null, string? status = null)
@@ -746,7 +752,8 @@ public class TrainingProviderService : ITrainingProviderService
 
     public DateTime Calculate5WorkingDaysDueDate(DateTime startDate)
     {
-        return WorkplaceApprovalService.AddBusinessDays(startDate, 5);
+        var slaDays = _configService?.GetValueAsync<int>("TrainingProvider:SiteInspectionSlaBusinessDays", 5).GetAwaiter().GetResult() ?? 5;
+        return WorkplaceApprovalService.AddBusinessDays(startDate, slaDays);
     }
 
     public string GenerateAccreditationSecuritySeal(TrainingProvider provider)

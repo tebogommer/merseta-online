@@ -21,7 +21,32 @@ public record LearnerEnrolmentDto(
     int? EmployerId,
     string? TrainingProviderName,
     int? TrainingProviderId
-);
+)
+{
+    public int EnrolmentId => CompanyLearnerId;
+}
+
+public record CompanyLearnerDto(
+    int CompanyLearnerId,
+    string? LearnerContractNumber,
+    string? LearningProgrammeTypeCode,
+    string? LearningProgrammeTypeName,
+    string? QualificationTitle,
+    int? NqfLevel,
+    string? SaqaQualificationId,
+    string? OFOCode,
+    string? EnrolmentStatusId,
+    string? EnrolmentStatusName,
+    DateTime RegistrationDate,
+    DateTime? CommencementDate,
+    DateTime? CompletionDate,
+    string? EmployerName,
+    int? EmployerId,
+    string? TrainingProviderName,
+    int? TrainingProviderId
+) : LearnerEnrolmentDto(CompanyLearnerId, LearnerContractNumber, LearningProgrammeTypeCode, LearningProgrammeTypeName,
+    QualificationTitle, NqfLevel, SaqaQualificationId, OFOCode, EnrolmentStatusId, EnrolmentStatusName,
+    RegistrationDate, CommencementDate, CompletionDate, EmployerName, EmployerId, TrainingProviderName, TrainingProviderId);
 
 /// <summary>
 /// DTO representing an employer host or sponsoring workplace linked to the learner.
@@ -81,4 +106,7 @@ public record LearnerStipendDto(
     string? MoaNumber,
     decimal? ApprovedStipendRate,
     string Status
-);
+)
+{
+    public int EnrolmentId => CompanyLearnerId;
+}

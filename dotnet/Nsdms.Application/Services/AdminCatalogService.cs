@@ -434,6 +434,23 @@ public class AdminCatalogService : IAdminCatalogService
 
         items.Add(new AdminSearchItemDto
         {
+            Key = "MOD-IDENTITY-USERS",
+            Title = "Identity & User Accounts",
+            Category = AdminCategoryConstants.SecurityAndAccess,
+            Description = "Manage ASP.NET Core Identity login credentials, account lockouts, passwords, and roles.",
+            Icon = "Icons.Material.Filled.ManageAccounts",
+            RouteUrl = "/admin/users",
+            ItemType = "Module",
+            CurrentValue = "Identity Accounts",
+            ValueType = "Badge",
+            IsEditableInline = false,
+            Tags = new List<string> { "users", "accounts", "identity", "passwords", "lockout", "logins" },
+            StatusBadgeColor = "Success",
+            DisplayOrder = 3
+        });
+
+        items.Add(new AdminSearchItemDto
+        {
             Key = "MOD-SYSTEM-SETTINGS",
             Title = "System Configuration & Overrides",
             Category = AdminCategoryConstants.SystemConfiguration,

@@ -1,0 +1,136 @@
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using MudBlazor
+@inject IBusinessRuleEngineService RuleService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Rule" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">@(Rule.Id == 0 ? "Add business rule" : "Edit business rule")</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+            Rules evaluate dynamic C# lambda expressions against runtime facts. Enter an expression that returns <code class="font-monospace">true</code> for compliant conditions.
+        </MudText>
+
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudGrid Spacing="3">
+                <MudItem xs="12" md="8">
+                    <MudTextField T="string"
+                                  @bind-Value="Rule.RuleName"
+                                  Label="Rule identifier"
+                                  Placeholder="e.g. MinimumAgeGate, ActiveEmployerGate"
+                                  Required="true"
+                                  RequiredError="Rule identifier is required"
+                                  Class="font-monospace" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="int"
+                                     @bind-Value="Rule.OrderIndex"
+                                     Label="Evaluation order"
+                                     Min="1"
+                                     Max="999" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string"
+                                  @bind-Value="Rule.Expression"
+                                  Label="Dynamic C# lambda expression"
+                                  Placeholder="e.g. Age >= 18 || HasMinorGuardian"
+                                  Required="true"
+                                  RequiredError="Expression is required"
+                                  Class="font-monospace"
+                                  Lines="2"
+                                  HelperText="Syntax: standard C# operators (&&, ||, ==, !=, >=, <=, etc.)" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string"
+                                  @bind-Value="Rule.ErrorMessage"
+                                  Label="Failure diagnostic error message"
+                                  Placeholder="Message displayed when expression evaluates to false..."
+                                  Required="true"
+                                  RequiredError="Error message is required" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               @bind-Value="Rule.Severity"
+                               Label="Diagnostic severity"
+                               Required="true">
+                        <MudSelectItem Value="@("Fatal")">Fatal (Blocks transaction / straight-through)</MudSelectItem>
+                        <MudSelectItem Value="@("Warning")">Warning (Requires officer inspection)</MudSelectItem>
+                        <MudSelectItem Value="@("Advisory")">Advisory (Informational notice)</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6" Class="d-flex align-center">
+                    <MudSwitch T="bool"
+                               @bind-Value="Rule.Enabled"
+                               Color="Color.Success"
+                               Label="Rule enabled for evaluation" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string"
+                                  @bind-Value="Rule.SuccessMessage"
+                                  Label="Optional compliance message"
+                                  Placeholder="Notice emitted when expression evaluates to true..." />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="Cancel" StartIcon="@Icons.Material.Filled.Cancel">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_isValid || _isSaving)" OnClick="SaveAsync" StartIcon="@Icons.Material.Filled.Save">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>Save rule</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public BusinessRule Rule { get; set; } = new();
+
+    private MudForm? _form;
+    private bool _isValid;
+    private bool _isSaving;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SaveAsync()
+    {
+        if (_form != null)
+        {
+            await _form.ValidateAsync();
+            if (!_form.IsValid) return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            var saved = await RuleService.UpsertRuleAsync(Rule, "Admin");
+            Snackbar.Add($"Saved rule '{saved.RuleName}' successfully.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(saved));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to save rule: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

@@ -1,0 +1,589 @@
+@page "/coordination/zones"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IZoneAndCaseloadService ZoneService
+@inject IPortfolioDispatchService DispatchService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A1 (List / Registry) & T3 (Reference Data)
+  Role: Client Relations Manager (CRM), Regional Coordinator (CLC) & System Admin
+  Governance: Phase 1 Sub-Regional Zone Architecture & Demarcation Clustering
+*@
+
+<EntityHeader Title="Sub-Regional Zone Management"
+              Subtitle="Sub-regional operational zones, town cluster assignments, and default primary relationship officer governance"
+              ReferenceKey="A1-ZONES-REGISTRY"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="LoadZonesAsync">
+            Refresh
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="OpenCreateZoneDialog">
+            Add Zone
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<!-- Summary Metric Cards -->
+<StatCardRow Class="mb-4">
+    <StatCard Value="@_zones.Count.ToString("N0")"
+              Label="Operational Zones"
+              Context="Sub-regional clusters defined" />
+    <StatCard Value="@_zones.Sum(z => z.TownCount).ToString("N0")"
+              Label="Demarcated Towns Mapped"
+              TrendColor="Color.Info"
+              Context="Assigned to active zones" />
+    <StatCard Value="@_unzonedDemarcations.Count.ToString("N0")"
+              Label="Unzoned Towns Pending"
+              TrendColor="@(_unzonedDemarcations.Count > 0 ? Color.Warning : Color.Success)"
+              Context="Awaiting cluster assignment" />
+    <StatCard Value="@_zones.Count(z => !string.IsNullOrEmpty(z.DefaultOfficerUserId)).ToString("N0")"
+              Label="Active Primary CLOs"
+              TrendColor="Color.Success"
+              Context="Assigned default relationship officers" />
+</StatCardRow>
+
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" Class="mb-6">
+    <!-- TAB 1: Zones Registry -->
+    <MudTabPanel Text="Territory Zones" Icon="@Icons.Material.Filled.Map">
+        <div class="pa-4">
+            <!-- Filter Bar -->
+            <FilterBar SearchPlaceholder="Search by zone code, name, officer..."
+                       @bind-SearchText="_searchString"
+                       OnSearch="HandleFilterChanged"
+                       OnClear="ClearFilters">
+                <FilterContent>
+                    <MudSelect T="string"
+                               Label="Region"
+                               @bind-Value="_regionFilter"
+                               @bind-Value:after="HandleFilterChanged"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true">
+                        <MudSelectItem Value="@("All")">All Regional Offices</MudSelectItem>
+                        <MudSelectItem Value="@("GAUTENG_SOUTH")">Gauteng South</MudSelectItem>
+                        <MudSelectItem Value="@("GAUTENG_NORTH")">Gauteng North</MudSelectItem>
+                        <MudSelectItem Value="@("KZN")">KwaZulu-Natal</MudSelectItem>
+                        <MudSelectItem Value="@("WESTERN_CAPE")">Western Cape</MudSelectItem>
+                        <MudSelectItem Value="@("EASTERN_CAPE")">Eastern Cape</MudSelectItem>
+                        <MudSelectItem Value="@("MPUMALANGA_LIMPOPO")">Mpumalanga &amp; Limpopo</MudSelectItem>
+                        <MudSelectItem Value="@("FREE_STATE_NC")">Free State &amp; NC</MudSelectItem>
+                    </MudSelect>
+                </FilterContent>
+            </FilterBar>
+
+            <!-- Zones Data Grid -->
+            <DataGridShell TItem="TerritoryZoneDto"
+                           Items="@FilteredZones"
+                           Loading="@_isLoading"
+                           TotalCount="@FilteredZones.Count()">
+                <ChildContent>
+                    <MudTable Items="@FilteredZones"
+                              Dense="true"
+                              Hover="true"
+                              Elevation="0">
+                        <HeaderContent>
+                            <MudTh><MudTableSortLabel SortBy="@(new Func<TerritoryZoneDto, object>(x => x.ZoneCode))">Zone Code</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="@(new Func<TerritoryZoneDto, object>(x => x.ZoneName))">Zone Name</MudTableSortLabel></MudTh>
+                            <MudTh>Regional Office</MudTh>
+                            <MudTh Style="text-align: center;">Towns Mapped</MudTh>
+                            <MudTh>Default Primary CLO</MudTh>
+                            <MudTh Style="text-align: center;">Estimated Employers</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh Style="text-align: right;">Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Zone Code">
+                                <span class="font-mono fw-bold">@context.ZoneCode</span>
+                            </MudTd>
+                            <MudTd DataLabel="Zone Name">
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold">@context.ZoneName</span>
+                                    <span class="mud-text-secondary text-caption">@context.Description</span>
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="Regional Office">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Primary">@context.RegionCode</MudChip>
+                            </MudTd>
+                            <MudTd Style="text-align: center;" DataLabel="Towns Mapped">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">
+                                    @context.TownCount Towns
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Default Primary CLO">
+                                @if (!string.IsNullOrEmpty(context.DefaultOfficerName))
+                                {
+                                    <div class="d-flex align-center gap-1">
+                                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Color="Color.Success" />
+                                        <span>@context.DefaultOfficerName</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="mud-text-secondary text-caption italic">Unassigned</span>
+                                }
+                            </MudTd>
+                            <MudTd Style="text-align: center;" DataLabel="Employers">
+                                <MudText Typo="Typo.body2">@context.ActiveEmployersCount</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Status">
+                                <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Default)">
+                                    @(context.IsActive ? "Active" : "Archived")
+                                </MudChip>
+                            </MudTd>
+                            <MudTd Style="text-align: right;" DataLabel="Actions">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Size="Size.Small"
+                                               Color="Color.Primary"
+                                               OnClick="@(() => OpenEditZoneDialog(context.Id))"
+                                               aria-label="Edit Zone" />
+                                <MudIconButton Icon="@Icons.Material.Filled.LocationCity"
+                                               Size="Size.Small"
+                                               Color="Color.Secondary"
+                                               OnClick="@(() => OpenManageTownsDialog(context.Id))"
+                                               aria-label="Manage Towns" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </ChildContent>
+            </DataGridShell>
+        </div>
+    </MudTabPanel>
+
+    <!-- TAB 2: Unzoned Towns Queue -->
+    <MudTabPanel Text="Unzoned Towns" Icon="@Icons.Material.Filled.LocationOff" BadgeData="@_unzonedDemarcations.Count" BadgeColor="Color.Warning">
+        <div class="pa-4">
+            <MudAlert Severity="Severity.Info" Class="mb-4" Dense="true">
+                The following municipal town demarcations are currently not assigned to any sub-regional operational zone. Link them to a zone to enable automatic relationship officer dispatching.
+            </MudAlert>
+
+            <MudTable Items="@_unzonedDemarcations" Dense="true" Hover="true" Elevation="1">
+                <HeaderContent>
+                    <MudTh>Town Name</MudTh>
+                    <MudTh>Region Code</MudTh>
+                    <MudTh>Region Name</MudTh>
+                    <MudTh>Province</MudTh>
+                    <MudTh>Gazette Reference</MudTh>
+                    <MudTh Style="text-align: right;">Assign To Zone</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Town Name"><span class="fw-bold">@context.TownName</span></MudTd>
+                    <MudTd DataLabel="Region Code"><MudChip T="string" Size="Size.Small" Color="Color.Primary">@context.RegionCode</MudChip></MudTd>
+                    <MudTd DataLabel="Region Name">@context.RegionName</MudTd>
+                    <MudTd DataLabel="Province">@context.ProvinceCode</MudTd>
+                    <MudTd DataLabel="Gazette">@context.BoundaryGazetteReference</MudTd>
+                    <MudTd Style="text-align: right;" DataLabel="Action">
+                        <MudButton Variant="Variant.Outlined"
+                                   Size="Size.Small"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.AddLocation"
+                                   OnClick="@(() => QuickAssignTownToZone(context.Id, context.RegionCode))">
+                            Link Zone
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </div>
+    </MudTabPanel>
+</MudTabs>
+
+<!-- Dialog: Create / Edit Zone -->
+<MudDialog @bind-Visible="_showZoneDialog" Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true })">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Map" Class="mr-2" />
+            @(_editingZone.Id == 0 ? "Create New Sub-Regional Zone" : $"Edit Zone: {_editingZone.ZoneCode}")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <div class="d-flex flex-column gap-3 pa-2">
+            <div class="d-flex gap-3">
+                <MudTextField @bind-Value="_editingZone.ZoneCode"
+                              Label="Zone Machine Code"
+                              Placeholder="e.g. ZONE_GP_EAST_RAND"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Class="flex-1" />
+                <MudTextField @bind-Value="_editingZone.ZoneName"
+                              Label="Zone Display Name"
+                              Placeholder="e.g. East Rand Heavy Engineering Zone"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Class="flex-1" />
+            </div>
+
+            <div class="d-flex gap-3">
+                <MudSelect T="string"
+                           Label="Regional Office"
+                           @bind-Value="_editingZone.RegionCode"
+                           @bind-Value:after="OnDialogRegionChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Class="flex-1">
+                    <MudSelectItem Value="@("GAUTENG_SOUTH")">Gauteng South Regional Office</MudSelectItem>
+                    <MudSelectItem Value="@("GAUTENG_NORTH")">Gauteng North Regional Office</MudSelectItem>
+                    <MudSelectItem Value="@("KZN")">KwaZulu-Natal Regional Office</MudSelectItem>
+                    <MudSelectItem Value="@("WESTERN_CAPE")">Western Cape Regional Office</MudSelectItem>
+                    <MudSelectItem Value="@("EASTERN_CAPE")">Eastern Cape Regional Office</MudSelectItem>
+                    <MudSelectItem Value="@("MPUMALANGA_LIMPOPO")">Mpumalanga &amp; Limpopo Regional Office</MudSelectItem>
+                    <MudSelectItem Value="@("FREE_STATE_NC")">Free State &amp; Northern Cape Regional Office</MudSelectItem>
+                </MudSelect>
+
+                <MudSelect T="string"
+                           Label="Province"
+                           @bind-Value="_editingZone.ProvinceCode"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Class="flex-1">
+                    <MudSelectItem Value="@("GP")">Gauteng (GP)</MudSelectItem>
+                    <MudSelectItem Value="@("KZN")">KwaZulu-Natal (KZN)</MudSelectItem>
+                    <MudSelectItem Value="@("WC")">Western Cape (WC)</MudSelectItem>
+                    <MudSelectItem Value="@("EC")">Eastern Cape (EC)</MudSelectItem>
+                    <MudSelectItem Value="@("MP")">Mpumalanga (MP)</MudSelectItem>
+                    <MudSelectItem Value="@("LP")">Limpopo (LP)</MudSelectItem>
+                    <MudSelectItem Value="@("FS")">Free State (FS)</MudSelectItem>
+                    <MudSelectItem Value="@("NC")">Northern Cape (NC)</MudSelectItem>
+                    <MudSelectItem Value="@("NW")">North West (NW)</MudSelectItem>
+                </MudSelect>
+            </div>
+
+            <MudSelect T="string"
+                       Label="Default Primary Relationship Officer (CLO)"
+                       @bind-Value="_editingZone.DefaultOfficerUserId"
+                       Variant="Variant.Outlined"
+                       Clearable="true"
+                       HelperText="Designated officer automatically allocated to newly registered employers in this zone">
+                @foreach (var officer in _eligibleOfficers)
+                {
+                    <MudSelectItem Value="@officer.UserId">
+                        @officer.StaffName (@officer.UserId) • @officer.EmploymentRole
+                    </MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudTextField @bind-Value="_editingZone.Description"
+                          Label="Operational Description &amp; Sector Focus"
+                          Placeholder="e.g. Alrode, Benoni, Boksburg foundry and heavy metal manufacturing cluster."
+                          Variant="Variant.Outlined"
+                          Lines="3" />
+
+            <MudSwitch @bind-Value="_editingZone.IsActive"
+                       Color="Color.Primary"
+                       Label="Zone is Active for Automated Allocation" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Cancel"
+                   OnClick="@(() => _showZoneDialog = false)">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="SaveZoneAsync"
+                   Disabled="@_isSaving">
+            @(_isSaving ? "Saving..." : "Save Zone")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- Dialog: Manage Towns for Zone -->
+<MudDialog @bind-Visible="_showTownsDialog" Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true })">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.LocationCity" Class="mr-2" />
+            Manage Towns for @_selectedZoneName
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <div class="pa-2">
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                Select the municipal towns to associate with this operational zone. Towns already belonging to another zone will be reassigned.
+            </MudText>
+
+            <div class="d-flex flex-wrap gap-2 mb-4" style="max-height: 350px; overflow-y: auto;">
+                @foreach (var town in _allRegionalDemarcations)
+                {
+                    var isSelected = _selectedTownIds.Contains(town.Id);
+                    <MudChip T="string"
+                             Color="@(isSelected ? Color.Primary : Color.Default)"
+                             Variant="@(isSelected ? Variant.Filled : Variant.Outlined)"
+                             OnClick="@(() => ToggleTownSelection(town.Id))"
+                             Class="cursor-pointer">
+                        @town.TownName
+                        @if (town.ZoneId.HasValue && town.ZoneId != _selectedZoneId)
+                        {
+                            <span class="text-caption ml-1">(Other: @town.ZoneCode)</span>
+                        }
+                    </MudChip>
+                }
+            </div>
+
+            <MudText Typo="Typo.caption" Color="Color.Primary">
+                Selected Towns: @_selectedTownIds.Count
+            </MudText>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Cancel"
+                   OnClick="@(() => _showTownsDialog = false)">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="SaveTownAssignmentsAsync"
+                   Disabled="@_isSaving">
+            @(_isSaving ? "Saving..." : "Save Town Assignments")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Coordination", href: "/coordination/dispatch"),
+        new BreadcrumbItem("Sub-Regional Zones", href: "/coordination/zones", disabled: true)
+    };
+
+    private bool _isLoading = true;
+    private bool _isSaving = false;
+    private string _searchString = "";
+    private string _regionFilter = "All";
+
+    private List<TerritoryZoneDto> _zones = new();
+    private List<TerritoryDemarcation> _unzonedDemarcations = new();
+    private List<StaffCapability> _eligibleOfficers = new();
+
+    // Dialog state: Zone Edit
+    private bool _showZoneDialog = false;
+    private TerritoryZone _editingZone = new();
+
+    // Dialog state: Manage Towns
+    private bool _showTownsDialog = false;
+    private int _selectedZoneId = 0;
+    private string _selectedZoneName = "";
+    private List<TerritoryDemarcation> _allRegionalDemarcations = new();
+    private HashSet<int> _selectedTownIds = new();
+
+    private IEnumerable<TerritoryZoneDto> FilteredZones => _zones.Where(z =>
+    {
+        if (_regionFilter != "All" && z.RegionCode != _regionFilter)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        var clean = _searchString.Trim().ToLower();
+        return z.ZoneCode.ToLower().Contains(clean) ||
+               z.ZoneName.ToLower().Contains(clean) ||
+               (z.DefaultOfficerName != null && z.DefaultOfficerName.ToLower().Contains(clean));
+    });
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadZonesAsync();
+    }
+
+    private async Task LoadZonesAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _zones = await ZoneService.GetAllZonesAsync();
+            _unzonedDemarcations = await ZoneService.GetUnzonedDemarcationsAsync();
+            _eligibleOfficers = await DispatchService.GetStaffCapabilitiesAsync();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void HandleFilterChanged() => StateHasChanged();
+
+    private void ClearFilters()
+    {
+        _searchString = "";
+        _regionFilter = "All";
+    }
+
+    private void OpenCreateZoneDialog()
+    {
+        _editingZone = new TerritoryZone
+        {
+            RegionCode = "GAUTENG_SOUTH",
+            RegionName = "Gauteng South Regional Office",
+            ProvinceCode = "GP",
+            IsActive = true
+        };
+        UpdateEligibleOfficersForRegion("GAUTENG_SOUTH");
+        _showZoneDialog = true;
+    }
+
+    private async Task OpenEditZoneDialog(int zoneId)
+    {
+        var zone = await ZoneService.GetZoneByIdAsync(zoneId);
+        if (zone == null)
+        {
+            Snackbar.Add("Zone not found.", Severity.Error);
+            return;
+        }
+
+        _editingZone = new TerritoryZone
+        {
+            Id = zone.Id,
+            ZoneCode = zone.ZoneCode,
+            ZoneName = zone.ZoneName,
+            RegionCode = zone.RegionCode,
+            RegionName = zone.RegionName,
+            ProvinceCode = zone.ProvinceCode,
+            DefaultOfficerUserId = zone.DefaultOfficerUserId,
+            DefaultOfficerName = zone.DefaultOfficerName,
+            DefaultOfficerEmail = zone.DefaultOfficerEmail,
+            Description = zone.Description,
+            IsActive = zone.IsActive
+        };
+
+        UpdateEligibleOfficersForRegion(zone.RegionCode);
+        _showZoneDialog = true;
+    }
+
+    private void OnDialogRegionChanged()
+    {
+        _editingZone.RegionName = _editingZone.RegionCode switch
+        {
+            "GAUTENG_SOUTH" => "Gauteng South Regional Office",
+            "GAUTENG_NORTH" => "Gauteng North Regional Office",
+            "KZN" => "KwaZulu-Natal Regional Office",
+            "WESTERN_CAPE" => "Western Cape Regional Office",
+            "EASTERN_CAPE" => "Eastern Cape Regional Office",
+            "MPUMALANGA_LIMPOPO" => "Mpumalanga & Limpopo Regional Office",
+            "FREE_STATE_NC" => "Free State & Northern Cape Regional Office",
+            _ => "Regional Office"
+        };
+        UpdateEligibleOfficersForRegion(_editingZone.RegionCode);
+    }
+
+    private void UpdateEligibleOfficersForRegion(string regionCode)
+    {
+        // Filter eligible officers to those stationed in that region or National
+        // (kept loaded in _eligibleOfficers)
+    }
+
+    private async Task SaveZoneAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_editingZone.ZoneCode) || string.IsNullOrWhiteSpace(_editingZone.ZoneName))
+        {
+            Snackbar.Add("Please specify both a Zone Code and Zone Name.", Severity.Warning);
+            return;
+        }
+
+        // Resolve officer display name
+        if (!string.IsNullOrEmpty(_editingZone.DefaultOfficerUserId))
+        {
+            var officer = _eligibleOfficers.FirstOrDefault(o => o.UserId == _editingZone.DefaultOfficerUserId);
+            if (officer != null)
+            {
+                _editingZone.DefaultOfficerName = officer.StaffName;
+                _editingZone.DefaultOfficerEmail = officer.Email;
+            }
+        }
+
+        _isSaving = true;
+        try
+        {
+            await ZoneService.SaveZoneAsync(_editingZone, "CRM_COORDINATOR");
+            Snackbar.Add($"Zone '{_editingZone.ZoneName}' saved successfully.", Severity.Success);
+            _showZoneDialog = false;
+            await LoadZonesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving zone: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task OpenManageTownsDialog(int zoneId)
+    {
+        var zone = await ZoneService.GetZoneByIdAsync(zoneId);
+        if (zone == null) return;
+
+        _selectedZoneId = zoneId;
+        _selectedZoneName = zone.ZoneName;
+
+        // Fetch all demarcations for this region
+        var allDemarcations = await DispatchService.GetAllTerritoryDemarcationsAsync();
+        _allRegionalDemarcations = allDemarcations
+            .Where(d => d.RegionCode == zone.RegionCode)
+            .OrderBy(d => d.TownName)
+            .ToList();
+
+        var existingTowns = await ZoneService.GetDemarcationsForZoneAsync(zoneId);
+        _selectedTownIds = existingTowns.Select(t => t.Id).ToHashSet();
+
+        _showTownsDialog = true;
+    }
+
+    private void ToggleTownSelection(int townId)
+    {
+        if (_selectedTownIds.Contains(townId))
+            _selectedTownIds.Remove(townId);
+        else
+            _selectedTownIds.Add(townId);
+    }
+
+    private async Task SaveTownAssignmentsAsync()
+    {
+        _isSaving = true;
+        try
+        {
+            await ZoneService.AssignTownsToZoneAsync(_selectedZoneId, _selectedTownIds.ToList(), "CRM_COORDINATOR");
+            Snackbar.Add($"Updated town cluster mappings for zone.", Severity.Success);
+            _showTownsDialog = false;
+            await LoadZonesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error assigning towns: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task QuickAssignTownToZone(int demarcationId, string regionCode)
+    {
+        var regionalZones = _zones.Where(z => z.RegionCode == regionCode).ToList();
+        if (!regionalZones.Any())
+        {
+            Snackbar.Add($"No active zones found for region {regionCode}. Please create a zone first.", Severity.Warning);
+            return;
+        }
+
+        // Open manage towns for first regional zone
+        await OpenManageTownsDialog(regionalZones.First().Id);
+        _selectedTownIds.Add(demarcationId);
+    }
+}

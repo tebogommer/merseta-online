@@ -616,7 +616,7 @@ The agent may only declare testing phase complete when:
 2. **Contracting via MoA**: The legal contracting instrument for Discretionary Grants is the **Memorandum of Agreement (MoA)**, never generic "Contracts".
 3. **Skills Development Providers (SDP)**: Refer to accredited training institutions as **Skills Development Providers (SDPs)** per QCTO statutory guidelines.
 4. **Artisan Mentorship Ratios**: Enforce NAMB / QCTO artisan mentor-to-apprentice ratios via `IMentorRatioPolicyEngine`, respecting trade-specific caps.
-5. **Governance & PFMA Controls**: Adhere to Delegation of Financial Authority (DOFA), Segregation of Duties (Maker-Checker), and non-repudiation audit logging for all approval gates.
+5. **Governance & PFMA Controls**: Adhere to financial approval delegation, Segregation of Duties (Maker-Checker), and non-repudiation audit logging for all approval gates.
 
 ---
 
@@ -705,6 +705,30 @@ Cite the clause identifier. If the standard does not cover what is needed, stop 
    - Live 5-tier cascading NAMB mentor-to-apprentice ratio policy engine (`IMentorRatioPolicyEngine`).
    - Mandatory Employer Contact Person linkage for all site visits and inspections.
    - 360-degree relational tabs (Placed Apprentices, Partnering SDPs, Site Audits, Tool Inventory, Mentors, Evidence Vault, Workflow Timeline).
+
+---
+
+### 🛡️ Test DbContext Factory & In-Memory Entity Reload Invariant
+- In integration and unit tests using `TestDbContextFactory`, application services execute mutations within their own scoped DbContext instances (`using var db = await _contextFactory.CreateDbContextAsync();`).
+- When asserting post-mutation database state in tests, NEVER query entities from the test setup's original `db` instance (even with `.AsNoTracking()`), because the EF Core InMemory provider's local change tracker identity map can retain pre-mutation entity snapshots.
+- Always retrieve post-mutation assertions using a fresh context: `using var verifyDb = (NsdmsDbContext)factory.CreateDbContext(); await verifyDb.Entity.FindAsync(...)`.
+
+---
+
+### 🛡️ Unmapped Entity Convenience Properties Invariant
+- When adding backward-compatibility aliases or computed properties to domain entities in `Nsdms.Domain/Entities/`, decorate them with `[NotMapped]` AND explicitly configure `entity.Ignore(e => e.PropertyName)` in `NsdmsDbContext.cs` inside Fluent API.
+- Fluent API overrides CLR attributes. Calling `entity.Property(...)` on an unmapped property causes EF Core to query non-existent columns, leading to SQL Server runtime errors (`Invalid column name '...'`).
+
+---
+
+### 🛡️ Dynamic Configuration & Zero-Hardcoding Invariant
+1. **Zero Hardcoded Business Rules**:
+   - Never hardcode statutory SLAs, approval validity durations, financial split percentages, mentor ratios, test attempt limits, file upload caps, or storage paths in service classes or UI components.
+2. **Standard Resolution Pattern**:
+   - Always inject `ISystemConfigurationService` and resolve parameters with `await _configService.GetValueAsync<T>("Category:KeyName", fallbackValue)`.
+   - Provide statutory constants strictly as fallback arguments.
+3. **Startup Seeding Requirement**:
+   - Any newly introduced configuration parameter MUST be added to `SystemConfigurationService.SeedDefaultConfigsAsync()` with its category, data type, description, and default value so it appears automatically in the System Settings administration portal.
 
 ---
 

@@ -192,10 +192,10 @@ public class NavigationMenuService : INavigationMenuService
                 PersonName = "Prof. K. Naidoo",
                 Email = "k.naidoo@vut-accredited.ac.za",
                 Initials = "KN",
-                StatutoryRole = "Accredited SDP Campus Director",
+                StatutoryRole = "Accredited SDP Site Director",
                 RoleBadge = "SDP PRINCIPAL",
-                OrganisationName = "Vaal Skills & Technology Campus",
-                Subtitle = "Accredited occupational qualifications, learner enrolments & campus management",
+                OrganisationName = "Vaal Skills & Technology Centre",
+                Subtitle = "Accredited occupational qualifications, learner enrolments & delivery site management",
                 Category = "Enterprise Governance",
                 Icon = "School",
                 ThemeColor = "Info",
@@ -238,6 +238,25 @@ public class NavigationMenuService : INavigationMenuService
                 Icon = "Security",
                 ThemeColor = "Primary",
                 Roles = new() { "Compliance" },
+                IsWorkplaceApprovalPersona = false
+            },
+            new()
+            {
+                PersonaKey = "StandardUser",
+                PersonaTitle = "Standard Applicant / User",
+                ShortLabel = "Standard User (Applicant)",
+                CompactLabel = "User (Applicant)",
+                PersonName = "Stakeholder Applicant",
+                Email = "user.applicant@merseta.org.za",
+                Initials = "UA",
+                StatutoryRole = "Self-Registered Stakeholder Applicant",
+                RoleBadge = "USER / APPLICANT",
+                OrganisationName = "Unassigned Organisation",
+                Subtitle = "Applies for statutory stakeholder roles (SDF, SDP Contact, Organisation Contact, Assessor, Moderator)",
+                Category = "Stakeholder Registration",
+                Icon = "Person",
+                ThemeColor = "Secondary",
+                Roles = new() { "User" },
                 IsWorkplaceApprovalPersona = false
             }
         };
@@ -765,7 +784,9 @@ public class NavigationMenuService : INavigationMenuService
             new() { Id = "act-sars-recon", Title = "Run SARS Levy Reconciliation Audit", Href = "finance/levy-audits", Icon = "Calculate", Category = "Quick Actions", Description = "Audit SARS levy monthly file against DHET distribution", ItemType = "QuickAction" },
             new() { Id = "act-inter-seta", Title = "Initiate Inter-SETA Transfer", Href = "inter-seta/transfer-request", Icon = "SwapHoriz", Category = "Quick Actions", Description = "Transfer organisation across SETAs due to business scope shift", ItemType = "QuickAction" },
             new() { Id = "act-banking-details", Title = "Submit / Verify Banking Details", Href = "finance/banking-details", Icon = "AccountBalance", Category = "Quick Actions", Description = "Upload verified bank confirmation letter for GP vendor sync", ItemType = "QuickAction" },
-            new() { Id = "act-verify-doc", Title = "Verify Document Authenticity", Href = "verify", Icon = "VerifiedUser", Category = "Quick Actions", Description = "Verify cryptographic certificate or MoA digital security seal", ItemType = "QuickAction" }
+            new() { Id = "act-verify-doc", Title = "Verify Document Authenticity", Href = "verify", Icon = "VerifiedUser", Category = "Quick Actions", Description = "Verify cryptographic certificate or MoA digital security seal", ItemType = "QuickAction" },
+            new() { Id = "act-field-dispatch", Title = "Dispatch Field Verification (CLC)", Href = "coordination/dispatch", Icon = "AltRoute", Category = "Quick Actions", Description = "Schedule and dispatch certified officer for workplace or monitoring audit", ItemType = "QuickAction" },
+            new() { Id = "act-portfolio-handoff", Title = "Initiate Portfolio Handoff", Href = "coordination/portfolios", Icon = "FolderShared", Category = "Quick Actions", Description = "Reassign organisation portfolio accounts and open tasks to successor officer", ItemType = "QuickAction" }
         };
     }
 
@@ -779,6 +800,20 @@ public class NavigationMenuService : INavigationMenuService
         return new List<NavItemDto>
         {
             // 1. Overview & tasks
+            new()
+            {
+                Id = "nav-home-applicant",
+                Title = "Applicant portal",
+                Href = "",
+                ExactMatch = true,
+                Icon = "Home",
+                Category = "Overview & tasks",
+                Description = "Stakeholder registration hub and statutory application status",
+                RequiredRoles = new() { "SuperAdmin", "Admin", "User" },
+                PersonaTags = new() { "User", "All" },
+                DisplayOrder = 0,
+                Keywords = new() { "home", "portal", "applicant", "stakeholder", "apply" }
+            },
             new()
             {
                 Id = "nav-tasks",
@@ -823,6 +858,21 @@ public class NavigationMenuService : INavigationMenuService
                 DisplayOrder = 3,
                 Keywords = new() { "workflows", "approval process", "lifecycles", "states", "designer", "studio", "sla" }
             },
+            new()
+            {
+                Id = "nav-coordinator-dispatch",
+                Title = "Field dispatch hub (CLC)",
+                Href = "coordination/dispatch",
+                Icon = "AltRoute",
+                Category = "Overview & tasks",
+                Description = "Client Liaison Coordinator (CLC) field dispatch, officer workload balancing, and capability scheduling",
+                RequiredModule = AppPermissions.ModuleOrganisations,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "CLO", "Executive" },
+                PersonaTags = new() { "Admin", "CLO", "Executive", "All" },
+                DisplayOrder = 4,
+                Keywords = new() { "dispatch", "clc", "coordinator", "field visit", "scheduling", "workload", "capability", "officer" }
+            },
 
             // 2. Registries & stakeholders
             new()
@@ -839,6 +889,36 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "Admin", "SDF", "CLO", "Finance" },
                 DisplayOrder = 1,
                 Keywords = new() { "employers", "organisations", "companies", "sdl", "chamber", "levy" }
+            },
+            new()
+            {
+                Id = "nav-portfolios",
+                Title = "Officer portfolios & handoffs",
+                Href = "coordination/portfolios",
+                Icon = "FolderShared",
+                Category = "Registries & stakeholders",
+                Description = "Cross-regional employer account assignments, temporal territory demarcation, and successor handoff audit trail",
+                RequiredModule = AppPermissions.ModuleOrganisations,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "CLO", "Executive" },
+                PersonaTags = new() { "Admin", "CLO", "Executive", "All" },
+                DisplayOrder = 2,
+                Keywords = new() { "portfolios", "handoff", "relationship officer", "successor", "territory", "demarcation", "cross-regional" }
+            },
+            new()
+            {
+                Id = "nav-zones",
+                Title = "Sub-regional zones",
+                Href = "coordination/zones",
+                Icon = "Map",
+                Category = "Registries & stakeholders",
+                Description = "Sub-regional territory zones, town cluster assignments, and default primary relationship officer governance",
+                RequiredModule = AppPermissions.ModuleOrganisations,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "CLO", "Executive" },
+                PersonaTags = new() { "Admin", "CLO", "Executive", "All" },
+                DisplayOrder = 3,
+                Keywords = new() { "zones", "sub-regional", "towns", "demarcation", "clusters", "territory", "clo" }
             },
             new()
             {
@@ -862,7 +942,7 @@ public class NavigationMenuService : INavigationMenuService
                 Href = "sdp",
                 Icon = "School",
                 Category = "Registries & stakeholders",
-                Description = "Accredited training providers, campuses, qualifications scope, and audits",
+                Description = "Accredited training providers, delivery sites, qualifications scope, and audits",
                 RequiredModule = AppPermissions.ModuleOrganisations,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "SDP", "CLO", "Assessor" },
@@ -914,6 +994,45 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "Admin", "Assessor", "SDP" },
                 DisplayOrder = 5,
                 Keywords = new() { "qcd", "curriculum", "qcto", "qualifications", "scoping", "modules" }
+            },
+            new()
+            {
+                Id = "nav-user-apply-sdf",
+                Title = "Apply to be an SDF",
+                Href = "employers/sdf/create",
+                Icon = "Work",
+                Category = "Registries & stakeholders",
+                Description = "Appoint or register as a Skills Development Facilitator for an employer",
+                RequiredRoles = new() { "SuperAdmin", "Admin", "User", "SDF" },
+                PersonaTags = new() { "User", "SDF", "Admin" },
+                DisplayOrder = 6,
+                Keywords = new() { "apply sdf", "register sdf", "facilitator appointment" }
+            },
+            new()
+            {
+                Id = "nav-user-apply-sdp",
+                Title = "Apply to be SDP contact",
+                Href = "providers/apply-accreditation",
+                Icon = "School",
+                Category = "Registries & stakeholders",
+                Description = "Register as a Skills Development Provider contact or apply for SDP accreditation",
+                RequiredRoles = new() { "SuperAdmin", "Admin", "User", "SDP" },
+                PersonaTags = new() { "User", "SDP", "Admin" },
+                DisplayOrder = 7,
+                Keywords = new() { "apply sdp", "training provider", "sdp contact", "accreditation" }
+            },
+            new()
+            {
+                Id = "nav-user-apply-contact",
+                Title = "Apply to be organisation contact",
+                Href = "employers/sdf/create?type=contact",
+                Icon = "Business",
+                Category = "Registries & stakeholders",
+                Description = "Register as an official contact person linked to an employer organisation",
+                RequiredRoles = new() { "SuperAdmin", "Admin", "User" },
+                PersonaTags = new() { "User", "Admin" },
+                DisplayOrder = 8,
+                Keywords = new() { "organisation contact", "employer contact", "register contact" }
             },
 
             // 3. Grants, levies & finance
@@ -1059,13 +1178,13 @@ public class NavigationMenuService : INavigationMenuService
                 Href = "finance/dg-claims",
                 Icon = "ReceiptLong",
                 Category = "Grants, levies & finance",
-                Description = "Discretionary Grant tranche claims, multi-tier DOFA approval, and ERP payment batches",
+                Description = "Discretionary Grant tranche claims, multi-tier financial approval, and ERP payment batches",
                 RequiredModule = AppPermissions.ModuleFinance,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Finance", "CLO", "Executive" },
                 PersonaTags = new() { "Admin", "Finance", "CLO", "Executive" },
                 DisplayOrder = 8,
-                Keywords = new() { "claims", "invoices", "tranches", "dofa", "cfo", "vouchers", "erp", "sage", "gp" }
+                Keywords = new() { "claims", "invoices", "tranches", "financial approval", "cfo", "vouchers", "erp", "sage", "gp" }
             },
             new()
             {
@@ -1080,7 +1199,7 @@ public class NavigationMenuService : INavigationMenuService
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Finance", "SDF" },
                 PersonaTags = new() { "All", "Admin", "Finance", "SDF" },
                 DisplayOrder = 9,
-                Keywords = new() { "claim wizard", "tranche claim", "payment voucher", "dofa", "invoice" }
+                Keywords = new() { "claim wizard", "tranche claim", "payment voucher", "financial approval", "invoice" }
             },
             new()
             {
@@ -1281,6 +1400,36 @@ public class NavigationMenuService : INavigationMenuService
             },
             new()
             {
+                Id = "nav-tradetest-cla-queue",
+                Title = "CLA trade test review queue",
+                Href = "tradetests/cla-queue",
+                Icon = "AssignmentTurnedIn",
+                Category = "Learner & artisan development",
+                Description = "Regional Client Liaison Officer review queue for recommending or resubmitting artisan trade test applications",
+                RequiredModule = AppPermissions.ModuleLearners,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "CLO" },
+                PersonaTags = new() { "All", "Admin", "CLO" },
+                DisplayOrder = 4,
+                Keywords = new() { "cla review", "trade test recommendations", "artisan intake" }
+            },
+            new()
+            {
+                Id = "nav-tradetest-qa-queue",
+                Title = "QA trade test approval queue",
+                Href = "tradetests/qa-queue",
+                Icon = "Verified",
+                Category = "Learner & artisan development",
+                Description = "Regional Quality Assurance adjudication queue for stamping signed application forms and serial allocation",
+                RequiredModule = AppPermissions.ModuleLearners,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor" },
+                PersonaTags = new() { "All", "Admin", "Assessor" },
+                DisplayOrder = 5,
+                Keywords = new() { "qa approval", "trade test serials", "artisan stamping", "red seal" }
+            },
+            new()
+            {
                 Id = "nav-namb-queue",
                 Title = "NAMB staging & serials",
                 Href = "artisans/namb-queue",
@@ -1308,6 +1457,66 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "Admin", "Assessor", "SDP" },
                 DisplayOrder = 3,
                 Keywords = new() { "assessments", "sor", "statement of results", "moderation", "grades" }
+            },
+            new()
+            {
+                Id = "nav-assessment-capture",
+                Title = "Capture assessments",
+                Href = "assessments/capture",
+                Icon = "AddChart",
+                Category = "Learner & artisan development",
+                Description = "Capture summative assessment results, evaluate credits, and commit to holding room",
+                RequiredModule = AppPermissions.ModuleLearners,
+                RequiredAction = AppPermissions.ActionCreate,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "SDP" },
+                PersonaTags = new() { "Admin", "Assessor", "SDP" },
+                DisplayOrder = 4,
+                Keywords = new() { "capture assessment", "intake", "etq-fm-005", "results capture" }
+            },
+            new()
+            {
+                Id = "nav-assessment-batching",
+                Title = "Assessment holding & batching",
+                Href = "assessments/batching",
+                Icon = "Layers",
+                Category = "Learner & artisan development",
+                Description = "Holding room inventory, sample size selection, and external moderation batching",
+                RequiredModule = AppPermissions.ModuleLearners,
+                RequiredAction = AppPermissions.ActionModerate,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "SDP" },
+                PersonaTags = new() { "Admin", "Assessor", "SDP" },
+                DisplayOrder = 5,
+                Keywords = new() { "holding room", "batching", "moderation batch", "sample size" }
+            },
+            new()
+            {
+                Id = "nav-qa-workbench",
+                Title = "QA moderation workbench",
+                Href = "assessments/qa-workbench",
+                Icon = "FactCheck",
+                Category = "Quality assurance & ETQA",
+                Description = "External QA site visit scheduling, stratified audit sample, and ETQ-TP-043 validation",
+                RequiredModule = AppPermissions.ModuleEtqa,
+                RequiredAction = AppPermissions.ActionModerate,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "CLO", "Compliance" },
+                PersonaTags = new() { "Admin", "Assessor", "CLO", "Compliance" },
+                DisplayOrder = 6,
+                Keywords = new() { "qa workbench", "external moderation", "etq-tp-043", "vacs", "remedial" }
+            },
+            new()
+            {
+                Id = "nav-cert-printing",
+                Title = "Certificate printing hub",
+                Href = "assessments/printing-hub",
+                Icon = "Print",
+                Category = "Quality assurance & ETQA",
+                Description = "Batch qualification certificate printing, transmittal letters, and distribution tracking",
+                RequiredModule = AppPermissions.ModuleEtqa,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "CLO" },
+                PersonaTags = new() { "Admin", "Assessor", "CLO" },
+                DisplayOrder = 7,
+                Keywords = new() { "certificates", "printing hub", "distribution letter", "etq-lt-012" }
             },
             new()
             {
@@ -1396,10 +1605,36 @@ public class NavigationMenuService : INavigationMenuService
                 Description = "Apply for initial assessor or moderator statutory registration",
                 RequiredModule = AppPermissions.ModuleEtqa,
                 RequiredAction = AppPermissions.ActionCreate,
-                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "SDP", "CLO" },
-                PersonaTags = new() { "Admin", "Assessor", "SDP" },
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "SDP", "CLO", "User" },
+                PersonaTags = new() { "Admin", "Assessor", "SDP", "User" },
                 DisplayOrder = 4,
                 Keywords = new() { "register assessor", "new moderator", "etqa application" }
+            },
+            new()
+            {
+                Id = "nav-user-apply-assessor",
+                Title = "Apply to be an assessor",
+                Href = "etqa/register?type=Assessor",
+                Icon = "FactCheck",
+                Category = "Quality assurance & ETQA",
+                Description = "Apply for initial statutory registration as an accredited constituent assessor",
+                RequiredRoles = new() { "SuperAdmin", "Admin", "User", "Assessor" },
+                PersonaTags = new() { "User", "Assessor", "Admin" },
+                DisplayOrder = 4,
+                Keywords = new() { "apply assessor", "register assessor", "etqa application" }
+            },
+            new()
+            {
+                Id = "nav-user-apply-moderator",
+                Title = "Apply to be a moderator",
+                Href = "etqa/register?type=Moderator",
+                Icon = "VerifiedUser",
+                Category = "Quality assurance & ETQA",
+                Description = "Apply for statutory registration as an accredited constituent moderator",
+                RequiredRoles = new() { "SuperAdmin", "Admin", "User", "Assessor" },
+                PersonaTags = new() { "User", "Assessor", "Admin" },
+                DisplayOrder = 5,
+                Keywords = new() { "apply moderator", "register moderator", "etqa moderation" }
             },
             new()
             {
@@ -1615,6 +1850,21 @@ public class NavigationMenuService : INavigationMenuService
             },
             new()
             {
+                Id = "nav-admin-users",
+                Title = "Identity & user accounts",
+                Href = "admin/users",
+                Icon = "ManageAccounts",
+                Category = "System administration",
+                Description = "ASP.NET Core Identity user accounts, demographic linking, credential security, and lockout controls",
+                RequiredModule = AppPermissions.ModuleSystem,
+                RequiredAction = AppPermissions.ActionManage,
+                RequiredRoles = new() { "SuperAdmin", "Admin" },
+                PersonaTags = new() { "Admin" },
+                DisplayOrder = 4,
+                Keywords = new() { "users", "accounts", "identity", "passwords", "lockout", "logins" }
+            },
+            new()
+            {
                 Id = "nav-admin-lookups",
                 Title = "Lookup tables",
                 Href = "admin/lookups",
@@ -1627,6 +1877,21 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "Admin" },
                 DisplayOrder = 4,
                 Keywords = new() { "lookups", "enums", "reference data", "setmis codes", "tables" }
+            },
+            new()
+            {
+                Id = "nav-admin-rules",
+                Title = "Business rules",
+                Href = "system-admin/rules",
+                Icon = "AccountTree",
+                Category = "System administration",
+                Description = "Dynamic business rule engine, statutory gatekeeper workflows, and interactive test sandbox",
+                RequiredModule = AppPermissions.ModuleSystem,
+                RequiredAction = AppPermissions.ActionManage,
+                RequiredRoles = new() { "SuperAdmin", "Admin" },
+                PersonaTags = new() { "Admin" },
+                DisplayOrder = 5,
+                Keywords = new() { "rules", "business rules", "rule engine", "stp", "gatekeepers", "financial approval", "sandbox", "validation" }
             },
             new()
             {

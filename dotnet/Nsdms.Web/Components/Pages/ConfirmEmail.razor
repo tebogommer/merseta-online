@@ -1,0 +1,120 @@
+@page "/confirm-email"
+@layout Layout.AuthLayout
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@using Nsdms.Application.Services
+@inject IIdentityService IdentityService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Confirm Email &amp; Activate Account - merSETA NSDMS</PageTitle>
+
+<div class="d-flex align-center justify-center pa-4" style="width: 100%; min-height: 80vh;">
+    <div style="width: 100%; max-width: 520px;">
+        <MudCard Elevation="4" Class="rounded-xl pa-6 bg-surface text-center" Style="border: 1px solid var(--mud-palette-lines-default);">
+            @if (_isLoading)
+            {
+                <div class="py-8">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" Class="mb-4" />
+                    <MudText Typo="Typo.h6" Class="fw-bold">Verifying Email Activation</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Validating your digital confirmation token with the merSETA Identity registry...
+                    </MudText>
+                </div>
+            }
+            else if (_isSuccess)
+            {
+                <div class="d-inline-flex align-center justify-center rounded-circle pa-3 mb-3" style="background-color: var(--mud-palette-success-hover);">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" Color="Color.Success" />
+                </div>
+                <MudText Typo="Typo.h6" Class="fw-bold mb-2">Email Confirmed &amp; Account Activated!</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                    Your email address has been verified. Your stakeholder account is now active and ready for use.
+                </MudText>
+                <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Class="mb-4 text-start">
+                    You have been provisioned with the standard <strong>User</strong> role. You may now sign in to view and submit applications to become an SDF, SDP Contact, Organisation Contact, Assessor, or Moderator.
+                </MudAlert>
+
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           FullWidth="true" 
+                           Href="/login"
+                           StartIcon="@Icons.Material.Filled.Login"
+                           Style="text-transform: none; font-weight: 600; height: 44px;">
+                    Proceed to Sign In
+                </MudButton>
+            }
+            else
+            {
+                <div class="d-inline-flex align-center justify-center rounded-circle pa-3 mb-3" style="background-color: var(--mud-palette-error-hover);">
+                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Large" Color="Color.Error" />
+                </div>
+                <MudText Typo="Typo.h6" Class="fw-bold mb-2">Activation Verification Failed</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                    @(_errorMessage ?? "The confirmation link is invalid, expired, or has already been used.")
+                </MudText>
+                <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4 text-start">
+                    If your account is already active, you can sign in directly. Otherwise, please contact support or self-register again.
+                </MudAlert>
+
+                <div class="d-flex flex-column gap-2">
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary" 
+                               FullWidth="true" 
+                               Href="/login"
+                               StartIcon="@Icons.Material.Filled.Login"
+                               Style="text-transform: none; font-weight: 600; height: 44px;">
+                        Return to Sign In
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Outlined" 
+                               Color="Color.Default" 
+                               FullWidth="true" 
+                               Href="/register"
+                               StartIcon="@Icons.Material.Filled.PersonAdd"
+                               Style="text-transform: none;">
+                        Self-Service Registration
+                    </MudButton>
+                </div>
+            }
+        </MudCard>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "userId")]
+    public int? UserId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "token")]
+    public string? Token { get; set; }
+
+    private bool _isLoading = true;
+    private bool _isSuccess = false;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!UserId.HasValue || string.IsNullOrWhiteSpace(Token))
+        {
+            _isLoading = false;
+            _isSuccess = false;
+            _errorMessage = "Missing required email confirmation parameters (User ID or Token).";
+            return;
+        }
+
+        try
+        {
+            var (succeeded, error) = await IdentityService.ConfirmEmailAsync(UserId.Value, Token);
+            _isSuccess = succeeded;
+            _errorMessage = error;
+        }
+        catch (Exception ex)
+        {
+            _isSuccess = false;
+            _errorMessage = $"An unexpected error occurred during confirmation: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

@@ -181,7 +181,7 @@ public class FinanceServiceTests
 
         var moa = new GrantMoa
         {
-            MoaNumber = "MOA-2026-DOFA-001",
+            MoaNumber = "MOA-2026-FIN-001",
             ContractStartDate = new DateTime(2026, 4, 1),
             ContractEndDate = new DateTime(2027, 3, 31),
             TotalContractValue = 2000000.00m
@@ -204,8 +204,8 @@ public class FinanceServiceTests
         var submitted = await financeService.SubmitTranchePaymentAsync(payment, "sdf@employer.co.za");
         Assert.Equal("Submitted", submitted.PaymentStatusCode);
 
-        // 3. Finance Manager approves -> should transition to PendingCfoApproval (DOFA threshold)
-        var finApproved = await financeService.ApproveTranchePaymentAsync(submitted.Id, "finmanager@merseta.org.za", "BATCH-2026-DOFA");
+        // 3. Finance Manager approves -> should transition to PendingCfoApproval (financial threshold)
+        var finApproved = await financeService.ApproveTranchePaymentAsync(submitted.Id, "finmanager@merseta.org.za", "BATCH-2026-FIN");
         Assert.True(finApproved);
 
         using (var ctx = (Nsdms.Infrastructure.Data.NsdmsDbContext)factory.CreateDbContext())
@@ -230,7 +230,7 @@ public class FinanceServiceTests
         }
 
         // 5. Process Payout succeeds
-        var paid = await financeService.ProcessTranchePayoutAsync(submitted.Id, "disbursements@merseta.org.za", "EFT-DOFA-SUCCESS");
+        var paid = await financeService.ProcessTranchePayoutAsync(submitted.Id, "disbursements@merseta.org.za", "EFT-FIN-SUCCESS");
         Assert.True(paid);
 
         using (var ctx = (Nsdms.Infrastructure.Data.NsdmsDbContext)factory.CreateDbContext())
