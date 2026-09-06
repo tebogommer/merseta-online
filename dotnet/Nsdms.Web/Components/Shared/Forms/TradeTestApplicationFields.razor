@@ -1,6 +1,7 @@
-﻿@namespace Nsdms.Web.Components.Shared.Forms
+@namespace Nsdms.Web.Components.Shared.Forms
 @using MudBlazor
 @using Nsdms.Domain.Entities
+@using Nsdms.Application.Common.Utilities
 
 @if (Section == "Route" || Section == "All")
 {
@@ -67,10 +68,128 @@
                                  ValueChanged="OnAttemptNumberChanged"
                                  Variant="Variant.Outlined"
                                  Min="1"
-                                 Max="5"
+                                 Max="3"
                                  Disabled="@IsReadOnly"
-                                 HelperText="1 for initial attempt; >1 for re-assessment" />
+                                 HelperText="Max 3 attempts permitted under Section 5" />
             </MudItem>
+
+            <!-- Statutory Employment Status (Signed 2023 Spec Section 4.2.3) -->
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
+                           Label="Employment status"
+                           Value="@EmploymentStatus"
+                           ValueChanged="OnEmploymentStatusChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly"
+                           HelperText="Statutory employment status of the candidate">
+                    <MudSelectItem Value="@("Employed")">Employed (Currently contracted at workplace)</MudSelectItem>
+                    <MudSelectItem Value="@("Unemployed")">Unemployed (Informal sector, retrenched, or prior experience)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+
+            @if (EmploymentStatus == "Unemployed")
+            {
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string?"
+                                  Label="Non-registered employer / informal workshop (if applicable)"
+                                  Value="@UnregisteredEmployerName"
+                                  ValueChanged="OnUnregisteredEmployerNameChanged"
+                                  Variant="Variant.Outlined"
+                                  Disabled="@IsReadOnly"
+                                  HelperText="Optional name of informal sector business where practical trade exposure was gained" />
+                </MudItem>
+            }
+
+            @if (ApplicationTypeCode == "Section28")
+            {
+                <!-- Section 28 ARPL Specific Fields (Section 5 & 6.2) -->
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string?"
+                                  Label="Trade specialisation"
+                                  Value="@Specialisation"
+                                  ValueChanged="OnSpecialisationChanged"
+                                  Variant="Variant.Outlined"
+                                  Disabled="@IsReadOnly"
+                                  HelperText="Candidate specific trade discipline (e.g. Arc Welding, CNC Turning, Heavy Plant Hydraulics)" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudSelect T="ArplQualifyingCategory?"
+                               Label="ARPL qualifying category (Section 5 Statutory Criteria)"
+                               Value="@QualifyingCategory"
+                               ValueChanged="OnQualifyingCategoryChanged"
+                               Variant="Variant.Outlined"
+                               Required="true"
+                               Disabled="@IsReadOnly"
+                               HelperText="Select qualifying educational and experience pathway under merSETA ARPL regulations">
+                        <MudSelectItem Value="@((ArplQualifyingCategory?)ArplQualifyingCategory.Category1_Min3Years_N2)">Category 1: Min 3 Years Experience + N2 with Trade Theory</MudSelectItem>
+                        <MudSelectItem Value="@((ArplQualifyingCategory?)ArplQualifyingCategory.Category2_Min3Years_NqfLevel3)">Category 2: Min 3 Years Experience + Engineering NQF Level 3 Certificate</MudSelectItem>
+                        <MudSelectItem Value="@((ArplQualifyingCategory?)ArplQualifyingCategory.Category3_Min3Years_TechnicalGrade12)">Category 3: Min 3 Years Experience + Technical Grade 12 (Maths, Science &amp; Theory)</MudSelectItem>
+                        <MudSelectItem Value="@((ArplQualifyingCategory?)ArplQualifyingCategory.Category4_Min18Months_NcvLevel4)">Category 4: Min 18 Months Experience + Engineering NCV Level 4 Certificate</MudSelectItem>
+                        <MudSelectItem Value="@((ArplQualifyingCategory?)ArplQualifyingCategory.Category5_Min18Months_N6OrNationalDiploma)">Category 5: Min 18 Months Experience + N6 Certificate / National Technical Diploma</MudSelectItem>
+                        <MudSelectItem Value="@((ArplQualifyingCategory?)ArplQualifyingCategory.Category6_Min4Years_Grade9)">Category 6: Min 4 Years Experience + Grade 9 (Standard 7)</MudSelectItem>
+                        <MudSelectItem Value="@((ArplQualifyingCategory?)ArplQualifyingCategory.Category7_Min3Years_ToolkitAssessment)">Category 7: Min 3 Years Experience + ARPL Toolkits Assessment (17 Designated Trades Only)</MudSelectItem>
+                        <MudSelectItem Value="@((ArplQualifyingCategory?)ArplQualifyingCategory.Category8_Min2Years_TradeLearnershipNqf2To4)">Category 8: Min 2 Years Experience + NQF Level 2-4 Trade-Related Learnership</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12">
+                    @if (ArplTradeValidator.RequiresToolkit(TradeTitle))
+                    {
+                        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true" Class="my-2">
+                            <strong>Designated Toolkit Trade:</strong> &lsquo;@TradeTitle&rsquo; is one of the 17 statutory designated trades equipped with toolkits. Category 7 admission is permitted.
+                        </MudAlert>
+                    }
+                    else if (QualifyingCategory == ArplQualifyingCategory.Category7_Min3Years_ToolkitAssessment)
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Dense="true" Class="my-2">
+                            <strong>Notice:</strong> &lsquo;@TradeTitle&rsquo; is not a designated toolkit trade. Under statutory Section 5 regulations, Category 7 is restricted to the 17 designated trades. Please select an alternative qualifying category (1–6 or 8).
+                        </MudAlert>
+                    }
+                </MudItem>
+
+                <!-- Previous Trade Test Attempt (Section 6.2) -->
+                <MudItem xs="12" md="4" Class="d-flex align-center">
+                    <MudCheckBox T="bool"
+                                 Label="Candidate previously attempted a trade test"
+                                 Value="@HasAttemptedPreviously"
+                                 ValueChanged="OnHasAttemptedPreviouslyChanged"
+                                 Color="Color.Primary"
+                                 Disabled="@IsReadOnly" />
+                </MudItem>
+
+                @if (HasAttemptedPreviously)
+                {
+                    <MudItem xs="12" md="4">
+                        <MudTextField T="string?"
+                                      Label="Previous Trade Test Centre name"
+                                      Value="@PreviousCenterName"
+                                      ValueChanged="OnPreviousCenterNameChanged"
+                                      Variant="Variant.Outlined"
+                                      Disabled="@IsReadOnly"
+                                      HelperText="Name of testing facility where earlier assessment occurred" />
+                    </MudItem>
+                    <MudItem xs="12" md="2">
+                        <MudDatePicker Label="Previous attempt date"
+                                       Date="@PreviousAttemptDate"
+                                       DateChanged="OnPreviousAttemptDateChanged"
+                                       Variant="Variant.Outlined"
+                                       Disabled="@IsReadOnly" />
+                    </MudItem>
+                    <MudItem xs="12" md="2">
+                        <MudNumericField T="int?"
+                                         Label="Total prior attempts"
+                                         Value="@PreviousAttemptsCount"
+                                         ValueChanged="OnPreviousAttemptsCountChanged"
+                                         Variant="Variant.Outlined"
+                                         Min="1"
+                                         Max="2"
+                                         Disabled="@IsReadOnly"
+                                         HelperText="1 or 2 prior attempts" />
+                    </MudItem>
+                }
+            }
         </FormRow>
     </div>
 }
@@ -131,6 +250,165 @@
 @if (Section == "Logbook" || Section == "All")
 {
     <div class="nsdms-section-logbook mb-4">
+        @if (ApplicationTypeCode == "Section28")
+        {
+            <!-- Multi-Employer Workplace Experience Portfolio (Signed Spec Section 4.2.3) -->
+            <MudCard Elevation="1" Class="pa-4 mb-4 rounded-lg" Style="border: 1px solid var(--mud-palette-divider);">
+                <div class="d-flex align-center justify-space-between mb-3">
+                    <div>
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                            Workplace Experience Portfolio (Multi-Employer History)
+                        </MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Capture verified practical trade experience across all previous employers. Cumulative total: <strong>@TotalExperienceYears.ToString("0.0") years</strong>.
+                        </MudText>
+                    </div>
+                    <MudChip T="string" Color="@(TotalExperienceYears >= 3.0m ? Color.Success : Color.Warning)" Variant="Variant.Filled" Size="Size.Small">
+                        @(TotalExperienceYears >= 3.0m ? "Meets 3-Year Threshold" : "Under 3-Year Minimum")
+                    </MudChip>
+                </div>
+
+                @if (ExperienceDetails != null && ExperienceDetails.Any())
+                {
+                    <MudTable Items="@ExperienceDetails" Hover="true" Dense="true" Elevation="0" Outlined="true" Class="mb-3">
+                        <HeaderContent>
+                            <MudTh>Employer</MudTh>
+                            <MudTh>Reg #</MudTh>
+                            <MudTh>Contact Person &amp; Phone</MudTh>
+                            <MudTh>Job Title / Scope</MudTh>
+                            <MudTh>Period</MudTh>
+                            <MudTh>Years</MudTh>
+                            @if (!IsReadOnly)
+                            {
+                                <MudTh Style="text-align: right;">Action</MudTh>
+                            }
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd><strong>@context.EmployerName</strong></MudTd>
+                            <MudTd class="font-mono">@(context.CompanyRegistrationNumber ?? "N/A")</MudTd>
+                            <MudTd>
+                                @(context.ContactPersonName ?? "N/A")
+                                @if (!string.IsNullOrWhiteSpace(context.ContactPhoneNumber))
+                                {
+                                    <span class="text-caption text-secondary d-block">@context.ContactPhoneNumber</span>
+                                }
+                            </MudTd>
+                            <MudTd>@context.JobTitle</MudTd>
+                            <MudTd>@context.StartDate.ToString("yyyy/MM") - @(context.EndDate?.ToString("yyyy/MM") ?? "Present")</MudTd>
+                            <MudTd>@context.YearsOfExperience.ToString("0.0") yrs</MudTd>
+                            @if (!IsReadOnly)
+                            {
+                                <MudTd Style="text-align: right;">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => RemoveExperience(context))"
+                                                   aria-label="Remove Experience Entry" />
+                                </MudTd>
+                            }
+                        </RowTemplate>
+                    </MudTable>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+                        No employer experience entries added yet. Use the form below to record historical work history.
+                    </MudAlert>
+                }
+
+                @if (!IsReadOnly)
+                {
+                    <MudExpansionPanels Elevation="0" Outlined="true">
+                        <MudExpansionPanel Text="Add workplace employer experience entry" Icon="@Icons.Material.Filled.AddBusiness">
+                            <FormRow>
+                                <MudItem xs="12" md="6">
+                                    <MudTextField T="string"
+                                                  Label="Employer / Company name"
+                                                  @bind-Value="_newExpEmployer"
+                                                  Variant="Variant.Outlined"
+                                                  Dense="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudTextField T="string?"
+                                                  Label="Company registration number (CIPC)"
+                                                  @bind-Value="_newExpRegNumber"
+                                                  Variant="Variant.Outlined"
+                                                  Dense="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="4">
+                                    <MudTextField T="string?"
+                                                  Label="Contact person name"
+                                                  @bind-Value="_newExpContactName"
+                                                  Variant="Variant.Outlined"
+                                                  Dense="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="4">
+                                    <MudTextField T="string?"
+                                                  Label="Contact phone number"
+                                                  @bind-Value="_newExpContactPhone"
+                                                  Variant="Variant.Outlined"
+                                                  Dense="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="4">
+                                    <MudTextField T="string?"
+                                                  Label="Employer physical address"
+                                                  @bind-Value="_newExpAddress"
+                                                  Variant="Variant.Outlined"
+                                                  Dense="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="4">
+                                    <MudTextField T="string"
+                                                  Label="Job title / Artisan role"
+                                                  @bind-Value="_newExpJobTitle"
+                                                  Variant="Variant.Outlined"
+                                                  Dense="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="3">
+                                    <MudDatePicker Label="Start date"
+                                                   @bind-Date="_newExpStartDate"
+                                                   Variant="Variant.Outlined"
+                                                   Dense="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="3">
+                                    <MudDatePicker Label="End date (blank if present)"
+                                                   @bind-Date="_newExpEndDate"
+                                                   Variant="Variant.Outlined"
+                                                   Dense="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="2">
+                                    <MudNumericField T="decimal"
+                                                     Label="Years"
+                                                     @bind-Value="_newExpYears"
+                                                     Variant="Variant.Outlined"
+                                                     Dense="true"
+                                                     Min="0.1m"
+                                                     Max="30m"
+                                                     Step="0.5m" />
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudTextField T="string"
+                                                  Label="Scope of trade duties performed"
+                                                  @bind-Value="_newExpDuties"
+                                                  Variant="Variant.Outlined"
+                                                  Dense="true"
+                                                  HelperText="Summary of practical tooling, machinery, and daily technical operations handled" />
+                                </MudItem>
+                                <MudItem xs="12" Class="d-flex justify-end mt-2">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               StartIcon="@Icons.Material.Filled.Add"
+                                               OnClick="AddExperienceEntry"
+                                               Disabled="@string.IsNullOrWhiteSpace(_newExpEmployer)">
+                                        Add experience entry
+                                    </MudButton>
+                                </MudItem>
+                            </FormRow>
+                        </MudExpansionPanel>
+                    </MudExpansionPanels>
+                }
+            </MudCard>
+        }
+
         <FormRow>
             <MudItem xs="12" md="6">
                 <MudTextField T="string"
@@ -207,13 +485,14 @@
                            Required="true"
                            Disabled="@IsReadOnly"
                            ToStringFunc="@(id => GetProviderDisplayText(id))"
-                           HelperText="Select the NAMB-accredited testing facility">
+                           HelperText="Select the NAMB-accredited testing facility (filtered by trade accreditation)">
                     @if (TrainingProviders != null)
                     {
                         @foreach (var p in TrainingProviders)
                         {
+                            bool isAccredited = IsProviderAccredited(p);
                             <MudSelectItem Value="@((int?)p.Id)">
-                                @($"{p.ProviderName} (Accreditation: {p.AccreditationNumber ?? "Active"})")
+                                @($"{p.ProviderName} (Accreditation: {p.AccreditationNumber ?? "Active"}){(isAccredited ? " - Accredited for Trade" : "")}")
                             </MudSelectItem>
                         }
                     }
@@ -251,6 +530,68 @@
                              Disabled="@IsReadOnly" />
             </MudItem>
         </FormRow>
+    </div>
+}
+
+@if (Section == "Documents" || Section == "All")
+{
+    <div class="nsdms-section-documents mb-4">
+        <MudCard Elevation="1" Class="pa-4 rounded-lg" Style="border: 1px solid var(--mud-palette-divider);">
+            <div class="d-flex align-center justify-space-between mb-3">
+                <div>
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                        Statutory Document Verification Checklist
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        @(IsToolkitTrade ? "7 Statutory Documents Required for Designated Toolkit Trade" : "6 Statutory Documents Required for Non-Toolkit Trade") per Section 4.2.7 of Signed Specification.
+                    </MudText>
+                </div>
+                <MudChip T="string" Color="@(AllMandatoryDocumentsConfirmed ? Color.Success : Color.Warning)" Variant="Variant.Filled" Size="Size.Small">
+                    @(AllMandatoryDocumentsConfirmed ? "All Documents Confirmed" : $"{ConfirmedDocuments.Count} of {MandatoryDocumentList.Count} Confirmed")
+                </MudChip>
+            </div>
+
+            <MudTable Items="@MandatoryDocumentList" Hover="true" Dense="true" Elevation="0" Outlined="true">
+                <HeaderContent>
+                    <MudTh Style="width: 50px;">Status</MudTh>
+                    <MudTh>Document Name &amp; Description</MudTh>
+                    <MudTh Style="width: 140px;">Requirement</MudTh>
+                    @if (!IsReadOnly)
+                    {
+                        <MudTh Style="width: 120px; text-align: right;">Confirmation</MudTh>
+                    }
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>
+                        @if (ConfirmedDocuments.Contains(context.Code))
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty" Color="Color.Warning" Size="Size.Small" />
+                        }
+                    </MudTd>
+                    <MudTd>
+                        <MudText Typo="Typo.body2" Class="fw-semibold">@context.Title</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Description</MudText>
+                    </MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">Mandatory</MudChip>
+                    </MudTd>
+                    @if (!IsReadOnly)
+                    {
+                        <MudTd Style="text-align: right;">
+                            <MudCheckBox T="bool"
+                                         Value="@ConfirmedDocuments.Contains(context.Code)"
+                                         ValueChanged="@((val) => ToggleDocumentConfirmation(context.Code, val))"
+                                         Color="Color.Primary"
+                                         Dense="true" />
+                        </MudTd>
+                    }
+                </RowTemplate>
+            </MudTable>
+        </MudCard>
     </div>
 }
 
@@ -293,6 +634,41 @@
 
     [Parameter] public int AttemptNumber { get; set; } = 1;
     [Parameter] public EventCallback<int> AttemptNumberChanged { get; set; }
+
+    // Employment Status Parameters (Signed Spec Section 4.2.3)
+    [Parameter] public string EmploymentStatus { get; set; } = "Employed";
+    [Parameter] public EventCallback<string> EmploymentStatusChanged { get; set; }
+
+    [Parameter] public string? UnregisteredEmployerName { get; set; }
+    [Parameter] public EventCallback<string?> UnregisteredEmployerNameChanged { get; set; }
+
+    // ARPL Qualifying Category (Section 5)
+    [Parameter] public ArplQualifyingCategory? QualifyingCategory { get; set; } = ArplQualifyingCategory.Category1_Min3Years_N2;
+    [Parameter] public EventCallback<ArplQualifyingCategory?> QualifyingCategoryChanged { get; set; }
+
+    // Specialisation & Previous Attempts (Section 6.2)
+    [Parameter] public string? Specialisation { get; set; }
+    [Parameter] public EventCallback<string?> SpecialisationChanged { get; set; }
+
+    [Parameter] public bool HasAttemptedPreviously { get; set; } = false;
+    [Parameter] public EventCallback<bool> HasAttemptedPreviouslyChanged { get; set; }
+
+    [Parameter] public string? PreviousCenterName { get; set; }
+    [Parameter] public EventCallback<string?> PreviousCenterNameChanged { get; set; }
+
+    [Parameter] public DateTime? PreviousAttemptDate { get; set; }
+    [Parameter] public EventCallback<DateTime?> PreviousAttemptDateChanged { get; set; }
+
+    [Parameter] public int? PreviousAttemptsCount { get; set; } = 1;
+    [Parameter] public EventCallback<int?> PreviousAttemptsCountChanged { get; set; }
+
+    // Multi-employer experience collection
+    [Parameter] public List<ArplExperienceDetail> ExperienceDetails { get; set; } = new();
+    [Parameter] public EventCallback<List<ArplExperienceDetail>> ExperienceDetailsChanged { get; set; }
+
+    // Document Checklist
+    [Parameter] public HashSet<string> ConfirmedDocuments { get; set; } = new();
+    [Parameter] public EventCallback<HashSet<string>> ConfirmedDocumentsChanged { get; set; }
 
     // Theory Parameters
     [Parameter] public string TheoryQualificationTitle { get; set; } = "National Technical Certificate N2";
@@ -346,6 +722,121 @@
     [Parameter] public bool IsPopiaAndCandidateDeclarationAccepted { get; set; } = true;
     [Parameter] public EventCallback<bool> IsPopiaAndCandidateDeclarationAcceptedChanged { get; set; }
 
+    // Local form state for adding an experience record
+    private string _newExpEmployer = string.Empty;
+    private string? _newExpRegNumber;
+    private string? _newExpContactName;
+    private string? _newExpContactPhone;
+    private string? _newExpAddress;
+    private string _newExpJobTitle = "Artisan Assistant";
+    private DateTime? _newExpStartDate = DateTime.UtcNow.AddYears(-3);
+    private DateTime? _newExpEndDate = DateTime.UtcNow.AddMonths(-6);
+    private decimal _newExpYears = 2.5m;
+    private string _newExpDuties = "Practical mechanical assembly, component maintenance, and safety log completion.";
+
+    private decimal TotalExperienceYears => ExperienceDetails?.Sum(x => x.YearsOfExperience) ?? 0m;
+
+    private bool IsToolkitTrade => ArplTradeValidator.RequiresToolkit(TradeTitle);
+
+    private record DocRequirement(string Code, string Title, string Description);
+
+    private List<DocRequirement> MandatoryDocumentList
+    {
+        get
+        {
+            if (IsToolkitTrade)
+            {
+                return new List<DocRequirement>
+                {
+                    new("STATEMENT_OF_RESULTS", "Statement of Results", "Official statement of modular curricular credits achieved"),
+                    new("ARPL_APPLICATION_FORM", "ARPL Application Form (ETQ-TP-ARPL-01)", "Signed statutory ARPL registration application document"),
+                    new("CERTIFIED_ID", "Certified RSA ID or Passport", "Clear certified copy of candidate identity document (not older than 3 months)"),
+                    new("LEGAL_PROOF_SA", "Legal Status Proof in South Africa", "Permanent residence or valid statutory work permit documentation"),
+                    new("NAMB_EVIDENCE_CONFIRMATION", "Confirmation of NAMB Evidence Packs", "Candidate evidence pack portfolio attestation"),
+                    new("SERVICE_LETTER", "Service Letter(s)", "Official employment letters confirming trade practical exposure"),
+                    new("POE_CHECKLIST", "Portfolio of Evidence (PoE) Checklist", "Signed practical task and toolkit assessment portfolio checklist")
+                };
+            }
+            else
+            {
+                return new List<DocRequirement>
+                {
+                    new("ARPL_APPLICATION_FORM", "Trade Test Application Form (ETQ-TP-ARPL-01)", "Signed statutory registration application document"),
+                    new("CERTIFIED_ID", "Certified RSA ID or Passport", "Clear certified copy of candidate identity document"),
+                    new("HIGHEST_QUALIFICATION", "Certified Highest Qualification", "N2 / NCV Level 4 / Technical Grade 12 certified educational certificate"),
+                    new("SERVICE_LETTER", "Service Letter(s)", "Official employer service letters confirming relevant trade experience"),
+                    new("PRE_ASSESSMENT_REPORT", "Pre-Assessment Evaluation Report", "Report issued by accredited TTC confirming practical candidate readiness"),
+                    new("LEGAL_PROOF_SA", "Legal Status Proof in South Africa", "Proof of citizenship or valid South African legal status")
+                };
+            }
+        }
+    }
+
+    private bool AllMandatoryDocumentsConfirmed => MandatoryDocumentList.All(d => ConfirmedDocuments.Contains(d.Code));
+
+    private async Task ToggleDocumentConfirmation(string code, bool isConfirmed)
+    {
+        if (isConfirmed)
+        {
+            ConfirmedDocuments.Add(code);
+        }
+        else
+        {
+            ConfirmedDocuments.Remove(code);
+        }
+        await ConfirmedDocumentsChanged.InvokeAsync(ConfirmedDocuments);
+    }
+
+    private async Task AddExperienceEntry()
+    {
+        if (string.IsNullOrWhiteSpace(_newExpEmployer)) return;
+
+        var exp = new ArplExperienceDetail
+        {
+            EmployerName = _newExpEmployer.Trim(),
+            CompanyRegistrationNumber = _newExpRegNumber?.Trim(),
+            ContactPersonName = _newExpContactName?.Trim(),
+            ContactPhoneNumber = _newExpContactPhone?.Trim(),
+            EmployerAddress = _newExpAddress?.Trim(),
+            JobTitle = _newExpJobTitle.Trim(),
+            StartDate = _newExpStartDate ?? DateTime.UtcNow.AddYears(-2),
+            EndDate = _newExpEndDate,
+            YearsOfExperience = _newExpYears,
+            DutiesDescription = _newExpDuties.Trim(),
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = "CandidateUser"
+        };
+
+        ExperienceDetails.Add(exp);
+        await ExperienceDetailsChanged.InvokeAsync(ExperienceDetails);
+
+        // Reset inputs
+        _newExpEmployer = string.Empty;
+        _newExpRegNumber = null;
+        _newExpContactName = null;
+        _newExpContactPhone = null;
+        _newExpAddress = null;
+        _newExpYears = 1.0m;
+        _newExpDuties = string.Empty;
+    }
+
+    private async Task RemoveExperience(ArplExperienceDetail item)
+    {
+        ExperienceDetails.Remove(item);
+        await ExperienceDetailsChanged.InvokeAsync(ExperienceDetails);
+    }
+
+    private bool IsProviderAccredited(TrainingProvider p)
+    {
+        if (p.Qualifications == null || !p.Qualifications.Any()) return true;
+        if (string.IsNullOrWhiteSpace(TradeTitle)) return true;
+
+        return p.Qualifications.Any(q =>
+            (!string.IsNullOrEmpty(q.QualificationTitle) && q.QualificationTitle.Contains(TradeTitle, StringComparison.OrdinalIgnoreCase))
+            || (!string.IsNullOrEmpty(TradeTitle) && TradeTitle.Contains(q.QualificationTitle, StringComparison.OrdinalIgnoreCase))
+            || (TradeOfoCode != null && q.SaqaQualificationId.ToString() == TradeOfoCode));
+    }
+
     // Event Handlers
     private async Task OnCompanyLearnerChanged(int? val)
     {
@@ -375,6 +866,54 @@
     {
         AttemptNumber = val;
         await AttemptNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnEmploymentStatusChanged(string val)
+    {
+        EmploymentStatus = val;
+        await EmploymentStatusChanged.InvokeAsync(val);
+    }
+
+    private async Task OnUnregisteredEmployerNameChanged(string? val)
+    {
+        UnregisteredEmployerName = val;
+        await UnregisteredEmployerNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnQualifyingCategoryChanged(ArplQualifyingCategory? val)
+    {
+        QualifyingCategory = val;
+        await QualifyingCategoryChanged.InvokeAsync(val);
+    }
+
+    private async Task OnSpecialisationChanged(string? val)
+    {
+        Specialisation = val;
+        await SpecialisationChanged.InvokeAsync(val);
+    }
+
+    private async Task OnHasAttemptedPreviouslyChanged(bool val)
+    {
+        HasAttemptedPreviously = val;
+        await HasAttemptedPreviouslyChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPreviousCenterNameChanged(string? val)
+    {
+        PreviousCenterName = val;
+        await PreviousCenterNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPreviousAttemptDateChanged(DateTime? val)
+    {
+        PreviousAttemptDate = val;
+        await PreviousAttemptDateChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPreviousAttemptsCountChanged(int? val)
+    {
+        PreviousAttemptsCount = val;
+        await PreviousAttemptsCountChanged.InvokeAsync(val);
     }
 
     private async Task OnTheoryQualificationTitleChanged(string val)
@@ -484,6 +1023,8 @@
     {
         if (!id.HasValue || TrainingProviders == null) return "Select Trade Test Centre";
         var p = TrainingProviders.FirstOrDefault(x => x.Id == id.Value);
-        return p == null ? "Select Trade Test Centre" : $"{p.ProviderName} ({p.AccreditationNumber ?? "Accredited"})";
+        if (p == null) return "Select Trade Test Centre";
+        bool isAccredited = IsProviderAccredited(p);
+        return $"{p.ProviderName} (Accreditation: {p.AccreditationNumber ?? "Active"}){(isAccredited ? " - Accredited for Trade" : "")}";
     }
 }

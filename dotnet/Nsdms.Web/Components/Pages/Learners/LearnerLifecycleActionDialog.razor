@@ -1,7 +1,10 @@
 @using MudBlazor
+@using Nsdms.Application.Common.Models
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @inject ILearnerLifecycleService LifecycleService
+@inject IOrganisationService OrganisationService
+@inject ITrainingProviderService ProviderService
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -12,28 +15,147 @@
         </MudText>
     </TitleContent>
     <DialogContent>
-        @if (ActionType == "Transfer")
+        @if (ActionType == "Extension")
         {
             <MudText Typo="Typo.body2" Class="mb-4">
-                Initiate a statutory learner transfer to a new host employer or training provider.
+                Request a formal contract extension or pre-registration validity extension per MerSETA Specification 4.1.
             </MudText>
             <MudGrid Spacing="2">
                 <MudItem xs="12" sm="6">
-                    <MudNumericField T="int" Label="Target Organisation ID" @bind-Value="_toOrganisationId" Required="true" Min="1" HelperText="New host employer organisation ID" Variant="Variant.Outlined" />
+                    <MudSelect T="string" Label="Extension Category" @bind-Value="_extensionCategory" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("ContractAddendum")">Contract Extension (Addendum to Agreement)</MudSelectItem>
+                        <MudSelectItem Value="@("PreRegistration")">Pre-Registration Validity Extension</MudSelectItem>
+                    </MudSelect>
                 </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="string" Label="Reason for Extension" @bind-Value="_extensionReasonCode" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("MedicalLeave")">Extended Medical Illness / Hospitalization</MudSelectItem>
+                        <MudSelectItem Value="@("MaternityLeave")">Maternity / Parental Leave</MudSelectItem>
+                        <MudSelectItem Value="@("FactorySuspension")">Factory Retooling / Plant Suspension</MudSelectItem>
+                        <MudSelectItem Value="@("AcademicCatchUp")">Academic Theory Catch-up / Re-assessment</MudSelectItem>
+                        <MudSelectItem Value="@("DisciplinaryInvestigation")">Internal Disciplinary Investigation</MudSelectItem>
+                        <MudSelectItem Value="@("Other")">Other Statutory Justification</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker Label="Requested New Expiry Date" @bind-Date="_requestedExpiryDate" Variant="Variant.Outlined" Required="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" Label="Addendum Document Reference / ID" @bind-Value="_addendumDocumentId" Variant="Variant.Outlined" HelperText="Addendum to Agreement reference" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Statutory Motivation &amp; Justification" @bind-Value="_extensionJustification" Lines="3" Variant="Variant.Outlined" Required="true" HelperText="Detail circumstances necessitating the extension request" />
+                </MudItem>
+            </MudGrid>
+        }
+        else if (ActionType == "Transfer")
+        {
+            <MudText Typo="Typo.body2" Class="mb-3">
+                Initiate a statutory learner transfer per Specification 4.7 (LPM-FM-005 Form). Host employers must hold an active Workplace Approval.
+            </MudText>
+            
+            <MudRadioGroup T="string" @bind-Value="_transferScope" Class="mb-3">
+                <MudRadio Value="@("Employer")" Color="Color.Primary">Employer-to-Employer Transfer</MudRadio>
+                <MudRadio Value="@("SDP")" Color="Color.Secondary">Training Provider (SDP) Transfer</MudRadio>
+            </MudRadioGroup>
+
+            <MudGrid Spacing="2">
+                @if (_transferScope == "Employer")
+                {
+                    <MudItem xs="12">
+                        <MudSelect T="int" 
+                                   Label="Target Host Employer" 
+                                   Value="_toOrganisationId" 
+                                   ValueChanged="OnTargetOrganisationChanged" 
+                                   Variant="Variant.Outlined" 
+                                   Required="true"
+                                   ToStringFunc="@GetOrganisationDisplay">
+                            <MudSelectItem Value="0">-- Select Target Organisation --</MudSelectItem>
+                            @foreach (var org in _organisations)
+                            {
+                                <MudSelectItem Value="@org.Id">@org.CompanyName (SDL: @org.SdlNumber)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    @if (_selectedOrgChecked && !_isTargetWorkplaceApproved)
+                    {
+                        <MudItem xs="12">
+                            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+                                The selected option is not workplace approved please contact MerSETA
+                            </MudAlert>
+                        </MudItem>
+                    }
+                    else if (_selectedOrgChecked && _isTargetWorkplaceApproved)
+                    {
+                        <MudItem xs="12">
+                            <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true">
+                                Verified: Host employer holds an active MerSETA Workplace Approval.
+                            </MudAlert>
+                        </MudItem>
+                    }
+                }
+                else
+                {
+                    <MudItem xs="12">
+                        <MudSelect T="int" 
+                                   Label="Target Skills Development Provider (SDP)" 
+                                   @bind-Value="_toTrainingProviderId" 
+                                   Variant="Variant.Outlined" 
+                                   Required="true"
+                                   ToStringFunc="@GetProviderDisplay">
+                            <MudSelectItem Value="0">-- Select Target Training Provider --</MudSelectItem>
+                            @foreach (var p in _providers)
+                            {
+                                <MudSelectItem Value="@p.Id">@p.ProviderName (Accreditation: @(p.AccreditationNumber ?? "Pending"))</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                }
+
                 <MudItem xs="12" sm="6">
                     <MudSelect T="string" Label="Reason for Transfer" @bind-Value="_transferReasonCode" Variant="Variant.Outlined">
                         <MudSelectItem Value="@("CompanyDownsized")">Employer Retrenchment / Downsizing</MudSelectItem>
                         <MudSelectItem Value="@("MutualAgreement")">Mutual Tripartite Agreement</MudSelectItem>
                         <MudSelectItem Value="@("HostClosure")">Host Facility Relocation / Closure</MudSelectItem>
                         <MudSelectItem Value="@("WorkplaceCapacity")">Workplace Mentor Capacity Exceeded</MudSelectItem>
+                        <MudSelectItem Value="@("ProgrammeChange")">Transfer to Specialized Programme Scope</MudSelectItem>
                     </MudSelect>
                 </MudItem>
+
                 <MudItem xs="12" sm="6">
                     <MudDatePicker Label="Effective Transfer Date" @bind-Date="_effectiveDate" Variant="Variant.Outlined" />
                 </MudItem>
+
                 <MudItem xs="12">
-                    <MudTextField T="string" Label="Transfer Justification &amp; Notes" @bind-Value="_comments" Lines="3" Variant="Variant.Outlined" />
+                    <MudText Typo="Typo.subtitle2" Class="mt-2 mb-1">Tripartite Consent &amp; Attestation</MudText>
+                    <MudGrid Spacing="1">
+                        <MudItem xs="12" sm="4">
+                            <MudCheckBox T="bool" @bind-Value="_currentEmployerConsented" Color="Color.Primary">
+                                Current Employer Consent
+                            </MudCheckBox>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudCheckBox T="bool" @bind-Value="_futureEmployerConsented" Color="Color.Primary">
+                                Future Employer Consent
+                            </MudCheckBox>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudCheckBox T="bool" @bind-Value="_learnerConsented" Color="Color.Primary">
+                                Learner Consent
+                            </MudCheckBox>
+                        </MudItem>
+                    </MudGrid>
+                    @if (!_currentEmployerConsented)
+                    {
+                        <MudAlert Severity="Severity.Warning" Class="mt-2" Dense="true">
+                            Notice: Current employer dissents. Per Spec 4.7, this will be logged as a contested transfer and flagged for MerSETA dispute investigation.
+                        </MudAlert>
+                    }
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Transfer Justification &amp; LPM-FM-005 Details" @bind-Value="_comments" Lines="3" Variant="Variant.Outlined" />
                 </MudItem>
             </MudGrid>
         }
@@ -67,17 +189,45 @@
         }
         else if (ActionType == "Termination")
         {
-            <MudAlert Severity="Severity.Warning" Class="mb-4" Variant="Variant.Filled">
-                Termination cancels the legal SETA agreement. All terminations require formal documentation and CCMA/dispute disclosure if non-mutual.
-            </MudAlert>
+            <MudText Typo="Typo.body2" Class="mb-3">
+                Process an agreement termination per MerSETA Specifications 4.4, 4.5, and 4.6.
+            </MudText>
+
+            <MudRadioGroup T="string" @bind-Value="_terminationCategory" Class="mb-3">
+                <MudRadio Value="@("Mutual")" Color="Color.Primary">Mutual Termination (Spec 4.6)</MudRadio>
+                <MudRadio Value="@("OneSided")" Color="Color.Error">One-Sided / Contested Termination (Spec 4.5)</MudRadio>
+            </MudRadioGroup>
+
+            @if (_terminationCategory == "OneSided")
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-3" Variant="Variant.Filled">
+                    Statutory Invariant: One-sided terminations trigger a 14 working day MerSETA investigation under Checklist 036 and review by the ETQA Review Committee before contract cancellation.
+                </MudAlert>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Class="mb-3" Variant="Variant.Outlined">
+                    Mutual terminations are processed via CLO / Regional CRM with an official LPM-TP-010 Mutual Termination Agreement letter.
+                </MudAlert>
+            }
+
             <MudGrid Spacing="2">
                 <MudItem xs="12" sm="6">
                     <MudSelect T="string" Label="Termination Reason" @bind-Value="_terminationReasonCode" Variant="Variant.Outlined">
-                        <MudSelectItem Value="@("MutualCancellation")">Mutual Agreement to Cancel</MudSelectItem>
-                        <MudSelectItem Value="@("Absconded")">Learner Absconded / Abandoned Programme</MudSelectItem>
-                        <MudSelectItem Value="@("DisciplinaryDismissal")">Dismissed via Disciplinary Inquiry</MudSelectItem>
-                        <MudSelectItem Value="@("Deceased")">Learner Deceased</MudSelectItem>
-                        <MudSelectItem Value="@("AcademicFailure")">Repeated Failure of Theoretical Modules</MudSelectItem>
+                        @if (_terminationCategory == "Mutual")
+                        {
+                            <MudSelectItem Value="@("ResignationAgreement")">Resignation by Mutual Agreement</MudSelectItem>
+                            <MudSelectItem Value="@("Retrenchment")">Operational Downsizing / Retrenchment</MudSelectItem>
+                            <MudSelectItem Value="@("MutualCancellation")">Mutual Tripartite Cancellation</MudSelectItem>
+                        }
+                        else
+                        {
+                            <MudSelectItem Value="@("ResignationUnilateral")">Learner Unilateral Resignation</MudSelectItem>
+                            <MudSelectItem Value="@("AwolDismissal")">Absconded (AWOL) / Disciplinary Dismissal</MudSelectItem>
+                            <MudSelectItem Value="@("Deceased")">Learner Deceased</MudSelectItem>
+                            <MudSelectItem Value="@("Incapacity")">Medical Incapacity / Non-Performance</MudSelectItem>
+                            <MudSelectItem Value="@("Other")">Other Contested Ground</MudSelectItem>
+                        }
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="12" sm="6">
@@ -85,14 +235,14 @@
                 </MudItem>
                 <MudItem xs="12">
                     <MudCheckBox T="bool" @bind-Value="_disputeLogged" Color="Color.Error">
-                        Formal labour dispute or CCMA conciliation currently active regarding this dismissal
+                        Formal labour dispute, CCMA referral, or bargaining council arbitration active
                     </MudCheckBox>
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudTextField T="string" Label="Union / Employee Representative" @bind-Value="_unionRepName" Variant="Variant.Outlined" />
+                    <MudTextField T="string" Label="Trade Union / Employee Representative" @bind-Value="_unionRepName" Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="12">
-                    <MudTextField T="string" Label="Settlement Agreement &amp; Notes" @bind-Value="_settlementNotes" Lines="3" Variant="Variant.Outlined" Required="true" />
+                    <MudTextField T="string" Label="Settlement Agreement &amp; Investigation Notes" @bind-Value="_settlementNotes" Lines="3" Variant="Variant.Outlined" Required="true" />
                 </MudItem>
             </MudGrid>
         }
@@ -121,7 +271,11 @@
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Cancel">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="Submit" Disabled="_isSubmitting">
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Save" 
+                   OnClick="Submit" 
+                   Disabled="@(_isSubmitting || (ActionType == "Transfer" && _transferScope == "Employer" && _selectedOrgChecked && !_isTargetWorkplaceApproved))">
             @(_isSubmitting ? "Processing..." : "Submit Amendment")
         </MudButton>
     </DialogActions>
@@ -139,13 +293,31 @@
 
     private bool _isSubmitting = false;
 
+    // Lookups
+    private List<Organisation> _organisations = new();
+    private List<TrainingProvider> _providers = new();
+
     // Common fields
     private DateTime? _effectiveDate = DateTime.Today;
     private string _comments = string.Empty;
 
-    // Transfer fields
-    private int _toOrganisationId = 1;
-    private string _transferReasonCode = "CompanyDownsized";
+    // Extension fields (Spec 4.1)
+    private string _extensionCategory = "ContractAddendum";
+    private string _extensionReasonCode = "MedicalLeave";
+    private DateTime? _requestedExpiryDate = DateTime.Today.AddMonths(6);
+    private string? _addendumDocumentId;
+    private string _extensionJustification = string.Empty;
+
+    // Transfer fields (Spec 4.7)
+    private string _transferScope = "Employer";
+    private int _toOrganisationId = 0;
+    private int _toTrainingProviderId = 0;
+    private string _transferReasonCode = "MutualAgreement";
+    private bool _currentEmployerConsented = true;
+    private bool _futureEmployerConsented = true;
+    private bool _learnerConsented = true;
+    private bool _selectedOrgChecked = false;
+    private bool _isTargetWorkplaceApproved = true;
 
     // Lost time fields
     private string _lostTimeReasonCode = "MedicalLeave";
@@ -153,8 +325,9 @@
     private DateTime? _lostTimeStartDate = DateTime.Today.AddDays(-14);
     private DateTime? _lostTimeEndDate = DateTime.Today;
 
-    // Termination fields
-    private string _terminationReasonCode = "MutualCancellation";
+    // Termination fields (Spec 4.4 - 4.6)
+    private string _terminationCategory = "Mutual";
+    private string _terminationReasonCode = "ResignationAgreement";
     private bool _disputeLogged = false;
     private string? _unionRepName;
     private string _settlementNotes = string.Empty;
@@ -164,8 +337,60 @@
     private string _proposedChangesJson = "{\"QualificationTitle\": \"Advanced Programme\"}";
     private string _justificationReason = string.Empty;
 
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (ActionType == "Transfer")
+            {
+                _organisations = await OrganisationService.GetAllAsync();
+                _providers = await ProviderService.GetAllAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Warning: Could not load lookup entities: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private string GetOrganisationDisplay(int orgId)
+    {
+        if (orgId <= 0) return "-- Select Target Organisation --";
+        var org = _organisations.FirstOrDefault(o => o.Id == orgId);
+        return org != null ? $"{org.CompanyName} (SDL: {org.SdlNumber})" : $"Employer #{orgId}";
+    }
+
+    private string GetProviderDisplay(int providerId)
+    {
+        if (providerId <= 0) return "-- Select Target Training Provider --";
+        var prov = _providers.FirstOrDefault(p => p.Id == providerId);
+        return prov != null ? $"{prov.ProviderName} (Accreditation: {prov.AccreditationNumber ?? "Pending"})" : $"Provider #{providerId}";
+    }
+
+    private async Task OnTargetOrganisationChanged(int orgId)
+    {
+        _toOrganisationId = orgId;
+        _selectedOrgChecked = false;
+
+        if (orgId > 0)
+        {
+            try
+            {
+                var wpas = await OrganisationService.GetWorkplaceApprovalsAsync(orgId);
+                _isTargetWorkplaceApproved = wpas.Any(w => w.ApprovalStatusCode == "Approved" || w.ApprovalStatusCode == "Active" || w.ApprovalStatusCode == "Compliant");
+                _selectedOrgChecked = true;
+            }
+            catch
+            {
+                _isTargetWorkplaceApproved = false;
+                _selectedOrgChecked = true;
+            }
+        }
+    }
+
     private string GetActionIcon() => ActionType switch
     {
+        "Extension" => Icons.Material.Filled.MoreTime,
         "Transfer" => Icons.Material.Filled.SwapHoriz,
         "LostTime" => Icons.Material.Filled.Update,
         "Termination" => Icons.Material.Filled.Cancel,
@@ -175,9 +400,10 @@
 
     private string GetActionTitle() => ActionType switch
     {
-        "Transfer" => "Request Inter-Employer Transfer",
+        "Extension" => "Request Contract Extension (Spec 4.1)",
+        "Transfer" => "Request Inter-Employer / SDP Transfer (Spec 4.7)",
         "LostTime" => "Record Lost Time & Extend Contract",
-        "Termination" => "Process Agreement Termination",
+        "Termination" => "Process Agreement Termination (Spec 4.4-4.6)",
         "ChangeRequest" => "Submit Contract Detail Amendment",
         _ => "Learner Amendment"
     };
@@ -189,18 +415,56 @@
         _isSubmitting = true;
         try
         {
-            if (ActionType == "Transfer")
+            if (ActionType == "Extension")
             {
+                if (string.IsNullOrWhiteSpace(_extensionJustification))
+                {
+                    Snackbar.Add("Please provide a justification for the extension.", Severity.Warning);
+                    return;
+                }
+
+                var req = new LearnerExtensionRequest
+                {
+                    CompanyLearnerId = CompanyLearnerId,
+                    ExtensionTypeCode = _extensionCategory,
+                    ExtensionReasonCode = _extensionReasonCode,
+                    RequestedExpiryDate = _requestedExpiryDate ?? DateTime.Today.AddMonths(6),
+                    JustificationComments = _extensionJustification,
+                    AddendumDocumentId = int.TryParse(_addendumDocumentId, out var extDocId) ? extDocId : null
+                };
+                await LifecycleService.RequestExtensionAsync(req, "WebUser");
+                Snackbar.Add("Extension request recorded and queued for MerSETA approval.", Severity.Success);
+            }
+            else if (ActionType == "Transfer")
+            {
+                if (_transferScope == "Employer" && _toOrganisationId <= 0)
+                {
+                    Snackbar.Add("Please select a target host employer.", Severity.Warning);
+                    return;
+                }
+                if (_transferScope == "SDP" && _toTrainingProviderId <= 0)
+                {
+                    Snackbar.Add("Please select a target training provider.", Severity.Warning);
+                    return;
+                }
+
                 var req = new LearnerTransferRequest
                 {
                     CompanyLearnerId = CompanyLearnerId,
-                    ToOrganisationId = _toOrganisationId,
+                    TransferScopeCode = _transferScope == "Employer" ? "EmployerToEmployer" : "SdpToSdp",
+                    ToOrganisationId = _transferScope == "Employer" ? _toOrganisationId : null,
+                    ToTrainingProviderId = _transferScope == "SDP" ? _toTrainingProviderId : null,
                     TransferReasonCode = _transferReasonCode,
                     EffectiveDate = _effectiveDate ?? DateTime.UtcNow,
-                    ApprovalComments = _comments
+                    ApprovalComments = _comments,
+                    IsCurrentEmployerAgreed = _currentEmployerConsented,
+                    IsFutureEmployerAgreed = _futureEmployerConsented,
+                    IsLearnerAgreed = _learnerConsented,
+                    TransferFormDocumentId = int.TryParse(_addendumDocumentId, out var tDocId) ? tDocId : null
                 };
+
                 await LifecycleService.RequestTransferAsync(req, "WebUser");
-                Snackbar.Add("Learner transfer request submitted for MerSETA approval.", Severity.Success);
+                Snackbar.Add("Learner transfer request submitted for MerSETA approval (LPM-FM-005).", Severity.Success);
             }
             else if (ActionType == "LostTime")
             {
@@ -221,6 +485,7 @@
                 var req = new LearnerTerminationRequest
                 {
                     CompanyLearnerId = CompanyLearnerId,
+                    TerminationTypeCode = _terminationCategory,
                     TerminationReasonCode = _terminationReasonCode,
                     EffectiveDate = _effectiveDate ?? DateTime.UtcNow,
                     DisputeLogged = _disputeLogged,
@@ -229,7 +494,7 @@
                     ApprovalComments = _settlementNotes
                 };
                 await LifecycleService.RequestTerminationAsync(req, "WebUser");
-                Snackbar.Add("Agreement termination request logged per statutory guidelines.", Severity.Warning);
+                Snackbar.Add($"Agreement termination request logged ({_terminationCategory}).", Severity.Warning);
             }
             else if (ActionType == "ChangeRequest")
             {

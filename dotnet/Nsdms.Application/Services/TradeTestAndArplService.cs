@@ -36,6 +36,8 @@ public class TradeTestAndArplService : ITradeTestAndArplService
         DateTime? previousAttemptDate = null,
         int? previousAttemptsCount = null,
         ArplQualifyingCategory? qualifyingCategory = null,
+        string employmentStatus = "Employed",
+        string? unregisteredEmployerName = null,
         string currentUsername = "SYSTEM")
     {
         using var db = await _contextFactory.CreateDbContextAsync();
@@ -66,6 +68,8 @@ public class TradeTestAndArplService : ITradeTestAndArplService
             PreferredTradeTestCenterId = preferredTrainingCenterId,
             QualificationId = qualificationId,
             Specialisation = specialisation,
+            EmploymentStatus = employmentStatus,
+            UnregisteredEmployerName = unregisteredEmployerName,
             HasAttemptedTradeTestPreviously = hasAttemptedPreviously,
             PreviousAssessmentCenterName = previousCenterName,
             PreviousAttemptDate = previousAttemptDate,
@@ -944,5 +948,29 @@ public class TradeTestAndArplService : ITradeTestAndArplService
         }
 
         return await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
+    }
+
+    public async Task<List<LearnerTradeTestApplication>> GetClaPendingApplicationsAsync()
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.LearnerTradeTestApplications
+            .Include(t => t.Person)
+            .Include(t => t.Organisation)
+            .Include(t => t.TrainingProvider)
+            .Where(t => t.StatusCode == "Submitted" || t.StatusCode == "Resubmitted" || t.StatusCode == "ApplicationStarted" || t.StatusCode == "Application")
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<List<LearnerTradeTestApplication>> GetQaPendingApplicationsAsync()
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.LearnerTradeTestApplications
+            .Include(t => t.Person)
+            .Include(t => t.Organisation)
+            .Include(t => t.TrainingProvider)
+            .Where(t => t.StatusCode == "RecommendedApplication" || t.StatusCode == "Recommended")
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
     }
 }

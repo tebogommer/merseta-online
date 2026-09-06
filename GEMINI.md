@@ -45,6 +45,23 @@ Every page must pass all 16 items before being declared complete:
 
 ---
 
+### 🛡️ Learner Management Lifecycle Statutory Governance Standard (Signed 2022 Specification)
+1. **In-State vs Overall Status Distinction**:
+   - The operational workflow state (`InstateStatusCode`) tracks lifecycle amendments (`Active`, `Extension Requested`, `Transfer Application`, `Termination Pending`, `Requirements Not Met`, `Withdrawal`, `Transferred`) while preserving statutory registration and SETMIS reporting integrity (`EnrolmentStatusCode == "Registered"`).
+2. **Transfer Preconditions & Workplace Approval Gate (Use Case 4.7)**:
+   - When transferring between employers, the target employer MUST have an active, registered `WorkplaceApproval` (`ApprovalStatusCode == "Approved"` or `ApprovalStatusCode == "Registered"`). If missing, the system MUST immediately present the exact statutory message: `"The selected option is not workplace approved please contact MerSETA"`.
+   - The target employer must satisfy artisan mentor-to-apprentice ratios via `IMentorRatioPolicyEngine.EvaluatePlacementFeasibilityAsync`.
+   - Mutual agreement is NOT required for a transfer to occur: If the releasing employer dissents, the system flags `DisagreementPromptedTermination = true` to prompt formal termination/conciliation.
+3. **Unilateral vs Mutual Termination Governance (Use Cases 4.4, 4.5, 4.6)**:
+   - **Mutual Termination (4.6)**: Approved by CRM / Regional CLO; generates statutory form `LPM-TP-010`.
+   - **One-Sided Termination (4.5)**: Enforces a 14-working-day investigation SLA (`WorkplaceApprovalService.AddBusinessDays(DateTime.UtcNow, 14)`), completion of **Checklist 036** investigation report, ARPL/Transfer recommendation evaluation, and adjudication by the **ETQA Review Committee** (yielding an official Decision Letter or a "Requirements Not Met" rejection notice).
+4. **Extension Addendum Gate (Use Case 4.1)**:
+   - Extensions require capture of structured reason codes, original and requested expiry dates, Addendum of Agreement document attachment (`AddendumDocumentId`), and mandatory justification comments. Upon approval, updates `CompanyLearner.ExpectedCompletionDate` and generates the official statutory Addendum PDF.
+5. **Double-Write & Digital Security Seal**:
+   - All lifecycle transitions (extensions, transfers, lost time recalculations, checklist submissions, and committee adjudications) must record atomic snapshots in `audit_logs` and stamp generated statutory PDFs with dynamic verification references.
+
+---
+
 ### 🛡️ MudMenu ActivatorContent Event Binding Invariant
 - In MudBlazor v9+, when customizing a `<MudMenu>` trigger via `<ActivatorContent Context="menuCtx">`, the inner interactive component (e.g. `<MudButton>` or `<button>`) MUST explicitly bind `OnClick="@menuCtx.ToggleAsync"` or `@onclick="@menuCtx.ToggleAsync"`.
 - Unlike basic menus with `Label="..."` or `Icon="..."` where MudBlazor renders the trigger button automatically, `<ActivatorContent>` replaces the default button and passes a `MenuContext` parameter. Omitting the `OnClick` binding leaves the inner button inert, preventing the popover from opening.
@@ -452,3 +469,38 @@ Every page must pass all 16 items before being declared complete:
    - Live 5-tier cascading NAMB mentor-to-apprentice ratio policy engine (`IMentorRatioPolicyEngine`).
    - Mandatory Employer Contact Person linkage for all site visits and inspections.
    - 360-degree relational tabs (Placed Apprentices, Partnering SDPs, Site Audits, Tool Inventory, Mentors, Evidence Vault, Workflow Timeline).
+
+---
+
+### 🛡️ Bursary Registration Statutory Governance Standard (Signed 2022 Specification MerSeta\NSDMS\LMS\LR\01)
+1. **Unemployed Employer Exemption & Relational Nullability**:
+   - For all Bursary applications (`LearningProgrammeTypeCode == "05"`), unemployed applicants (`EmploymentStatusCode == "Unemployed"` or `EconomicStatusId == "02"`) are statutorily exempt from attaching an Employer (`OrganisationId` nullable).
+   - Employed applicants MUST link a valid levy-paying or registered employer (`OrganisationId`).
+2. **New vs Continuation Bursary Lifecycle Rules**:
+   - Continuation applications (`BursaryApplicationTypeCode == "Continuation"`) MUST link to a previously registered active bursary record (`PreviousCompanyLearnerId`).
+   - Anti-tamper execution date precondition: A continuation agreement execution date cannot be equal to or earlier than the predecessor agreement execution date.
+   - Academic progression: `YearOfStudy` must advance by exactly +1 year, and passed prior academic transcripts (`ContinuationAcademicResultsPassed = true`) are mandatory.
+3. **Statutory Bursary Funding Typology**:
+   - Every bursary must map to one of the 7 official statutory funding types (`lookup.BursaryFundingType`): `01` - merSETA Funded, `02` - Employer Funded, `03` - Institution Funded, `04` - Self-Funded, `05` - NSFAS / Other Public, `06` - Donor / NGO Funded, `07` - Other Funding.
+4. **Dynamic Evidentiary Document Gate**:
+   - Unemployed bursaries require certified RSA ID / passport, proof of tertiary registration, verified academic results, and proof of unemployment / affidavit.
+   - Employed bursaries additionally mandate certified employer confirmation and tripartite bursary agreement.
+5. **Audited Double-Write & Contract Generation**:
+   - Bursary registration must generate serial contract numbers `BUR-{yyyy}-{id:D5}` and perform double-write logging to `audit_logs`.
+
+---
+
+### 🛡️ Skills Development Provider (SDP) Accreditation Statutory Governance Standard (Signed 2023 Specification)
+1. **5 Accreditation Streams & Trade Test Centres (TTC)**:
+   - Accreditation intake must explicitly support 5 distinct statutory streams: Primary merSETA, Programme Approval (non-merSETA SETA), QCTO SDP, QCTO Trade Test Centre (TTC), and Non-merSETA Scope.
+   - For Trade Test Centres (TTC), the application MUST capture NAMB TTC assessor/moderator registration credentials and validity dates.
+2. **Interactive Two-Stage QMS Self-Evaluation Gate**:
+   - After initial QA recommendation, the system must issue a QMS Self-Evaluation task back to the Primary SDP Contact to complete compliance checks (Yes/No, document references, and evidence uploads) before physical site inspection scheduling.
+3. **5-Day Site Visit SLA & 6-Month Re-Accreditation Invariant**:
+   - Submissions must enforce a 5-working-day SLA for QA initial contact and inspection scheduling.
+   - Re-accreditation applications are permitted strictly within 6 months prior to expiry. During re-accreditation processing, the provider's operational status MUST NOT revert to "Pending Approval", ensuring unhindered learner registration transactions.
+4. **Multi-Contact Quorum & Banking Confirmation**:
+   - Provider registration requires a minimum of two (2) verified contact persons. At least one designated contact other than the primary SDF must be tagged with banking details confirmation authority.
+5. **Double-Write & Digital Security Seal**:
+   - All approval gates (Regional QA, QA Manager, Review Committee, Senior QA Manager) must record atomic snapshots in `audit_logs` and stamp the generated Accreditation Certificate with an immutable SHA-256 digital security seal.
+

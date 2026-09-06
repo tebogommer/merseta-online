@@ -29,6 +29,49 @@
     </ActionZone>
 </EntityHeader>
 
+<!-- Statutory Quick Filter Preset Tabs -->
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <MudChip T="string" 
+             Color="@(_selectedFilterPreset == "All" ? Color.Primary : Color.Default)" 
+             Variant="@(_selectedFilterPreset == "All" ? Variant.Filled : Variant.Outlined)" 
+             Size="Size.Medium" 
+             OnClick="@(() => SelectPresetFilter("All"))">
+        All Approvals (@_approvals.Count)
+    </MudChip>
+    <MudChip T="string" 
+             Color="@(_selectedFilterPreset == "AwaitingInspection" ? Color.Warning : Color.Default)" 
+             Variant="@(_selectedFilterPreset == "AwaitingInspection" ? Variant.Filled : Variant.Outlined)" 
+             Size="Size.Medium" 
+             Icon="@Icons.Material.Filled.AccessTime"
+             OnClick="@(() => SelectPresetFilter("AwaitingInspection"))">
+        Awaiting Verification (@_approvals.Count(a => a.ApprovalStatusCode == "APPLICATION" || a.ApprovalStatusCode == "AUDIT_SCHEDULED" || a.ApprovalStatusCode == "Pending"))
+    </MudChip>
+    <MudChip T="string" 
+             Color="@(_selectedFilterPreset == "AwaitingDecision" ? Color.Info : Color.Default)" 
+             Variant="@(_selectedFilterPreset == "AwaitingDecision" ? Variant.Filled : Variant.Outlined)" 
+             Size="Size.Medium" 
+             Icon="@Icons.Material.Filled.AssignmentTurnedIn"
+             OnClick="@(() => SelectPresetFilter("AwaitingDecision"))">
+        Awaiting Committee Decision (@_approvals.Count(a => a.ApprovalStatusCode == "VERIFIED" || a.ApprovalStatusCode == "UNDER_EVALUATION"))
+    </MudChip>
+    <MudChip T="string" 
+             Color="@(_selectedFilterPreset == "SlaAtRisk" ? Color.Error : Color.Default)" 
+             Variant="@(_selectedFilterPreset == "SlaAtRisk" ? Variant.Filled : Variant.Outlined)" 
+             Size="Size.Medium" 
+             Icon="@Icons.Material.Filled.Alarm"
+             OnClick="@(() => SelectPresetFilter("SlaAtRisk"))">
+        SLA at Risk / Overdue (@_approvals.Count(a => a.InspectionDueDate.HasValue && (a.ApprovalStatusCode == "APPLICATION" || a.ApprovalStatusCode == "AUDIT_SCHEDULED") && (a.InspectionDueDate.Value.Date - DateTime.Today).Days <= 5))
+    </MudChip>
+    <MudChip T="string" 
+             Color="@(_selectedFilterPreset == "Approved" ? Color.Success : Color.Default)" 
+             Variant="@(_selectedFilterPreset == "Approved" ? Variant.Filled : Variant.Outlined)" 
+             Size="Size.Medium" 
+             Icon="@Icons.Material.Filled.CheckCircle"
+             OnClick="@(() => SelectPresetFilter("Approved"))">
+        Approved &amp; Active (@_approvals.Count(a => a.ApprovalStatusCode == "APPROVED" || a.ApprovalStatusCode == "Approved"))
+    </MudChip>
+</div>
+
 <!-- Filter Bar (Clause 11.4) -->
 <FilterBar SearchPlaceholder="Search approval no, qualification, employer name, SDL..."
            @bind-SearchText="_searchString"
@@ -36,17 +79,23 @@
            OnClear="ClearFilters">
     <FilterContent>
         <MudSelect T="string" 
-                   Label="Status Filter" 
+                   Label="Statutory Status" 
                    Value="_selectedStatus" 
                    ValueChanged="OnStatusFilterChanged"
                    Variant="Variant.Outlined" 
                    Margin="Margin.Dense"
                    Dense="true">
             <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
-            <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
-            <MudSelectItem Value="@("Approved")">Approved</MudSelectItem>
-            <MudSelectItem Value="@("Rejected")">Rejected</MudSelectItem>
-            <MudSelectItem Value="@("Expired")">Expired</MudSelectItem>
+            <MudSelectItem Value="@("APPLICATION")">APPLICATION — Submitted (Awaiting Verification)</MudSelectItem>
+            <MudSelectItem Value="@("AUDIT_SCHEDULED")">AUDIT_SCHEDULED — Site Inspection Scheduled</MudSelectItem>
+            <MudSelectItem Value="@("VERIFIED")">VERIFIED — Verified (Awaiting Decision)</MudSelectItem>
+            <MudSelectItem Value="@("UNDER_EVALUATION")">UNDER_EVALUATION — Committee Evaluation</MudSelectItem>
+            <MudSelectItem Value="@("APPROVED")">APPROVED — Accreditation Granted</MudSelectItem>
+            <MudSelectItem Value="@("REVISE_REQUESTED")">REVISE_REQUESTED — Revision Requested</MudSelectItem>
+            <MudSelectItem Value="@("REJECTED")">REJECTED — Application Rejected</MudSelectItem>
+            <MudSelectItem Value="@("WITHDRAWN")">WITHDRAWN — Application Withdrawn</MudSelectItem>
+            <MudSelectItem Value="@("Pending")">Pending (Legacy Draft/Submitted)</MudSelectItem>
+            <MudSelectItem Value="@("Expired")">Expired Accreditation</MudSelectItem>
         </MudSelect>
     </FilterContent>
     <ActiveFilterChips>
@@ -62,15 +111,21 @@
                 Status: @_selectedStatus
             </MudChip>
         }
+        @if (_selectedFilterPreset != "All")
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" OnClose="@(() => SelectPresetFilter("All"))">
+                Preset: @_selectedFilterPreset
+            </MudChip>
+        }
     </ActiveFilterChips>
 </FilterBar>
 
 <!-- Data Grid Shell (Clause 11.9) -->
 <DataGridShell TItem="WorkplaceApproval"
                GridKey="WorkplaceApprovalsGrid"
-               Items="@_approvals"
+               Items="@_displayedApprovals"
                IsLoading="@_loading"
-               TotalItemsCount="@_approvals.Count"
+               TotalItemsCount="@_displayedApprovals.Count"
                SelectedItems="@_selectedApprovals"
                SelectedItemsChanged="OnSelectedApprovalsChanged"
                EmptyTitle="No Workplace Approvals Found"
@@ -91,7 +146,7 @@
     </BulkActionBarContent>
     <ChildContent>
         <MudTable T="WorkplaceApproval" 
-                  Items="_approvals" 
+                  Items="_displayedApprovals" 
                   Hover="true" 
                   Dense="true" 
                   Elevation="0" 
@@ -103,9 +158,11 @@
                 <MudTh>Approval Number</MudTh>
                 <MudTh>Employer / Organisation</MudTh>
                 <MudTh>Qualification Scope</MudTh>
+                <MudTh>Inspection SLA (20d)</MudTh>
                 <MudTh>Inspection Date</MudTh>
                 <MudTh>Expiry Date</MudTh>
                 <MudTh>Mentors</MudTh>
+                <MudTh>Assigned Officer</MudTh>
                 <MudTh>Status</MudTh>
                 <MudTh Style="text-align: right;">Actions</MudTh>
             </HeaderContent>
@@ -130,6 +187,46 @@
                         <div class="text-secondary" style="font-size: 0.8rem;">SAQA ID: @context.SaqaQualificationId</div>
                     }
                 </MudTd>
+                <MudTd DataLabel="Inspection SLA">
+                    @if (context.InspectionDueDate.HasValue && (context.ApprovalStatusCode == "APPLICATION" || context.ApprovalStatusCode == "AUDIT_SCHEDULED" || context.ApprovalStatusCode == "Pending"))
+                    {
+                        var daysRemaining = (context.InspectionDueDate.Value.Date - DateTime.Today).Days;
+                        @if (daysRemaining < 0)
+                        {
+                            <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Alarm">
+                                Overdue (@Math.Abs(daysRemaining)d)
+                            </MudChip>
+                        }
+                        else if (daysRemaining <= 5)
+                        {
+                            <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.HourglassBottom">
+                                Due in @daysRemaining d
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.CheckCircle">
+                                @daysRemaining d left
+                            </MudChip>
+                        }
+                    }
+                    else if (context.ApprovalStatusCode == "VERIFIED" || context.ApprovalStatusCode == "UNDER_EVALUATION")
+                    {
+                        <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.DoneAll">
+                            Verified
+                        </MudChip>
+                    }
+                    else if (context.ApprovalStatusCode == "APPROVED" || context.ApprovalStatusCode == "Approved")
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Verified">
+                            Ratified
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <span class="text-secondary">—</span>
+                    }
+                </MudTd>
                 <MudTd DataLabel="Inspection Date">
                     @(context.InspectionDate?.ToString("yyyy-MM-dd") ?? "Pending")
                 </MudTd>
@@ -141,13 +238,33 @@
                         @(context.Mentors?.Count ?? 0) Mentors
                     </MudChip>
                 </MudTd>
+                <MudTd DataLabel="Assigned Officer">
+                    @if (context.VerifiedByPerson != null)
+                    {
+                        <div class="d-flex align-center gap-1">
+                            <MudIcon Icon="@Icons.Material.Filled.Badge" Size="Size.Small" Color="Color.Primary" />
+                            <span style="font-size: 0.85rem;">@context.VerifiedByPerson.FullName</span>
+                        </div>
+                    }
+                    else if (context.AssessorPerson != null)
+                    {
+                        <div class="d-flex align-center gap-1">
+                            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Color="Color.Secondary" />
+                            <span style="font-size: 0.85rem;">@context.AssessorPerson.FullName</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-secondary" style="font-size: 0.85rem;">Unallocated</span>
+                    }
+                </MudTd>
                 <MudTd DataLabel="Status">
                     <!-- Non-clickable status pill (Clause 6.1, 7.2) -->
                     <StatusBadge Status="@(context.ApprovalStatusCode ?? "Pending")" Size="Size.Small" />
                 </MudTd>
                 <MudTd Style="text-align: right;" DataLabel="Actions">
                     <div class="d-flex justify-end gap-1">
-                        <MudTooltip Text="View Approval">
+                        <MudTooltip Text="View Approval Record">
                             <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
                                            Color="Color.Primary" 
                                            Size="Size.Small" 
@@ -167,10 +284,12 @@
 
 @code {
     private List<WorkplaceApproval> _approvals = new();
+    private List<WorkplaceApproval> _displayedApprovals = new();
     private HashSet<WorkplaceApproval> _selectedApprovals = new();
     private bool _loading = true;
     private string _searchString = string.Empty;
     private string _selectedStatus = "All";
+    private string _selectedFilterPreset = "All";
 
     private List<BreadcrumbItem> _breadcrumbItems = new()
     {
@@ -191,6 +310,7 @@
         {
             var statusArg = _selectedStatus == "All" ? null : _selectedStatus;
             _approvals = await ApprovalService.GetAllAsync(_searchString, statusArg);
+            ApplyPresetFilter();
         }
         finally
         {
@@ -198,9 +318,28 @@
         }
     }
 
+    private void SelectPresetFilter(string preset)
+    {
+        _selectedFilterPreset = preset;
+        ApplyPresetFilter();
+    }
+
+    private void ApplyPresetFilter()
+    {
+        _displayedApprovals = _selectedFilterPreset switch
+        {
+            "AwaitingInspection" => _approvals.Where(a => a.ApprovalStatusCode == "APPLICATION" || a.ApprovalStatusCode == "AUDIT_SCHEDULED" || a.ApprovalStatusCode == "Pending").ToList(),
+            "AwaitingDecision" => _approvals.Where(a => a.ApprovalStatusCode == "VERIFIED" || a.ApprovalStatusCode == "UNDER_EVALUATION").ToList(),
+            "SlaAtRisk" => _approvals.Where(a => a.InspectionDueDate.HasValue && (a.ApprovalStatusCode == "APPLICATION" || a.ApprovalStatusCode == "AUDIT_SCHEDULED") && (a.InspectionDueDate.Value.Date - DateTime.Today).Days <= 5).ToList(),
+            "Approved" => _approvals.Where(a => a.ApprovalStatusCode == "APPROVED" || a.ApprovalStatusCode == "Approved").ToList(),
+            _ => _approvals.ToList()
+        };
+    }
+
     private async Task OnStatusFilterChanged(string val)
     {
         _selectedStatus = val;
+        _selectedFilterPreset = "All";
         await LoadData();
     }
 
@@ -208,6 +347,7 @@
     {
         _searchString = string.Empty;
         _selectedStatus = "All";
+        _selectedFilterPreset = "All";
         await LoadData();
     }
 

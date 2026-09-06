@@ -1,4 +1,4 @@
-﻿using Nsdms.Domain.Common;
+using Nsdms.Domain.Common;
 
 namespace Nsdms.Domain.Entities;
 
@@ -22,6 +22,18 @@ public class TrainingProviderCampus : BaseEntity
     public string? ContactPersonName { get; set; }
     public string? ContactEmail { get; set; }
     public string? ContactPhone { get; set; }
+
+    /// <summary>
+    /// Statutory GPS Geocode coordinates (e.g. -26.2041, 28.0473) per SDP Application Use Case Table 24 Step D.
+    /// </summary>
+    public string? GpsCoordinates { get; set; }
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
+
+    /// <summary>
+    /// Local or District Municipality jurisdiction (Table 15 Attribute 24).
+    /// </summary>
+    public string? LocalMunicipality { get; set; }
 
     public bool IsPrimarySite { get; set; } = false;
     public string Status { get; set; } = "Active"; // Active, Suspended, Closed

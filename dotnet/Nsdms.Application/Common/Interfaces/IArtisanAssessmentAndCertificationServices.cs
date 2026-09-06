@@ -18,6 +18,8 @@ public interface ITradeTestAndArplService
         DateTime? previousAttemptDate = null,
         int? previousAttemptsCount = null,
         ArplQualifyingCategory? qualifyingCategory = null,
+        string employmentStatus = "Employed",
+        string? unregisteredEmployerName = null,
         string currentUsername = "SYSTEM");
 
     Task<ArplTradeTestInformation> SubmitArplEvidenceAndChecklistAsync(
@@ -118,6 +120,8 @@ public interface ITradeTestAndArplService
     Task<LearnerTradeTestApplication?> GetApplicationByIdAsync(int id);
     Task<LearnerTradeTestApplication?> GetApplicationWithFullDetailsByIdAsync(int id);
     Task<List<LearnerTradeTestApplication>> GetApplicationsAsync(string? statusCode = null, string? tradeTitle = null);
+    Task<List<LearnerTradeTestApplication>> GetClaPendingApplicationsAsync();
+    Task<List<LearnerTradeTestApplication>> GetQaPendingApplicationsAsync();
 }
 
 public interface ISummativeAssessmentAndModerationService

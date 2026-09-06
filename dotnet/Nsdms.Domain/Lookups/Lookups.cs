@@ -309,6 +309,12 @@ public class StatusType : BaseLookupType { }
 public class FundingType : BaseLookupType { }
 
 /// <summary>
+/// Statutory Bursary funding categories (merSETA, Non-merSETA, Employer, Learner, Other SETA, NSF, Industry).
+/// </summary>
+[Table("BursaryFundingType", Schema = "lookup")]
+public class BursaryFundingType : BaseLookupType { }
+
+/// <summary>
 /// MerSETA Discretionary and Mandatory grant allocation funding types.
 /// </summary>
 [Table("GrantTypeType", Schema = "lookup")]

@@ -68,7 +68,7 @@ public class WspSubmission : BaseEntity
     public bool IsSignoffQuorumMet { get; set; } = false;
 
     /// <summary>
-    /// Minimum required distinct signatory roles needed to meet statutory quorum (2 for < 50 staff, 3 for >= 50 staff).
+    /// Minimum required distinct signatory roles needed to meet statutory quorum (2 for &lt; 50 staff, 3 for &gt;= 50 staff).
     /// </summary>
     public int RequiredSignoffCount { get; set; } = 2;
 
@@ -481,6 +481,27 @@ public class EtqaAssessor : BaseEntity
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public string? StatusCode { get => RegistrationStatusCode; set => RegistrationStatusCode = value; }
 
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string AssessorRegistrationNumber { get => RegistrationNumber; set => RegistrationNumber = value; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string? EtqaDecisionNumber { get => EtqeDecisionNumber; set => EtqeDecisionNumber = value; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public DateTime? CertificateStartDate { get => StartDate; set => StartDate = value ?? default; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public DateTime? CertificateEndDate { get => EndDate; set => EndDate = value ?? default; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public bool AssessmentAbilitySuspended
+    {
+        get => DesignationStructureStatusId == "03" || DesignationStructureStatusId == "02" || RegistrationStatusCode == "Suspended" || RegistrationStatusCode == "De-Registered" || RegistrationStatusCode == "Deregistered";
+        set => DesignationStructureStatusId = value ? (RegistrationStatusCode == "De-Registered" || RegistrationStatusCode == "Deregistered" ? "02" : "03") : "01";
+    }
+
+    public string? DeRegistrationReason { get; set; }
+
     /// <summary>
     /// Registration validity start date (SETMIS File 401).
     /// </summary>
@@ -510,4 +531,14 @@ public class EtqaAssessor : BaseEntity
     /// Statutory 3-year re-registration and scope extension applications.
     /// </summary>
     public ICollection<AssessorReRegistrationApplication> ReRegistrationApplications { get; set; } = new List<AssessorReRegistrationApplication>();
+
+    /// <summary>
+    /// Skills Development Provider (SDP) and employer affiliations with verified SLAs.
+    /// </summary>
+    public ICollection<AssessorProviderLink> ProviderAffiliations { get; set; } = new List<AssessorProviderLink>();
+
+    /// <summary>
+    /// Disciplinary, suspension, and de-registration cases investigated against practitioner.
+    /// </summary>
+    public ICollection<AssessorDisciplinaryCase> DisciplinaryCases { get; set; } = new List<AssessorDisciplinaryCase>();
 }

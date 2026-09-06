@@ -1,0 +1,935 @@
+@page "/etqa/register"
+@page "/etqa/applications/{ApplicationId:int}/edit"
+@using Microsoft.AspNetCore.Authorization
+@using Nsdms.Application.Services
+@using Nsdms.Application.Common.Utilities
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using Nsdms.Web.Components.Shared.Forms
+@using Nsdms.Web.Components.Shared.Wizard
+@using MudBlazor
+@attribute [Authorize]
+@inject IAssessorRegistrationService RegService
+@inject IPersonService PersonService
+@inject IOrganisationService OrgService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A4 (Form / Multi-Step Wizard)
+  Assessor and Moderator Initial Registration Application
+  Governed by SAQA, QCTO ETQA regulations and MerSeta\NSDMS\LMS\LR\01.
+  Compliant with 16-point UI standard and [NSDMS0001] build guard.
+*@
+
+<div class="mb-4">
+    <div class="d-flex align-center gap-2 mb-2">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="GoBack">
+            Back to ETQA applications
+        </MudButton>
+        <MudBreadcrumbs Items="_breadcrumbs" Separator=">" Class="pa-0 ma-0" />
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="d-flex justify-center align-center py-12">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else if (_isSuccess)
+{
+    <MudCard Elevation="2" Class="pa-6 rounded-lg text-center">
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" Class="mb-3" />
+        <h1 class="text-h5 font-weight-bold text-primary mb-2">
+            Practitioner registration application submitted
+        </h1>
+        <p class="text-body1 text-secondary mb-4">
+            Statutory application reference <strong class="font-mono">@_registeredApplicationNumber</strong> has been successfully locked and forwarded to the Document Verification queue.
+        </p>
+        <div class="d-flex justify-center gap-3">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Visibility"
+                       OnClick="ViewApplicationDetails">
+                View application details
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       OnClick="GoBack">
+                Return to applications queue
+            </MudButton>
+        </div>
+    </MudCard>
+}
+else
+{
+    <WizardShell Title="Assessor and moderator initial registration"
+                 Subtitle="Statutory practitioner registration, scope qualification cascade, and SDP provider affiliation"
+                 ActiveStepIndex="@_activeStep"
+                 ActiveStepIndexChanged="OnStepChanged"
+                 FinishButtonText="Submit application"
+                 IsBusy="@_isProcessing"
+                 OnCancel="GoBack"
+                 OnFinish="SubmitApplicationAsync">
+
+        <!-- STEP 1: Practitioner Role & Personal Demographics -->
+        <WizardStep Label="Role &amp; Demographics"
+                    Heading="Practitioner role &amp; identification"
+                    Description="Specify registration track and capture demographic information"
+                    ValidateAsync="ValidateStep1Async">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="int"
+                               Label="Select existing person profile (or capture new below)"
+                               Value="@_selectedPersonId"
+                               ValueChanged="OnPersonSelected"
+                               Variant="Variant.Outlined">
+                        <MudSelectItem Value="0">-- New / Unregistered applicant --</MudSelectItem>
+                        @foreach (var p in _availablePersons)
+                        {
+                            <MudSelectItem Value="@p.Id">@p.FirstName @p.LastName (@(!string.IsNullOrWhiteSpace(p.RsaIdNumber) ? p.RsaIdNumber : p.Email))</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <AssessorRegistrationFields Section="RoleAndPerson"
+                                                  @bind-PractitionerType="_practitionerType"
+                                                  @bind-RsaIdNumber="_rsaIdNumber"
+                                                  @bind-FirstName="_firstName"
+                                                  @bind-LastName="_lastName"
+                                                  @bind-Email="_email"
+                                                  @bind-CellNumber="_cellNumber"
+                                                  @bind-DateOfBirthText="_dobText"
+                                                  @bind-Gender="_gender"
+                                                  @bind-EmploymentStatusCode="_employmentStatusCode"
+                                                  @bind-LastSchoolAttended="_lastSchoolAttended"
+                                                  @bind-LastSchoolYear="_lastSchoolYear"
+                                                  @bind-UrbanRuralArea="_urbanRuralArea"
+                                                  @bind-NextOfKinName="_nextOfKinName"
+                                                  @bind-NextOfKinContact="_nextOfKinContact"
+                                                  @bind-NextOfKinRelationship="_nextOfKinRelationship" />
+                </MudItem>
+            </MudGrid>
+        </WizardStep>
+
+        <!-- STEP 2: Qualification Scope & Unit Standards Cascade -->
+        <WizardStep Label="Scope &amp; Unit Standards"
+                    Heading="Accredited assessment scopes &amp; 3-year practice rule"
+                    Description="Register national qualifications with 3-year post-qualification experience"
+                    ValidateAsync="ValidateStep2Async">
+            <MudGrid>
+                <MudItem xs="12">
+                    <AssessorRegistrationFields Section="Scope"
+                                                  @bind-HighestQualificationTitle="_highestQualificationTitle"
+                                                  @bind-HighestQualificationObtainedDate="_highestQualificationObtainedDate" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <div class="d-flex justify-space-between align-center mb-2">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">Registered Qualification Scopes</MudText>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="@(() => _showAddScopeSection = !_showAddScopeSection)">
+                            @(_showAddScopeSection ? "Close scope form" : "Add qualification scope")
+                        </MudButton>
+                    </div>
+
+                    @if (_showAddScopeSection)
+                    {
+                        <MudCard Outlined="true" Class="pa-4 mb-4 border-primary" style="background: var(--surface-subtle);">
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-3">Add Scope Qualification</MudText>
+                            <MudGrid>
+                                <MudItem xs="12" md="3">
+                                    <MudNumericField T="int"
+                                                     Label="SAQA qualification ID *"
+                                                     @bind-Value="_newScopeSaqaId"
+                                                     Variant="Variant.Outlined"
+                                                     Placeholder="e.g. 58270"
+                                                     Required="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="5">
+                                    <MudTextField T="string"
+                                                  Label="Qualification title *"
+                                                  @bind-Value="_newScopeTitle"
+                                                  Variant="Variant.Outlined"
+                                                  Placeholder="e.g. NC: Welding Application and Practice"
+                                                  Required="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="4">
+                                    <MudDatePicker Label="Date qualification obtained *"
+                                                   @bind-Date="_newScopeObtainedDate"
+                                                   Variant="Variant.Outlined"
+                                                   DateFormat="yyyy-MM-dd"
+                                                   Required="true"
+                                                   MaxDate="DateTime.Today"
+                                                   HelperText="Must be >= 3 years ago per Section 5" />
+                                </MudItem>
+                                <MudItem xs="12" Class="d-flex justify-end gap-2">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small" OnClick="@(() => _showAddScopeSection = false)">Cancel</MudButton>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Check" OnClick="AddScopeAsync">Add scope</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </MudCard>
+                    }
+
+                    @if (_scopes.Any())
+                    {
+                        @foreach (var scope in _scopes)
+                        {
+                            <MudCard Outlined="true" Class="mb-3 pa-3">
+                                <div class="d-flex justify-space-between align-center mb-2">
+                                    <div>
+                                        <MudChip T="string" Color="Color.Primary" Size="Size.Small" Class="font-mono">SAQA: @scope.SaqaQualificationId</MudChip>
+                                        <strong class="ml-2">@scope.QualificationTitle</strong>
+                                        <span class="text-caption text-secondary ml-3">
+                                            Obtained: @scope.QualificationObtainedDate.ToString("yyyy-MM-dd")
+                                            (@Math.Round((DateTime.UtcNow - scope.QualificationObtainedDate).TotalDays / 365.25, 1) years post-qual)
+                                        </span>
+                                    </div>
+                                    <div class="d-flex align-center gap-1">
+                                        <MudButton Variant="Variant.Text"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   StartIcon="@Icons.Material.Filled.Add"
+                                                   OnClick="@(() => OpenAddUnitStandardForm(scope.Id))">
+                                            Add standalone unit standard
+                                        </MudButton>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Color="Color.Error"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => RemoveScopeAsync(scope.Id))"
+                                                       aria-label="Remove scope" />
+                                    </div>
+                                </div>
+
+                                @if (_activeScopeIdForUnitStandard == scope.Id)
+                                {
+                                    <div class="pa-3 mb-3 rounded-lg border" style="background: var(--surface);">
+                                        <span class="text-caption font-weight-bold d-block mb-2">Add Standalone Unit Standard to Scope</span>
+                                        <MudGrid>
+                                            <MudItem xs="12" md="3">
+                                                <MudTextField T="string" Label="Unit standard code *" @bind-Value="_newUsCode" Variant="Variant.Outlined" Placeholder="e.g. 116235" />
+                                            </MudItem>
+                                            <MudItem xs="12" md="5">
+                                                <MudTextField T="string" Label="Unit standard title *" @bind-Value="_newUsTitle" Variant="Variant.Outlined" Placeholder="e.g. Apply basic safety" />
+                                            </MudItem>
+                                            <MudItem xs="12" md="2">
+                                                <MudNumericField T="int" Label="NQF level" @bind-Value="_newUsNqf" Variant="Variant.Outlined" Min="1" Max="10" />
+                                            </MudItem>
+                                            <MudItem xs="12" md="2">
+                                                <MudNumericField T="int" Label="Credits" @bind-Value="_newUsCredits" Variant="Variant.Outlined" Min="1" Max="120" />
+                                            </MudItem>
+                                            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small" OnClick="@(() => _activeScopeIdForUnitStandard = null)">Cancel</MudButton>
+                                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" OnClick="@(() => AddStandaloneUnitStandardAsync(scope.Id))">Add unit standard</MudButton>
+                                            </MudItem>
+                                        </MudGrid>
+                                    </div>
+                                }
+
+                                <MudTable Items="scope.UnitStandards" Dense="true" Hover="true" Elevation="0">
+                                    <HeaderContent>
+                                        <MudTh>Code</MudTh>
+                                        <MudTh>Title</MudTh>
+                                        <MudTh>NQF Level</MudTh>
+                                        <MudTh>Credits</MudTh>
+                                        <MudTh>Source</MudTh>
+                                        <MudTh Style="text-align:right">Action</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate Context="us">
+                                        <MudTd><span class="font-mono">@us.UnitStandardCode</span></MudTd>
+                                        <MudTd>@us.UnitStandardTitle</MudTd>
+                                        <MudTd>Level @us.NqfLevel</MudTd>
+                                        <MudTd>@us.Credits</MudTd>
+                                        <MudTd>
+                                            <MudChip T="string" Size="Size.Small" Color="@(us.IsPopulatedFromQualification ? Color.Default : Color.Info)" Variant="Variant.Outlined">
+                                                @(us.IsPopulatedFromQualification ? "Qualification Constituent" : "Standalone Added")
+                                            </MudChip>
+                                        </MudTd>
+                                        <MudTd Style="text-align:right">
+                                            @if (!us.IsPopulatedFromQualification)
+                                            {
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveUnitStandardAsync(us.Id))" aria-label="Remove standalone unit standard" />
+                                            }
+                                            else
+                                            {
+                                                <MudTooltip Text="Constituent unit standards cannot be removed (Spec Section 5)">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Lock" Color="Color.Default" Size="Size.Small" Disabled="true" />
+                                                </MudTooltip>
+                                            }
+                                        </MudTd>
+                                    </RowTemplate>
+                                    <NoRecordsContent>
+                                        <div class="pa-2 text-center text-secondary">No unit standards linked.</div>
+                                    </NoRecordsContent>
+                                </MudTable>
+                            </MudCard>
+                        }
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+                            At least one accredited qualification scope meeting the 3-year post-qualification requirement must be added.
+                        </MudAlert>
+                    }
+                </MudItem>
+            </MudGrid>
+        </WizardStep>
+
+        <!-- STEP 3: SDP Training Provider Affiliation -->
+        <WizardStep Label="SDP Affiliations"
+                    Heading="Skills Development Provider (SDP) linkages"
+                    Description="Link accredited training providers and capture Service Level Agreements (SLAs)"
+                    ValidateAsync="ValidateStep3Async">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
+                        Practitioners may operate independently or affiliate with accredited Skills Development Providers (SDPs). Affiliated assessors require verified SLAs.
+                    </MudAlert>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <div class="pa-4 rounded-lg border mb-4" style="background: var(--surface-subtle);">
+                        <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-3">Link Accredited Training Provider (SDP)</MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudSelect T="int"
+                                           Label="Select SDP Organisation"
+                                           @bind-Value="_selectedSdpOrgId"
+                                           Variant="Variant.Outlined">
+                                    <MudSelectItem Value="0">-- Select training provider --</MudSelectItem>
+                                    @foreach (var org in _sdpOrganisations)
+                                    {
+                                        <MudSelectItem Value="@org.Id">@org.CompanyName (@org.SdlNumber)</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudTextField T="string"
+                                              Label="SLA contract reference number"
+                                              @bind-Value="_sdpSlaRef"
+                                              Variant="Variant.Outlined"
+                                              Placeholder="e.g. SLA-2026-SDP-042" />
+                            </MudItem>
+                            <MudItem xs="12" Class="d-flex justify-end">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.Link"
+                                           Disabled="@(_selectedSdpOrgId <= 0)"
+                                           OnClick="LinkProviderAffiliationAsync">
+                                    Link provider
+                                </MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </div>
+
+                    @if (_providerAffiliations.Any())
+                    {
+                        <MudTable Items="_providerAffiliations" Dense="true" Hover="true" Elevation="1">
+                            <HeaderContent>
+                                <MudTh>Training Provider (SDP)</MudTh>
+                                <MudTh>SDL Number</MudTh>
+                                <MudTh>SLA Reference</MudTh>
+                                <MudTh>Status</MudTh>
+                                <MudTh Style="text-align:right">Action</MudTh>
+                            </HeaderContent>
+                            <RowTemplate Context="link">
+                                <MudTd><strong>@(link.TrainingProvider?.Organisation?.CompanyName ?? "SDP Organisation")</strong></MudTd>
+                                <MudTd><span class="font-mono">@(link.TrainingProvider?.Organisation?.SdlNumber ?? "—")</span></MudTd>
+                                <MudTd><span class="font-mono">@(string.IsNullOrWhiteSpace(link.SlaDocumentRef) ? "Pending Upload" : link.SlaDocumentRef)</span></MudTd>
+                                <MudTd>
+                                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Active Link</MudChip>
+                                </MudTd>
+                                <MudTd Style="text-align:right">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveProviderAffiliationAsync(link.Id))" aria-label="Remove affiliation" />
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                    else
+                    {
+                        <div class="pa-4 rounded-lg text-center text-secondary border">
+                            No training providers linked. You may proceed as an independent practitioner or add SDP affiliations above.
+                        </div>
+                    }
+                </MudItem>
+            </MudGrid>
+        </WizardStep>
+
+        <!-- STEP 4: Document Vault Matrix -->
+        <WizardStep Label="Document Vault"
+                    Heading="Mandatory statutory evidentiary documents"
+                    Description="Upload or certify required supporting documentation"
+                    ValidateAsync="ValidateStep4Async">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
+                        All mandatory documents must be confirmed attached before final sign-off (Spec Section 4.2.7 &amp; 9.1.2).
+                    </MudAlert>
+                </MudItem>
+
+                @foreach (var doc in _mandatoryDocuments)
+                {
+                    <MudItem xs="12">
+                        <MudCard Outlined="true" Class="pa-3 mb-2">
+                            <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+                                <div>
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">
+                                        <MudIcon Icon="@Icons.Material.Filled.AttachFile" Size="Size.Small" Class="mr-1" />
+                                        @doc.Name
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        Code: <strong class="font-mono">@doc.Code</strong> | Requirement: @(doc.IsMandatory ? "Mandatory" : "Optional")
+                                    </MudText>
+                                </div>
+                                <MudCheckBox T="bool"
+                                             Value="@_attachedDocCodes.Contains(doc.Code)"
+                                             ValueChanged="@((val) => OnDocumentToggle(doc.Code, val))"
+                                             Color="Color.Success"
+                                             Label="Attached &amp; Verified" />
+                            </div>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        </WizardStep>
+
+        <!-- STEP 5: Review & Statutory Sign-Off -->
+        <WizardStep Label="Review &amp; Sign-off"
+                    Heading="Application review &amp; legal submission declaration"
+                    Description="Verify all details and acknowledge statutory declaration"
+                    ValidateAsync="ValidateStep5Async">
+            
+            <WizardReviewStep ReviewGroups="@_reviewGroups" OnEditStep="OnEditStepRequested" />
+
+            <AssessorRegistrationFields Section="Legal"
+                                          @bind-IsCodeOfConductAccepted="_isCodeOfConductAccepted"
+                                          @bind-IsPopiaConsented="_isPopiaConsented"
+                                          @bind-IsDeclarationAcknowledged="_isDeclarationAcknowledged" />
+        </WizardStep>
+
+    </WizardShell>
+}
+
+@code {
+    [Parameter] public int ApplicationId { get; set; }
+
+    private int _activeStep = 0;
+    private bool _loading = true;
+    private bool _isProcessing = false;
+    private bool _isSuccess = false;
+    private string _registeredApplicationNumber = string.Empty;
+
+    private List<BreadcrumbItem> _breadcrumbs = new();
+    private List<Person> _availablePersons = new();
+    private List<Organisation> _sdpOrganisations = new();
+
+    // Model State
+    private int _selectedPersonId = 0;
+    private string _practitionerType = "Assessor";
+    private string _rsaIdNumber = string.Empty;
+    private string _firstName = string.Empty;
+    private string _lastName = string.Empty;
+    private string _email = string.Empty;
+    private string _cellNumber = string.Empty;
+    private string _dobText = string.Empty;
+    private string _gender = string.Empty;
+    private string _employmentStatusCode = "Employed";
+    private string? _lastSchoolAttended;
+    private int? _lastSchoolYear = 2010;
+    private string _urbanRuralArea = "Urban";
+    private string? _nextOfKinName;
+    private string? _nextOfKinContact;
+    private string? _nextOfKinRelationship;
+    private string? _highestQualificationTitle = "National Diploma: Engineering";
+    private DateTime? _highestQualificationObtainedDate = DateTime.Today.AddYears(-5);
+
+    // Scopes state
+    private bool _showAddScopeSection = false;
+    private int _newScopeSaqaId = 58270;
+    private string _newScopeTitle = "National Certificate: Welding Application and Practice";
+    private DateTime? _newScopeObtainedDate = DateTime.Today.AddYears(-4);
+    private int? _activeScopeIdForUnitStandard;
+    private string _newUsCode = string.Empty;
+    private string _newUsTitle = string.Empty;
+    private int _newUsNqf = 4;
+    private int _newUsCredits = 10;
+    private List<AssessorApplicationScope> _scopes = new();
+
+    // SDP state
+    private int _selectedSdpOrgId = 0;
+    private string _sdpSlaRef = string.Empty;
+    private List<AssessorApplicationProviderLink> _providerAffiliations = new();
+
+    // Document Matrix State
+    private record DocumentDef(string Code, string Name, bool IsMandatory);
+    private List<DocumentDef> _mandatoryDocuments = new()
+    {
+        new("RSA_ID", "Certified RSA Identity Document / Valid Passport", true),
+        new("QUAL_CERT", "Certified Highest Educational & Occupational Qualification Certificates", true),
+        new("CURRICULUM_VITAE", "Comprehensive Curriculum Vitae & Employment Record", true),
+        new("PRACTICE_PROOF", "Proof of >= 3 Years Post-Qualification Occupational Practice", true),
+        new("ASSESSOR_CERT", "ETDP SETA Statement of Results / Assessor Training Certificate", true),
+        new("SDP_SLA", "Signed Service Level Agreement (SLA) with Skills Development Provider", false)
+    };
+    private HashSet<string> _attachedDocCodes = new() { "RSA_ID", "QUAL_CERT", "CURRICULUM_VITAE", "PRACTICE_PROOF", "ASSESSOR_CERT" };
+
+    // Legal Declarations
+    private bool _isCodeOfConductAccepted = false;
+    private bool _isPopiaConsented = false;
+    private bool _isDeclarationAcknowledged = false;
+
+    private List<WizardReviewGroup> _reviewGroups = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _breadcrumbs = new()
+        {
+            new("ETQA Applications", "/etqa/applications"),
+            new("Register Practitioner", null, disabled: true)
+        };
+
+        try
+        {
+            _availablePersons = await PersonService.GetAllAsync();
+            var allOrgs = await OrgService.GetAllAsync();
+            _sdpOrganisations = allOrgs.Take(50).ToList();
+
+            if (ApplicationId > 0)
+            {
+                var existing = await RegService.GetApplicationByIdAsync(ApplicationId);
+                if (existing != null)
+                {
+                    _practitionerType = existing.PractitionerType;
+                    _selectedPersonId = existing.PersonId;
+                    if (existing.Person != null)
+                    {
+                        _firstName = existing.Person.FirstName;
+                        _lastName = existing.Person.LastName;
+                        _email = existing.Person.Email ?? string.Empty;
+                        _cellNumber = existing.Person.CellNumber ?? string.Empty;
+                        _rsaIdNumber = existing.Person.RsaIdNumber ?? string.Empty;
+                        _dobText = existing.Person.DateOfBirth?.ToString("yyyy-MM-dd") ?? string.Empty;
+                        _gender = existing.Person.Gender ?? string.Empty;
+                    }
+                    _employmentStatusCode = existing.EmploymentStatusCode;
+                    _lastSchoolAttended = existing.LastSchoolAttended;
+                    _lastSchoolYear = existing.LastSchoolYear;
+                    _urbanRuralArea = existing.UrbanRuralArea;
+                    _nextOfKinName = existing.NextOfKinName;
+                    _nextOfKinContact = existing.NextOfKinContact;
+                    _nextOfKinRelationship = existing.NextOfKinRelationship;
+                    _highestQualificationTitle = existing.HighestQualificationTitle;
+                    _highestQualificationObtainedDate = existing.HighestQualificationObtainedDate;
+                    _scopes = existing.Scopes.ToList();
+                    _providerAffiliations = existing.ProviderAffiliations.ToList();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading registration data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void OnPersonSelected(int personId)
+    {
+        _selectedPersonId = personId;
+        var p = _availablePersons.FirstOrDefault(x => x.Id == personId);
+        if (p != null)
+        {
+            _firstName = p.FirstName;
+            _lastName = p.LastName;
+            _email = p.Email ?? string.Empty;
+            _cellNumber = p.CellNumber ?? string.Empty;
+            _rsaIdNumber = p.RsaIdNumber ?? string.Empty;
+            _dobText = p.DateOfBirth?.ToString("yyyy-MM-dd") ?? string.Empty;
+            _gender = p.Gender ?? string.Empty;
+        }
+    }
+
+    private void OnDocumentToggle(string code, bool val)
+    {
+        if (val) _attachedDocCodes.Add(code);
+        else _attachedDocCodes.Remove(code);
+    }
+
+    private Task<bool> ValidateStep1Async()
+    {
+        if (string.IsNullOrWhiteSpace(_firstName) || string.IsNullOrWhiteSpace(_lastName) || string.IsNullOrWhiteSpace(_email))
+        {
+            Snackbar.Add("First name, last name, and email address are required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_rsaIdNumber) || _rsaIdNumber.Length != 13)
+        {
+            Snackbar.Add("A valid 13-digit South African RSA ID is required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep2Async()
+    {
+        if (string.IsNullOrWhiteSpace(_highestQualificationTitle) || !_highestQualificationObtainedDate.HasValue)
+        {
+            Snackbar.Add("Highest educational qualification title and obtained date are required.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (!_scopes.Any())
+        {
+            Snackbar.Add("At least one registered qualification scope meeting the 3-year practice requirement must be added.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep3Async()
+    {
+        // SDP affiliation is optional for independent practitioners
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep4Async()
+    {
+        var missingMandatory = _mandatoryDocuments.Where(d => d.IsMandatory && !_attachedDocCodes.Contains(d.Code)).ToList();
+        if (missingMandatory.Any())
+        {
+            Snackbar.Add($"Missing required documents: {string.Join(", ", missingMandatory.Select(m => m.Name))}", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        BuildReviewGroups();
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep5Async()
+    {
+        if (!_isCodeOfConductAccepted)
+        {
+            Snackbar.Add("You must accept the Assessor and Moderator Code of Conduct.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        if (!_isPopiaConsented)
+        {
+            Snackbar.Add("POPIA credential processing consent is mandatory.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        if (!_isDeclarationAcknowledged)
+        {
+            Snackbar.Add("You must solemnly acknowledge the accuracy of all submitted particulars.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private async Task EnsureDraftApplicationAsync()
+    {
+        if (ApplicationId <= 0)
+        {
+            // If person doesn't exist, create a draft person record or use first
+            int personId = _selectedPersonId;
+            if (personId <= 0)
+            {
+                var newPerson = await PersonService.CreateAsync(new Person
+                {
+                    FirstName = _firstName,
+                    LastName = _lastName,
+                    Email = _email,
+                    CellNumber = _cellNumber,
+                    RsaIdNumber = _rsaIdNumber,
+                    DateOfBirth = DateTime.TryParse(_dobText, out var dt) ? dt : DateTime.UtcNow.AddYears(-25),
+                    Gender = _gender
+                }, "SYSTEM");
+                personId = newPerson.Id;
+                _selectedPersonId = personId;
+            }
+
+            var app = await RegService.CreateDraftApplicationAsync(new CreateAssessorApplicationRequest
+            {
+                PractitionerType = _practitionerType,
+                PersonId = personId,
+                LastSchoolAttended = _lastSchoolAttended,
+                LastSchoolYear = _lastSchoolYear,
+                EmploymentStatusCode = _employmentStatusCode,
+                UrbanRuralArea = _urbanRuralArea,
+                NextOfKinName = _nextOfKinName,
+                NextOfKinContact = _nextOfKinContact,
+                NextOfKinRelationship = _nextOfKinRelationship,
+                HighestQualificationTitle = _highestQualificationTitle,
+                HighestQualificationObtainedDate = _highestQualificationObtainedDate
+            }, "SYSTEM");
+
+            ApplicationId = app.Id;
+        }
+        else
+        {
+            await RegService.UpdateDraftApplicationAsync(new UpdateAssessorApplicationRequest
+            {
+                ApplicationId = ApplicationId,
+                PractitionerType = _practitionerType,
+                LastSchoolAttended = _lastSchoolAttended,
+                LastSchoolYear = _lastSchoolYear,
+                EmploymentStatusCode = _employmentStatusCode,
+                UrbanRuralArea = _urbanRuralArea,
+                NextOfKinName = _nextOfKinName,
+                NextOfKinContact = _nextOfKinContact,
+                NextOfKinRelationship = _nextOfKinRelationship,
+                HighestQualificationTitle = _highestQualificationTitle,
+                HighestQualificationObtainedDate = _highestQualificationObtainedDate
+            }, "SYSTEM");
+        }
+    }
+
+    private async Task AddScopeAsync()
+    {
+        if (_newScopeSaqaId <= 0 || string.IsNullOrWhiteSpace(_newScopeTitle) || !_newScopeObtainedDate.HasValue)
+        {
+            Snackbar.Add("SAQA ID, title, and obtained date are required.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await EnsureDraftApplicationAsync();
+
+            var added = await RegService.AddQualificationScopeAsync(ApplicationId, new AddQualificationScopeRequest
+            {
+                SaqaQualificationId = _newScopeSaqaId,
+                QualificationTitle = _newScopeTitle,
+                QualificationObtainedDate = _newScopeObtainedDate.Value
+            }, "SYSTEM");
+
+            _scopes.Add(added);
+            _showAddScopeSection = false;
+            Snackbar.Add($"Scope for '{_newScopeTitle}' added successfully.", Severity.Success);
+        }
+        catch (InvalidOperationException ex)
+        {
+            Snackbar.Add($"Compliance error: {ex.Message}", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to add scope: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveScopeAsync(int scopeId)
+    {
+        try
+        {
+            await RegService.RemoveQualificationScopeAsync(scopeId, "SYSTEM");
+            _scopes.RemoveAll(s => s.Id == scopeId);
+            Snackbar.Add("Scope removed.", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing scope: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OpenAddUnitStandardForm(int scopeId)
+    {
+        _activeScopeIdForUnitStandard = scopeId;
+        _newUsCode = string.Empty;
+        _newUsTitle = string.Empty;
+        _newUsNqf = 4;
+        _newUsCredits = 10;
+    }
+
+    private async Task AddStandaloneUnitStandardAsync(int scopeId)
+    {
+        if (string.IsNullOrWhiteSpace(_newUsCode) || string.IsNullOrWhiteSpace(_newUsTitle))
+        {
+            Snackbar.Add("Unit standard code and title are required.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            var addedUs = await RegService.AddStandaloneUnitStandardAsync(scopeId, new ConstituentUnitStandardDto
+            {
+                UnitStandardCode = _newUsCode,
+                UnitStandardTitle = _newUsTitle,
+                NqfLevel = _newUsNqf,
+                Credits = _newUsCredits
+            }, "SYSTEM");
+
+            var scope = _scopes.FirstOrDefault(s => s.Id == scopeId);
+            if (scope != null)
+            {
+                scope.UnitStandards.Add(addedUs);
+            }
+
+            _activeScopeIdForUnitStandard = null;
+            Snackbar.Add("Standalone unit standard added to scope.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding unit standard: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveUnitStandardAsync(int unitStandardId)
+    {
+        try
+        {
+            await RegService.RemoveUnitStandardAsync(unitStandardId, "SYSTEM");
+            foreach (var s in _scopes)
+            {
+                var toRemove = s.UnitStandards.Where(u => u.Id == unitStandardId).ToList();
+                foreach (var item in toRemove) s.UnitStandards.Remove(item);
+            }
+            Snackbar.Add("Standalone unit standard removed.", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task LinkProviderAffiliationAsync()
+    {
+        if (_selectedSdpOrgId <= 0) return;
+
+        try
+        {
+            await EnsureDraftApplicationAsync();
+
+            var link = await RegService.LinkProviderAffiliationAsync(ApplicationId, _selectedSdpOrgId, _sdpSlaRef, "SYSTEM");
+            _providerAffiliations.Add(link);
+            _selectedSdpOrgId = 0;
+            _sdpSlaRef = string.Empty;
+            Snackbar.Add("Training provider linked successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error linking provider: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveProviderAffiliationAsync(int linkId)
+    {
+        try
+        {
+            await RegService.RemoveProviderAffiliationAsync(linkId, "SYSTEM");
+            _providerAffiliations.RemoveAll(p => p.Id == linkId);
+            Snackbar.Add("Provider affiliation unlinked.", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void BuildReviewGroups()
+    {
+        _reviewGroups = new()
+        {
+            new()
+            {
+                Title = "Practitioner & Personal Profile",
+                Icon = Icons.Material.Filled.Person,
+                TargetStepIndex = 0,
+                Items = new()
+                {
+                    new("Registration Role", _practitionerType),
+                    new("Full Name", $"{_firstName} {_lastName}"),
+                    new("RSA ID Number", _rsaIdNumber, isMonospace: true),
+                    new("Email Address", _email),
+                    new("Employment Status", _employmentStatusCode)
+                }
+            },
+            new()
+            {
+                Title = "Qualification Scopes",
+                Icon = Icons.Material.Filled.WorkspacePremium,
+                TargetStepIndex = 1,
+                Items = new()
+                {
+                    new("Highest Qualification", _highestQualificationTitle ?? "—"),
+                    new("Scopes Registered", $"{_scopes.Count} accredited qualifications"),
+                    new("Total Unit Standards", $"{_scopes.Sum(s => s.UnitStandards.Count)} unit standards")
+                }
+            },
+            new()
+            {
+                Title = "SDP Provider Affiliations",
+                Icon = Icons.Material.Filled.Business,
+                TargetStepIndex = 2,
+                Items = new()
+                {
+                    new("Affiliated Providers", $"{_providerAffiliations.Count} linked institutions")
+                }
+            },
+            new()
+            {
+                Title = "Document Matrix",
+                Icon = Icons.Material.Filled.Folder,
+                TargetStepIndex = 3,
+                Items = new()
+                {
+                    new("Attached Documents", $"{_attachedDocCodes.Count} verified files")
+                }
+            }
+        };
+    }
+
+    private void OnStepChanged(int newStep)
+    {
+        _activeStep = newStep;
+    }
+
+    private void OnEditStepRequested(int targetStep)
+    {
+        _activeStep = targetStep;
+    }
+
+    private async Task SubmitApplicationAsync()
+    {
+        _isProcessing = true;
+        try
+        {
+            await EnsureDraftApplicationAsync();
+
+            var submitted = await RegService.SignOffAndSubmitAsync(ApplicationId, "SYSTEM");
+            _registeredApplicationNumber = submitted.ApplicationNumber;
+            _isSuccess = true;
+            Snackbar.Add($"Application {_registeredApplicationNumber} successfully submitted!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Submission failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void ViewApplicationDetails()
+    {
+        NavManager.NavigateTo($"/etqa/applications/{ApplicationId}");
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo("/etqa/applications");
+    }
+}

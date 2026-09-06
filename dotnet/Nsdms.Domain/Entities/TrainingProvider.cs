@@ -129,6 +129,87 @@ public class TrainingProvider : BaseEntity
     public string? BrandColorHex { get; set; }
 
     /// <summary>
+    /// Statutory accreditation intake stream: PrimaryAccreditation, ProgrammeApproval, QctoSkillsDevelopmentProvider, QctoTradeTestCentre, NonMerSetaScope
+    /// (Signed SDP Application Use Case Table 7, 8, 9 & Table 24).
+    /// </summary>
+    public string AccreditationStream { get; set; } = "PrimaryAccreditation";
+
+    /// <summary>
+    /// Primary ETQA / SETA name for Programme Approval stream (e.g. CHIETA, Services SETA, QCTO).
+    /// </summary>
+    public string? PrimaryEtqaName { get; set; }
+
+    /// <summary>
+    /// Accreditation certificate number awarded by the Primary ETQA (Table 8 / Table 24 Col 2).
+    /// </summary>
+    public string? PrimaryAccreditationNumber { get; set; }
+
+    /// <summary>
+    /// Primary ETQA accreditation validity cycle start date.
+    /// </summary>
+    public DateTime? PrimaryAccreditationStartDate { get; set; }
+
+    /// <summary>
+    /// Primary ETQA accreditation validity cycle end date.
+    /// </summary>
+    public DateTime? PrimaryAccreditationEndDate { get; set; }
+
+    /// <summary>
+    /// Official NAMB Trade Test Centre registration number (Table 9 / Table 24 Col 4).
+    /// </summary>
+    public string? NambRegistrationNumber { get; set; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string? PrimaryEtqaAccreditationNumber { get => PrimaryAccreditationNumber; set => PrimaryAccreditationNumber = value; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string? NambTtcRegistrationNumber { get => NambRegistrationNumber; set => NambRegistrationNumber = value; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public DateTime? NambTtcExpiryDate { get => NambRegistrationEndDate; set => NambRegistrationEndDate = value; }
+
+    /// <summary>
+    /// NAMB Trade Test Centre accreditation start date.
+    /// </summary>
+    public DateTime? NambRegistrationStartDate { get; set; }
+
+    /// <summary>
+    /// NAMB Trade Test Centre accreditation end date.
+    /// </summary>
+    public DateTime? NambRegistrationEndDate { get; set; }
+
+    /// <summary>
+    /// MerSETA ETQA Review Committee decision minute reference number (Table 7 Step N, Table 15 Attribute 19).
+    /// </summary>
+    public string? EtqaCommitteeDecisionNumber { get; set; }
+
+    /// <summary>
+    /// Date when the ETQA Review Committee ratified the accreditation decision.
+    /// </summary>
+    public DateTime? EtqaCommitteeMeetingDate { get; set; }
+
+    /// <summary>
+    /// Indicates whether a re-accreditation application is currently underway.
+    /// Statutory Invariant (BR4): Operational status must NOT revert to Pending Approval during renewal.
+    /// </summary>
+    public bool ReAccreditationUnderway { get; set; } = false;
+
+    /// <summary>
+    /// Timestamp when re-accreditation application was initiated.
+    /// </summary>
+    public DateTime? ReAccreditationEffectiveDate { get; set; }
+
+    /// <summary>
+    /// 5-Working-Day SLA Inspection Due Date for QA initial contact and scheduling (Table 14 BR3).
+    /// </summary>
+    public DateTime? InspectionDueDate { get; set; }
+
+    /// <summary>
+    /// SHA-256 cryptographic Digital Security Seal stamped on official ETQA Accreditation Certificate.
+    /// </summary>
+    public string? DigitalSecuritySeal { get; set; }
+
+    /// <summary>
     /// Full SAQA qualifications accredited for delivery by this provider.
     /// </summary>
     public ICollection<TrainingProviderQualification> Qualifications { get; set; } = new List<TrainingProviderQualification>();
@@ -147,4 +228,14 @@ public class TrainingProvider : BaseEntity
     /// Registered assessors and moderators linked to this provider.
     /// </summary>
     public ICollection<TrainingProviderAssessorLink> AssessorLinks { get; set; } = new List<TrainingProviderAssessorLink>();
+
+    /// <summary>
+    /// Two-stage QMS Self-Evaluation audit checklist records.
+    /// </summary>
+    public ICollection<TrainingProviderSelfEvaluation> SelfEvaluations { get; set; } = new List<TrainingProviderSelfEvaluation>();
+
+    /// <summary>
+    /// Verified multi-contact quorum records including banking confirmation authorization.
+    /// </summary>
+    public ICollection<TrainingProviderContact> Contacts { get; set; } = new List<TrainingProviderContact>();
 }

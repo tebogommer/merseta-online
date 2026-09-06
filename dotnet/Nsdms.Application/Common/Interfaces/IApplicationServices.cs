@@ -39,6 +39,21 @@ public interface IPdfDocumentService
     // Statutory Workplace Approval Spec NMok_19122022 Annexures
     Task<byte[]> GenerateWorkplaceApprovalLetterPdfAsync(int approvalId);
     Task<byte[]> GenerateWorkplaceApprovalReportPdfAsync(int approvalId);
+
+    // Statutory ARPL Spec NMok_27012023 Form
+    Task<byte[]> GenerateArplApplicationFormPdfAsync(int applicationId);
+
+    // Statutory Assessor Spec MerSeta\NSDMS\LMS\LR\01 Annexures
+    Task<byte[]> GenerateAssessorCertificateLetterPdfAsync(int assessorId);
+    Task<byte[]> GenerateAssessorStatementOfScopePdfAsync(int assessorId);
+    Task<byte[]> GenerateAssessorDisciplinaryLetterPdfAsync(int disciplinaryCaseId);
+
+    // Statutory Learner Management Spec NMok_21112022 Documents
+    Task<byte[]> GenerateLpmFm005TransferFormPdfAsync(int transferId);
+    Task<byte[]> GenerateLpmTp010MutualTerminationLetterPdfAsync(int terminationId);
+    Task<byte[]> GenerateChecklist036InvestigationPdfAsync(int terminationId);
+    Task<byte[]> GenerateLearnerAddendumPdfAsync(int extensionId);
+    Task<byte[]> GenerateTerminationDecisionLetterPdfAsync(int terminationId);
 }
 
 public class ErpDisbursementResult

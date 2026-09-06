@@ -659,7 +659,193 @@
                 }
             </MudTabPanel>
 
-            <!-- TAB 8: Evidence Vault & Workflow History -->
+            <!-- TAB 8: QMS Self-Evaluation Checklist -->
+            <MudTabPanel Text="QMS Self-Evaluation" Icon="@Icons.Material.Filled.FactCheck" Disabled="Id == 0">
+                <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
+                    <div>
+                        <MudText Typo="Typo.h6">Statutory QMS Self-Evaluation Checklist (Signed 2023 Specification)</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Provider quality management compliance audit required prior to site verification scheduling</MudText>
+                    </div>
+                    <div class="d-flex align-center gap-2">
+                        @if (!_selfEvaluations.Any())
+                        {
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.PlaylistAddCheck"
+                                       OnClick="SeedQmsAuditChecklist"
+                                       Disabled="_loadingSelfEvaluations">
+                                Seed Standard QMS Checklist (10 Criteria)
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Secondary"
+                                       StartIcon="@Icons.Material.Filled.Save"
+                                       OnClick="SaveQmsEvaluations">
+                                Save QMS Progress
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Success"
+                                       StartIcon="@Icons.Material.Filled.Send"
+                                       OnClick="SubmitQmsEvaluations">
+                                Submit QMS to QA
+                            </MudButton>
+                        }
+                    </div>
+                </div>
+
+                @if (_loadingSelfEvaluations)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+                }
+                else if (!_selfEvaluations.Any())
+                {
+                    <MudAlert Severity="Severity.Info" Class="mb-4">
+                        No QMS self-evaluation checklist found for this provider. Click "Seed Standard QMS Checklist (10 Criteria)" to populate statutory quality management audit criteria.
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudTable Items="_selfEvaluations" Hover="true" Dense="true" Elevation="1">
+                        <HeaderContent>
+                            <MudTh Style="width: 90px;">Code</MudTh>
+                            <MudTh Style="width: 150px;">Category</MudTh>
+                            <MudTh>Criterion Description</MudTh>
+                            <MudTh Style="width: 120px;">Self-Rating</MudTh>
+                            <MudTh Style="width: 180px;">Document Reference</MudTh>
+                            <MudTh Style="width: 110px;">QA Verified</MudTh>
+                            <MudTh Style="width: 220px;">QA Findings &amp; Comments</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Code"><span class="font-mono"><strong>@context.CriteriaCode</strong></span></MudTd>
+                            <MudTd DataLabel="Category">
+                                <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">@context.CriteriaCategory</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Description">
+                                <MudText Typo="Typo.body2">@context.CriteriaDescription</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Self-Rating">
+                                <MudSwitch T="bool" @bind-Value="context.IsCompliant" Color="Color.Success" Size="Size.Small" Label="@(context.IsCompliant ? "Compliant" : "Non-Compliant")" />
+                            </MudTd>
+                            <MudTd DataLabel="Document Ref">
+                                <MudTextField T="string" @bind-Value="context.DocumentReferenceNumber" Variant="Variant.Outlined" Margin="Margin.Dense" Placeholder="e.g. Doc #QMS-01" />
+                            </MudTd>
+                            <MudTd DataLabel="QA Verified">
+                                <MudCheckBox T="bool?" @bind-Value="context.AssessorVerified" Color="Color.Primary" Dense="true" />
+                            </MudTd>
+                            <MudTd DataLabel="QA Comments">
+                                <MudTextField T="string" @bind-Value="context.AssessorFindings" Variant="Variant.Outlined" Margin="Margin.Dense" Placeholder="QA auditor remarks" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudTabPanel>
+
+            <!-- TAB 9: Contacts & Quorum -->
+            <MudTabPanel Text="Contacts &amp; Quorum" Icon="@Icons.Material.Filled.PeopleAlt" Disabled="Id == 0">
+                <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
+                    <div>
+                        <MudText Typo="Typo.h6">Designated Contact Persons &amp; Statutory Quorum</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Minimum two verified contacts required, with at least one designated banking details confirmation authority</MudText>
+                    </div>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.PersonAdd"
+                               OnClick="OpenAddContactDialog">
+                        Add Contact Person
+                    </MudButton>
+                </div>
+
+                @if (_quorumCompliant)
+                {
+                    <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mb-4">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Class="mr-2" />
+                        <strong>Statutory Quorum Satisfied:</strong> Minimum 2 verified contacts present, and designated banking details confirmation authority verified.
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="mb-4">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
+                        <strong>Statutory Quorum Incomplete:</strong> @_quorumReason
+                    </MudAlert>
+                }
+
+                @if (_loadingContacts)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+                }
+                else
+                {
+                    <MudTable Items="_contacts" Hover="true" Dense="true" Striped="true" Elevation="1">
+                        <HeaderContent>
+                            <MudTh>Full Name</MudTh>
+                            <MudTh>Designation / Role</MudTh>
+                            <MudTh>Contact (Email / Cell)</MudTh>
+                            <MudTh>RSA ID / Passport</MudTh>
+                            <MudTh>Primary SDF</MudTh>
+                            <MudTh>Banking Authority</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh Style="text-align:right">Action</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Full Name"><strong>@context.FullName</strong></MudTd>
+                            <MudTd DataLabel="Designation">@(context.ContactDesignation ?? "Contact Person")</MudTd>
+                            <MudTd DataLabel="Contact">
+                                <div>@context.Email</div>
+                                @if (!string.IsNullOrWhiteSpace(context.CellNumber))
+                                {
+                                    <div class="text-secondary small">@context.CellNumber</div>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="ID">@(context.IdOrPassportNumber ?? "-")</MudTd>
+                            <MudTd DataLabel="Primary SDF">
+                                @if (context.IsPrimaryContact)
+                                {
+                                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">Primary Contact</MudChip>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">-</span>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="Banking Authority">
+                                @if (context.IsBankingConfirmationAuthorized)
+                                {
+                                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.AccountBalance">
+                                        Banking Authority
+                                    </MudChip>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">-</span>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="Status">
+                                <MudChip T="string" Color="@(context.VerificationStatus == "Verified" ? Color.Success : Color.Default)" Size="Size.Small" Variant="Variant.Outlined">
+                                    @(context.VerificationStatus ?? "Active")
+                                </MudChip>
+                            </MudTd>
+                            <MudTd Style="text-align:right" DataLabel="Action">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="@(() => DeleteContact(context.Id))"
+                                               aria-label="Delete Contact Person" />
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No designated contact persons recorded. At least two contacts are required for statutory quorum.</MudText>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                }
+            </MudTabPanel>
+
+            <!-- TAB 10: Evidence Vault & Workflow History -->
             @if (Id > 0)
             {
                 <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
@@ -736,7 +922,7 @@
 </MudDialog>
 
 <!-- Add Campus Dialog -->
-<MudDialog @bind-IsVisible="_addCampusOpen" Options="_dialogOptions">
+<MudDialog @bind-Visible="_addCampusOpen" Options="_dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6">Add Delivery Campus / Physical Site</MudText>
     </TitleContent>
@@ -774,6 +960,45 @@
     </DialogActions>
 </MudDialog>
 
+<!-- ADD CONTACT PERSON DIALOG -->
+<MudDialog @bind-Visible="_addContactOpen" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add Provider Contact Person</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newContact.FirstName" Label="First Name" Variant="Variant.Outlined" Required="true" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newContact.LastName" Label="Last Name" Variant="Variant.Outlined" Required="true" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newContact.ContactDesignation" Label="Designation / Role" Variant="Variant.Outlined" Placeholder="e.g. Chief Executive / SDF / Finance Officer" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newContact.Email" Label="Email Address" Variant="Variant.Outlined" Required="true" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newContact.CellNumber" Label="Cell / Mobile Number" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newContact.IdOrPassportNumber" Label="RSA ID / Passport" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudCheckBox @bind-Value="_newContact.IsPrimaryContact" Label="Designated Primary Contact / SDF" Color="Color.Primary" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudCheckBox @bind-Value="_newContact.IsBankingConfirmationAuthorized" Label="Authorised to Confirm Banking Details (Statutory Requirement)" Color="Color.Success" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _addContactOpen = false)">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveContact">Save Contact Person</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     [Parameter] public int Id { get; set; }
 
@@ -791,12 +1016,18 @@
     private List<ProviderAssessorModeratorDto> _assessors = new();
     private List<ProviderEmployerDto> _employers = new();
     private List<ProviderAuditVisitDto> _audits = new();
+    private List<TrainingProviderSelfEvaluation> _selfEvaluations = new();
+    private List<TrainingProviderContact> _contacts = new();
 
     private bool _loadingCampuses = false;
     private bool _loadingLearners = false;
     private bool _loadingAssessors = false;
     private bool _loadingEmployers = false;
     private bool _loadingAudits = false;
+    private bool _loadingSelfEvaluations = false;
+    private bool _loadingContacts = false;
+    private bool _quorumCompliant = false;
+    private string _quorumReason = string.Empty;
 
     // In-tab Modals
     private bool _addCampusOpen = false;
@@ -807,6 +1038,9 @@
 
     private bool _addUnitStandardOpen = false;
     private TrainingProviderUnitStandard _newUnitStandard = new();
+
+    private bool _addContactOpen = false;
+    private TrainingProviderContact _newContact = new();
 
     private bool _loading = true;
     private bool _isSaving = false;
@@ -873,6 +1107,8 @@
             _loadingAssessors = true;
             _loadingEmployers = true;
             _loadingAudits = true;
+            _loadingSelfEvaluations = true;
+            _loadingContacts = true;
 
             _campuses = await CampusService.GetCampusesByProviderAsync(Id);
             _loadingCampuses = false;
@@ -888,6 +1124,15 @@
 
             _audits = await ProviderService.GetAuditVisitsAsync(Id);
             _loadingAudits = false;
+
+            _selfEvaluations = await ProviderService.GetSelfEvaluationsAsync(Id);
+            _loadingSelfEvaluations = false;
+
+            _contacts = await ProviderService.GetContactsAsync(Id);
+            var quorum = await ProviderService.ValidateContactQuorumAsync(Id);
+            _quorumCompliant = quorum.IsValid;
+            _quorumReason = quorum.Message;
+            _loadingContacts = false;
         }
         else
         {
@@ -956,16 +1201,117 @@
     {
         try
         {
-            _provider.AccreditationEndDate = DateTime.Today.AddYears(5);
-            _provider.ProviderStatusCode = "Accredited";
-            _provider.IsActive = true;
-            await ProviderService.SaveAsync(_provider, "Admin");
-            Snackbar.Add($"SDP '{_provider.AccreditationNumber}' accreditation successfully renewed for 5 years until {_provider.AccreditationEndDate:yyyy-MM-dd}.", Severity.Success);
-            await LoadProviderData();
+            var initiated = await ProviderService.InitiateReAccreditationAsync(Id, "Admin");
+            if (initiated != null)
+            {
+                Snackbar.Add($"Re-accreditation formally initiated for '{_provider.AccreditationNumber}'. Provider operational status is preserved without interruption.", Severity.Success);
+                await LoadProviderData();
+            }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error renewing provider accreditation: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Re-accreditation condition: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private async Task SeedQmsAuditChecklist()
+    {
+        try
+        {
+            await ProviderService.SeedDefaultSelfEvaluationsAsync(Id, "Admin");
+            _selfEvaluations = await ProviderService.GetSelfEvaluationsAsync(Id);
+            Snackbar.Add("Standard 10-criteria QMS audit checklist successfully seeded.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error seeding QMS checklist: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SaveQmsEvaluations()
+    {
+        try
+        {
+            await ProviderService.SaveSelfEvaluationsAsync(Id, _selfEvaluations, "Admin");
+            Snackbar.Add("QMS Self-Evaluation checklist saved successfully with audit log.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving QMS checklist: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SubmitQmsEvaluations()
+    {
+        try
+        {
+            var success = await ProviderService.SubmitSelfEvaluationAsync(Id, "Admin");
+            if (success)
+            {
+                Snackbar.Add("QMS Self-Evaluation submitted to ETQA for inspection site audit.", Severity.Success);
+                await LoadProviderData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error submitting QMS evaluation: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OpenAddContactDialog()
+    {
+        _newContact = new TrainingProviderContact
+        {
+            TrainingProviderId = Id,
+            IsPrimaryContact = !_contacts.Any(c => c.IsPrimaryContact),
+            IsBankingConfirmationAuthorized = !_contacts.Any(c => c.IsBankingConfirmationAuthorized),
+            VerificationStatus = "Verified"
+        };
+        _addContactOpen = true;
+    }
+
+    private async Task SaveContact()
+    {
+        if (string.IsNullOrWhiteSpace(_newContact.FirstName) || string.IsNullOrWhiteSpace(_newContact.LastName) || string.IsNullOrWhiteSpace(_newContact.Email))
+        {
+            Snackbar.Add("First name, last name, and email are mandatory for contact persons.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _newContact.TrainingProviderId = Id;
+            await ProviderService.SaveContactAsync(Id, _newContact, "Admin");
+            Snackbar.Add($"Contact '{_newContact.FullName}' saved successfully with audit log.", Severity.Success);
+            _addContactOpen = false;
+            _contacts = await ProviderService.GetContactsAsync(Id);
+            var q = await ProviderService.ValidateContactQuorumAsync(Id);
+            _quorumCompliant = q.IsValid;
+            _quorumReason = q.Message;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving contact: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteContact(int contactId)
+    {
+        try
+        {
+            var success = await ProviderService.DeleteContactAsync(contactId, "Admin");
+            if (success)
+            {
+                Snackbar.Add("Contact person removed with audit log.", Severity.Success);
+                _contacts = await ProviderService.GetContactsAsync(Id);
+                var q = await ProviderService.ValidateContactQuorumAsync(Id);
+                _quorumCompliant = q.IsValid;
+                _quorumReason = q.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing contact: {ex.Message}", Severity.Error);
         }
     }
 

@@ -58,6 +58,24 @@
                 }
             }
 
+            <!-- Expiry Warning & Renewal Prompt (Section 5) -->
+            @if ((_approval.ApprovalStatusCode == "APPROVED" || _approval.ApprovalStatusCode == "Approved") && _approval.ExpiryDate.HasValue)
+            {
+                var daysToExpiry = (_approval.ExpiryDate.Value.Date - DateTime.Today).Days;
+                @if (daysToExpiry <= 0)
+                {
+                    <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.EventBusy" OnClick="OpenRenewalDialog">
+                        Accreditation Expired — Click to Renew
+                    </MudChip>
+                }
+                else if (daysToExpiry <= 180)
+                {
+                    <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.HourglassBottom" OnClick="OpenRenewalDialog">
+                        Expiring in @daysToExpiry days — Click to Renew
+                    </MudChip>
+                }
+            }
+
             <!-- Statutory Services & Actions Menu -->
             <MudMenu Label="Statutory Services"
                      StartIcon="@Icons.Material.Filled.Bolt"
@@ -74,6 +92,9 @@
                 </MudMenuItem>
                 <MudMenuItem Icon="@Icons.Material.Filled.AssignmentTurnedIn" OnClick="OpenEvaluationDialog" Disabled="@(_approval.ApprovalStatusCode != "VERIFIED" && _approval.ApprovalStatusCode != "UNDER_EVALUATION")">
                     Render Committee Decision (Maker-Checker)
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Autorenew" IconColor="Color.Info" OnClick="OpenRenewalDialog" Disabled="@(_approval.ApprovalStatusCode != "APPROVED" && _approval.ApprovalStatusCode != "Approved" && _approval.ApprovalStatusCode != "EXPIRED" && _approval.ApprovalStatusCode != "Expired")">
+                    Apply for Re-Approval (Renewal)
                 </MudMenuItem>
                 <MudDivider Class="my-1" />
                 <MudMenuItem Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="DownloadOutcomeLetterPdf">
@@ -276,7 +297,7 @@ else
                 <MudCard Outlined="true" Class="pa-4">
                     <MudGrid Spacing="3">
                         <MudItem xs="12" md="6">
-                            <MudSelect T="int" @bind-Value="_approval.OrganisationId" Label="Host Employer / Organisation" Variant="Variant.Outlined" Required="true">
+                            <MudSelect T="int" Value="_approval.OrganisationId" ValueChanged="OnOrganisationChanged" Label="Host Employer / Organisation" Variant="Variant.Outlined" Required="true">
                                 <MudSelectItem Value="0">-- Select Employer --</MudSelectItem>
                                 @foreach (var org in _organisations)
                                 {
@@ -507,7 +528,7 @@ else
                     <MudTh>Designation / Trade Title</MudTh>
                     <MudTh>Artisan Trade Number</MudTh>
                     <MudTh>Experience (Years)</MudTh>
-                    <MudTh>Certified</MudTh>
+                    <MudTh>Approval Status</MudTh>
                     <MudTh>Supervision Capacity</MudTh>
                     <MudTh>Ratio Status</MudTh>
                     <MudTh Style="text-align: right;">Action</MudTh>
@@ -524,14 +545,26 @@ else
                     <MudTd DataLabel="Designation">@context.Designation</MudTd>
                     <MudTd DataLabel="Trade No">@(context.ArtisanTradeNumber ?? "—")</MudTd>
                     <MudTd DataLabel="Experience">@context.YearsExperience yrs</MudTd>
-                    <MudTd DataLabel="Certified">
-                        @if (context.IsCertifiedArtisan)
+                    <MudTd DataLabel="Approval Status">
+                        @if (context.ApprovalStatusCode == "Approved")
                         {
-                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Certified</MudChip>
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">
+                                Approved
+                            </MudChip>
+                        }
+                        else if (context.ApprovalStatusCode == "Rejected")
+                        {
+                            <MudTooltip Text="@(context.RejectionReason ?? "Rejected")">
+                                <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Cancel">
+                                    Rejected
+                                </MudChip>
+                            </MudTooltip>
                         }
                         else
                         {
-                            <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">Under Review</MudChip>
+                            <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.AccessTime">
+                                Pending
+                            </MudChip>
                         }
                     </MudTd>
                     <MudTd DataLabel="Capacity">
@@ -560,16 +593,40 @@ else
                     </MudTd>
                     <MudTd DataLabel="Action" Style="text-align: right;">
                         <div class="d-flex justify-end gap-1">
-                            <MudIconButton Icon="@Icons.Material.Filled.Tune"
-                                           Color="Color.Primary"
-                                           Size="Size.Small"
-                                           OnClick="@(() => OpenEditMentorCapacityDialog(context))"
-                                           aria-label="Configure Mentor Capacity" />
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                           Color="Color.Error"
-                                           Size="Size.Small"
-                                           OnClick="@(() => RemoveMentor(context.Id))"
-                                           aria-label="Remove Mentor" />
+                            @if (context.ApprovalStatusCode != "Approved")
+                            {
+                                <MudTooltip Text="Approve Mentor Nomination">
+                                    <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
+                                                   Color="Color.Success"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => ApproveMentor(context.Id))"
+                                                   aria-label="Approve Mentor" />
+                                </MudTooltip>
+                            }
+                            @if (context.ApprovalStatusCode != "Rejected")
+                            {
+                                <MudTooltip Text="Reject Mentor Nomination">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Cancel"
+                                                   Color="Color.Warning"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenRejectMentorDialog(context))"
+                                                   aria-label="Reject Mentor" />
+                                </MudTooltip>
+                            }
+                            <MudTooltip Text="Configure Supervision Capacity">
+                                <MudIconButton Icon="@Icons.Material.Filled.Tune"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenEditMentorCapacityDialog(context))"
+                                               aria-label="Configure Mentor Capacity" />
+                            </MudTooltip>
+                            <MudTooltip Text="Remove Mentor">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="@(() => RemoveMentor(context.Id))"
+                                               aria-label="Remove Mentor" />
+                            </MudTooltip>
                         </div>
                     </MudTd>
                 </RowTemplate>
@@ -993,18 +1050,35 @@ else
                 </MudRadioGroup>
             </MudItem>
 
+            @if (_evalDecisionMakerPersonId.HasValue && _approval.VerifiedByPersonId.HasValue && _evalDecisionMakerPersonId.Value == _approval.VerifiedByPersonId.Value)
+            {
+                <MudItem xs="12">
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="my-1">
+                        <strong>Maker-Checker Segregation Warning:</strong> The selected decision-maker (@_people.FirstOrDefault(p => p.Id == _evalDecisionMakerPersonId.Value)?.FullName) is also the Verification Officer who inspected this site. merSETA PFMA guidelines mandate independent committee evaluation.
+                    </MudAlert>
+                    <MudCheckBox T="bool" @bind-Value="_evalAllowSelfApprovalOverride" Color="Color.Warning" Label="Authorize Administrative Committee Override (Will be recorded in Audited Change Log)" />
+                </MudItem>
+            }
+
             @if (_evalIsApproved)
             {
                 <MudItem xs="12" md="6">
                     <MudSelect T="string" @bind-Value="_evalReason" Label="Approval Decision Category" Variant="Variant.Outlined" Required="true">
-                        <MudSelectItem Value="@("AuditVerified")">Audit Criteria Fully Met & Verified</MudSelectItem>
+                        <MudSelectItem Value="@("AuditVerified")">Audit Criteria Fully Met &amp; Verified</MudSelectItem>
                         <MudSelectItem Value="@("CommitteeApproved")">ETQA Committee Ratified Approval</MudSelectItem>
                         <MudSelectItem Value="@("StandardAccredited")">National Artisan Moderation Body Standards Met</MudSelectItem>
                     </MudSelect>
                 </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="int" @bind-Value="_evalValidityYears" Label="Accreditation Validity Duration" Variant="Variant.Outlined">
+                        <MudSelectItem Value="3">3 Years (Standard Full Statutory Approval)</MudSelectItem>
+                        <MudSelectItem Value="2">2 Years (Conditional Approval / Mid-Term Audit)</MudSelectItem>
+                        <MudSelectItem Value="1">1 Year (Provisional / Action Plan Required)</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
                 <MudItem xs="12">
-                    <MudTextField @bind-Value="_evalExplanation" Label="Decision Rationale & Terms of Accreditation" Variant="Variant.Outlined" Lines="2"
-                                  Placeholder="Accredited for 3-year term subject to annual monitoring audits..." />
+                    <MudTextField @bind-Value="_evalExplanation" Label="Decision Rationale &amp; Terms of Accreditation" Variant="Variant.Outlined" Lines="2"
+                                  Placeholder="Accredited for selected validity term subject to annual monitoring audits..." />
                 </MudItem>
             }
             else
@@ -1027,6 +1101,53 @@ else
         <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => _evaluationDialogOpen = false)">Cancel</MudButton>
         <MudButton Color="@(_evalIsApproved ? Color.Success : Color.Error)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveEvaluationAsync">
             @(_evalIsApproved ? "Grant Approval" : "Decline Approval")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- WORKPLACE RE-APPROVAL / RENEWAL DIALOG (Section 5) -->
+<MudDialog @bind-Visible="_renewalDialogOpen">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Autorenew" Color="Color.Info" />
+            <MudText Typo="Typo.h6">Apply for Workplace Re-Approval (Renewal)</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            In accordance with Section 5 of the Workplace Approval specification, initiating a renewal creates an expedited re-approval application retaining all certified artisan mentors and tool inventories from <strong>@_approval.ApprovalNumber</strong>.
+        </MudText>
+        <MudAlert Severity="Severity.Info" Dense="true">
+            The renewed application will be automatically routed for re-verification under a fresh 20-working-day statutory SLA clock.
+        </MudAlert>
+    </DialogContent>
+    <DialogActions>
+        <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => _renewalDialogOpen = false)">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="SaveRenewalAsync">
+            Initiate Renewal Application
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- REJECT MENTOR NOMINATION DIALOG (Section 4.2.3) -->
+<MudDialog @bind-Visible="_rejectMentorDialogOpen">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" />
+            <MudText Typo="Typo.h6">Reject Artisan Mentor Nomination</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Please capture the non-compliance reason for rejecting mentor <strong>@_targetMentor?.Person?.FullName</strong> per Section 4.2.3.
+        </MudText>
+        <MudTextField @bind-Value="_mentorRejectionReason" Label="Specific Rejection Reason" Variant="Variant.Outlined" Lines="3" Required="true"
+                      Placeholder="e.g. Red Seal certificate unverified with NAMB, insufficient post-qualification experience..." />
+    </DialogContent>
+    <DialogActions>
+        <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => _rejectMentorDialogOpen = false)">Cancel</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" OnClick="SaveRejectMentorAsync">
+            Reject Mentor
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -1284,6 +1405,16 @@ else
     private string? _evalReason = "AuditVerified";
     private string? _evalExplanation;
     private int? _evalDecisionMakerPersonId;
+    private int _evalValidityYears = 3;
+    private bool _evalAllowSelfApprovalOverride = false;
+
+    // Renewal Dialog State (Section 5)
+    private bool _renewalDialogOpen = false;
+
+    // Reject Mentor Nomination Dialog State (Section 4.2.3)
+    private bool _rejectMentorDialogOpen = false;
+    private WorkplaceApprovalMentor? _targetMentor;
+    private string? _mentorRejectionReason;
 
     // Withdraw Dialog State
     private bool _withdrawDialogOpen = false;
@@ -1519,6 +1650,23 @@ else
         }
     }
 
+    private async Task OnOrganisationChanged(int orgId)
+    {
+        _approval.OrganisationId = orgId;
+        _sites = await OrganisationService.GetSitesAsync(orgId);
+        _approval.OrganisationSiteId = _sites.FirstOrDefault()?.Id;
+        var contacts = await OrganisationService.GetContactsAsync(orgId);
+        if (contacts.Any())
+        {
+            var primaryContact = contacts.FirstOrDefault(c => c.IsPrimary) ?? contacts.FirstOrDefault();
+            if (primaryContact != null)
+            {
+                _approval.ContactPersonId = primaryContact.PersonId;
+            }
+        }
+        StateHasChanged();
+    }
+
     private void OpenEvaluationDialog()
     {
         _evalDecisionMakerPersonId = _approval.DecisionByPersonId ?? _people.FirstOrDefault()?.Id;
@@ -1535,7 +1683,9 @@ else
                 _evalReason,
                 _evalExplanation,
                 _evalDecisionMakerPersonId,
-                "ADMIN");
+                "ADMIN",
+                validityYears: _evalValidityYears,
+                allowSelfApprovalOverride: _evalAllowSelfApprovalOverride);
 
             Snackbar.Add(_evalIsApproved ? "Workplace Approval granted by authority!" : "Workplace Approval rejected.", _evalIsApproved ? Severity.Success : Severity.Warning);
             _evaluationDialogOpen = false;
@@ -1544,6 +1694,26 @@ else
         catch (Exception ex)
         {
             Snackbar.Add($"Evaluation error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OpenRenewalDialog()
+    {
+        _renewalDialogOpen = true;
+    }
+
+    private async Task SaveRenewalAsync()
+    {
+        try
+        {
+            var renewed = await ApprovalService.RenewWorkplaceApprovalAsync(Id, "ADMIN");
+            Snackbar.Add($"Workplace Re-Approval application #{renewed.ApprovalNumber} created successfully with 20-working-day SLA!", Severity.Success);
+            _renewalDialogOpen = false;
+            Navigation.NavigateTo($"/workplace-approvals/{renewed.Id}");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Renewal error: {ex.Message}", Severity.Error);
         }
     }
 
@@ -1579,7 +1749,8 @@ else
         {
             WorkplaceApprovalId = _approval.Id,
             PersonId = _people.FirstOrDefault()?.Id ?? 0,
-            IsCertifiedArtisan = true
+            IsCertifiedArtisan = true,
+            ApprovalStatusCode = (_approval.ApprovalStatusCode == "APPROVED" || _approval.ApprovalStatusCode == "Approved") ? "Pending" : "Approved"
         };
         _addMentorOpen = true;
     }
@@ -1602,6 +1773,51 @@ else
         catch (Exception ex)
         {
             Snackbar.Add($"Error adding mentor: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ApproveMentor(int mentorId)
+    {
+        var officerId = _approval.VerifiedByPersonId ?? _approval.AssessorPersonId ?? _people.FirstOrDefault()?.Id ?? 0;
+        try
+        {
+            await ApprovalService.ApproveMentorAsync(mentorId, officerId, "ADMIN");
+            Snackbar.Add("Artisan mentor nomination approved.", Severity.Success);
+            await LoadApprovalDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error approving mentor: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OpenRejectMentorDialog(WorkplaceApprovalMentor mentor)
+    {
+        _targetMentor = mentor;
+        _mentorRejectionReason = mentor.RejectionReason;
+        _rejectMentorDialogOpen = true;
+    }
+
+    private async Task SaveRejectMentorAsync()
+    {
+        if (_targetMentor == null) return;
+        if (string.IsNullOrWhiteSpace(_mentorRejectionReason))
+        {
+            Snackbar.Add("Please specify the reason for rejecting the mentor nomination.", Severity.Warning);
+            return;
+        }
+
+        var officerId = _approval.VerifiedByPersonId ?? _approval.AssessorPersonId ?? _people.FirstOrDefault()?.Id ?? 0;
+        try
+        {
+            await ApprovalService.RejectMentorAsync(_targetMentor.Id, _mentorRejectionReason, officerId, "ADMIN");
+            Snackbar.Add("Artisan mentor nomination rejected.", Severity.Warning);
+            _rejectMentorDialogOpen = false;
+            await LoadApprovalDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error rejecting mentor: {ex.Message}", Severity.Error);
         }
     }
 

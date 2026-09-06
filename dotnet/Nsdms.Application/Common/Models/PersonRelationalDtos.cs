@@ -7,7 +7,7 @@ public record PersonLearnerDto(
     int CompanyLearnerId,
     string? LearnerContractNumber,
     string EmployerName,
-    int EmployerId,
+    int? EmployerId,
     string QualificationTitle,
     string? ProgrammeTypeName,
     string Status,

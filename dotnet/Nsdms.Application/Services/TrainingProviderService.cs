@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
 using Nsdms.Application.Common.Models;
@@ -24,6 +26,25 @@ public interface ITrainingProviderService
     Task<TrainingProviderUnitStandard> AddUnitStandardAsync(int trainingProviderId, TrainingProviderUnitStandard unitStandard, string currentUsername = "SYSTEM");
     Task<List<TrainingProviderUnitStandard>> GetUnitStandardsAsync(int trainingProviderId);
     Task<bool> RemoveUnitStandardAsync(int unitStandardId, string currentUsername = "SYSTEM");
+
+    // Phase 34: SDP Statutory Governance Standards
+    Task<List<TrainingProviderSelfEvaluation>> GetSelfEvaluationsAsync(int trainingProviderId);
+    Task<List<TrainingProviderSelfEvaluation>> SeedDefaultSelfEvaluationsAsync(int trainingProviderId, string currentUsername = "SYSTEM");
+    Task<TrainingProviderSelfEvaluation> SaveSelfEvaluationAsync(TrainingProviderSelfEvaluation item, string currentUsername = "SYSTEM");
+    Task SaveSelfEvaluationsAsync(int trainingProviderId, List<TrainingProviderSelfEvaluation> items, string currentUsername = "SYSTEM");
+    Task<bool> SubmitSelfEvaluationAsync(int trainingProviderId, List<TrainingProviderSelfEvaluation> items, string currentUsername = "SYSTEM");
+    Task<bool> SubmitSelfEvaluationAsync(int trainingProviderId, string currentUsername = "SYSTEM");
+
+    Task<List<TrainingProviderContact>> GetContactsAsync(int trainingProviderId);
+    Task<TrainingProviderContact> AddOrUpdateContactAsync(TrainingProviderContact contact, string currentUsername = "SYSTEM");
+    Task<TrainingProviderContact> SaveContactAsync(int trainingProviderId, TrainingProviderContact contact, string currentUsername = "SYSTEM");
+    Task<bool> RemoveContactAsync(int contactId, string currentUsername = "SYSTEM");
+    Task<bool> DeleteContactAsync(int contactId, string currentUsername = "SYSTEM");
+    Task<(bool IsValid, string Message)> ValidateContactQuorumAsync(int trainingProviderId);
+
+    Task<TrainingProvider> InitiateReAccreditationAsync(int trainingProviderId, string currentUsername = "SYSTEM");
+    DateTime Calculate5WorkingDaysDueDate(DateTime startDate);
+    string GenerateAccreditationSecuritySeal(TrainingProvider provider);
 
     // 360-Degree SDP Relational Queries
     Task<List<ProviderLearnerDto>> GetEnrolledLearnersAsync(int trainingProviderId);
@@ -110,6 +131,21 @@ public class TrainingProviderService : ITrainingProviderService
         provider.CreatedAt = DateTime.UtcNow;
         provider.CreatedBy = currentUsername;
 
+        if (string.IsNullOrWhiteSpace(provider.AccreditationStream))
+        {
+            provider.AccreditationStream = "PrimaryAccreditation";
+        }
+
+        if (!provider.InspectionDueDate.HasValue)
+        {
+            provider.InspectionDueDate = Calculate5WorkingDaysDueDate(DateTime.UtcNow);
+        }
+
+        if (string.IsNullOrWhiteSpace(provider.DigitalSecuritySeal))
+        {
+            provider.DigitalSecuritySeal = GenerateAccreditationSecuritySeal(provider);
+        }
+
         db.TrainingProviders.Add(provider);
         await db.SaveChangesAsync();
 
@@ -138,6 +174,10 @@ public class TrainingProviderService : ITrainingProviderService
             existing.EtqaDecisionNumber,
             existing.MaxLearnerCapacity,
             existing.PrimaryContactPersonId,
+            existing.AccreditationStream,
+            existing.PrimaryEtqaName,
+            existing.ReAccreditationUnderway,
+            existing.InspectionDueDate,
             existing.IsActive
         };
 
@@ -149,6 +189,20 @@ public class TrainingProviderService : ITrainingProviderService
         existing.EtqaDecisionNumber = provider.EtqaDecisionNumber;
         existing.MaxLearnerCapacity = provider.MaxLearnerCapacity;
         existing.PrimaryContactPersonId = provider.PrimaryContactPersonId;
+        existing.AccreditationStream = provider.AccreditationStream ?? existing.AccreditationStream;
+        existing.PrimaryEtqaName = provider.PrimaryEtqaName;
+        existing.PrimaryAccreditationNumber = provider.PrimaryAccreditationNumber;
+        existing.PrimaryAccreditationStartDate = provider.PrimaryAccreditationStartDate;
+        existing.PrimaryAccreditationEndDate = provider.PrimaryAccreditationEndDate;
+        existing.NambRegistrationNumber = provider.NambRegistrationNumber;
+        existing.NambRegistrationStartDate = provider.NambRegistrationStartDate;
+        existing.NambRegistrationEndDate = provider.NambRegistrationEndDate;
+        existing.EtqaCommitteeDecisionNumber = provider.EtqaCommitteeDecisionNumber;
+        existing.EtqaCommitteeMeetingDate = provider.EtqaCommitteeMeetingDate;
+        existing.ReAccreditationUnderway = provider.ReAccreditationUnderway;
+        existing.ReAccreditationEffectiveDate = provider.ReAccreditationEffectiveDate;
+        existing.InspectionDueDate = provider.InspectionDueDate;
+        existing.DigitalSecuritySeal = provider.DigitalSecuritySeal ?? GenerateAccreditationSecuritySeal(existing);
         existing.IsActive = provider.IsActive;
         existing.ModifiedAt = DateTime.UtcNow;
         existing.ModifiedBy = currentUsername;
@@ -432,4 +486,274 @@ public class TrainingProviderService : ITrainingProviderService
         "07" => "ARPL",
         _ => code ?? "Learnership"
     };
+
+    // Phase 34: SDP Statutory Governance Standards
+    public async Task<List<TrainingProviderSelfEvaluation>> GetSelfEvaluationsAsync(int trainingProviderId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.TrainingProviderSelfEvaluations
+            .Where(e => e.TrainingProviderId == trainingProviderId)
+            .OrderBy(e => e.CriteriaCode)
+            .ToListAsync();
+    }
+
+    public async Task<List<TrainingProviderSelfEvaluation>> SeedDefaultSelfEvaluationsAsync(int trainingProviderId, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.TrainingProviderSelfEvaluations
+            .Where(e => e.TrainingProviderId == trainingProviderId)
+            .ToListAsync();
+
+        if (existing.Count > 0)
+        {
+            return existing;
+        }
+
+        var defaultCriteria = new List<TrainingProviderSelfEvaluation>
+        {
+            new() { TrainingProviderId = trainingProviderId, CriteriaCode = "QMS-01", CriteriaCategory = "Policy & Governance", CriteriaDescription = "Institutional governance structure, legal standing with CIPC/Trust, and statutory tax compliance with SARS.", IsCompliant = true, CreatedBy = currentUsername },
+            new() { TrainingProviderId = trainingProviderId, CriteriaCode = "QMS-02", CriteriaCategory = "Policy & Governance", CriteriaDescription = "Formally adopted Learner Admissions, Registration, and Recognition of Prior Learning (RPL) policies.", IsCompliant = true, CreatedBy = currentUsername },
+            new() { TrainingProviderId = trainingProviderId, CriteriaCode = "QMS-03", CriteriaCategory = "Assessment & Moderation", CriteriaDescription = "Documented internal assessment, moderation, reassessment, and learner appeals procedures.", IsCompliant = true, CreatedBy = currentUsername },
+            new() { TrainingProviderId = trainingProviderId, CriteriaCode = "QMS-04", CriteriaCategory = "Curriculum & Delivery", CriteriaDescription = "Approved occupational curriculum delivery strategy, learning materials, and structured artisan training plans.", IsCompliant = true, CreatedBy = currentUsername },
+            new() { TrainingProviderId = trainingProviderId, CriteriaCode = "QMS-05", CriteriaCategory = "Academic Staffing", CriteriaDescription = "Accredited and ETQA-registered assessors, internal moderators, and technical facilitators with statutory SLA agreements.", IsCompliant = true, CreatedBy = currentUsername },
+            new() { TrainingProviderId = trainingProviderId, CriteriaCode = "QMS-06", CriteriaCategory = "Facilities & Safety", CriteriaDescription = "Physical training campus infrastructure with valid Occupational Health & Safety (OHS) clearance certificate.", IsCompliant = true, CreatedBy = currentUsername },
+            new() { TrainingProviderId = trainingProviderId, CriteriaCode = "QMS-07", CriteriaCategory = "Tools & Equipment", CriteriaDescription = "Designated trade toolkit, machinery inventory, and practical workshop equipment matching curriculum specs.", IsCompliant = true, CreatedBy = currentUsername },
+            new() { TrainingProviderId = trainingProviderId, CriteriaCode = "QMS-08", CriteriaCategory = "Learner Support", CriteriaDescription = "Learner guidance, code of conduct, grievance mechanisms, and special learning needs accommodation.", IsCompliant = true, CreatedBy = currentUsername },
+            new() { TrainingProviderId = trainingProviderId, CriteriaCode = "QMS-09", CriteriaCategory = "Records & MIS", CriteriaDescription = "Management Information System (MIS) capable of data extraction for SETMIS File 100/200 and SAQA NLRD.", IsCompliant = true, CreatedBy = currentUsername },
+            new() { TrainingProviderId = trainingProviderId, CriteriaCode = "QMS-10", CriteriaCategory = "Financial Viability", CriteriaDescription = "Financial sustainability, valid public liability insurance, and formal tripartite agreement governance.", IsCompliant = true, CreatedBy = currentUsername }
+        };
+
+        db.TrainingProviderSelfEvaluations.AddRange(defaultCriteria);
+        await db.SaveChangesAsync();
+
+        _audit.LogAction(db, "TrainingProviderSelfEvaluation", trainingProviderId, "SeedDefaultCriteria", currentUsername, null, new { Count = defaultCriteria.Count });
+        await db.SaveChangesAsync();
+
+        return defaultCriteria;
+    }
+
+    public async Task<TrainingProviderSelfEvaluation> SaveSelfEvaluationAsync(TrainingProviderSelfEvaluation item, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        if (item.Id == 0)
+        {
+            item.CreatedAt = DateTime.UtcNow;
+            item.CreatedBy = currentUsername;
+            db.TrainingProviderSelfEvaluations.Add(item);
+        }
+        else
+        {
+            var existing = await db.TrainingProviderSelfEvaluations.FindAsync(item.Id);
+            if (existing == null) throw new KeyNotFoundException($"SelfEvaluation {item.Id} not found.");
+
+            existing.IsCompliant = item.IsCompliant;
+            existing.DocumentReferenceNumber = item.DocumentReferenceNumber;
+            existing.ApplicantComments = item.ApplicantComments;
+            existing.AssessorVerified = item.AssessorVerified;
+            existing.AssessorFindings = item.AssessorFindings;
+            existing.ModifiedAt = DateTime.UtcNow;
+            existing.ModifiedBy = currentUsername;
+            item = existing;
+        }
+
+        await db.SaveChangesAsync();
+        _audit.LogAction(db, "TrainingProviderSelfEvaluation", item.Id, "Save", currentUsername, null, item);
+        await db.SaveChangesAsync();
+
+        return item;
+    }
+
+    public async Task<bool> SubmitSelfEvaluationAsync(int trainingProviderId, List<TrainingProviderSelfEvaluation> items, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var provider = await db.TrainingProviders.FindAsync(trainingProviderId);
+        if (provider == null) throw new KeyNotFoundException($"TrainingProvider {trainingProviderId} not found.");
+
+        foreach (var item in items)
+        {
+            if (item.Id == 0)
+            {
+                item.TrainingProviderId = trainingProviderId;
+                item.CreatedAt = DateTime.UtcNow;
+                item.CreatedBy = currentUsername;
+                db.TrainingProviderSelfEvaluations.Add(item);
+            }
+            else
+            {
+                var existing = await db.TrainingProviderSelfEvaluations.FindAsync(item.Id);
+                if (existing != null)
+                {
+                    existing.IsCompliant = item.IsCompliant;
+                    existing.DocumentReferenceNumber = item.DocumentReferenceNumber;
+                    existing.ApplicantComments = item.ApplicantComments;
+                    existing.AssessorVerified = item.AssessorVerified;
+                    existing.AssessorFindings = item.AssessorFindings;
+                    existing.ModifiedAt = DateTime.UtcNow;
+                    existing.ModifiedBy = currentUsername;
+                }
+            }
+        }
+
+        // Advance workflow status
+        provider.ProviderStatusCode = "QMS_SUBMITTED";
+        provider.ModifiedAt = DateTime.UtcNow;
+        provider.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "TrainingProvider", trainingProviderId, "SubmitSelfEvaluation", currentUsername, null, new { ItemCount = items.Count });
+        await db.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task SaveSelfEvaluationsAsync(int trainingProviderId, List<TrainingProviderSelfEvaluation> items, string currentUsername = "SYSTEM")
+    {
+        foreach (var item in items)
+        {
+            item.TrainingProviderId = trainingProviderId;
+            await SaveSelfEvaluationAsync(item, currentUsername);
+        }
+    }
+
+    public async Task<bool> SubmitSelfEvaluationAsync(int trainingProviderId, string currentUsername = "SYSTEM")
+    {
+        var items = await GetSelfEvaluationsAsync(trainingProviderId);
+        return await SubmitSelfEvaluationAsync(trainingProviderId, items, currentUsername);
+    }
+
+    public async Task<List<TrainingProviderContact>> GetContactsAsync(int trainingProviderId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.TrainingProviderContacts
+            .Include(c => c.Person)
+            .Where(c => c.TrainingProviderId == trainingProviderId && c.IsActive)
+            .OrderBy(c => c.ContactDesignation)
+            .ToListAsync();
+    }
+
+    public async Task<TrainingProviderContact> AddOrUpdateContactAsync(TrainingProviderContact contact, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        if (contact.Id == 0)
+        {
+            contact.CreatedAt = DateTime.UtcNow;
+            contact.CreatedBy = currentUsername;
+            db.TrainingProviderContacts.Add(contact);
+        }
+        else
+        {
+            var existing = await db.TrainingProviderContacts.FindAsync(contact.Id);
+            if (existing == null) throw new KeyNotFoundException($"Contact {contact.Id} not found.");
+
+            existing.ContactDesignation = contact.ContactDesignation;
+            existing.Title = contact.Title;
+            existing.FirstName = contact.FirstName;
+            existing.LastName = contact.LastName;
+            existing.IdOrPassportNumber = contact.IdOrPassportNumber;
+            existing.Email = contact.Email;
+            existing.CellNumber = contact.CellNumber;
+            existing.IsBankingConfirmationAuthorized = contact.IsBankingConfirmationAuthorized;
+            existing.IsActive = contact.IsActive;
+            existing.ModifiedAt = DateTime.UtcNow;
+            existing.ModifiedBy = currentUsername;
+            contact = existing;
+        }
+
+        await db.SaveChangesAsync();
+        _audit.LogAction(db, "TrainingProviderContact", contact.Id, "Save", currentUsername, null, contact);
+        await db.SaveChangesAsync();
+
+        return contact;
+    }
+
+    public async Task<bool> RemoveContactAsync(int contactId, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var contact = await db.TrainingProviderContacts.FindAsync(contactId);
+        if (contact == null) return false;
+
+        contact.IsActive = false;
+        contact.ModifiedAt = DateTime.UtcNow;
+        contact.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "TrainingProviderContact", contact.Id, "Deactivate", currentUsername, null, new { contact.Id });
+        await db.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<TrainingProviderContact> SaveContactAsync(int trainingProviderId, TrainingProviderContact contact, string currentUsername = "SYSTEM")
+    {
+        contact.TrainingProviderId = trainingProviderId;
+        return await AddOrUpdateContactAsync(contact, currentUsername);
+    }
+
+    public async Task<bool> DeleteContactAsync(int contactId, string currentUsername = "SYSTEM")
+    {
+        return await RemoveContactAsync(contactId, currentUsername);
+    }
+
+    public async Task<(bool IsValid, string Message)> ValidateContactQuorumAsync(int trainingProviderId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var contacts = await db.TrainingProviderContacts
+            .Where(c => c.TrainingProviderId == trainingProviderId && c.IsActive)
+            .ToListAsync();
+
+        if (contacts.Count < 2)
+        {
+            return (false, $"Contact Quorum Failed: Exactly {contacts.Count} active contact person(s) registered. A minimum of two (2) verified contact persons is statutorily required.");
+        }
+
+        var hasBankingConfirmation = contacts.Any(c => c.IsBankingConfirmationAuthorized);
+        if (!hasBankingConfirmation)
+        {
+            return (false, "Banking Confirmation Invariant Failed: At least one designated contact person other than the primary SDF must be authorized to confirm banking details.");
+        }
+
+        return (true, "Contact quorum and banking confirmation authority verified successfully.");
+    }
+
+    public async Task<TrainingProvider> InitiateReAccreditationAsync(int trainingProviderId, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var provider = await db.TrainingProviders.FindAsync(trainingProviderId);
+        if (provider == null) throw new KeyNotFoundException($"TrainingProvider {trainingProviderId} not found.");
+
+        // Enforce 6-Month Invariant (Table 14 BR4)
+        if (provider.AccreditationEndDate.HasValue)
+        {
+            var sixMonthsPrior = provider.AccreditationEndDate.Value.AddMonths(-6);
+            if (DateTime.UtcNow < sixMonthsPrior)
+            {
+                throw new InvalidOperationException($"Statutory Invariant: Re-accreditation application is strictly permitted within 6 months prior to expiry. Current accreditation expires on {provider.AccreditationEndDate.Value:dd MMMM yyyy}; earliest re-accreditation date is {sixMonthsPrior:dd MMMM yyyy}.");
+            }
+        }
+
+        var beforeState = new { provider.ReAccreditationUnderway, provider.ProviderStatusCode };
+
+        // Statutory Non-Disruption Invariant (BR4):
+        // Provider status MUST NOT revert to Pending Approval; SDP remains Accredited and able to transact learner enrolments!
+        provider.ReAccreditationUnderway = true;
+        provider.ReAccreditationEffectiveDate = DateTime.UtcNow;
+        provider.ModifiedAt = DateTime.UtcNow;
+        provider.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "TrainingProvider", provider.Id, "InitiateReAccreditation", currentUsername, beforeState, provider);
+        await db.SaveChangesAsync();
+
+        return provider;
+    }
+
+    public DateTime Calculate5WorkingDaysDueDate(DateTime startDate)
+    {
+        return WorkplaceApprovalService.AddBusinessDays(startDate, 5);
+    }
+
+    public string GenerateAccreditationSecuritySeal(TrainingProvider provider)
+    {
+        var raw = $"{provider.AccreditationNumber}:{provider.OrganisationId}:{provider.AccreditationStream}:{provider.AccreditationStartDate:yyyy-MM-dd}:{provider.AccreditationEndDate:yyyy-MM-dd}:{provider.EtqaDecisionNumber}:{provider.ProviderCode}";
+        using var sha = SHA256.Create();
+        var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(raw));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
 }

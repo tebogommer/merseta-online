@@ -26,11 +26,23 @@
                    OnClick="@(() => Navigation.NavigateTo("/tradetests"))">
             Trade Tests Hub
         </MudButton>
+        <MudButton Variant="Variant.Outlined" 
+                   Color="Color.Secondary" 
+                   StartIcon="@Icons.Material.Filled.School" 
+                   OnClick="@(() => Navigation.NavigateTo("/learners/register-bursary"))">
+            Register Bursary
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" 
+                   Color="Color.Info" 
+                   StartIcon="@Icons.Material.Filled.UploadFile" 
+                   OnClick="@(() => Navigation.NavigateTo("/learners/bulk-register"))">
+            Bulk Fast-Track (ATM)
+        </MudButton>
         <MudButton Variant="Variant.Filled" 
                    Color="Color.Primary" 
                    StartIcon="@Icons.Material.Filled.PersonAdd" 
                    OnClick="@(() => Navigation.NavigateTo("/learners/create"))">
-            Register Learner
+            Register Learner (Manual)
         </MudButton>
     </ActionZone>
 </EntityHeader>
@@ -173,7 +185,19 @@
                 </MudTd>
                 <MudTd DataLabel="Status">
                     <!-- Non-clickable status pill (Clause 6.1, 7.2) -->
-                    <StatusBadge Status="@(context.EnrolmentStatus ?? "Registered")" Size="Size.Small" />
+                    <div class="d-flex flex-column align-start gap-1">
+                        <StatusBadge Status="@(context.EnrolmentStatus ?? "Registered")" Size="Size.Small" />
+                        @if (context.StpApproved)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">
+                                <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" Class="mr-1" /> STP Approved
+                            </MudChip>
+                        }
+                        else if (context.RegistrationChannel == "AutomatedBulk")
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Text">Bulk Ingested</MudChip>
+                        }
+                    </div>
                 </MudTd>
                 <MudTd Style="text-align: right;" DataLabel="Actions">
                     <div class="d-flex justify-end gap-1">

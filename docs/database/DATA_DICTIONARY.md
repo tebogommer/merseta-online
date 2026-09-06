@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-05 21:39:11 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 193
+> **Generated:** 2026-09-06 09:07:49 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 207
 
 ---
 
@@ -19,23 +19,32 @@
 | `dbo` | [`AqpPartner`](#aqppartner) | `AqpPartner` | 19 | `Id` | Assessment Quality Partner (AQP) accredited by QCTO to develop assessment instruments and manage EISA exams. |
 | `dbo` | [`AqpQualificationScope`](#aqpqualificationscope) | `AqpQualificationScope` | 12 | `Id` | Qualifications in scope for which the AQP is authorized to administer external summative assessments (EISA). |
 | `dbo` | [`ArplDocumentChecklist`](#arpldocumentchecklist) | `ArplDocumentChecklist` | 16 | `Id` | System entity for ArplDocumentChecklist data governance. |
-| `dbo` | [`ArplExperienceDetail`](#arplexperiencedetail) | `ArplExperienceDetail` | 12 | `Id` | Historical work experience item claimed under ARPL. |
+| `dbo` | [`ArplExperienceDetail`](#arplexperiencedetail) | `ArplExperienceDetail` | 17 | `Id` | Historical work experience item claimed under ARPL. |
 | `dbo` | [`ArplTradeTestInformation`](#arpltradetestinformation) | `ArplTradeTestInformation` | 17 | `Id` | Artisan Recognition of Prior Learning (ARPL) Portfolio Assessment record. |
 | `dbo` | [`ArplTrainingDetail`](#arpltrainingdetail) | `ArplTrainingDetail` | 10 | `Id` | Prior formal or non-formal training modules completed by an ARPL candidate. |
+| `dbo` | [`AssessorApplicationDocument`](#assessorapplicationdocument) | `AssessorApplicationDocument` | 11 | `Id` | Evidentiary document attached to an assessor/moderator registration application. |
+| `dbo` | [`AssessorApplicationProviderLink`](#assessorapplicationproviderlink) | `AssessorApplicationProviderLink` | 10 | `Id` | Skills Development Provider (SDP) affiliation requested during registration with mandatory SLA verification. |
+| `dbo` | [`AssessorApplicationScope`](#assessorapplicationscope) | `AssessorApplicationScope` | 9 | `Id` | Specific qualification scope requested in an initial registration application. |
+| `dbo` | [`AssessorApplicationUnitStandard`](#assessorapplicationunitstandard) | `AssessorApplicationUnitStandard` | 11 | `Id` | Individual unit standard scope linked to a qualification or requested standalone. |
 | `dbo` | [`AssessorCpdActivity`](#assessorcpdactivity) | `AssessorCpdActivity` | 12 | `Id` | Individual Continuous Professional Development (CPD) activity logged in support of practitioner renewal. |
+| `dbo` | [`AssessorDisciplinaryCase`](#assessordisciplinarycase) | `AssessorDisciplinaryCase` | 23 | `Id` | Statutory disciplinary, investigation, suspension, and de-registration case per specification MerSeta\NSDMS\LMS\LR\01 Use Case 4.2.7. |
 | `dbo` | [`AssessorExtensionOfScope`](#assessorextensionofscope) | `AssessorExtensionOfScope` | 16 | `Id` | System entity for AssessorExtensionOfScope data governance. |
 | `dbo` | [`AssessorModeratorApplication`](#assessormoderatorapplication) | `AssessorModeratorApplication` | 12 | `Id` | Assessor and Moderator Accreditation Application. |
 | `dbo` | [`AssessorModeratorScope`](#assessormoderatorscope) | `AssessorModeratorScope` | 10 | `Id` | Specific SAQA qualification registration scope granted to an ETQA Assessor or Moderator. |
+| `dbo` | [`AssessorProviderLink`](#assessorproviderlink) | `AssessorProviderLink` | 10 | `Id` | Active multi-SDP affiliation for a registered ETQA practitioner. |
+| `dbo` | [`AssessorRegistrationApplication`](#assessorregistrationapplication) | `AssessorRegistrationApplication` | 49 | `Id` | Represents a statutory initial registration application for ETQA Assessors and Moderators per specification MerSeta\NSDMS\LMS\LR\01. |
 | `dbo` | [`AssessorReRegistrationApplication`](#assessorreregistrationapplication) | `AssessorReRegistrationApplication` | 19 | `Id` | Represents a statutory 3-year re-registration or scope extension application for ETQA registered Assessors and Moderators. |
+| `dbo` | [`AssessorUnitStandardScope`](#assessorunitstandardscope) | `AssessorUnitStandardScope` | 11 | `Id` | Registered unit standard constituent scope approved on an active EtqaAssessor profile. |
 | `dbo` | [`AuditLog`](#auditlog) | `AuditLog` | 11 | `Id` | Immutable operational audit trail recording entity mutations, actor identity, timestamps, and JSON snapshots. |
 | `dbo` | [`BankingDetails`](#bankingdetails) | `BankingDetails` | 34 | `Id` | System entity for BankingDetails data governance. |
 | `dbo` | [`BankingDetailsAudit`](#bankingdetailsaudit) | `BankingDetailsAudit` | 8 | `Id` | System entity for BankingDetailsAudit data governance. |
 | `dbo` | [`CertificateDistributionEvent`](#certificatedistributionevent) | `CertificateDistributionEvent` | 14 | `Id` | Certificate Distribution Event tracking for National Red Seal certificates (Section 4.2.6). |
-| `dbo` | [`CompanyLearner`](#companylearner) | `CompanyLearner` | 53 | `Id` | Represents a learner registration agreement linked to an employer organisation, training provider, and MerSETA learning programme, capturing all statutory fields for SETMIS Files 500, 501, 502, and 506. |
+| `dbo` | [`CompanyLearner`](#companylearner) | `CompanyLearner` | 69 | `Id` | Represents a learner registration agreement linked to an employer organisation, training provider, and MerSETA learning programme, capturing all statutory fields for SETMIS Files 500, 501, 502, and 506. |
 | `dbo` | [`CompanyLearnerChangeRequest`](#companylearnerchangerequest) | `CompanyLearnerChangeRequest` | 16 | `Id` | Formal change request for amending an active registered CompanyLearner contract or demographic details. |
+| `dbo` | [`CompanyLearnerExtension`](#companylearnerextension) | `CompanyLearnerExtension` | 17 | `Id` | Represents a statutory request for extension of an unregistered learner application or an active learner contract per signed specification Section 4.1. |
 | `dbo` | [`CompanyLearnerLostTime`](#companylearnerlosttime) | `CompanyLearnerLostTime` | 16 | `Id` | Tracks suspended or lost training time and recalculates revised contract end dates. |
-| `dbo` | [`CompanyLearnerTermination`](#companylearnertermination) | `CompanyLearnerTermination` | 15 | `Id` | Manages formal bilateral or unilateral cancellation of learner contracts. |
-| `dbo` | [`CompanyLearnerTransfer`](#companylearnertransfer) | `CompanyLearnerTransfer` | 15 | `Id` | Tracks transfer of an active learner contract from one employer to another. |
+| `dbo` | [`CompanyLearnerTermination`](#companylearnertermination) | `CompanyLearnerTermination` | 35 | `Id` | Manages formal bilateral or unilateral cancellation of learner contracts per signed specification Sections 4.4, 4.5, 4.6. |
+| `dbo` | [`CompanyLearnerTransfer`](#companylearnertransfer) | `CompanyLearnerTransfer` | 31 | `Id` | Tracks transfer of an active learner contract from one employer to another, or from one accredited SDP to another, per signed specification Section 4.7. |
 | `dbo` | [`ContractAddenda`](#contractaddenda) | `ContractAddenda` | 19 | `Id` | System entity for ContractAddenda data governance. |
 | `dbo` | [`ContractExtensionRequest`](#contractextensionrequest) | `ContractExtensionRequest` | 16 | `Id` | System entity for ContractExtensionRequest data governance. |
 | `dbo` | [`ContractTerminationRequest`](#contractterminationrequest) | `ContractTerminationRequest` | 15 | `Id` | System entity for ContractTerminationRequest data governance. |
@@ -51,7 +60,7 @@
 | `dbo` | [`ErpOutboxMessage`](#erpoutboxmessage) | `ErpOutboxMessage` | 22 | `Id` | Transactional Outbox message entity for Microsoft Dynamics GP and ERP Web Services integration. Ensures resilient, decoupled asynchronous execution with automatic pause on GP outage and resumption upon recovery. |
 | `dbo` | [`ErpPaymentBatchEntry`](#erppaymentbatchentry) | `ErpPaymentBatchEntry` | 17 | `Id` | Individual line item voucher within an ERP payment batch. |
 | `dbo` | [`ErpPaymentBatchHeader`](#erppaymentbatchheader) | `ErpPaymentBatchHeader` | 14 | `Id` | ERP Payment Batch Header for staging mandatory/discretionary grant disbursements to Dynamics GP / Sage. |
-| `dbo` | [`EtqaAssessor`](#etqaassessor) | `EtqaAssessor` | 17 | `Id` | Registered ETQA Assessors and Moderators with approved qualification scopes, capturing all statutory fields required for SETMIS File 401 (Person Designation) reporting. |
+| `dbo` | [`EtqaAssessor`](#etqaassessor) | `EtqaAssessor` | 18 | `Id` | Registered ETQA Assessors and Moderators with approved qualification scopes, capturing all statutory fields required for SETMIS File 401 (Person Designation) reporting. |
 | `dbo` | [`FinancialApprovalThreshold`](#financialapprovalthreshold) | `FinancialApprovalThreshold` | 12 | `Id` | Represents a tiered financial delegation limit (DoA) enforcing role-based threshold caps on grants and disbursements. |
 | `dbo` | [`FundingWindowPriority`](#fundingwindowpriority) | `FundingWindowPriority` | 12 | `Id` | Gazetted Strategic Priority sub-budget envelope and beneficiary quota allocated to a Discretionary Grant Funding Window. |
 | `dbo` | [`GrantApplication`](#grantapplication) | `GrantApplication` | 20 | `Id` | Discretionary Grant funding applications submitted by employers for skills development projects. |
@@ -63,9 +72,11 @@
 | `dbo` | [`GrantTranchePayment`](#granttranchepayment) | `GrantTranchePayment` | 19 | `Id` | Tranche Invoices and Payment Requisitions. |
 | `dbo` | [`InterSetaTransfer`](#intersetatransfer) | `InterSetaTransfer` | 16 | `Id` | Inter-SETA Transfer of employer registration and levy funds between SETAs. |
 | `dbo` | [`LearnerAssessment`](#learnerassessment) | `LearnerAssessment` | 30 | `Id` | Formative and summative learning programme unit standard assessment evaluations, capturing all statutory fields required for SETMIS File 503 (Unit Standard Enrolment) reporting. |
+| `dbo` | [`LearnerBulkBatch`](#learnerbulkbatch) | `LearnerBulkBatch` | 14 | `Id` | Represents a bulk intake batch for high-speed learner registrations submitted by an Employer or SDP. Implements the ATM channel of the Dual-Channel Learner Registration Architecture. |
+| `dbo` | [`LearnerBulkBatchRow`](#learnerbulkbatchrow) | `LearnerBulkBatchRow` | 29 | `Id` | Individual candidate learner row staged within a LearnerBulkBatch. Allows fractional processing and inline error correction. |
 | `dbo` | [`LearnerRegisteredUnitStandard`](#learnerregisteredunitstandard) | `LearnerRegisteredUnitStandard` | 12 | `Id` | Tracks individual Unit Standards or Skills Sets registered against a CompanyLearner for Skills Programme and Unit Standard enrolments (SETMIS File 503). |
 | `dbo` | [`LearnerTradeTest`](#learnertradetest) | `LearnerTradeTest` | 29 | `Id` | Trade test final competency evaluation and artisan certification attempt records (ARPL & standard), fully normalized with statutory columns required for SETMIS File 505 (Trade Test) reporting. |
-| `dbo` | [`LearnerTradeTestApplication`](#learnertradetestapplication) | `LearnerTradeTestApplication` | 69 | `Id` | Artisan Trade Test Application and Assessment Record (Section 26D / Section 28 ARPL / Apprenticeships). |
+| `dbo` | [`LearnerTradeTestApplication`](#learnertradetestapplication) | `LearnerTradeTestApplication` | 71 | `Id` | Artisan Trade Test Application and Assessment Record (Section 26D / Section 28 ARPL / Apprenticeships). |
 | `dbo` | [`LearnerTradeTestWithdrawal`](#learnertradetestwithdrawal) | `LearnerTradeTestWithdrawal` | 10 | `Id` | Non-repudiation audit record for withdrawn ARPL and Trade Test applications (Section 4.2.8). |
 | `dbo` | [`LevyFile`](#levyfile) | `LevyFile` | 16 | `Id` | Monthly SARS Skills Development Levy file import batches. |
 | `dbo` | [`LevyFileLine`](#levyfileline) | `LevyFileLine` | 21 | `Id` | Individual employer monthly SARS levy transaction breakdown. |
@@ -114,10 +125,12 @@
 | `dbo` | [`TradeTestTask`](#tradetesttask) | `TradeTestTask` | 19 | `Id` | Practical Task and Scoring Item evaluated during the Trade Test. |
 | `dbo` | [`TrainingCommittee`](#trainingcommittee) | `TrainingCommittee` | 10 | `Id` | Employer Workplace Training Committee constituted per statutory merSETA guidelines. |
 | `dbo` | [`TrainingCommitteeMember`](#trainingcommitteemember) | `TrainingCommitteeMember` | 10 | `Id` | Individual Union and Employer representatives on a Training Committee. |
-| `dbo` | [`TrainingProvider`](#trainingprovider) | `TrainingProvider` | 25 | `Id` | Accredited Skills Development Provider (SDP) offering registered occupational qualifications and skills programmes, capturing all statutory fields required for SETMIS File 100 reporting. |
+| `dbo` | [`TrainingProvider`](#trainingprovider) | `TrainingProvider` | 39 | `Id` | Accredited Skills Development Provider (SDP) offering registered occupational qualifications and skills programmes, capturing all statutory fields required for SETMIS File 100 reporting. |
 | `dbo` | [`TrainingProviderAssessorLink`](#trainingproviderassessorlink) | `TrainingProviderAssessorLink` | 13 | `Id` | Relational binding between an accredited ETQA Assessor/Moderator and an SDP delivery campus. |
-| `dbo` | [`TrainingProviderCampus`](#trainingprovidercampus) | `TrainingProviderCampus` | 18 | `Id` | Physical training site or delivery campus belonging to an accredited Skills Development Provider (SDP). |
+| `dbo` | [`TrainingProviderCampus`](#trainingprovidercampus) | `TrainingProviderCampus` | 22 | `Id` | Physical training site or delivery campus belonging to an accredited Skills Development Provider (SDP). |
+| `dbo` | [`TrainingProviderContact`](#trainingprovidercontact) | `TrainingProviderContact` | 16 | `Id` | System entity for TrainingProviderContact data governance. |
 | `dbo` | [`TrainingProviderQualification`](#trainingproviderqualification) | `TrainingProviderQualification` | 11 | `Id` | Registered SAQA qualification delivery scope accredited to a Training Provider. |
+| `dbo` | [`TrainingProviderSelfEvaluation`](#trainingproviderselfevaluation) | `TrainingProviderSelfEvaluation` | 14 | `Id` | System entity for TrainingProviderSelfEvaluation data governance. |
 | `dbo` | [`TrainingProviderUnitStandard`](#trainingproviderunitstandard) | `TrainingProviderUnitStandard` | 10 | `Id` | Registered SAQA unit standard accredited for delivery by a Training Provider. |
 | `dbo` | [`Visit`](#visit) | `Visit` | 14 | `Id` | On-site monitoring, workplace inspection, and employer liaison visits scheduled and executed by MerSETA staff. |
 | `dbo` | [`WizardDraftSession`](#wizarddraftsession) | `WizardDraftSession` | 18 | `Id` | Transient wizard draft state session. Stores progressive inputs and active step indices to enable seamless resume lifecycle across all 9 statutory enterprise wizards. |
@@ -132,7 +145,7 @@
 | `dbo` | [`WorkflowTaskLease`](#workflowtasklease) | `WorkflowTaskLease` | 12 | `Id` | Represents a distributed concurrency lock lease on a workflow task to prevent simultaneous claims and race conditions. |
 | `dbo` | [`WorkflowTransition`](#workflowtransition) | `WorkflowTransition` | 14 | `Id` | Authorized state transition path with role authorization gates and UI button metadata. |
 | `dbo` | [`WorkplaceApproval`](#workplaceapproval) | `WorkplaceApproval` | 42 | `Id` | Workplace site inspection approval for hosting apprentice and learnership training. |
-| `dbo` | [`WorkplaceApprovalMentor`](#workplaceapprovalmentor) | `WorkplaceApprovalMentor` | 16 | `Id` | Qualified artisan mentor assigned to supervise apprentices and learners at an approved workplace. |
+| `dbo` | [`WorkplaceApprovalMentor`](#workplaceapprovalmentor) | `WorkplaceApprovalMentor` | 20 | `Id` | Qualified artisan mentor assigned to supervise apprentices and learners at an approved workplace. |
 | `dbo` | [`WorkplaceApprovalToolList`](#workplaceapprovaltoollist) | `WorkplaceApprovalToolList` | 11 | `Id` | Tool, equipment, or health and safety checklist item inspected for workplace qualification approval. |
 | `dbo` | [`WorkplaceMonitoringActionPlan`](#workplacemonitoringactionplan) | `WorkplaceMonitoringActionPlan` | 15 | `Id` | Corrective Action Plan for identified defects or non-compliances. |
 | `dbo` | [`WorkplaceMonitoringComplianceSurvey`](#workplacemonitoringcompliancesurvey) | `WorkplaceMonitoringComplianceSurvey` | 13 | `Id` | 10-Point Statutory Compliance Survey Questions answered during the visit. |
@@ -150,6 +163,7 @@
 | `dbo` | [`WspTrainingPlan`](#wsptrainingplan) | `WspTrainingPlan` | 10 | `Id` | Planned learning and development interventions submitted in the annual Workplace Skills Plan. |
 | `lookup` | [`AbetBandType`](#abetbandtype) | `AbetBandType` | 8 | `Code` | NLRD Adult Basic Education and Training Band classifications (Field: ABET_BAND_ID - 1 to 5). |
 | `lookup` | [`AlternateIdType`](#alternateidtype) | `AlternateIdType` | 8 | `Code` | SETMIS statutory alternate identification types (Field: Alternate_Id_Type_Id - e.g. Passport, Birth Certificate, Work Permit). |
+| `lookup` | [`BursaryFundingType`](#bursaryfundingtype) | `BursaryFundingType` | 8 | `Code` | Statutory Bursary funding categories (merSETA, Non-merSETA, Employer, Learner, Other SETA, NSF, Industry). |
 | `lookup` | [`CategoryType`](#categorytype) | `CategoryType` | 8 | `Code` | Employer entity levy compliance categories (e.g. Levy Paying, Non-Levy Paying, Government/Exempt). |
 | `lookup` | [`ChamberType`](#chambertype) | `ChamberType` | 8 | `Code` | MerSETA sub-sector chambers (Auto, Metal & Engineering, Plastics, Motor Retail). |
 | `lookup` | [`CitizenStatusType`](#citizenstatustype) | `CitizenStatusType` | 8 | `Code` | SETMIS South African citizenship and residency legal status classifications (Field: Citizen_Resident_Status_Code - SA, PR, D, O, U). |
@@ -581,9 +595,13 @@
 | Column | SQL Store Type | Nullable | Key | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CompanyRegistrationNumber` | `nvarchar(50)` | NULL |  | Domain property for CompanyRegistrationNumber. |
+| `ContactPersonName` | `nvarchar(150)` | NULL |  | Domain property for ContactPersonName. |
+| `ContactPhoneNumber` | `nvarchar(50)` | NULL |  | Domain property for ContactPhoneNumber. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DutiesDescription` | `nvarchar(max)` | **NOT NULL** |  | Domain property for DutiesDescription. |
+| `EmployerAddress` | `nvarchar(300)` | NULL |  | Domain property for EmployerAddress. |
 | `EmployerName` | `nvarchar(200)` | **NOT NULL** |  | Domain property for EmployerName. |
 | `EndDate` | `datetime2` | NULL |  | Domain property for EndDate. |
 | `EvidenceDocumentName` | `nvarchar(max)` | NULL |  | Domain property for EvidenceDocumentName. |
@@ -592,6 +610,7 @@
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `StartDate` | `datetime2` | **NOT NULL** |  | Domain property for StartDate. |
+| `YearsOfExperience` | `decimal(18,2)` | **NOT NULL** |  | Domain property for YearsOfExperience. |
 
 #### Foreign Key Constraints
 
@@ -684,6 +703,152 @@
 
 ---
 
+### <a id="assessorapplicationdocument"></a> `dbo.AssessorApplicationDocument`
+
+**Description:** Evidentiary document attached to an assessor/moderator registration application.  
+**CLR Model:** `Nsdms.Domain.Entities.AssessorApplicationDocument`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AssessorRegistrationApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing parent application. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DocumentTitle` | `nvarchar(250)` | **NOT NULL** |  | Display title or original file name. |
+| `DocumentTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Document category (ID, CV, QualificationCertificate, SlaAgreement, EmploymentProof). |
+| `FileStoragePath` | `nvarchar(500)` | **NOT NULL** |  | File system storage or blob reference path. |
+| `IsVerified` | `bit` | **NOT NULL** |  | Verification status flag from ETQA document inspection. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `VersionNumber` | `int` | **NOT NULL** |  | Document version counter for version control. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_AssessorApplicationDocument_AssessorRegistrationApplication_AssessorRegistrationApplicationId` | `AssessorRegistrationApplicationId` | `dbo.AssessorRegistrationApplication` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AssessorApplicationDocument_AssessorRegistrationApplicationId` | `AssessorRegistrationApplicationId` | No |
+| `IX_AssessorApplicationDocument_DocumentTypeCode` | `DocumentTypeCode` | No |
+
+---
+
+### <a id="assessorapplicationproviderlink"></a> `dbo.AssessorApplicationProviderLink`
+
+**Description:** Skills Development Provider (SDP) affiliation requested during registration with mandatory SLA verification.  
+**CLR Model:** `Nsdms.Domain.Entities.AssessorApplicationProviderLink`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AssessorRegistrationApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing parent registration application. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `IsVerifiedByProvider` | `bit` | **NOT NULL** |  | Indicates if the SDP has officially confirmed and verified the practitioner affiliation. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `SlaDocumentRef` | `nvarchar(500)` | NULL |  | File storage reference to uploaded Service Level Agreement (SLA) contract. |
+| `TrainingProviderId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the affiliated Training Provider / SDP. |
+| `VerificationDate` | `datetime2` | NULL |  | Timestamp when SDP verified affiliation. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_AssessorApplicationProviderLink_AssessorRegistrationApplication_AssessorRegistrationApplicationId` | `AssessorRegistrationApplicationId` | `dbo.AssessorRegistrationApplication` | `Cascade` |
+| `FK_AssessorApplicationProviderLink_TrainingProvider_TrainingProviderId` | `TrainingProviderId` | `dbo.TrainingProvider` | `Restrict` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AssessorApplicationProviderLink_AssessorRegistrationApplicationId` | `AssessorRegistrationApplicationId` | No |
+| `IX_AssessorApplicationProviderLink_TrainingProviderId` | `TrainingProviderId` | No |
+
+---
+
+### <a id="assessorapplicationscope"></a> `dbo.AssessorApplicationScope`
+
+**Description:** Specific qualification scope requested in an initial registration application.  
+**CLR Model:** `Nsdms.Domain.Entities.AssessorApplicationScope`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AssessorRegistrationApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing parent application. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `QualificationObtainedDate` | `datetime2` | **NOT NULL** |  | Date when the applicant obtained this qualification (Spec Section 5: must be >= 3 years ago). |
+| `QualificationTitle` | `nvarchar(250)` | **NOT NULL** |  | Registered Qualification Title. |
+| `SaqaQualificationId` | `int` | **NOT NULL** |  | SAQA Registered Qualification ID code. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_AssessorApplicationScope_AssessorRegistrationApplication_AssessorRegistrationApplicationId` | `AssessorRegistrationApplicationId` | `dbo.AssessorRegistrationApplication` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AssessorApplicationScope_AssessorRegistrationApplicationId` | `AssessorRegistrationApplicationId` | No |
+| `IX_AssessorApplicationScope_SaqaQualificationId` | `SaqaQualificationId` | No |
+
+---
+
+### <a id="assessorapplicationunitstandard"></a> `dbo.AssessorApplicationUnitStandard`
+
+**Description:** Individual unit standard scope linked to a qualification or requested standalone.  
+**CLR Model:** `Nsdms.Domain.Entities.AssessorApplicationUnitStandard`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AssessorApplicationScopeId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing parent application scope. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `Credits` | `int` | **NOT NULL** |  | Statutory credit value. |
+| `IsPopulatedFromQualification` | `bit` | **NOT NULL** |  | Indicates if unit standard was auto-populated from parent qualification (true = non-removable by user; false = manually added). |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `NqfLevel` | `int` | **NOT NULL** |  | NQF Level of unit standard. |
+| `UnitStandardCode` | `nvarchar(20)` | **NOT NULL** |  | SAQA Unit Standard Code (e.g. 115753). |
+| `UnitStandardTitle` | `nvarchar(300)` | **NOT NULL** |  | SAQA Unit Standard Title. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_AssessorApplicationUnitStandard_AssessorApplicationScope_AssessorApplicationScopeId` | `AssessorApplicationScopeId` | `dbo.AssessorApplicationScope` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AssessorApplicationUnitStandard_AssessorApplicationScopeId` | `AssessorApplicationScopeId` | No |
+| `IX_AssessorApplicationUnitStandard_UnitStandardCode` | `UnitStandardCode` | No |
+
+---
+
 ### <a id="assessorcpdactivity"></a> `dbo.AssessorCpdActivity`
 
 **Description:** Individual Continuous Professional Development (CPD) activity logged in support of practitioner renewal.  
@@ -719,6 +884,57 @@
 | :--- | :--- | :--- |
 | `IX_AssessorCpdActivity_ActivityCategory` | `ActivityCategory` | No |
 | `IX_AssessorCpdActivity_AssessorReRegistrationApplicationId` | `AssessorReRegistrationApplicationId` | No |
+
+---
+
+### <a id="assessordisciplinarycase"></a> `dbo.AssessorDisciplinaryCase`
+
+**Description:** Statutory disciplinary, investigation, suspension, and de-registration case per specification MerSeta\NSDMS\LMS\LR\01 Use Case 4.2.7.  
+**CLR Model:** `Nsdms.Domain.Entities.AssessorDisciplinaryCase`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CaseNumber` | `nvarchar(50)` | **NOT NULL** |  | Statutory case tracking number (e.g. DISC-2026-ASS-0042). |
+| `CaseType` | `nvarchar(50)` | **NOT NULL** |  | Case type (DeRegistration, Suspension, VoluntaryDeRegistration, Deceased). |
+| `ClosedAt` | `datetime2` | NULL |  | Timestamp when case was concluded. |
+| `ClosedByUserId` | `nvarchar(max)` | NULL |  | User ID of officer concluding case. |
+| `ComplaintDocumentRef` | `nvarchar(max)` | NULL |  | File reference to formal complaint letter. |
+| `ComplaintSummary` | `nvarchar(2000)` | **NOT NULL** |  | Summary of complaint or misconduct report. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DecisionLetterDocumentRef` | `nvarchar(max)` | NULL |  | File reference to system-generated de-registration or suspension letter. |
+| `DevelopmentPlanDetails` | `nvarchar(max)` | NULL |  | Remedial development plan outlining corrective actions required prior to potential re-registration. |
+| `EtqaAssessorId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing registered practitioner. |
+| `InvestigationEndDate` | `datetime2` | NULL |  | Date investigation concluded. |
+| `InvestigationReportSummary` | `nvarchar(max)` | NULL |  | Summary of investigative findings and recommendations. |
+| `InvestigationStartDate` | `datetime2` | NULL |  | Date investigation initiated. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `OutcomeCode` | `nvarchar(30)` | **NOT NULL** |  | Case outcome (DEREGISTERED, SUSPENDED, DISMISSED, DECEASED). |
+| `ReviewCommitteeDate` | `datetime2` | NULL |  | Date of Review Committee sitting. |
+| `ReviewCommitteeDecisionNumber` | `nvarchar(max)` | NULL |  | Official Review Committee Decision Number adjudicating the disciplinary outcome. |
+| `Status` | `nvarchar(30)` | **NOT NULL** |  | Case status (Open, UnderInvestigation, CommitteeReview, Resolved, Sanctioned, Closed). |
+| `SuspensionEndDate` | `datetime2` | NULL |  | If suspended, end date of disciplinary suspension period. |
+| `SuspensionStartDate` | `datetime2` | NULL |  | If suspended, start date of disciplinary suspension period. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_AssessorDisciplinaryCase_EtqaAssessor_EtqaAssessorId` | `EtqaAssessorId` | `dbo.EtqaAssessor` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AssessorDisciplinaryCase_CaseNumber` | `CaseNumber` | ✅ Yes |
+| `IX_AssessorDisciplinaryCase_CaseType` | `CaseType` | No |
+| `IX_AssessorDisciplinaryCase_EtqaAssessorId` | `EtqaAssessorId` | No |
+| `IX_AssessorDisciplinaryCase_Status` | `Status` | No |
 
 ---
 
@@ -836,8 +1052,123 @@
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
 | `IX_AssessorModeratorScope_EtqaAssessorId` | `EtqaAssessorId` | No |
-| `IX_AssessorModeratorScope_RegistrationStatusCode` | `RegistrationStatusCode` | No |
 | `IX_AssessorModeratorScope_SaqaQualificationId` | `SaqaQualificationId` | No |
+
+---
+
+### <a id="assessorproviderlink"></a> `dbo.AssessorProviderLink`
+
+**Description:** Active multi-SDP affiliation for a registered ETQA practitioner.  
+**CLR Model:** `Nsdms.Domain.Entities.AssessorProviderLink`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `EtqaAssessorId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing registered EtqaAssessor. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates if affiliation agreement is currently in force. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `SlaDocumentRef` | `nvarchar(500)` | NULL |  | File reference to signed SLA agreement. |
+| `TrainingProviderId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing affiliated Training Provider / SDP. |
+| `VerifiedDate` | `datetime2` | NULL |  | Timestamp when provider verified link. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_AssessorProviderLink_EtqaAssessor_EtqaAssessorId` | `EtqaAssessorId` | `dbo.EtqaAssessor` | `Cascade` |
+| `FK_AssessorProviderLink_TrainingProvider_TrainingProviderId` | `TrainingProviderId` | `dbo.TrainingProvider` | `Restrict` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AssessorProviderLink_EtqaAssessorId` | `EtqaAssessorId` | No |
+| `IX_AssessorProviderLink_TrainingProviderId` | `TrainingProviderId` | No |
+
+---
+
+### <a id="assessorregistrationapplication"></a> `dbo.AssessorRegistrationApplication`
+
+**Description:** Represents a statutory initial registration application for ETQA Assessors and Moderators per specification MerSeta\NSDMS\LMS\LR\01.  
+**CLR Model:** `Nsdms.Domain.Entities.AssessorRegistrationApplication`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ApplicationNumber` | `nvarchar(50)` | **NOT NULL** |  | Statutory application tracking reference (e.g. APP-ASS-2026-00001 or APP-MOD-2026-00001). |
+| `ApplicationStatusCode` | `nvarchar(40)` | **NOT NULL** |  | Application status (Draft, Application, VerificationPending, EvaluationPending, ReviewCommitteePending, Approved, Rejected, Withdrawn). |
+| `ApprovalComments` | `nvarchar(max)` | NULL |  | Final approval comments or directive. |
+| `ApprovalDate` | `datetime2` | NULL |  | Timestamp of final approval. |
+| `ApprovedByUserId` | `nvarchar(max)` | NULL |  | User ID of Senior Manager / Executive granting final sign-off. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DigitalSecuritySeal` | `nvarchar(64)` | NULL |  | Immutable SHA-256 digital security seal certifying statutory registration approval. |
+| `DisabilitySeverityCode` | `nvarchar(max)` | NULL |  | Disability severity level. |
+| `DisabilityTypeCode` | `nvarchar(max)` | NULL |  | Disability classification type (if applicable). |
+| `EmploymentStatusCode` | `nvarchar(30)` | **NOT NULL** |  | Employment standing (Employed, Unemployed). |
+| `EvaluatedByUserId` | `nvarchar(max)` | NULL |  | User ID of evaluating officer. |
+| `EvaluationDate` | `datetime2` | NULL |  | Timestamp of evaluation completion. |
+| `EvaluationExplanation` | `nvarchar(max)` | NULL |  | Detailed notes from evaluator. |
+| `EvaluationReason` | `nvarchar(max)` | NULL |  | Evaluation statutory reason code. |
+| `EvaluationRecommendation` | `nvarchar(max)` | NULL |  | Recommendation outcome from evaluator (Recommend, Reject). |
+| `HighestQualificationObtainedDate` | `datetime2` | NULL |  | Date highest qualification was obtained. |
+| `HighestQualificationTitle` | `nvarchar(250)` | NULL |  | Highest educational qualification title held by applicant. |
+| `IsDeclarationAcknowledged` | `bit` | **NOT NULL** |  | Indicates whether applicant completed legal acknowledgment and declaration sign-off. |
+| `IsFinalRejection` | `bit` | **NOT NULL** |  | Indicates whether committee decision marks a terminal rejection. |
+| `LastSchoolAttended` | `nvarchar(max)` | NULL |  | Last secondary/high school attended. |
+| `LastSchoolYear` | `int` | NULL |  | Year completed at last school attended. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `NextOfKinContact` | `nvarchar(50)` | NULL |  | Next of kin telephone contact number. |
+| `NextOfKinName` | `nvarchar(150)` | NULL |  | Next of kin contact name. |
+| `NextOfKinRelationship` | `nvarchar(50)` | NULL |  | Next of kin relationship to applicant (e.g. Spouse, Parent, Sibling). |
+| `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the applicant's Person demographic record. |
+| `PractitionerType` | `nvarchar(50)` | **NOT NULL** |  | Domain property for PractitionerType. |
+| `RegisteredAssessorId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the active EtqaAssessor record created upon approval. |
+| `RejectionComments` | `nvarchar(max)` | NULL |  | Additional rejection reason comments. |
+| `RejectionReason` | `nvarchar(max)` | NULL |  | Rejection reason code from Review Committee. |
+| `ReviewCommitteeDecision` | `nvarchar(max)` | NULL |  | Official Review Committee outcome (Approve, Reject). |
+| `ReviewCommitteeDecisionNumber` | `nvarchar(max)` | NULL |  | Formal ETQA Review Committee Decision Number. |
+| `ReviewCommitteeMeetingDate` | `datetime2` | NULL |  | Date when the Review Committee meeting convened. |
+| `ReviewCommitteeNotes` | `nvarchar(max)` | NULL |  | Review committee deliberations summary and minute notes. |
+| `SignedOffAt` | `datetime2` | NULL |  | Timestamp when application was locked and submitted for review. |
+| `SignedOffByUserId` | `nvarchar(max)` | NULL |  | User ID of the practitioner or CLO representative who signed off the submission. |
+| `UrbanRuralArea` | `nvarchar(20)` | **NOT NULL** |  | Urban or rural living location indicator. |
+| `VerificationDate` | `datetime2` | NULL |  | Timestamp of verification completion. |
+| `VerificationExplanation` | `nvarchar(max)` | NULL |  | Detailed justification notes from verification officer. |
+| `VerificationReason` | `nvarchar(max)` | NULL |  | Statutory recommendation reason code. |
+| `VerificationRecommendation` | `nvarchar(max)` | NULL |  | Recommendation outcome from verification officer (Recommend, Reject). |
+| `VerifiedByUserId` | `nvarchar(max)` | NULL |  | User ID of verifying officer. |
+| `WithdrawalComments` | `nvarchar(max)` | NULL |  | Detailed notes supporting withdrawal. |
+| `WithdrawalReason` | `nvarchar(max)` | NULL |  | Reason code if application is withdrawn by applicant. |
+| `WithdrawnAt` | `datetime2` | NULL |  | Timestamp when withdrawal was recorded. |
+| `WithdrawnByUserId` | `nvarchar(max)` | NULL |  | User ID who initiated withdrawal. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_AssessorRegistrationApplication_Person_PersonId` | `PersonId` | `dbo.Person` | `Restrict` |
+| `FK_AssessorRegistrationApplication_EtqaAssessor_RegisteredAssessorId` | `RegisteredAssessorId` | `dbo.EtqaAssessor` | `SetNull` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AssessorRegistrationApplication_ApplicationNumber` | `ApplicationNumber` | ✅ Yes |
+| `IX_AssessorRegistrationApplication_ApplicationStatusCode` | `ApplicationStatusCode` | No |
+| `IX_AssessorRegistrationApplication_PersonId` | `PersonId` | No |
+| `IX_AssessorRegistrationApplication_PractitionerType` | `PractitionerType` | No |
+| `IX_AssessorRegistrationApplication_RegisteredAssessorId` | `RegisteredAssessorId` | No |
 
 ---
 
@@ -884,6 +1215,43 @@
 | `IX_AssessorReRegistrationApplication_ApplicationReferenceNumber` | `ApplicationReferenceNumber` | ✅ Yes |
 | `IX_AssessorReRegistrationApplication_EtqaAssessorId` | `EtqaAssessorId` | No |
 | `IX_AssessorReRegistrationApplication_ReviewStatusCode` | `ReviewStatusCode` | No |
+
+---
+
+### <a id="assessorunitstandardscope"></a> `dbo.AssessorUnitStandardScope`
+
+**Description:** Registered unit standard constituent scope approved on an active EtqaAssessor profile.  
+**CLR Model:** `Nsdms.Domain.Entities.AssessorUnitStandardScope`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AssessorModeratorScopeId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing parent AssessorModeratorScope. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `Credits` | `int` | **NOT NULL** |  | Credits value. |
+| `IsPopulatedFromQualification` | `bit` | **NOT NULL** |  | Indicates if unit standard was derived from approved qualification. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `NqfLevel` | `int` | **NOT NULL** |  | NQF Level. |
+| `UnitStandardCode` | `nvarchar(20)` | **NOT NULL** |  | SAQA Unit Standard Code. |
+| `UnitStandardTitle` | `nvarchar(300)` | **NOT NULL** |  | SAQA Unit Standard Title. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_AssessorUnitStandardScope_AssessorModeratorScope_AssessorModeratorScopeId` | `AssessorModeratorScopeId` | `dbo.AssessorModeratorScope` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AssessorUnitStandardScope_AssessorModeratorScopeId` | `AssessorModeratorScopeId` | No |
+| `IX_AssessorUnitStandardScope_UnitStandardCode` | `UnitStandardCode` | No |
 
 ---
 
@@ -1065,16 +1433,21 @@
 | Column | SQL Store Type | Nullable | Key | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AcademicYear` | `int` | NULL |  | Current academic funding year for the bursary (e.g. 2026). |
 | `AssessorEtqaId` | `nvarchar(10)` | NULL |  | Submitting ETQA ID of the registered Assessor (references lookup.SetaType, default 17 for merSETA). |
 | `AssessorRegistrationNumber` | `nvarchar(50)` | NULL |  | Registered ETQA Assessor registration number assigned to this learner agreement (SETMIS Files 500, 501, 502). |
+| `BursaryApplicationTypeCode` | `nvarchar(50)` | NULL |  | Classification of the bursary submission: "New" for initial qualification, "Continuation" for next academic year. |
+| `BursaryFundingTypeCode` | `nvarchar(50)` | NULL |  | Statutory Bursary funding category (references lookup.BursaryFundingType): 01 merSETA funded, 02 Non-merSETA funded, 03 Employer funded, 04 Learner funded, 05 Other SETA funded, 06 NSF funded, 07 Industry funded. |
 | `CertificateNumber` | `nvarchar(100)` | NULL |  | SAQA or merSETA National Certificate Serial Number awarded upon successful achievement. |
 | `ChamberCode` | `nvarchar(max)` | NULL |  | MerSETA industrial chamber code (e.g. Auto, Metal, Plastic, Motor, New Tyre). |
 | `CommencementDate` | `datetime2` | NULL |  | Commencement start date of training in the workplace / provider. |
 | `CompletionDate` | `datetime2` | NULL |  | Actual completion or certification signoff date. |
+| `ContinuationAcademicResultsPassed` | `bit` | NULL |  | Verification flag indicating whether prior year academic results were submitted and verified for continuation. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `CumulativeSpend` | `decimal(18,2)` | **NOT NULL** |  | Cumulative Discretionary Grant / Levy stipend funding disbursed to date in ZAR. |
 | `EconomicStatusId` | `nvarchar(10)` | NULL |  | Learner economic employment standing code (references lookup.EconomicStatusType: 01 Employed 18.1, 02 Unemployed 18.2, 03 Student). |
+| `EmploymentStatusCode` | `nvarchar(50)` | NULL |  | Employment standing of the bursary applicant: "Employed", "Unemployed". Unemployed bursars do not require host employer details per Section 5 of the Bursary Use Case. |
 | `EnrolmentStatusCode` | `nvarchar(50)` | NULL |  | Legacy enrolment status code mapping. |
 | `EnrolmentStatusDate` | `datetime2` | NULL |  | Date when current enrolment status milestone became effective (SETMIS Files 500, 501, 502). |
 | `EnrolmentStatusId` | `nvarchar(10)` | NULL |  | Current statutory enrolment lifecycle status code (references lookup.EnrolmentStatusType: 01 Enrolled, 02 Achieved, 03 Certificated, 04 Terminated, 05 Transferred). |
@@ -1085,8 +1458,14 @@
 | `FundingId` | `nvarchar(10)` | NULL |  | Funding source lookup identifier (references lookup.FundingType: 01 SETA Funded, 02 Employer Funded, 03 NSF). |
 | `FundingTypeCode` | `nvarchar(50)` | NULL |  | Funding vehicle classification code (e.g. MandatoryGrant, DiscretionaryGrant, SelfFunded). |
 | `HasPendingModifications` | `bit` | **NOT NULL** |  | Flags whether modifications have been made to this application prior to approval. |
+| `IngestionBatchId` | `int` | NULL |  | Optional foreign key referencing the bulk ingestion batch if registered via automated fast-track. |
+| `InstateStatusCode` | `nvarchar(max)` | **NOT NULL** |  | Operational in-state status code per signed Learner Management specification Section 5 (e.g. Active, TransferApplication, Transferred, TerminationPending, Terminated, Withdrawal, RequirementsNotMet). Preserves statutory EnrolmentStatusCode = "Registered" / "Enrolled". |
+| `InstateStatusDate` | `datetime2` | **NOT NULL** |  | Timestamp when the operational in-state status was last transitioned. |
+| `InstitutionName` | `nvarchar(250)` | NULL |  | Higher Education Institution (HEI) or TVET College name where the learner is registered. |
+| `InstitutionTypeCode` | `nvarchar(50)` | NULL |  | Classification of the educational institution: "PublicUniversity", "TvetCollege", "PrivateHEI". |
 | `InternshipStatusId` | `nvarchar(10)` | NULL |  | Work Integrated Learning / Internship milestone standing (references lookup.InternshipStatusType: 01 In Progress, 02 Completed, 03 Withdrawn). |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the learner record is active in reporting and SETMIS submissions. |
+| `IsContinuation` | `bit` | **NOT NULL** |  | Indicates whether this record is an academic continuation of an existing active bursary. |
 | `IsNonEmployerEntity` | `bit` | **NOT NULL** |  | Indicates whether the contracting partner is a Non-Employer Entity (TVET, CET, HEI, NGO). |
 | `LearnerContractNumber` | `nvarchar(50)` | NULL |  | Unique MerSETA-generated learner agreement / contract registration number. |
 | `LearnerSignatureDate` | `datetime2` | NULL |  | Date when the learner physically or electronically signed the agreement. Used to enforce the statutory 30-working-day submission deadline. |
@@ -1097,26 +1476,31 @@
 | `NonNqfInterventionCode` | `nvarchar(50)` | NULL |  | Registered Non-NQF Skills Programme or Course Code for SETMIS File 502 (references SkillsRegistration.CourseCode). |
 | `NqfLevel` | `int` | NULL |  | National Qualifications Framework (NQF) level descriptor (e.g. 2, 3, 4, 5). |
 | `OfoCode` | `nvarchar(20)` | NULL |  | DHET Organising Framework for Occupations statutory code (references lookup.OfoCodeType, e.g. 264202 Editor, 651202 Welder). |
-| `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the host or sponsoring Employer Organisation. |
+| `OrganisationId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the host or sponsoring Employer Organisation (optional for unemployed bursaries). |
 | `OrganisationSiteId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the specific host branch / plant facility. |
 | `PartOfId` | `nvarchar(10)` | NULL |  | Programme hierarchy and articulation type code (references lookup.PartOfType: 01 Stand-alone, 02 Part of Qualification, 03 Part of Learnership). |
 | `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the demographic Person record (names, RSA ID, contact details). |
 | `PracticalProviderCode` | `nvarchar(50)` | NULL |  | Secondary practical training provider code for decentralized apprenticeship workplace programmes (SETMIS File 501). |
 | `PracticalProviderEtqaId` | `nvarchar(10)` | NULL |  | Secondary practical training provider ETQA ID (default 17). |
+| `PreviousCompanyLearnerId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the preceding active CompanyLearner bursary record when IsContinuation is true. |
 | `PriorQualificationAchievementDate` | `datetime2` | NULL |  | Date when prior qualification was achieved. |
 | `PriorQualificationId` | `nvarchar(50)` | NULL |  | Prior completed TVET / Higher Education qualification ID achieved before entering internship. |
 | `ProfessionalRegistrationNumber` | `nvarchar(100)` | NULL |  | Professional council candidate registration number (e.g. ECSA Candidate Engineer) for Candidacy programmes. |
 | `QualificationTitle` | `nvarchar(250)` | NULL |  | Title of the registered SAQA / QCTO qualification or learning programme. |
+| `RegistrationChannel` | `nvarchar(max)` | **NOT NULL** |  | Registration intake channel: "ManualWizard" (The Teller) or "AutomatedBulk" (The ATM). |
 | `RegistrationDate` | `datetime2` | **NOT NULL** |  | Official date when the learner contract was officially registered with MerSETA. |
 | `SaqaQualificationId` | `int` | NULL |  | SAQA Registered Qualification ID code (SETMIS File 501, 505, 506). |
 | `SetaRegion` | `nvarchar(max)` | NULL |  | MerSETA regional office responsible for managing this learner agreement. |
 | `SignatoryPersonId` | `int` | NULL |  | Optional foreign key referencing the Person who signed off the application. |
 | `SignatoryRoleTitle` | `nvarchar(100)` | NULL |  | Appointed role title of the individual executing the submission sign-off. |
+| `StpApproved` | `bit` | **NOT NULL** |  | Indicates whether this registration was straight-through processed by the automated rule engine. |
+| `StpDecisionReason` | `nvarchar(max)` | NULL |  | Reason or evaluation notes from the Straight-Through Processing rule engine. |
 | `SubmissionDate` | `datetime2` | NULL |  | System auto-generated date and time when the application was formally submitted to merSETA. |
 | `TrainingProviderId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the accredited Skills Development Training Provider (SDP). |
 | `UrbanRuralId` | `nvarchar(10)` | NULL |  | Geographic intervention area classification (references lookup.UrbanRuralType: 01 Urban, 02 Rural, 98 Unknown). |
 | `WithdrawalComments` | `nvarchar(max)` | NULL |  | Detailed comments or justification recorded upon application withdrawal. |
 | `WithdrawalReasonCode` | `nvarchar(50)` | NULL |  | Reason code if the learner agreement application is withdrawn prior to approval. |
+| `YearOfStudy` | `int` | NULL |  | Current academic year level of study (e.g. 1 = 1st Year, 2 = 2nd Year, 3 = 3rd Year, 4 = 4th Year, 5 = Honours, 6 = Masters). |
 
 #### Foreign Key Constraints
 
@@ -1125,17 +1509,21 @@
 | `FK_CompanyLearner_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `Restrict` |
 | `FK_CompanyLearner_OrganisationSite_OrganisationSiteId` | `OrganisationSiteId` | `dbo.OrganisationSite` | `SetNull` |
 | `FK_CompanyLearner_Person_PersonId` | `PersonId` | `dbo.Person` | `Restrict` |
+| `FK_CompanyLearner_CompanyLearner_PreviousCompanyLearnerId` | `PreviousCompanyLearnerId` | `dbo.CompanyLearner` | `Restrict` |
 | `FK_CompanyLearner_TrainingProvider_TrainingProviderId` | `TrainingProviderId` | `dbo.TrainingProvider` | `Restrict` |
 
 #### Performance Indexes
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
+| `IX_CompanyLearner_AcademicYear` | `AcademicYear` | No |
+| `IX_CompanyLearner_BursaryApplicationTypeCode` | `BursaryApplicationTypeCode` | No |
 | `IX_CompanyLearner_EconomicStatusId` | `EconomicStatusId` | No |
 | `IX_CompanyLearner_EnrolmentStatusCode` | `EnrolmentStatusCode` | No |
 | `IX_CompanyLearner_EnrolmentStatusId` | `EnrolmentStatusId` | No |
 | `IX_CompanyLearner_EnrolmentTypeId` | `EnrolmentTypeId` | No |
 | `IX_CompanyLearner_FundingId` | `FundingId` | No |
+| `IX_CompanyLearner_IngestionBatchId` | `IngestionBatchId` | No |
 | `IX_CompanyLearner_LearnerContractNumber` | `LearnerContractNumber` | No |
 | `IX_CompanyLearner_LearnerSignatureDate` | `LearnerSignatureDate` | No |
 | `IX_CompanyLearner_LearnershipId` | `LearnershipId` | No |
@@ -1145,6 +1533,8 @@
 | `IX_CompanyLearner_OrganisationSiteId` | `OrganisationSiteId` | No |
 | `IX_CompanyLearner_PartOfId` | `PartOfId` | No |
 | `IX_CompanyLearner_PersonId` | `PersonId` | No |
+| `IX_CompanyLearner_PreviousCompanyLearnerId` | `PreviousCompanyLearnerId` | No |
+| `IX_CompanyLearner_RegistrationChannel` | `RegistrationChannel` | No |
 | `IX_CompanyLearner_RegistrationDate` | `RegistrationDate` | No |
 | `IX_CompanyLearner_SubmissionDate` | `SubmissionDate` | No |
 | `IX_CompanyLearner_TrainingProviderId` | `TrainingProviderId` | No |
@@ -1194,6 +1584,50 @@
 
 ---
 
+### <a id="companylearnerextension"></a> `dbo.CompanyLearnerExtension`
+
+**Description:** Represents a statutory request for extension of an unregistered learner application or an active learner contract per signed specification Section 4.1.  
+**CLR Model:** `Nsdms.Domain.Entities.CompanyLearnerExtension`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AddendumDocumentId` | `int` | NULL |  | Optional foreign key referencing the uploaded Addendum of Agreement document. |
+| `ApprovalComments` | `nvarchar(1000)` | NULL |  | Reviewer or approval justification notes. |
+| `ApprovalDate` | `datetime2` | NULL |  | Timestamp when the extension was formally approved. |
+| `ApprovedByUserId` | `nvarchar(100)` | NULL |  | User identifier of the approving MerSETA official. |
+| `ApprovedExpiryDate` | `datetime2` | NULL |  | Approved extended expiry date after merSETA adjudication. |
+| `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the CompanyLearner agreement record. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ExtensionReasonCode` | `nvarchar(50)` | **NOT NULL** |  | Reason code for the extension request (e.g. PendingDocumentation, SdpAccreditationPending, WorkplaceReadiness, MedicalInterruption, Other). |
+| `ExtensionStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current approval status (Pending, Approved, Rejected). |
+| `ExtensionTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Extension category classification: "PreRegistration", "ContractAddendum". |
+| `JustificationComments` | `nvarchar(2000)` | **NOT NULL** |  | Detailed justification text captured from the user per Section 4.1 Step 5. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `OriginalExpiryDate` | `datetime2` | NULL |  | Original submission deadline or contract completion date. |
+| `RequestedExpiryDate` | `datetime2` | **NOT NULL** |  | Requested extended expiry date. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_CompanyLearnerExtension_CompanyLearner_CompanyLearnerId` | `CompanyLearnerId` | `dbo.CompanyLearner` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_CompanyLearnerExtension_CompanyLearnerId` | `CompanyLearnerId` | No |
+| `IX_CompanyLearnerExtension_ExtensionStatusCode` | `ExtensionStatusCode` | No |
+| `IX_CompanyLearnerExtension_ExtensionTypeCode` | `ExtensionTypeCode` | No |
+
+---
+
 ### <a id="companylearnerlosttime"></a> `dbo.CompanyLearnerLostTime`
 
 **Description:** Tracks suspended or lost training time and recalculates revised contract end dates.  
@@ -1225,7 +1659,7 @@
 
 | Constraint Name | Foreign Columns | Principal Table | Delete Rule |
 | :--- | :--- | :--- | :--- |
-| `FK_CompanyLearnerLostTime_CompanyLearner_CompanyLearnerId` | `CompanyLearnerId` | `dbo.CompanyLearner` | `Restrict` |
+| `FK_CompanyLearnerLostTime_CompanyLearner_CompanyLearnerId` | `CompanyLearnerId` | `dbo.CompanyLearner` | `Cascade` |
 
 #### Performance Indexes
 
@@ -1238,7 +1672,7 @@
 
 ### <a id="companylearnertermination"></a> `dbo.CompanyLearnerTermination`
 
-**Description:** Manages formal bilateral or unilateral cancellation of learner contracts.  
+**Description:** Manages formal bilateral or unilateral cancellation of learner contracts per signed specification Sections 4.4, 4.5, 4.6.  
 **CLR Model:** `Nsdms.Domain.Entities.CompanyLearnerTermination`  
 **Primary Key:** `Id`
 
@@ -1250,36 +1684,58 @@
 | `ApprovalComments` | `nvarchar(1000)` | NULL |  | Adjudication and approval decision notes. |
 | `ApprovalDate` | `datetime2` | NULL |  | Timestamp when the termination was formally approved. |
 | `ApprovedByUserId` | `nvarchar(100)` | NULL |  | User identifier of the authorized MerSETA official approving the cancellation. |
+| `Checklist036Completed` | `bit` | **NOT NULL** |  | Indicates whether statutory Checklist (036) has been completed and verified. |
+| `Checklist036CompletedByUserId` | `nvarchar(100)` | NULL |  | User identifier of the investigating officer who completed Checklist 036. |
+| `Checklist036CompletedDate` | `datetime2` | NULL |  | Timestamp when Checklist 036 was completed. |
+| `Checklist036DataJson` | `nvarchar(max)` | NULL |  | Structured JSON payload capturing Checklist 036 criteria responses. |
+| `CommitteeDecisionCode` | `nvarchar(50)` | NULL |  | Official ETQA Review Committee decision code: "Approved", "RequirementsNotMet", "Deferred". |
+| `CommitteeDecisionDate` | `datetime2` | NULL |  | Date when the ETQA Review Committee rendered its decision. |
+| `CommitteeDecisionNotes` | `nvarchar(max)` | NULL |  | Detailed committee minutes or rationale for the decision. |
 | `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the terminated CompanyLearner record. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DecisionLetterDocumentId` | `int` | NULL |  | Document identifier for the generated Confirmation of Termination Decision Letter. |
 | `DisputeLogged` | `bit` | **NOT NULL** |  | Indicates whether a formal labour dispute or CCMA conciliation is lodged. |
-| `EffectiveDate` | `datetime2` | **NOT NULL** |  | Official date on which the learner agreement was terminated. |
+| `EffectiveDate` | `datetime2` | **NOT NULL** |  | Official date on which the learner agreement cancellation was requested / effective. |
+| `InvestigationCompletedDate` | `datetime2` | NULL |  | Date when the investigation was formally completed and signed off. |
+| `InvestigationConductedByUserId` | `nvarchar(100)` | NULL |  | User identifier of the investigating MerSETA official. |
+| `InvestigationDueDate` | `datetime2` | NULL |  | Mandatory SLA deadline for investigation completion (14 working days from initiation per Section 5). |
+| `InvestigationOutcomeSummary` | `nvarchar(max)` | NULL |  | Detailed investigation findings and summary report. |
+| `InvestigationStartDate` | `datetime2` | NULL |  | Date when the formal unilateral termination investigation commenced. |
+| `IsArplRecommended` | `bit` | **NOT NULL** |  | Indicates whether an official recommendation was dispatched to the employer to write ARPL. |
+| `IsTransferRecommended` | `bit` | **NOT NULL** |  | Indicates whether an official recommendation was dispatched to the employer to transfer the learner. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `RecommendationToCommitteeDate` | `datetime2` | NULL |  | Timestamp when the document pack was submitted to the ETQA Review Committee. |
+| `RecommendedToCommitteeByUserId` | `nvarchar(100)` | NULL |  | User identifier of the official recommending the pack to the ETQA Review Committee. |
+| `RejectionLetterDocumentId` | `int` | NULL |  | Document identifier for the generated "Requirements Not Met" Rejection Letter. |
+| `ReviewCommitteeMeetingId` | `int` | NULL |  | Optional foreign key referencing the ETQA Review Committee meeting agenda. |
 | `SettlementNotes` | `nvarchar(2000)` | NULL |  | Detailed settlement notes, mutual release terms, or disciplinary minutes. |
-| `TerminationReasonCode` | `nvarchar(50)` | **NOT NULL** |  | Statutory contract cancellation reason code (e.g. Deceased, Absconded, DismissedForMisconduct, MutualCancellation, MedicalIncapacity). |
-| `TerminationStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current cancellation approval status code (Pending, Approved, Rejected). |
+| `TerminationReasonCode` | `nvarchar(50)` | **NOT NULL** |  | Statutory contract cancellation reason code: Mutual: ResignationAgreement, Retrenchment. One-Sided: ResignationUnilateral, Deceased, AwolDismissal, Other. |
+| `TerminationStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current cancellation approval status code (Pending, InInvestigation, CommitteeAgenda, Approved, Rejected, RequirementsNotMet). |
+| `TerminationTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Termination classification category: "Mutual" (Section 4.6) or "OneSided" (Section 4.5). |
 | `UnionRepresentativeName` | `nvarchar(150)` | NULL |  | Name of the trade union representative or legal counsel involved. |
 
 #### Foreign Key Constraints
 
 | Constraint Name | Foreign Columns | Principal Table | Delete Rule |
 | :--- | :--- | :--- | :--- |
-| `FK_CompanyLearnerTermination_CompanyLearner_CompanyLearnerId` | `CompanyLearnerId` | `dbo.CompanyLearner` | `Restrict` |
+| `FK_CompanyLearnerTermination_CompanyLearner_CompanyLearnerId` | `CompanyLearnerId` | `dbo.CompanyLearner` | `Cascade` |
 
 #### Performance Indexes
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
 | `IX_CompanyLearnerTermination_CompanyLearnerId` | `CompanyLearnerId` | No |
+| `IX_CompanyLearnerTermination_ReviewCommitteeMeetingId` | `ReviewCommitteeMeetingId` | No |
 | `IX_CompanyLearnerTermination_TerminationStatusCode` | `TerminationStatusCode` | No |
+| `IX_CompanyLearnerTermination_TerminationTypeCode` | `TerminationTypeCode` | No |
 
 ---
 
 ### <a id="companylearnertransfer"></a> `dbo.CompanyLearnerTransfer`
 
-**Description:** Tracks transfer of an active learner contract from one employer to another.  
+**Description:** Tracks transfer of an active learner contract from one employer to another, or from one accredited SDP to another, per signed specification Section 4.7.  
 **CLR Model:** `Nsdms.Domain.Entities.CompanyLearnerTransfer`  
 **Primary Key:** `Id`
 
@@ -1294,22 +1750,41 @@
 | `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the active CompanyLearner record. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
-| `EffectiveDate` | `datetime2` | **NOT NULL** |  | Effective operational start date at the new employer. |
-| `FromOrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the releasing employer Organisation. |
+| `CurrentEmployerSignoffDate` | `datetime2` | NULL |  | Domain property for CurrentEmployerSignoffDate. |
+| `CurrentEmployerSignoffUserId` | `nvarchar(100)` | NULL |  | Domain property for CurrentEmployerSignoffUserId. |
+| `DisagreementPromptedTermination` | `bit` | **NOT NULL** |  | Indicates whether refusal of consent by the current employer prompted a formal termination process. |
+| `EffectiveDate` | `datetime2` | **NOT NULL** |  | Effective operational start date at the new employer / provider. |
+| `FromOrganisationId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the releasing employer Organisation (null for SDP-to-SDP transfers). |
+| `FromTrainingProviderId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the releasing accredited Training Provider. |
+| `FutureEmployerSignoffDate` | `datetime2` | NULL |  | Domain property for FutureEmployerSignoffDate. |
+| `FutureEmployerSignoffUserId` | `nvarchar(100)` | NULL |  | Domain property for FutureEmployerSignoffUserId. |
+| `InitiatedByTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Who initiated the transfer: "CurrentEmployer", "FutureEmployer", "SDP", "Learner", "MerSetaRepresentative". |
+| `IsCurrentEmployerAgreed` | `bit` | NULL |  | Consent tracking: Current releasing employer agreement status. |
+| `IsFutureEmployerAgreed` | `bit` | NULL |  | Consent tracking: Future receiving employer agreement status. |
+| `IsLearnerAgreed` | `bit` | NULL |  | Consent tracking: Learner agreement status. |
+| `LearnerSignoffDate` | `datetime2` | NULL |  | Domain property for LearnerSignoffDate. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
-| `ToOrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the receiving employer Organisation. |
+| `ReviewCommitteeMeetingId` | `int` | NULL |  | Optional foreign key referencing the ETQA Review Committee agenda item for committee ratification. |
+| `TargetWorkplaceApprovalId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the verified Workplace Approval record for the target employer. |
+| `ToOrganisationId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the receiving employer Organisation (null for SDP-to-SDP transfers). |
+| `ToTrainingProviderId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the receiving accredited Training Provider. |
 | `TransferDate` | `datetime2` | **NOT NULL** |  | Date when the transfer request was formally initiated. |
-| `TransferReasonCode` | `nvarchar(50)` | **NOT NULL** |  | Transfer rationale code (e.g. CompanyDownsized, MutualAgreement, Relocation, DisputeResolution). |
-| `TransferStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current transfer workflow state code (Pending, Approved, Rejected, Completed). |
+| `TransferFormDocumentId` | `int` | NULL |  | Optional foreign key referencing the generated LPM-FM-005 Transfer Application Form document. |
+| `TransferReasonCode` | `nvarchar(50)` | **NOT NULL** |  | Transfer rationale code per Section 4.7: ChangedLocation, TakenOnByHostEmployer, ChangedEmployer, ChangedProvider, Other. |
+| `TransferScopeCode` | `nvarchar(50)` | **NOT NULL** |  | Transfer scope classification: "EmployerToEmployer", "SdpToSdp". |
+| `TransferStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current transfer workflow state code (Pending, ReviewCommitteeAgenda, Approved, Rejected, Cancelled). |
 
 #### Foreign Key Constraints
 
 | Constraint Name | Foreign Columns | Principal Table | Delete Rule |
 | :--- | :--- | :--- | :--- |
-| `FK_CompanyLearnerTransfer_CompanyLearner_CompanyLearnerId` | `CompanyLearnerId` | `dbo.CompanyLearner` | `Restrict` |
+| `FK_CompanyLearnerTransfer_CompanyLearner_CompanyLearnerId` | `CompanyLearnerId` | `dbo.CompanyLearner` | `Cascade` |
 | `FK_CompanyLearnerTransfer_Organisation_FromOrganisationId` | `FromOrganisationId` | `dbo.Organisation` | `Restrict` |
+| `FK_CompanyLearnerTransfer_TrainingProvider_FromTrainingProviderId` | `FromTrainingProviderId` | `dbo.TrainingProvider` | `Restrict` |
+| `FK_CompanyLearnerTransfer_WorkplaceApproval_TargetWorkplaceApprovalId` | `TargetWorkplaceApprovalId` | `dbo.WorkplaceApproval` | `Restrict` |
 | `FK_CompanyLearnerTransfer_Organisation_ToOrganisationId` | `ToOrganisationId` | `dbo.Organisation` | `Restrict` |
+| `FK_CompanyLearnerTransfer_TrainingProvider_ToTrainingProviderId` | `ToTrainingProviderId` | `dbo.TrainingProvider` | `Restrict` |
 
 #### Performance Indexes
 
@@ -1317,7 +1792,11 @@
 | :--- | :--- | :--- |
 | `IX_CompanyLearnerTransfer_CompanyLearnerId` | `CompanyLearnerId` | No |
 | `IX_CompanyLearnerTransfer_FromOrganisationId` | `FromOrganisationId` | No |
+| `IX_CompanyLearnerTransfer_FromTrainingProviderId` | `FromTrainingProviderId` | No |
+| `IX_CompanyLearnerTransfer_TargetWorkplaceApprovalId` | `TargetWorkplaceApprovalId` | No |
 | `IX_CompanyLearnerTransfer_ToOrganisationId` | `ToOrganisationId` | No |
+| `IX_CompanyLearnerTransfer_ToTrainingProviderId` | `ToTrainingProviderId` | No |
+| `IX_CompanyLearnerTransfer_TransferScopeCode` | `TransferScopeCode` | No |
 | `IX_CompanyLearnerTransfer_TransferStatusCode` | `TransferStatusCode` | No |
 
 ---
@@ -1955,6 +2434,7 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DeRegistrationReason` | `nvarchar(250)` | NULL |  | Domain property for DeRegistrationReason. |
 | `DesignationStructureStatusId` | `nvarchar(10)` | **NOT NULL** |  | Practitioner registration standing code (references lookup.DesignationStructureStatusType: 01 Registered, 02 Deregistered, 03 Suspended). |
 | `DesignationTypeId` | `nvarchar(10)` | **NOT NULL** |  | Practitioner designation type code (references lookup.DesignationType: 01 Assessor, 02 Moderator). |
 | `EndDate` | `datetime2` | **NOT NULL** |  | Registration validity expiration date (SETMIS File 401). |
@@ -2487,6 +2967,105 @@
 
 ---
 
+### <a id="learnerbulkbatch"></a> `dbo.LearnerBulkBatch`
+
+**Description:** Represents a bulk intake batch for high-speed learner registrations submitted by an Employer or SDP. Implements the ATM channel of the Dual-Channel Learner Registration Architecture.  
+**CLR Model:** `Nsdms.Domain.Entities.LearnerBulkBatch`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `BatchReference` | `nvarchar(50)` | **NOT NULL** |  | Domain property for BatchReference. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DigitalSecuritySeal` | `nvarchar(100)` | NULL |  | Domain property for DigitalSecuritySeal. |
+| `ErrorCount` | `int` | **NOT NULL** |  | Domain property for ErrorCount. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `OriginalFileName` | `nvarchar(250)` | **NOT NULL** |  | Domain property for OriginalFileName. |
+| `Status` | `nvarchar(50)` | **NOT NULL** |  | Current lifecycle state code in the workflow engine. |
+| `StpCount` | `int` | **NOT NULL** |  | Domain property for StpCount. |
+| `SuccessCount` | `int` | **NOT NULL** |  | Domain property for SuccessCount. |
+| `TotalRows` | `int` | **NOT NULL** |  | Domain property for TotalRows. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_LearnerBulkBatch_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `Restrict` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_LearnerBulkBatch_BatchReference` | `BatchReference` | ✅ Yes |
+| `IX_LearnerBulkBatch_OrganisationId` | `OrganisationId` | No |
+| `IX_LearnerBulkBatch_Status` | `Status` | No |
+
+---
+
+### <a id="learnerbulkbatchrow"></a> `dbo.LearnerBulkBatchRow`
+
+**Description:** Individual candidate learner row staged within a LearnerBulkBatch. Allows fractional processing and inline error correction.  
+**CLR Model:** `Nsdms.Domain.Entities.LearnerBulkBatchRow`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CommencementDate` | `datetime2` | NULL |  | Domain property for CommencementDate. |
+| `CompanyLearnerId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DateOfBirth` | `datetime2` | **NOT NULL** |  | Domain property for DateOfBirth. |
+| `EmailAddress` | `nvarchar(150)` | NULL |  | Domain property for EmailAddress. |
+| `EquityCode` | `nvarchar(10)` | **NOT NULL** |  | Domain property for EquityCode. |
+| `FirstName` | `nvarchar(100)` | **NOT NULL** |  | Domain property for FirstName. |
+| `GenderCode` | `nvarchar(10)` | **NOT NULL** |  | Domain property for GenderCode. |
+| `IsStpEligible` | `bit` | **NOT NULL** |  | Domain property for IsStpEligible. |
+| `IsValid` | `bit` | **NOT NULL** |  | Domain property for IsValid. |
+| `LastName` | `nvarchar(100)` | **NOT NULL** |  | Domain property for LastName. |
+| `LearnerBulkBatchId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `LearnerSignatureDate` | `datetime2` | **NOT NULL** |  | Domain property for LearnerSignatureDate. |
+| `LearningProgrammeTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for LearningProgrammeTypeCode. |
+| `MiddleName` | `nvarchar(100)` | NULL |  | Domain property for MiddleName. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PassportNumber` | `nvarchar(50)` | NULL |  | Domain property for PassportNumber. |
+| `PhoneNumber` | `nvarchar(50)` | NULL |  | Primary contact telephone number. |
+| `QualificationTitle` | `nvarchar(250)` | NULL |  | Domain property for QualificationTitle. |
+| `RowIndex` | `int` | **NOT NULL** |  | Domain property for RowIndex. |
+| `RsaIdNumber` | `nvarchar(50)` | **NOT NULL** |  | 13-digit South African National Identity Number. |
+| `SaqaQualificationId` | `nvarchar(50)` | NULL |  | Domain property for SaqaQualificationId. |
+| `Status` | `nvarchar(50)` | **NOT NULL** |  | Current lifecycle state code in the workflow engine. |
+| `StpDecisionNotes` | `nvarchar(max)` | NULL |  | Domain property for StpDecisionNotes. |
+| `TradeCode` | `nvarchar(50)` | NULL |  | Domain property for TradeCode. |
+| `ValidationErrors` | `nvarchar(max)` | NULL |  | Domain property for ValidationErrors. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_LearnerBulkBatchRow_CompanyLearner_CompanyLearnerId` | `CompanyLearnerId` | `dbo.CompanyLearner` | `SetNull` |
+| `FK_LearnerBulkBatchRow_LearnerBulkBatch_LearnerBulkBatchId` | `LearnerBulkBatchId` | `dbo.LearnerBulkBatch` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_LearnerBulkBatchRow_CompanyLearnerId` | `CompanyLearnerId` | No |
+| `IX_LearnerBulkBatchRow_LearnerBulkBatchId` | `LearnerBulkBatchId` | No |
+| `IX_LearnerBulkBatchRow_RsaIdNumber` | `RsaIdNumber` | No |
+| `IX_LearnerBulkBatchRow_Status` | `Status` | No |
+
+---
+
 ### <a id="learnerregisteredunitstandard"></a> `dbo.LearnerRegisteredUnitStandard`
 
 **Description:** Tracks individual Unit Standards or Skills Sets registered against a CompanyLearner for Skills Programme and Unit Standard enrolments (SETMIS File 503).  
@@ -2620,6 +3199,7 @@
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DesignatedTradeLevel` | `nvarchar(max)` | NULL |  | Domain property for DesignatedTradeLevel. |
+| `EmploymentStatus` | `nvarchar(50)` | **NOT NULL** |  | Statutory employment status: Employed vs Unemployed (Section 4.2.3 of Signed Use Case). |
 | `HasAttemptedTradeTestPreviously` | `bit` | **NOT NULL** |  | Indicates whether the candidate attempted a trade test previously. |
 | `IsFinalRejection` | `bit` | **NOT NULL** |  | Domain property for IsFinalRejection. |
 | `IsSelectedForQaAuditSample` | `bit` | **NOT NULL** |  | Quality Assurance 10% achievement audit sampling flag (DFD Step 4.0). |
@@ -2666,6 +3246,7 @@
 | `TradeTestSerialNumber` | `nvarchar(max)` | NULL |  | Official Trade Test Serial Number generated upon QA Approval (committed to record). |
 | `TradeTitle` | `nvarchar(200)` | **NOT NULL** |  | Domain property for TradeTitle. |
 | `TrainingProviderId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `UnregisteredEmployerName` | `nvarchar(200)` | NULL |  | Name of employer if non-registered or private provider context (Section 4.2.3). |
 | `WithdrawalNotes` | `nvarchar(max)` | NULL |  | Domain property for WithdrawalNotes. |
 | `WithdrawalReasonCode` | `nvarchar(max)` | NULL |  | Application withdrawal fields. |
 | `WithdrawnAt` | `datetime2` | NULL |  | Domain property for WithdrawnAt. |
@@ -4810,25 +5391,39 @@
 | `AccreditationEndDate` | `datetime2` | NULL |  | Expiration date of current ETQA accreditation cycle. |
 | `AccreditationNumber` | `nvarchar(50)` | **NOT NULL** |  | Official ETQA accreditation certificate number. |
 | `AccreditationStartDate` | `datetime2` | NULL |  | Start date of current ETQA accreditation cycle. |
+| `AccreditationStream` | `nvarchar(50)` | **NOT NULL** |  | Domain property for AccreditationStream. |
 | `BrandColorHex` | `nvarchar(max)` | NULL |  | Primary brand color in HEX format (e.g. #865300). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DigitalSecuritySeal` | `nvarchar(64)` | NULL |  | SHA-256 cryptographic Digital Security Seal stamped on official ETQA Accreditation Certificate. |
+| `EtqaCommitteeDecisionNumber` | `nvarchar(50)` | NULL |  | MerSETA ETQA Review Committee decision minute reference number (Table 7 Step N, Table 15 Attribute 19). |
+| `EtqaCommitteeMeetingDate` | `datetime2` | NULL |  | Date when the ETQA Review Committee ratified the accreditation decision. |
 | `EtqaDecisionNumber` | `nvarchar(50)` | NULL |  | MerSETA ETQA committee decision minute reference number (SETMIS File 100). |
 | `EtqaId` | `nvarchar(10)` | NULL |  | Submitting ETQA / SETA Identifier (references lookup.SetaType, default 17 for merSETA). |
 | `FaxNumber` | `nvarchar(50)` | NULL |  | Facsimile transmission contact number. |
+| `InspectionDueDate` | `datetime2` | NULL |  | 5-Working-Day SLA Inspection Due Date for QA initial contact and scheduling (Table 14 BR3). |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the provider is active for new learner enrolments. |
 | `LogoDocumentId` | `int` | NULL |  | Foreign key referencing the high-resolution brand logo DocumentMetadata. |
 | `MaxLearnerCapacity` | `int` | NULL |  | Maximum concurrent learner enrolment capacity authorized for facilities. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `NambRegistrationEndDate` | `datetime2` | NULL |  | NAMB Trade Test Centre accreditation end date. |
+| `NambRegistrationNumber` | `nvarchar(50)` | NULL |  | Official NAMB Trade Test Centre registration number (Table 9 / Table 24 Col 4). |
+| `NambRegistrationStartDate` | `datetime2` | NULL |  | NAMB Trade Test Centre accreditation start date. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent legal Organisation. |
+| `PrimaryAccreditationEndDate` | `datetime2` | NULL |  | Primary ETQA accreditation validity cycle end date. |
+| `PrimaryAccreditationNumber` | `nvarchar(50)` | NULL |  | Accreditation certificate number awarded by the Primary ETQA (Table 8 / Table 24 Col 2). |
+| `PrimaryAccreditationStartDate` | `datetime2` | NULL |  | Primary ETQA accreditation validity cycle start date. |
 | `PrimaryContactPersonId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the SDP principal or training director. |
+| `PrimaryEtqaName` | `nvarchar(100)` | NULL |  | Primary ETQA / SETA name for Programme Approval stream (e.g. CHIETA, Services SETA, QCTO). |
 | `ProviderClassId` | `nvarchar(10)` | NULL |  | Provider institutional class code (references lookup.ProviderClassType: 01 Public TVET, 02 Private, 03 University, 04 NGO/CBO). |
 | `ProviderCode` | `nvarchar(50)` | NULL |  | Statutory Provider Code as recorded on the National Learners' Records Database (NLRD) and SETMIS (SETMIS File 100). |
 | `ProviderStatusCode` | `nvarchar(15)` | NULL |  | Legacy Provider Status Code mapping. |
 | `ProviderStatusId` | `nvarchar(10)` | NULL |  | Current accreditation standing code (references lookup.ProviderStatusType: 01 Accredited, 02 Provisional, 03 De-accredited). |
 | `ProviderTypeCode` | `nvarchar(15)` | NULL |  | Legacy Provider Type Code mapping. |
 | `ProviderTypeId` | `nvarchar(10)` | NULL |  | Provider functional operational type code (references lookup.ProviderType: 01 Education, 02 Training, 03 Employer Provider). |
+| `ReAccreditationEffectiveDate` | `datetime2` | NULL |  | Timestamp when re-accreditation application was initiated. |
+| `ReAccreditationUnderway` | `bit` | **NOT NULL** |  | Indicates whether a re-accreditation application is currently underway. Statutory Invariant (BR4): Operational status must NOT revert to Pending Approval during renewal. |
 | `SarsNumber` | `nvarchar(50)` | NULL |  | SARS Income Tax reference number (SETMIS File 100). |
 | `WebsiteUrl` | `nvarchar(200)` | NULL |  | Corporate website URL. |
 
@@ -4844,6 +5439,7 @@
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
 | `IX_TrainingProvider_AccreditationNumber` | `AccreditationNumber` | No |
+| `IX_TrainingProvider_AccreditationStream` | `AccreditationStream` | No |
 | `IX_TrainingProvider_EtqaId` | `EtqaId` | No |
 | `IX_TrainingProvider_IsActive` | `IsActive` | No |
 | `IX_TrainingProvider_OrganisationId` | `OrganisationId` | No |
@@ -4916,7 +5512,11 @@
 | `ContactPhone` | `nvarchar(max)` | NULL |  | Domain property for ContactPhone. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `GpsCoordinates` | `nvarchar(50)` | NULL |  | Statutory GPS Geocode coordinates (e.g. -26.2041, 28.0473) per SDP Application Use Case Table 24 Step D. |
 | `IsPrimarySite` | `bit` | **NOT NULL** |  | Domain property for IsPrimarySite. |
+| `Latitude` | `decimal(9,6)` | NULL |  | Domain property for Latitude. |
+| `LocalMunicipality` | `nvarchar(100)` | NULL |  | Local or District Municipality jurisdiction (Table 15 Attribute 24). |
+| `Longitude` | `decimal(9,6)` | NULL |  | Domain property for Longitude. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `PhysicalAddressLine1` | `nvarchar(max)` | NULL |  | Domain property for PhysicalAddressLine1. |
@@ -4938,6 +5538,50 @@
 | :--- | :--- | :--- |
 | `IX_TrainingProviderCampus_CampusCode` | `CampusCode` | No |
 | `IX_TrainingProviderCampus_TrainingProviderId` | `TrainingProviderId` | No |
+
+---
+
+### <a id="trainingprovidercontact"></a> `dbo.TrainingProviderContact`
+
+**Description:** System entity for TrainingProviderContact data governance.  
+**CLR Model:** `Nsdms.Domain.Entities.TrainingProviderContact`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CellNumber` | `nvarchar(30)` | **NOT NULL** |  | Domain property for CellNumber. |
+| `ContactDesignation` | `nvarchar(50)` | **NOT NULL** |  | Statutory role designation (e.g. Primary SDP Contact, Secondary SDP Contact, CEO, CFO/Finance Manager, HR Manager). |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `Email` | `nvarchar(150)` | **NOT NULL** |  | Primary email address. |
+| `FirstName` | `nvarchar(100)` | **NOT NULL** |  | Domain property for FirstName. |
+| `IdOrPassportNumber` | `nvarchar(30)` | NULL |  | Domain property for IdOrPassportNumber. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active and operational. |
+| `IsBankingConfirmationAuthorized` | `bit` | **NOT NULL** |  | Statutory requirement: At least one designated contact must have authority to confirm banking details. |
+| `LastName` | `nvarchar(100)` | **NOT NULL** |  | Domain property for LastName. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PersonId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `Title` | `nvarchar(20)` | NULL |  | Domain property for Title. |
+| `TrainingProviderId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_TrainingProviderContact_Person_PersonId` | `PersonId` | `dbo.Person` | `SetNull` |
+| `FK_TrainingProviderContact_TrainingProvider_TrainingProviderId` | `TrainingProviderId` | `dbo.TrainingProvider` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_TrainingProviderContact_Email` | `Email` | No |
+| `IX_TrainingProviderContact_PersonId` | `PersonId` | No |
+| `IX_TrainingProviderContact_TrainingProviderId` | `TrainingProviderId` | No |
 
 ---
 
@@ -4976,6 +5620,46 @@
 | `IX_TrainingProviderQualification_AccreditationStatusCode` | `AccreditationStatusCode` | No |
 | `IX_TrainingProviderQualification_SaqaQualificationId` | `SaqaQualificationId` | No |
 | `IX_TrainingProviderQualification_TrainingProviderId` | `TrainingProviderId` | No |
+
+---
+
+### <a id="trainingproviderselfevaluation"></a> `dbo.TrainingProviderSelfEvaluation`
+
+**Description:** System entity for TrainingProviderSelfEvaluation data governance.  
+**CLR Model:** `Nsdms.Domain.Entities.TrainingProviderSelfEvaluation`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ApplicantComments` | `nvarchar(1000)` | NULL |  | SDP Applicant compliance comments, explanation, or procedure manual cross-references. |
+| `AssessorFindings` | `nvarchar(1000)` | NULL |  | Quality Assuror forensic site findings, observations, or gap remediation notes. |
+| `AssessorVerified` | `bit` | NULL |  | Quality Assuror on-site audit verification verdict: true = Verified Compliant, false = Gaps Identified, null = Pending Inspection. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `CriteriaCategory` | `nvarchar(100)` | **NOT NULL** |  | Domain property for CriteriaCategory. |
+| `CriteriaCode` | `nvarchar(50)` | **NOT NULL** |  | Statutory Criteria Code (e.g. QMS-01, QMS-02, OHS-01, STAFF-01). |
+| `CriteriaDescription` | `nvarchar(500)` | **NOT NULL** |  | Evaluation checklist requirement description. |
+| `DocumentReferenceNumber` | `nvarchar(150)` | NULL |  | Documentary evidence reference ID or filing reference. |
+| `IsCompliant` | `bit` | **NOT NULL** |  | Applicant self-evaluation rating: Yes (Compliant) or No (Non-Compliant). |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `TrainingProviderId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_TrainingProviderSelfEvaluation_TrainingProvider_TrainingProviderId` | `TrainingProviderId` | `dbo.TrainingProvider` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_TrainingProviderSelfEvaluation_CriteriaCode` | `CriteriaCode` | No |
+| `IX_TrainingProviderSelfEvaluation_TrainingProviderId` | `TrainingProviderId` | No |
 
 ---
 
@@ -5559,6 +6243,7 @@
 | Column | SQL Store Type | Nullable | Key | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ApprovalStatusCode` | `nvarchar(max)` | **NOT NULL** |  | Approval status of this mentor nomination (e.g. Approved, Pending, Rejected). Per Section 4.2.3 and Section 5 of Workplace Approval Use Case NMok_19122022. |
 | `ArtisanTradeNumber` | `nvarchar(50)` | NULL |  | Red Seal Artisan Trade Certificate serial number. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
@@ -5572,6 +6257,9 @@
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `Notes` | `nvarchar(500)` | NULL |  | Specific notes or special conditions regarding this mentor's capacity. |
 | `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the mentor's demographic Person record. |
+| `RejectionReason` | `nvarchar(max)` | NULL |  | Rejection reason captured if mentor qualification or credentials are not compliant. |
+| `VerifiedByPersonId` | `int` | NULL | 🔗 **FK** | Person ID of the Verification Officer or QA Authority who evaluated this mentor. |
+| `VerifiedDate` | `datetime2` | NULL |  | Timestamp when this mentor was verified/approved. |
 | `WorkplaceApprovalId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent WorkplaceApproval. |
 | `YearsExperience` | `int` | **NOT NULL** |  | Number of verified years of post-apprenticeship industry experience. |
 
@@ -5580,16 +6268,19 @@
 | Constraint Name | Foreign Columns | Principal Table | Delete Rule |
 | :--- | :--- | :--- | :--- |
 | `FK_WorkplaceApprovalMentor_Person_PersonId` | `PersonId` | `dbo.Person` | `Restrict` |
+| `FK_WorkplaceApprovalMentor_Person_VerifiedByPersonId` | `VerifiedByPersonId` | `dbo.Person` | `Restrict` |
 | `FK_WorkplaceApprovalMentor_WorkplaceApproval_WorkplaceApprovalId` | `WorkplaceApprovalId` | `dbo.WorkplaceApproval` | `Cascade` |
 
 #### Performance Indexes
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
+| `IX_WorkplaceApprovalMentor_ApprovalStatusCode` | `ApprovalStatusCode` | No |
 | `IX_WorkplaceApprovalMentor_IsActive` | `IsActive` | No |
 | `IX_WorkplaceApprovalMentor_IsRatioEnforced` | `IsRatioEnforced` | No |
 | `IX_WorkplaceApprovalMentor_IsRatioExempt` | `IsRatioExempt` | No |
 | `IX_WorkplaceApprovalMentor_PersonId` | `PersonId` | No |
+| `IX_WorkplaceApprovalMentor_VerifiedByPersonId` | `VerifiedByPersonId` | No |
 | `IX_WorkplaceApprovalMentor_WorkplaceApprovalId` | `WorkplaceApprovalId` | No |
 
 ---
@@ -6117,7 +6808,7 @@
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the submitting Employer Organisation. |
 | `PlannedTrainingBudget` | `decimal(18,2)` | **NOT NULL** |  | Total aggregate training budget planned for the upcoming financial year in ZAR. |
 | `ReferenceNumber` | `nvarchar(50)` | **NOT NULL** |  | Unique statutory WSP submission reference tracking number. |
-| `RequiredSignoffCount` | `int` | **NOT NULL** |  | Domain property for RequiredSignoffCount. |
+| `RequiredSignoffCount` | `int` | **NOT NULL** |  | Minimum required distinct signatory roles needed to meet statutory quorum (2 for < 50 staff, 3 for >= 50 staff). |
 | `SignoffDigitalSecuritySeal` | `nvarchar(max)` | NULL |  | SHA-256 digital security seal certifying completion of all requisite multi-party attestations. |
 | `SubmissionDate` | `datetime2` | NULL |  | Official date and time when the submission was locked and signed off. |
 | `WspApprovalStatusCode` | `nvarchar(15)` | NULL |  | Current workflow review and approval status code (e.g. Draft, Submitted, Approved, Rejected). |
@@ -6264,6 +6955,34 @@
 | :--- | :--- | :--- |
 | `IX_AlternateIdType_Active` | `Active` | No |
 | `IX_AlternateIdType_Name` | `Name` | No |
+
+---
+
+### <a id="bursaryfundingtype"></a> `lookup.BursaryFundingType`
+
+**Description:** Statutory Bursary funding categories (merSETA, Non-merSETA, Employer, Learner, Other SETA, NSF, Industry).  
+**CLR Model:** `Nsdms.Domain.Entities.BursaryFundingType`  
+**Primary Key:** `Code`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Code` | `nvarchar(50)` | **NOT NULL** | 🔑 **PK** | Unique alphanumeric code identifier acting as primary key. |
+| `Active` | `bit` | **NOT NULL** |  | Indicates whether the lookup value is active and selectable in UI workflows. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the lookup record was created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the lookup record. |
+| `Description` | `nvarchar(500)` | NULL |  | Detailed description and statutory context of the lookup code. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the lookup record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the lookup record. |
+| `Name` | `nvarchar(250)` | **NOT NULL** |  | Display name / title of the lookup option. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_BursaryFundingType_Active` | `Active` | No |
+| `IX_BursaryFundingType_Name` | `Name` | No |
 
 ---
 

@@ -145,6 +145,8 @@ public class WizardParityTests : BunitContext, IAsyncLifetime
             var recognizedWizards = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
                 "AssessorReRegistrationWizard.razor",
+                "AssessorRegistrationWizard.razor",
+                "BursaryRegistrationWizard.razor",
                 "DgGrantApplicationWizard.razor",
                 "LearnerAgreementRegistrationWizard.razor",
                 "WorkplaceApprovalWizard.razor",
@@ -350,6 +352,30 @@ public class WizardParityTests : BunitContext, IAsyncLifetime
         Assert.Contains("Assessment, re-assessment", cut.Markup, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("OHS", cut.Markup, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("QMS institutional manual reference document", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("solemnly declare", cut.Markup, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void AssessorRegistrationFields_RendersExpectedStatutoryFields()
+    {
+        var cut = Render<AssessorRegistrationFields>(parameters => parameters
+            .Add(p => p.Section, "All")
+            .Add(p => p.PractitionerType, "Assessor")
+            .Add(p => p.RsaIdNumber, "8901015800088")
+            .Add(p => p.FirstName, "Kagiso")
+            .Add(p => p.LastName, "Mahlangu")
+            .Add(p => p.Email, "kagiso@example.com")
+            .Add(p => p.HighestQualificationTitle, "National Diploma: Mechanical Engineering")
+        );
+
+        Assert.Contains("Practitioner role", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("RSA ID number", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("First name", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Last name", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Email address", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Highest qualification", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Code of Conduct", cut.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("POPIA consent", cut.Markup, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("solemnly declare", cut.Markup, StringComparison.OrdinalIgnoreCase);
     }
 

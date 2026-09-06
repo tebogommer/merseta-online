@@ -42,8 +42,17 @@ public interface IWorkplaceApprovalService
         string? reason,
         string? explanation,
         int? decisionMakerPersonId,
-        string currentUsername = "SYSTEM");
+        string currentUsername = "SYSTEM",
+        int? validityYears = 3,
+        bool allowSelfApprovalOverride = false);
     Task<WorkplaceApproval> WithdrawWorkplaceApprovalAsync(int id, string reason, string currentUsername = "SYSTEM");
+
+    // Mentor Approval Lifecycle (Section 4.2.3 & Section 5)
+    Task<WorkplaceApprovalMentor> ApproveMentorAsync(int mentorId, int verifiedByPersonId, string currentUsername = "SYSTEM");
+    Task<WorkplaceApprovalMentor> RejectMentorAsync(int mentorId, string reason, int verifiedByPersonId, string currentUsername = "SYSTEM");
+
+    // Re-Approval / Renewal Lifecycle (Section 5)
+    Task<WorkplaceApproval> RenewWorkplaceApprovalAsync(int existingApprovalId, string currentUsername = "SYSTEM");
 
     // 360-Degree Relational Queries
     Task<List<Nsdms.Application.Common.Models.WpaLearnerDto>> GetPlacedLearnersAsync(int workplaceApprovalId);
@@ -57,15 +66,21 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
     private readonly IMentorRatioPolicyEngine _ratioEngine;
+    private readonly IStorageService? _storageService;
+    private readonly Nsdms.Application.Common.Interfaces.IPdfDocumentService? _pdfService;
 
     public WorkplaceApprovalService(
         INsdmsDbContextFactory contextFactory,
         IAuditService audit,
-        IMentorRatioPolicyEngine ratioEngine)
+        IMentorRatioPolicyEngine ratioEngine,
+        IStorageService? storageService = null,
+        Nsdms.Application.Common.Interfaces.IPdfDocumentService? pdfService = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
         _ratioEngine = ratioEngine;
+        _storageService = storageService;
+        _pdfService = pdfService;
     }
 
     public async Task<MentorRatioEvaluationResult> GetRatioEvaluationAsync(int workplaceApprovalId)
@@ -372,6 +387,39 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
 
         _audit.LogAction(db, "WorkplaceApproval", existing.Id, "VerifyWorkplace", currentUsername, beforeState, existing);
         await db.SaveChangesAsync();
+
+        // Statutory Spec Section 4.2.7 & Section 9: Auto-archive inspection report into Document Vault
+        if (_pdfService != null && _storageService != null)
+        {
+            try
+            {
+                var pdfBytes = await _pdfService.GenerateWorkplaceApprovalReportPdfAsync(id);
+                if (pdfBytes != null && pdfBytes.Length > 0)
+                {
+                    using var stream = new MemoryStream(pdfBytes);
+                    var docMeta = await _storageService.UploadDocumentAsync(
+                        "WorkplaceApproval",
+                        id,
+                        "ETQ-TP-054",
+                        "Workplace Inspection Report (ETQ-TP-054)",
+                        $"WPA_InspectionReport_{existing.ApprovalNumber ?? id.ToString()}_{DateTime.UtcNow:yyyyMMdd}.pdf",
+                        stream,
+                        "application/pdf",
+                        officerPersonId?.ToString() ?? "OFFICER",
+                        currentUsername);
+
+                    if (docMeta != null)
+                    {
+                        await _storageService.VerifyDocumentAsync(docMeta.Id, officerPersonId?.ToString() ?? "OFFICER", "Auto-archived verified inspection report.");
+                    }
+                }
+            }
+            catch
+            {
+                // Non-blocking in decoupled/test contexts
+            }
+        }
+
         return existing;
     }
 
@@ -381,11 +429,19 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         string? reason,
         string? explanation,
         int? decisionMakerPersonId,
-        string currentUsername = "SYSTEM")
+        string currentUsername = "SYSTEM",
+        int? validityYears = 3,
+        bool allowSelfApprovalOverride = false)
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var existing = await db.WorkplaceApprovals.FindAsync(id);
         if (existing == null) throw new KeyNotFoundException($"WorkplaceApproval with ID {id} not found.");
+
+        // Maker-Checker Segregation of Duties Enforcement (PFMA / Signed Spec Section 4.2.7)
+        if (!allowSelfApprovalOverride && decisionMakerPersonId.HasValue && existing.VerifiedByPersonId.HasValue && decisionMakerPersonId.Value == existing.VerifiedByPersonId.Value)
+        {
+            throw new InvalidOperationException("Maker-Checker Segregation of Duties violation: The Verification Officer who inspected this workplace cannot act as the Approval Authority. Another authorised committee member or manager must evaluate and approve.");
+        }
 
         var beforeState = new { existing.ApprovalStatusCode, existing.ApprovalDate };
         existing.DecisionDate = DateTime.UtcNow;
@@ -393,9 +449,10 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
 
         if (isApproved)
         {
+            var years = validityYears.HasValue && validityYears.Value is >= 1 and <= 5 ? validityYears.Value : 3;
             existing.ApprovalStatusCode = "APPROVED";
             existing.ApprovalDate = DateTime.UtcNow;
-            existing.ExpiryDate = DateTime.UtcNow.AddYears(3);
+            existing.ExpiryDate = DateTime.UtcNow.AddYears(years);
             existing.ApprovalReason = reason;
             existing.ApprovalExplanation = explanation;
             existing.Recommendations = explanation ?? reason;
@@ -436,13 +493,133 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         return existing;
     }
 
+    public async Task<WorkplaceApprovalMentor> ApproveMentorAsync(int mentorId, int verifiedByPersonId, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var mentor = await db.WorkplaceApprovalMentors.FindAsync(mentorId);
+        if (mentor == null) throw new KeyNotFoundException($"WorkplaceApprovalMentor with ID {mentorId} not found.");
+
+        var beforeState = new { mentor.ApprovalStatusCode, mentor.VerifiedDate, mentor.VerifiedByPersonId };
+        mentor.ApprovalStatusCode = "Approved";
+        mentor.VerifiedDate = DateTime.UtcNow;
+        mentor.VerifiedByPersonId = verifiedByPersonId;
+        mentor.RejectionReason = null;
+        mentor.ModifiedAt = DateTime.UtcNow;
+        mentor.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "WorkplaceApprovalMentor", mentor.Id, "ApproveMentor", currentUsername, beforeState, mentor);
+        await db.SaveChangesAsync();
+        return mentor;
+    }
+
+    public async Task<WorkplaceApprovalMentor> RejectMentorAsync(int mentorId, string reason, int verifiedByPersonId, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var mentor = await db.WorkplaceApprovalMentors.FindAsync(mentorId);
+        if (mentor == null) throw new KeyNotFoundException($"WorkplaceApprovalMentor with ID {mentorId} not found.");
+
+        var beforeState = new { mentor.ApprovalStatusCode, mentor.RejectionReason, mentor.VerifiedByPersonId };
+        mentor.ApprovalStatusCode = "Rejected";
+        mentor.RejectionReason = reason;
+        mentor.VerifiedDate = DateTime.UtcNow;
+        mentor.VerifiedByPersonId = verifiedByPersonId;
+        mentor.ModifiedAt = DateTime.UtcNow;
+        mentor.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "WorkplaceApprovalMentor", mentor.Id, "RejectMentor", currentUsername, beforeState, mentor);
+        await db.SaveChangesAsync();
+        return mentor;
+    }
+
+    public async Task<WorkplaceApproval> RenewWorkplaceApprovalAsync(int existingApprovalId, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.WorkplaceApprovals
+            .Include(w => w.Mentors)
+            .Include(w => w.ToolItems)
+            .FirstOrDefaultAsync(w => w.Id == existingApprovalId);
+
+        if (existing == null)
+            throw new KeyNotFoundException($"WorkplaceApproval with ID {existingApprovalId} not found.");
+
+        var renewal = new WorkplaceApproval
+        {
+            OrganisationId = existing.OrganisationId,
+            OrganisationSiteId = existing.OrganisationSiteId,
+            ContactPersonId = existing.ContactPersonId,
+            QualificationTitle = existing.QualificationTitle,
+            SaqaQualificationId = existing.SaqaQualificationId,
+            TradeCode = existing.TradeCode,
+            LearningProgramTypeCode = existing.LearningProgramTypeCode,
+            RequiresWorkplaceApproval = existing.RequiresWorkplaceApproval,
+            IsRatioEnforced = existing.IsRatioEnforced,
+            CustomTradeRatio = existing.CustomTradeRatio,
+            MentorRatioExemptionNotes = existing.MentorRatioExemptionNotes,
+            IsNonMerSetaCompany = existing.IsNonMerSetaCompany,
+            HomeSetaName = existing.HomeSetaName,
+            HomeSetaAgreementRef = existing.HomeSetaAgreementRef,
+            ApprovalStatusCode = "APPLICATION",
+            ApprovalNumber = $"WPA-REN-{DateTime.UtcNow.Year}-{existing.Id:D4}",
+            InspectionDueDate = AddBusinessDays(DateTime.UtcNow, 20),
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername,
+            IsActive = true
+        };
+
+        // Clone active mentors (set to Pending for re-verification upon renewal)
+        foreach (var m in existing.Mentors.Where(x => x.IsActive))
+        {
+            renewal.Mentors.Add(new WorkplaceApprovalMentor
+            {
+                PersonId = m.PersonId,
+                Designation = m.Designation,
+                ArtisanTradeNumber = m.ArtisanTradeNumber,
+                YearsExperience = m.YearsExperience,
+                IsCertifiedArtisan = m.IsCertifiedArtisan,
+                IsActive = true,
+                MaxLearnerCapacity = m.MaxLearnerCapacity,
+                IsRatioExempt = m.IsRatioExempt,
+                IsRatioEnforced = m.IsRatioEnforced,
+                Notes = m.Notes,
+                ApprovalStatusCode = "Pending",
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = currentUsername
+            });
+        }
+
+        // Clone tooling inventory
+        foreach (var t in existing.ToolItems)
+        {
+            renewal.ToolItems.Add(new WorkplaceApprovalToolList
+            {
+                ToolName = t.ToolName,
+                Category = t.Category,
+                RequiredQuantity = t.RequiredQuantity,
+                AvailableQuantity = t.AvailableQuantity,
+                Remarks = t.Remarks,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = currentUsername
+            });
+        }
+
+        db.WorkplaceApprovals.Add(renewal);
+        await db.SaveChangesAsync();
+
+        _audit.LogAction(db, "WorkplaceApproval", renewal.Id, "RenewWorkplaceApproval", currentUsername, new { SourceApprovalId = existing.Id, existing.ApprovalNumber }, renewal);
+        await db.SaveChangesAsync();
+
+        return renewal;
+    }
+
     public static DateTime AddBusinessDays(DateTime startDate, int businessDays)
     {
         var current = startDate;
         while (businessDays > 0)
         {
             current = current.AddDays(1);
-            if (current.DayOfWeek != DayOfWeek.Saturday && current.DayOfWeek != DayOfWeek.Sunday)
+            if (current.DayOfWeek != DayOfWeek.Saturday && 
+                current.DayOfWeek != DayOfWeek.Sunday &&
+                !SouthAfricanPublicHolidays.IsPublicHoliday(current))
             {
                 businessDays--;
             }
@@ -559,3 +736,77 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
 
     #endregion
 }
+
+/// <summary>
+/// South African statutory public holidays per Public Holidays Act 36 of 1994.
+/// Accurately excludes gazetted national holidays and Sunday rollover observances from SLA business day calculations.
+/// </summary>
+public static class SouthAfricanPublicHolidays
+{
+    public static HashSet<DateTime> GetPublicHolidays(int year)
+    {
+        var holidays = new HashSet<DateTime>();
+
+        void AddHoliday(DateTime date)
+        {
+            holidays.Add(date.Date);
+            if (date.DayOfWeek == DayOfWeek.Sunday)
+            {
+                // Section 2(1) Public Holidays Act 36 of 1994: Whenever any public holiday falls upon a Sunday, the following Monday shall be a public holiday.
+                holidays.Add(date.AddDays(1).Date);
+            }
+        }
+
+        // Fixed Statutory Holidays
+        AddHoliday(new DateTime(year, 1, 1));   // New Year's Day
+        AddHoliday(new DateTime(year, 3, 21));  // Human Rights Day
+        AddHoliday(new DateTime(year, 4, 27));  // Freedom Day
+        AddHoliday(new DateTime(year, 5, 1));   // Workers' Day
+        AddHoliday(new DateTime(year, 6, 16));  // Youth Day
+        AddHoliday(new DateTime(year, 8, 9));   // National Women's Day
+        AddHoliday(new DateTime(year, 9, 24));  // Heritage Day
+        AddHoliday(new DateTime(year, 12, 16)); // Day of Reconciliation
+        AddHoliday(new DateTime(year, 12, 25)); // Christmas Day
+        AddHoliday(new DateTime(year, 12, 26)); // Day of Goodwill
+
+        // Special Sunday rule for Christmas / Day of Goodwill
+        if (new DateTime(year, 12, 25).DayOfWeek == DayOfWeek.Sunday)
+        {
+            // 26 Dec (Monday) is Day of Goodwill, so Tuesday 27 Dec becomes the observed holiday for Christmas
+            holidays.Add(new DateTime(year, 12, 27));
+        }
+
+        // Variable Easter Holidays (Computus algorithm)
+        var easterSunday = GetEasterSunday(year);
+        holidays.Add(easterSunday.AddDays(-2).Date); // Good Friday
+        holidays.Add(easterSunday.AddDays(1).Date);  // Family Day
+
+        return holidays;
+    }
+
+    public static bool IsPublicHoliday(DateTime date)
+    {
+        var holidays = GetPublicHolidays(date.Year);
+        return holidays.Contains(date.Date);
+    }
+
+    private static DateTime GetEasterSunday(int year)
+    {
+        int a = year % 19;
+        int b = year / 100;
+        int c = year % 100;
+        int d = b / 4;
+        int e = b % 4;
+        int f = (b + 8) / 25;
+        int g = (b - f + 1) / 3;
+        int h = (19 * a + b - d - g + 15) % 30;
+        int i = c / 4;
+        int k = c % 4;
+        int l = (32 + 2 * e + 2 * i - h - k) % 7;
+        int m = (a + 11 * h + 22 * l) / 451;
+        int month = (h + l - 7 * m + 114) / 31;
+        int day = ((h + l - 7 * m + 114) % 31) + 1;
+        return new DateTime(year, month, day);
+    }
+}
+

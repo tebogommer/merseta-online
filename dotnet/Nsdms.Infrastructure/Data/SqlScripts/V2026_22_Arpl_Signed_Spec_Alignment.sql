@@ -1,4 +1,4 @@
-﻿-- ============================================================================
+-- ============================================================================
 -- V2026_22_Arpl_Signed_Spec_Alignment.sql
 -- MerSETA NSDMS 2.0 - Artisan Recognition of Prior Learning (ARPL) Schema Alignment
 -- Based on signed specification: ARPL Registration Application Use Case 27012023.NMok.signed.pdf
@@ -274,6 +274,49 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.LearnerTradeTestApplication') AND name = 'CertificateDistributedAt')
 BEGIN
     ALTER TABLE dbo.LearnerTradeTestApplication ADD CertificateDistributedAt DATETIME2 NULL;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.LearnerTradeTestApplication') AND name = 'EmploymentStatus')
+BEGIN
+    ALTER TABLE dbo.LearnerTradeTestApplication ADD EmploymentStatus NVARCHAR(50) NOT NULL CONSTRAINT DF_LTTA_EmploymentStatus DEFAULT 'Employed';
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.LearnerTradeTestApplication') AND name = 'UnregisteredEmployerName')
+BEGIN
+    ALTER TABLE dbo.LearnerTradeTestApplication ADD UnregisteredEmployerName NVARCHAR(200) NULL;
+END
+GO
+
+-- 3b. ArplExperienceDetail multi-employer columns
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.ArplExperienceDetail') AND name = 'CompanyRegistrationNumber')
+BEGIN
+    ALTER TABLE dbo.ArplExperienceDetail ADD CompanyRegistrationNumber NVARCHAR(50) NULL;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.ArplExperienceDetail') AND name = 'ContactPersonName')
+BEGIN
+    ALTER TABLE dbo.ArplExperienceDetail ADD ContactPersonName NVARCHAR(150) NULL;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.ArplExperienceDetail') AND name = 'ContactPhoneNumber')
+BEGIN
+    ALTER TABLE dbo.ArplExperienceDetail ADD ContactPhoneNumber NVARCHAR(50) NULL;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.ArplExperienceDetail') AND name = 'EmployerAddress')
+BEGIN
+    ALTER TABLE dbo.ArplExperienceDetail ADD EmployerAddress NVARCHAR(300) NULL;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.ArplExperienceDetail') AND name = 'YearsOfExperience')
+BEGIN
+    ALTER TABLE dbo.ArplExperienceDetail ADD YearsOfExperience DECIMAL(18,2) NOT NULL CONSTRAINT DF_AED_YearsExp DEFAULT 0;
 END
 GO
 

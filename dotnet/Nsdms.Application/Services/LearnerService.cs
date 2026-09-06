@@ -21,6 +21,10 @@ public interface ILearnerService
     Task<CompanyLearner> ResubmitLearnerApplicationAsync(int id, string justificationOrNotes, string currentUsername = "SYSTEM");
     Task<bool> DeleteLearnerAsync(int id, string currentUsername = "SYSTEM");
 
+    // Bursary Registration & Continuation (Use Case MerSeta\NSDMS\LMS\LR\01)
+    Task<List<CompanyLearner>> GetActiveBursariesForPersonAsync(int personId);
+    Task<CompanyLearner> RegisterBursaryApplicationAsync(CompanyLearner learner, string currentUsername = "SYSTEM");
+
     // Trade Testing & Progression
     Task<LearnerTradeTest> ScheduleTradeTestAsync(LearnerTradeTest tradeTest, string currentUsername = "SYSTEM");
     Task<LearnerTradeTest> RecordTradeTestResultAsync(int tradeTestId, string resultStatusCode, string? certificateNumber, string? remarks, string currentUsername = "SYSTEM");
@@ -166,7 +170,14 @@ public class LearnerService : ILearnerService
             throw new ArgumentException("A valid PersonId (learner) is required.");
         }
 
-        if (learner.OrganisationId <= 0)
+        bool isBursary = string.Equals(learner.LearningProgrammeTypeCode, "05", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(learner.LearningProgrammeTypeCode, "Bursary", StringComparison.OrdinalIgnoreCase);
+
+        bool isUnemployedBursary = isBursary && (
+            string.Equals(learner.EmploymentStatusCode, "Unemployed", StringComparison.OrdinalIgnoreCase) ||
+            learner.EconomicStatusId == "02");
+
+        if (!isUnemployedBursary && (!learner.OrganisationId.HasValue || learner.OrganisationId.Value <= 0))
         {
             throw new ArgumentException("A valid OrganisationId (employer) is required.");
         }
@@ -207,8 +218,9 @@ public class LearnerService : ILearnerService
 
         if (string.IsNullOrWhiteSpace(learner.LearnerContractNumber))
         {
-            var prefix = (learner.LearningProgrammeTypeCode ?? "").StartsWith("App", StringComparison.OrdinalIgnoreCase) || learner.LearningProgrammeTypeCode == "01" ? "APP" : "LRN";
-            learner.LearnerContractNumber = $"{prefix}-{DateTime.UtcNow.Year}-{learner.OrganisationId}-{Guid.NewGuid().ToString("N")[..4].ToUpper()}";
+            var prefix = isBursary ? "BUR" : ((learner.LearningProgrammeTypeCode ?? "").StartsWith("App", StringComparison.OrdinalIgnoreCase) || learner.LearningProgrammeTypeCode == "01" ? "APP" : "LRN");
+            var orgPart = learner.OrganisationId.HasValue && learner.OrganisationId.Value > 0 ? learner.OrganisationId.Value.ToString() : "NON-EMP";
+            learner.LearnerContractNumber = $"{prefix}-{DateTime.UtcNow.Year}-{orgPart}-{Guid.NewGuid().ToString("N")[..4].ToUpper()}";
         }
 
         if (string.IsNullOrWhiteSpace(learner.EnrolmentStatusCode))
@@ -236,6 +248,45 @@ public class LearnerService : ILearnerService
         _audit.LogAction(db, "CompanyLearner", learner.Id, "RegisterLearner", currentUsername, null, learner);
         await db.SaveChangesAsync();
         return learner;
+    }
+
+    public async Task<List<CompanyLearner>> GetActiveBursariesForPersonAsync(int personId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.CompanyLearners
+            .AsNoTracking()
+            .Include(l => l.Organisation)
+            .Include(l => l.TrainingProvider)
+            .Where(l => l.PersonId == personId &&
+                        (l.LearningProgrammeTypeCode == "05" || l.LearningProgrammeTypeCode == "Bursary") &&
+                        l.IsActive &&
+                        (l.EnrolmentStatusCode == "Registered" || l.EnrolmentStatusCode == "InProgress" || l.EnrolmentStatusCode == "Completed"))
+            .OrderByDescending(l => l.Id)
+            .ToListAsync();
+    }
+
+    public async Task<CompanyLearner> RegisterBursaryApplicationAsync(CompanyLearner learner, string currentUsername = "SYSTEM")
+    {
+        learner.LearningProgrammeTypeCode = "05";
+
+        CompanyLearner? previousBursary = null;
+        if ((learner.IsContinuation || string.Equals(learner.BursaryApplicationTypeCode, "Continuation", StringComparison.OrdinalIgnoreCase)) &&
+            learner.PreviousCompanyLearnerId.HasValue && learner.PreviousCompanyLearnerId.Value > 0)
+        {
+            using var dbCheck = await _contextFactory.CreateDbContextAsync();
+            previousBursary = await dbCheck.CompanyLearners
+                .AsNoTracking()
+                .FirstOrDefaultAsync(l => l.Id == learner.PreviousCompanyLearnerId.Value);
+        }
+
+        var errors = CompanyLearnerDomainValidator.ValidateBursaryApplication(learner, previousBursary);
+        var fatalErrors = errors.Where(e => e.Severity == StatutoryValidationSeverity.Fatal).ToList();
+        if (fatalErrors.Any())
+        {
+            throw new InvalidOperationException($"Bursary statutory compliance violation: {string.Join("; ", fatalErrors.Select(e => e.Message))}");
+        }
+
+        return await RegisterLearnerAsync(learner, currentUsername);
     }
 
     public async Task<CompanyLearner> UpdateLearnerAsync(CompanyLearner learner, string currentUsername = "SYSTEM")
@@ -275,6 +326,20 @@ public class LearnerService : ILearnerService
         };
 
         bool wasRegistered = string.Equals(existing.EnrolmentStatusCode, "Registered", StringComparison.OrdinalIgnoreCase);
+
+        // Section 4.3 Validation: If training provider or qualification changes, validate against TrainingProviderQualification accreditation
+        if (learner.TrainingProviderId.HasValue && learner.SaqaQualificationId.HasValue &&
+            (existing.TrainingProviderId != learner.TrainingProviderId || existing.SaqaQualificationId != learner.SaqaQualificationId))
+        {
+            var isAccredited = await db.TrainingProviderQualifications
+                .AnyAsync(tpq => tpq.TrainingProviderId == learner.TrainingProviderId.Value &&
+                                 tpq.SaqaQualificationId == learner.SaqaQualificationId.Value &&
+                                 (tpq.AccreditationStatusCode == "Accredited" || tpq.AccreditationStatusCode == "Approved"));
+            if (!isAccredited)
+            {
+                throw new InvalidOperationException("The selected training provider is not accredited for the requested qualification scope.");
+            }
+        }
 
         existing.QualificationTitle = learner.QualificationTitle;
         existing.SaqaQualificationId = learner.SaqaQualificationId;
@@ -342,9 +407,11 @@ public class LearnerService : ILearnerService
         var existing = await db.CompanyLearners.FindAsync(id);
         if (existing == null) throw new KeyNotFoundException($"CompanyLearner with ID {id} not found.");
 
-        var beforeState = new { existing.EnrolmentStatusCode, existing.WithdrawalReasonCode, existing.WithdrawalComments };
+        var beforeState = new { existing.EnrolmentStatusCode, existing.InstateStatusCode, existing.WithdrawalReasonCode, existing.WithdrawalComments };
 
         existing.EnrolmentStatusCode = "Withdrawn";
+        existing.InstateStatusCode = "Withdrawal";
+        existing.InstateStatusDate = DateTime.UtcNow;
         existing.WithdrawalReasonCode = reasonCode;
         existing.WithdrawalComments = comments;
         existing.HasPendingModifications = false;

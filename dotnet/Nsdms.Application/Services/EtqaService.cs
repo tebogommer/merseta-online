@@ -127,6 +127,11 @@ public class EtqaService : IEtqaService
         return await db.EtqaAssessors
             .Include(a => a.Person)
             .Include(a => a.Scopes)
+                .ThenInclude(s => s.UnitStandards)
+            .Include(a => a.ProviderAffiliations)
+                .ThenInclude(p => p.TrainingProvider)
+                    .ThenInclude(t => t.Organisation)
+            .Include(a => a.DisciplinaryCases)
             .Include(a => a.Assessments)
                 .ThenInclude(asm => asm.Person)
             .Include(a => a.Assessments)

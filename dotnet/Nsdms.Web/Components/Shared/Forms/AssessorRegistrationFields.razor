@@ -1,0 +1,413 @@
+@namespace Nsdms.Web.Components.Shared.Forms
+@using MudBlazor
+@using Nsdms.Application.Common.Utilities
+@using Nsdms.Domain.Entities
+
+@if (Section == "RoleAndPerson" || Section == "All")
+{
+    <div class="nsdms-section-person mb-4">
+        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3 text-primary">Practitioner Role &amp; Demographics</MudText>
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
+                           Label="Practitioner role"
+                           Value="@PractitionerType"
+                           ValueChanged="OnPractitionerTypeChanged"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           Disabled="@IsReadOnly">
+                    <MudSelectItem Value="@("Assessor")">Registered Assessor</MudSelectItem>
+                    <MudSelectItem Value="@("Moderator")">Registered Moderator</MudSelectItem>
+                    <MudSelectItem Value="@("Assessor & Moderator")">Assessor &amp; Moderator</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="RSA ID number"
+                              Value="@RsaIdNumber"
+                              ValueChanged="OnRsaIdChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              HelperText="13-digit South African ID number (validates DOB &amp; gender)"
+                              Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="First name"
+                              Value="@FirstName"
+                              ValueChanged="OnFirstNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Last name"
+                              Value="@LastName"
+                              ValueChanged="OnLastNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Email address"
+                              Value="@Email"
+                              ValueChanged="OnEmailChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Cell number"
+                              Value="@CellNumber"
+                              ValueChanged="OnCellNumberChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Date of birth"
+                              Value="@DateOfBirthText"
+                              ReadOnly="true"
+                              Variant="Variant.Outlined"
+                              HelperText="Auto-populated from RSA ID" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Gender"
+                              Value="@Gender"
+                              ReadOnly="true"
+                              Variant="Variant.Outlined"
+                              HelperText="Auto-populated from RSA ID" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect T="string"
+                           Label="Employment standing"
+                           Value="@EmploymentStatusCode"
+                           ValueChanged="OnEmploymentStatusCodeChanged"
+                           Variant="Variant.Outlined"
+                           Disabled="@IsReadOnly">
+                    <MudSelectItem Value="@("Employed")">Employed</MudSelectItem>
+                    <MudSelectItem Value="@("Unemployed")">Unemployed</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+        </FormRow>
+
+        <MudDivider Class="my-4" />
+        <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-3 text-secondary">Secondary Education &amp; Location</MudText>
+        <FormRow>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Last school attended"
+                              Value="@LastSchoolAttended"
+                              ValueChanged="OnLastSchoolAttendedChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudNumericField T="int?"
+                                 Label="Year completed"
+                                 Value="@LastSchoolYear"
+                                 ValueChanged="OnLastSchoolYearChanged"
+                                 Variant="Variant.Outlined"
+                                 Min="1950"
+                                 Max="2030"
+                                 Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string"
+                           Label="Residential area type"
+                           Value="@UrbanRuralArea"
+                           ValueChanged="OnUrbanRuralAreaChanged"
+                           Variant="Variant.Outlined"
+                           Disabled="@IsReadOnly">
+                    <MudSelectItem Value="@("Urban")">Urban</MudSelectItem>
+                    <MudSelectItem Value="@("Rural")">Rural</MudSelectItem>
+                    <MudSelectItem Value="@("Semi-Urban")">Semi-Urban</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+        </FormRow>
+
+        <MudDivider Class="my-4" />
+        <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-3 text-secondary">Next of Kin Contact Details</MudText>
+        <FormRow>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Next of kin name"
+                              Value="@NextOfKinName"
+                              ValueChanged="OnNextOfKinNameChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Next of kin contact"
+                              Value="@NextOfKinContact"
+                              ValueChanged="OnNextOfKinContactChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Relationship"
+                              Value="@NextOfKinRelationship"
+                              ValueChanged="OnNextOfKinRelationshipChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Scope" || Section == "All")
+{
+    <div class="nsdms-section-scope mb-4">
+        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3 text-primary">Highest Educational Qualification</MudText>
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
+            <strong>Statutory 3-Year Post-Qualification Rule:</strong> Under ETQA regulations, assessors and moderators must possess at least three (3) years of post-qualification occupational practice before applying for assessment scope registration.
+        </MudAlert>
+        <FormRow>
+            <MudItem xs="12" md="8">
+                <MudTextField T="string"
+                              Label="Highest qualification title"
+                              Value="@HighestQualificationTitle"
+                              ValueChanged="OnHighestQualificationTitleChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="e.g. National Diploma: Mechanical Engineering or NC: Welding Application" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudDatePicker Label="Date qualification obtained"
+                               Date="@HighestQualificationObtainedDate"
+                               DateChanged="OnHighestQualificationDateChanged"
+                               Variant="Variant.Outlined"
+                               DateFormat="yyyy-MM-dd"
+                               Required="true"
+                               Disabled="@IsReadOnly"
+                               MaxDate="DateTime.Today" />
+            </MudItem>
+        </FormRow>
+    </div>
+}
+
+@if (Section == "Legal" || Section == "All")
+{
+    <div class="nsdms-section-legal mb-4">
+        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3 text-primary">Statutory Declarations &amp; Legal Compliance</MudText>
+        <div class="pa-4 rounded-lg mb-3" style="background: var(--surface-subtle); border: 1px solid var(--border);">
+            <MudCheckBox T="bool"
+                         Label="Code of Conduct: I certify compliance with the merSETA Assessor and Moderator Code of Conduct, ensuring fair, reliable, and valid assessment practices."
+                         Value="@IsCodeOfConductAccepted"
+                         ValueChanged="OnCodeOfConductAcceptedChanged"
+                         Color="Color.Primary"
+                         Disabled="@IsReadOnly" />
+        </div>
+        <div class="pa-4 rounded-lg mb-3" style="background: var(--surface-subtle); border: 1px solid var(--border);">
+            <MudCheckBox T="bool"
+                         Label="POPIA consent: I consent to the processing and verification of my personal identification, qualifications, and credentials in accordance with the Protection of Personal Information Act (POPIA)."
+                         Value="@IsPopiaConsented"
+                         ValueChanged="OnPopiaConsentedChanged"
+                         Color="Color.Primary"
+                         Disabled="@IsReadOnly" />
+        </div>
+        <div class="pa-4 rounded-lg mb-3" style="background: var(--surface-subtle); border: 1px solid var(--border);">
+            <MudCheckBox T="bool"
+                         Label="I solemnly declare that all particulars furnished in this application and accompanying documents are true, correct, and authentic."
+                         Value="@IsDeclarationAcknowledged"
+                         ValueChanged="OnDeclarationAcknowledgedChanged"
+                         Color="Color.Primary"
+                         Disabled="@IsReadOnly" />
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Section { get; set; } = "All";
+    [Parameter] public bool IsReadOnly { get; set; }
+
+    [Parameter] public string PractitionerType { get; set; } = "Assessor";
+    [Parameter] public EventCallback<string> PractitionerTypeChanged { get; set; }
+
+    [Parameter] public string RsaIdNumber { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> RsaIdNumberChanged { get; set; }
+
+    [Parameter] public string FirstName { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> FirstNameChanged { get; set; }
+
+    [Parameter] public string LastName { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> LastNameChanged { get; set; }
+
+    [Parameter] public string Email { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> EmailChanged { get; set; }
+
+    [Parameter] public string CellNumber { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> CellNumberChanged { get; set; }
+
+    [Parameter] public string DateOfBirthText { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> DateOfBirthTextChanged { get; set; }
+
+    [Parameter] public string Gender { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> GenderChanged { get; set; }
+
+    [Parameter] public string EmploymentStatusCode { get; set; } = "Employed";
+    [Parameter] public EventCallback<string> EmploymentStatusCodeChanged { get; set; }
+
+    [Parameter] public string? LastSchoolAttended { get; set; }
+    [Parameter] public EventCallback<string?> LastSchoolAttendedChanged { get; set; }
+
+    [Parameter] public int? LastSchoolYear { get; set; }
+    [Parameter] public EventCallback<int?> LastSchoolYearChanged { get; set; }
+
+    [Parameter] public string UrbanRuralArea { get; set; } = "Urban";
+    [Parameter] public EventCallback<string> UrbanRuralAreaChanged { get; set; }
+
+    [Parameter] public string? NextOfKinName { get; set; }
+    [Parameter] public EventCallback<string?> NextOfKinNameChanged { get; set; }
+
+    [Parameter] public string? NextOfKinContact { get; set; }
+    [Parameter] public EventCallback<string?> NextOfKinContactChanged { get; set; }
+
+    [Parameter] public string? NextOfKinRelationship { get; set; }
+    [Parameter] public EventCallback<string?> NextOfKinRelationshipChanged { get; set; }
+
+    [Parameter] public string? HighestQualificationTitle { get; set; }
+    [Parameter] public EventCallback<string?> HighestQualificationTitleChanged { get; set; }
+
+    [Parameter] public DateTime? HighestQualificationObtainedDate { get; set; }
+    [Parameter] public EventCallback<DateTime?> HighestQualificationObtainedDateChanged { get; set; }
+
+    [Parameter] public bool IsCodeOfConductAccepted { get; set; }
+    [Parameter] public EventCallback<bool> IsCodeOfConductAcceptedChanged { get; set; }
+
+    [Parameter] public bool IsPopiaConsented { get; set; }
+    [Parameter] public EventCallback<bool> IsPopiaConsentedChanged { get; set; }
+
+    [Parameter] public bool IsDeclarationAcknowledged { get; set; }
+    [Parameter] public EventCallback<bool> IsDeclarationAcknowledgedChanged { get; set; }
+
+    private async Task OnPractitionerTypeChanged(string value)
+    {
+        PractitionerType = value;
+        await PractitionerTypeChanged.InvokeAsync(value);
+    }
+
+    private async Task OnRsaIdChanged(string value)
+    {
+        RsaIdNumber = value;
+        await RsaIdNumberChanged.InvokeAsync(value);
+
+        var parseResult = RsaIdValidator.Parse(value);
+        if (parseResult.IsValid)
+        {
+            if (parseResult.DateOfBirth.HasValue)
+            {
+                DateOfBirthText = parseResult.DateOfBirth.Value.ToString("yyyy-MM-dd");
+                await DateOfBirthTextChanged.InvokeAsync(DateOfBirthText);
+            }
+            if (!string.IsNullOrWhiteSpace(parseResult.Gender))
+            {
+                Gender = parseResult.Gender;
+                await GenderChanged.InvokeAsync(Gender);
+            }
+        }
+    }
+
+    private async Task OnFirstNameChanged(string value)
+    {
+        FirstName = value;
+        await FirstNameChanged.InvokeAsync(value);
+    }
+
+    private async Task OnLastNameChanged(string value)
+    {
+        LastName = value;
+        await LastNameChanged.InvokeAsync(value);
+    }
+
+    private async Task OnEmailChanged(string value)
+    {
+        Email = value;
+        await EmailChanged.InvokeAsync(value);
+    }
+
+    private async Task OnCellNumberChanged(string value)
+    {
+        CellNumber = value;
+        await CellNumberChanged.InvokeAsync(value);
+    }
+
+    private async Task OnEmploymentStatusCodeChanged(string value)
+    {
+        EmploymentStatusCode = value;
+        await EmploymentStatusCodeChanged.InvokeAsync(value);
+    }
+
+    private async Task OnLastSchoolAttendedChanged(string? value)
+    {
+        LastSchoolAttended = value;
+        await LastSchoolAttendedChanged.InvokeAsync(value);
+    }
+
+    private async Task OnLastSchoolYearChanged(int? value)
+    {
+        LastSchoolYear = value;
+        await LastSchoolYearChanged.InvokeAsync(value);
+    }
+
+    private async Task OnUrbanRuralAreaChanged(string value)
+    {
+        UrbanRuralArea = value;
+        await UrbanRuralAreaChanged.InvokeAsync(value);
+    }
+
+    private async Task OnNextOfKinNameChanged(string? value)
+    {
+        NextOfKinName = value;
+        await NextOfKinNameChanged.InvokeAsync(value);
+    }
+
+    private async Task OnNextOfKinContactChanged(string? value)
+    {
+        NextOfKinContact = value;
+        await NextOfKinContactChanged.InvokeAsync(value);
+    }
+
+    private async Task OnNextOfKinRelationshipChanged(string? value)
+    {
+        NextOfKinRelationship = value;
+        await NextOfKinRelationshipChanged.InvokeAsync(value);
+    }
+
+    private async Task OnHighestQualificationTitleChanged(string? value)
+    {
+        HighestQualificationTitle = value;
+        await HighestQualificationTitleChanged.InvokeAsync(value);
+    }
+
+    private async Task OnHighestQualificationDateChanged(DateTime? value)
+    {
+        HighestQualificationObtainedDate = value;
+        await HighestQualificationObtainedDateChanged.InvokeAsync(value);
+    }
+
+    private async Task OnCodeOfConductAcceptedChanged(bool value)
+    {
+        IsCodeOfConductAccepted = value;
+        await IsCodeOfConductAcceptedChanged.InvokeAsync(value);
+    }
+
+    private async Task OnPopiaConsentedChanged(bool value)
+    {
+        IsPopiaConsented = value;
+        await IsPopiaConsentedChanged.InvokeAsync(value);
+    }
+
+    private async Task OnDeclarationAcknowledgedChanged(bool value)
+    {
+        IsDeclarationAcknowledged = value;
+        await IsDeclarationAcknowledgedChanged.InvokeAsync(value);
+    }
+}

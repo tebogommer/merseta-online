@@ -68,6 +68,14 @@ public class ErpIntegrationAndLearnerLifecycleTests
         db.Organisations.AddRange(org1, org2);
         await db.SaveChangesAsync();
 
+        var wpa = new WorkplaceApproval
+        {
+            OrganisationId = org2.Id,
+            ApprovalStatusCode = "Approved"
+        };
+        db.WorkplaceApprovals.Add(wpa);
+        await db.SaveChangesAsync();
+
         var learner = new CompanyLearner
         {
             OrganisationId = org1.Id,

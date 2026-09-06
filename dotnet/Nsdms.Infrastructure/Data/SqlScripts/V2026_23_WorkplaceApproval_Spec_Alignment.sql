@@ -78,3 +78,25 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[WorkplaceApproval]') AND name = N'IX_WorkplaceApproval_InspectionDueDate')
         CREATE NONCLUSTERED INDEX [IX_WorkplaceApproval_InspectionDueDate] ON [dbo].[WorkplaceApproval] ([InspectionDueDate]) WHERE [InspectionDueDate] IS NOT NULL;
 END
+
+-- =========================================================================================
+-- Mentor Approval Lifecycle & Verification Attributes (Section 4.2.3 & Section 5)
+-- =========================================================================================
+IF OBJECT_ID(N'[dbo].[WorkplaceApprovalMentor]', N'U') IS NOT NULL
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[WorkplaceApprovalMentor]') AND name = 'ApprovalStatusCode')
+        ALTER TABLE [dbo].[WorkplaceApprovalMentor] ADD [ApprovalStatusCode] NVARCHAR(50) NOT NULL DEFAULT 'Approved';
+
+    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[WorkplaceApprovalMentor]') AND name = 'RejectionReason')
+        ALTER TABLE [dbo].[WorkplaceApprovalMentor] ADD [RejectionReason] NVARCHAR(MAX) NULL;
+
+    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[WorkplaceApprovalMentor]') AND name = 'VerifiedDate')
+        ALTER TABLE [dbo].[WorkplaceApprovalMentor] ADD [VerifiedDate] DATETIME2 NULL;
+
+    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[WorkplaceApprovalMentor]') AND name = 'VerifiedByPersonId')
+        ALTER TABLE [dbo].[WorkplaceApprovalMentor] ADD [VerifiedByPersonId] INT NULL;
+
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[WorkplaceApprovalMentor]') AND name = N'IX_WorkplaceApprovalMentor_VerifiedByPersonId')
+        CREATE NONCLUSTERED INDEX [IX_WorkplaceApprovalMentor_VerifiedByPersonId] ON [dbo].[WorkplaceApprovalMentor] ([VerifiedByPersonId]) WHERE [VerifiedByPersonId] IS NOT NULL;
+END
+

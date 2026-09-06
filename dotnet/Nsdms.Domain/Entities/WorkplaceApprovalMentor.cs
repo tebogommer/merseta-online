@@ -71,4 +71,30 @@ public class WorkplaceApprovalMentor : BaseEntity
     /// Specific notes or special conditions regarding this mentor's capacity.
     /// </summary>
     public string? Notes { get; set; }
+
+    /// <summary>
+    /// Approval status of this mentor nomination (e.g. Approved, Pending, Rejected).
+    /// Per Section 4.2.3 and Section 5 of Workplace Approval Use Case NMok_19122022.
+    /// </summary>
+    public string ApprovalStatusCode { get; set; } = "Approved";
+
+    /// <summary>
+    /// Rejection reason captured if mentor qualification or credentials are not compliant.
+    /// </summary>
+    public string? RejectionReason { get; set; }
+
+    /// <summary>
+    /// Timestamp when this mentor was verified/approved.
+    /// </summary>
+    public DateTime? VerifiedDate { get; set; }
+
+    /// <summary>
+    /// Person ID of the Verification Officer or QA Authority who evaluated this mentor.
+    /// </summary>
+    public int? VerifiedByPersonId { get; set; }
+
+    /// <summary>
+    /// Navigational reference to the verifying officer.
+    /// </summary>
+    public Person? VerifiedByPerson { get; set; }
 }

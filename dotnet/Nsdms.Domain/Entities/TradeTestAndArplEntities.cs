@@ -31,6 +31,9 @@ public class LearnerTradeTestApplication : BaseEntity
     public int? PreferredTradeTestCenterId { get; set; }
     public TrainingProvider? PreferredTradeTestCenter { get; set; }
 
+    [NotMapped]
+    public string? PreferredTradeCenterCode { get => PreferredTradeTestCenter?.AccreditationNumber ?? PreferredTradeTestCenterId?.ToString(); set { } }
+
     /// <summary>
     /// Relational Link to SAQA Qualification / Listed Trade.
     /// </summary>
@@ -40,6 +43,16 @@ public class LearnerTradeTestApplication : BaseEntity
     /// Trade specialisation under the designated trade.
     /// </summary>
     public string? Specialisation { get; set; }
+
+    /// <summary>
+    /// Statutory employment status: Employed vs Unemployed (Section 4.2.3 of Signed Use Case).
+    /// </summary>
+    public string EmploymentStatus { get; set; } = "Employed"; // Employed, Unemployed
+
+    /// <summary>
+    /// Name of employer if non-registered or private provider context (Section 4.2.3).
+    /// </summary>
+    public string? UnregisteredEmployerName { get; set; }
 
     /// <summary>
     /// Indicates whether the candidate attempted a trade test previously.
@@ -89,6 +102,8 @@ public class LearnerTradeTestApplication : BaseEntity
 
     #region Tier 1: Regional CLA Recommendation Flow (Section 4.2.4)
     public string? ClaUserId { get; set; }
+    [NotMapped]
+    public string? ClaRecommendedBy { get => ClaUserId; set => ClaUserId = value; }
     public DateTime? ClaRecommendationDate { get; set; }
     public string? ClaRecommendationStatus { get; set; } // Recommended, Rejected
     public string? ClaRejectionReason { get; set; }
@@ -263,9 +278,14 @@ public class ArplExperienceDetail : BaseEntity
     public LearnerTradeTestApplication? LearnerTradeTestApplication { get; set; }
 
     public string EmployerName { get; set; } = string.Empty;
+    public string? CompanyRegistrationNumber { get; set; }
+    public string? ContactPersonName { get; set; }
+    public string? ContactPhoneNumber { get; set; }
+    public string? EmployerAddress { get; set; }
     public string JobTitle { get; set; } = string.Empty;
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
+    public decimal YearsOfExperience { get; set; } = 0m;
     public string DutiesDescription { get; set; } = string.Empty;
     public string? EvidenceDocumentName { get; set; }
 }

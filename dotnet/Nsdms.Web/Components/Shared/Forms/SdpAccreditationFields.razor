@@ -85,6 +85,26 @@
                               HelperText="Main delivery site inspected for physical verification" />
             </MudItem>
             <MudItem xs="12" md="4">
+                <MudTextField T="string?"
+                              Label="Campus GPS coordinates"
+                              Value="@GpsCoordinates"
+                              ValueChanged="OnGpsCoordinatesChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly"
+                              Placeholder="-26.2041, 28.0473"
+                              HelperText="Latitude and Longitude for site visit navigation" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string?"
+                              Label="Local municipality"
+                              Value="@LocalMunicipality"
+                              ValueChanged="OnLocalMunicipalityChanged"
+                              Variant="Variant.Outlined"
+                              Disabled="@IsReadOnly"
+                              Placeholder="City of Johannesburg"
+                              HelperText="Statutory local government district" />
+            </MudItem>
+            <MudItem xs="12" md="4">
                 <MudSelect T="string"
                            Label="Campus province"
                            Value="@Province"
@@ -135,6 +155,65 @@
                               HelperText="Primary landline or switchboard number" />
             </MudItem>
         </FormRow>
+
+        <!-- Statutory Contact Quorum & Banking Authority -->
+        <MudDivider Class="my-3" />
+        <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mb-2 font-weight-bold">
+            Secondary Designated Contact &amp; Governance Quorum (Statutory Invariant)
+        </MudText>
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">
+            Provider registration statutorily mandates a minimum of two (2) verified contact persons. At least one designated contact must have official banking details confirmation authority.
+        </MudAlert>
+        <FormRow>
+            <MudItem xs="12" md="3">
+                <MudTextField T="string"
+                              Label="Secondary contact full name"
+                              Value="@SecondaryContactFullName"
+                              ValueChanged="OnSecondaryContactFullNameChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Second verified institutional representative" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField T="string"
+                              Label="Secondary contact email address"
+                              Value="@SecondaryContactEmail"
+                              ValueChanged="OnSecondaryContactEmailChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Official email for dual-signoff" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField T="string"
+                              Label="Secondary contact phone number"
+                              Value="@SecondaryContactPhone"
+                              ValueChanged="OnSecondaryContactPhoneChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="Direct contact mobile or office phone" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField T="string"
+                              Label="Designation / Institutional role"
+                              Value="@SecondaryContactDesignation"
+                              ValueChanged="OnSecondaryContactDesignationChanged"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Disabled="@IsReadOnly"
+                              HelperText="e.g. Chief Financial Officer, Quality Director" />
+            </MudItem>
+            <MudItem xs="12" Class="d-flex align-center">
+                <MudSwitch T="bool"
+                           Label="Authorized to confirm institutional banking details (Governance Maker-Checker Authority)"
+                           Value="@IsBankingConfirmationAuthorized"
+                           ValueChanged="OnIsBankingConfirmationAuthorizedChanged"
+                           Color="Color.Success"
+                           Disabled="@IsReadOnly" />
+            </MudItem>
+        </FormRow>
     </div>
 }
 
@@ -144,17 +223,71 @@
         <FormRow>
             <MudItem xs="12" md="6">
                 <MudSelect T="string"
-                           Label="Accreditation application scope category"
-                           Value="@AccreditationScopeType"
-                           ValueChanged="OnAccreditationScopeTypeChanged"
+                           Label="Accreditation application scope category / stream (Statutory Standard)"
+                           Value="@AccreditationStream"
+                           ValueChanged="OnAccreditationStreamChanged"
                            Variant="Variant.Outlined"
                            Required="true"
                            Disabled="@IsReadOnly"
-                           HelperText="Primary quality assurance or secondary scope extension">
-                    <MudSelectItem Value="@("Primary")">Primary Institutional Accreditation (merSETA Lead QA)</MudSelectItem>
-                    <MudSelectItem Value="@("Secondary")">Secondary Accreditation / Extension of Programme Scope</MudSelectItem>
+                           HelperText="Select one of the 5 official accreditation intake streams">
+                    <MudSelectItem Value="@("PrimaryAccreditation")">01 Primary merSETA Institutional Accreditation</MudSelectItem>
+                    <MudSelectItem Value="@("ProgrammeApproval")">02 Programme Approval (Non-merSETA Primary SETA)</MudSelectItem>
+                    <MudSelectItem Value="@("QctoSkillsDevelopmentProvider")">03 QCTO Skills Development Provider (SDP)</MudSelectItem>
+                    <MudSelectItem Value="@("QctoTradeTestCentre")">04 QCTO Trade Test Centre (TTC)</MudSelectItem>
+                    <MudSelectItem Value="@("NonMerSetaScope")">05 Non-merSETA Scope / MOA Partner</MudSelectItem>
                 </MudSelect>
             </MudItem>
+
+            @if (AccreditationStream == "ProgrammeApproval")
+            {
+                <MudItem xs="12" md="3">
+                    <MudTextField T="string?"
+                                  Label="Primary Quality Assurance Body (Primary SETA)"
+                                  Value="@PrimaryEtqaName"
+                                  ValueChanged="OnPrimaryEtqaNameChanged"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  Disabled="@IsReadOnly"
+                                  Placeholder="e.g. CHIETA, Services SETA, W&RSETA"
+                                  HelperText="SETA holding primary institutional accreditation" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField T="string?"
+                                  Label="Primary SETA accreditation reference number"
+                                  Value="@PrimaryEtqaAccreditationNumber"
+                                  ValueChanged="OnPrimaryEtqaAccreditationNumberChanged"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  Disabled="@IsReadOnly"
+                                  Placeholder="e.g. CHIETA-ACC-2024-0012"
+                                  HelperText="Current valid primary accreditation certificate reference" />
+                </MudItem>
+            }
+
+            @if (AccreditationStream == "QctoTradeTestCentre")
+            {
+                <MudItem xs="12" md="3">
+                    <MudTextField T="string?"
+                                  Label="NAMB TTC assessor / moderator registration number"
+                                  Value="@NambTtcRegistrationNumber"
+                                  ValueChanged="OnNambTtcRegistrationNumberChanged"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  Disabled="@IsReadOnly"
+                                  Placeholder="e.g. NAMB-TTC-2025-081"
+                                  HelperText="Official NAMB Trade Test Centre credential" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudDatePicker Label="NAMB TTC credential expiry date"
+                                   Date="@NambTtcExpiryDate"
+                                   DateChanged="OnNambTtcExpiryDateChanged"
+                                   Variant="Variant.Outlined"
+                                   Required="true"
+                                   Disabled="@IsReadOnly"
+                                   HelperText="Validity date of NAMB registration" />
+                </MudItem>
+            }
+
             <MudItem xs="12" md="6">
                 <MudTextField T="string"
                               Label="Primary designated occupational qualification / trade"
@@ -424,6 +557,12 @@
     [Parameter] public string PhysicalAddress { get; set; } = "142 Heidelberg Road, City Deep, Johannesburg";
     [Parameter] public EventCallback<string> PhysicalAddressChanged { get; set; }
 
+    [Parameter] public string? GpsCoordinates { get; set; } = "-26.2041, 28.0473";
+    [Parameter] public EventCallback<string?> GpsCoordinatesChanged { get; set; }
+
+    [Parameter] public string? LocalMunicipality { get; set; } = "City of Johannesburg";
+    [Parameter] public EventCallback<string?> LocalMunicipalityChanged { get; set; }
+
     [Parameter] public string Province { get; set; } = "Gauteng";
     [Parameter] public EventCallback<string> ProvinceChanged { get; set; }
 
@@ -436,7 +575,38 @@
     [Parameter] public string ContactPhone { get; set; } = "011 402 8800";
     [Parameter] public EventCallback<string> ContactPhoneChanged { get; set; }
 
-    // Section 2: Scope
+    // Secondary Contact Quorum & Banking Authority (BR3)
+    [Parameter] public string SecondaryContactFullName { get; set; } = "Amanda Sithole";
+    [Parameter] public EventCallback<string> SecondaryContactFullNameChanged { get; set; }
+
+    [Parameter] public string SecondaryContactEmail { get; set; } = "finance@apexacademy.co.za";
+    [Parameter] public EventCallback<string> SecondaryContactEmailChanged { get; set; }
+
+    [Parameter] public string SecondaryContactPhone { get; set; } = "011 402 8805";
+    [Parameter] public EventCallback<string> SecondaryContactPhoneChanged { get; set; }
+
+    [Parameter] public string SecondaryContactDesignation { get; set; } = "Chief Financial Officer";
+    [Parameter] public EventCallback<string> SecondaryContactDesignationChanged { get; set; }
+
+    [Parameter] public bool IsBankingConfirmationAuthorized { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsBankingConfirmationAuthorizedChanged { get; set; }
+
+    // Section 2: Scope & 5 Statutory Streams (BR1)
+    [Parameter] public string AccreditationStream { get; set; } = "PrimaryAccreditation";
+    [Parameter] public EventCallback<string> AccreditationStreamChanged { get; set; }
+
+    [Parameter] public string? PrimaryEtqaName { get; set; }
+    [Parameter] public EventCallback<string?> PrimaryEtqaNameChanged { get; set; }
+
+    [Parameter] public string? PrimaryEtqaAccreditationNumber { get; set; }
+    [Parameter] public EventCallback<string?> PrimaryEtqaAccreditationNumberChanged { get; set; }
+
+    [Parameter] public string? NambTtcRegistrationNumber { get; set; }
+    [Parameter] public EventCallback<string?> NambTtcRegistrationNumberChanged { get; set; }
+
+    [Parameter] public DateTime? NambTtcExpiryDate { get; set; } = DateTime.UtcNow.AddYears(3);
+    [Parameter] public EventCallback<DateTime?> NambTtcExpiryDateChanged { get; set; }
+
     [Parameter] public string AccreditationScopeType { get; set; } = "Primary";
     [Parameter] public EventCallback<string> AccreditationScopeTypeChanged { get; set; }
 
@@ -703,5 +873,79 @@
     {
         IsDeclarationAccepted = val;
         await IsDeclarationAcceptedChanged.InvokeAsync(val);
+    }
+
+    private async Task OnGpsCoordinatesChanged(string? val)
+    {
+        GpsCoordinates = val;
+        await GpsCoordinatesChanged.InvokeAsync(val);
+    }
+
+    private async Task OnLocalMunicipalityChanged(string? val)
+    {
+        LocalMunicipality = val;
+        await LocalMunicipalityChanged.InvokeAsync(val);
+    }
+
+    private async Task OnSecondaryContactFullNameChanged(string val)
+    {
+        SecondaryContactFullName = val;
+        await SecondaryContactFullNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnSecondaryContactEmailChanged(string val)
+    {
+        SecondaryContactEmail = val;
+        await SecondaryContactEmailChanged.InvokeAsync(val);
+    }
+
+    private async Task OnSecondaryContactPhoneChanged(string val)
+    {
+        SecondaryContactPhone = val;
+        await SecondaryContactPhoneChanged.InvokeAsync(val);
+    }
+
+    private async Task OnSecondaryContactDesignationChanged(string val)
+    {
+        SecondaryContactDesignation = val;
+        await SecondaryContactDesignationChanged.InvokeAsync(val);
+    }
+
+    private async Task OnIsBankingConfirmationAuthorizedChanged(bool val)
+    {
+        IsBankingConfirmationAuthorized = val;
+        await IsBankingConfirmationAuthorizedChanged.InvokeAsync(val);
+    }
+
+    private async Task OnAccreditationStreamChanged(string val)
+    {
+        AccreditationStream = val;
+        AccreditationScopeType = val == "PrimaryAccreditation" ? "Primary" : "Secondary";
+        await AccreditationStreamChanged.InvokeAsync(val);
+        await AccreditationScopeTypeChanged.InvokeAsync(AccreditationScopeType);
+    }
+
+    private async Task OnPrimaryEtqaNameChanged(string? val)
+    {
+        PrimaryEtqaName = val;
+        await PrimaryEtqaNameChanged.InvokeAsync(val);
+    }
+
+    private async Task OnPrimaryEtqaAccreditationNumberChanged(string? val)
+    {
+        PrimaryEtqaAccreditationNumber = val;
+        await PrimaryEtqaAccreditationNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnNambTtcRegistrationNumberChanged(string? val)
+    {
+        NambTtcRegistrationNumber = val;
+        await NambTtcRegistrationNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnNambTtcExpiryDateChanged(DateTime? val)
+    {
+        NambTtcExpiryDate = val;
+        await NambTtcExpiryDateChanged.InvokeAsync(val);
     }
 }

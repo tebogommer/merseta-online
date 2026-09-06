@@ -1,0 +1,303 @@
+@page "/learners/bulk-register"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Forms
+@inject ILearnerBulkIngestionService BulkService
+@inject IOrganisationService OrgService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A4 / T2 (Multi-Step Bulk Ingestion Hub - The ATM Channel)
+  Clauses: 4.2, 4.3, 6.1, 7.2, 8.1, 11.1–11.9
+*@
+
+<EntityHeader Title="Bulk Fast-Track Registration (The ATM Channel)"
+              Subtitle="High-speed spreadsheet ingestion with in-browser pre-flight linting and Straight-Through Processing (STP)"
+              ReferenceKey="A4-BULK-REG"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="@(() => Navigation.NavigateTo("/learners"))">
+            Back to Registry
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.FileDownload"
+                   OnClick="DownloadTemplate">
+            Download CSV Template
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+    <!-- Tab 1: Upload & Ingestion -->
+    <MudTabPanel Text="New Ingestion Batch" Icon="@Icons.Material.Filled.CloudUpload">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudCard Elevation="2" Class="pa-4 h-100">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.Business" Class="mr-2 align-middle" /> 1. Select Submitting Employer / SDP
+                    </MudText>
+                    <MudSelect T="int"
+                               Label="Submitting Organisation"
+                               @bind-Value="_selectedOrgId"
+                               Variant="Variant.Outlined"
+                               Dense="true"
+                               Required="true">
+                        @foreach (var org in _organisations)
+                        {
+                            <MudSelectItem Value="@org.Id">@org.CompanyName (SDL: @org.SdlNumber)</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mt-4">
+                        <strong>Straight-Through Processing (STP) Rule:</strong>
+                        Active levy-paying employers submitting compliant learnerships with valid RSA IDs within 30 days are automatically registered instantly!
+                    </MudAlert>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudCard Elevation="2" Class="pa-4 h-100">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.UploadFile" Class="mr-2 align-middle" /> 2. Upload Candidate CSV File
+                    </MudText>
+
+                    <MudFileUpload T="IBrowserFile" FilesChanged="@((IBrowserFile file) => UploadFiles(file))">
+                        <ActivatorContent>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                                       FullWidth="true"
+                                       Size="Size.Large">
+                                Choose Learner Batch CSV
+                            </MudButton>
+                        </ActivatorContent>
+                    </MudFileUpload>
+
+                    @if (_uploadedFile != null)
+                    {
+                        <MudPaper Class="pa-3 mt-4 border-default bg-surface" Elevation="0">
+                            <div class="d-flex align-center justify-space-between">
+                                <div>
+                                    <MudText Typo="Typo.subtitle2">@_uploadedFile.Name</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        @((_uploadedFile.Size / 1024.0).ToString("F1")) KB • Ready for pre-flight processing
+                                    </MudText>
+                                </div>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Success"
+                                           Disabled="@(_selectedOrgId <= 0 || _isProcessing)"
+                                           OnClick="ProcessUploadAsync">
+                                    @if (_isProcessing)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                        <span>Processing...</span>
+                                    }
+                                    else
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Class="mr-1" />
+                                        <span>Start Ingestion</span>
+                                    }
+                                </MudButton>
+                            </div>
+                        </MudPaper>
+                    }
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+
+        @if (_activeBatch != null)
+        {
+            <!-- Batch Staging & Live Pre-Flight Review -->
+            <MudCard Elevation="2" Class="mt-6 pa-4">
+                <div class="d-flex justify-space-between align-center mb-4">
+                    <div>
+                        <MudText Typo="Typo.h6" Class="fw-bold">
+                            Batch: @_activeBatch.BatchReference
+                        </MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Total Candidates: @_activeBatch.TotalRows | 
+                            Successful: @_activeBatch.SuccessCount | 
+                            STP Auto-Approved: @_activeBatch.StpCount | 
+                            Exceptions: @_activeBatch.ErrorCount
+                        </MudText>
+                    </div>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.CheckCircle"
+                               Disabled="@(_isProcessing || _activeBatch.Status == "Processed")"
+                               OnClick="CommitBatchAsync">
+                        Commit & Register Batch
+                    </MudButton>
+                </div>
+
+                <MudTable Items="_activeBatch.Rows" Hover="true" Dense="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>#</MudTh>
+                        <MudTh>Learner</MudTh>
+                        <MudTh>RSA ID</MudTh>
+                        <MudTh>Programme</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>STP Eligibility</MudTh>
+                        <MudTh>Validation Notes</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.RowIndex</MudTd>
+                        <MudTd><strong>@context.FirstName @context.LastName</strong></MudTd>
+                        <MudTd Class="font-monospace">@context.RsaIdNumber</MudTd>
+                        <MudTd>@context.QualificationTitle (@context.LearningProgrammeTypeCode)</MudTd>
+                        <MudTd>
+                            <StatusBadge Status="@context.Status" Size="Size.Small" />
+                        </MudTd>
+                        <MudTd>
+                            @if (context.IsStpEligible)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">
+                                    <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" Class="mr-1" /> Auto-Eligible
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">
+                                    Officer Review
+                                </MudChip>
+                            }
+                        </MudTd>
+                        <MudTd>
+                            @if (!string.IsNullOrWhiteSpace(context.ValidationErrors))
+                            {
+                                <span class="text-danger">@context.ValidationErrors</span>
+                            }
+                            else
+                            {
+                                <span class="text-secondary" style="font-size: 0.8rem;">@context.StpDecisionNotes</span>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudCard>
+        }
+    </MudTabPanel>
+
+    <!-- Tab 2: Batch History & STP Analytics -->
+    <MudTabPanel Text="Ingestion History" Icon="@Icons.Material.Filled.History">
+        <MudTable Items="_batchHistory" Hover="true" Dense="true" Elevation="1">
+            <HeaderContent>
+                <MudTh>Batch Reference</MudTh>
+                <MudTh>Organisation</MudTh>
+                <MudTh>Date Staged</MudTh>
+                <MudTh>Total Candidates</MudTh>
+                <MudTh>STP Rate</MudTh>
+                <MudTh>Status</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd Class="font-monospace fw-bold">@context.BatchReference</MudTd>
+                <MudTd>@(context.Organisation?.CompanyName ?? "Unknown")</MudTd>
+                <MudTd>@context.CreatedAt.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                <MudTd>@context.TotalRows rows</MudTd>
+                <MudTd>
+                    @if (context.TotalRows > 0)
+                    {
+                        var pct = (context.StpCount * 100) / context.TotalRows;
+                        <MudProgressLinear Color="Color.Success" Value="@pct" Class="my-2" />
+                        <span style="font-size: 0.75rem;">@context.StpCount / @context.TotalRows (@pct%)</span>
+                    }
+                    else
+                    {
+                        <span>0%</span>
+                    }
+                </MudTd>
+                <MudTd>
+                    <StatusBadge Status="@context.Status" Size="Size.Small" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Learner Registry", href: "/learners"),
+        new BreadcrumbItem("Bulk Fast-Track (ATM)", href: null, disabled: true)
+    };
+
+    private List<Organisation> _organisations = new();
+    private List<LearnerBulkBatch> _batchHistory = new();
+    private int _selectedOrgId;
+    private IBrowserFile? _uploadedFile;
+    private LearnerBulkBatch? _activeBatch;
+    private bool _isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _organisations = await OrgService.GetAllAsync();
+        if (_organisations.Any()) _selectedOrgId = _organisations.First().Id;
+        _batchHistory = await BulkService.GetBatchesAsync();
+    }
+
+    private void UploadFiles(IBrowserFile? file)
+    {
+        _uploadedFile = file;
+    }
+
+    private async Task ProcessUploadAsync()
+    {
+        if (_uploadedFile == null || _selectedOrgId <= 0) return;
+        _isProcessing = true;
+        try
+        {
+            using var stream = _uploadedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            _activeBatch = await BulkService.StageBatchAsync(_selectedOrgId, _uploadedFile.Name, stream, "OfficerSDF");
+            Snackbar.Add($"Batch {_activeBatch.BatchReference} staged with {_activeBatch.TotalRows} candidate records.", Severity.Success);
+            _batchHistory = await BulkService.GetBatchesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Upload failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task CommitBatchAsync()
+    {
+        if (_activeBatch == null) return;
+        _isProcessing = true;
+        try
+        {
+            var result = await BulkService.ProcessBatchAsync(_activeBatch.Id, "OfficerSDF");
+            _activeBatch = result.Batch;
+            Snackbar.Add($"Batch processed: {result.TotalSucceeded} registered ({result.TotalStpApproved} via STP), {result.TotalFailed} exceptions.", Severity.Success);
+            _batchHistory = await BulkService.GetBatchesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Batch commit failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task DownloadTemplate()
+    {
+        var bytes = BulkService.GenerateBulkTemplateCsv();
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("downloadFileFromBase64", "merSETA_Learner_Bulk_Enrolment_Template.csv", "text/csv", base64);
+        Snackbar.Add("Bulk CSV template downloaded successfully.", Severity.Info);
+    }
+}

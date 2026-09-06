@@ -1,0 +1,456 @@
+@page "/tradetests/qa-queue"
+@page "/trade-tests/qa-queue"
+@using Microsoft.AspNetCore.Authorization
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@attribute [Authorize]
+@inject ITradeTestAndArplService TradeTestService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A2 (Work Queue - Quality Assurance Regional Approval & Stamping Gate)
+  Signed 2023 ARPL Specification Section 4.2.4 (QA Approval Stage & Stamped Application Upload)
+*@
+
+<PageTitle>QA Approval Queue | merSETA NSDMS</PageTitle>
+
+<EntityHeader Title="QA Regional Approval &amp; Stamping Queue"
+              Subtitle="Regional Quality Assurance Maker-Checker adjudication, statutory document stamping, and Trade Test Serial allocation"
+              ReferenceKey="A2-QA-QUEUE"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="LoadDataAsync"
+                   aria-label="Refresh QA Approval Queue">
+            Refresh
+        </MudButton>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Info"
+                   StartIcon="@Icons.Material.Filled.AssignmentTurnedIn"
+                   OnClick="@(() => Nav.NavigateTo("/tradetests/cla-queue"))"
+                   aria-label="Navigate to CLA Review Queue">
+            CLA review queue
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.ListAlt"
+                   OnClick="@(() => Nav.NavigateTo("/tradetests"))"
+                   aria-label="Back to Trade Test Registry">
+            Registry list
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<!-- Metrics Overview -->
+<MudGrid Class="mb-4">
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="1" Class="pa-3 rounded-lg border-l-4" Style="border-left: 4px solid var(--mud-palette-success);">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Recommended by CLA</MudText>
+            <MudText Typo="Typo.h5" Class="fw-bold text-success">@_applications.Count</MudText>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="1" Class="pa-3 rounded-lg border-l-4" Style="border-left: 4px solid var(--mud-palette-secondary);">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Designated toolkit trades</MudText>
+            <MudText Typo="Typo.h5" Class="fw-bold text-secondary">@_applications.Count(a => a.RequiresToolkit)</MudText>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="1" Class="pa-3 rounded-lg border-l-4" Style="border-left: 4px solid var(--mud-palette-primary);">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Non-toolkit trades</MudText>
+            <MudText Typo="Typo.h5" Class="fw-bold text-primary">@_applications.Count(a => !a.RequiresToolkit)</MudText>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="1" Class="pa-3 rounded-lg border-l-4" Style="border-left: 4px solid var(--mud-palette-info);">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Serial generation milestone</MudText>
+            <MudText Typo="Typo.h5" Class="fw-bold text-info">Ready</MudText>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<!-- Filter Bar -->
+<MudPaper Class="pa-4 mb-4" Elevation="1">
+    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
+        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Search by application number, candidate name, RSA ID, or trade..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mt-0"
+                          Immediate="true"
+                          Clearable="true" />
+        </div>
+        <div class="d-flex align-center gap-2 flex-wrap">
+            <MudChipSet T="string" @bind-SelectedValue="_statusFilter" SelectionMode="SelectionMode.SingleSelection">
+                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_statusFilter == "All" ? Variant.Filled : Variant.Outlined)">All (@_applications.Count)</MudChip>
+                <MudChip T="string" Value="@("ToolkitOnly")" Color="Color.Secondary" Variant="@(_statusFilter == "ToolkitOnly" ? Variant.Filled : Variant.Outlined)">Toolkit trades (17)</MudChip>
+                <MudChip T="string" Value="@("NonToolkitOnly")" Color="Color.Primary" Variant="@(_statusFilter == "NonToolkitOnly" ? Variant.Filled : Variant.Outlined)">Non-toolkit trades</MudChip>
+            </MudChipSet>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-center align-center py-12">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+        </div>
+    }
+    else if (!FilteredApplications.Any())
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-4">
+            No applications are currently awaiting QA approval. All CLA recommendations have been adjudicated.
+        </MudAlert>
+    }
+    else
+    {
+        <MudTable Items="@FilteredApplications"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true"
+                  Breakpoint="Breakpoint.Sm"
+                  Elevation="0"
+                  T="LearnerTradeTestApplication">
+            <HeaderContent>
+                <MudTh>Application #</MudTh>
+                <MudTh>Candidate Name &amp; ID</MudTh>
+                <MudTh>Trade &amp; Prerequisites</MudTh>
+                <MudTh Class="d-none d-md-table-cell">Accredited TTC</MudTh>
+                <MudTh Class="d-none d-lg-table-cell">CLA Recommendation</MudTh>
+                <MudTh>Stage</MudTh>
+                <MudTh Style="text-align:right">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Application #">
+                    <MudLink Href="@($"/tradetests/{context.Id}")" Color="Color.Primary" Underline="Underline.Hover">
+                        <span class="font-mono fw-bold">@context.ApplicationNumber</span>
+                    </MudLink>
+                </MudTd>
+                <MudTd DataLabel="Candidate Name &amp; ID">
+                    <div class="fw-bold">@context.Person?.FirstName @context.Person?.LastName</div>
+                    <div class="text-caption font-mono text-secondary">ID: @context.Person?.RsaIdNumber</div>
+                </MudTd>
+                <MudTd DataLabel="Trade &amp; Prerequisites">
+                    <div>@context.TradeTitle</div>
+                    @if (context.RequiresToolkit)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined" Class="mt-1">
+                            17 Designated toolkit trade
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text" Class="mt-1">
+                            Category 1-6 prerequisite
+                        </MudChip>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Accredited TTC" Class="d-none d-md-table-cell">
+                    <div>@(context.TrainingProvider?.ProviderName ?? context.AssessmentCenterName ?? "Not designated")</div>
+                    @if (!string.IsNullOrEmpty(context.PreferredTradeCenterCode))
+                    {
+                        <div class="text-caption font-mono text-secondary">Accreditation: @context.PreferredTradeCenterCode</div>
+                    }
+                </MudTd>
+                <MudTd DataLabel="CLA Recommendation" Class="d-none d-lg-table-cell">
+                    <div>@(context.ClaUserId ?? "CLA Officer")</div>
+                    <div class="text-caption text-secondary">@context.ClaRecommendationDate?.ToString("yyyy-MM-dd HH:mm")</div>
+                </MudTd>
+                <MudTd DataLabel="Stage">
+                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">
+                        @context.StatusCode
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Actions" Style="text-align:right">
+                    <div class="d-flex justify-end gap-1 flex-wrap">
+                        <MudIconButton Icon="@Icons.Material.Filled.PictureAsPdf"
+                                       Color="Color.Info"
+                                       Size="Size.Small"
+                                       Title="Download Official Form ETQ-TP-ARPL-01"
+                                       Href="@($"/api/documents/tradetest/{context.Id}/form-pdf")"
+                                       Target="_blank" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                       Color="Color.Default"
+                                       Size="Size.Small"
+                                       Title="View Application"
+                                       OnClick="@(() => Nav.NavigateTo($"/tradetests/{context.Id}"))" />
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Success"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Approval"
+                                   OnClick="@(() => OpenApproveDialog(context))">
+                            Approve &amp; stamp
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Error"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Close"
+                                   OnClick="@(() => OpenRejectDialog(context))">
+                            Reject
+                        </MudButton>
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 20, 50, 100 }" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudPaper>
+
+<!-- QA Approval & Stamping Dialog -->
+<MudDialog @bind-Visible="_showApproveDialog" Options="_dialogOptions">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Approval" Color="Color.Success" />
+            <MudText Typo="Typo.h6">QA approval &amp; statutory document stamping</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Approving application <strong>@_activeApplication?.ApplicationNumber</strong> for candidate <strong>@_activeApplication?.Person?.FirstName @_activeApplication?.Person?.LastName</strong>.
+        </MudText>
+        <MudAlert Severity="Severity.Success" Class="mb-3" Variant="Variant.Outlined">
+            <strong>Statutory Milestone:</strong> Approving this application will generate the official <strong>Trade Test Serial Number</strong> (TT-SER-@DateTime.UtcNow.Year-xxxxx) and notify the Candidate, CLA, and TTC.
+        </MudAlert>
+
+        <MudText Typo="Typo.subtitle2" Class="mb-1">Statutory document re-upload check:</MudText>
+        <MudCheckBox T="bool" @bind-Value="_stampedFormVerified" Color="Color.Primary" Label="I certify that the official ETQ-TP-ARPL-01 application form has been physically signed, stamped, and archived in the Evidence Vault." Class="mb-3" />
+
+        <MudTextField @bind-Value="_actionComments"
+                      Label="QA approval remarks"
+                      Variant="Variant.Outlined"
+                      Lines="2"
+                      Placeholder="QA audit compliance verified. Registered for trade test assessment." />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showApproveDialog = false)">Cancel</MudButton>
+        <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="ConfirmApproveAsync" Disabled="@(!_stampedFormVerified || _actionSubmitting)">
+            @if (_actionSubmitting)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <span class="ms-2">Generating serial...</span>
+            }
+            else
+            {
+                <span>Approve &amp; register serial</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- QA Rejection Dialog -->
+<MudDialog @bind-Visible="_showRejectDialog" Options="_dialogOptions">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" />
+            <MudText Typo="Typo.h6">QA application rejection</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Adjudicating rejection for application <strong>@_activeApplication?.ApplicationNumber</strong>.
+        </MudText>
+
+        <MudCheckBox T="bool" @bind-Value="_isFinalRejection" Color="Color.Error" Label="Final rejection (terminal rejection; if unchecked, routes for candidate resubmission)" Class="mb-3" />
+
+        <MudSelect T="string" Label="Statutory QA rejection reason" @bind-Value="_selectedRejectionReason" Variant="Variant.Outlined" Class="mb-3" Required="true">
+            <MudSelectItem Value="@("Selected TTC is not accredited for the specified trade code")">Selected TTC is not accredited for the specified trade code</MudSelectItem>
+            <MudSelectItem Value="@("Toolkits assessment verification incomplete")">Toolkits assessment verification incomplete</MudSelectItem>
+            <MudSelectItem Value="@("Document authenticity audit discrepancy")">Document authenticity audit discrepancy</MudSelectItem>
+            <MudSelectItem Value="@("Pre-assessment evaluation report missing or unverified")">Pre-assessment evaluation report missing or unverified</MudSelectItem>
+            <MudSelectItem Value="@("Previous attempt wait-period policy restriction")">Previous attempt wait-period policy restriction</MudSelectItem>
+            <MudSelectItem Value="@("Other QA audit non-compliance")">Other QA audit non-compliance</MudSelectItem>
+        </MudSelect>
+
+        <MudTextField @bind-Value="_actionComments"
+                      Label="Rejection findings and justification"
+                      Variant="Variant.Outlined"
+                      Lines="3"
+                      Placeholder="Specific non-compliance findings explaining QA rejection decision." />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showRejectDialog = false)">Cancel</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="ConfirmRejectAsync" Disabled="_actionSubmitting">
+            @if (_actionSubmitting)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <span class="ms-2">Processing...</span>
+            }
+            else
+            {
+                <span>Confirm rejection</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<LearnerTradeTestApplication> _applications = new();
+    private bool _loading = true;
+    private string _searchString = string.Empty;
+    private string _statusFilter = "All";
+
+    private bool _showApproveDialog = false;
+    private bool _showRejectDialog = false;
+    private bool _actionSubmitting = false;
+    private LearnerTradeTestApplication? _activeApplication;
+    private bool _stampedFormVerified = true;
+    private bool _isFinalRejection = false;
+    private string _selectedRejectionReason = "Selected TTC is not accredited for the specified trade code";
+    private string _actionComments = string.Empty;
+
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
+
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new("NSDMS Home", href: "/"),
+        new("Artisan & ARPL", href: "/tradetests"),
+        new("QA Approval Queue", href: "/tradetests/qa-queue", disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        try
+        {
+            _applications = await TradeTestService.GetQaPendingApplicationsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading QA approval queue: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private IEnumerable<LearnerTradeTestApplication> FilteredApplications
+    {
+        get
+        {
+            var result = _applications.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(_statusFilter) && _statusFilter != "All")
+            {
+                if (_statusFilter == "ToolkitOnly")
+                {
+                    result = result.Where(a => a.RequiresToolkit);
+                }
+                else if (_statusFilter == "NonToolkitOnly")
+                {
+                    result = result.Where(a => !a.RequiresToolkit);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                result = result.Where(a =>
+                    a.ApplicationNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                    a.TradeTitle.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                    (a.Person != null && $"{a.Person.FirstName} {a.Person.LastName}".Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
+                    (a.Person?.RsaIdNumber?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false));
+            }
+
+            return result;
+        }
+    }
+
+    private void OpenApproveDialog(LearnerTradeTestApplication app)
+    {
+        _activeApplication = app;
+        _stampedFormVerified = true;
+        _actionComments = "QA assessment audit approved. Candidate registered.";
+        _showApproveDialog = true;
+    }
+
+    private void OpenRejectDialog(LearnerTradeTestApplication app)
+    {
+        _activeApplication = app;
+        _isFinalRejection = false;
+        _selectedRejectionReason = "Selected TTC is not accredited for the specified trade code";
+        _actionComments = string.Empty;
+        _showRejectDialog = true;
+    }
+
+    private async Task ConfirmApproveAsync()
+    {
+        if (_activeApplication == null) return;
+        _actionSubmitting = true;
+        try
+        {
+            var updated = await TradeTestService.SubmitQaApprovalAsync(
+                _activeApplication.Id,
+                approve: true,
+                stampedDocumentAttachmentId: 201,
+                isFinalRejection: false,
+                rejectionReason: null,
+                comments: _actionComments,
+                currentUsername: "RegionalQaManager");
+
+            Snackbar.Add($"Application registered! Trade test serial allocated: {updated.TradeTestSerialNumber}", Severity.Success);
+            _showApproveDialog = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to approve application: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _actionSubmitting = false;
+        }
+    }
+
+    private async Task ConfirmRejectAsync()
+    {
+        if (_activeApplication == null) return;
+        _actionSubmitting = true;
+        try
+        {
+            await TradeTestService.SubmitQaApprovalAsync(
+                _activeApplication.Id,
+                approve: false,
+                stampedDocumentAttachmentId: null,
+                isFinalRejection: _isFinalRejection,
+                rejectionReason: _selectedRejectionReason,
+                comments: _actionComments,
+                currentUsername: "RegionalQaManager");
+
+            if (_isFinalRejection)
+            {
+                Snackbar.Add($"Application {_activeApplication.ApplicationNumber} has been terminally rejected.", Severity.Error);
+            }
+            else
+            {
+                Snackbar.Add($"Application {_activeApplication.ApplicationNumber} returned to candidate for resubmission.", Severity.Warning);
+            }
+
+            _showRejectDialog = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to reject application: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _actionSubmitting = false;
+        }
+    }
+}

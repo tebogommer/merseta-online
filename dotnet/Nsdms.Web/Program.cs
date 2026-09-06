@@ -105,6 +105,8 @@ builder.Services.AddScoped<WorkplaceApprovalService>();
 builder.Services.AddScoped<IWorkplaceApprovalService>(sp => sp.GetRequiredService<WorkplaceApprovalService>());
 builder.Services.AddScoped<LearnerService>();
 builder.Services.AddScoped<ILearnerService>(sp => sp.GetRequiredService<LearnerService>());
+builder.Services.AddScoped<ILearnerStpRiskEngine, LearnerStpRiskEngine>();
+builder.Services.AddScoped<ILearnerBulkIngestionService, LearnerBulkIngestionService>();
 
 // Workflow Engine & Storage Services
 builder.Services.AddScoped<IWorkflowEngineService, WorkflowEngineService>();
@@ -212,8 +214,10 @@ builder.Services.AddScoped<IAqpPartnerService, AqpPartnerService>();
 builder.Services.AddScoped<IWspSignoffService, WspSignoffService>();
 builder.Services.AddScoped<IDiscretionaryGrantClaimService, DiscretionaryGrantClaimService>();
 
-// Phase 4: ETQA Assessor 3-Year Re-registration & CPD Service
+// Phase 4: ETQA Assessor Statutory Lifecycle & Registration Services
+builder.Services.AddScoped<IAssessorRegistrationService, AssessorRegistrationService>();
 builder.Services.AddScoped<IAssessorReRegistrationService, AssessorReRegistrationService>();
+builder.Services.AddScoped<IAssessorDisciplinaryService, AssessorDisciplinaryService>();
 
 // Brand Asset Service
 builder.Services.AddScoped<IBrandAssetService, Nsdms.Infrastructure.Services.BrandAssetService>();
@@ -283,6 +287,12 @@ app.MapGet("/api/documents/tradetest/{id:int}/pdf", async (int id, IPdfDocumentS
 {
     var bytes = await pdf.GenerateTradeTestCertificatePdfAsync(id);
     return Results.File(bytes, "application/pdf", $"TradeTest_Artisan_Certificate_{id}.pdf");
+}).RequireAuthorization();
+
+app.MapGet("/api/documents/tradetest/{id:int}/form-pdf", async (int id, IPdfDocumentService pdf) =>
+{
+    var bytes = await pdf.GenerateArplApplicationFormPdfAsync(id);
+    return Results.File(bytes, "application/pdf", $"ARPL_Application_Form_ETQ_TP_ARPL_01_{id}.pdf");
 }).RequireAuthorization();
 
 app.MapGet("/api/documents/wsp/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
@@ -430,6 +440,10 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase29LearnerRegistrationAlignment", () => Phase29LearnerRegistrationAlignmentMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase30ArplGovernance", () => Phase30ArplGovernanceSchemaMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase31WorkplaceApproval", () => Phase31WorkplaceApprovalSchemaMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase32BursaryRegistration", () => Phase32BursaryRegistrationGovernanceMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase33LearnerLifecycleManagement", () => Phase33LearnerLifecycleManagementMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase33LearnerDualChannel", () => Phase33LearnerDualChannelMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase34SdpAccreditationGovernance", () => Phase34SdpAccreditationGovernanceMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
     RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
     RunMigrator("RolePermissions", () => scope.ServiceProvider.GetRequiredService<IRolePermissionService>().SeedDefaultRolePermissionsAsync().GetAwaiter().GetResult());

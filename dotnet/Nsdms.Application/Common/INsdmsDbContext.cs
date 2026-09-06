@@ -39,6 +39,14 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<StrategicPriority> StrategicPriorities { get; }
     DbSet<FundingWindowPriority> FundingWindowPriorities { get; }
     DbSet<AssessorModeratorScope> AssessorModeratorScopes { get; }
+    DbSet<AssessorUnitStandardScope> AssessorUnitStandardScopes { get; }
+    DbSet<AssessorProviderLink> AssessorProviderLinks { get; }
+    DbSet<AssessorRegistrationApplication> AssessorRegistrationApplications { get; }
+    DbSet<AssessorApplicationScope> AssessorApplicationScopes { get; }
+    DbSet<AssessorApplicationUnitStandard> AssessorApplicationUnitStandards { get; }
+    DbSet<AssessorApplicationProviderLink> AssessorApplicationProviderLinks { get; }
+    DbSet<AssessorApplicationDocument> AssessorApplicationDocuments { get; }
+    DbSet<AssessorDisciplinaryCase> AssessorDisciplinaryCases { get; }
     DbSet<LearnerAssessment> LearnerAssessments { get; }
     DbSet<WorkplaceApproval> WorkplaceApprovals { get; }
     DbSet<WorkplaceApprovalMentor> WorkplaceApprovalMentors { get; }
@@ -48,6 +56,8 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<LearnerTradeTest> LearnerTradeTests { get; }
     DbSet<PersonGuardian> PersonGuardians { get; }
     DbSet<LearnerRegisteredUnitStandard> LearnerRegisteredUnitStandards { get; }
+    DbSet<LearnerBulkBatch> LearnerBulkBatches { get; }
+    DbSet<LearnerBulkBatchRow> LearnerBulkBatchRows { get; }
     DbSet<AuditLog> AuditLogs { get; }
 
     // Workflow Engine & Task Matrix
@@ -100,6 +110,7 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<CompanyLearnerTransfer> CompanyLearnerTransfers { get; }
     DbSet<CompanyLearnerLostTime> CompanyLearnerLostTimes { get; }
     DbSet<CompanyLearnerTermination> CompanyLearnerTerminations { get; }
+    DbSet<CompanyLearnerExtension> CompanyLearnerExtensions { get; }
 
     // Workplace Monitoring & Inspection Surveys (Cluster 1)
     DbSet<WorkplaceMonitoringSiteVisit> WorkplaceMonitoringSiteVisits { get; }
@@ -224,6 +235,7 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<UrbanRuralType> UrbanRuralTypes { get; }
     DbSet<SetaType> SetaTypes { get; }
     DbSet<FundingType> FundingTypes { get; }
+    DbSet<BursaryFundingType> BursaryFundingTypes { get; }
 
     // NLRD Lookups
     DbSet<AbetBandType> AbetBandTypes { get; }
@@ -257,6 +269,8 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     // Phase 7: SDP Campus Infrastructure & Assessor Linking
     DbSet<TrainingProviderCampus> TrainingProviderCampuses { get; }
     DbSet<TrainingProviderAssessorLink> TrainingProviderAssessorLinks { get; }
+    DbSet<TrainingProviderSelfEvaluation> TrainingProviderSelfEvaluations { get; }
+    DbSet<TrainingProviderContact> TrainingProviderContacts { get; }
 
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
     ValueTask<object?> FindAsync(Type entityType, params object?[]? keyValues);

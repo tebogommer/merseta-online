@@ -20,9 +20,9 @@ public class CompanyLearner : BaseEntity
     public Person? Person { get; set; }
 
     /// <summary>
-    /// Foreign key referencing the host or sponsoring Employer Organisation.
+    /// Optional foreign key referencing the host or sponsoring Employer Organisation (optional for unemployed bursaries).
     /// </summary>
-    public int OrganisationId { get; set; }
+    public int? OrganisationId { get; set; }
 
     /// <summary>
     /// Navigational reference to the sponsoring Employer Organisation.
@@ -199,6 +199,18 @@ public class CompanyLearner : BaseEntity
     public string? LearnerStatusCode { get => EnrolmentStatusCode; set => EnrolmentStatusCode = value ?? "Registered"; }
 
     /// <summary>
+    /// Operational in-state status code per signed Learner Management specification Section 5
+    /// (e.g. Active, TransferApplication, Transferred, TerminationPending, Terminated, Withdrawal, RequirementsNotMet).
+    /// Preserves statutory EnrolmentStatusCode = "Registered" / "Enrolled".
+    /// </summary>
+    public string InstateStatusCode { get; set; } = "Active";
+
+    /// <summary>
+    /// Timestamp when the operational in-state status was last transitioned.
+    /// </summary>
+    public DateTime InstateStatusDate { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
     /// Official date when the learner contract was officially registered with MerSETA.
     /// </summary>
     public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
@@ -290,6 +302,87 @@ public class CompanyLearner : BaseEntity
     /// Flags whether modifications have been made to this application prior to approval.
     /// </summary>
     public bool HasPendingModifications { get; set; } = false;
+
+    #region Bursary Registration & Continuation Attributes (Signed 2022 Use Case)
+    /// <summary>
+    /// Classification of the bursary submission: "New" for initial qualification, "Continuation" for next academic year.
+    /// </summary>
+    public string? BursaryApplicationTypeCode { get; set; } = "New";
+
+    /// <summary>
+    /// Indicates whether this record is an academic continuation of an existing active bursary.
+    /// </summary>
+    public bool IsContinuation { get; set; } = false;
+
+    /// <summary>
+    /// Foreign key referencing the preceding active CompanyLearner bursary record when IsContinuation is true.
+    /// </summary>
+    public int? PreviousCompanyLearnerId { get; set; }
+
+    /// <summary>
+    /// Navigational reference to the previous academic year bursary record.
+    /// </summary>
+    public CompanyLearner? PreviousCompanyLearner { get; set; }
+
+    /// <summary>
+    /// Current academic funding year for the bursary (e.g. 2026).
+    /// </summary>
+    public int? AcademicYear { get; set; }
+
+    /// <summary>
+    /// Current academic year level of study (e.g. 1 = 1st Year, 2 = 2nd Year, 3 = 3rd Year, 4 = 4th Year, 5 = Honours, 6 = Masters).
+    /// </summary>
+    public int? YearOfStudy { get; set; }
+
+    /// <summary>
+    /// Statutory Bursary funding category (references lookup.BursaryFundingType):
+    /// 01 merSETA funded, 02 Non-merSETA funded, 03 Employer funded, 04 Learner funded, 05 Other SETA funded, 06 NSF funded, 07 Industry funded.
+    /// </summary>
+    public string? BursaryFundingTypeCode { get; set; }
+
+    /// <summary>
+    /// Higher Education Institution (HEI) or TVET College name where the learner is registered.
+    /// </summary>
+    public string? InstitutionName { get; set; }
+
+    /// <summary>
+    /// Classification of the educational institution: "PublicUniversity", "TvetCollege", "PrivateHEI".
+    /// </summary>
+    public string? InstitutionTypeCode { get; set; }
+
+    /// <summary>
+    /// Employment standing of the bursary applicant: "Employed", "Unemployed".
+    /// Unemployed bursars do not require host employer details per Section 5 of the Bursary Use Case.
+    /// </summary>
+    public string? EmploymentStatusCode { get; set; } = "Unemployed";
+
+    /// <summary>
+    /// Verification flag indicating whether prior year academic results were submitted and verified for continuation.
+    /// </summary>
+    public bool? ContinuationAcademicResultsPassed { get; set; }
+    #endregion
+
+    #region Dual-Channel Registration (Manual Teller vs Automated STP Engine)
+    /// <summary>
+    /// Registration intake channel: "ManualWizard" (The Teller) or "AutomatedBulk" (The ATM).
+    /// </summary>
+    public string RegistrationChannel { get; set; } = "ManualWizard";
+
+    /// <summary>
+    /// Optional foreign key referencing the bulk ingestion batch if registered via automated fast-track.
+    /// </summary>
+    public int? IngestionBatchId { get; set; }
+
+    /// <summary>
+    /// Indicates whether this registration was straight-through processed by the automated rule engine.
+    /// </summary>
+    public bool StpApproved { get; set; } = false;
+
+    /// <summary>
+    /// Reason or evaluation notes from the Straight-Through Processing rule engine.
+    /// </summary>
+    public string? StpDecisionReason { get; set; }
+    #endregion
     #endregion
 
     /// <summary>
@@ -306,4 +399,24 @@ public class CompanyLearner : BaseEntity
     /// Registered unit standards or skills set components linked to this agreement.
     /// </summary>
     public ICollection<LearnerRegisteredUnitStandard> RegisteredUnitStandards { get; set; } = new List<LearnerRegisteredUnitStandard>();
+
+    /// <summary>
+    /// Pre-registration and contract extension requests linked to this agreement.
+    /// </summary>
+    public ICollection<CompanyLearnerExtension> Extensions { get; set; } = new List<CompanyLearnerExtension>();
+
+    /// <summary>
+    /// Inter-employer and inter-SDP transfers linked to this agreement.
+    /// </summary>
+    public ICollection<CompanyLearnerTransfer> Transfers { get; set; } = new List<CompanyLearnerTransfer>();
+
+    /// <summary>
+    /// Certified lost training times linked to this agreement.
+    /// </summary>
+    public ICollection<CompanyLearnerLostTime> LostTimes { get; set; } = new List<CompanyLearnerLostTime>();
+
+    /// <summary>
+    /// Cancellation and termination requests linked to this agreement.
+    /// </summary>
+    public ICollection<CompanyLearnerTermination> Terminations { get; set; } = new List<CompanyLearnerTermination>();
 }

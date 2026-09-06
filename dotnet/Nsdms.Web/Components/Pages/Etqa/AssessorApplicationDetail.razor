@@ -1,0 +1,648 @@
+@page "/etqa/applications/{Id:int}"
+@using Microsoft.AspNetCore.Authorization
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@attribute [Authorize]
+@inject IAssessorRegistrationService RegService
+@inject IPdfDocumentService PdfService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IJSRuntime JsRuntime
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A3 (Entity Detail / Stacked Master-Detail)
+  Assessor & Moderator Registration Application Detail
+  Governed by SAQA, QCTO ETQA regulations and MerSeta\NSDMS\LMS\LR\01.
+*@
+
+<MudPaper Elevation="1" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+    <div class="d-flex align-center gap-3">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="BackToQueue">
+            Back to applications
+        </MudButton>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        <div>
+            <MudBreadcrumbs Items="_breadcrumbItems" Separator=">" Class="pa-0 ma-0" />
+            <div class="d-flex align-center gap-2">
+                <MudText Typo="Typo.h6" Class="font-weight-bold">
+                    @(_application == null ? "Loading application..." : $"{_application.ApplicationNumber} - {_application.Person?.FirstName} {_application.Person?.LastName}")
+                </MudText>
+                @if (_application != null)
+                {
+                    <MudChip T="string" Color="@GetStatusColor(_application.ApplicationStatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                        @_application.ApplicationStatusCode
+                    </MudChip>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="d-flex align-center gap-2">
+        @if (_application?.ApplicationStatusCode == "Approved")
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Download"
+                       OnClick="DownloadCertificateLetterAsync"
+                       Disabled="_isDownloading">
+                Certificate letter (Annexure 10.1)
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.Download"
+                       OnClick="DownloadStatementOfScopeAsync"
+                       Disabled="_isDownloading">
+                Statement of scope (Annexure 10.3)
+            </MudButton>
+        }
+        else if (_application?.ApplicationStatusCode == "Draft")
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Edit"
+                       OnClick="@(() => NavManager.NavigateTo($"/etqa/applications/{Id}/edit"))">
+                Edit application
+            </MudButton>
+        }
+        @if (_application != null && _application.ApplicationStatusCode != "Approved" && _application.ApplicationStatusCode != "Rejected" && _application.ApplicationStatusCode != "Withdrawn")
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="@(() => _showWithdrawDialog = true)">
+                Withdraw application
+            </MudButton>
+        }
+    </div>
+</MudPaper>
+
+@if (_loading)
+{
+    <div class="d-flex justify-center align-center py-12">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else if (_application == null)
+{
+    <MudAlert Severity="Severity.Error">Application with ID @Id was not found.</MudAlert>
+}
+else
+{
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface">
+        <!-- TAB 1: Applicant Profile & Demographics -->
+        <MudTabPanel Text="Applicant Profile" Icon="@Icons.Material.Filled.Person">
+            <MudGrid Class="pa-4">
+                <MudItem xs="12" md="6">
+                    <MudCard Outlined="true" Class="pa-4 h-100">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary mb-3">Identification &amp; Personal Details</MudText>
+                        <div class="d-flex flex-column gap-2">
+                            <ReadOnlyField Label="Full practitioner name" Value="@($"{_application.Person?.FirstName} {_application.Person?.LastName}")" />
+                            <ReadOnlyField Label="Registration track" Value="@_application.PractitionerType" />
+                            <ReadOnlyField Label="RSA ID number" Value="@(_application.Person?.RsaIdNumber ?? "—")" IsMonospace="true" />
+                            <ReadOnlyField Label="Email address" Value="@(_application.Person?.Email ?? "—")" />
+                            <ReadOnlyField Label="Contact mobile" Value="@(_application.Person?.CellNumber ?? "—")" />
+                            <ReadOnlyField Label="Date of birth" Value="@(_application.Person?.DateOfBirth?.ToString("yyyy-MM-dd") ?? "—")" />
+                            <ReadOnlyField Label="Gender" Value="@(_application.Person?.Gender ?? "—")" />
+                        </div>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudCard Outlined="true" Class="pa-4 h-100">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary mb-3">Education, Location &amp; Next of Kin</MudText>
+                        <div class="d-flex flex-column gap-2">
+                            <ReadOnlyField Label="Employment standing" Value="@_application.EmploymentStatusCode" />
+                            <ReadOnlyField Label="Highest qualification" Value="@(_application.HighestQualificationTitle ?? "—")" />
+                            <ReadOnlyField Label="Highest qualification date" Value="@(_application.HighestQualificationObtainedDate?.ToString("yyyy-MM-dd") ?? "—")" />
+                            <ReadOnlyField Label="Last school attended" Value="@($"{_application.LastSchoolAttended ?? "—"} ({_application.LastSchoolYear?.ToString() ?? "—"})")" />
+                            <ReadOnlyField Label="Residential area" Value="@_application.UrbanRuralArea" />
+                            <ReadOnlyField Label="Next of kin" Value="@($"{_application.NextOfKinName ?? "—"} ({_application.NextOfKinRelationship ?? "—"})")" />
+                            <ReadOnlyField Label="Next of kin contact" Value="@(_application.NextOfKinContact ?? "—")" />
+                        </div>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudTabPanel>
+
+        <!-- TAB 2: Registered Scopes & Unit Standards -->
+        <MudTabPanel Text="Accredited Scopes" Icon="@Icons.Material.Filled.WorkspacePremium">
+            <div class="pa-4">
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary mb-3">Assessed Qualification Scopes &amp; Unit Standards</MudText>
+                @if (_application.Scopes.Any())
+                {
+                    @foreach (var scope in _application.Scopes)
+                    {
+                        <MudCard Outlined="true" Class="pa-4 mb-4">
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <div>
+                                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Class="font-mono">SAQA: @scope.SaqaQualificationId</MudChip>
+                                    <strong class="ml-2 text-primary">@scope.QualificationTitle</strong>
+                                </div>
+                                <div class="text-caption text-secondary">
+                                    Obtained: @scope.QualificationObtainedDate.ToString("yyyy-MM-dd")
+                                    (@Math.Round((DateTime.UtcNow - scope.QualificationObtainedDate).TotalDays / 365.25, 1) years post-qual)
+                                </div>
+                            </div>
+
+                            <MudTable Items="scope.UnitStandards" Dense="true" Hover="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>Code</MudTh>
+                                    <MudTh>Unit Standard Title</MudTh>
+                                    <MudTh>NQF Level</MudTh>
+                                    <MudTh>Credits</MudTh>
+                                    <MudTh>Origin</MudTh>
+                                </HeaderContent>
+                                <RowTemplate Context="us">
+                                    <MudTd><span class="font-mono">@us.UnitStandardCode</span></MudTd>
+                                    <MudTd>@us.UnitStandardTitle</MudTd>
+                                    <MudTd>Level @us.NqfLevel</MudTd>
+                                    <MudTd>@us.Credits</MudTd>
+                                    <MudTd>
+                                        <MudChip T="string" Size="Size.Small" Color="@(us.IsPopulatedFromQualification ? Color.Default : Color.Info)" Variant="Variant.Outlined">
+                                            @(us.IsPopulatedFromQualification ? "Qualification Constituent" : "Standalone Added")
+                                        </MudChip>
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudCard>
+                    }
+                }
+                else
+                {
+                    <div class="pa-4 text-center text-secondary border rounded-lg">No qualification scopes attached to this application.</div>
+                }
+            </div>
+        </MudTabPanel>
+
+        <!-- TAB 3: SDP Provider Affiliations -->
+        <MudTabPanel Text="SDP Affiliations" Icon="@Icons.Material.Filled.Business">
+            <div class="pa-4">
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary mb-3">Linked Skills Development Providers (SDPs)</MudText>
+                @if (_application.ProviderAffiliations.Any())
+                {
+                    <MudTable Items="_application.ProviderAffiliations" Dense="true" Hover="true" Elevation="1">
+                        <HeaderContent>
+                            <MudTh>Training Provider</MudTh>
+                            <MudTh>SDL Number</MudTh>
+                            <MudTh>SLA Reference</MudTh>
+                            <MudTh>Status</MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="link">
+                            <MudTd><strong>@(link.TrainingProvider?.Organisation?.CompanyName ?? "SDP Organisation")</strong></MudTd>
+                            <MudTd><span class="font-mono">@(link.TrainingProvider?.Organisation?.SdlNumber ?? "—")</span></MudTd>
+                            <MudTd><span class="font-mono">@(string.IsNullOrWhiteSpace(link.SlaDocumentRef) ? "Pending Upload" : link.SlaDocumentRef)</span></MudTd>
+                            <MudTd>
+                                <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Active Affiliation</MudChip>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+                else
+                {
+                    <div class="pa-4 text-center text-secondary border rounded-lg">
+                        Applicant is registered as an independent practitioner (No SDP affiliations linked).
+                    </div>
+                }
+            </div>
+        </MudTabPanel>
+
+        <!-- TAB 4: 4-Stage Workflow Adjudication Pipeline -->
+        <MudTabPanel Text="Adjudication Pipeline" Icon="@Icons.Material.Filled.Rule">
+            <div class="pa-4">
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary mb-4">4-Stage Maker-Checker Workflow Adjudication</MudText>
+
+                <!-- Stage 1: Document Verification -->
+                <MudCard Outlined="true" Class="pa-4 mb-4" style="@(IsStageCurrent("VerificationPending") ? "border-color: var(--mud-palette-warning);" : "")">
+                    <div class="d-flex justify-space-between align-center mb-2">
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Filled.FactCheck" Color="@(IsStageCompleted(1) ? Color.Success : Color.Warning)" />
+                            <strong>Stage 1: Document Verification</strong>
+                        </div>
+                        @if (IsStageCompleted(1))
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Verified: @_application.VerificationRecommendation</MudChip>
+                        }
+                        else if (IsStageCurrent("VerificationPending") || IsStageCurrent("Application"))
+                        {
+                            <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">Awaiting Verification</MudChip>
+                        }
+                    </div>
+
+                    @if (IsStageCompleted(1))
+                    {
+                        <div class="pa-3 rounded-lg" style="background: var(--surface-subtle);">
+                            <div class="text-caption">Verified by: <strong>@_application.VerifiedByUserId</strong> on @_application.VerificationDate?.ToString("yyyy-MM-dd HH:mm")</div>
+                            <div class="text-body2 mt-1">Reason: @_application.VerificationReason</div>
+                            <div class="text-caption text-secondary">Explanation: @_application.VerificationExplanation</div>
+                        </div>
+                    }
+                    else if (IsStageCurrent("VerificationPending") || IsStageCurrent("Application"))
+                    {
+                        <MudGrid Class="mt-2">
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string" Label="Verification recommendation *" @bind-Value="_verifRecommendation" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("Recommend")">Recommend for evaluation</MudSelectItem>
+                                    <MudSelectItem Value="@("Reject")">Reject application</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string" Label="Statutory reason *" @bind-Value="_verifReason" Variant="Variant.Outlined" Placeholder="e.g. All certified documents verified" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string" Label="Detailed notes" @bind-Value="_verifExplanation" Variant="Variant.Outlined" />
+                            </MudItem>
+                            <MudItem xs="12" Class="d-flex justify-end">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Check" OnClick="SubmitVerificationAsync">
+                                    Submit verification outcome
+                                </MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    }
+                </MudCard>
+
+                <!-- Stage 2: Application Evaluation -->
+                <MudCard Outlined="true" Class="pa-4 mb-4" style="@(IsStageCurrent("EvaluationPending") ? "border-color: var(--mud-palette-info);" : "")">
+                    <div class="d-flex justify-space-between align-center mb-2">
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Filled.RateReview" Color="@(IsStageCompleted(2) ? Color.Success : Color.Info)" />
+                            <strong>Stage 2: Application Evaluation</strong>
+                        </div>
+                        @if (IsStageCompleted(2))
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Evaluated: @_application.EvaluationRecommendation</MudChip>
+                        }
+                        else if (IsStageCurrent("EvaluationPending"))
+                        {
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Filled">Awaiting Evaluation</MudChip>
+                        }
+                    </div>
+
+                    @if (IsStageCompleted(2))
+                    {
+                        <div class="pa-3 rounded-lg" style="background: var(--surface-subtle);">
+                            <div class="text-caption">Evaluated by: <strong>@_application.EvaluatedByUserId</strong> on @_application.EvaluationDate?.ToString("yyyy-MM-dd HH:mm")</div>
+                            <div class="text-body2 mt-1">Reason: @_application.EvaluationReason</div>
+                            <div class="text-caption text-secondary">Explanation: @_application.EvaluationExplanation</div>
+                        </div>
+                    }
+                    else if (IsStageCurrent("EvaluationPending"))
+                    {
+                        <MudGrid Class="mt-2">
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string" Label="Evaluation recommendation *" @bind-Value="_evalRecommendation" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("Recommend")">Recommend to Review Committee</MudSelectItem>
+                                    <MudSelectItem Value="@("Reject")">Reject application</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string" Label="Statutory reason *" @bind-Value="_evalReason" Variant="Variant.Outlined" Placeholder="e.g. 3-Year experience criteria verified" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string" Label="Detailed notes" @bind-Value="_evalExplanation" Variant="Variant.Outlined" />
+                            </MudItem>
+                            <MudItem xs="12" Class="d-flex justify-end">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Check" OnClick="SubmitEvaluationAsync">
+                                    Submit evaluation outcome
+                                </MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    }
+                </MudCard>
+
+                <!-- Stage 3: Review Committee (RC) Adjudication -->
+                <MudCard Outlined="true" Class="pa-4 mb-4" style="@(IsStageCurrent("ReviewCommitteePending") ? "border-color: var(--mud-palette-secondary);" : "")">
+                    <div class="d-flex justify-space-between align-center mb-2">
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Filled.Groups" Color="@(IsStageCompleted(3) ? Color.Success : Color.Secondary)" />
+                            <strong>Stage 3: Review Committee (RC) Adjudication</strong>
+                        </div>
+                        @if (IsStageCompleted(3))
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Decision: @_application.ReviewCommitteeDecision</MudChip>
+                        }
+                        else if (IsStageCurrent("ReviewCommitteePending"))
+                        {
+                            <MudChip T="string" Color="Color.Secondary" Size="Size.Small" Variant="Variant.Filled">Awaiting RC Meeting</MudChip>
+                        }
+                    </div>
+
+                    @if (IsStageCompleted(3))
+                    {
+                        <div class="pa-3 rounded-lg" style="background: var(--surface-subtle);">
+                            <div class="text-caption">
+                                Committee Decision No: <strong class="font-mono">@_application.ReviewCommitteeDecisionNumber</strong> | Meeting Date: @_application.ReviewCommitteeMeetingDate?.ToString("yyyy-MM-dd")
+                            </div>
+                            <div class="text-body2 mt-1">Deliberation Notes: @_application.ReviewCommitteeNotes</div>
+                        </div>
+                    }
+                    else if (IsStageCurrent("ReviewCommitteePending"))
+                    {
+                        <MudGrid Class="mt-2">
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string" Label="Committee decision *" @bind-Value="_rcDecision" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("Approve")">Approve registration</MudSelectItem>
+                                    <MudSelectItem Value="@("Reject")">Reject application</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string" Label="Decision number *" @bind-Value="_rcDecisionNumber" Variant="Variant.Outlined" Placeholder="e.g. RC-2026-ETQA-012" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudDatePicker Label="Meeting date *" @bind-Date="_rcMeetingDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField T="string" Label="Committee minutes / notes" Lines="2" @bind-Value="_rcNotes" Variant="Variant.Outlined" />
+                            </MudItem>
+                            <MudItem xs="12" Class="d-flex justify-end">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Gavel" OnClick="SubmitCommitteeDecisionAsync">
+                                    Record committee decision
+                                </MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    }
+                </MudCard>
+
+                <!-- Stage 4: Final Approval & Registration -->
+                @if (_application.ApplicationStatusCode == "Approved")
+                {
+                    <MudCard Outlined="true" Class="pa-4 border-success" style="background: var(--surface-subtle);">
+                        <div class="d-flex align-center gap-2 mb-2">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                            <strong class="text-success">Stage 4: Approved &amp; Registered</strong>
+                        </div>
+                        <p class="text-body2 text-secondary mb-0">
+                            Practitioner registration is complete. Serial certificate number and accreditation record have been committed to the ETQA Master Registry.
+                        </p>
+                    </MudCard>
+                }
+            </div>
+        </MudTabPanel>
+    </MudTabs>
+}
+
+<!-- Withdraw Dialog -->
+<MudDialog @bind-Visible="_showWithdrawDialog" Options="new DialogOptions { MaxWidth = MaxWidth.Small }">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Withdraw Application</MudText>
+    </TitleContent>
+    <DialogContent>
+        <p class="text-body2 text-secondary mb-3">
+            Are you sure you want to withdraw this application? This action cannot be undone.
+        </p>
+        <MudTextField T="string" Label="Reason for withdrawal *" @bind-Value="_withdrawReason" Variant="Variant.Outlined" Required="true" />
+        <MudTextField T="string" Label="Additional comments" Lines="2" @bind-Value="_withdrawComments" Variant="Variant.Outlined" Class="mt-2" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showWithdrawDialog = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmWithdrawAsync">Confirm withdrawal</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private bool _loading = true;
+    private bool _isDownloading = false;
+    private AssessorRegistrationApplication? _application;
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+
+    // Stage 1 fields
+    private string _verifRecommendation = "Recommend";
+    private string _verifReason = "All mandatory documents verified";
+    private string? _verifExplanation;
+
+    // Stage 2 fields
+    private string _evalRecommendation = "Recommend";
+    private string _evalReason = "3-Year post-qualification experience validated";
+    private string? _evalExplanation;
+
+    // Stage 3 fields
+    private string _rcDecision = "Approve";
+    private string _rcDecisionNumber = $"RC-{DateTime.UtcNow.Year}-ETQA-{Random.Shared.Next(100, 999)}";
+    private DateTime? _rcMeetingDate = DateTime.Today;
+    private string? _rcNotes = "Approved unanimously by ETQA Review Committee.";
+
+    // Withdraw fields
+    private bool _showWithdrawDialog = false;
+    private string _withdrawReason = string.Empty;
+    private string? _withdrawComments;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadApplicationAsync();
+    }
+
+    private async Task LoadApplicationAsync()
+    {
+        _loading = true;
+        try
+        {
+            _application = await RegService.GetApplicationByIdAsync(Id);
+            _breadcrumbItems = new()
+            {
+                new("ETQA Applications", "/etqa/applications"),
+                new(_application?.ApplicationNumber ?? $"Application #{Id}", null, disabled: true)
+            };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading application: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private bool IsStageCompleted(int stage)
+    {
+        if (_application == null) return false;
+        return stage switch
+        {
+            1 => !string.IsNullOrWhiteSpace(_application.VerificationRecommendation),
+            2 => !string.IsNullOrWhiteSpace(_application.EvaluationRecommendation),
+            3 => !string.IsNullOrWhiteSpace(_application.ReviewCommitteeDecision),
+            _ => false
+        };
+    }
+
+    private bool IsStageCurrent(string status) => _application?.ApplicationStatusCode == status;
+
+    private async Task SubmitVerificationAsync()
+    {
+        try
+        {
+            await RegService.VerifyDocumentAsync(new VerificationStepRequest
+            {
+                ApplicationId = Id,
+                Recommendation = _verifRecommendation,
+                Reason = _verifReason,
+                Explanation = _verifExplanation
+            }, "SYSTEM");
+
+            Snackbar.Add("Verification outcome recorded successfully.", Severity.Success);
+            await LoadApplicationAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SubmitEvaluationAsync()
+    {
+        try
+        {
+            await RegService.EvaluateApplicationAsync(new EvaluationStepRequest
+            {
+                ApplicationId = Id,
+                Recommendation = _evalRecommendation,
+                Reason = _evalReason,
+                Explanation = _evalExplanation
+            }, "SYSTEM");
+
+            Snackbar.Add("Evaluation outcome recorded successfully.", Severity.Success);
+            await LoadApplicationAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SubmitCommitteeDecisionAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_rcDecisionNumber))
+        {
+            Snackbar.Add("Committee decision number is mandatory.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await RegService.RecordCommitteeDecisionAsync(new ReviewCommitteeDecisionRequest
+            {
+                ApplicationId = Id,
+                Decision = _rcDecision,
+                CommitteeDecisionNumber = _rcDecisionNumber,
+                MeetingDate = _rcMeetingDate ?? DateTime.UtcNow,
+                Notes = _rcNotes,
+                IsFinalRejection = _rcDecision == "Reject"
+            }, "SYSTEM");
+
+            // If approved, trigger final approval pipeline
+            if (_rcDecision == "Approve")
+            {
+                await RegService.FinalApproveAsync(new FinalApprovalRequest
+                {
+                    ApplicationId = Id,
+                    ApprovalComments = "Final ETQA registration approval"
+                }, "SYSTEM");
+            }
+
+            Snackbar.Add("Committee decision recorded and registration finalized.", Severity.Success);
+            await LoadApplicationAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ConfirmWithdrawAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_withdrawReason))
+        {
+            Snackbar.Add("Withdrawal reason is mandatory.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await RegService.WithdrawApplicationAsync(Id, _withdrawReason, _withdrawComments, "SYSTEM");
+            _showWithdrawDialog = false;
+            Snackbar.Add("Application withdrawn.", Severity.Info);
+            await LoadApplicationAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DownloadCertificateLetterAsync()
+    {
+        if (_application == null) return;
+        int assessorId = _application.RegisteredAssessorId ?? 0;
+        if (assessorId <= 0)
+        {
+            Snackbar.Add("Practitioner registration record has not been generated yet.", Severity.Warning);
+            return;
+        }
+
+        _isDownloading = true;
+        try
+        {
+            var pdfBytes = await PdfService.GenerateAssessorCertificateLetterPdfAsync(assessorId);
+            var base64 = Convert.ToBase64String(pdfBytes);
+            await JsRuntime.InvokeVoidAsync("nsdmsDownloadFile", $"{_application.ApplicationNumber}_Certificate_Letter.pdf", "application/pdf", base64);
+            Snackbar.Add("Certificate letter downloaded.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Download failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isDownloading = false;
+        }
+    }
+
+    private async Task DownloadStatementOfScopeAsync()
+    {
+        if (_application == null) return;
+        int assessorId = _application.RegisteredAssessorId ?? 0;
+        if (assessorId <= 0)
+        {
+            Snackbar.Add("Practitioner registration record has not been generated yet.", Severity.Warning);
+            return;
+        }
+
+        _isDownloading = true;
+        try
+        {
+            var pdfBytes = await PdfService.GenerateAssessorStatementOfScopePdfAsync(assessorId);
+            var base64 = Convert.ToBase64String(pdfBytes);
+            await JsRuntime.InvokeVoidAsync("nsdmsDownloadFile", $"{_application.ApplicationNumber}_Statement_Of_Scope.pdf", "application/pdf", base64);
+            Snackbar.Add("Statement of scope downloaded.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Download failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isDownloading = false;
+        }
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Draft" => Color.Default,
+        "Application" or "VerificationPending" => Color.Warning,
+        "EvaluationPending" => Color.Info,
+        "ReviewCommitteePending" => Color.Secondary,
+        "Approved" => Color.Success,
+        "Rejected" => Color.Error,
+        "Withdrawn" => Color.Dark,
+        _ => Color.Default
+    };
+
+    private void BackToQueue() => NavManager.NavigateTo("/etqa/applications");
+}

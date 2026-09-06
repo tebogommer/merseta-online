@@ -1,0 +1,51 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+namespace Nsdms.Infrastructure.Data;
+
+/// <summary>
+/// Phase 33 Database Migrator:
+/// Applies Learner Management Statutory Lifecycle Alignment (Ref: MerSeta\NSDMS\LMS\ASM\12 – Manage Learner – Use Case\13):
+/// - dbo.LearnerEnrolment / dbo.CompanyLearner two-tiered Instate status attributes (InstateStatusCode, InstateStatusDate).
+/// - dbo.CompanyLearnerTransfer SDP-to-SDP support, bilateral employer consent, and workplace approval references.
+/// - dbo.CompanyLearnerLostTime training interruption tracking.
+/// - dbo.CompanyLearnerTermination Mutual vs One-Sided categorization, 14-day SLA, Checklist 036, and ETQA Review Committee fields.
+/// - dbo.CompanyLearnerExtension table for pre-registration and contract extensions.
+/// </summary>
+public static class Phase33LearnerLifecycleManagementMigrator
+{
+    public static async Task MigrateAsync(IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<NsdmsDbContext>();
+        var logger = scope.ServiceProvider.GetService<ILogger<NsdmsDbContext>>();
+
+        if (context.Database.IsSqlServer())
+        {
+            try
+            {
+                var scriptPath = Path.Combine(AppContext.BaseDirectory, "Data", "SqlScripts", "V2026_25_Phase33_Learner_Lifecycle_Management.sql");
+                if (!File.Exists(scriptPath))
+                {
+                    scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "dotnet", "Nsdms.Infrastructure", "Data", "SqlScripts", "V2026_25_Phase33_Learner_Lifecycle_Management.sql");
+                }
+                if (!File.Exists(scriptPath))
+                {
+                    scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "Nsdms.Infrastructure", "Data", "SqlScripts", "V2026_25_Phase33_Learner_Lifecycle_Management.sql");
+                }
+
+                if (File.Exists(scriptPath))
+                {
+                    var sql = await File.ReadAllTextAsync(scriptPath);
+                    await SqlBatchRunner.ExecuteBatchesAsync(context, sql, logger);
+                    logger?.LogInformation("Executed V2026_25_Phase33_Learner_Lifecycle_Management.sql successfully.");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogWarning(ex, "Failed to apply V2026_25_Phase33_Learner_Lifecycle_Management.sql migrator. Non-fatal in sandbox.");
+            }
+        }
+    }
+}

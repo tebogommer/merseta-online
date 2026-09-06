@@ -1373,6 +1373,36 @@ public class NavigationMenuService : INavigationMenuService
             },
             new()
             {
+                Id = "nav-etqa-applications",
+                Title = "Assessor applications",
+                Href = "etqa/applications",
+                Icon = "Assignment",
+                Category = "Quality assurance & ETQA",
+                Description = "Assessor and moderator initial registration applications and 4-stage maker-checker review queue",
+                RequiredModule = AppPermissions.ModuleEtqa,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "CLO", "Compliance" },
+                PersonaTags = new() { "Admin", "Assessor", "CLO", "Compliance" },
+                DisplayOrder = 3,
+                Keywords = new() { "applications", "etqa queue", "assessor review", "evaluations", "committee" }
+            },
+            new()
+            {
+                Id = "nav-etqa-register",
+                Title = "Register practitioner",
+                Href = "etqa/register",
+                Icon = "PersonAdd",
+                Category = "Quality assurance & ETQA",
+                Description = "Apply for initial assessor or moderator statutory registration",
+                RequiredModule = AppPermissions.ModuleEtqa,
+                RequiredAction = AppPermissions.ActionCreate,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "SDP", "CLO" },
+                PersonaTags = new() { "Admin", "Assessor", "SDP" },
+                DisplayOrder = 4,
+                Keywords = new() { "register assessor", "new moderator", "etqa application" }
+            },
+            new()
+            {
                 Id = "nav-etqa-aqp",
                 Title = "AQP partners",
                 Href = "etqa/aqp",

@@ -36,4 +36,9 @@ public class AssessorModeratorScope : BaseEntity
     /// Validity expiration date of this qualification scope.
     /// </summary>
     public DateTime? ExpiryDate { get; set; }
+
+    /// <summary>
+    /// Approved constituent unit standards associated with this qualification scope.
+    /// </summary>
+    public ICollection<AssessorUnitStandardScope> UnitStandards { get; set; } = new List<AssessorUnitStandardScope>();
 }

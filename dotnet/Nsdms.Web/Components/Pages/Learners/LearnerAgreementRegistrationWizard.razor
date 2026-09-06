@@ -502,7 +502,8 @@ else
 
     private Task<bool> ValidateStep3Async()
     {
-        if (_organisationId <= 0)
+        bool isBursary = _programmeType == "05" || _programmeType == "Bursary";
+        if (!isBursary && _organisationId <= 0)
         {
             Snackbar.Add("Please select the host employer organisation.", Severity.Warning);
             return Task.FromResult(false);
@@ -510,7 +511,7 @@ else
 
         if (_trainingProviderId == null || _trainingProviderId <= 0)
         {
-            Snackbar.Add("Please select an accredited Skills Development Provider (SDP).", Severity.Warning);
+            Snackbar.Add("Please select an accredited Skills Development Provider (SDP) or Educational Institution.", Severity.Warning);
             return Task.FromResult(false);
         }
 
@@ -812,7 +813,7 @@ else
     {
         var learner = new CompanyLearner
         {
-            OrganisationId = _organisationId,
+            OrganisationId = _organisationId > 0 ? _organisationId : null,
             TrainingProviderId = _trainingProviderId,
             LearnerContractNumber = $"LA-2026-{DateTime.UtcNow:MMdd}-{_rsaIdNumber.Substring(Math.Max(0, _rsaIdNumber.Length - 4))}",
             QualificationTitle = _qualificationTitle,

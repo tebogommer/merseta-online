@@ -8,6 +8,7 @@
 @using Nsdms.Web.Components.Shared
 @using Nsdms.Web.Components.Shared.Forms
 @using Nsdms.Web.Components.Shared.Wizard
+@using Nsdms.Application.Common.Utilities
 @using MudBlazor
 @inject ITradeTestAndArplService TradeTestService
 @inject ILearnerService LearnerService
@@ -91,7 +92,23 @@ else
                                         TradeOfoCode="@_tradeOfoCode"
                                         TradeOfoCodeChanged="@((val) => _tradeOfoCode = val)"
                                         AttemptNumber="@_attemptNumber"
-                                        AttemptNumberChanged="@((val) => _attemptNumber = val)" />
+                                        AttemptNumberChanged="@((val) => _attemptNumber = val)"
+                                        EmploymentStatus="@_employmentStatus"
+                                        EmploymentStatusChanged="@((val) => _employmentStatus = val)"
+                                        UnregisteredEmployerName="@_unregisteredEmployerName"
+                                        UnregisteredEmployerNameChanged="@((val) => _unregisteredEmployerName = val)"
+                                        QualifyingCategory="@_qualifyingCategory"
+                                        QualifyingCategoryChanged="@((val) => _qualifyingCategory = val)"
+                                        Specialisation="@_specialisation"
+                                        SpecialisationChanged="@((val) => _specialisation = val)"
+                                        HasAttemptedPreviously="@_hasAttemptedPreviously"
+                                        HasAttemptedPreviouslyChanged="@((val) => _hasAttemptedPreviously = val)"
+                                        PreviousCenterName="@_previousCenterName"
+                                        PreviousCenterNameChanged="@((val) => _previousCenterName = val)"
+                                        PreviousAttemptDate="@_previousAttemptDate"
+                                        PreviousAttemptDateChanged="@((val) => _previousAttemptDate = val)"
+                                        PreviousAttemptsCount="@_previousAttemptsCount"
+                                        PreviousAttemptsCountChanged="@((val) => _previousAttemptsCount = val)" />
         </WizardStep>
 
         <!-- STEP 2: Curricular & Theory Clearance -->
@@ -113,11 +130,12 @@ else
         </WizardStep>
 
         <!-- STEP 3: Workplace Practical Hours & Logbook -->
-        <WizardStep Label="Logbook &amp; hours"
-                    Heading="Employer logbook attestation"
-                    Description="Verify workplace modular practical training duration, qualified mentor credentials, and employer verification"
+        <WizardStep Label="Logbook &amp; portfolio"
+                    Heading="Employer logbook &amp; multi-employer portfolio"
+                    Description="Verify workplace modular practical training duration, multi-employer experience portfolio, and mentor credentials"
                     ValidateAsync="ValidateStep3Async">
             <TradeTestApplicationFields Section="Logbook"
+                                        ApplicationTypeCode="@_applicationTypeCode"
                                         CurrentEmployerName="@_currentEmployerName"
                                         CurrentEmployerNameChanged="@((val) => _currentEmployerName = val)"
                                         LogbookWeeksCompleted="@_logbookWeeksCompleted"
@@ -129,16 +147,20 @@ else
                                         EmployerContactPhone="@_employerContactPhone"
                                         EmployerContactPhoneChanged="@((val) => _employerContactPhone = val)"
                                         IsLogbookAttestationVerified="@_isLogbookAttestationVerified"
-                                        IsLogbookAttestationVerifiedChanged="@((val) => _isLogbookAttestationVerified = val)" />
+                                        IsLogbookAttestationVerifiedChanged="@((val) => _isLogbookAttestationVerified = val)"
+                                        ExperienceDetails="@_experienceDetails"
+                                        ExperienceDetailsChanged="@((val) => _experienceDetails = val)" />
         </WizardStep>
 
         <!-- STEP 4: Accredited Trade Test Centre (TTC) & Scheduling -->
         <WizardStep Label="Testing centre"
                     Heading="Select Trade Test Centre &amp; schedule"
-                    Description="Designate accredited testing facility, earliest practical examination date, and tool readiness"
+                    Description="Designate accredited testing facility (filtered by trade accreditation), earliest practical examination date, and tool readiness"
                     ValidateAsync="ValidateStep4Async">
             <TradeTestApplicationFields Section="Centre"
-                                        TrainingProviders="@_trainingProviders"
+                                        TradeTitle="@_tradeTitle"
+                                        TradeOfoCode="@_tradeOfoCode"
+                                        TrainingProviders="@FilteredTrainingProviders"
                                         TrainingProviderId="@_trainingProviderId"
                                         TrainingProviderIdChanged="@((val) => _trainingProviderId = val)"
                                         PreferredAssessmentDate="@_preferredAssessmentDate"
@@ -149,7 +171,18 @@ else
                                         IsToolAndPpeReadyChanged="@((val) => _isToolAndPpeReady = val)" />
         </WizardStep>
 
-        <!-- STEP 5: Review & Statutory Declaration -->
+        <!-- STEP 5: Statutory Document Verification Checklist -->
+        <WizardStep Label="Documents"
+                    Heading="Statutory document verification"
+                    Description="Confirm statutory documents required for trade test registration (7 toolkit vs 6 non-toolkit trades)"
+                    ValidateAsync="ValidateStep5Async">
+            <TradeTestApplicationFields Section="Documents"
+                                        TradeTitle="@_tradeTitle"
+                                        ConfirmedDocuments="@_confirmedDocuments"
+                                        ConfirmedDocumentsChanged="@((val) => _confirmedDocuments = val)" />
+        </WizardStep>
+
+        <!-- STEP 6: Review & Statutory Declaration -->
         <WizardReviewStep Heading="Application review &amp; pre-trade clearance"
                           Description="Inspect candidate credentials, verified logbook hours, and testing centre arrangements prior to dispatch"
                           ReviewGroups="@_reviewGroups"
@@ -183,6 +216,14 @@ else
     private string _tradeTitle = "Fitter and Turner";
     private string? _tradeOfoCode = "653306";
     private int _attemptNumber = 1;
+    private string _employmentStatus = "Employed";
+    private string? _unregisteredEmployerName;
+    private ArplQualifyingCategory? _qualifyingCategory = ArplQualifyingCategory.Category1_Min3Years_N2;
+    private string? _specialisation;
+    private bool _hasAttemptedPreviously = false;
+    private string? _previousCenterName;
+    private DateTime? _previousAttemptDate;
+    private int? _previousAttemptsCount = 1;
 
     // Step 2: Curricular & Theory
     private string _theoryQualificationTitle = "National Technical Certificate N2";
@@ -191,13 +232,14 @@ else
     private DateTime? _theoryCompletionDate = DateTime.UtcNow.AddMonths(-12);
     private bool _isCurricularPrerequisitesMet = true;
 
-    // Step 3: Workplace Logbook
+    // Step 3: Workplace Logbook & Portfolio
     private string _currentEmployerName = "Toyota SA Manufacturing";
     private int _logbookWeeksCompleted = 120;
     private string _workplaceMentorName = "Johan van der Merwe";
     private string? _mentorArtisanTradeNumber = "TT-NAMB-2018-0941";
     private string _employerContactPhone = "011 884 9000";
     private bool _isLogbookAttestationVerified = true;
+    private List<ArplExperienceDetail> _experienceDetails = new();
 
     // Step 4: Centre & Scheduling
     private int? _trainingProviderId;
@@ -205,8 +247,33 @@ else
     private string _subsidyCategory = "merSETA Subsidised";
     private bool _isToolAndPpeReady = true;
 
-    // Step 5: Declaration
+    // Step 5: Documents Checklist
+    private HashSet<string> _confirmedDocuments = new();
+
+    // Step 6: Declaration
     private bool _isDeclarationAccepted = true;
+
+    private List<TrainingProvider> FilteredTrainingProviders
+    {
+        get
+        {
+            if (_trainingProviders == null || !_trainingProviders.Any())
+                return new List<TrainingProvider>();
+
+            if (string.IsNullOrWhiteSpace(_tradeTitle))
+                return _trainingProviders;
+
+            var matching = _trainingProviders.Where(p =>
+                p.Qualifications != null && p.Qualifications.Any(q =>
+                    (!string.IsNullOrEmpty(q.QualificationTitle) && q.QualificationTitle.Contains(_tradeTitle, StringComparison.OrdinalIgnoreCase))
+                    || _tradeTitle.Contains(q.QualificationTitle, StringComparison.OrdinalIgnoreCase)
+                    || (_tradeOfoCode != null && q.SaqaQualificationId.ToString() == _tradeOfoCode)
+                )
+            ).ToList();
+
+            return matching.Any() ? matching : _trainingProviders;
+        }
+    }
 
     private List<BreadcrumbItem> _breadcrumbs = new()
     {
@@ -232,6 +299,14 @@ else
         public string TradeTitle { get; init; } = "Fitter and Turner";
         public string? TradeOfoCode { get; init; } = "653306";
         public int AttemptNumber { get; init; } = 1;
+        public string EmploymentStatus { get; init; } = "Employed";
+        public string? UnregisteredEmployerName { get; init; }
+        public ArplQualifyingCategory? QualifyingCategory { get; init; }
+        public string? Specialisation { get; init; }
+        public bool HasAttemptedPreviously { get; init; }
+        public string? PreviousCenterName { get; init; }
+        public DateTime? PreviousAttemptDate { get; init; }
+        public int? PreviousAttemptsCount { get; init; }
         public string TheoryQualificationTitle { get; init; } = string.Empty;
         public string TheoryInstitutionName { get; init; } = string.Empty;
         public string TheorySubjectsPassed { get; init; } = string.Empty;
@@ -243,10 +318,12 @@ else
         public string? MentorArtisanTradeNumber { get; init; }
         public string EmployerContactPhone { get; init; } = string.Empty;
         public bool IsLogbookAttestationVerified { get; init; } = true;
+        public List<ArplExperienceDetail>? ExperienceDetails { get; init; }
         public int? TrainingProviderId { get; init; }
         public DateTime? PreferredAssessmentDate { get; init; }
         public string SubsidyCategory { get; init; } = "merSETA Subsidised";
         public bool IsToolAndPpeReady { get; init; } = true;
+        public List<string>? ConfirmedDocuments { get; init; }
         public bool IsDeclarationAccepted { get; init; } = true;
     }
 
@@ -329,6 +406,49 @@ else
             }
         }
 
+        var reviewItemsStep0 = new List<WizardReviewItem>
+        {
+            new("Candidate learner", learnerName),
+            new("Application route", _applicationTypeCode),
+            new("Employment status", string.IsNullOrWhiteSpace(_unregisteredEmployerName) ? _employmentStatus : $"{_employmentStatus} ({_unregisteredEmployerName})"),
+            new("Designated trade", _tradeTitle),
+            new("Trade OFO code", _tradeOfoCode ?? "N/A", isMonospace: true),
+            new("Attempt number", $"Attempt #{_attemptNumber}")
+        };
+
+        if (_applicationTypeCode == "Section28")
+        {
+            reviewItemsStep0.Add(new("ARPL category", _qualifyingCategory?.ToString() ?? "Not specified"));
+            if (!string.IsNullOrWhiteSpace(_specialisation))
+            {
+                reviewItemsStep0.Add(new("Specialisation", _specialisation));
+            }
+            reviewItemsStep0.Add(new("Prior attempts", _hasAttemptedPreviously ? $"Yes ({_previousCenterName ?? "TTC"}, {_previousAttemptDate?.ToString("yyyy-MM") ?? "N/A"}, #{_previousAttemptsCount})" : "First attempt"));
+        }
+
+        var reviewItemsStep2 = new List<WizardReviewItem>
+        {
+            new("Current employer", _currentEmployerName),
+            new("Practical duration", $"{_logbookWeeksCompleted} weeks verified"),
+            new("Lead artisan mentor", _workplaceMentorName),
+            new("Mentor certificate #", _mentorArtisanTradeNumber ?? "N/A", isMonospace: true),
+            new("Employer phone", _employerContactPhone),
+            new("Logbook attestation", _isLogbookAttestationVerified ? "Signed & Attached" : "Pending")
+        };
+
+        if (_applicationTypeCode == "Section28" && _experienceDetails.Any())
+        {
+            reviewItemsStep2.Insert(0, new("Experience portfolio", $"{_experienceDetails.Count} employers recorded ({_experienceDetails.Sum(x => x.YearsOfExperience):0.0} yrs total)"));
+        }
+
+        int reqDocCount = ArplTradeValidator.RequiresToolkit(_tradeTitle) ? 7 : 6;
+        var reviewItemsStep4 = new List<WizardReviewItem>
+        {
+            new("Required documents", $"{reqDocCount} statutory documents ({(ArplTradeValidator.RequiresToolkit(_tradeTitle) ? "Toolkit Trade" : "Standard Trade")})"),
+            new("Confirmed items", $"{_confirmedDocuments.Count} of {reqDocCount} verified"),
+            new("Checklist status", _confirmedDocuments.Count >= reqDocCount ? "100% Compliant" : "Verification in progress")
+        };
+
         _reviewGroups = new List<WizardReviewGroup>
         {
             new()
@@ -336,14 +456,7 @@ else
                 Title = "Candidate & Trade Route",
                 Icon = Icons.Material.Filled.Person,
                 TargetStepIndex = 0,
-                Items = new()
-                {
-                    new("Candidate learner", learnerName),
-                    new("Application route", _applicationTypeCode),
-                    new("Designated trade", _tradeTitle),
-                    new("Trade OFO code", _tradeOfoCode ?? "N/A", isMonospace: true),
-                    new("Attempt number", $"Attempt #{_attemptNumber}")
-                }
+                Items = reviewItemsStep0
             },
             new()
             {
@@ -364,15 +477,7 @@ else
                 Title = "Workplace Logbook & Hours",
                 Icon = Icons.Material.Filled.Work,
                 TargetStepIndex = 2,
-                Items = new()
-                {
-                    new("Current employer", _currentEmployerName),
-                    new("Practical duration", $"{_logbookWeeksCompleted} weeks verified"),
-                    new("Lead artisan mentor", _workplaceMentorName),
-                    new("Mentor certificate #", _mentorArtisanTradeNumber ?? "N/A", isMonospace: true),
-                    new("Employer phone", _employerContactPhone),
-                    new("Logbook attestation", _isLogbookAttestationVerified ? "Signed & Attached" : "Pending")
-                }
+                Items = reviewItemsStep2
             },
             new()
             {
@@ -386,6 +491,13 @@ else
                     new("Funding subsidy", _subsidyCategory),
                     new("Tooling & PPE status", _isToolAndPpeReady ? "Fully equipped & compliant" : "Pending")
                 }
+            },
+            new()
+            {
+                Title = "Statutory Document Verification",
+                Icon = Icons.Material.Filled.AttachFile,
+                TargetStepIndex = 4,
+                Items = reviewItemsStep4
             }
         };
     }
@@ -401,6 +513,14 @@ else
         {
             Snackbar.Add("Designated trade title is required.", Severity.Warning);
             return Task.FromResult(false);
+        }
+        if (_applicationTypeCode == "Section28" && _qualifyingCategory == ArplQualifyingCategory.Category7_Min3Years_ToolkitAssessment)
+        {
+            if (!ArplTradeValidator.RequiresToolkit(_tradeTitle))
+            {
+                Snackbar.Add($"Category 7 is strictly restricted to the 17 designated toolkit trades. '{_tradeTitle}' requires prerequisites under Categories 1–6 or 8.", Severity.Warning);
+                return Task.FromResult(false);
+            }
         }
         return Task.FromResult(true);
     }
@@ -427,10 +547,14 @@ else
             Snackbar.Add("Current employer name is required.", Severity.Warning);
             return Task.FromResult(false);
         }
-        if (_logbookWeeksCompleted < 80 && _applicationTypeCode == "Section28")
+        if (_applicationTypeCode == "Section28")
         {
-            Snackbar.Add("Section 28 ARPL candidates must possess at least 80 weeks of verified workplace experience.", Severity.Warning);
-            return Task.FromResult(false);
+            decimal totalYears = _experienceDetails.Any() ? _experienceDetails.Sum(x => x.YearsOfExperience) : (_logbookWeeksCompleted / 52m);
+            if (totalYears < 1.5m)
+            {
+                Snackbar.Add("Section 28 ARPL candidates must possess at least 18 months of verified practical experience.", Severity.Warning);
+                return Task.FromResult(false);
+            }
         }
         if (!_isLogbookAttestationVerified)
         {
@@ -450,6 +574,17 @@ else
         if (!_preferredAssessmentDate.HasValue)
         {
             Snackbar.Add("Please specify a preferred assessment date.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep5Async()
+    {
+        int reqCount = ArplTradeValidator.RequiresToolkit(_tradeTitle) ? 7 : 6;
+        if (_confirmedDocuments.Count < reqCount)
+        {
+            Snackbar.Add($"Please confirm all {reqCount} statutory documents before continuing to final review.", Severity.Warning);
             return Task.FromResult(false);
         }
         return Task.FromResult(true);
@@ -489,6 +624,14 @@ else
             _tradeTitle = model.TradeTitle;
             _tradeOfoCode = model.TradeOfoCode;
             _attemptNumber = model.AttemptNumber;
+            _employmentStatus = model.EmploymentStatus ?? "Employed";
+            _unregisteredEmployerName = model.UnregisteredEmployerName;
+            _qualifyingCategory = model.QualifyingCategory ?? ArplQualifyingCategory.Category1_Min3Years_N2;
+            _specialisation = model.Specialisation;
+            _hasAttemptedPreviously = model.HasAttemptedPreviously;
+            _previousCenterName = model.PreviousCenterName;
+            _previousAttemptDate = model.PreviousAttemptDate;
+            _previousAttemptsCount = model.PreviousAttemptsCount ?? 1;
             _theoryQualificationTitle = model.TheoryQualificationTitle;
             _theoryInstitutionName = model.TheoryInstitutionName;
             _theorySubjectsPassed = model.TheorySubjectsPassed;
@@ -500,10 +643,18 @@ else
             _mentorArtisanTradeNumber = model.MentorArtisanTradeNumber;
             _employerContactPhone = model.EmployerContactPhone;
             _isLogbookAttestationVerified = model.IsLogbookAttestationVerified;
+            if (model.ExperienceDetails != null)
+            {
+                _experienceDetails = model.ExperienceDetails;
+            }
             _trainingProviderId = model.TrainingProviderId;
             _preferredAssessmentDate = model.PreferredAssessmentDate;
             _subsidyCategory = model.SubsidyCategory;
             _isToolAndPpeReady = model.IsToolAndPpeReady;
+            if (model.ConfirmedDocuments != null)
+            {
+                _confirmedDocuments = new HashSet<string>(model.ConfirmedDocuments);
+            }
             _isDeclarationAccepted = model.IsDeclarationAccepted;
 
             _activeStep = _loadedDraft.CurrentStepIndex;
@@ -537,6 +688,14 @@ else
                 TradeTitle = _tradeTitle,
                 TradeOfoCode = _tradeOfoCode,
                 AttemptNumber = _attemptNumber,
+                EmploymentStatus = _employmentStatus,
+                UnregisteredEmployerName = _unregisteredEmployerName,
+                QualifyingCategory = _qualifyingCategory,
+                Specialisation = _specialisation,
+                HasAttemptedPreviously = _hasAttemptedPreviously,
+                PreviousCenterName = _previousCenterName,
+                PreviousAttemptDate = _previousAttemptDate,
+                PreviousAttemptsCount = _previousAttemptsCount,
                 TheoryQualificationTitle = _theoryQualificationTitle,
                 TheoryInstitutionName = _theoryInstitutionName,
                 TheorySubjectsPassed = _theorySubjectsPassed,
@@ -548,10 +707,12 @@ else
                 MentorArtisanTradeNumber = _mentorArtisanTradeNumber,
                 EmployerContactPhone = _employerContactPhone,
                 IsLogbookAttestationVerified = _isLogbookAttestationVerified,
+                ExperienceDetails = _experienceDetails,
                 TrainingProviderId = _trainingProviderId,
                 PreferredAssessmentDate = _preferredAssessmentDate,
                 SubsidyCategory = _subsidyCategory,
                 IsToolAndPpeReady = _isToolAndPpeReady,
+                ConfirmedDocuments = _confirmedDocuments.ToList(),
                 IsDeclarationAccepted = _isDeclarationAccepted
             };
 
@@ -562,7 +723,7 @@ else
                 "CandidateUser",
                 null,
                 _activeStep,
-                5,
+                6,
                 draftModel,
                 _activeDraftKey
             );
@@ -599,7 +760,16 @@ else
                 attemptNumber: _attemptNumber,
                 tradeOfoCode: _tradeOfoCode,
                 preferredTrainingCenterId: _trainingProviderId,
-                currentUsername: "CurrentArtisanOfficer"
+                qualificationId: null,
+                specialisation: _specialisation,
+                hasAttemptedPreviously: _hasAttemptedPreviously,
+                previousCenterName: _previousCenterName,
+                previousAttemptDate: _previousAttemptDate,
+                previousAttemptsCount: _previousAttemptsCount,
+                qualifyingCategory: _qualifyingCategory,
+                employmentStatus: _employmentStatus,
+                unregisteredEmployerName: _unregisteredEmployerName,
+                currentUsername: "CandidateUser"
             );
 
             _createdApplicationId = app.Id;
@@ -608,16 +778,27 @@ else
             // If ARPL route, also record portfolio details
             if (_applicationTypeCode == "Section28")
             {
+                int experienceYears = _experienceDetails.Any()
+                    ? (int)Math.Round(_experienceDetails.Sum(x => x.YearsOfExperience))
+                    : (_logbookWeeksCompleted / 52);
+
                 await TradeTestService.SubmitArplEvidenceAndChecklistAsync(
                     applicationId: app.Id,
-                    yearsOfExperience: _logbookWeeksCompleted / 52,
+                    yearsOfExperience: Math.Max(1, experienceYears),
                     currentEmployerName: _currentEmployerName,
                     employerContactPhone: _employerContactPhone,
-                    experienceDetails: new List<ArplExperienceDetail>(),
+                    experienceDetails: _experienceDetails,
                     trainingDetails: new List<ArplTrainingDetail>(),
                     portfolioScorePercentage: 75m,
-                    currentUsername: "CurrentArtisanOfficer"
+                    currentUsername: "CandidateUser"
                 );
+            }
+
+            // Persist verified statutory documents
+            if (_confirmedDocuments.Any())
+            {
+                var docTuples = _confirmedDocuments.Select(docCode => (DocTypeCode: docCode, AttachmentId: (int?)null)).ToList();
+                await TradeTestService.SaveDocumentChecklistAsync(app.Id, docTuples, "CandidateUser");
             }
 
             // Clear submitted draft

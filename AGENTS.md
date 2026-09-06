@@ -134,3 +134,38 @@ The Option and Lookup Controls Standard v1.1 (Rules E.1 and E.2, OPT-001 through
    - Live 5-tier cascading NAMB mentor-to-apprentice ratio policy engine (`IMentorRatioPolicyEngine`).
    - Mandatory Employer Contact Person linkage for all site visits and inspections.
    - 360-degree relational tabs (Placed Apprentices, Partnering SDPs, Site Audits, Tool Inventory, Mentors, Evidence Vault, Workflow Timeline).
+
+---
+
+### 🛡️ Bursary Registration Statutory Governance Standard (Signed 2022 Specification MerSeta\NSDMS\LMS\LR\01)
+1. **Unemployed Employer Exemption & Relational Nullability**:
+   - For all Bursary applications (`LearningProgrammeTypeCode == "05"`), unemployed applicants (`EmploymentStatusCode == "Unemployed"` or `EconomicStatusId == "02"`) are statutorily exempt from attaching an Employer (`OrganisationId` nullable).
+   - Employed applicants MUST link a valid levy-paying or registered employer (`OrganisationId`).
+2. **New vs Continuation Bursary Lifecycle Rules**:
+   - Continuation applications (`BursaryApplicationTypeCode == "Continuation"`) MUST link to a previously registered active bursary record (`PreviousCompanyLearnerId`).
+   - Anti-tamper execution date precondition: A continuation agreement execution date cannot be equal to or earlier than the predecessor agreement execution date.
+   - Academic progression: `YearOfStudy` must advance by exactly +1 year, and passed prior academic transcripts (`ContinuationAcademicResultsPassed = true`) are mandatory.
+3. **Statutory Bursary Funding Typology**:
+   - Every bursary must map to one of the 7 official statutory funding types (`lookup.BursaryFundingType`): `01` - merSETA Funded, `02` - Employer Funded, `03` - Institution Funded, `04` - Self-Funded, `05` - NSFAS / Other Public, `06` - Donor / NGO Funded, `07` - Other Funding.
+4. **Dynamic Evidentiary Document Gate**:
+   - Unemployed bursaries require certified RSA ID / passport, proof of tertiary registration, verified academic results, and proof of unemployment / affidavit.
+   - Employed bursaries additionally mandate certified employer confirmation and tripartite bursary agreement.
+5. **Audited Double-Write & Contract Generation**:
+   - Bursary registration must generate serial contract numbers `BUR-{yyyy}-{id:D5}` and perform double-write logging to `audit_logs`.
+
+---
+
+### 🛡️ Skills Development Provider (SDP) Accreditation Statutory Governance Standard (Signed 2023 Specification)
+1. **5 Accreditation Streams & Trade Test Centres (TTC)**:
+   - Accreditation intake must explicitly support 5 distinct statutory streams: Primary merSETA, Programme Approval (non-merSETA SETA), QCTO SDP, QCTO Trade Test Centre (TTC), and Non-merSETA Scope.
+   - For Trade Test Centres (TTC), the application MUST capture NAMB TTC assessor/moderator registration credentials and validity dates.
+2. **Interactive Two-Stage QMS Self-Evaluation Gate**:
+   - After initial QA recommendation, the system must issue a QMS Self-Evaluation task back to the Primary SDP Contact to complete compliance checks (Yes/No, document references, and evidence uploads) before physical site inspection scheduling.
+3. **5-Day Site Visit SLA & 6-Month Re-Accreditation Invariant**:
+   - Submissions must enforce a 5-working-day SLA for QA initial contact and inspection scheduling.
+   - Re-accreditation applications are permitted strictly within 6 months prior to expiry. During re-accreditation processing, the provider's operational status MUST NOT revert to "Pending Approval", ensuring unhindered learner registration transactions.
+4. **Multi-Contact Quorum & Banking Confirmation**:
+   - Provider registration requires a minimum of two (2) verified contact persons. At least one designated contact other than the primary SDF must be tagged with banking details confirmation authority.
+5. **Double-Write & Digital Security Seal**:
+   - All approval gates (Regional QA, QA Manager, Review Committee, Senior QA Manager) must record atomic snapshots in `audit_logs` and stamp the generated Accreditation Certificate with an immutable SHA-256 digital security seal.
+

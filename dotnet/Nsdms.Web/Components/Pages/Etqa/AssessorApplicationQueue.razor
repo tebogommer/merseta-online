@@ -1,0 +1,244 @@
+@page "/etqa/applications"
+@using Microsoft.AspNetCore.Authorization
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@attribute [Authorize]
+@inject IAssessorRegistrationService RegService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A2 (Work Queue)
+  Assessor & Moderator Registration Applications Pipeline
+  Manages the 4-stage maker-checker review pipeline per MerSeta\NSDMS\LMS\LR\01.
+*@
+
+<div class="d-flex justify-space-between align-center mb-4 flex-wrap gap-3">
+    <div>
+        <div class="d-flex align-center gap-2 mb-1">
+            <MudBreadcrumbs Items="_breadcrumbs" Separator=">" Class="pa-0 ma-0" />
+        </div>
+        <MudText Typo="Typo.h5" Class="font-weight-bold text-primary">
+            Assessor &amp; Moderator Registration Queue
+        </MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">
+            4-Stage statutory review pipeline: Document Verification &rarr; Application Evaluation &rarr; Review Committee &rarr; Final Approval
+        </MudText>
+    </div>
+    <div class="d-flex align-center gap-2">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.PersonAddAlt1"
+                   OnClick="@(() => NavManager.NavigateTo("/etqa/register"))">
+            Register practitioner
+        </MudButton>
+    </div>
+</div>
+
+<MudPaper Class="pa-4 mb-4" Elevation="1">
+    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
+        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Search by application number, applicant name, RSA ID, or role..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mt-0"
+                          Immediate="true"
+                          Clearable="true" />
+        </div>
+        <div class="d-flex align-center gap-2 flex-wrap">
+            <MudChipSet T="string" @bind-SelectedValue="_statusFilter" SelectionMode="SelectionMode.SingleSelection">
+                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_statusFilter == "All" ? Variant.Filled : Variant.Outlined)">All (@_applications.Count)</MudChip>
+                <MudChip T="string" Value="@("Draft")" Color="Color.Default" Variant="@(_statusFilter == "Draft" ? Variant.Filled : Variant.Outlined)">Draft</MudChip>
+                <MudChip T="string" Value="@("VerificationPending")" Color="Color.Warning" Variant="@(_statusFilter == "VerificationPending" ? Variant.Filled : Variant.Outlined)">Verification</MudChip>
+                <MudChip T="string" Value="@("EvaluationPending")" Color="Color.Info" Variant="@(_statusFilter == "EvaluationPending" ? Variant.Filled : Variant.Outlined)">Evaluation</MudChip>
+                <MudChip T="string" Value="@("ReviewCommitteePending")" Color="Color.Secondary" Variant="@(_statusFilter == "ReviewCommitteePending" ? Variant.Filled : Variant.Outlined)">Review Committee</MudChip>
+                <MudChip T="string" Value="@("Approved")" Color="Color.Success" Variant="@(_statusFilter == "Approved" ? Variant.Filled : Variant.Outlined)">Approved</MudChip>
+                <MudChip T="string" Value="@("Rejected")" Color="Color.Error" Variant="@(_statusFilter == "Rejected" ? Variant.Filled : Variant.Outlined)">Rejected</MudChip>
+            </MudChipSet>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-center align-center py-12">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+        </div>
+    }
+    else
+    {
+        <MudTable Items="@FilteredApplications"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true"
+                  Breakpoint="Breakpoint.Sm"
+                  Elevation="0"
+                  T="AssessorRegistrationApplication">
+            <HeaderContent>
+                <MudTh>Application No</MudTh>
+                <MudTh>Practitioner Name</MudTh>
+                <MudTh>Track Role</MudTh>
+                <MudTh Class="d-none d-md-table-cell">Scopes</MudTh>
+                <MudTh Class="d-none d-lg-table-cell">Submission Date</MudTh>
+                <MudTh>Workflow Stage</MudTh>
+                <MudTh Style="text-align:right">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Application No">
+                    <MudLink Href="@($"/etqa/applications/{context.Id}")" Color="Color.Primary" Underline="Underline.Hover">
+                        <span class="font-mono font-weight-bold">@context.ApplicationNumber</span>
+                    </MudLink>
+                </MudTd>
+                <MudTd DataLabel="Practitioner Name">
+                    @if (context.Person != null)
+                    {
+                        <div class="font-weight-bold text-primary">@context.Person.FirstName @context.Person.LastName</div>
+                        <div class="text-caption text-secondary">
+                            @(context.Person.RsaIdNumber ?? context.Person.Email ?? "—")
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-secondary">Unlinked Applicant</span>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Track Role">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                        @context.PractitionerType
+                    </MudChip>
+                </MudTd>
+                <MudTd Class="d-none d-md-table-cell" DataLabel="Scopes">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled">
+                        @context.Scopes.Count Scopes
+                    </MudChip>
+                </MudTd>
+                <MudTd Class="d-none d-lg-table-cell" DataLabel="Submission Date">
+                    @(context.SignedOffAt.HasValue ? context.SignedOffAt.Value.ToString("yyyy-MM-dd HH:mm") : "Not submitted")
+                </MudTd>
+                <MudTd DataLabel="Workflow Stage">
+                    <MudChip T="string" Color="@GetStatusColor(context.ApplicationStatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                        @GetStageLabel(context.ApplicationStatusCode)
+                    </MudChip>
+                </MudTd>
+                <MudTd Style="text-align:right" DataLabel="Actions">
+                    <div class="d-flex justify-end gap-1">
+                        <MudTooltip Text="View Details & Adjudicate">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => NavManager.NavigateTo($"/etqa/applications/{context.Id}"))"
+                                           aria-label="View Application" />
+                        </MudTooltip>
+                        @if (context.ApplicationStatusCode == "Draft")
+                        {
+                            <MudTooltip Text="Resume Draft">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Secondary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => NavManager.NavigateTo($"/etqa/applications/{context.Id}/edit"))"
+                                               aria-label="Edit Application" />
+                            </MudTooltip>
+                        }
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="pa-8 text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.AssignmentLate" Size="Size.Large" Color="Color.Default" Class="mb-2" />
+                    <MudText Typo="Typo.body1" Class="font-weight-bold">No assessor applications found</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No records match your selected stage or search criteria.</MudText>
+                </div>
+            </NoRecordsContent>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private bool _loading = true;
+    private string _searchString = string.Empty;
+    private string _statusFilter = "All";
+    private List<AssessorRegistrationApplication> _applications = new();
+    private List<BreadcrumbItem> _breadcrumbs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _breadcrumbs = new()
+        {
+            new("ETQA Registry", "/etqa"),
+            new("Applications Queue", null, disabled: true)
+        };
+
+        await LoadApplicationsAsync();
+    }
+
+    private async Task LoadApplicationsAsync()
+    {
+        _loading = true;
+        try
+        {
+            _applications = await RegService.GetApplicationsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading applications: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private IEnumerable<AssessorRegistrationApplication> FilteredApplications
+    {
+        get
+        {
+            var query = _applications.AsEnumerable();
+
+            if (_statusFilter != "All")
+            {
+                query = query.Where(a => a.ApplicationStatusCode.Equals(_statusFilter, StringComparison.OrdinalIgnoreCase)
+                    || (_statusFilter == "VerificationPending" && (a.ApplicationStatusCode == "Application" || a.ApplicationStatusCode == "VerificationPending")));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var search = _searchString.Trim().ToLowerInvariant();
+                query = query.Where(a =>
+                    a.ApplicationNumber.ToLowerInvariant().Contains(search)
+                    || (a.Person != null && $"{a.Person.FirstName} {a.Person.LastName}".ToLowerInvariant().Contains(search))
+                    || (a.Person?.RsaIdNumber != null && a.Person.RsaIdNumber.Contains(search))
+                    || a.PractitionerType.ToLowerInvariant().Contains(search));
+            }
+
+            return query.OrderByDescending(a => a.CreatedAt);
+        }
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Draft" => Color.Default,
+        "Application" or "VerificationPending" => Color.Warning,
+        "EvaluationPending" => Color.Info,
+        "ReviewCommitteePending" => Color.Secondary,
+        "Approved" => Color.Success,
+        "Rejected" => Color.Error,
+        "Withdrawn" => Color.Dark,
+        _ => Color.Default
+    };
+
+    private string GetStageLabel(string status) => status switch
+    {
+        "Draft" => "Draft Saved",
+        "Application" or "VerificationPending" => "Verification Pending",
+        "EvaluationPending" => "Evaluation Pending",
+        "ReviewCommitteePending" => "Review Committee Pending",
+        "Approved" => "Registered & Approved",
+        "Rejected" => "Rejected",
+        "Withdrawn" => "Withdrawn",
+        _ => status
+    };
+}

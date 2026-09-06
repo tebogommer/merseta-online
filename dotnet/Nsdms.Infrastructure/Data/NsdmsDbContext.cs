@@ -49,6 +49,14 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<StrategicPriority> StrategicPriorities => Set<StrategicPriority>();
     public DbSet<FundingWindowPriority> FundingWindowPriorities => Set<FundingWindowPriority>();
     public DbSet<AssessorModeratorScope> AssessorModeratorScopes => Set<AssessorModeratorScope>();
+    public DbSet<AssessorUnitStandardScope> AssessorUnitStandardScopes => Set<AssessorUnitStandardScope>();
+    public DbSet<AssessorProviderLink> AssessorProviderLinks => Set<AssessorProviderLink>();
+    public DbSet<AssessorRegistrationApplication> AssessorRegistrationApplications => Set<AssessorRegistrationApplication>();
+    public DbSet<AssessorApplicationScope> AssessorApplicationScopes => Set<AssessorApplicationScope>();
+    public DbSet<AssessorApplicationUnitStandard> AssessorApplicationUnitStandards => Set<AssessorApplicationUnitStandard>();
+    public DbSet<AssessorApplicationProviderLink> AssessorApplicationProviderLinks => Set<AssessorApplicationProviderLink>();
+    public DbSet<AssessorApplicationDocument> AssessorApplicationDocuments => Set<AssessorApplicationDocument>();
+    public DbSet<AssessorDisciplinaryCase> AssessorDisciplinaryCases => Set<AssessorDisciplinaryCase>();
     public DbSet<LearnerAssessment> LearnerAssessments => Set<LearnerAssessment>();
     public DbSet<WorkplaceApproval> WorkplaceApprovals => Set<WorkplaceApproval>();
     public DbSet<WorkplaceApprovalMentor> WorkplaceApprovalMentors => Set<WorkplaceApprovalMentor>();
@@ -58,6 +66,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<LearnerTradeTest> LearnerTradeTests => Set<LearnerTradeTest>();
     public DbSet<PersonGuardian> PersonGuardians => Set<PersonGuardian>();
     public DbSet<LearnerRegisteredUnitStandard> LearnerRegisteredUnitStandards => Set<LearnerRegisteredUnitStandard>();
+    public DbSet<LearnerBulkBatch> LearnerBulkBatches => Set<LearnerBulkBatch>();
+    public DbSet<LearnerBulkBatchRow> LearnerBulkBatchRows => Set<LearnerBulkBatchRow>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     // Workflow Engine & Task Matrix
@@ -110,6 +120,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<CompanyLearnerTransfer> CompanyLearnerTransfers => Set<CompanyLearnerTransfer>();
     public DbSet<CompanyLearnerLostTime> CompanyLearnerLostTimes => Set<CompanyLearnerLostTime>();
     public DbSet<CompanyLearnerTermination> CompanyLearnerTerminations => Set<CompanyLearnerTermination>();
+    public DbSet<CompanyLearnerExtension> CompanyLearnerExtensions => Set<CompanyLearnerExtension>();
 
     // Workplace Monitoring & Inspection Surveys (Cluster 1)
     public DbSet<WorkplaceMonitoringSiteVisit> WorkplaceMonitoringSiteVisits => Set<WorkplaceMonitoringSiteVisit>();
@@ -206,6 +217,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     // Phase 7: SDP Campus Infrastructure & Assessor Linking
     public DbSet<TrainingProviderCampus> TrainingProviderCampuses => Set<TrainingProviderCampus>();
     public DbSet<TrainingProviderAssessorLink> TrainingProviderAssessorLinks => Set<TrainingProviderAssessorLink>();
+    public DbSet<TrainingProviderSelfEvaluation> TrainingProviderSelfEvaluations => Set<TrainingProviderSelfEvaluation>();
+    public DbSet<TrainingProviderContact> TrainingProviderContacts => Set<TrainingProviderContact>();
 
     // Lookups in `lookup` schema
     public DbSet<GenderType> GenderTypes => Set<GenderType>();
@@ -260,6 +273,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<UrbanRuralType> UrbanRuralTypes => Set<UrbanRuralType>();
     public DbSet<SetaType> SetaTypes => Set<SetaType>();
     public DbSet<FundingType> FundingTypes => Set<FundingType>();
+    public DbSet<BursaryFundingType> BursaryFundingTypes => Set<BursaryFundingType>();
 
     // NLRD Lookups
     public DbSet<AbetBandType> AbetBandTypes => Set<AbetBandType>();
@@ -752,6 +766,13 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(a => a.EtqeDecisionNumber).HasMaxLength(50);
             entity.Property(a => a.EtqaRole).HasMaxLength(50);
             entity.Property(a => a.RegistrationStatusCode).HasMaxLength(15);
+            entity.Ignore(a => a.StatusCode);
+            entity.Ignore(a => a.AssessorRegistrationNumber);
+            entity.Ignore(a => a.CertificateStartDate);
+            entity.Ignore(a => a.CertificateEndDate);
+            entity.Ignore(a => a.EtqaDecisionNumber);
+            entity.Ignore(a => a.AssessmentAbilitySuspended);
+            entity.Property(a => a.DeRegistrationReason).HasMaxLength(250);
 
             entity.HasOne(a => a.Person)
                   .WithMany()
@@ -788,6 +809,12 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(tp => tp.SarsNumber).HasMaxLength(50);
             entity.Property(tp => tp.FaxNumber).HasMaxLength(50);
             entity.Property(tp => tp.WebsiteUrl).HasMaxLength(200);
+            entity.Property(tp => tp.AccreditationStream).HasMaxLength(50).HasDefaultValue("PrimaryAccreditation");
+            entity.Property(tp => tp.PrimaryEtqaName).HasMaxLength(100);
+            entity.Property(tp => tp.PrimaryAccreditationNumber).HasMaxLength(50);
+            entity.Property(tp => tp.NambRegistrationNumber).HasMaxLength(50);
+            entity.Property(tp => tp.EtqaCommitteeDecisionNumber).HasMaxLength(50);
+            entity.Property(tp => tp.DigitalSecuritySeal).HasMaxLength(64);
 
             entity.Ignore(tp => tp.StatusCode);
             entity.Ignore(tp => tp.LegalName);
@@ -811,6 +838,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(tp => tp.ProviderTypeId);
             entity.HasIndex(tp => tp.ProviderStatusId);
             entity.HasIndex(tp => tp.EtqaId);
+            entity.HasIndex(tp => tp.AccreditationStream);
             entity.HasIndex(tp => tp.IsActive);
         });
 
@@ -969,7 +997,165 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
 
             entity.HasIndex(s => s.EtqaAssessorId);
             entity.HasIndex(s => s.SaqaQualificationId);
-            entity.HasIndex(s => s.RegistrationStatusCode);
+        });
+
+        // AssessorUnitStandardScope
+        modelBuilder.Entity<AssessorUnitStandardScope>(entity =>
+        {
+            entity.ToTable("AssessorUnitStandardScope");
+            entity.Property(u => u.UnitStandardCode).HasMaxLength(20).IsRequired();
+            entity.Property(u => u.UnitStandardTitle).HasMaxLength(300).IsRequired();
+
+            entity.HasOne(u => u.AssessorScope)
+                  .WithMany(s => s.UnitStandards)
+                  .HasForeignKey(u => u.AssessorModeratorScopeId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(u => u.AssessorModeratorScopeId);
+            entity.HasIndex(u => u.UnitStandardCode);
+        });
+
+        // AssessorProviderLink
+        modelBuilder.Entity<AssessorProviderLink>(entity =>
+        {
+            entity.ToTable("AssessorProviderLink");
+            entity.Property(p => p.SlaDocumentRef).HasMaxLength(500);
+
+            entity.HasOne(p => p.EtqaAssessor)
+                  .WithMany(a => a.ProviderAffiliations)
+                  .HasForeignKey(p => p.EtqaAssessorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(p => p.TrainingProvider)
+                  .WithMany()
+                  .HasForeignKey(p => p.TrainingProviderId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(p => p.EtqaAssessorId);
+            entity.HasIndex(p => p.TrainingProviderId);
+        });
+
+        // AssessorRegistrationApplication
+        modelBuilder.Entity<AssessorRegistrationApplication>(entity =>
+        {
+            entity.ToTable("AssessorRegistrationApplication");
+            entity.Property(a => a.ApplicationNumber).HasMaxLength(50).IsRequired();
+            entity.Property(a => a.PractitionerType).HasMaxLength(50).IsRequired();
+            entity.Property(a => a.EmploymentStatusCode).HasMaxLength(30).IsRequired();
+            entity.Property(a => a.ApplicationStatusCode).HasMaxLength(40).IsRequired();
+            entity.Property(a => a.UrbanRuralArea).HasMaxLength(20);
+            entity.Property(a => a.NextOfKinName).HasMaxLength(150);
+            entity.Property(a => a.NextOfKinContact).HasMaxLength(50);
+            entity.Property(a => a.NextOfKinRelationship).HasMaxLength(50);
+            entity.Property(a => a.HighestQualificationTitle).HasMaxLength(250);
+            entity.Property(a => a.DigitalSecuritySeal).HasMaxLength(64);
+            entity.Ignore(a => a.ApplicationScopes);
+
+            entity.HasOne(a => a.Person)
+                  .WithMany()
+                  .HasForeignKey(a => a.PersonId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(a => a.RegisteredAssessor)
+                  .WithMany()
+                  .HasForeignKey(a => a.RegisteredAssessorId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(a => a.ApplicationNumber).IsUnique();
+            entity.HasIndex(a => a.PersonId);
+            entity.HasIndex(a => a.ApplicationStatusCode);
+            entity.HasIndex(a => a.PractitionerType);
+            entity.HasIndex(a => a.RegisteredAssessorId);
+        });
+
+        // AssessorApplicationScope
+        modelBuilder.Entity<AssessorApplicationScope>(entity =>
+        {
+            entity.ToTable("AssessorApplicationScope");
+            entity.Property(s => s.QualificationTitle).HasMaxLength(250).IsRequired();
+
+            entity.HasOne(s => s.Application)
+                  .WithMany(a => a.Scopes)
+                  .HasForeignKey(s => s.AssessorRegistrationApplicationId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(s => s.AssessorRegistrationApplicationId);
+            entity.HasIndex(s => s.SaqaQualificationId);
+        });
+
+        // AssessorApplicationUnitStandard
+        modelBuilder.Entity<AssessorApplicationUnitStandard>(entity =>
+        {
+            entity.ToTable("AssessorApplicationUnitStandard");
+            entity.Property(u => u.UnitStandardCode).HasMaxLength(20).IsRequired();
+            entity.Property(u => u.UnitStandardTitle).HasMaxLength(300).IsRequired();
+
+            entity.HasOne(u => u.ApplicationScope)
+                  .WithMany(s => s.UnitStandards)
+                  .HasForeignKey(u => u.AssessorApplicationScopeId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(u => u.AssessorApplicationScopeId);
+            entity.HasIndex(u => u.UnitStandardCode);
+        });
+
+        // AssessorApplicationProviderLink
+        modelBuilder.Entity<AssessorApplicationProviderLink>(entity =>
+        {
+            entity.ToTable("AssessorApplicationProviderLink");
+            entity.Property(p => p.SlaDocumentRef).HasMaxLength(500);
+
+            entity.HasOne(p => p.Application)
+                  .WithMany(a => a.ProviderAffiliations)
+                  .HasForeignKey(p => p.AssessorRegistrationApplicationId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(p => p.TrainingProvider)
+                  .WithMany()
+                  .HasForeignKey(p => p.TrainingProviderId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(p => p.AssessorRegistrationApplicationId);
+            entity.HasIndex(p => p.TrainingProviderId);
+        });
+
+        // AssessorApplicationDocument
+        modelBuilder.Entity<AssessorApplicationDocument>(entity =>
+        {
+            entity.ToTable("AssessorApplicationDocument");
+            entity.Property(d => d.DocumentTypeCode).HasMaxLength(50).IsRequired();
+            entity.Property(d => d.DocumentTitle).HasMaxLength(250).IsRequired();
+            entity.Property(d => d.FileStoragePath).HasMaxLength(500).IsRequired();
+
+            entity.HasOne(d => d.Application)
+                  .WithMany(a => a.Documents)
+                  .HasForeignKey(d => d.AssessorRegistrationApplicationId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(d => d.AssessorRegistrationApplicationId);
+            entity.HasIndex(d => d.DocumentTypeCode);
+        });
+
+        // AssessorDisciplinaryCase
+        modelBuilder.Entity<AssessorDisciplinaryCase>(entity =>
+        {
+            entity.ToTable("AssessorDisciplinaryCase");
+            entity.Property(c => c.CaseNumber).HasMaxLength(50).IsRequired();
+            entity.Property(c => c.CaseType).HasMaxLength(50).IsRequired();
+            entity.Property(c => c.ComplaintSummary).HasMaxLength(2000).IsRequired();
+            entity.Property(c => c.OutcomeCode).HasMaxLength(30).IsRequired();
+            entity.Property(c => c.Status).HasMaxLength(30).IsRequired();
+            entity.Ignore(c => c.StatusCode);
+
+            entity.HasOne(c => c.EtqaAssessor)
+                  .WithMany(a => a.DisciplinaryCases)
+                  .HasForeignKey(c => c.EtqaAssessorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(c => c.CaseNumber).IsUnique();
+            entity.HasIndex(c => c.EtqaAssessorId);
+            entity.HasIndex(c => c.CaseType);
+            entity.HasIndex(c => c.Status);
         });
 
         // LearnerAssessment
@@ -1132,8 +1318,15 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                   .HasForeignKey(m => m.PersonId)
                   .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne(m => m.VerifiedByPerson)
+                  .WithMany()
+                  .HasForeignKey(m => m.VerifiedByPersonId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasIndex(m => m.WorkplaceApprovalId);
             entity.HasIndex(m => m.PersonId);
+            entity.HasIndex(m => m.VerifiedByPersonId);
+            entity.HasIndex(m => m.ApprovalStatusCode);
             entity.HasIndex(m => m.IsActive);
             entity.HasIndex(m => m.IsRatioExempt);
             entity.HasIndex(m => m.IsRatioEnforced);
@@ -1196,6 +1389,14 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(l => l.FundingTypeCode).HasMaxLength(50);
             entity.Property(l => l.FundingId).HasMaxLength(10).HasDefaultValue("01");
             entity.Property(l => l.EnrolmentStatusCode).HasMaxLength(50);
+            entity.Property(l => l.BursaryApplicationTypeCode).HasMaxLength(50);
+            entity.Property(l => l.BursaryFundingTypeCode).HasMaxLength(50);
+            entity.Property(l => l.InstitutionName).HasMaxLength(250);
+            entity.Property(l => l.InstitutionTypeCode).HasMaxLength(50);
+            entity.Property(l => l.EmploymentStatusCode).HasMaxLength(50);
+            entity.Ignore(l => l.StatusCode);
+            entity.Ignore(l => l.LearnerStatusCode);
+            entity.Ignore(l => l.ApprovalWorkflowStatus);
 
             entity.HasOne(l => l.Person)
                   .WithMany()
@@ -1205,6 +1406,11 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasOne(l => l.Organisation)
                   .WithMany()
                   .HasForeignKey(l => l.OrganisationId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(l => l.PreviousCompanyLearner)
+                  .WithMany()
+                  .HasForeignKey(l => l.PreviousCompanyLearnerId)
                   .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(l => l.OrganisationSite)
@@ -1231,6 +1437,9 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(l => l.OrganisationId);
             entity.HasIndex(l => l.OrganisationSiteId);
             entity.HasIndex(l => l.TrainingProviderId);
+            entity.HasIndex(l => l.PreviousCompanyLearnerId);
+            entity.HasIndex(l => l.BursaryApplicationTypeCode);
+            entity.HasIndex(l => l.AcademicYear);
             entity.HasIndex(l => l.LearnershipId);
             entity.HasIndex(l => l.NonNqfInterventionCode);
             entity.HasIndex(l => l.PartOfId);
@@ -1245,6 +1454,62 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(l => l.RegistrationDate);
             entity.HasIndex(l => l.LearnerSignatureDate);
             entity.HasIndex(l => l.SubmissionDate);
+            entity.HasIndex(l => l.RegistrationChannel);
+            entity.HasIndex(l => l.IngestionBatchId);
+        });
+
+        // LearnerBulkBatch
+        modelBuilder.Entity<LearnerBulkBatch>(entity =>
+        {
+            entity.ToTable("LearnerBulkBatch");
+            entity.Property(b => b.BatchReference).HasMaxLength(50).IsRequired();
+            entity.Property(b => b.OriginalFileName).HasMaxLength(250).IsRequired();
+            entity.Property(b => b.Status).HasMaxLength(50).IsRequired();
+            entity.Property(b => b.DigitalSecuritySeal).HasMaxLength(100);
+
+            entity.HasOne(b => b.Organisation)
+                  .WithMany()
+                  .HasForeignKey(b => b.OrganisationId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(b => b.Rows)
+                  .WithOne(r => r.LearnerBulkBatch)
+                  .HasForeignKey(r => r.LearnerBulkBatchId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(b => b.BatchReference).IsUnique();
+            entity.HasIndex(b => b.OrganisationId);
+            entity.HasIndex(b => b.Status);
+        });
+
+        // LearnerBulkBatchRow
+        modelBuilder.Entity<LearnerBulkBatchRow>(entity =>
+        {
+            entity.ToTable("LearnerBulkBatchRow");
+            entity.Property(r => r.FirstName).HasMaxLength(100).IsRequired();
+            entity.Property(r => r.MiddleName).HasMaxLength(100);
+            entity.Property(r => r.LastName).HasMaxLength(100).IsRequired();
+            entity.Property(r => r.RsaIdNumber).HasMaxLength(50).IsRequired();
+            entity.Property(r => r.PassportNumber).HasMaxLength(50);
+            entity.Property(r => r.GenderCode).HasMaxLength(10);
+            entity.Property(r => r.EquityCode).HasMaxLength(10);
+            entity.Property(r => r.EmailAddress).HasMaxLength(150);
+            entity.Property(r => r.PhoneNumber).HasMaxLength(50);
+            entity.Property(r => r.LearningProgrammeTypeCode).HasMaxLength(50);
+            entity.Property(r => r.SaqaQualificationId).HasMaxLength(50);
+            entity.Property(r => r.QualificationTitle).HasMaxLength(250);
+            entity.Property(r => r.TradeCode).HasMaxLength(50);
+            entity.Property(r => r.Status).HasMaxLength(50);
+
+            entity.HasOne(r => r.CompanyLearner)
+                  .WithMany()
+                  .HasForeignKey(r => r.CompanyLearnerId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(r => r.LearnerBulkBatchId);
+            entity.HasIndex(r => r.RsaIdNumber);
+            entity.HasIndex(r => r.Status);
+            entity.HasIndex(r => r.CompanyLearnerId);
         });
 
         // PersonGuardian
@@ -1876,15 +2141,19 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         modelBuilder.Entity<CompanyLearnerTransfer>(entity =>
         {
             entity.ToTable("CompanyLearnerTransfer");
+            entity.Property(t => t.TransferScopeCode).HasMaxLength(50).IsRequired();
             entity.Property(t => t.TransferReasonCode).HasMaxLength(50).IsRequired();
             entity.Property(t => t.TransferStatusCode).HasMaxLength(50).IsRequired();
+            entity.Property(t => t.InitiatedByTypeCode).HasMaxLength(50).IsRequired();
             entity.Property(t => t.ApprovalComments).HasMaxLength(1000);
             entity.Property(t => t.ApprovedByUserId).HasMaxLength(100);
+            entity.Property(t => t.CurrentEmployerSignoffUserId).HasMaxLength(100);
+            entity.Property(t => t.FutureEmployerSignoffUserId).HasMaxLength(100);
 
             entity.HasOne(t => t.CompanyLearner)
-                .WithMany()
+                .WithMany(l => l.Transfers)
                 .HasForeignKey(t => t.CompanyLearnerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(t => t.FromOrganisation)
                 .WithMany()
@@ -1896,10 +2165,29 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                 .HasForeignKey(t => t.ToOrganisationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne(t => t.FromTrainingProvider)
+                .WithMany()
+                .HasForeignKey(t => t.FromTrainingProviderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(t => t.ToTrainingProvider)
+                .WithMany()
+                .HasForeignKey(t => t.ToTrainingProviderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(t => t.TargetWorkplaceApproval)
+                .WithMany()
+                .HasForeignKey(t => t.TargetWorkplaceApprovalId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasIndex(t => t.CompanyLearnerId);
             entity.HasIndex(t => t.FromOrganisationId);
             entity.HasIndex(t => t.ToOrganisationId);
+            entity.HasIndex(t => t.FromTrainingProviderId);
+            entity.HasIndex(t => t.ToTrainingProviderId);
+            entity.HasIndex(t => t.TargetWorkplaceApprovalId);
             entity.HasIndex(t => t.TransferStatusCode);
+            entity.HasIndex(t => t.TransferScopeCode);
         });
 
         modelBuilder.Entity<CompanyLearnerLostTime>(entity =>
@@ -1911,9 +2199,9 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(l => l.ApprovedByUserId).HasMaxLength(100);
 
             entity.HasOne(l => l.CompanyLearner)
-                .WithMany()
+                .WithMany(l => l.LostTimes)
                 .HasForeignKey(l => l.CompanyLearnerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(l => l.CompanyLearnerId);
             entity.HasIndex(l => l.LostTimeStatusCode);
@@ -1922,20 +2210,49 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         modelBuilder.Entity<CompanyLearnerTermination>(entity =>
         {
             entity.ToTable("CompanyLearnerTermination");
+            entity.Property(t => t.TerminationTypeCode).HasMaxLength(50).IsRequired();
             entity.Property(t => t.TerminationReasonCode).HasMaxLength(50).IsRequired();
             entity.Property(t => t.TerminationStatusCode).HasMaxLength(50).IsRequired();
             entity.Property(t => t.UnionRepresentativeName).HasMaxLength(150);
             entity.Property(t => t.SettlementNotes).HasMaxLength(2000);
             entity.Property(t => t.ApprovalComments).HasMaxLength(1000);
             entity.Property(t => t.ApprovedByUserId).HasMaxLength(100);
+            entity.Property(t => t.Checklist036CompletedByUserId).HasMaxLength(100);
+            entity.Property(t => t.InvestigationConductedByUserId).HasMaxLength(100);
+            entity.Property(t => t.RecommendedToCommitteeByUserId).HasMaxLength(100);
+            entity.Property(t => t.CommitteeDecisionCode).HasMaxLength(50);
 
             entity.HasOne(t => t.CompanyLearner)
-                .WithMany()
+                .WithMany(l => l.Terminations)
                 .HasForeignKey(t => t.CompanyLearnerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(t => t.CompanyLearnerId);
             entity.HasIndex(t => t.TerminationStatusCode);
+            entity.HasIndex(t => t.TerminationTypeCode);
+            entity.HasIndex(t => t.ReviewCommitteeMeetingId);
+        });
+
+        modelBuilder.Entity<CompanyLearnerExtension>(entity =>
+        {
+            entity.ToTable("CompanyLearnerExtension");
+            entity.Property(e => e.ExtensionTypeCode).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.ExtensionReasonCode).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.ExtensionStatusCode).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.JustificationComments).HasMaxLength(2000).IsRequired();
+            entity.Property(e => e.ApprovalComments).HasMaxLength(1000);
+            entity.Property(e => e.ApprovedByUserId).HasMaxLength(100);
+            entity.Ignore(e => e.RequestDate);
+            entity.Ignore(e => e.ExtensionCategory);
+
+            entity.HasOne(e => e.CompanyLearner)
+                .WithMany(l => l.Extensions)
+                .HasForeignKey(e => e.CompanyLearnerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.CompanyLearnerId);
+            entity.HasIndex(e => e.ExtensionStatusCode);
+            entity.HasIndex(e => e.ExtensionTypeCode);
         });
 
         // Workplace Monitoring & Quality Assurance Site Visits (Cluster 1)
@@ -2298,6 +2615,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(t => t.ApplicationNumber).HasMaxLength(50).IsRequired();
             entity.Property(t => t.TradeTitle).HasMaxLength(200).IsRequired();
             entity.Property(t => t.ApplicationTypeCode).HasMaxLength(50).IsRequired();
+            entity.Property(t => t.EmploymentStatus).HasMaxLength(50).HasDefaultValue("Employed");
+            entity.Property(t => t.UnregisteredEmployerName).HasMaxLength(200);
             entity.Property(t => t.StatusCode).HasMaxLength(50).IsRequired();
             entity.Property(t => t.CompetencyStatusCode).HasMaxLength(50);
             entity.Property(t => t.NambSerialNumber).HasMaxLength(100);
@@ -2390,6 +2709,11 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.ToTable("ArplExperienceDetail");
             entity.Property(e => e.EmployerName).HasMaxLength(200).IsRequired();
             entity.Property(e => e.JobTitle).HasMaxLength(150).IsRequired();
+            entity.Property(e => e.CompanyRegistrationNumber).HasMaxLength(50);
+            entity.Property(e => e.ContactPersonName).HasMaxLength(150);
+            entity.Property(e => e.ContactPhoneNumber).HasMaxLength(50);
+            entity.Property(e => e.EmployerAddress).HasMaxLength(300);
+            entity.Property(e => e.YearsOfExperience).HasPrecision(18, 2);
 
             entity.HasOne(e => e.LearnerTradeTestApplication)
                 .WithMany(t => t.ExperienceDetails)
@@ -2930,6 +3254,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         ConfigureLookup<UrbanRuralType>(modelBuilder, "UrbanRuralType");
         ConfigureLookup<SetaType>(modelBuilder, "SetaType");
         ConfigureLookup<FundingType>(modelBuilder, "FundingType");
+        ConfigureLookup<BursaryFundingType>(modelBuilder, "BursaryFundingType");
         ConfigureLookup<AbetBandType>(modelBuilder, "AbetBandType");
         ConfigureLookup<QualificationTypeType>(modelBuilder, "QualificationTypeType");
         ConfigureLookup<HonoursClassType>(modelBuilder, "HonoursClassType");
@@ -3103,6 +3428,10 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(c => c.CampusName).HasMaxLength(150).IsRequired();
             entity.Property(c => c.CampusCode).HasMaxLength(50).IsRequired();
             entity.Property(c => c.Status).HasMaxLength(50).IsRequired();
+            entity.Property(c => c.GpsCoordinates).HasMaxLength(50);
+            entity.Property(c => c.Latitude).HasColumnType("decimal(9,6)");
+            entity.Property(c => c.Longitude).HasColumnType("decimal(9,6)");
+            entity.Property(c => c.LocalMunicipality).HasMaxLength(100);
 
             entity.HasOne(c => c.TrainingProvider)
                   .WithMany(p => p.Campuses)
@@ -3111,6 +3440,55 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
 
             entity.HasIndex(c => c.TrainingProviderId);
             entity.HasIndex(c => c.CampusCode);
+        });
+
+        // Phase 34: SDP Statutory Accreditation Governance & Two-Stage QMS
+        modelBuilder.Entity<TrainingProviderSelfEvaluation>(entity =>
+        {
+            entity.ToTable("TrainingProviderSelfEvaluation");
+            entity.Property(e => e.CriteriaCode).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.CriteriaCategory).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.CriteriaDescription).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.DocumentReferenceNumber).HasMaxLength(150);
+            entity.Property(e => e.ApplicantComments).HasMaxLength(1000);
+            entity.Property(e => e.AssessorFindings).HasMaxLength(1000);
+
+            entity.HasOne(e => e.TrainingProvider)
+                  .WithMany(p => p.SelfEvaluations)
+                  .HasForeignKey(e => e.TrainingProviderId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.TrainingProviderId);
+            entity.HasIndex(e => e.CriteriaCode);
+        });
+
+        modelBuilder.Entity<TrainingProviderContact>(entity =>
+        {
+            entity.ToTable("TrainingProviderContact");
+            entity.Property(c => c.ContactDesignation).HasMaxLength(50).IsRequired();
+            entity.Property(c => c.Title).HasMaxLength(20);
+            entity.Property(c => c.FirstName).HasMaxLength(100).IsRequired();
+            entity.Property(c => c.LastName).HasMaxLength(100).IsRequired();
+            entity.Property(c => c.IdOrPassportNumber).HasMaxLength(30);
+            entity.Property(c => c.Email).HasMaxLength(150).IsRequired();
+            entity.Property(c => c.CellNumber).HasMaxLength(30).IsRequired();
+            entity.Ignore(c => c.IsPrimaryContact);
+            entity.Ignore(c => c.FullName);
+            entity.Ignore(c => c.VerificationStatus);
+
+            entity.HasOne(c => c.TrainingProvider)
+                  .WithMany(p => p.Contacts)
+                  .HasForeignKey(c => c.TrainingProviderId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(c => c.Person)
+                  .WithMany()
+                  .HasForeignKey(c => c.PersonId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(c => c.TrainingProviderId);
+            entity.HasIndex(c => c.PersonId);
+            entity.HasIndex(c => c.Email);
         });
 
         modelBuilder.Entity<TrainingProviderAssessorLink>(entity =>

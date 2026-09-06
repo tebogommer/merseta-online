@@ -25,7 +25,7 @@
     <EntityHeader Title="@(_person?.FullName ?? "Learner Profile")"
                   ReferenceKey="@(_learner.LearnerContractNumber ?? "LRN-" + Id)"
                   Status="@(_learner.EnrolmentStatusCode ?? "Registered")"
-                  Subtitle="@($"ID: {_person?.RsaIdNumber ?? "N/A"} | Qualification: {_learner.QualificationTitle ?? "Skills Programme"} | Reference: {_learner.LearnerContractNumber ?? "LRN-" + Id}")"
+                  Subtitle="@($"ID: {_person?.RsaIdNumber ?? "N/A"} | Qualification: {_learner.QualificationTitle ?? "Skills Programme"} | In-State: {_learner.InstateStatusCode ?? "Active"} | Ref: {_learner.LearnerContractNumber ?? "LRN-" + Id}")"
                   BreadcrumbItems="@_breadcrumbItems">
         <ActionZone>
             <MudButton Variant="Variant.Text"
@@ -48,14 +48,17 @@
                 <MudMenuItem Icon="@Icons.Material.Filled.FactCheck" OnClick="@(() => Navigation.NavigateTo($"/tradetests/create?learnerId={Id}"))">
                     Apply for Trade Test (26D)
                 </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.MoreTime" OnClick="@(() => OpenLifecycleDialog("Extension"))">
+                    Request Extension (Spec 4.1)
+                </MudMenuItem>
                 <MudMenuItem Icon="@Icons.Material.Filled.SwapHoriz" OnClick="@(() => OpenLifecycleDialog("Transfer"))">
-                    Transfer Provider / Employer
+                    Transfer Provider / Employer (Spec 4.7)
                 </MudMenuItem>
                 <MudMenuItem Icon="@Icons.Material.Filled.Update" OnClick="@(() => OpenLifecycleDialog("LostTime"))">
                     Record Lost Time / Extension
                 </MudMenuItem>
                 <MudMenuItem Icon="@Icons.Material.Filled.CancelPresentation" OnClick="@(() => OpenLifecycleDialog("Termination"))">
-                    Request Agreement Termination
+                    Request Agreement Termination (Spec 4.4-4.6)
                 </MudMenuItem>
                 <MudMenuItem Icon="@Icons.Material.Filled.EditNote" OnClick="@(() => OpenLifecycleDialog("ChangeRequest"))">
                     Submit Contract Amendment
@@ -313,6 +316,36 @@ else
                             </div>
                         </MudCardContent>
                     </MudCard>
+
+                    @if (_learner.LearningProgrammeTypeCode == "05" || _learner.LearningProgrammeTypeCode == "Bursary")
+                    {
+                        <MudCard Elevation="2" Class="mb-4">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <div class="d-flex align-center gap-2">
+                                        <MudIcon Icon="@Icons.Material.Filled.School" Color="Color.Secondary" Size="Size.Small" />
+                                        <MudText Typo="Typo.h6">Bursary Academic Progression</MudText>
+                                    </div>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <div class="d-flex flex-column gap-3">
+                                    <MudTextField @bind-Value="_learner.BursaryApplicationTypeCode" Label="Application Type" Variant="Variant.Outlined" ReadOnly="true" />
+                                    <MudTextField @bind-Value="_learner.InstitutionName" Label="Educational Institution" Variant="Variant.Outlined" ReadOnly="!IsNew" />
+                                    <MudGrid>
+                                        <MudItem xs="6">
+                                            <MudNumericField @bind-Value="_learner.YearOfStudy" Label="Year of Study" Variant="Variant.Outlined" Min="1" Max="7" />
+                                        </MudItem>
+                                        <MudItem xs="6">
+                                            <MudNumericField @bind-Value="_learner.AcademicYear" Label="Academic Year" Variant="Variant.Outlined" />
+                                        </MudItem>
+                                    </MudGrid>
+                                    <MudTextField @bind-Value="_learner.BursaryFundingTypeCode" Label="Funding Vehicle" Variant="Variant.Outlined" />
+                                    <MudTextField @bind-Value="_learner.EmploymentStatusCode" Label="Employment Status" Variant="Variant.Outlined" />
+                                </div>
+                            </MudCardContent>
+                        </MudCard>
+                    }
                 </MudItem>
             </MudGrid>
         </MudTabPanel>
@@ -660,26 +693,105 @@ else
                     <MudCardHeader>
                         <CardHeaderContent>
                             <MudText Typo="Typo.h6">Statutory Lifecycle History</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">Inter-employer transfers, lost-time extensions, cancellations, and change requests</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Inter-employer/SDP transfers (Spec 4.7), contract extensions (Spec 4.1), terminations (Spec 4.4-4.6), and amendments</MudText>
                         </CardHeaderContent>
                     </MudCardHeader>
                     <MudCardContent>
                         <MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface">
-                            <MudTabPanel Text="Transfers" Icon="@Icons.Material.Filled.SwapHoriz" BadgeData="@_transfers.Count">
+                            <MudTabPanel Text="Extensions (Spec 4.1)" Icon="@Icons.Material.Filled.MoreTime" BadgeData="@_extensions.Count">
+                                <MudTable Items="@_extensions" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                    <HeaderContent>
+                                        <MudTh>Request Date</MudTh>
+                                        <MudTh>Category</MudTh>
+                                        <MudTh>Reason</MudTh>
+                                        <MudTh>Original Expiry</MudTh>
+                                        <MudTh>Requested / Approved</MudTh>
+                                        <MudTh>Status</MudTh>
+                                        <MudTh>Actions</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="Request Date">@context.CreatedAt.ToString("yyyy-MM-dd")</MudTd>
+                                        <MudTd DataLabel="Category">@context.ExtensionTypeCode</MudTd>
+                                        <MudTd DataLabel="Reason">@context.ExtensionReasonCode</MudTd>
+                                        <MudTd DataLabel="Original Expiry">@(context.OriginalExpiryDate?.ToString("yyyy-MM-dd") ?? "N/A")</MudTd>
+                                        <MudTd DataLabel="Requested / Approved">@((context.ApprovedExpiryDate ?? context.RequestedExpiryDate).ToString("yyyy-MM-dd"))</MudTd>
+                                        <MudTd DataLabel="Status">
+                                            <MudChip T="string" Size="Size.Small" Color="@(context.ExtensionStatusCode == "Approved" ? Color.Success : Color.Warning)">
+                                                @context.ExtensionStatusCode
+                                            </MudChip>
+                                        </MudTd>
+                                        <MudTd DataLabel="Actions">
+                                            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="@(() => DownloadExtensionAddendumPdf(context.Id))">
+                                                Addendum PDF
+                                            </MudButton>
+                                        </MudTd>
+                                    </RowTemplate>
+                                    <NoRecordsContent>
+                                        <MudText Typo="Typo.body2" Class="pa-3 text-center">No contract extensions recorded for this learner.</MudText>
+                                    </NoRecordsContent>
+                                </MudTable>
+                            </MudTabPanel>
+
+                            <MudTabPanel Text="Transfers (Spec 4.7)" Icon="@Icons.Material.Filled.SwapHoriz" BadgeData="@_transfers.Count">
                                 <MudTable Items="@_transfers" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
                                     <HeaderContent>
                                         <MudTh>Transfer Date</MudTh>
-                                        <MudTh>From Employer</MudTh>
-                                        <MudTh>To Employer</MudTh>
+                                        <MudTh>Scope</MudTh>
+                                        <MudTh>From</MudTh>
+                                        <MudTh>To</MudTh>
                                         <MudTh>Reason</MudTh>
+                                        <MudTh>Consent</MudTh>
                                         <MudTh>Status</MudTh>
+                                        <MudTh>Actions</MudTh>
                                     </HeaderContent>
                                     <RowTemplate>
                                         <MudTd DataLabel="Transfer Date">@context.TransferDate.ToString("yyyy-MM-dd")</MudTd>
-                                        <MudTd DataLabel="From Employer">@(context.FromOrganisation?.CompanyName ?? "N/A")</MudTd>
-                                        <MudTd DataLabel="To Employer">@(context.ToOrganisation?.CompanyName ?? "N/A")</MudTd>
+                                        <MudTd DataLabel="Scope">@context.TransferScopeCode</MudTd>
+                                        <MudTd DataLabel="From">
+                                            @if (context.TransferScopeCode == "EmployerToEmployer" || context.FromOrganisation != null)
+                                            {
+                                                <span>@(context.FromOrganisation?.CompanyName ?? "N/A")</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@(context.FromTrainingProvider?.ProviderName ?? "N/A")</span>
+                                            }
+                                        </MudTd>
+                                        <MudTd DataLabel="To">
+                                            @if (context.TransferScopeCode == "EmployerToEmployer" || context.ToOrganisation != null)
+                                            {
+                                                <span>@(context.ToOrganisation?.CompanyName ?? "N/A")</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@(context.ToTrainingProvider?.ProviderName ?? "N/A")</span>
+                                            }
+                                        </MudTd>
                                         <MudTd DataLabel="Reason">@context.TransferReasonCode</MudTd>
-                                        <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small" Color="@(context.TransferStatusCode == "Approved" ? Color.Success : Color.Warning)">@context.TransferStatusCode</MudChip></MudTd>
+                                        <MudTd DataLabel="Consent">
+                                            @if (context.IsCurrentEmployerAgreed == true && context.IsFutureEmployerAgreed == true && context.IsLearnerAgreed == true)
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Success">Tripartite Agreed</MudChip>
+                                            }
+                                            else if (context.DisagreementPromptedTermination)
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Error">Contested</MudChip>
+                                            }
+                                            else
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Warning">In Progress</MudChip>
+                                            }
+                                        </MudTd>
+                                        <MudTd DataLabel="Status">
+                                            <MudChip T="string" Size="Size.Small" Color="@(context.TransferStatusCode == "Approved" ? Color.Success : Color.Warning)">
+                                                @context.TransferStatusCode
+                                            </MudChip>
+                                        </MudTd>
+                                        <MudTd DataLabel="Actions">
+                                            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="@(async () => await DownloadLpmFm005Pdf(context.Id))">
+                                                LPM-FM-005 PDF
+                                            </MudButton>
+                                        </MudTd>
                                     </RowTemplate>
                                     <NoRecordsContent>
                                         <MudText Typo="Typo.body2" Class="pa-3 text-center">No transfers recorded for this learner agreement.</MudText>
@@ -687,7 +799,7 @@ else
                                 </MudTable>
                             </MudTabPanel>
                             
-                            <MudTabPanel Text="Lost Time &amp; Extensions" Icon="@Icons.Material.Filled.Update" BadgeData="@_lostTimes.Count">
+                            <MudTabPanel Text="Lost Time &amp; Recalculation" Icon="@Icons.Material.Filled.Update" BadgeData="@_lostTimes.Count">
                                 <MudTable Items="@_lostTimes" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
                                     <HeaderContent>
                                         <MudTh>Period</MudTh>
@@ -709,30 +821,85 @@ else
                                 </MudTable>
                             </MudTabPanel>
 
-                            <MudTabPanel Text="Terminations" Icon="@Icons.Material.Filled.Cancel" BadgeData="@_terminations.Count">
+                            <MudTabPanel Text="Terminations (Spec 4.4-4.6)" Icon="@Icons.Material.Filled.Cancel" BadgeData="@_terminations.Count">
                                 <MudTable Items="@_terminations" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
                                     <HeaderContent>
                                         <MudTh>Effective Date</MudTh>
+                                        <MudTh>Type</MudTh>
                                         <MudTh>Reason</MudTh>
-                                        <MudTh>Dispute Logged</MudTh>
-                                        <MudTh>Union Rep</MudTh>
+                                        <MudTh>Investigation SLA / Checklist 036</MudTh>
+                                        <MudTh>Committee Decision</MudTh>
                                         <MudTh>Status</MudTh>
+                                        <MudTh>Actions</MudTh>
                                     </HeaderContent>
                                     <RowTemplate>
                                         <MudTd DataLabel="Effective Date">@context.EffectiveDate.ToString("yyyy-MM-dd")</MudTd>
+                                        <MudTd DataLabel="Type">
+                                            <MudChip T="string" Size="Size.Small" Color="@(context.TerminationTypeCode == "Mutual" ? Color.Info : Color.Error)">
+                                                @context.TerminationTypeCode
+                                            </MudChip>
+                                        </MudTd>
                                         <MudTd DataLabel="Reason">@context.TerminationReasonCode</MudTd>
-                                        <MudTd DataLabel="Dispute Logged">
-                                            @if (context.DisputeLogged)
+                                        <MudTd DataLabel="Investigation SLA / Checklist 036">
+                                            @if (context.TerminationTypeCode == "OneSided")
                                             {
-                                                <MudChip T="string" Size="Size.Small" Color="Color.Error">CCMA/Dispute</MudChip>
+                                                @if (context.InvestigationDueDate.HasValue)
+                                                {
+                                                    var isOverdue = DateTime.UtcNow > context.InvestigationDueDate.Value;
+                                                    <MudChip T="string" Size="Size.Small" Color="@(isOverdue ? Color.Error : Color.Warning)" Variant="Variant.Filled">
+                                                        @(isOverdue ? "SLA Overdue" : $"Due {context.InvestigationDueDate.Value:yyyy-MM-dd}")
+                                                    </MudChip>
+                                                }
+                                                @if (context.Checklist036Completed)
+                                                {
+                                                    <MudChip T="string" Size="Size.Small" Color="Color.Success">036 Completed</MudChip>
+                                                }
+                                                else
+                                                {
+                                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning">036 Pending</MudChip>
+                                                }
                                             }
                                             else
                                             {
-                                                <span>None</span>
+                                                <span class="text-muted">Not Required (Mutual)</span>
                                             }
                                         </MudTd>
-                                        <MudTd DataLabel="Union Rep">@(context.UnionRepresentativeName ?? "None")</MudTd>
-                                        <MudTd DataLabel="Status"><MudChip T="string" Size="Size.Small" Color="Color.Error">@context.TerminationStatusCode</MudChip></MudTd>
+                                        <MudTd DataLabel="Committee Decision">
+                                            @if (!string.IsNullOrEmpty(context.CommitteeDecisionCode))
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Color="@(context.CommitteeDecisionCode == "Approved" ? Color.Success : Color.Error)">
+                                                    @context.CommitteeDecisionCode
+                                                </MudChip>
+                                            }
+                                            else
+                                            {
+                                                <span>Pending Review</span>
+                                            }
+                                        </MudTd>
+                                        <MudTd DataLabel="Status">
+                                            <MudChip T="string" Size="Size.Small" Color="@(context.TerminationStatusCode == "Approved" ? Color.Success : Color.Error)">
+                                                @context.TerminationStatusCode
+                                            </MudChip>
+                                        </MudTd>
+                                        <MudTd DataLabel="Actions">
+                                            <div class="d-flex flex-wrap gap-1">
+                                                @if (context.TerminationTypeCode == "Mutual")
+                                                {
+                                                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="@(async () => await DownloadLpmTp010Pdf(context.Id))">
+                                                        LPM-TP-010 PDF
+                                                    </MudButton>
+                                                }
+                                                else
+                                                {
+                                                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Assessment" OnClick="@(async () => await DownloadChecklist036Pdf(context.Id))">
+                                                        Checklist 036 PDF
+                                                    </MudButton>
+                                                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="@(async () => await DownloadTerminationDecisionPdf(context.Id))">
+                                                        Decision Letter
+                                                    </MudButton>
+                                                }
+                                            </div>
+                                        </MudTd>
                                     </RowTemplate>
                                     <NoRecordsContent>
                                         <MudText Typo="Typo.body2" Class="pa-3 text-center">No termination requests logged.</MudText>
@@ -900,6 +1067,7 @@ else
     private List<LearnerStipendDto> _stipends = new();
 
     // Lifecycle History Collections
+    private List<CompanyLearnerExtension> _extensions = new();
     private List<CompanyLearnerTransfer> _transfers = new();
     private List<CompanyLearnerLostTime> _lostTimes = new();
     private List<CompanyLearnerTermination> _terminations = new();
@@ -1130,6 +1298,7 @@ else
         if (Id <= 0) return;
         try
         {
+            _extensions = await LifecycleService.GetExtensionsForLearnerAsync(Id);
             _transfers = await LifecycleService.GetTransfersForLearnerAsync(Id);
             _lostTimes = await LifecycleService.GetLostTimesForLearnerAsync(Id);
             _terminations = await LifecycleService.GetTerminationsForLearnerAsync(Id);
@@ -1266,6 +1435,86 @@ else
         catch (Exception ex)
         {
             Snackbar.Add($"Error generating agreement: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DownloadExtensionAddendumPdf(int extensionId)
+    {
+        try
+        {
+            var bytes = await PdfService.GenerateLearnerAddendumPdfAsync(extensionId);
+            var base64 = Convert.ToBase64String(bytes);
+            var filename = $"Addendum_Extension_{_learner.LearnerContractNumber ?? "LRN-" + Id}_{extensionId}.pdf";
+            await JsRuntime.InvokeVoidAsync("downloadFileFromBytes", filename, "application/pdf", base64);
+            Snackbar.Add("Addendum to Agreement (Extension) generated successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating addendum: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DownloadLpmFm005Pdf(int transferId)
+    {
+        try
+        {
+            var bytes = await PdfService.GenerateLpmFm005TransferFormPdfAsync(transferId);
+            var base64 = Convert.ToBase64String(bytes);
+            var filename = $"LPM_FM_005_Transfer_{_learner.LearnerContractNumber ?? "LRN-" + Id}_{transferId}.pdf";
+            await JsRuntime.InvokeVoidAsync("downloadFileFromBytes", filename, "application/pdf", base64);
+            Snackbar.Add("LPM-FM-005 Transfer Application form generated successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating transfer form: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DownloadLpmTp010Pdf(int terminationId)
+    {
+        try
+        {
+            var bytes = await PdfService.GenerateLpmTp010MutualTerminationLetterPdfAsync(terminationId);
+            var base64 = Convert.ToBase64String(bytes);
+            var filename = $"LPM_TP_010_Mutual_Termination_{_learner.LearnerContractNumber ?? "LRN-" + Id}_{terminationId}.pdf";
+            await JsRuntime.InvokeVoidAsync("downloadFileFromBytes", filename, "application/pdf", base64);
+            Snackbar.Add("LPM-TP-010 Mutual Termination letter generated successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating mutual termination letter: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DownloadChecklist036Pdf(int terminationId)
+    {
+        try
+        {
+            var bytes = await PdfService.GenerateChecklist036InvestigationPdfAsync(terminationId);
+            var base64 = Convert.ToBase64String(bytes);
+            var filename = $"Checklist_036_Investigation_{_learner.LearnerContractNumber ?? "LRN-" + Id}_{terminationId}.pdf";
+            await JsRuntime.InvokeVoidAsync("downloadFileFromBytes", filename, "application/pdf", base64);
+            Snackbar.Add("Checklist 036 Investigation Report generated successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating checklist 036: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DownloadTerminationDecisionPdf(int terminationId)
+    {
+        try
+        {
+            var bytes = await PdfService.GenerateTerminationDecisionLetterPdfAsync(terminationId);
+            var base64 = Convert.ToBase64String(bytes);
+            var filename = $"ETQA_Termination_Decision_{_learner.LearnerContractNumber ?? "LRN-" + Id}_{terminationId}.pdf";
+            await JsRuntime.InvokeVoidAsync("downloadFileFromBytes", filename, "application/pdf", base64);
+            Snackbar.Add("ETQA Review Committee Decision letter generated successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating decision letter: {ex.Message}", Severity.Error);
         }
     }
 
