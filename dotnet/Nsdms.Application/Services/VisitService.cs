@@ -34,16 +34,7 @@ public class VisitService : IVisitService
         var contactExists = await db.People.AnyAsync(p => p.Id == v.ContactPersonId);
         if (!contactExists)
         {
-            var newContact = new Person
-            {
-                FirstName = "Primary",
-                LastName = "Contact",
-                Email = "contact@employer.co.za",
-                PhoneNumber = "011-555-0100"
-            };
-            db.People.Add(newContact);
-            await db.SaveChangesAsync();
-            v.ContactPersonId = newContact.Id;
+            throw new ArgumentException($"The selected Contact Person (ID: {v.ContactPersonId}) does not exist in the Person registry. A verified contact person must be selected.");
         }
 
         if (v.Id == 0)

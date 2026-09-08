@@ -287,7 +287,14 @@ else
 
             <MudSelect T="string" @bind-Value="_adjudicationOutcome" Label="Adjudication Determination" Variant="Variant.Outlined" Class="mb-3">
                 <MudSelectItem Value="@("RECOMMEND_INSPECTION")">Stage 1: Recommend for Physical Site Inspection</MudSelectItem>
-                <MudSelectItem Value="@("COMMITTEE_APPROVE")">Stage 3: ETQA Review Committee Full Approval (Accredited)</MudSelectItem>
+                @if (AccreditationStreamType.IsQctoOrSecondary(_selectedProvider.AccreditationStream))
+                {
+                    <MudSelectItem Value="@("COMMITTEE_APPROVE")">Stage 3: Verify &amp; Endorse QCTO / Secondary Credentials</MudSelectItem>
+                }
+                else
+                {
+                    <MudSelectItem Value="@("COMMITTEE_APPROVE")">Stage 3: ETQA Review Committee Full Approval (Accredited)</MudSelectItem>
+                }
                 <MudSelectItem Value="@("REJECT_RESUBMISSION")">Stage 3: Return for Candidate Resubmission (Non-Terminal)</MudSelectItem>
                 <MudSelectItem Value="@("REJECT_TERMINAL")">Stage 3: Terminal Application Rejection (Final)</MudSelectItem>
             </MudSelect>
@@ -455,16 +462,44 @@ else
             }
             else if (_adjudicationOutcome == "COMMITTEE_APPROVE")
             {
+                bool isQctoOrSecondary = AccreditationStreamType.IsQctoOrSecondary(_selectedProvider.AccreditationStream);
+
                 _selectedProvider.ProviderStatusCode = "Accredited";
                 _selectedProvider.ProviderStatusId = "01";
                 _selectedProvider.EtqaDecisionNumber = _committeeMinuteNumber;
                 _selectedProvider.EtqaCommitteeDecisionNumber = _committeeMinuteNumber;
                 _selectedProvider.EtqaCommitteeMeetingDate = _committeeMeetingDate;
-                _selectedProvider.AccreditationStartDate = DateTime.UtcNow;
-                _selectedProvider.AccreditationEndDate = DateTime.UtcNow.AddYears(5);
+
+                if (isQctoOrSecondary)
+                {
+                    if (_selectedProvider.QctoAccreditationStartDate.HasValue && _selectedProvider.QctoAccreditationEndDate.HasValue)
+                    {
+                        _selectedProvider.AccreditationStartDate = _selectedProvider.QctoAccreditationStartDate;
+                        _selectedProvider.AccreditationEndDate = _selectedProvider.QctoAccreditationEndDate;
+                    }
+                    else if (_selectedProvider.NambRegistrationStartDate.HasValue && _selectedProvider.NambRegistrationEndDate.HasValue)
+                    {
+                        _selectedProvider.AccreditationStartDate = _selectedProvider.NambRegistrationStartDate;
+                        _selectedProvider.AccreditationEndDate = _selectedProvider.NambRegistrationEndDate;
+                    }
+                }
+                else
+                {
+                    _selectedProvider.AccreditationStartDate ??= DateTime.UtcNow;
+                    _selectedProvider.AccreditationEndDate ??= DateTime.UtcNow.AddYears(5);
+                }
+
                 _selectedProvider.DigitalSecuritySeal = ProviderService.GenerateAccreditationSecuritySeal(_selectedProvider);
                 await ProviderService.UpdateAsync(_selectedProvider, "REVIEW_COMMITTEE");
-                Snackbar.Add($"Accreditation ratified under resolution {_committeeMinuteNumber}. Certificate unlocked.", Severity.Success);
+
+                if (isQctoOrSecondary)
+                {
+                    Snackbar.Add($"QCTO credentials endorsed under resolution {_committeeMinuteNumber}. Endorsement letter unlocked.", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add($"Accreditation ratified under resolution {_committeeMinuteNumber}. Certificate unlocked.", Severity.Success);
+                }
             }
             else if (_adjudicationOutcome == "REJECT_RESUBMISSION")
             {

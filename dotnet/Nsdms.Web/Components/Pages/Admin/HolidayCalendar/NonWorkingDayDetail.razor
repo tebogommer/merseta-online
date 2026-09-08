@@ -1,0 +1,769 @@
+@page "/admin/non-working-days/{id:int}"
+@page "/admin/non-working-days/{id:int}/edit"
+@page "/admin/non-working-days/create"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using System.Text.Json
+@inject IHolidayClosureService ClosureService
+@inject IWorkingDayCalculationEngine CalculationEngine
+@inject IAuditService AuditService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A3 (Entity Detail) & A4 (Form/Editor)
+  Governs national statutory public holidays and merSETA year-end shutdowns with SLA impact simulation.
+*@
+
+<PageTitle>@(IsCreateMode ? "Add Holiday or Closure" : $"{_model.Name} - Details") | merSETA NSDMS</PageTitle>
+
+<div class="non-working-day-detail-container" style="max-width: 1600px; margin: 0 auto;">
+    <!-- Sticky Top Bar -->
+    <MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3 bg-surface" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+        <div class="d-flex align-center gap-3">
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Color="Color.Default"
+                       OnClick="HandleBackNavigation"
+                       aria-label="Back to Holidays List">
+                Back to list
+            </MudButton>
+            <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+            <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
+                <MudIcon Icon="@Icons.Material.Filled.EventBusy" Size="Size.Small" />
+            </MudAvatar>
+            <div>
+                <div class="d-flex align-center gap-2">
+                    <MudText Typo="Typo.h5" Class="font-weight-bold">
+                        @(IsCreateMode ? "Add new closure or holiday" : _model.Name)
+                    </MudText>
+                    @if (!IsCreateMode)
+                    {
+                        <MudChip T="string" Color="@GetStatusBadgeColor(_model.StatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                            @_model.StatusCode
+                        </MudChip>
+                        <MudChip T="string" Color="@GetTypeBadgeColor(_model.TypeCode)" Size="Size.Small" Variant="Variant.Outlined">
+                            @NonWorkingDayType.GetDisplayTitle(_model.TypeCode)
+                        </MudChip>
+                        @if (_isEditMode)
+                        {
+                            <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Outlined">
+                                Editing
+                            </MudChip>
+                        }
+                    }
+                </div>
+                @if (!IsCreateMode)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Period: <strong>@_model.StartDate.ToString("dd MMM yyyy")</strong>
+                        @if (_model.IsDateSpan)
+                        {
+                            <span> to <strong>@_model.EndDate.ToString("dd MMM yyyy")</strong></span>
+                        }
+                        | Spanning: <strong>@_model.TotalDays @(_model.TotalDays == 1 ? "day" : "days")</strong>
+                        | Workflow SLA: <strong>@(_model.AffectsSla ? "Excluded (Pauses SLAs)" : "Calendar only")</strong>
+                    </MudText>
+                }
+            </div>
+        </div>
+
+        <div class="d-flex align-center gap-2">
+            @if (_isEditMode)
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Cancel"
+                           OnClick="CancelEdit"
+                           Disabled="@_saving">
+                    Cancel
+                </MudButton>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           OnClick="SaveClosureAsync"
+                           Disabled="@(_saving || !IsFormValid())">
+                    @(_saving ? "Saving..." : (IsCreateMode ? "Create record" : "Save changes"))
+                </MudButton>
+            }
+            else
+            {
+                @if (_model.StatusCode == NonWorkingDayStatus.Draft)
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
+                               StartIcon="@Icons.Material.Filled.CheckCircle"
+                               OnClick="HandleApproveAsync">
+                        Approve closure
+                    </MudButton>
+                }
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           OnClick="HandleDeleteAsync">
+                    Delete
+                </MudButton>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           OnClick="EnterEditMode">
+                    Edit record
+                </MudButton>
+            }
+        </div>
+    </MudPaper>
+
+    <!-- Main Navigation Tabs -->
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Surface" @bind-ActivePanelIndex="_activeTab">
+        <!-- Tab 1: General Details -->
+        <MudTabPanel Text="General details" Icon="@Icons.Material.Filled.Info">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudCard Elevation="1" Class="rounded-lg mb-4">
+                        <MudCardHeader>
+                            <CardHeaderAvatar>
+                                <MudAvatar Color="Color.Primary" Size="Size.Small">
+                                    <MudIcon Icon="@Icons.Material.Filled.EventNote" />
+                                </MudAvatar>
+                            </CardHeaderAvatar>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Holiday &amp; Institutional Closure Definition</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Official designation, typology, and effective calendar span</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            @if (_isEditMode)
+                            {
+                                <MudGrid>
+                                    <MudItem xs="12" md="6">
+                                        <MudTextField Label="Holiday or closure designation"
+                                                      @bind-Value="_editDto.Name"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Placeholder="e.g. merSETA Annual Year-End Shutdown 2026/2027"
+                                                      Required="true" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudSelect T="string"
+                                                   Label="Typology classification"
+                                                   @bind-Value="_editDto.TypeCode"
+                                                   Variant="Variant.Outlined"
+                                                   Margin="Margin.Dense"
+                                                   Dense="true"
+                                                   Required="true">
+                                            <MudSelectItem Value="@(NonWorkingDayType.NationalStatutory)">National statutory public holiday</MudSelectItem>
+                                            <MudSelectItem Value="@(NonWorkingDayType.InstitutionalShutdown)">merSETA annual year-end shutdown</MudSelectItem>
+                                            <MudSelectItem Value="@(NonWorkingDayType.AdHocGazetted)">Ad-hoc gazetted public holiday</MudSelectItem>
+                                            <MudSelectItem Value="@(NonWorkingDayType.SpecialClosure)">Special administrative closure</MudSelectItem>
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <MudDatePicker Label="Start date (inclusive)"
+                                                       Date="@_editDto.StartDate"
+                                                       DateChanged="OnStartDateChanged"
+                                                       Variant="Variant.Outlined"
+                                                       Margin="Margin.Dense"
+                                                       DateFormat="yyyy-MM-dd"
+                                                       Required="true" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <MudDatePicker Label="End date (inclusive)"
+                                                       Date="@_editDto.EndDate"
+                                                       DateChanged="OnEndDateChanged"
+                                                       Variant="Variant.Outlined"
+                                                       Margin="Margin.Dense"
+                                                       DateFormat="yyyy-MM-dd"
+                                                       Required="true" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <MudNumericField Label="Calendar year"
+                                                         @bind-Value="_editDto.CalendarYear"
+                                                         Variant="Variant.Outlined"
+                                                         Margin="Margin.Dense"
+                                                         Min="2020"
+                                                         Max="2040"
+                                                         Required="true" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <MudSelect T="string"
+                                                   Label="Operational status"
+                                                   @bind-Value="_editDto.StatusCode"
+                                                   Variant="Variant.Outlined"
+                                                   Margin="Margin.Dense"
+                                                   Dense="true">
+                                            <MudSelectItem Value="@(NonWorkingDayStatus.Approved)">Approved (Active in SLA engine)</MudSelectItem>
+                                            <MudSelectItem Value="@(NonWorkingDayStatus.Draft)">Draft (Pending confirmation)</MudSelectItem>
+                                            <MudSelectItem Value="@(NonWorkingDayStatus.Inactive)">Inactive</MudSelectItem>
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudTextField Label="Authority, circular or gazette reference"
+                                                      @bind-Value="_editDto.GazetteOrResolutionRef"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Placeholder="e.g. Act 36 of 1994, merSETA Circular 2026-12" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <MudSwitch T="bool"
+                                                   @bind-Value="_editDto.AffectsSla"
+                                                   Label="Excludes from workflow SLAs"
+                                                   Color="Color.Primary" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <MudSwitch T="bool"
+                                                   @bind-Value="_editDto.IsRecurringAnnually"
+                                                   Label="Recurs annually"
+                                                   Color="Color.Secondary" />
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudTextField Label="Administrative description / operational notes"
+                                                      @bind-Value="_editDto.Description"
+                                                      Variant="Variant.Outlined"
+                                                      Lines="3"
+                                                      Margin="Margin.Dense"
+                                                      Placeholder="Provide context, justification or operational directives regarding this closure..." />
+                                    </MudItem>
+                                </MudGrid>
+                            }
+                            else
+                            {
+                                <MudGrid>
+                                    <MudItem xs="12" md="6">
+                                        <ReadOnlyField Label="Holiday or closure title" Value="@_model.Name" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <ReadOnlyField Label="Typology" Value="@NonWorkingDayType.GetDisplayTitle(_model.TypeCode)" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <ReadOnlyField Label="Start date" Value="@_model.StartDate.ToString("dd MMMM yyyy (dddd)")" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <ReadOnlyField Label="End date" Value="@_model.EndDate.ToString("dd MMMM yyyy (dddd)")" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <ReadOnlyField Label="Calendar days spanned" Value="@($"{_model.TotalDays} {(_model.TotalDays == 1 ? "day" : "days")}")" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <ReadOnlyField Label="Calendar year" Value="@_model.CalendarYear.ToString()" IsMonospace="true" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <ReadOnlyField Label="Statutory authority / resolution" Value="@(!string.IsNullOrWhiteSpace(_model.GazetteOrResolutionRef) ? _model.GazetteOrResolutionRef : "—")" IsMonospace="true" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <ReadOnlyField Label="Workflow SLA governance" Value="@(_model.AffectsSla ? "Yes — Excluded from SLA countdowns" : "No — Informational calendar only")" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <ReadOnlyField Label="Recurring annually" Value="@(_model.IsRecurringAnnually ? "Yes" : "No")" />
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <ReadOnlyField Label="Administrative description" Value="@(!string.IsNullOrWhiteSpace(_model.Description) ? _model.Description : "No description recorded.")" />
+                                    </MudItem>
+                                </MudGrid>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudTabPanel>
+
+        <!-- Tab 2: SLA Impact Simulator -->
+        <MudTabPanel Text="SLA impact simulator" Icon="@Icons.Material.Filled.Speed">
+            <MudCard Elevation="1" Class="rounded-lg mb-4">
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Color="Color.Success" Size="Size.Small">
+                            <MudIcon Icon="@Icons.Material.Filled.Calculate" />
+                        </MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Workflow SLA Countdown Simulator</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Test and verify how this closure interacts with weekends, statutory public holidays, and officer SLA deadlines
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid Class="mb-4 align-center">
+                        <MudItem xs="12" sm="4">
+                            <MudDatePicker Label="Simulation start date"
+                                           Date="@_simulationStartDate"
+                                           DateChanged="OnSimulationStartDateChanged"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           DateFormat="yyyy-MM-dd" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudNumericField Label="Statutory business days duration"
+                                             @bind-Value="_simulationDays"
+                                             Variant="Variant.Outlined"
+                                             Margin="Margin.Dense"
+                                             Min="1"
+                                             Max="120"
+                                             HelperText="e.g. 20 (Workplace Approval), 14 (Dispute), 5 (SDP)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.PlayArrow"
+                                       OnClick="RunSimulationAsync"
+                                       Disabled="@_simulating">
+                                @(_simulating ? "Calculating..." : "Run SLA simulation")
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+
+                    @if (_simulationResult != null)
+                    {
+                        <!-- Simulation Summary Cards -->
+                        <MudGrid Class="mb-4">
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudPaper Outlined="true" Class="pa-3 text-center">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Target SLA deadline</MudText>
+                                    <MudText Typo="Typo.h6" Class="font-weight-bold text-success font-mono">
+                                        @_simulationResult.CalculatedDueDate.ToString("dd MMM yyyy (dddd)")
+                                    </MudText>
+                                </MudPaper>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudPaper Outlined="true" Class="pa-3 text-center">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total calendar days elapsed</MudText>
+                                    <MudText Typo="Typo.h6" Class="font-weight-bold">
+                                        @_simulationResult.TotalCalendarDaysSpanned days
+                                    </MudText>
+                                </MudPaper>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudPaper Outlined="true" Class="pa-3 text-center">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Weekends skipped</MudText>
+                                    <MudText Typo="Typo.h6" Class="font-weight-bold text-info">
+                                        @_simulationResult.WeekendDaysCount days
+                                    </MudText>
+                                </MudPaper>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudPaper Outlined="true" Class="pa-3 text-center">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Closures &amp; holidays skipped</MudText>
+                                    <MudText Typo="Typo.h6" Class="font-weight-bold text-warning">
+                                        @(_simulationResult.StatutoryHolidaysCount + _simulationResult.InstitutionalClosuresCount) days
+                                    </MudText>
+                                </MudPaper>
+                            </MudItem>
+                        </MudGrid>
+
+                        <!-- Day-by-Day Trajectory Table -->
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-2">Day-by-day countdown trajectory</MudText>
+                        <MudTable Items="@_simulationResult.Trajectory" Hover="true" Dense="true" Striped="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Day</MudTh>
+                                <MudTh>Calendar date</MudTh>
+                                <MudTh>Day of week</MudTh>
+                                <MudTh>Working day?</MudTh>
+                                <MudTh>Remaining business days</MudTh>
+                                <MudTh>Status / skip explanation</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Day">
+                                    <span class="font-mono">#@context.DayIndex</span>
+                                </MudTd>
+                                <MudTd DataLabel="Calendar date">
+                                    <span class="font-mono">@context.Date.ToString("yyyy-MM-dd")</span>
+                                </MudTd>
+                                <MudTd DataLabel="Day of week">@context.DayOfWeek</MudTd>
+                                <MudTd DataLabel="Working day?">
+                                    @if (context.IsWorkingDay)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Working day</MudChip>
+                                    }
+                                    else
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">Skipped</MudChip>
+                                    }
+                                </MudTd>
+                                <MudTd DataLabel="Remaining business days">
+                                    <span class="font-mono font-weight-bold">@context.RemainingBusinessDays</span>
+                                </MudTd>
+                                <MudTd DataLabel="Status / skip explanation">
+                                    @if (!string.IsNullOrWhiteSpace(context.SkipReason))
+                                    {
+                                        <span class="text-secondary font-italic">@context.SkipReason</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-success font-weight-bold">SLA Day Counted</span>
+                                    }
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudTabPanel>
+
+        <!-- Tab 3: Audited Change Log -->
+        <MudTabPanel Text="Audited change log" Icon="@Icons.Material.Filled.History">
+            <MudCard Elevation="1" Class="rounded-lg">
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Color="Color.Info" Size="Size.Small">
+                            <MudIcon Icon="@Icons.Material.Filled.Security" />
+                        </MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Audited Change Log</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Immutable double-write audit trail of all creations, updates, approvals, and deletions</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (_auditLogs.Any())
+                    {
+                        <MudTimeline TimelinePosition="TimelinePosition.Start">
+                            @foreach (var log in _auditLogs.OrderByDescending(l => l.Timestamp))
+                            {
+                                <MudTimelineItem Color="@GetAuditTimelineColor(log.Action)" Size="Size.Small">
+                                    <ItemContent>
+                                        <MudPaper Elevation="0" Class="pa-3 mb-2 rounded border-solid" style="border-width: 1px; border-color: var(--mud-palette-lines-default);">
+                                            <div class="d-flex justify-space-between align-center mb-1">
+                                                <MudText Typo="Typo.subtitle2" Class="font-weight-bold">
+                                                    @log.Action
+                                                </MudText>
+                                                <span class="font-mono text-secondary" style="font-size: 0.8rem;">
+                                                    @log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss") UTC
+                                                </span>
+                                            </div>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-1">
+                                                Actor: <strong>@(log.Username ?? "SYSTEM")</strong>
+                                            </MudText>
+                                            @if (!string.IsNullOrWhiteSpace(log.Details))
+                                            {
+                                                <div class="pa-2 rounded bg-surface mt-1" style="max-height: 120px; overflow-y: auto;">
+                                                    <pre class="font-mono text-secondary" style="font-size: 0.75rem; margin: 0; white-space: pre-wrap;">@log.Details</pre>
+                                                </div>
+                                            }
+                                        </MudPaper>
+                                    </ItemContent>
+                                </MudTimelineItem>
+                            }
+                        </MudTimeline>
+                    }
+                    else
+                    {
+                        <div class="pa-6 text-center">
+                            <MudIcon Icon="@Icons.Material.Filled.History" Color="Color.Secondary" Size="Size.Large" Class="mb-2" />
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No audited changes recorded for this record yet.</MudText>
+                        </div>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudTabPanel>
+    </MudTabs>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private bool IsCreateMode => Navigation.Uri.EndsWith("/create", StringComparison.OrdinalIgnoreCase);
+    private bool _isEditMode = false;
+    private bool _saving = false;
+    private bool _simulating = false;
+    private int _activeTab = 0;
+
+    private NonWorkingDay _model = new();
+    private NonWorkingDayDto _editDto = new();
+    private List<AuditLogEntryDto> _auditLogs = new();
+
+    // SLA Simulator Fields
+    private DateTime? _simulationStartDate = new DateTime(2026, 12, 15);
+    private int _simulationDays = 20;
+    private SlaImpactSimulationResultDto? _simulationResult;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _isEditMode = IsCreateMode || Navigation.Uri.EndsWith("/edit", StringComparison.OrdinalIgnoreCase);
+
+        if (IsCreateMode)
+        {
+            _model = new NonWorkingDay
+            {
+                Name = string.Empty,
+                TypeCode = NonWorkingDayType.NationalStatutory,
+                StartDate = DateTime.UtcNow.Date,
+                EndDate = DateTime.UtcNow.Date,
+                CalendarYear = DateTime.UtcNow.Year,
+                AffectsSla = true,
+                StatusCode = NonWorkingDayStatus.Approved,
+                IsActive = true
+            };
+            _editDto = new NonWorkingDayDto
+            {
+                Name = string.Empty,
+                TypeCode = NonWorkingDayType.NationalStatutory,
+                StartDate = DateTime.UtcNow.Date,
+                EndDate = DateTime.UtcNow.Date,
+                CalendarYear = DateTime.UtcNow.Year,
+                AffectsSla = true,
+                StatusCode = NonWorkingDayStatus.Approved,
+                IsActive = true
+            };
+        }
+        else if (Id > 0)
+        {
+            await LoadRecordAsync();
+        }
+    }
+
+    private async Task LoadRecordAsync()
+    {
+        try
+        {
+            var found = await ClosureService.GetByIdAsync(Id);
+            if (found == null)
+            {
+                Snackbar.Add($"Holiday / closure record with ID {Id} not found.", Severity.Error);
+                Navigation.NavigateTo("/admin/non-working-days");
+                return;
+            }
+
+            _model = found;
+            _editDto = new NonWorkingDayDto
+            {
+                Name = _model.Name,
+                TypeCode = _model.TypeCode,
+                StartDate = _model.StartDate,
+                EndDate = _model.EndDate,
+                CalendarYear = _model.CalendarYear,
+                AffectsSla = _model.AffectsSla,
+                IsRecurringAnnually = _model.IsRecurringAnnually,
+                GazetteOrResolutionRef = _model.GazetteOrResolutionRef,
+                Description = _model.Description,
+                StatusCode = _model.StatusCode,
+                IsActive = _model.IsActive
+            };
+
+            // Load audit logs
+            var logs = await AuditService.GetLogsForEntityAsync("NonWorkingDay", Id);
+            _auditLogs = logs.Select(l => new AuditLogEntryDto
+            {
+                Action = l.ActionName,
+                Timestamp = l.Timestamp,
+                Username = l.Actor,
+                Details = l.MetadataJson
+            }).ToList();
+
+            // Set default simulation start date around this record's start date
+            _simulationStartDate = _model.StartDate.AddDays(-5);
+            await RunSimulationAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading record: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void EnterEditMode()
+    {
+        _isEditMode = true;
+        _activeTab = 0;
+        Navigation.NavigateTo($"/admin/non-working-days/{Id}/edit");
+        StateHasChanged();
+    }
+
+    private void CancelEdit()
+    {
+        if (IsCreateMode)
+        {
+            Navigation.NavigateTo("/admin/non-working-days");
+        }
+        else
+        {
+            _isEditMode = false;
+            Navigation.NavigateTo($"/admin/non-working-days/{Id}");
+            StateHasChanged();
+        }
+    }
+
+    private void HandleBackNavigation()
+    {
+        Navigation.NavigateTo("/admin/non-working-days");
+    }
+
+    private void OnStartDateChanged(DateTime? newStart)
+    {
+        if (newStart.HasValue)
+        {
+            _editDto.StartDate = newStart.Value.Date;
+            if (_editDto.EndDate < _editDto.StartDate)
+            {
+                _editDto.EndDate = _editDto.StartDate;
+            }
+            _editDto.CalendarYear = _editDto.StartDate.Year;
+        }
+    }
+
+    private void OnEndDateChanged(DateTime? newEnd)
+    {
+        if (newEnd.HasValue)
+        {
+            _editDto.EndDate = newEnd.Value.Date;
+            if (_editDto.EndDate < _editDto.StartDate)
+            {
+                _editDto.StartDate = _editDto.EndDate;
+            }
+        }
+    }
+
+    private void OnSimulationStartDateChanged(DateTime? date)
+    {
+        _simulationStartDate = date;
+    }
+
+    private bool IsFormValid()
+    {
+        return !string.IsNullOrWhiteSpace(_editDto.Name) &&
+               _editDto.EndDate >= _editDto.StartDate &&
+               _editDto.CalendarYear >= 2020;
+    }
+
+    private async Task SaveClosureAsync()
+    {
+        if (!IsFormValid())
+        {
+            Snackbar.Add("Please complete all required fields correctly.", Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+            var username = auth.User.Identity?.Name ?? "AdminUser";
+
+            if (IsCreateMode)
+            {
+                var created = await ClosureService.CreateAsync(_editDto, username);
+                Snackbar.Add($"Holiday / closure '{created.Name}' created successfully.", Severity.Success);
+                Navigation.NavigateTo($"/admin/non-working-days/{created.Id}");
+            }
+            else
+            {
+                var updated = await ClosureService.UpdateAsync(Id, _editDto, username);
+                Snackbar.Add($"Holiday / closure '{updated.Name}' saved successfully.", Severity.Success);
+                _isEditMode = false;
+                Navigation.NavigateTo($"/admin/non-working-days/{updated.Id}");
+                await LoadRecordAsync();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving closure: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task HandleApproveAsync()
+    {
+        try
+        {
+            var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+            var username = auth.User.Identity?.Name ?? "AdminChecker";
+            await ClosureService.ApproveAsync(Id, username);
+            Snackbar.Add($"Approved closure '{_model.Name}' successfully.", Severity.Success);
+            await LoadRecordAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error approving closure: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task HandleDeleteAsync()
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Confirm Deletion" },
+            { x => x.Consequence, $"Are you sure you want to delete '{_model.Name}'? This action is tracked in the audited change log." },
+            { x => x.ConfirmLabel, "Delete closure" },
+            { x => x.IsDestructive, true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Deletion", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            try
+            {
+                var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+                var username = auth.User.Identity?.Name ?? "AdminUser";
+                await ClosureService.DeleteAsync(Id, username);
+                Snackbar.Add($"Record '{_model.Name}' deleted successfully.", Severity.Success);
+                Navigation.NavigateTo("/admin/non-working-days");
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting record: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task RunSimulationAsync()
+    {
+        if (!_simulationStartDate.HasValue || _simulationDays <= 0) return;
+
+        _simulating = true;
+        try
+        {
+            _simulationResult = await CalculationEngine.SimulateSlaAsync(_simulationStartDate.Value, _simulationDays);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error simulating SLA: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _simulating = false;
+        }
+    }
+
+    private Color GetStatusBadgeColor(string status) => status switch
+    {
+        NonWorkingDayStatus.Approved => Color.Success,
+        NonWorkingDayStatus.Draft => Color.Warning,
+        NonWorkingDayStatus.Inactive => Color.Default,
+        _ => Color.Default
+    };
+
+    private Color GetTypeBadgeColor(string typeCode) => typeCode switch
+    {
+        NonWorkingDayType.NationalStatutory => Color.Info,
+        NonWorkingDayType.InstitutionalShutdown => Color.Warning,
+        NonWorkingDayType.AdHocGazetted => Color.Primary,
+        NonWorkingDayType.SpecialClosure => Color.Secondary,
+        _ => Color.Default
+    };
+
+    private Color GetAuditTimelineColor(string action)
+    {
+        if (action.Contains("Create", StringComparison.OrdinalIgnoreCase)) return Color.Success;
+        if (action.Contains("Approve", StringComparison.OrdinalIgnoreCase)) return Color.Info;
+        if (action.Contains("Update", StringComparison.OrdinalIgnoreCase)) return Color.Warning;
+        if (action.Contains("Delete", StringComparison.OrdinalIgnoreCase)) return Color.Error;
+        return Color.Primary;
+    }
+
+    private class AuditLogEntryDto
+    {
+        public string Action { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+        public string? Username { get; set; }
+        public string? Details { get; set; }
+    }
+}

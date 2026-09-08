@@ -279,6 +279,13 @@ builder.Services.AddScoped<IWorkflowGovernanceService, WorkflowGovernanceService
 // MoA Template & Reusable Clause Engine (Option A)
 builder.Services.AddScoped<IMoaTemplateEngineService, MoaTemplateEngineService>();
 
+// Hierarchical Fiscal Calendar & Quarters Engine
+builder.Services.AddScoped<IFiscalCalendarService, FiscalCalendarService>();
+
+// Enterprise Holiday & Institutional Closure Hub (Option A)
+builder.Services.AddScoped<IWorkingDayCalculationEngine, WorkingDayCalculationEngine>();
+builder.Services.AddScoped<IHolidayClosureService, HolidayClosureService>();
+
 // BankservAfrica AVS Service (Option C)
 builder.Services.AddScoped<IBankservAvsService, Nsdms.Infrastructure.Services.BankservAvsService>();
 
@@ -675,10 +682,14 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase34SdpAccreditationGovernance", () => Phase34SdpAccreditationGovernanceMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase35AssessmentAndModerationGovernance", () => Phase35AssessmentAndModerationGovernanceMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase36SdpLifecycleAndDisciplinary", () => Phase36SdpLifecycleAndDisciplinaryMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase37QctoAccreditationGovernance", () => Phase37QctoAccreditationGovernanceMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase36PortfolioDispatch", () => Phase11PortfolioDispatchMigrator.MigratePortfolioDispatchSchemaAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase37ZoningAndCaseload", () => Phase12ZoningAndCaseloadMigrator.MigrateZoningAndCaseloadSchemaAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase38EnterpriseSchemaFix", () => Phase38EnterpriseSchemaFixMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase12BusinessRuleEngine", () => Phase12BusinessRuleEngineMigrator.MigrateBusinessRuleSchemaAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase39FiscalCalendar", () => Phase13FiscalCalendarMigrator.MigrateFiscalCalendarSchemaAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase40HolidayAndClosure", () => Phase14HolidayAndClosureMigrator.MigrateHolidayAndClosureSchemaAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase41WspExtensionRequest", () => Phase15WspExtensionRequestMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
     RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
     RunMigrator("SystemConfigs", () => scope.ServiceProvider.GetRequiredService<ISystemConfigurationService>().SeedDefaultConfigsAsync().GetAwaiter().GetResult());

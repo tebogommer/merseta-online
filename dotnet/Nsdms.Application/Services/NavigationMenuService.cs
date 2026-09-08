@@ -1835,6 +1835,36 @@ public class NavigationMenuService : INavigationMenuService
             },
             new()
             {
+                Id = "nav-admin-financial-years",
+                Title = "Financial years & quarters",
+                Href = "admin/financial-years",
+                Icon = "CalendarMonth",
+                Category = "System administration",
+                Description = "Statutory financial scheme years, custom quarter date boundaries, and working day projections",
+                RequiredModule = AppPermissions.ModuleSystem,
+                RequiredAction = AppPermissions.ActionManage,
+                RequiredRoles = new() { "SuperAdmin", "Admin" },
+                PersonaTags = new() { "Admin", "Finance" },
+                DisplayOrder = 3,
+                Keywords = new() { "financial year", "fiscal", "quarters", "working days", "calendar", "fin year" }
+            },
+            new()
+            {
+                Id = "nav-admin-non-working-days",
+                Title = "Holidays & institutional closures",
+                Href = "admin/non-working-days",
+                Icon = "EventBusy",
+                Category = "System administration",
+                Description = "National statutory holidays, merSETA year-end shutdowns, and ad-hoc institutional closure periods affecting workflow SLAs",
+                RequiredModule = AppPermissions.ModuleSystem,
+                RequiredAction = AppPermissions.ActionManage,
+                RequiredRoles = new() { "SuperAdmin", "Admin" },
+                PersonaTags = new() { "Admin", "Finance", "CLO", "Compliance" },
+                DisplayOrder = 4,
+                Keywords = new() { "holidays", "institutional closures", "shutdown", "sla", "non-working days", "public holidays", "annual shutdown" }
+            },
+            new()
+            {
                 Id = "nav-admin-roles",
                 Title = "Roles & permissions",
                 Href = "admin/roles",

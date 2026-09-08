@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Interfaces;
 using Nsdms.Domain.Entities;
 using System.Globalization;
 
@@ -66,11 +67,13 @@ public class LevyService : ILevyService
 
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
+    private readonly ISystemConfigurationService? _configService;
 
-    public LevyService(INsdmsDbContextFactory contextFactory, IAuditService audit)
+    public LevyService(INsdmsDbContextFactory contextFactory, IAuditService audit, ISystemConfigurationService? configService = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
+        _configService = configService;
     }
 
     /// <summary>
@@ -84,14 +87,20 @@ public class LevyService : ILevyService
             return new StatutoryLevySplit(0, 0, 0, 0, 0, 0);
         }
 
+        decimal mgRate = MandatoryRate;
+        decimal dgRate = DiscretionaryRate;
+        decimal adminRate = AdminRate;
+        decimal qctoRate = QctoRate;
+
         // Total statutory SETA portion is exactly 80.5% (20% + 49.5% + 10.5% + 0.5%)
-        long totalTargetCents = (long)Math.Round(totalLevyAmount * 0.805m * 100m, MidpointRounding.AwayFromZero);
+        decimal totalRate = mgRate + dgRate + adminRate + qctoRate;
+        long totalTargetCents = (long)Math.Round(totalLevyAmount * totalRate * 100m, MidpointRounding.AwayFromZero);
 
         // Calculate unrounded exact cents for each statutory component
-        decimal unroundedMg = totalLevyAmount * 20.0m;
-        decimal unroundedDg = totalLevyAmount * 49.5m;
-        decimal unroundedAdmin = totalLevyAmount * 10.5m;
-        decimal unroundedQcto = totalLevyAmount * 0.5m;
+        decimal unroundedMg = totalLevyAmount * (mgRate * 100m);
+        decimal unroundedDg = totalLevyAmount * (dgRate * 100m);
+        decimal unroundedAdmin = totalLevyAmount * (adminRate * 100m);
+        decimal unroundedQcto = totalLevyAmount * (qctoRate * 100m);
 
         // Base integer floors
         long baseMg = (long)Math.Floor(unroundedMg);

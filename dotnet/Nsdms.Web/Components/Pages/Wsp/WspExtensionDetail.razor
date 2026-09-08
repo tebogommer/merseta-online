@@ -1,0 +1,523 @@
+@page "/wsp/extensions/{Id:int}"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using WspExtensionRequest = Nsdms.Domain.Entities.WspExtensionRequest
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IWspService WspService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A3 (Entity Detail - Statutory Deadline Extension Review Hub)
+  Regulation 4(2) SETA Grant Regulations. Enforces strict Two-Tier Maker-Checker segregation of duties.
+*@
+
+<PageTitle>@(_model?.ApplicationReference ?? "Extension Request") - Details | NSDMS</PageTitle>
+
+@if (_loading)
+{
+    <div class="d-flex justify-center align-center py-12">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else if (_model == null)
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="ma-4">
+        Statutory extension application with ID @Id was not found.
+    </MudAlert>
+}
+else
+{
+    <div style="max-width: 1600px; margin: 0 auto;">
+        <!-- Sticky Top Bar (Clause 11.2) -->
+        <MudPaper Elevation="2"
+                  Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3 bg-surface"
+                  Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+            <div class="d-flex align-center gap-3">
+                <MudButton Variant="Variant.Text"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Color="Color.Default"
+                           OnClick="@(() => NavManager.NavigateTo("/admin/wsp-extensions"))"
+                           aria-label="Back to Extension Requests Queue">
+                    Back to queue
+                </MudButton>
+                <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
+                    <MudIcon Icon="@Icons.Material.Filled.EventBusy" Size="Size.Small" />
+                </MudAvatar>
+                <div>
+                    <div class="d-flex align-center gap-2">
+                        <MudText Typo="Typo.h5" Class="font-weight-bold font-mono">
+                            @_model.ApplicationReference
+                        </MudText>
+                        <MudChip T="string" Color="@GetStatusColor(_model.ApprovalStatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                            @FormatStatus(_model.ApprovalStatusCode)
+                        </MudChip>
+                        <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">
+                            Scheme year @_model.SchemeYear
+                        </MudChip>
+                    </div>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Employer: <strong>@(_model.Organisation?.CompanyName ?? $"Organisation #{_model.OrganisationId}")</strong>
+                        (SDL: <span class="font-mono">@(_model.Organisation?.SdlNumber ?? "N/A")</span>)
+                        | Submitted: <strong>@_model.SubmittedAt.ToString("dd MMM yyyy HH:mm")</strong>
+                        | Requested deadline: <strong>@_model.RequestedExtensionDate.ToString("dd MMM yyyy")</strong>
+                    </MudText>
+                </div>
+            </div>
+
+            <!-- Single Right-Aligned Action Zone -->
+            <div class="d-flex align-center gap-2">
+                @if (_model.ApprovalStatusCode == "PendingReview")
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Error"
+                               StartIcon="@Icons.Material.Filled.Cancel"
+                               OnClick="PromptRejectStage1"
+                               Disabled="_processing">
+                        Reject request
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Info"
+                               StartIcon="@Icons.Material.Filled.ThumbUp"
+                               OnClick="PromptRecommendStage1"
+                               Disabled="_processing">
+                        Recommend for approval
+                    </MudButton>
+                }
+                else if (_model.ApprovalStatusCode == "Recommended")
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Error"
+                               StartIcon="@Icons.Material.Filled.Cancel"
+                               OnClick="PromptRejectStage2"
+                               Disabled="_processing">
+                        Reject application
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
+                               StartIcon="@Icons.Material.Filled.CheckCircle"
+                               OnClick="PromptApproveStage2"
+                               Disabled="_processing">
+                        Executive approve
+                    </MudButton>
+                }
+            </div>
+        </MudPaper>
+
+        <!-- Inline Action Drawers / Form Dialogs -->
+        @if (_showRecommendForm)
+        {
+            <MudCard Elevation="3" Class="pa-4 mb-4 rounded-lg border-2 border-primary">
+                <MudText Typo="Typo.h6" Class="mb-2">
+                    <MudIcon Icon="@Icons.Material.Filled.RateReview" Class="mr-1" />
+                    Stage 1: CLO / CRM compliance recommendation
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                    Record your verification findings and recommend this statutory extension to the Executive Authority.
+                </MudText>
+                <MudTextField T="string"
+                              @bind-Value="_actionComments"
+                              Label="Compliance evaluation comments"
+                              Lines="3"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Placeholder="State whether employer grounds are verified against third-party proof..." />
+                <div class="d-flex justify-end gap-2 mt-3">
+                    <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="@(() => _showRecommendForm = false)">
+                        Cancel
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Info"
+                               StartIcon="@Icons.Material.Filled.Send"
+                               OnClick="ExecuteRecommendAsync"
+                               Disabled="_processing">
+                        @(_processing ? "Processing..." : "Submit recommendation")
+                    </MudButton>
+                </div>
+            </MudCard>
+        }
+
+        @if (_showApproveForm)
+        {
+            <MudCard Elevation="3" Class="pa-4 mb-4 rounded-lg border-2 border-success">
+                <MudText Typo="Typo.h6" Class="mb-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Gavel" Class="mr-1" />
+                    Stage 2: Executive authority final adjudication
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                    In terms of Regulation 4(2), granting an extension pushes the employer's WSP submission deadline up to 31 May.
+                </MudText>
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker Label="Granted submission deadline (Max 31 May)"
+                                       @bind-Date="_grantedExtensionDate"
+                                       MinDate="DateTime.Today"
+                                       MaxDate="@(new DateTime(_model.SchemeYear, 5, 31))"
+                                       Variant="Variant.Outlined"
+                                       DateFormat="yyyy-MM-dd"
+                                       Required="true" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField T="string"
+                                      @bind-Value="_actionComments"
+                                      Label="Executive decision remarks / rationale"
+                                      Lines="3"
+                                      Variant="Variant.Outlined"
+                                      Placeholder="Enter formal adjudication remarks..." />
+                    </MudItem>
+                </MudGrid>
+                <div class="d-flex justify-end gap-2 mt-3">
+                    <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="@(() => _showApproveForm = false)">
+                        Cancel
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
+                               StartIcon="@Icons.Material.Filled.Check"
+                               OnClick="ExecuteApproveAsync"
+                               Disabled="_processing">
+                        @(_processing ? "Granting extension..." : "Confirm executive approval")
+                    </MudButton>
+                </div>
+            </MudCard>
+        }
+
+        @if (_showRejectForm)
+        {
+            <MudCard Elevation="3" Class="pa-4 mb-4 rounded-lg border-2 border-error">
+                <MudText Typo="Typo.h6" Color="Color.Error" Class="mb-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-1" />
+                    Rejection notice
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                    Please provide the statutory reason for rejecting this extension application. This explanation will form part of the audited decision notice.
+                </MudText>
+                <MudTextField T="string"
+                              @bind-Value="_actionComments"
+                              Label="Rejection justification"
+                              Lines="3"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Placeholder="Detail reasons why exceptional circumstances criteria were not satisfied..." />
+                <div class="d-flex justify-end gap-2 mt-3">
+                    <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="@(() => _showRejectForm = false)">
+                        Cancel
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Error"
+                               StartIcon="@Icons.Material.Filled.Block"
+                               OnClick="ExecuteRejectAsync"
+                               Disabled="_processing">
+                        @(_processing ? "Rejecting..." : "Confirm rejection")
+                    </MudButton>
+                </div>
+            </MudCard>
+        }
+
+        <!-- Stacked Master-Detail Tabs (Clause 11.6) -->
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+            <!-- TAB 1: General Application Details (Read-Only) -->
+            <MudTabPanel Text="Application details" Icon="@Icons.Material.Filled.Article">
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" md="6">
+                        <ReadOnlyField Label="Submitting employer organisation"
+                                       Value="@(_model.Organisation?.CompanyName ?? "N/A")" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <ReadOnlyField Label="Skills Development Levy (SDL) number"
+                                       Value="@(_model.Organisation?.SdlNumber ?? "N/A")"
+                                       IsMonospace="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <ReadOnlyField Label="Application tracking reference"
+                                       Value="@_model.ApplicationReference"
+                                       IsMonospace="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <ReadOnlyField Label="Financial scheme year"
+                                       Value="@($"{_model.SchemeYear}/{_model.SchemeYear + 1}")" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <ReadOnlyField Label="Grounds for extension"
+                                       Value="@FormatReasonCode(_model.ReasonCode)" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <ReadOnlyField Label="Requested extension deadline"
+                                       Value="@_model.RequestedExtensionDate.ToString("yyyy-MM-dd")" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <ReadOnlyField Label="Granted submission deadline"
+                                       Value="@(_model.GrantedExtensionDate.HasValue ? _model.GrantedExtensionDate.Value.ToString("yyyy-MM-dd") : "Pending adjudication")" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <ReadOnlyField Label="Comprehensive statutory motivation"
+                                       Value="@_model.StatutoryMotivation" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <ReadOnlyField Label="Supporting evidentiary affidavit / documentation"
+                                       Value="@(!string.IsNullOrWhiteSpace(_model.EvidenceFileName) ? _model.EvidenceFileName : "None attached")" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <ReadOnlyField Label="Statutory compliance declaration"
+                                       Value="@(_model.DeclarationAccepted ? "Accepted under oath (Skills Development Act)" : "Pending")" />
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- TAB 2: Governance, Maker-Checker & Audited Change Log -->
+            <MudTabPanel Text="Maker-checker governance" Icon="@Icons.Material.Filled.Security">
+                <MudGrid Spacing="3">
+                    <!-- Stage 1 Verification Box -->
+                    <MudItem xs="12" md="6">
+                        <MudCard Elevation="1" Class="pa-4 rounded-lg">
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.PersonSearch" Size="Size.Small" Class="mr-1" />
+                                Stage 1: CLO verification &amp; recommendation
+                            </MudText>
+                            <ReadOnlyField Label="Reviewing officer"
+                                           Value="@(_model.ReviewedByUserId ?? "Pending review")" />
+                            <ReadOnlyField Label="Review timestamp"
+                                           Value="@(_model.ReviewedAt.HasValue ? _model.ReviewedAt.Value.ToString("yyyy-MM-dd HH:mm UTC") : "Not recorded")" />
+                            <ReadOnlyField Label="Reviewer observation / comments"
+                                           Value="@(_model.ReviewerComments ?? "No comments logged")" />
+                        </MudCard>
+                    </MudItem>
+
+                    <!-- Stage 2 Executive Adjudication Box -->
+                    <MudItem xs="12" md="6">
+                        <MudCard Elevation="1" Class="pa-4 rounded-lg">
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Small" Class="mr-1" />
+                                Stage 2: Executive authority adjudication
+                            </MudText>
+                            <ReadOnlyField Label="Adjudicating executive authority"
+                                           Value="@(_model.ApprovedByUserId ?? "Pending adjudication")" />
+                            <ReadOnlyField Label="Adjudication timestamp"
+                                           Value="@(_model.ApprovedAt.HasValue ? _model.ApprovedAt.Value.ToString("yyyy-MM-dd HH:mm UTC") : "Not recorded")" />
+                            <ReadOnlyField Label="Executive decision remarks"
+                                           Value="@(_model.ApprovalComments ?? "No remarks logged")" />
+                        </MudCard>
+                    </MudItem>
+
+                    <!-- Governance Invariants Summary -->
+                    <MudItem xs="12">
+                        <MudAlert Severity="@(_model.ApprovalStatusCode == "Approved" ? Severity.Success : Severity.Info)" Variant="Variant.Outlined" Class="rounded-lg">
+                            <MudText Typo="Typo.subtitle2" Class="fw-bold">Statutory Governance &amp; Controls Summary</MudText>
+                            <ul class="mt-1" style="margin-left: 1.25rem;">
+                                <li><strong>Segregation of duties (Maker-Checker):</strong> Reviewer and Approver cannot be the same officer.</li>
+                                <li><strong>Maximum extension boundary:</strong> Extension cannot exceed 31 May in terms of SETA Grant Regulation 4(2).</li>
+                                <li><strong>Audited change log:</strong> All review recommendations and final adjudications are captured in immutable audit logs.</li>
+                            </ul>
+                        </MudAlert>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+        </MudTabs>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private WspExtensionRequest? _model;
+    private bool _loading = true;
+    private bool _processing;
+
+    private bool _showRecommendForm;
+    private bool _showApproveForm;
+    private bool _showRejectForm;
+    private bool _isStage2Reject;
+    private string _actionComments = string.Empty;
+    private DateTime? _grantedExtensionDate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            _loading = true;
+            _model = await WspService.GetExtensionRequestByIdAsync(Id);
+            if (_model != null)
+            {
+                _grantedExtensionDate = _model.GrantedExtensionDate ?? _model.RequestedExtensionDate;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading extension details: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void PromptRecommendStage1()
+    {
+        _actionComments = string.Empty;
+        _showRecommendForm = true;
+        _showApproveForm = false;
+        _showRejectForm = false;
+    }
+
+    private void PromptApproveStage2()
+    {
+        _actionComments = string.Empty;
+        var defaultYear = _model != null ? _model.SchemeYear : DateTime.UtcNow.Year;
+        _grantedExtensionDate = _model != null ? _model.RequestedExtensionDate : new DateTime(defaultYear, 5, 31);
+        _showApproveForm = true;
+        _showRecommendForm = false;
+        _showRejectForm = false;
+    }
+
+    private void PromptRejectStage1()
+    {
+        _actionComments = string.Empty;
+        _isStage2Reject = false;
+        _showRejectForm = true;
+        _showRecommendForm = false;
+        _showApproveForm = false;
+    }
+
+    private void PromptRejectStage2()
+    {
+        _actionComments = string.Empty;
+        _isStage2Reject = true;
+        _showRejectForm = true;
+        _showRecommendForm = false;
+        _showApproveForm = false;
+    }
+
+    private async Task ExecuteRecommendAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_actionComments))
+        {
+            Snackbar.Add("Please provide evaluative comments for the recommendation.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _processing = true;
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.Identity?.Name ?? "CLO_OFFICER";
+
+            await WspService.ReviewExtensionRequestAsync(Id, userId, recommend: true, _actionComments);
+            _showRecommendForm = false;
+            Snackbar.Add("Extension request recommended for Executive approval.", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Action failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _processing = false;
+        }
+    }
+
+    private async Task ExecuteApproveAsync()
+    {
+        if (!_grantedExtensionDate.HasValue)
+        {
+            Snackbar.Add("Please select the granted extension deadline date.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _processing = true;
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.Identity?.Name ?? "EXECUTIVE_OFFICER";
+
+            await WspService.AdjudicateExtensionRequestAsync(Id, userId, approve: true, _grantedExtensionDate.Value, _actionComments);
+            _showApproveForm = false;
+            Snackbar.Add($"Extension application approved. New deadline: {_grantedExtensionDate.Value:yyyy-MM-dd}.", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Approval failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _processing = false;
+        }
+    }
+
+    private async Task ExecuteRejectAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_actionComments))
+        {
+            Snackbar.Add("Please provide a justification for rejection.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _processing = true;
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.Identity?.Name ?? (_isStage2Reject ? "EXECUTIVE_OFFICER" : "CLO_OFFICER");
+
+            if (_isStage2Reject)
+            {
+                await WspService.AdjudicateExtensionRequestAsync(Id, userId, approve: false, null, _actionComments);
+            }
+            else
+            {
+                await WspService.ReviewExtensionRequestAsync(Id, userId, recommend: false, _actionComments);
+            }
+
+            _showRejectForm = false;
+            Snackbar.Add("Extension request has been rejected.", Severity.Info);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Rejection failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _processing = false;
+        }
+    }
+
+    private Color GetStatusColor(string? status) => status switch
+    {
+        "PendingReview" => Color.Warning,
+        "Recommended" => Color.Info,
+        "Approved" => Color.Success,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+
+    private string FormatStatus(string? status) => status switch
+    {
+        "PendingReview" => "Pending review",
+        "Recommended" => "Recommended",
+        "Approved" => "Approved",
+        "Rejected" => "Rejected",
+        _ => status ?? "Unknown"
+    };
+
+    private string FormatReasonCode(string? code) => code switch
+    {
+        "BusinessRescue" => "Business rescue / Formal financial distress",
+        "TechnicalOutage" => "Severe ICT / Network outage",
+        "NaturalDisaster" => "Natural disaster / Force majeure",
+        "IndustrialAction" => "Protracted industrial action / Strike",
+        "OwnershipRestructure" => "Corporate restructuring / Merger",
+        "OtherExceptional" => "Other statutory exceptional circumstances",
+        _ => code ?? "Not specified"
+    };
+}

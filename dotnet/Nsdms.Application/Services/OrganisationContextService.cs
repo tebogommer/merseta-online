@@ -129,21 +129,6 @@ public class OrganisationContextService : IOrganisationContextService
             }
         }
 
-        // Fallback for demo / persona switching if no specific Person link exists in DB
-        if (resultDict.Count == 0 && !string.IsNullOrWhiteSpace(userEmail))
-        {
-            if (userEmail.Contains("toyota", StringComparison.OrdinalIgnoreCase))
-            {
-                var toyota = await db.Organisations.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(o => o.SdlNumber.Contains("700100200") || o.CompanyName.Contains("Toyota"));
-                if (toyota != null)
-                {
-                    var dto = MapBaseDto(toyota);
-                    dto.Roles.Add("Designated SDF & Employer Lead");
-                    dto.IsPrimary = true;
-                    resultDict[toyota.Id] = dto;
-                }
-            }
-        }
 
         // Enrich with recent WSP / Grant status indicators
         foreach (var entry in resultDict.Values)

@@ -686,6 +686,7 @@ public class IdentityService : IIdentityService
         var defaultAccounts = new[]
         {
             new { UserName = "sysadmin@merseta.org.za", Email = "sysadmin@merseta.org.za", Role = "SuperAdmin", SecondRole = "Admin" },
+            new { UserName = "admin.checker@merseta.org.za", Email = "admin.checker@merseta.org.za", Role = "Admin", SecondRole = (string?)null },
             new { UserName = "clo.officer@merseta.org.za", Email = "clo.officer@merseta.org.za", Role = "CLO", SecondRole = (string?)null },
             new { UserName = "sdf.employer@toyota.co.za", Email = "sdf.employer@toyota.co.za", Role = "SDF", SecondRole = (string?)null },
             new { UserName = "finance.officer@merseta.org.za", Email = "finance.officer@merseta.org.za", Role = "FinanceManager", SecondRole = (string?)null },

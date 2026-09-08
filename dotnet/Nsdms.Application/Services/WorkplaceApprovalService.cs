@@ -553,6 +553,10 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         if (existing == null)
             throw new KeyNotFoundException($"WorkplaceApproval with ID {existingApprovalId} not found.");
 
+        var slaDays = _configService != null 
+            ? await _configService.GetValueAsync<int>("WorkplaceApproval:InspectionSlaBusinessDays", 20) 
+            : 20;
+
         var renewal = new WorkplaceApproval
         {
             OrganisationId = existing.OrganisationId,
@@ -571,7 +575,7 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
             HomeSetaAgreementRef = existing.HomeSetaAgreementRef,
             ApprovalStatusCode = "APPLICATION",
             ApprovalNumber = $"WPA-REN-{DateTime.UtcNow.Year}-{existing.Id:D4}",
-            InspectionDueDate = AddBusinessDays(DateTime.UtcNow, 20),
+            InspectionDueDate = AddBusinessDays(DateTime.UtcNow, slaDays),
             CreatedAt = DateTime.UtcNow,
             CreatedBy = currentUsername,
             IsActive = true
@@ -624,18 +628,7 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
 
     public static DateTime AddBusinessDays(DateTime startDate, int businessDays)
     {
-        var current = startDate;
-        while (businessDays > 0)
-        {
-            current = current.AddDays(1);
-            if (current.DayOfWeek != DayOfWeek.Saturday && 
-                current.DayOfWeek != DayOfWeek.Sunday &&
-                !SouthAfricanPublicHolidays.IsPublicHoliday(current))
-            {
-                businessDays--;
-            }
-        }
-        return current;
+        return WorkingDayCalculationEngine.AddBusinessDays(startDate, businessDays);
     }
 
     #region 360-Degree Relational Queries

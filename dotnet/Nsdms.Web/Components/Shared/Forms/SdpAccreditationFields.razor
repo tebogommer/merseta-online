@@ -76,7 +76,7 @@
             </MudItem>
             <MudItem xs="12" md="4">
                 <MudTextField T="string"
-                              Label="Physical training campus address"
+                              Label="Physical delivery site address"
                               Value="@PhysicalAddress"
                               ValueChanged="OnPhysicalAddressChanged"
                               Variant="Variant.Outlined"
@@ -86,7 +86,7 @@
             </MudItem>
             <MudItem xs="12" md="4">
                 <MudTextField T="string?"
-                              Label="Campus GPS coordinates"
+                              Label="Delivery site GPS coordinates"
                               Value="@GpsCoordinates"
                               ValueChanged="OnGpsCoordinatesChanged"
                               Variant="Variant.Outlined"
@@ -106,7 +106,7 @@
             </MudItem>
             <MudItem xs="12" md="4">
                 <MudSelect T="string"
-                           Label="Campus province"
+                           Label="Delivery site province"
                            Value="@Province"
                            ValueChanged="OnProvinceChanged"
                            Variant="Variant.Outlined"
@@ -136,7 +136,7 @@
             </MudItem>
             <MudItem xs="12" md="4">
                 <MudTextField T="string"
-                              Label="Official campus email address"
+                              Label="Official delivery site email address"
                               Value="@ContactEmail"
                               ValueChanged="OnContactEmailChanged"
                               Variant="Variant.Outlined"
@@ -261,6 +261,59 @@
                                   Disabled="@IsReadOnly"
                                   Placeholder="e.g. CHIETA-ACC-2024-0012"
                                   HelperText="Current valid primary accreditation certificate reference" />
+                </MudItem>
+            }
+
+            @if (AccreditationStream == "QctoSkillsDevelopmentProvider")
+            {
+                <MudItem xs="12" md="4">
+                    <MudTextField T="string?"
+                                  Label="QCTO accreditation reference number"
+                                  Value="@QctoAccreditationNumber"
+                                  ValueChanged="OnQctoAccreditationNumberChanged"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  Disabled="@IsReadOnly"
+                                  Placeholder="e.g. QCTOSDP0120230501"
+                                  HelperText="Accreditation credential issued by QCTO under SDA §26I" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField T="string?"
+                                  Label="QCTO allocated centre code"
+                                  Value="@QctoCentreCode"
+                                  ValueChanged="OnQctoCentreCodeChanged"
+                                  Variant="Variant.Outlined"
+                                  Disabled="@IsReadOnly"
+                                  Placeholder="e.g. SDP-CT-094"
+                                  HelperText="QCTO designated delivery centre code" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField T="string?"
+                                  Label="QCTO accreditation letter document reference"
+                                  Value="@QctoLetterAttachmentRef"
+                                  ValueChanged="OnQctoLetterAttachmentRefChanged"
+                                  Variant="Variant.Outlined"
+                                  Disabled="@IsReadOnly"
+                                  Placeholder="e.g. DOC-QCTO-2024-884.pdf"
+                                  HelperText="Official QCTO accreditation confirmation notice" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudDatePicker Label="QCTO accreditation start date"
+                                   Date="@QctoAccreditationStartDate"
+                                   DateChanged="OnQctoAccreditationStartDateChanged"
+                                   Variant="Variant.Outlined"
+                                   Required="true"
+                                   Disabled="@IsReadOnly"
+                                   HelperText="Effective start date per QCTO letter" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudDatePicker Label="QCTO accreditation expiry date"
+                                   Date="@QctoAccreditationEndDate"
+                                   DateChanged="OnQctoAccreditationEndDateChanged"
+                                   Variant="Variant.Outlined"
+                                   Required="true"
+                                   Disabled="@IsReadOnly"
+                                   HelperText="Cycle expiration date per QCTO letter" />
                 </MudItem>
             }
 
@@ -554,38 +607,38 @@
     [Parameter] public string ProviderTypeId { get; set; } = "01";
     [Parameter] public EventCallback<string> ProviderTypeIdChanged { get; set; }
 
-    [Parameter] public string PhysicalAddress { get; set; } = "142 Heidelberg Road, City Deep, Johannesburg";
+    [Parameter] public string PhysicalAddress { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> PhysicalAddressChanged { get; set; }
 
-    [Parameter] public string? GpsCoordinates { get; set; } = "-26.2041, 28.0473";
+    [Parameter] public string? GpsCoordinates { get; set; }
     [Parameter] public EventCallback<string?> GpsCoordinatesChanged { get; set; }
 
-    [Parameter] public string? LocalMunicipality { get; set; } = "City of Johannesburg";
+    [Parameter] public string? LocalMunicipality { get; set; }
     [Parameter] public EventCallback<string?> LocalMunicipalityChanged { get; set; }
 
-    [Parameter] public string Province { get; set; } = "Gauteng";
+    [Parameter] public string Province { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> ProvinceChanged { get; set; }
 
-    [Parameter] public string PrincipalFullName { get; set; } = "Dr. Pieter de Villiers";
+    [Parameter] public string PrincipalFullName { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> PrincipalFullNameChanged { get; set; }
 
-    [Parameter] public string ContactEmail { get; set; } = "accreditation@apexacademy.co.za";
+    [Parameter] public string ContactEmail { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> ContactEmailChanged { get; set; }
 
-    [Parameter] public string ContactPhone { get; set; } = "011 402 8800";
+    [Parameter] public string ContactPhone { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> ContactPhoneChanged { get; set; }
 
     // Secondary Contact Quorum & Banking Authority (BR3)
-    [Parameter] public string SecondaryContactFullName { get; set; } = "Amanda Sithole";
+    [Parameter] public string SecondaryContactFullName { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> SecondaryContactFullNameChanged { get; set; }
 
-    [Parameter] public string SecondaryContactEmail { get; set; } = "finance@apexacademy.co.za";
+    [Parameter] public string SecondaryContactEmail { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> SecondaryContactEmailChanged { get; set; }
 
-    [Parameter] public string SecondaryContactPhone { get; set; } = "011 402 8805";
+    [Parameter] public string SecondaryContactPhone { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> SecondaryContactPhoneChanged { get; set; }
 
-    [Parameter] public string SecondaryContactDesignation { get; set; } = "Chief Financial Officer";
+    [Parameter] public string SecondaryContactDesignation { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> SecondaryContactDesignationChanged { get; set; }
 
     [Parameter] public bool IsBankingConfirmationAuthorized { get; set; } = true;
@@ -606,6 +659,21 @@
 
     [Parameter] public DateTime? NambTtcExpiryDate { get; set; } = DateTime.UtcNow.AddYears(3);
     [Parameter] public EventCallback<DateTime?> NambTtcExpiryDateChanged { get; set; }
+
+    [Parameter] public string? QctoAccreditationNumber { get; set; }
+    [Parameter] public EventCallback<string?> QctoAccreditationNumberChanged { get; set; }
+
+    [Parameter] public DateTime? QctoAccreditationStartDate { get; set; }
+    [Parameter] public EventCallback<DateTime?> QctoAccreditationStartDateChanged { get; set; }
+
+    [Parameter] public DateTime? QctoAccreditationEndDate { get; set; }
+    [Parameter] public EventCallback<DateTime?> QctoAccreditationEndDateChanged { get; set; }
+
+    [Parameter] public string? QctoCentreCode { get; set; }
+    [Parameter] public EventCallback<string?> QctoCentreCodeChanged { get; set; }
+
+    [Parameter] public string? QctoLetterAttachmentRef { get; set; }
+    [Parameter] public EventCallback<string?> QctoLetterAttachmentRefChanged { get; set; }
 
     [Parameter] public string AccreditationScopeType { get; set; } = "Primary";
     [Parameter] public EventCallback<string> AccreditationScopeTypeChanged { get; set; }
@@ -947,5 +1015,35 @@
     {
         NambTtcExpiryDate = val;
         await NambTtcExpiryDateChanged.InvokeAsync(val);
+    }
+
+    private async Task OnQctoAccreditationNumberChanged(string? val)
+    {
+        QctoAccreditationNumber = val;
+        await QctoAccreditationNumberChanged.InvokeAsync(val);
+    }
+
+    private async Task OnQctoAccreditationStartDateChanged(DateTime? val)
+    {
+        QctoAccreditationStartDate = val;
+        await QctoAccreditationStartDateChanged.InvokeAsync(val);
+    }
+
+    private async Task OnQctoAccreditationEndDateChanged(DateTime? val)
+    {
+        QctoAccreditationEndDate = val;
+        await QctoAccreditationEndDateChanged.InvokeAsync(val);
+    }
+
+    private async Task OnQctoCentreCodeChanged(string? val)
+    {
+        QctoCentreCode = val;
+        await QctoCentreCodeChanged.InvokeAsync(val);
+    }
+
+    private async Task OnQctoLetterAttachmentRefChanged(string? val)
+    {
+        QctoLetterAttachmentRef = val;
+        await QctoLetterAttachmentRefChanged.InvokeAsync(val);
     }
 }

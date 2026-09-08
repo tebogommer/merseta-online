@@ -57,7 +57,7 @@ public class AnalyticsService : IAnalyticsService
             {
                 ChamberName = ch.Name,
                 EmployerCount = empCount,
-                LearnerCount = lrnCount > 0 ? lrnCount : empTotal / 10,
+                LearnerCount = lrnCount,
                 PlannedTrainingBudget = totalBudget,
                 DisbursedGrantsAmount = disbursed
             });

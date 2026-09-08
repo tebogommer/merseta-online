@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -34,7 +34,7 @@ public class ErpOutboxQueueService : IErpOutboxQueueService
         _config = config;
         _audit = audit;
         _logger = logger;
-        _httpClient = httpClient ?? new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+        _httpClient = httpClient ?? new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
     }
 
     public async Task<ErpOutboxMessage> EnqueueAsync(
@@ -99,12 +99,15 @@ public class ErpOutboxQueueService : IErpOutboxQueueService
             );
         }
 
+        var endpoint = await _config.GetValueAsync("Integrations:DynamicsGp:EndpointUrl", 
+            await _config.GetValueAsync("Integrations.DynamicsGp.EndpointUrl", "https://erp.merseta.org.za/GP/v1/Transactions"));
+
         if (!isGpEnabled)
         {
             // Default decoupled simulation mode is healthy and available locally
             return new GpHealthStatus(
                 IsAvailable: true,
-                EndpointUrl: "https://erp.merseta.org.za/GP/v1/Transactions",
+                EndpointUrl: endpoint,
                 ResponseTimeMs: 4,
                 StatusMessage: "Dynamics GP ERP Ledger (Zero-Risk Simulation Mode Active).",
                 CheckedAtUtc: DateTime.UtcNow,
@@ -113,12 +116,12 @@ public class ErpOutboxQueueService : IErpOutboxQueueService
         }
 
         // Live GP Web Services Health Probe
-        var endpoint = await _config.GetValueAsync("Integrations.DynamicsGp.EndpointUrl", "https://erp.merseta.org.za/GP/v1/Transactions");
         var sw = Stopwatch.StartNew();
 
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            var timeoutSec = await _config.GetValueAsync<int>("Integrations:DynamicsGp:TimeoutSeconds", 5);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSec));
             var response = await _httpClient.GetAsync(endpoint, cts.Token);
             sw.Stop();
 

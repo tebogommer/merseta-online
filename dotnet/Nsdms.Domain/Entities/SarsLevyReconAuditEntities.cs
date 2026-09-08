@@ -8,8 +8,8 @@ namespace Nsdms.Domain.Entities;
 /// </summary>
 public class SarsLevyReconAudit : BaseEntity
 {
-    public string FinancialYear { get; set; } = "2026";
-    public string SchemeYear { get; set; } = "2026";
+    public string FinancialYear { get; set; } = string.Empty;
+    public string SchemeYear { get; set; } = string.Empty;
     public string SdlNumber { get; set; } = string.Empty;
 
     public int? OrganisationId { get; set; }
@@ -53,7 +53,7 @@ public class SarsLevyReconAudit : BaseEntity
 /// </summary>
 public class SarsSchemeYearCalculation : BaseEntity
 {
-    public string SchemeYear { get; set; } = "2026";
+    public string SchemeYear { get; set; } = string.Empty;
     public decimal MandatoryPercentage { get; set; } = 20.0m;
     public decimal DiscretionaryPercentage { get; set; } = 49.5m;
     public decimal AdminPercentage { get; set; } = 10.5m;
@@ -77,7 +77,7 @@ public class SarsLevyDeviationDto
     public string SdlNumber { get; set; } = string.Empty;
     public string OrganisationName { get; set; } = string.Empty;
     public string ChamberCode { get; set; } = "METAL";
-    public string SchemeYear { get; set; } = "2026";
+    public string SchemeYear { get; set; } = string.Empty;
     public decimal Month1 { get; set; }
     public decimal Month2 { get; set; }
     public decimal Month3 { get; set; }

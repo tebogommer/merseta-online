@@ -174,7 +174,9 @@ public static class ArplTradeValidator
     /// </summary>
     public static (bool QualifiesForRetention, decimal PassRate, DateTime ExpiryDate) EvaluateTaskCreditRetention(
         IEnumerable<TradeTestTask> tasks,
-        DateTime assessmentDate)
+        DateTime assessmentDate,
+        decimal qualifyingThreshold = 50m,
+        int retentionMonths = 18)
     {
         var taskList = tasks.ToList();
         if (!taskList.Any()) return (false, 0m, assessmentDate);
@@ -183,8 +185,8 @@ public static class ArplTradeValidator
         int passedCount = taskList.Count(t => t.IsCompetent || (t.TotalMarksAvailable > 0 && (t.MarksObtained / t.TotalMarksAvailable) * 100m >= t.PassPercentage));
         decimal passRate = Math.Round(((decimal)passedCount / totalCount) * 100m, 2);
 
-        bool qualifies = passRate >= 50m;
-        DateTime expiry = assessmentDate.AddMonths(18);
+        bool qualifies = passRate >= qualifyingThreshold;
+        DateTime expiry = assessmentDate.AddMonths(retentionMonths);
 
         return (qualifies, passRate, expiry);
     }

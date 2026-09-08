@@ -9,7 +9,8 @@
 @inject IOrganisationService OrgService
 @inject IPersonService PersonService
 @inject IBrandAssetService BrandAssetService
-@inject LookupService LookupService
+@inject ILookupService LookupService
+@inject ISystemConfigurationService ConfigService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @rendermode InteractiveServer
@@ -51,6 +52,13 @@
                 @(_provider.ProviderStatusCode ?? "Accredited")
             </MudChip>
 
+            @if (!string.IsNullOrEmpty(_provider.AccreditationStream))
+            {
+                <MudChip T="string" Color="@GetStreamColor(_provider.AccreditationStream)" Variant="Variant.Outlined">
+                    @FormatStream(_provider.AccreditationStream)
+                </MudChip>
+            }
+
             <MudMenu Label="Provider Services"
                      StartIcon="@Icons.Material.Filled.Bolt"
                      EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
@@ -70,13 +78,28 @@
                 </MudMenuItem>
             </MudMenu>
 
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Autorenew"
-                       OnClick="RenewProviderAccreditation"
-                       aria-label="Renew Provider Accreditation">
-                Renew Accreditation
-            </MudButton>
+            @if (AccreditationStreamType.IsQctoOrSecondary(_provider.AccreditationStream))
+            {
+                <MudTooltip Text="Accreditation renewal is issued by QCTO/Primary body. merSETA records the updated endorsement upon re-issuance.">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Default"
+                               StartIcon="@Icons.Material.Filled.Info"
+                               Disabled="true"
+                               aria-label="QCTO External Renewal">
+                        External Renewal (QCTO)
+                    </MudButton>
+                </MudTooltip>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Autorenew"
+                           OnClick="RenewProviderAccreditation"
+                           aria-label="Renew Provider Accreditation">
+                    Renew Accreditation
+                </MudButton>
+            }
         }
         <MudButton Variant="Variant.Outlined"
                    Color="Color.Secondary"
@@ -150,6 +173,15 @@
                                             </MudSelect>
                                         </MudItem>
                                         <MudItem xs="12" md="6">
+                                            <MudSelect T="string" Label="Accreditation Stream" @bind-Value="_provider.AccreditationStream" Variant="Variant.Outlined" HelperText="Statutory scope authority (SDA §26I / QCTO regulations)">
+                                                <MudSelectItem Value="@AccreditationStreamType.PrimaryAccreditation">Primary merSETA Scope</MudSelectItem>
+                                                <MudSelectItem Value="@AccreditationStreamType.ProgrammeApproval">Programme Approval (Non-merSETA SETA)</MudSelectItem>
+                                                <MudSelectItem Value="@AccreditationStreamType.QctoSkillsDevelopmentProvider">QCTO Skills Development Provider (SDP)</MudSelectItem>
+                                                <MudSelectItem Value="@AccreditationStreamType.QctoTradeTestCentre">QCTO Trade Test Centre (TTC)</MudSelectItem>
+                                                <MudSelectItem Value="@AccreditationStreamType.NonMerSetaScope">Non-merSETA Scope / Other</MudSelectItem>
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
                                             <MudTextField T="string"
                                                           Label="Accreditation Number"
                                                           Required="true"
@@ -158,6 +190,78 @@
                                                           Variant="Variant.Outlined"
                                                           Placeholder="e.g. SDP-2026-0812" />
                                         </MudItem>
+
+                                        @if (_provider.AccreditationStream == AccreditationStreamType.QctoSkillsDevelopmentProvider || _provider.AccreditationStream == AccreditationStreamType.QctoTradeTestCentre)
+                                        {
+                                            <MudItem xs="12">
+                                                <MudAlert Severity="Severity.Info" Dense="true" Class="my-2">
+                                                    <strong>QCTO Statutory Delegation:</strong> Primary accreditation is held with the Quality Council for Trades and Occupations (QCTO). merSETA records and endorses this accreditation for local occupational learning programmes and artisan administration.
+                                                </MudAlert>
+                                            </MudItem>
+                                            <MudItem xs="12" md="6">
+                                                <MudTextField T="string"
+                                                              Label="QCTO Accreditation Number"
+                                                              Required="true"
+                                                              RequiredError="QCTO Accreditation Number is mandatory"
+                                                              @bind-Value="_provider.QctoAccreditationNumber"
+                                                              Variant="Variant.Outlined"
+                                                              Placeholder="e.g. QCTOSDP01200908-01" />
+                                            </MudItem>
+                                            <MudItem xs="12" md="6">
+                                                <MudTextField T="string"
+                                                              Label="QCTO Centre Code"
+                                                              @bind-Value="_provider.QctoCentreCode"
+                                                              Variant="Variant.Outlined"
+                                                              Placeholder="e.g. CC-78012" />
+                                            </MudItem>
+                                            <MudItem xs="12" md="6">
+                                                <MudDatePicker Label="QCTO Accreditation Start Date"
+                                                               @bind-Date="_provider.QctoAccreditationStartDate"
+                                                               Variant="Variant.Outlined" />
+                                            </MudItem>
+                                            <MudItem xs="12" md="6">
+                                                <MudDatePicker Label="QCTO Accreditation Expiry Date"
+                                                               @bind-Date="_provider.QctoAccreditationEndDate"
+                                                               Variant="Variant.Outlined" />
+                                            </MudItem>
+                                            <MudItem xs="12" md="6">
+                                                <MudTextField T="string"
+                                                              Label="QCTO Accreditation Letter Ref / Link"
+                                                              @bind-Value="_provider.QctoLetterAttachmentRef"
+                                                              Variant="Variant.Outlined"
+                                                              Placeholder="e.g. DOC-QCTO-2026-9901" />
+                                            </MudItem>
+                                        }
+
+                                        @if (_provider.AccreditationStream == AccreditationStreamType.QctoTradeTestCentre)
+                                        {
+                                            <MudItem xs="12" md="6">
+                                                <MudTextField T="string"
+                                                              Label="NAMB Registration Number"
+                                                              Required="true"
+                                                              RequiredError="NAMB Registration Number is mandatory for Trade Test Centres"
+                                                              @bind-Value="_provider.NambRegistrationNumber"
+                                                              Variant="Variant.Outlined"
+                                                              Placeholder="e.g. NAMB-TTC-2026-0042" />
+                                            </MudItem>
+                                            <MudItem xs="12" md="6">
+                                                <MudDatePicker Label="NAMB Registration End Date"
+                                                               @bind-Date="_provider.NambRegistrationEndDate"
+                                                               Variant="Variant.Outlined" />
+                                            </MudItem>
+                                        }
+
+                                        @if (_provider.AccreditationStream == AccreditationStreamType.ProgrammeApproval)
+                                        {
+                                            <MudItem xs="12" md="6">
+                                                <MudTextField T="string"
+                                                              Label="Primary Quality Assurance Body (SETA)"
+                                                              @bind-Value="_provider.PrimaryQualityAssuranceBody"
+                                                              Variant="Variant.Outlined"
+                                                              Placeholder="e.g. CHIETA, EWSETA, TETA" />
+                                            </MudItem>
+                                        }
+
                                         <MudItem xs="12" md="6">
                                             <MudSelect T="string" Label="Provider Type" @bind-Value="_provider.ProviderTypeCode" Variant="Variant.Outlined">
                                                 @foreach (var pt in _providerTypes)
@@ -1322,7 +1426,8 @@
         {
             try
             {
-                using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+                var maxBytes = await ConfigService.GetValueAsync<long>("Storage:MaxLogoUploadBytes", 5 * 1024 * 1024);
+                using var stream = file.OpenReadStream(maxAllowedSize: maxBytes);
                 using var ms = new MemoryStream();
                 await stream.CopyToAsync(ms);
                 var bytes = ms.ToArray();
@@ -1507,5 +1612,24 @@
         "03" or "Suspended" or "Expired" => Color.Warning,
         "De-accredited" or "Terminated" => Color.Error,
         _ => Color.Default
+    };
+
+    private static Color GetStreamColor(string? stream) => stream switch
+    {
+        AccreditationStreamType.PrimaryAccreditation or "Primary merSETA Scope" => Color.Primary,
+        AccreditationStreamType.QctoSkillsDevelopmentProvider or "QCTO Skills Development Provider (SDP)" => Color.Info,
+        AccreditationStreamType.QctoTradeTestCentre or "QCTO Trade Test Centre (TTC)" => Color.Success,
+        AccreditationStreamType.ProgrammeApproval or "Programme Approval (Non-merSETA SETA)" => Color.Warning,
+        _ => Color.Default
+    };
+
+    private static string FormatStream(string? stream) => stream switch
+    {
+        AccreditationStreamType.PrimaryAccreditation or "Primary merSETA Scope" => "Primary merSETA",
+        AccreditationStreamType.QctoSkillsDevelopmentProvider or "QCTO Skills Development Provider (SDP)" => "QCTO SDP",
+        AccreditationStreamType.QctoTradeTestCentre or "QCTO Trade Test Centre (TTC)" => "QCTO Trade Test Centre",
+        AccreditationStreamType.ProgrammeApproval or "Programme Approval (Non-merSETA SETA)" => "Programme Approval",
+        AccreditationStreamType.NonMerSetaScope or "Non-merSETA Scope / Other" => "Non-merSETA Scope",
+        _ => stream ?? "Primary"
     };
 }

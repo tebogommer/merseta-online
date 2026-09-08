@@ -1,4 +1,4 @@
-﻿using Nsdms.Domain.Entities;
+using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
 
@@ -11,7 +11,7 @@ public record BulkBatchImportResult(
 );
 
 /// <summary>
-/// Service managing the automated high-speed bulk ingestion pipeline (The ATM Channel).
+/// Service managing the automated high-speed bulk ingestion pipeline (Automated Fast-Track Channel).
 /// </summary>
 public interface ILearnerBulkIngestionService
 {

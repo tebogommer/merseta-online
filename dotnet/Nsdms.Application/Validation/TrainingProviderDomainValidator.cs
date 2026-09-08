@@ -83,6 +83,118 @@ public static class TrainingProviderDomainValidator
             }
         }
 
+        // 3. Statutory Stream Specific Validations
+        if (provider.AccreditationStream == AccreditationStreamType.QctoSkillsDevelopmentProvider)
+        {
+            if (string.IsNullOrWhiteSpace(provider.QctoAccreditationNumber))
+            {
+                errors.Add(new StatutoryValidationError
+                {
+                    FileIdentifier = fileId,
+                    RecordId = provider.Id,
+                    EntityName = nameof(TrainingProvider),
+                    RecordDescriptor = desc,
+                    FieldName = nameof(provider.QctoAccreditationNumber),
+                    FieldValue = null,
+                    RuleCode = "QCTO_SDP_ACCREDITATION_NUMBER_REQUIRED",
+                    Severity = StatutoryValidationSeverity.Fatal,
+                    Message = "QCTO Accreditation Number is mandatory for QCTO Skills Development Providers.",
+                    Remediation = "Capture the official QCTO accreditation letter/certificate number (e.g. QCTOSDP0120230501)."
+                });
+            }
+
+            if (provider.QctoAccreditationStartDate.HasValue && provider.QctoAccreditationEndDate.HasValue &&
+                provider.QctoAccreditationStartDate.Value > provider.QctoAccreditationEndDate.Value)
+            {
+                errors.Add(new StatutoryValidationError
+                {
+                    FileIdentifier = fileId,
+                    RecordId = provider.Id,
+                    EntityName = nameof(TrainingProvider),
+                    RecordDescriptor = desc,
+                    FieldName = nameof(provider.QctoAccreditationEndDate),
+                    FieldValue = provider.QctoAccreditationEndDate.Value.ToString("yyyy-MM-dd"),
+                    RuleCode = "QCTO_SDP_ACCREDITATION_END_BEFORE_START",
+                    Severity = StatutoryValidationSeverity.Fatal,
+                    Message = "QCTO Accreditation End Date cannot precede Start Date.",
+                    Remediation = "Correct the QCTO accreditation expiration date."
+                });
+            }
+        }
+        else if (provider.AccreditationStream == AccreditationStreamType.QctoTradeTestCentre)
+        {
+            if (string.IsNullOrWhiteSpace(provider.NambRegistrationNumber))
+            {
+                errors.Add(new StatutoryValidationError
+                {
+                    FileIdentifier = fileId,
+                    RecordId = provider.Id,
+                    EntityName = nameof(TrainingProvider),
+                    RecordDescriptor = desc,
+                    FieldName = nameof(provider.NambRegistrationNumber),
+                    FieldValue = null,
+                    RuleCode = "QCTO_TTC_NAMB_REGISTRATION_NUMBER_REQUIRED",
+                    Severity = StatutoryValidationSeverity.Fatal,
+                    Message = "NAMB Trade Test Centre Registration Number is mandatory for QCTO Trade Test Centres.",
+                    Remediation = "Capture the official NAMB TTC registration credential (e.g. AC-2023-014)."
+                });
+            }
+
+            if (provider.NambRegistrationStartDate.HasValue && provider.NambRegistrationEndDate.HasValue &&
+                provider.NambRegistrationStartDate.Value > provider.NambRegistrationEndDate.Value)
+            {
+                errors.Add(new StatutoryValidationError
+                {
+                    FileIdentifier = fileId,
+                    RecordId = provider.Id,
+                    EntityName = nameof(TrainingProvider),
+                    RecordDescriptor = desc,
+                    FieldName = nameof(provider.NambRegistrationEndDate),
+                    FieldValue = provider.NambRegistrationEndDate.Value.ToString("yyyy-MM-dd"),
+                    RuleCode = "QCTO_TTC_REGISTRATION_END_BEFORE_START",
+                    Severity = StatutoryValidationSeverity.Fatal,
+                    Message = "NAMB TTC Registration End Date cannot precede Start Date.",
+                    Remediation = "Correct the NAMB trade test centre registration expiration date."
+                });
+            }
+        }
+        else if (provider.AccreditationStream == AccreditationStreamType.ProgrammeApproval)
+        {
+            if (string.IsNullOrWhiteSpace(provider.PrimaryEtqaName))
+            {
+                errors.Add(new StatutoryValidationError
+                {
+                    FileIdentifier = fileId,
+                    RecordId = provider.Id,
+                    EntityName = nameof(TrainingProvider),
+                    RecordDescriptor = desc,
+                    FieldName = nameof(provider.PrimaryEtqaName),
+                    FieldValue = null,
+                    RuleCode = "PROGRAMME_APPROVAL_PRIMARY_ETQA_REQUIRED",
+                    Severity = StatutoryValidationSeverity.Fatal,
+                    Message = "Primary ETQA / SETA Name is mandatory for Programme Approval applications.",
+                    Remediation = "Specify the primary accrediting SETA or ETQA authority (e.g. CHIETA, Services SETA)."
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(provider.PrimaryAccreditationNumber))
+            {
+                errors.Add(new StatutoryValidationError
+                {
+                    FileIdentifier = fileId,
+                    RecordId = provider.Id,
+                    EntityName = nameof(TrainingProvider),
+                    RecordDescriptor = desc,
+                    FieldName = nameof(provider.PrimaryAccreditationNumber),
+                    FieldValue = null,
+                    RuleCode = "PROGRAMME_APPROVAL_PRIMARY_NUMBER_REQUIRED",
+                    Severity = StatutoryValidationSeverity.Fatal,
+                    Message = "Primary SETA Accreditation Number is mandatory for Programme Approval applications.",
+                    Remediation = "Capture the accreditation certificate number issued by the primary SETA."
+                });
+            }
+        }
+
         return errors;
     }
 }

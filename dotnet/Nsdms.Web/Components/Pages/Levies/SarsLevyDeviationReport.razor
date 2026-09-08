@@ -4,6 +4,7 @@
 @using Nsdms.Domain.Entities
 @inject ILevyService LevyService
 @inject ILookupService LookupService
+@inject ISystemConfigurationService ConfigService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @rendermode InteractiveServer
@@ -123,10 +124,10 @@
             </MudItem>
             <MudItem xs="12" sm="4" md="3">
                 <MudSelect T="string" Label="Scheme Year" @bind-Value="_selectedSchemeYear" Variant="Variant.Outlined" OnSelectedValuesChanged="LoadDataAsync">
-                    <MudSelectItem Value="@("2026")">2026</MudSelectItem>
-                    <MudSelectItem Value="@("2025")">2025</MudSelectItem>
-                    <MudSelectItem Value="@("2024")">2024</MudSelectItem>
-                    <MudSelectItem Value="@("2023")">2023</MudSelectItem>
+                    @foreach (var yr in _availableYears)
+                    {
+                        <MudSelectItem Value="@yr">@yr</MudSelectItem>
+                    }
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" sm="12" md="3" Class="d-flex justify-end gap-2">
@@ -319,12 +320,14 @@
 
     private string _searchString = string.Empty;
     private string _selectedChamber = string.Empty;
-    private string _selectedSchemeYear = "2026";
+    private string _selectedSchemeYear = DateTime.UtcNow.Year.ToString();
+    private List<string> _availableYears = Enumerable.Range(DateTime.UtcNow.Year - 4, 6).Reverse().Select(y => y.ToString()).ToList();
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            _selectedSchemeYear = await ConfigService.GetValueAsync("Governance:CurrentSchemeYear", DateTime.UtcNow.Year.ToString());
             _availableChambers = await LookupService.GetLookupItemsAsync("ChamberType");
         }
         catch

@@ -1,0 +1,445 @@
+@page "/admin/non-working-days"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@inject IHolidayClosureService ClosureService
+@inject IWorkingDayCalculationEngine CalculationEngine
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A1 (Master List - Holidays & Institutional Closures)
+  Governs national statutory public holidays and merSETA year-end shutdowns affecting workflow SLAs.
+*@
+
+<PageTitle>Holidays &amp; Institutional Closures | merSETA NSDMS</PageTitle>
+
+<div class="non-working-days-container" style="max-width: 1600px; margin: 0 auto;">
+    <EntityHeader Title="Holidays &amp; institutional closures"
+                  Subtitle="Manage national statutory holidays, official merSETA year-end shutdowns, and ad-hoc institutional closures that govern universal workflow SLAs."
+                  ReferenceKey="SYS-HOLIDAYS-SLA"
+                  Status="Active"
+                  BreadcrumbItems="@_breadcrumbs">
+        <ActionZone>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.Autorenew"
+                       OnClick="HandleSeedDefaultHolidaysAsync"
+                       Disabled="@_isSeeding"
+                       Class="mr-2">
+                @(_isSeeding ? "Seeding..." : $"Seed {SelectedYear} holidays")
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => Navigation.NavigateTo("/admin/non-working-days/create"))">
+                Add closure or holiday
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+
+    <!-- Filter Bar -->
+    <FilterBar SearchPlaceholder="Search by holiday name, circular reference, description..."
+               @bind-SearchText="_searchString"
+               OnSearch="HandleFilterChanged"
+               OnClear="HandleFilterCleared">
+        <FilterContent>
+            <MudSelect T="int"
+                       Label="Calendar year"
+                       @bind-Value="SelectedYear"
+                       @bind-Value:after="LoadClosuresAsync"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Dense="true"
+                       Style="min-width: 140px;">
+                <MudSelectItem Value="2025">2025</MudSelectItem>
+                <MudSelectItem Value="2026">2026 (Active)</MudSelectItem>
+                <MudSelectItem Value="2027">2027</MudSelectItem>
+                <MudSelectItem Value="2028">2028</MudSelectItem>
+            </MudSelect>
+
+            <MudSelect T="string"
+                       Label="Typology filter"
+                       @bind-Value="_selectedType"
+                       @bind-Value:after="HandleFilterChanged"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Dense="true"
+                       Style="min-width: 220px;">
+                <MudSelectItem Value="@("All")">All typologies</MudSelectItem>
+                <MudSelectItem Value="@(NonWorkingDayType.NationalStatutory)">National statutory holidays</MudSelectItem>
+                <MudSelectItem Value="@(NonWorkingDayType.InstitutionalShutdown)">merSETA annual shutdowns</MudSelectItem>
+                <MudSelectItem Value="@(NonWorkingDayType.AdHocGazetted)">Ad-hoc gazetted holidays</MudSelectItem>
+                <MudSelectItem Value="@(NonWorkingDayType.SpecialClosure)">Special administrative closures</MudSelectItem>
+            </MudSelect>
+
+            <MudSelect T="string"
+                       Label="SLA impact"
+                       @bind-Value="_selectedSlaFilter"
+                       @bind-Value:after="HandleFilterChanged"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Dense="true"
+                       Style="min-width: 170px;">
+                <MudSelectItem Value="@("All")">All records</MudSelectItem>
+                <MudSelectItem Value="@("AffectsSla")">Pauses workflow SLAs</MudSelectItem>
+                <MudSelectItem Value="@("Informational")">Calendar only</MudSelectItem>
+            </MudSelect>
+        </FilterContent>
+    </FilterBar>
+
+    <!-- Summary Metrics Cards -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Outlined="true" Class="pa-3">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Total registered in @SelectedYear</MudText>
+                        <MudText Typo="Typo.h5" Class="font-weight-bold">@_allClosures.Count</MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Color="Color.Primary" Size="Size.Large" />
+                </div>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Outlined="true" Class="pa-3">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Statutory public holidays</MudText>
+                        <MudText Typo="Typo.h5" Class="font-weight-bold text-info">
+                            @_allClosures.Count(c => c.TypeCode == NonWorkingDayType.NationalStatutory)
+                        </MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Info" Size="Size.Large" />
+                </div>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Outlined="true" Class="pa-3">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Institutional shutdowns</MudText>
+                        <MudText Typo="Typo.h5" Class="font-weight-bold text-warning">
+                            @_allClosures.Count(c => c.TypeCode == NonWorkingDayType.InstitutionalShutdown)
+                        </MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.DomainDisabled" Color="Color.Warning" Size="Size.Large" />
+                </div>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Outlined="true" Class="pa-3">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">SLA excluded days</MudText>
+                        <MudText Typo="Typo.h5" Class="font-weight-bold text-success">
+                            @_allClosures.Where(c => c.AffectsSla).Sum(c => c.TotalDays)
+                        </MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.HourglassDisabled" Color="Color.Success" Size="Size.Large" />
+                </div>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Data Table -->
+    <MudTable Items="@FilteredClosures"
+              Hover="true"
+              Striped="true"
+              Dense="true"
+              Elevation="1"
+              Loading="@_isLoading"
+              LoadingProgressColor="Color.Primary"
+              Class="mb-6">
+        <HeaderContent>
+            <MudTh>Holiday / closure title</MudTh>
+            <MudTh>Typology</MudTh>
+            <MudTh>Effective date range</MudTh>
+            <MudTh>Days spanned</MudTh>
+            <MudTh>Workflow SLA impact</MudTh>
+            <MudTh>Authority / resolution</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh Style="text-align: right;">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Holiday / closure title">
+                <div class="d-flex flex-column">
+                    <MudLink Href="@($"/admin/non-working-days/{context.Id}")" Typo="Typo.body2" Class="font-weight-bold">
+                        @context.Name
+                    </MudLink>
+                    @if (!string.IsNullOrWhiteSpace(context.Description))
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-truncate" Style="max-width: 320px;">
+                            @context.Description
+                        </MudText>
+                    }
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Typology">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@GetTypeBadgeColor(context.TypeCode)">
+                    @NonWorkingDayType.GetDisplayTitle(context.TypeCode)
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Effective date range">
+                <span class="font-mono" style="font-size: 0.85rem;">
+                    @if (context.IsDateSpan)
+                    {
+                        @($"{context.StartDate:dd MMM yyyy} – {context.EndDate:dd MMM yyyy}")
+                    }
+                    else
+                    {
+                        @context.StartDate.ToString("dd MMM yyyy (dddd)")
+                    }
+                </span>
+            </MudTd>
+            <MudTd DataLabel="Days spanned">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">
+                    @context.TotalDays @(context.TotalDays == 1 ? "day" : "days")
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Workflow SLA impact">
+                @if (context.AffectsSla)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.PauseCircleFilled">
+                        Pauses SLAs
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">
+                        Calendar only
+                    </MudChip>
+                }
+            </MudTd>
+            <MudTd DataLabel="Authority / resolution">
+                <MudText Typo="Typo.caption" Class="font-mono">
+                    @(context.GazetteOrResolutionRef ?? "—")
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@GetStatusBadgeColor(context.StatusCode)">
+                    @context.StatusCode
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Actions" Style="text-align: right;">
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Dense="true">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Visibility"
+                                 OnClick="@(() => Navigation.NavigateTo($"/admin/non-working-days/{context.Id}"))">
+                        View details
+                    </MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Edit"
+                                 OnClick="@(() => Navigation.NavigateTo($"/admin/non-working-days/{context.Id}/edit"))">
+                        Edit record
+                    </MudMenuItem>
+                    @if (context.StatusCode == NonWorkingDayStatus.Draft)
+                    {
+                        <MudMenuItem Icon="@Icons.Material.Filled.CheckCircle"
+                                     OnClick="@(() => HandleApproveAsync(context.Id, context.Name))">
+                            Approve closure
+                        </MudMenuItem>
+                    }
+                    <MudDivider />
+                    <MudMenuItem Icon="@Icons.Material.Filled.Delete"
+                                 IconColor="Color.Error"
+                                 OnClick="@(() => HandleDeleteAsync(context.Id, context.Name))">
+                        Delete record
+                    </MudMenuItem>
+                </MudMenu>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <div class="pa-8 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.EventBusy" Color="Color.Secondary" Size="Size.Large" Class="mb-2" />
+                <MudText Typo="Typo.h6" Color="Color.Secondary">No non-working days or closures found</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                    No records found for @SelectedYear with current filters. You can seed standard statutory holidays or create an institutional closure.
+                </MudText>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Autorenew"
+                           OnClick="HandleSeedDefaultHolidaysAsync">
+                    Seed standard holidays for @SelectedYear
+                </MudButton>
+            </div>
+        </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 20, 50, 100 }" />
+        </PagerContent>
+    </MudTable>
+</div>
+
+@code {
+    private List<NonWorkingDay> _allClosures = new();
+    private bool _isLoading = true;
+    private bool _isSeeding = false;
+    private string _searchString = string.Empty;
+    private string _selectedType = "All";
+    private string _selectedSlaFilter = "All";
+    private int SelectedYear { get; set; } = 2026;
+
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("System administration", href: "/admin"),
+        new BreadcrumbItem("Holidays & institutional closures", href: null, disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadClosuresAsync();
+    }
+
+    private async Task LoadClosuresAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _allClosures = await ClosureService.GetAllAsync(year: SelectedYear);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading holidays: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private IEnumerable<NonWorkingDay> FilteredClosures
+    {
+        get
+        {
+            var query = _allClosures.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(c =>
+                    c.Name.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    (c.GazetteOrResolutionRef != null && c.GazetteOrResolutionRef.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (c.Description != null && c.Description.Contains(s, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            if (_selectedType != "All")
+            {
+                query = query.Where(c => c.TypeCode == _selectedType);
+            }
+
+            if (_selectedSlaFilter == "AffectsSla")
+            {
+                query = query.Where(c => c.AffectsSla);
+            }
+            else if (_selectedSlaFilter == "Informational")
+            {
+                query = query.Where(c => !c.AffectsSla);
+            }
+
+            return query.OrderBy(c => c.StartDate);
+        }
+    }
+
+    private void HandleFilterChanged() => StateHasChanged();
+
+    private void HandleFilterCleared()
+    {
+        _searchString = string.Empty;
+        _selectedType = "All";
+        _selectedSlaFilter = "All";
+        StateHasChanged();
+    }
+
+    private async Task HandleSeedDefaultHolidaysAsync()
+    {
+        _isSeeding = true;
+        try
+        {
+            var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+            var username = auth.User.Identity?.Name ?? "AdminUser";
+            var seededCount = await ClosureService.SeedDefaultHolidaysForYearAsync(SelectedYear, username);
+            if (seededCount > 0)
+            {
+                Snackbar.Add($"Successfully seeded {seededCount} holidays and merSETA closures for {SelectedYear}.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"All statutory holidays and closures for {SelectedYear} are already registered.", Severity.Info);
+            }
+            await LoadClosuresAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error seeding holidays: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSeeding = false;
+        }
+    }
+
+    private async Task HandleApproveAsync(int id, string name)
+    {
+        try
+        {
+            var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+            var username = auth.User.Identity?.Name ?? "AdminChecker";
+            await ClosureService.ApproveAsync(id, username);
+            Snackbar.Add($"Approved closure: {name}", Severity.Success);
+            await LoadClosuresAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to approve closure: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task HandleDeleteAsync(int id, string name)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Confirm Deletion" },
+            { x => x.Consequence, $"Are you sure you want to delete '{name}'? This will remove this date from all future SLA calculations." },
+            { x => x.ConfirmLabel, "Delete closure" },
+            { x => x.IsDestructive, true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Deletion", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            try
+            {
+                var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+                var username = auth.User.Identity?.Name ?? "AdminUser";
+                await ClosureService.DeleteAsync(id, username);
+                Snackbar.Add($"Non-working day record '{name}' was deleted successfully.", Severity.Success);
+                await LoadClosuresAsync();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting record: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private Color GetTypeBadgeColor(string typeCode) => typeCode switch
+    {
+        NonWorkingDayType.NationalStatutory => Color.Info,
+        NonWorkingDayType.InstitutionalShutdown => Color.Warning,
+        NonWorkingDayType.AdHocGazetted => Color.Primary,
+        NonWorkingDayType.SpecialClosure => Color.Secondary,
+        _ => Color.Default
+    };
+
+    private Color GetStatusBadgeColor(string status) => status switch
+    {
+        NonWorkingDayStatus.Approved => Color.Success,
+        NonWorkingDayStatus.Draft => Color.Warning,
+        NonWorkingDayStatus.Inactive => Color.Default,
+        _ => Color.Default
+    };
+}

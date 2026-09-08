@@ -1,6 +1,7 @@
 @page "/finance/mg-rebates"
 @page "/finance/levy-rebates"
 @inject IFinanceService FinanceService
+@inject ISystemConfigurationService ConfigService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @rendermode InteractiveServer
@@ -91,8 +92,10 @@
         </div>
         <div class="d-flex align-center gap-2">
             <MudSelect T="int" Value="_selectedFinYear" ValueChanged="OnFinYearChanged" Label="Financial Year" Variant="Variant.Outlined" Dense="true" Style="min-width: 140px;">
-                <MudSelectItem Value="2026">2026/2027</MudSelectItem>
-                <MudSelectItem Value="2025">2025/2026</MudSelectItem>
+                @foreach (var yr in _availableYears)
+                {
+                    <MudSelectItem Value="@yr">@($"{yr}/{yr + 1}")</MudSelectItem>
+                }
             </MudSelect>
         </div>
     </div>
@@ -178,11 +181,21 @@
 @code {
     private List<MandatoryGrantDisbursement> _disbursements = new();
     private bool _loading = true;
-    private int _selectedFinYear = 2026;
+    private int _selectedFinYear = DateTime.UtcNow.Year;
+    private List<int> _availableYears = Enumerable.Range(DateTime.UtcNow.Year - 4, 6).Reverse().ToList();
     private string _searchString = "";
 
     protected override async Task OnInitializedAsync()
     {
+        var configuredSchemeYear = await ConfigService.GetValueAsync<string>("Governance:CurrentSchemeYear", DateTime.UtcNow.Year.ToString());
+        if (int.TryParse(configuredSchemeYear, out var schYear))
+        {
+            _selectedFinYear = schYear;
+            if (!_availableYears.Contains(schYear))
+            {
+                _availableYears.Insert(0, schYear);
+            }
+        }
         await LoadData();
     }
 

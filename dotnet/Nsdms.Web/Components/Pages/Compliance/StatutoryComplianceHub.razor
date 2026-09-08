@@ -10,6 +10,7 @@
 @inject INlrdExtractService NlrdExtractService
 @inject IStatutorySchedulerService SchedulerService
 @inject IStatutoryValidationService ValidationService
+@inject ISystemConfigurationService ConfigService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
@@ -57,9 +58,10 @@
                     </div>
                     <div class="d-flex align-center gap-3">
                         <MudSelect T="int" Label="Scheme year" @bind-Value="_selectedFinancialYear" Dense="true" Margin="Margin.Dense" Style="width: 140px;">
-                            <MudSelectItem Value="2026">2026</MudSelectItem>
-                            <MudSelectItem Value="2025">2025</MudSelectItem>
-                            <MudSelectItem Value="2024">2024</MudSelectItem>
+                            @foreach (var yr in _availableYears)
+                            {
+                                <MudSelectItem Value="@yr">@yr</MudSelectItem>
+                            }
                         </MudSelect>
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Primary"
@@ -139,9 +141,10 @@
                     </div>
                     <div class="d-flex align-center gap-3">
                         <MudSelect T="int" Label="Scheme year" @bind-Value="_selectedFinancialYear" Dense="true" Margin="Margin.Dense" Style="width: 140px;">
-                            <MudSelectItem Value="2026">2026</MudSelectItem>
-                            <MudSelectItem Value="2025">2025</MudSelectItem>
-                            <MudSelectItem Value="2024">2024</MudSelectItem>
+                            @foreach (var yr in _availableYears)
+                            {
+                                <MudSelectItem Value="@yr">@yr</MudSelectItem>
+                            }
                         </MudSelect>
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Secondary"
@@ -470,7 +473,8 @@
     private bool _isExtracting = false;
     private bool _isTriggeringJob = false;
     private int _activeTabIndex = 0;
-    private int _selectedFinancialYear = 2026;
+    private int _selectedFinancialYear = DateTime.UtcNow.Year;
+    private List<int> _availableYears = Enumerable.Range(DateTime.UtcNow.Year - 4, 6).Reverse().ToList();
     private string _batchSearch = string.Empty;
     private string _auditSearch = string.Empty;
 
@@ -492,6 +496,15 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var configuredSchemeYear = await ConfigService.GetValueAsync<string>("Governance:CurrentSchemeYear", DateTime.UtcNow.Year.ToString());
+        if (int.TryParse(configuredSchemeYear, out var schYear))
+        {
+            _selectedFinancialYear = schYear;
+            if (!_availableYears.Contains(schYear))
+            {
+                _availableYears.Insert(0, schYear);
+            }
+        }
         await RefreshAllAsync();
     }
 

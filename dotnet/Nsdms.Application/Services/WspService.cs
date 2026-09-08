@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Interfaces;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
@@ -34,6 +35,15 @@ public interface IWspService
     Task<decimal> CalculateMandatoryGrantClaimAsync(int wspSubmissionId);
     decimal CalculateMandatoryGrant(decimal totalLevyPaid);
     bool ValidateMandatoryGrantEligibility(WspSubmission submission);
+
+    // Statutory Window & Extension Requests
+    Task<bool> IsSubmissionWindowOpenAsync(int organisationId, int schemeYear);
+    Task<DateTime> GetEffectiveSubmissionDeadlineAsync(int organisationId, int schemeYear);
+    Task<List<WspExtensionRequest>> GetExtensionRequestsAsync(int? organisationId = null, int? schemeYear = null, string? statusCode = null);
+    Task<WspExtensionRequest?> GetExtensionRequestByIdAsync(int id);
+    Task<WspExtensionRequest> SubmitExtensionRequestAsync(WspExtensionRequest request, string currentUsername = "SYSTEM");
+    Task<WspExtensionRequest> ReviewExtensionRequestAsync(int id, string reviewerUserId, bool recommend, string comments);
+    Task<WspExtensionRequest> AdjudicateExtensionRequestAsync(int id, string approverUserId, bool approve, DateTime? grantedDate, string comments);
 }
 
 public class WspService : IWspService
@@ -42,11 +52,13 @@ public class WspService : IWspService
 
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
+    private readonly ISystemConfigurationService? _configService;
 
-    public WspService(INsdmsDbContextFactory contextFactory, IAuditService audit)
+    public WspService(INsdmsDbContextFactory contextFactory, IAuditService audit, ISystemConfigurationService? configService = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
+        _configService = configService;
     }
 
     public async Task<List<WspSubmission>> GetAllAsync(int? finYear = null, string? search = null, int? organisationId = null)
@@ -117,6 +129,16 @@ public class WspService : IWspService
         if (string.IsNullOrWhiteSpace(submission.WspApprovalStatusCode))
         {
             submission.WspApprovalStatusCode = "Draft";
+        }
+
+        if (string.Equals(submission.WspApprovalStatusCode, "Submitted", StringComparison.OrdinalIgnoreCase))
+        {
+            var isOpen = await IsSubmissionWindowOpenAsync(submission.OrganisationId, submission.FinYear);
+            if (!isOpen)
+            {
+                var deadline = await GetEffectiveSubmissionDeadlineAsync(submission.OrganisationId, submission.FinYear);
+                throw new InvalidOperationException($"Mandatory Grant (WSP/ATR) submission window for scheme year {submission.FinYear} closed on {deadline:yyyy-MM-dd}. Submissions cannot be accepted after deadline without an approved extension.");
+            }
         }
 
         using var db = await _contextFactory.CreateDbContextAsync();
@@ -193,6 +215,16 @@ public class WspService : IWspService
         if (existing == null)
         {
             throw new KeyNotFoundException($"WspSubmission with ID {id} was not found.");
+        }
+
+        if (statusCode.Equals("Submitted", StringComparison.OrdinalIgnoreCase))
+        {
+            var isOpen = await IsSubmissionWindowOpenAsync(existing.OrganisationId, existing.FinYear);
+            if (!isOpen)
+            {
+                var deadline = await GetEffectiveSubmissionDeadlineAsync(existing.OrganisationId, existing.FinYear);
+                throw new InvalidOperationException($"Mandatory Grant (WSP/ATR) submission window for scheme year {existing.FinYear} closed on {deadline:yyyy-MM-dd}. Submissions cannot be accepted after deadline without an approved extension.");
+            }
         }
 
         var beforeState = new { existing.WspApprovalStatusCode, existing.SubmissionDate };
@@ -508,5 +540,263 @@ public class WspService : IWspService
                             string.Equals(submission.WspApprovalStatusCode, "SUBMITTED", StringComparison.OrdinalIgnoreCase);
 
         return isValidStatus && submission.EmployeeCount > 0 && submission.PlannedTrainingBudget > 0;
+    }
+
+    // Statutory Window & Extension Requests
+    public async Task<DateTime> GetEffectiveSubmissionDeadlineAsync(int organisationId, int schemeYear)
+    {
+        // 1. Resolve standard submission deadline for the scheme year (default April 30 23:59:59 SAST/UTC)
+        var deadlineConfig = "04-30";
+        if (_configService != null)
+        {
+            deadlineConfig = await _configService.GetValueAsync("Governance:WspAnnualSubmissionDeadline", "04-30") ?? "04-30";
+        }
+
+        int month = 4;
+        int day = 30;
+        if (deadlineConfig.Contains('-'))
+        {
+            var parts = deadlineConfig.Split('-');
+            if (parts.Length == 2 && int.TryParse(parts[0], out var m) && int.TryParse(parts[1], out var d))
+            {
+                month = m;
+                day = d;
+            }
+            else if (parts.Length == 3 && int.TryParse(parts[1], out var m3) && int.TryParse(parts[2], out var d3))
+            {
+                month = m3;
+                day = d3;
+            }
+        }
+
+        var baseDeadline = new DateTime(schemeYear, month, day, 23, 59, 59, DateTimeKind.Utc);
+
+        // 2. Check if an approved extension request exists for this organisation and scheme year
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var approvedExtension = await db.WspExtensionRequests
+            .Where(r => r.OrganisationId == organisationId && r.SchemeYear == schemeYear && r.ApprovalStatusCode == "Approved" && r.GrantedExtensionDate.HasValue)
+            .OrderByDescending(r => r.GrantedExtensionDate)
+            .FirstOrDefaultAsync();
+
+        if (approvedExtension?.GrantedExtensionDate != null)
+        {
+            var extDate = approvedExtension.GrantedExtensionDate.Value;
+            var extensionDeadline = new DateTime(extDate.Year, extDate.Month, extDate.Day, 23, 59, 59, DateTimeKind.Utc);
+            if (extensionDeadline > baseDeadline)
+            {
+                return extensionDeadline;
+            }
+        }
+
+        return baseDeadline;
+    }
+
+    public async Task<bool> IsSubmissionWindowOpenAsync(int organisationId, int schemeYear)
+    {
+        var openConfig = "01-01";
+        if (_configService != null)
+        {
+            openConfig = await _configService.GetValueAsync("Governance:WspWindowOpenDate", "01-01") ?? "01-01";
+        }
+
+        int openMonth = 1;
+        int openDay = 1;
+        if (openConfig.Contains('-'))
+        {
+            var parts = openConfig.Split('-');
+            if (parts.Length == 2 && int.TryParse(parts[0], out var m) && int.TryParse(parts[1], out var d))
+            {
+                openMonth = m;
+                openDay = d;
+            }
+        }
+
+        var windowOpen = new DateTime(schemeYear, openMonth, openDay, 0, 0, 0, DateTimeKind.Utc);
+        var now = DateTime.UtcNow;
+
+        if (now < windowOpen)
+        {
+            return false;
+        }
+
+        var effectiveDeadline = await GetEffectiveSubmissionDeadlineAsync(organisationId, schemeYear);
+        return now <= effectiveDeadline;
+    }
+
+    public async Task<List<WspExtensionRequest>> GetExtensionRequestsAsync(int? organisationId = null, int? schemeYear = null, string? statusCode = null)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var query = db.WspExtensionRequests
+            .Include(r => r.Organisation)
+            .Include(r => r.WspSubmission)
+            .AsQueryable();
+
+        if (organisationId.HasValue && organisationId.Value > 0)
+        {
+            query = query.Where(r => r.OrganisationId == organisationId.Value);
+        }
+
+        if (schemeYear.HasValue && schemeYear.Value > 0)
+        {
+            query = query.Where(r => r.SchemeYear == schemeYear.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(statusCode) && !statusCode.Equals("All", StringComparison.OrdinalIgnoreCase))
+        {
+            query = query.Where(r => r.ApprovalStatusCode == statusCode);
+        }
+
+        return await query.OrderByDescending(r => r.CreatedAt).ToListAsync();
+    }
+
+    public async Task<WspExtensionRequest?> GetExtensionRequestByIdAsync(int id)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.WspExtensionRequests
+            .Include(r => r.Organisation)
+            .Include(r => r.WspSubmission)
+            .FirstOrDefaultAsync(r => r.Id == id);
+    }
+
+    public async Task<WspExtensionRequest> SubmitExtensionRequestAsync(WspExtensionRequest request, string currentUsername = "SYSTEM")
+    {
+        if (request == null) throw new ArgumentNullException(nameof(request));
+        if (request.OrganisationId <= 0) throw new ArgumentException("A valid Organisation is required.", nameof(request));
+        if (request.SchemeYear <= 0) request.SchemeYear = DateTime.UtcNow.Year;
+        if (string.IsNullOrWhiteSpace(request.StatutoryMotivation)) throw new ArgumentException("Detailed statutory motivation is required.", nameof(request));
+        if (request.RequestedExtensionDate == default) throw new ArgumentException("Requested extension date is required.", nameof(request));
+
+        var maxAllowedDate = new DateTime(request.SchemeYear, 5, 31, 23, 59, 59, DateTimeKind.Utc);
+        if (request.RequestedExtensionDate > maxAllowedDate)
+        {
+            request.RequestedExtensionDate = maxAllowedDate;
+        }
+
+        using var db = await _contextFactory.CreateDbContextAsync();
+
+        var existingActive = await db.WspExtensionRequests
+            .AnyAsync(r => r.OrganisationId == request.OrganisationId 
+                        && r.SchemeYear == request.SchemeYear 
+                        && (r.ApprovalStatusCode == "PendingReview" || r.ApprovalStatusCode == "Recommended"));
+
+        if (existingActive)
+        {
+            throw new InvalidOperationException($"An active extension request is already under review for organisation ID {request.OrganisationId} in scheme year {request.SchemeYear}.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ApplicationReference))
+        {
+            request.ApplicationReference = $"EXT-{request.SchemeYear}-{DateTime.UtcNow:MMdd}-{request.OrganisationId:D3}";
+        }
+
+        request.ApprovalStatusCode = "PendingReview";
+        request.SubmittedByUserId = currentUsername;
+        request.CreatedAt = DateTime.UtcNow;
+        request.CreatedBy = currentUsername;
+
+        db.WspExtensionRequests.Add(request);
+        await db.SaveChangesAsync();
+
+        _audit.LogAction(db, "WspExtensionRequest", request.Id, "Submit", currentUsername, null, request);
+        await db.SaveChangesAsync();
+
+        return request;
+    }
+
+    public async Task<WspExtensionRequest> ReviewExtensionRequestAsync(int id, string reviewerUserId, bool recommend, string comments)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.WspExtensionRequests.FindAsync(id);
+        if (existing == null)
+        {
+            throw new KeyNotFoundException($"WspExtensionRequest with ID {id} was not found.");
+        }
+
+        if (existing.ApprovalStatusCode != "PendingReview")
+        {
+            throw new InvalidOperationException($"Cannot review extension request in status '{existing.ApprovalStatusCode}'. It must be in 'PendingReview' status.");
+        }
+
+        var beforeState = new
+        {
+            existing.ApprovalStatusCode,
+            existing.ReviewedByUserId,
+            existing.ReviewedAt,
+            existing.ReviewerComments
+        };
+
+        existing.ReviewedByUserId = reviewerUserId;
+        existing.ReviewedAt = DateTime.UtcNow;
+        existing.ReviewerComments = comments;
+        existing.ModifiedAt = DateTime.UtcNow;
+        existing.ModifiedBy = reviewerUserId;
+
+        if (recommend)
+        {
+            existing.ApprovalStatusCode = "Recommended";
+        }
+        else
+        {
+            existing.ApprovalStatusCode = "Rejected";
+            existing.ApprovalComments = comments;
+            existing.ApprovedAt = DateTime.UtcNow;
+        }
+
+        _audit.LogAction(db, "WspExtensionRequest", existing.Id, "Review", reviewerUserId, beforeState, existing);
+        await db.SaveChangesAsync();
+
+        return existing;
+    }
+
+    public async Task<WspExtensionRequest> AdjudicateExtensionRequestAsync(int id, string approverUserId, bool approve, DateTime? grantedDate, string comments)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.WspExtensionRequests.FindAsync(id);
+        if (existing == null)
+        {
+            throw new KeyNotFoundException($"WspExtensionRequest with ID {id} was not found.");
+        }
+
+        if (!string.IsNullOrEmpty(existing.ReviewedByUserId) && string.Equals(existing.ReviewedByUserId, approverUserId, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Maker-Checker segregation of duties violation: The reviewer cannot adjudicate the final approval.");
+        }
+
+        var beforeState = new
+        {
+            existing.ApprovalStatusCode,
+            existing.ApprovedByUserId,
+            existing.ApprovedAt,
+            existing.GrantedExtensionDate,
+            existing.ApprovalComments
+        };
+
+        existing.ApprovedByUserId = approverUserId;
+        existing.ApprovedAt = DateTime.UtcNow;
+        existing.ApprovalComments = comments;
+        existing.ModifiedAt = DateTime.UtcNow;
+        existing.ModifiedBy = approverUserId;
+
+        if (approve)
+        {
+            var finalGrantedDate = grantedDate ?? existing.RequestedExtensionDate;
+            var maxAllowedDate = new DateTime(existing.SchemeYear, 5, 31, 23, 59, 59, DateTimeKind.Utc);
+            if (finalGrantedDate > maxAllowedDate)
+            {
+                finalGrantedDate = maxAllowedDate;
+            }
+
+            existing.ApprovalStatusCode = "Approved";
+            existing.GrantedExtensionDate = finalGrantedDate;
+        }
+        else
+        {
+            existing.ApprovalStatusCode = "Rejected";
+        }
+
+        _audit.LogAction(db, "WspExtensionRequest", existing.Id, "Adjudicate", approverUserId, beforeState, existing);
+        await db.SaveChangesAsync();
+
+        return existing;
     }
 }

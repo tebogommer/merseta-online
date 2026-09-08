@@ -14,6 +14,7 @@
 - [project] Form Keybindings & Empty States: Ctrl+S to save, '/' to search, Esc to cancel, <EmptyStateCard> for empty tables → project-conventions.md
 - [project] CI Quality Gate: All changes must pass python scripts/ci_ux_quality_gate.py with 0 errors and >=90% clean pass → project-conventions.md
 - [project] Systemic Bug Remediation: Fix bugs across entire app and enforce regression tests to prevent recurrence → project-conventions.md
+- [project] When pushing to git, generate and commit DDL SQL script with lookup tables and seed values aligned with code → project-conventions.md
 - [project] Component metadata uses SemVer while toolkit releases use CalVer → tech-decisions.md
-
-
+## Feedback
+- [feedback] Human test cases must use UI menu names and button labels, never raw URLs → feedback-history.md

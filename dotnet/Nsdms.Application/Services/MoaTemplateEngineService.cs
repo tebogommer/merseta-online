@@ -511,6 +511,8 @@ public class MoaTemplateEngineService : IMoaTemplateEngineService
 
     public Dictionary<string, Dictionary<string, string>> GetDefaultScenarioTokenProfiles()
     {
+        var currentYear = DateTime.UtcNow.Year.ToString();
+
         return new Dictionary<string, Dictionary<string, string>>
         {
             ["LevyEmployer"] = new()
@@ -518,8 +520,8 @@ public class MoaTemplateEngineService : IMoaTemplateEngineService
                 ["ScenarioLabel"] = "Discretionary Grant — Corporate Employer",
                 ["EmployerName"] = "Apex Engineering Works (Pty) Ltd",
                 ["SdlNumber"] = "L998877665",
-                ["ProjectTitle"] = "Apprenticeship Skills Development Programme 2026",
-                ["MoaNumber"] = "MOA-2026-DG-00892",
+                ["ProjectTitle"] = $"Apprenticeship Skills Development Programme {currentYear}",
+                ["MoaNumber"] = $"MOA-{currentYear}-DG-00892",
                 ["TotalContractValue"] = "R 450,000.00",
                 ["ContractPeriod"] = $"{DateTime.UtcNow:yyyy-MM-dd} to {DateTime.UtcNow.AddYears(1):yyyy-MM-dd}",
                 ["ContractStartDate"] = DateTime.UtcNow.ToString("dd MMMM yyyy"),
@@ -529,9 +531,9 @@ public class MoaTemplateEngineService : IMoaTemplateEngineService
             {
                 ["ScenarioLabel"] = "Special Project — Non-Levy Community Trust",
                 ["EmployerName"] = "Bambanani Skills Development Trust",
-                ["SdlNumber"] = "NGO-2026-081",
+                ["SdlNumber"] = $"NGO-{currentYear}-081",
                 ["ProjectTitle"] = "Community Artisan Upliftment & Welder Training",
-                ["MoaNumber"] = "MOA-2026-SP-00114",
+                ["MoaNumber"] = $"MOA-{currentYear}-SP-00114",
                 ["TotalContractValue"] = "R 180,000.00",
                 ["ContractPeriod"] = $"{DateTime.UtcNow:yyyy-MM-dd} to {DateTime.UtcNow.AddMonths(18):yyyy-MM-dd}",
                 ["ContractStartDate"] = DateTime.UtcNow.ToString("dd MMMM yyyy"),
@@ -541,9 +543,9 @@ public class MoaTemplateEngineService : IMoaTemplateEngineService
             {
                 ["ScenarioLabel"] = "Public TVET College Partnership",
                 ["EmployerName"] = "Ekurhuleni East TVET College",
-                ["SdlNumber"] = "TVET-2026-004",
+                ["SdlNumber"] = $"TVET-{currentYear}-004",
                 ["ProjectTitle"] = "NCV Level 4 Engineering & Related Services Practical Workplace",
-                ["MoaNumber"] = "MOA-2026-TVET-00045",
+                ["MoaNumber"] = $"MOA-{currentYear}-TVET-00045",
                 ["TotalContractValue"] = "R 1,200,000.00",
                 ["ContractPeriod"] = $"{DateTime.UtcNow:yyyy-MM-dd} to {DateTime.UtcNow.AddYears(2):yyyy-MM-dd}",
                 ["ContractStartDate"] = DateTime.UtcNow.ToString("dd MMMM yyyy"),
@@ -555,7 +557,7 @@ public class MoaTemplateEngineService : IMoaTemplateEngineService
                 ["EmployerName"] = "Transnet Engineering Division",
                 ["SdlNumber"] = "L102938475",
                 ["ProjectTitle"] = "Mechanical & Industrial Candidate Engineer Development Scheme",
-                ["MoaNumber"] = "MOA-2026-BUR-00301",
+                ["MoaNumber"] = $"MOA-{currentYear}-BUR-00301",
                 ["TotalContractValue"] = "R 320,000.00",
                 ["ContractPeriod"] = $"{DateTime.UtcNow:yyyy-MM-dd} to {DateTime.UtcNow.AddYears(3):yyyy-MM-dd}",
                 ["ContractStartDate"] = DateTime.UtcNow.ToString("dd MMMM yyyy"),

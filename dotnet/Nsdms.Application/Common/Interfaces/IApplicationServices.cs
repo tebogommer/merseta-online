@@ -67,6 +67,7 @@ public interface IPdfDocumentService
 
     // Phase 34/36: SDP Accreditation Certificate, Outcome Letter, Disciplinary Notice & Site Inspection Report
     Task<byte[]> GenerateSdpAccreditationCertificatePdfAsync(int providerId);
+    Task<byte[]> GenerateQctoEndorsementLetterPdfAsync(int providerId);
     Task<byte[]> GenerateSdpOutcomeLetterPdfAsync(int providerId);
     Task<byte[]> GenerateSdpDisciplinaryNoticePdfAsync(int caseId);
     Task<byte[]> GenerateSdpSiteInspectionReportPdfAsync(int inspectionId);

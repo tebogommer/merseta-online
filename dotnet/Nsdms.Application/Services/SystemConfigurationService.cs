@@ -178,6 +178,28 @@ public class SystemConfigurationService : ISystemConfigurationService
             ("LearnerRegistration:MaxSignatureElapsedBusinessDays", "30", "Statutory SLAs", "Statutory window in business days for submitting executed tripartite learnership agreements.", "Integer"),
             ("Etqa:AssessorRegistrationCycleYears", "3", "Statutory SLAs", "Assessor and Moderator accreditation renewal validity cycle in years.", "Integer"),
             ("TradeTest:MaxAllowedAttempts", "3", "Statutory SLAs", "Maximum permitted attempts for trade test qualification assessments per NAMB regulations.", "Integer"),
+
+            // Fiscal Calendar Defaults
+            ("Fiscal:DefaultStartMonthDay", "04-01", "Fiscal Calendar", "Default statutory financial scheme year start date in MM-DD format (01 April).", "String"),
+            ("Fiscal:DefaultEndMonthDay", "03-31", "Fiscal Calendar", "Default statutory financial scheme year end date in MM-DD format (31 March).", "String"),
+            ("Fiscal:DefaultQ1Start", "04-01", "Fiscal Calendar", "Default statutory Quarter 1 start date in MM-DD format (01 April).", "String"),
+            ("Fiscal:DefaultQ1End", "06-30", "Fiscal Calendar", "Default statutory Quarter 1 end date in MM-DD format (30 June).", "String"),
+            ("Fiscal:DefaultQ2Start", "07-01", "Fiscal Calendar", "Default statutory Quarter 2 start date in MM-DD format (01 July).", "String"),
+            ("Fiscal:DefaultQ2End", "09-30", "Fiscal Calendar", "Default statutory Quarter 2 end date in MM-DD format (30 September).", "String"),
+            ("Fiscal:DefaultQ3Start", "10-01", "Fiscal Calendar", "Default statutory Quarter 3 start date in MM-DD format (01 October).", "String"),
+            ("Fiscal:DefaultQ3End", "12-31", "Fiscal Calendar", "Default statutory Quarter 3 end date in MM-DD format (31 December).", "String"),
+            ("Fiscal:DefaultQ4Start", "01-01", "Fiscal Calendar", "Default statutory Quarter 4 start date in MM-DD format (01 January).", "String"),
+            ("Fiscal:DefaultQ4End", "03-31", "Fiscal Calendar", "Default statutory Quarter 4 end date in MM-DD format (31 March).", "String"),
+            ("Fiscal:AllowAnyAdminReviewer", "true", "Fiscal Calendar", "Whether any user with Admin/SuperAdmin role can review and approve a financial year if they are not the submitter.", "Boolean"),
+            ("Fiscal:EnforceMakerCheckerSegregation", "true", "Fiscal Calendar", "Enforce strict Maker-Checker segregation preventing the submitter from approving their own financial year.", "Boolean"),
+            ("Fiscal:RequiredReviewRole", "Admin,SuperAdmin", "Fiscal Calendar", "Comma-separated list of roles authorized to review and adjudicate financial scheme years.", "String"),
+            ("Fiscal:AllowMultipleActiveYears", "false", "Fiscal Calendar", "Whether multiple financial scheme years can be concurrently active without auto-deactivating predecessor years.", "Boolean"),
+
+            // Institutional Closures & Holidays
+            ("Calendar:ObserveInstitutionalClosuresInSla", "true", "Calendar & Holidays", "Whether human officer workflow SLAs universally skip registered merSETA institutional closures.", "Boolean"),
+            ("Calendar:DefaultYearEndShutdownStart", "12-24", "Calendar & Holidays", "Default calendar start date for merSETA annual year-end shutdown in MM-DD format (24 December).", "String"),
+            ("Calendar:DefaultYearEndShutdownEnd", "01-03", "Calendar & Holidays", "Default calendar end date for merSETA annual year-end shutdown in MM-DD format (03 January).", "String"),
+            ("Calendar:RequireMakerCheckerForClosures", "false", "Calendar & Holidays", "Whether newly created ad-hoc closures require secondary officer approval before activation.", "Boolean"),
             ("TradeTest:ResultsUploadSlaDays", "5", "Statutory SLAs", "SLA in days for accredited trade test centres to upload practical assessment results.", "Integer"),
             ("Banking:CoolingOffPeriodDays", "14", "Governance", "Mandatory cooling-off period in days for updating bank disbursement accounts.", "Integer"),
             ("Banking:ConfirmationLetterMaxAgeDays", "90", "Compliance", "Maximum allowable age in days for uploaded bank confirmation letters (FICA/Treasury).", "Integer"),

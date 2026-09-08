@@ -110,6 +110,26 @@ else
                     Description="Select primary or secondary accreditation scope, designated occupational qualification, SAQA reference, and maximum capacity"
                     ValidateAsync="ValidateStep2Async">
             <SdpAccreditationFields Section="Scope"
+                                    AccreditationStream="@_accreditationStream"
+                                    AccreditationStreamChanged="@((val) => { _accreditationStream = val; UpdateReviewGroups(); })"
+                                    PrimaryEtqaName="@_primaryEtqaName"
+                                    PrimaryEtqaNameChanged="@((val) => { _primaryEtqaName = val; UpdateReviewGroups(); })"
+                                    PrimaryEtqaAccreditationNumber="@_primaryEtqaAccreditationNumber"
+                                    PrimaryEtqaAccreditationNumberChanged="@((val) => { _primaryEtqaAccreditationNumber = val; UpdateReviewGroups(); })"
+                                    NambTtcRegistrationNumber="@_nambTtcRegistrationNumber"
+                                    NambTtcRegistrationNumberChanged="@((val) => { _nambTtcRegistrationNumber = val; UpdateReviewGroups(); })"
+                                    NambTtcExpiryDate="@_nambTtcExpiryDate"
+                                    NambTtcExpiryDateChanged="@((val) => { _nambTtcExpiryDate = val; UpdateReviewGroups(); })"
+                                    QctoAccreditationNumber="@_qctoAccreditationNumber"
+                                    QctoAccreditationNumberChanged="@((val) => { _qctoAccreditationNumber = val; UpdateReviewGroups(); })"
+                                    QctoAccreditationStartDate="@_qctoAccreditationStartDate"
+                                    QctoAccreditationStartDateChanged="@((val) => { _qctoAccreditationStartDate = val; UpdateReviewGroups(); })"
+                                    QctoAccreditationEndDate="@_qctoAccreditationEndDate"
+                                    QctoAccreditationEndDateChanged="@((val) => { _qctoAccreditationEndDate = val; UpdateReviewGroups(); })"
+                                    QctoCentreCode="@_qctoCentreCode"
+                                    QctoCentreCodeChanged="@((val) => { _qctoCentreCode = val; UpdateReviewGroups(); })"
+                                    QctoLetterAttachmentRef="@_qctoLetterAttachmentRef"
+                                    QctoLetterAttachmentRefChanged="@((val) => { _qctoLetterAttachmentRef = val; UpdateReviewGroups(); })"
                                     AccreditationScopeType="@_accreditationScopeType"
                                     AccreditationScopeTypeChanged="@((val) => { _accreditationScopeType = val; UpdateReviewGroups(); })"
                                     PrimaryQualificationTitle="@_primaryQualificationTitle"
@@ -193,19 +213,29 @@ else
     private string _submittedAccNumber = string.Empty;
 
     // Step 1: Profile
-    private string _providerLegalName = "Apex Technical Training Academy (Pty) Ltd";
-    private string _tradingName = "Apex Institute of Technology";
-    private string _registrationNumber = "2018/489123/07";
-    private string _taxNumber = "9823471029";
+    private string _providerLegalName = string.Empty;
+    private string _tradingName = string.Empty;
+    private string _registrationNumber = string.Empty;
+    private string _taxNumber = string.Empty;
     private string _providerClassId = "02";
     private string _providerTypeId = "01";
-    private string _physicalAddress = "142 Heidelberg Road, City Deep, Johannesburg";
+    private string _physicalAddress = string.Empty;
     private string _province = "Gauteng";
-    private string _principalFullName = "Dr. Pieter de Villiers";
-    private string _contactEmail = "accreditation@apexacademy.co.za";
-    private string _contactPhone = "011 402 8800";
+    private string _principalFullName = string.Empty;
+    private string _contactEmail = string.Empty;
+    private string _contactPhone = string.Empty;
 
     // Step 2: Scope
+    private string _accreditationStream = "PrimaryAccreditation";
+    private string? _primaryEtqaName;
+    private string? _primaryEtqaAccreditationNumber;
+    private string? _nambTtcRegistrationNumber;
+    private DateTime? _nambTtcExpiryDate = DateTime.UtcNow.AddYears(3);
+    private string? _qctoAccreditationNumber;
+    private DateTime? _qctoAccreditationStartDate = DateTime.UtcNow;
+    private DateTime? _qctoAccreditationEndDate = DateTime.UtcNow.AddYears(5);
+    private string? _qctoCentreCode;
+    private string? _qctoLetterAttachmentRef;
     private string _accreditationScopeType = "Primary";
     private string _primaryQualificationTitle = "Occupational Certificate: Automotive Body Repairer";
     private string _saqaQualificationId = "97542";
@@ -265,6 +295,16 @@ else
         public string PrincipalFullName { get; init; } = string.Empty;
         public string ContactEmail { get; init; } = string.Empty;
         public string ContactPhone { get; init; } = string.Empty;
+        public string AccreditationStream { get; init; } = "PrimaryAccreditation";
+        public string? PrimaryEtqaName { get; init; }
+        public string? PrimaryEtqaAccreditationNumber { get; init; }
+        public string? NambTtcRegistrationNumber { get; init; }
+        public DateTime? NambTtcExpiryDate { get; init; }
+        public string? QctoAccreditationNumber { get; init; }
+        public DateTime? QctoAccreditationStartDate { get; init; }
+        public DateTime? QctoAccreditationEndDate { get; init; }
+        public string? QctoCentreCode { get; init; }
+        public string? QctoLetterAttachmentRef { get; init; }
         public string AccreditationScopeType { get; init; } = "Primary";
         public string PrimaryQualificationTitle { get; init; } = string.Empty;
         public string SaqaQualificationId { get; init; } = string.Empty;
@@ -333,6 +373,15 @@ else
             _ => "Workplace-Integrated Learning"
         };
 
+        var streamTitle = _accreditationStream switch
+        {
+            AccreditationStreamType.ProgrammeApproval => $"Programme Approval ({_primaryEtqaName ?? "Secondary SETA"})",
+            AccreditationStreamType.QctoSkillsDevelopmentProvider => $"QCTO SDP ({_qctoAccreditationNumber ?? "QCTO Registered"})",
+            AccreditationStreamType.QctoTradeTestCentre => $"QCTO Trade Test Centre ({_nambTtcRegistrationNumber ?? "NAMB TTC"})",
+            AccreditationStreamType.NonMerSetaScope => "Non-merSETA Scope",
+            _ => "Primary merSETA Institutional Accreditation"
+        };
+
         _reviewGroups = new List<WizardReviewGroup>
         {
             new()
@@ -358,6 +407,7 @@ else
                 TargetStepIndex = 1,
                 Items = new()
                 {
+                    new("Accreditation stream", streamTitle),
                     new("Accreditation category", _accreditationScopeType == "Primary" ? "Primary merSETA QA" : "Secondary Scope Extension"),
                     new("Primary qualification title", _primaryQualificationTitle),
                     new("SAQA registration ID", _saqaQualificationId, isMonospace: true),
@@ -428,6 +478,36 @@ else
 
     private Task<bool> ValidateStep2Async()
     {
+        if (_accreditationStream == AccreditationStreamType.QctoSkillsDevelopmentProvider)
+        {
+            if (string.IsNullOrWhiteSpace(_qctoAccreditationNumber))
+            {
+                Snackbar.Add("Please enter the official QCTO accreditation reference number.", Severity.Warning);
+                return Task.FromResult(false);
+            }
+        }
+        else if (_accreditationStream == AccreditationStreamType.QctoTradeTestCentre)
+        {
+            if (string.IsNullOrWhiteSpace(_nambTtcRegistrationNumber))
+            {
+                Snackbar.Add("Please enter the NAMB Trade Test Centre registration number.", Severity.Warning);
+                return Task.FromResult(false);
+            }
+        }
+        else if (_accreditationStream == AccreditationStreamType.ProgrammeApproval)
+        {
+            if (string.IsNullOrWhiteSpace(_primaryEtqaName))
+            {
+                Snackbar.Add("Please enter the Primary ETQA / SETA name.", Severity.Warning);
+                return Task.FromResult(false);
+            }
+            if (string.IsNullOrWhiteSpace(_primaryEtqaAccreditationNumber))
+            {
+                Snackbar.Add("Please enter the Primary SETA accreditation reference number.", Severity.Warning);
+                return Task.FromResult(false);
+            }
+        }
+
         if (string.IsNullOrWhiteSpace(_primaryQualificationTitle))
         {
             Snackbar.Add("Please provide the primary qualification title.", Severity.Warning);
@@ -523,6 +603,16 @@ else
             _principalFullName = model.PrincipalFullName;
             _contactEmail = model.ContactEmail;
             _contactPhone = model.ContactPhone;
+            _accreditationStream = model.AccreditationStream ?? "PrimaryAccreditation";
+            _primaryEtqaName = model.PrimaryEtqaName;
+            _primaryEtqaAccreditationNumber = model.PrimaryEtqaAccreditationNumber;
+            _nambTtcRegistrationNumber = model.NambTtcRegistrationNumber;
+            _nambTtcExpiryDate = model.NambTtcExpiryDate;
+            _qctoAccreditationNumber = model.QctoAccreditationNumber;
+            _qctoAccreditationStartDate = model.QctoAccreditationStartDate;
+            _qctoAccreditationEndDate = model.QctoAccreditationEndDate;
+            _qctoCentreCode = model.QctoCentreCode;
+            _qctoLetterAttachmentRef = model.QctoLetterAttachmentRef;
             _accreditationScopeType = model.AccreditationScopeType;
             _primaryQualificationTitle = model.PrimaryQualificationTitle;
             _saqaQualificationId = model.SaqaQualificationId;
@@ -583,6 +673,16 @@ else
                 PrincipalFullName = _principalFullName,
                 ContactEmail = _contactEmail,
                 ContactPhone = _contactPhone,
+                AccreditationStream = _accreditationStream,
+                PrimaryEtqaName = _primaryEtqaName,
+                PrimaryEtqaAccreditationNumber = _primaryEtqaAccreditationNumber,
+                NambTtcRegistrationNumber = _nambTtcRegistrationNumber,
+                NambTtcExpiryDate = _nambTtcExpiryDate,
+                QctoAccreditationNumber = _qctoAccreditationNumber,
+                QctoAccreditationStartDate = _qctoAccreditationStartDate,
+                QctoAccreditationEndDate = _qctoAccreditationEndDate,
+                QctoCentreCode = _qctoCentreCode,
+                QctoLetterAttachmentRef = _qctoLetterAttachmentRef,
                 AccreditationScopeType = _accreditationScopeType,
                 PrimaryQualificationTitle = _primaryQualificationTitle,
                 SaqaQualificationId = _saqaQualificationId,
@@ -645,8 +745,24 @@ else
         {
             _isProcessing = true;
 
-            // Generate statutory accreditation number reference
-            var accNumber = $"SDP-{DateTime.UtcNow:yyyy}-{new Random().Next(1000, 9999)}";
+            // Determine statutory accreditation reference number
+            string accNumber;
+            if (_accreditationStream == AccreditationStreamType.QctoSkillsDevelopmentProvider && !string.IsNullOrWhiteSpace(_qctoAccreditationNumber))
+            {
+                accNumber = _qctoAccreditationNumber.Trim();
+            }
+            else if (_accreditationStream == AccreditationStreamType.QctoTradeTestCentre && !string.IsNullOrWhiteSpace(_nambTtcRegistrationNumber))
+            {
+                accNumber = _nambTtcRegistrationNumber.Trim();
+            }
+            else if (_accreditationStream == AccreditationStreamType.ProgrammeApproval && !string.IsNullOrWhiteSpace(_primaryEtqaAccreditationNumber))
+            {
+                accNumber = _primaryEtqaAccreditationNumber.Trim();
+            }
+            else
+            {
+                accNumber = $"SDP-{DateTime.UtcNow:yyyy}-{new Random().Next(1000, 9999)}";
+            }
 
             // Resolve or create parent Organisation record
             var orgs = await OrgService.GetAllAsync(_providerLegalName);
@@ -678,9 +794,20 @@ else
                 ProviderStatusId = "02", // Provisional
                 ProviderStatusCode = "PROVISIONAL",
                 MaxLearnerCapacity = _maxLearnerCapacity,
-                AccreditationStartDate = DateTime.UtcNow,
-                AccreditationEndDate = DateTime.UtcNow.AddYears(5),
-                EtqaId = "17",
+                AccreditationStream = _accreditationStream,
+                PrimaryEtqaName = _primaryEtqaName,
+                PrimaryAccreditationNumber = _primaryEtqaAccreditationNumber,
+                NambRegistrationNumber = _nambTtcRegistrationNumber,
+                NambRegistrationStartDate = DateTime.UtcNow,
+                NambRegistrationEndDate = _nambTtcExpiryDate ?? DateTime.UtcNow.AddYears(3),
+                QctoAccreditationNumber = _qctoAccreditationNumber,
+                QctoAccreditationStartDate = _qctoAccreditationStartDate ?? DateTime.UtcNow,
+                QctoAccreditationEndDate = _qctoAccreditationEndDate ?? DateTime.UtcNow.AddYears(5),
+                QctoCentreCode = _qctoCentreCode,
+                QctoLetterAttachmentRef = _qctoLetterAttachmentRef,
+                AccreditationStartDate = _accreditationStream == AccreditationStreamType.QctoSkillsDevelopmentProvider ? (_qctoAccreditationStartDate ?? DateTime.UtcNow) : DateTime.UtcNow,
+                AccreditationEndDate = _accreditationStream == AccreditationStreamType.QctoSkillsDevelopmentProvider ? (_qctoAccreditationEndDate ?? DateTime.UtcNow.AddYears(5)) : DateTime.UtcNow.AddYears(5),
+                EtqaId = _accreditationStream == AccreditationStreamType.PrimaryAccreditation ? "17" : "99",
                 EtqaDecisionNumber = $"ETQA-MIN-{DateTime.UtcNow:yyyy}-{new Random().Next(100, 999)}",
                 IsActive = true
             };

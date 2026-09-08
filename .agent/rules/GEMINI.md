@@ -525,6 +525,20 @@ The agent may only declare testing phase complete when:
 ### ⚙️ Dynamic Configuration & Feature Flags Governance
 1. **Zero Hardcoding Invariant**: No business parameter, threshold, storage path, or external integration endpoint may be hardcoded. Always use `ISystemConfigurationService` with cascading database overrides.
 2. **Integrations Off-By-Default**: All external integrations (Dynamics GP, Sage, Live DHET SFTP, Live SARS FTP, SMS OTP, Azure Blob) MUST default to `IsEnabled = false`. Workflows must cleanly execute in mock simulation mode when disabled.
+### 🛡️ Hierarchical Relational Fiscal Calendar & Working Day Governance Standard
+1. **Relational Model & Contiguity Invariant**:
+   - Every financial year record (`FinancialYear`) must manage 4 sequential relational quarters (`FinancialQuarter`, 1:4).
+   - Quarter dates must satisfy strict contiguity: $Q_n.\text{EndDate} + 1\text{ day} == Q_{n+1}.\text{StartDate}$, with $Q_1.\text{StartDate} == \text{FinancialYear.StartDate}$ and $Q_4.\text{EndDate} == \text{FinancialYear.EndDate}$. Overlaps and gaps must be rejected at both domain and UI validation levels.
+2. **Statutory South African Working Days Computation**:
+   - Calculation of working days across months and quarters must use `SouthAfricanPublicHolidays` (Butcher's Computus algorithm for Easter/Good Friday/Family Day and Section 2(1) Sunday rollover to Monday under Act No 36 of 1994).
+   - February days must dynamically evaluate `DateTime.IsLeapYear(year)` (29 days for leap years, 28 for non-leap years).
+3. **Master-Detail & View-by-Default Architecture**:
+   - Fiscal calendar management must reside at `/admin/financial-years` (Archetype A1 List) and `/admin/financial-years/{id}` (Archetype A3 Detail).
+   - Viewing records (`/{id}`) is strictly read-only by default. Edits are confined to `/{id}/edit` with Save and Cancel buttons.
+4. **Audited Double-Write & Dynamic Configuration**:
+   - All mutations (financial year creation, quarter modifications, deletions, and template updates) must perform atomic double-writes into `audit_logs` with before/after state snapshots.
+   - Statutory default dates must resolve dynamically from `SystemConfigurationService` (`Fiscal:Default*`) with fallback constants.
+
 ---
 
 ### 🛡️ Razor Component & Master-Detail Invariants
@@ -657,6 +671,21 @@ Cite the clause identifier. If the standard does not cover what is needed, stop 
 
 ---
 
+### 🛡️ Zero-Hardcoding & Dynamic Configuration Invariant
+1. **Dynamic Business Rules Resolution**:
+   - Never embed literal values for statutory SLAs, attempt limits, validity tenures, monetary approval thresholds, levy split percentages, or mentor ratios directly inside application service classes or UI components.
+   - Always inject `ISystemConfigurationService` and resolve parameters using:
+     `await _configService.GetValueAsync<T>("Category:KeyName", fallbackConstant)`
+   - Constant literals may only be used as fallback defaults passed to `GetValueAsync<T>`.
+2. **Dynamic Tenancy & Identity Resolution**:
+   - Never write fallback logic containing hardcoded organisation names (e.g., `"toyota"`), SDL numbers (e.g., `"700100200"`), or usernames (e.g., `"Admin"`, `"sysadmin@merseta.org.za"`).
+   - Tenancy and user identities must resolve strictly from database relations (`OrganisationContact`, `SdfCompany`) and authenticated claims (`IHttpContextAccessor` / `AuthenticationStateProvider`).
+3. **MudBlazor Design Token Invariant**:
+   - Never write hardcoded hex color codes (`#cc9c47`) or inline RGB strings in `.razor` markup.
+   - All colors and theme accents must reference MudBlazor design variables (e.g., `var(--mud-palette-primary)` or `Color.Primary`).
+
+---
+
 ### 🛡️ Statutory Learner Registration & Minor Protection Invariant
 1. **Minor Co-Signatory Requirement**:
    - For all learner registration workflows (Agreements, ARPL, Trade Tests), any applicant under 18 years of age at the time of agreement execution MUST capture a linked `PersonGuardian` record. Bypassing guardian details for minors violates the Skills Development Act.
@@ -729,6 +758,21 @@ Cite the clause identifier. If the standard does not cover what is needed, stop 
    - Provide statutory constants strictly as fallback arguments.
 3. **Startup Seeding Requirement**:
    - Any newly introduced configuration parameter MUST be added to `SystemConfigurationService.SeedDefaultConfigsAsync()` with its category, data type, description, and default value so it appears automatically in the System Settings administration portal.
+
+---
+
+### 🛡️ Anti-Synthetic Data & Zero-Hardcoding Architecture Invariant
+1. **Zero Synthetic Dummy Entity Creation**:
+   - Application services and UI components MUST NEVER synthesize placeholder records (e.g. dummy `Person` with `"Primary Contact"`, `"contact@employer.co.za"`, or `"011-555-0100"`) when a foreign key is missing.
+   - Missing required relations must fail fast with descriptive domain validation exceptions requiring the user to select or link a verified record.
+2. **Zero Hardcoded Scheme/Financial Years**:
+   - Never write literal `"2026"` or `"2026/2027"` in entity property initializers, document templates, or UI `<MudSelectItem>` elements.
+   - Dynamic year selectors must compute ranges relative to `DateTime.UtcNow.Year` and resolve the active scheme year via `ISystemConfigurationService.GetValueAsync("Governance:CurrentSchemeYear", DateTime.UtcNow.Year.ToString())`.
+3. **Zero Hardcoded URLs & Endpoints**:
+   - Verification URLs, QR code links, and external ERP integration endpoints must never contain static domain names (e.g. `"https://verify.merseta.org.za"` or `"https://erp.merseta.org.za"`).
+   - All external/public URLs must be constructed from configurable base URLs resolved from `ISystemConfigurationService` or `IConfiguration`.
+4. **Zero Inline Timeouts & File Caps**:
+   - File upload limits (`maxAllowedSize`), cache TTLs (`MemoryCacheEntryOptions`), and HTTP client timeouts must reference centralized system configuration keys with statutory constants strictly as fallback defaults.
 
 ---
 

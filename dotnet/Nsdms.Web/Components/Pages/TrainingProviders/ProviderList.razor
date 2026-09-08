@@ -46,6 +46,20 @@
             <MudSelectItem Value="@("Active")">Active Only</MudSelectItem>
             <MudSelectItem Value="@("Inactive")">Inactive Only</MudSelectItem>
         </MudSelect>
+        <MudSelect T="string" 
+                   Label="Accreditation Stream" 
+                   @bind-Value="_streamFilter" 
+                   @bind-Value:after="HandleFilterChanged"
+                   Variant="Variant.Outlined" 
+                   Margin="Margin.Dense"
+                   Dense="true">
+            <MudSelectItem Value="@("All")">All Streams</MudSelectItem>
+            <MudSelectItem Value="@("PrimaryAccreditation")">Primary merSETA</MudSelectItem>
+            <MudSelectItem Value="@("ProgrammeApproval")">Programme Approval</MudSelectItem>
+            <MudSelectItem Value="@("QctoSkillsDevelopmentProvider")">QCTO SDP</MudSelectItem>
+            <MudSelectItem Value="@("QctoTradeTestCentre")">QCTO Trade Test Centre</MudSelectItem>
+            <MudSelectItem Value="@("NonMerSetaScope")">Non-merSETA Scope</MudSelectItem>
+        </MudSelect>
     </FilterContent>
     <ActiveFilterChips>
         @if (!string.IsNullOrWhiteSpace(_searchString))
@@ -58,6 +72,12 @@
         {
             <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
                 Status: @_statusFilter
+            </MudChip>
+        }
+        @if (_streamFilter != "All")
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Info" OnClose="@(() => { _streamFilter = "All"; HandleFilterChanged(); })">
+                Stream: @FormatStream(_streamFilter)
             </MudChip>
         }
     </ActiveFilterChips>
@@ -99,6 +119,7 @@
             <HeaderContent>
                 <MudTh>Accreditation No</MudTh>
                 <MudTh>Provider / Organisation</MudTh>
+                <MudTh Class="d-none d-lg-table-cell">Accreditation Stream</MudTh>
                 <MudTh Class="d-none d-md-table-cell">Provider Type</MudTh>
                 <MudTh Class="d-none d-md-table-cell">Decision No</MudTh>
                 <MudTh>Accreditation Period</MudTh>
@@ -122,6 +143,11 @@
                             Contact: @context.PrimaryContactPerson.FirstName @context.PrimaryContactPerson.LastName
                         </MudText>
                     }
+                </MudTd>
+                <MudTd Class="d-none d-lg-table-cell" DataLabel="Accreditation Stream">
+                    <MudChip T="string" Size="Size.Small" Color="@GetStreamColor(context.AccreditationStream)" Variant="Variant.Outlined">
+                        @FormatStream(context.AccreditationStream)
+                    </MudChip>
                 </MudTd>
                 <MudTd Class="d-none d-md-table-cell" DataLabel="Provider Type">
                     <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">
@@ -183,6 +209,7 @@
     private HashSet<TrainingProvider> _selectedProviders = new();
     private string _searchString = string.Empty;
     private string _statusFilter = "All";
+    private string _streamFilter = "All";
     private bool _loading = true;
 
     private List<BreadcrumbItem> _breadcrumbs = new()
@@ -219,6 +246,11 @@
                 query = query.Where(x => !x.IsActive);
             }
 
+            if (_streamFilter != "All")
+            {
+                query = query.Where(x => x.AccreditationStream == _streamFilter);
+            }
+
             if (!string.IsNullOrWhiteSpace(_searchString))
             {
                 var s = _searchString.Trim();
@@ -243,8 +275,27 @@
     {
         _searchString = string.Empty;
         _statusFilter = "All";
+        _streamFilter = "All";
         StateHasChanged();
     }
+
+    private static Color GetStreamColor(string? stream) => stream switch
+    {
+        AccreditationStreamType.QctoSkillsDevelopmentProvider => Color.Tertiary,
+        AccreditationStreamType.QctoTradeTestCentre => Color.Warning,
+        AccreditationStreamType.ProgrammeApproval => Color.Secondary,
+        AccreditationStreamType.NonMerSetaScope => Color.Default,
+        _ => Color.Primary
+    };
+
+    private static string FormatStream(string? stream) => stream switch
+    {
+        AccreditationStreamType.QctoSkillsDevelopmentProvider => "QCTO SDP",
+        AccreditationStreamType.QctoTradeTestCentre => "QCTO TTC",
+        AccreditationStreamType.ProgrammeApproval => "Programme Approval",
+        AccreditationStreamType.NonMerSetaScope => "Non-merSETA Scope",
+        _ => "Primary merSETA"
+    };
 
     private void OnSelectedProvidersChanged(HashSet<TrainingProvider> selected)
     {

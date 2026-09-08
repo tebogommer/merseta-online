@@ -1,6 +1,6 @@
-﻿-- =========================================================================================
+-- =========================================================================================
 -- Phase 33: Learner Registration Dual-Channel Architecture & Straight-Through Processing (STP)
--- Supports high-speed automated bulk intake (The ATM) alongside manual wizards (The Teller)
+-- Supports high-speed automated bulk intake alongside manual registration wizards
 -- =========================================================================================
 
 -- 1. Extend CompanyLearner with Dual-Channel metadata

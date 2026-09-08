@@ -24,6 +24,7 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<Microsoft.AspNetCore.Identity.IdentityUserClaim<int>> UserClaims { get; }
     DbSet<Visit> Visits { get; }
     DbSet<WspSubmission> WspSubmissions { get; }
+    DbSet<WspExtensionRequest> WspExtensionRequests { get; }
     DbSet<LevyFile> LevyFiles { get; }
     DbSet<LevyFileLine> LevyFileLines { get; }
     DbSet<SarsLevyStaging> SarsLevyStagings { get; }
@@ -96,6 +97,11 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<DocumentTemplateSection> DocumentTemplateSections { get; }
     DbSet<DocumentSnapshot> DocumentSnapshots { get; }
 
+
+    // Fiscal Calendar & Quarters Management
+    DbSet<FinancialYear> FinancialYears { get; }
+    DbSet<FinancialQuarter> FinancialQuarters { get; }
+    DbSet<NonWorkingDay> NonWorkingDays { get; }
 
     // System Configuration & Feature Flags
     DbSet<SystemConfig> SystemConfigs { get; }

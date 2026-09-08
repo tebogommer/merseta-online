@@ -1,7 +1,8 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Interfaces;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
@@ -55,11 +56,16 @@ public class WspSignoffService : IWspSignoffService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
+    private readonly ISystemConfigurationService? _configService;
 
-    public WspSignoffService(INsdmsDbContextFactory contextFactory, IAuditService audit)
+    public WspSignoffService(
+        INsdmsDbContextFactory contextFactory, 
+        IAuditService audit,
+        ISystemConfigurationService? configService = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
+        _configService = configService;
     }
 
     public async Task<WspQuorumStatusDto> GetQuorumStatusAsync(int wspSubmissionId)
@@ -73,7 +79,10 @@ public class WspSignoffService : IWspSignoffService
         if (wsp == null)
             throw new KeyNotFoundException($"WspSubmission with ID {wspSubmissionId} not found.");
 
-        bool isSmallEmployer = wsp.EmployeeCount < 50;
+        var smallEmployerThreshold = _configService != null
+            ? await _configService.GetValueAsync<int>("Governance:SmallEmployerMaxEmployeeCount", 50)
+            : 50;
+        bool isSmallEmployer = wsp.EmployeeCount < smallEmployerThreshold;
         int requiredSignatures = isSmallEmployer ? 2 : 3;
 
         var validAttestations = wsp.SignoffAttestations
@@ -175,7 +184,10 @@ public class WspSignoffService : IWspSignoffService
         db.WspSignoffAttestations.Add(attestation);
 
         // Check and update submission status
-        bool isSmallEmployer = wsp.EmployeeCount < 50;
+        var smallEmployerThreshold = _configService != null
+            ? await _configService.GetValueAsync<int>("Governance:SmallEmployerMaxEmployeeCount", 50)
+            : 50;
+        bool isSmallEmployer = wsp.EmployeeCount < smallEmployerThreshold;
         wsp.RequiredSignoffCount = isSmallEmployer ? 2 : 3;
 
         var allRoles = wsp.SignoffAttestations

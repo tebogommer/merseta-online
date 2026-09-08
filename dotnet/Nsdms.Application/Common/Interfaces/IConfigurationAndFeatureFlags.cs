@@ -8,6 +8,7 @@ public interface ISystemConfigurationService
     Task<T> GetValueAsync<T>(string key, T defaultValue);
     Task<List<SystemConfig>> GetAllConfigsAsync(string? category = null);
     Task<SystemConfig> SetConfigAsync(string key, string value, string category = "General", string? description = null, string dataType = "String", string currentUsername = "SYSTEM");
+    Task SetValueAsync(string key, string value, string currentUsername = "SYSTEM", string category = "General") => SetConfigAsync(key, value, category, null, "String", currentUsername);
     Task<bool> DeleteConfigAsync(string key, string currentUsername = "SYSTEM");
     Task SeedDefaultConfigsAsync();
 }

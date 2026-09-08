@@ -9,6 +9,7 @@
 @using Nsdms.Web.Components.Shared.Wizard
 @using MudBlazor
 @inject ILearnerService LearnerService
+@inject IPersonService PersonService
 @inject IOrganisationService OrgService
 @inject ITrainingProviderService ProviderService
 @inject NavigationManager NavManager
@@ -781,11 +782,36 @@ else
         }
     }
 
+    private int _personId = 0;
+
     private async Task SubmitAgreementAsync()
     {
         _isProcessing = true;
         try
         {
+            if (_personId <= 0 && !string.IsNullOrWhiteSpace(_rsaIdNumber))
+            {
+                var existing = await PersonService.GetByRsaIdAsync(_rsaIdNumber.Trim());
+                if (existing != null)
+                {
+                    _personId = existing.Id;
+                }
+                else
+                {
+                    var newPerson = new Person
+                    {
+                        RsaIdNumber = _rsaIdNumber.Trim(),
+                        FirstName = _firstName?.Trim() ?? string.Empty,
+                        LastName = _lastName?.Trim() ?? string.Empty,
+                        EquityCode = _equityGroup,
+                        PhysicalAddress = $"{_addressLine1}, {_city}".Trim(' ', ','),
+                        PhysicalAddressPostalCode = _postalCode
+                    };
+                    var created = await PersonService.CreateAsync(newPerson);
+                    _personId = created.Id;
+                }
+            }
+
             var learner = BuildLearnerEntity("Registered");
             var result = await LearnerService.RegisterLearnerAsync(learner, "SdfUser");
             _registeredLearnerId = result.Id;
@@ -814,6 +840,7 @@ else
     {
         var learner = new CompanyLearner
         {
+            PersonId = _personId,
             OrganisationId = _organisationId > 0 ? _organisationId : null,
             TrainingProviderId = _trainingProviderId,
             LearnerContractNumber = $"LA-2026-{DateTime.UtcNow:MMdd}-{_rsaIdNumber.Substring(Math.Max(0, _rsaIdNumber.Length - 4))}",

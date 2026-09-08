@@ -34,6 +34,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<OrganisationSite> OrganisationSites => Set<OrganisationSite>();
     public DbSet<Visit> Visits => Set<Visit>();
     public DbSet<WspSubmission> WspSubmissions => Set<WspSubmission>();
+    public DbSet<WspExtensionRequest> WspExtensionRequests => Set<WspExtensionRequest>();
     public DbSet<LevyFile> LevyFiles => Set<LevyFile>();
     public DbSet<LevyFileLine> LevyFileLines => Set<LevyFileLine>();
     public DbSet<SarsLevyStaging> SarsLevyStagings => Set<SarsLevyStaging>();
@@ -106,6 +107,11 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<DocumentTemplateSection> DocumentTemplateSections => Set<DocumentTemplateSection>();
     public DbSet<DocumentSnapshot> DocumentSnapshots => Set<DocumentSnapshot>();
 
+
+    // Fiscal Calendar & Quarters Management
+    public DbSet<FinancialYear> FinancialYears => Set<FinancialYear>();
+    public DbSet<FinancialQuarter> FinancialQuarters => Set<FinancialQuarter>();
+    public DbSet<NonWorkingDay> NonWorkingDays => Set<NonWorkingDay>();
 
     // System Configuration & Feature Flags
     public DbSet<SystemConfig> SystemConfigs => Set<SystemConfig>();
@@ -498,13 +504,13 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(o => o.TradingName).HasMaxLength(200);
             entity.Property(o => o.SdlNumber).HasMaxLength(20).IsRequired();
             entity.Property(o => o.MainSdlNumber).HasMaxLength(20);
-            entity.Property(o => o.SetaId).HasMaxLength(10).HasDefaultValue("17");
+            entity.Property(o => o.SetaId).HasMaxLength(10).HasDefaultValue(StatutoryConstants.MerSetaId);
             entity.Property(o => o.RegistrationNumber).HasMaxLength(50);
             entity.Property(o => o.TaxNumber).HasMaxLength(50);
             entity.Property(o => o.LevyCategoryCode).HasMaxLength(15);
             entity.Property(o => o.OrganisationStatusCode).HasMaxLength(15);
             entity.Property(o => o.ProvinceCode).HasMaxLength(15);
-            entity.Property(o => o.CountryCode).HasMaxLength(10).HasDefaultValue("ZA");
+            entity.Property(o => o.CountryCode).HasMaxLength(10).HasDefaultValue(StatutoryConstants.DefaultCountryCode);
             entity.Property(o => o.SectorCode).HasMaxLength(15);
             entity.Property(o => o.ChamberCode).HasMaxLength(15);
             entity.Property(o => o.SicCode).HasMaxLength(15);
@@ -652,6 +658,39 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(w => w.WspApprovalStatusCode);
 
             entity.HasQueryFilter(w => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || w.OrganisationId == _tenantProvider.CurrentOrganisationId);
+        });
+
+        // WspExtensionRequest
+        modelBuilder.Entity<WspExtensionRequest>(entity =>
+        {
+            entity.ToTable("WspExtensionRequest");
+            entity.Property(e => e.ApplicationReference).HasMaxLength(50);
+            entity.Property(e => e.ReasonCode).HasMaxLength(50);
+            entity.Property(e => e.ApprovalStatusCode).HasMaxLength(30);
+            entity.Property(e => e.EvidenceDocumentId).HasMaxLength(100);
+            entity.Property(e => e.EvidenceFileName).HasMaxLength(250);
+            entity.Property(e => e.SubmittedByUserId).HasMaxLength(100);
+            entity.Property(e => e.ReviewedByUserId).HasMaxLength(100);
+            entity.Property(e => e.ApprovedByUserId).HasMaxLength(100);
+
+            entity.HasOne(e => e.Organisation)
+                  .WithMany()
+                  .HasForeignKey(e => e.OrganisationId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.WspSubmission)
+                  .WithMany()
+                  .HasForeignKey(e => e.WspSubmissionId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => e.OrganisationId);
+            entity.HasIndex(e => e.WspSubmissionId);
+            entity.HasIndex(e => e.SchemeYear);
+            entity.HasIndex(e => e.ApplicationReference);
+            entity.HasIndex(e => e.ApprovalStatusCode);
+            entity.HasIndex(e => e.ReasonCode);
+
+            entity.HasQueryFilter(e => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || e.OrganisationId == _tenantProvider.CurrentOrganisationId);
         });
 
         // LevyFile & LevyFileLine & SarsLevyStaging
@@ -836,6 +875,9 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(tp => tp.PrimaryEtqaName).HasMaxLength(100);
             entity.Property(tp => tp.PrimaryAccreditationNumber).HasMaxLength(50);
             entity.Property(tp => tp.NambRegistrationNumber).HasMaxLength(50);
+            entity.Property(tp => tp.QctoAccreditationNumber).HasMaxLength(50);
+            entity.Property(tp => tp.QctoCentreCode).HasMaxLength(50);
+            entity.Property(tp => tp.QctoLetterAttachmentRef).HasMaxLength(255);
             entity.Property(tp => tp.EtqaCommitteeDecisionNumber).HasMaxLength(50);
             entity.Property(tp => tp.DigitalSecuritySeal).HasMaxLength(64);
 
@@ -843,6 +885,11 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Ignore(tp => tp.LegalName);
             entity.Ignore(tp => tp.ProviderName);
             entity.Ignore(tp => tp.DeliverySites);
+            entity.Ignore(tp => tp.PrimaryEtqaAccreditationNumber);
+            entity.Ignore(tp => tp.PrimaryQualityAssuranceBody);
+            entity.Ignore(tp => tp.NambTtcRegistrationNumber);
+            entity.Ignore(tp => tp.NambTtcExpiryDate);
+            entity.Ignore(tp => tp.QctoAccreditationExpiryDate);
 
             entity.HasOne(tp => tp.Organisation)
                   .WithMany(o => o.TrainingProviders)
@@ -863,6 +910,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(tp => tp.ProviderStatusId);
             entity.HasIndex(tp => tp.EtqaId);
             entity.HasIndex(tp => tp.AccreditationStream);
+            entity.HasIndex(tp => tp.QctoAccreditationNumber);
+            entity.HasIndex(tp => tp.NambRegistrationNumber);
             entity.HasIndex(tp => tp.IsActive);
         });
 
@@ -1919,6 +1968,56 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(s => s.MoaTemplateId);
             entity.HasIndex(s => s.RenderedContentHash);
             entity.HasIndex(s => s.FrozenAt);
+        });
+
+        modelBuilder.Entity<FinancialYear>(entity =>
+        {
+            entity.ToTable("FinancialYear");
+            entity.Property(f => f.FinYearCode).HasMaxLength(50).IsRequired();
+            entity.Property(f => f.StatusCode).HasMaxLength(50).IsRequired();
+            entity.Property(f => f.Description).HasMaxLength(500);
+            entity.Property(f => f.SubmittedBy).HasMaxLength(100);
+            entity.Property(f => f.SubmissionNotes).HasMaxLength(500);
+            entity.Property(f => f.ReviewedBy).HasMaxLength(100);
+            entity.Property(f => f.ReviewNotes).HasMaxLength(500);
+            entity.Property(f => f.AmendmentReason).HasMaxLength(500);
+
+            entity.HasIndex(f => f.FinYearCode).IsUnique();
+            entity.HasIndex(f => new { f.StartDate, f.EndDate });
+            entity.HasIndex(f => new { f.StatusCode, f.IsActive });
+
+            entity.HasMany(f => f.Quarters)
+                .WithOne(q => q.FinancialYear)
+                .HasForeignKey(q => q.FinancialYearId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<FinancialQuarter>(entity =>
+        {
+            entity.ToTable("FinancialQuarter");
+            entity.Property(q => q.QuarterCode).HasMaxLength(10).IsRequired();
+            entity.Property(q => q.Description).HasMaxLength(250);
+
+            entity.HasIndex(q => new { q.FinancialYearId, q.QuarterCode }).IsUnique();
+            entity.HasIndex(q => new { q.FinancialYearId, q.QuarterNumber });
+            entity.HasIndex(q => new { q.StartDate, q.EndDate });
+        });
+
+        modelBuilder.Entity<NonWorkingDay>(entity =>
+        {
+            entity.ToTable("NonWorkingDay");
+            entity.Property(n => n.Name).HasMaxLength(150).IsRequired();
+            entity.Property(n => n.TypeCode).HasMaxLength(50).IsRequired();
+            entity.Property(n => n.StatusCode).HasMaxLength(50).IsRequired();
+            entity.Property(n => n.GazetteOrResolutionRef).HasMaxLength(200);
+            entity.Property(n => n.Description).HasMaxLength(500);
+
+            entity.HasIndex(n => n.Name);
+            entity.HasIndex(n => n.TypeCode);
+            entity.HasIndex(n => n.CalendarYear);
+            entity.HasIndex(n => new { n.StartDate, n.EndDate });
+            entity.HasIndex(n => new { n.StatusCode, n.IsActive });
+            entity.HasIndex(n => n.AffectsSla);
         });
 
         modelBuilder.Entity<DocumentTemplate>(entity =>

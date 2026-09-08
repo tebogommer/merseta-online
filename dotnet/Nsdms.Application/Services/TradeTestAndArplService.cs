@@ -516,8 +516,15 @@ public class TradeTestAndArplService : ITradeTestAndArplService
             task.CreatedBy = currentUsername;
         }
 
-        // Check if candidate achieves >= 50% overall pass rate across tasks in this attempt
-        var (qualifiesForRetention, passRate, retentionExpiry) = ArplTradeValidator.EvaluateTaskCreditRetention(taskResults, assessmentDate);
+        var qualifyingThreshold = _configService != null
+            ? await _configService.GetValueAsync<decimal>("TradeTest:CreditRetentionPassRatePercentage", 50.0m)
+            : 50.0m;
+        var retentionMonths = _configService != null
+            ? await _configService.GetValueAsync<int>("TradeTest:CreditRetentionWindowMonths", 18)
+            : 18;
+
+        // Check if candidate achieves >= configured pass rate across tasks in this attempt
+        var (qualifiesForRetention, passRate, retentionExpiry) = ArplTradeValidator.EvaluateTaskCreditRetention(taskResults, assessmentDate, qualifyingThreshold, retentionMonths);
 
         foreach (var task in taskResults)
         {

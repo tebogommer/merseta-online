@@ -58,6 +58,26 @@ else if (_isSuccess)
 }
 else
 {
+    @if (!_isWindowOpen)
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4 rounded-lg">
+            <div class="d-flex flex-column flex-md-row justify-space-between align-md-center gap-3">
+                <div>
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold">Mandatory Grant (WSP/ATR) Submission Window Closed</MudText>
+                    <MudText Typo="Typo.body2">
+                        The statutory submission deadline for Scheme Year @_finYear closed on @_effectiveDeadline.ToString("dd MMMM yyyy HH:mm UTC"). Further submissions cannot be accepted without an approved extension.
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Surface"
+                           StartIcon="@Icons.Material.Filled.EventBusy"
+                           OnClick="@(() => NavManager.NavigateTo("/wsp/extension-request"))">
+                    Request Deadline Extension
+                </MudButton>
+            </div>
+        </MudAlert>
+    }
+
     <WizardShell Title="Mandatory Grant WSP / ATR annual submission"
                  Subtitle="Statutory Workplace Skills Plan, Annual Training Report, and 20% Mandatory Grant levy rebate claim"
                  ActiveStepIndex="@_activeStep"
@@ -308,6 +328,7 @@ else
             }
 
             UpdateReviewGroups();
+            await CheckWindowStatusAsync();
 
             // Check for available in-progress draft
             await CheckForActiveDraftAsync();
@@ -322,16 +343,36 @@ else
         }
     }
 
+    private bool _isWindowOpen = true;
+    private DateTime _effectiveDeadline;
+
+    private async Task CheckWindowStatusAsync()
+    {
+        if (_organisationId.HasValue && _organisationId.Value > 0)
+        {
+            try
+            {
+                _isWindowOpen = await WspService.IsSubmissionWindowOpenAsync(_organisationId.Value, _finYear);
+                _effectiveDeadline = await WspService.GetEffectiveSubmissionDeadlineAsync(_organisationId.Value, _finYear);
+            }
+            catch
+            {
+                _isWindowOpen = true;
+            }
+        }
+    }
+
     private void OnStepChanged(int newStep)
     {
         _activeStep = newStep;
         UpdateReviewGroups();
     }
 
-    private void OnOrganisationChanged(int? id)
+    private async Task OnOrganisationChanged(int? id)
     {
         _organisationId = id;
         UpdateReviewGroups();
+        await CheckWindowStatusAsync();
     }
 
     private void UpdateReviewGroups()
@@ -643,6 +684,12 @@ else
 
     private async Task SubmitApplicationAsync()
     {
+        if (!_isWindowOpen)
+        {
+            Snackbar.Add($"Mandatory Grant (WSP/ATR) submission window for scheme year {_finYear} closed on {_effectiveDeadline:yyyy-MM-dd}. Please apply for an extension.", Severity.Error);
+            return;
+        }
+
         if (!_isDeclarationAccepted)
         {
             Snackbar.Add("Please accept the statutory declaration before submitting.", Severity.Warning);

@@ -14,6 +14,7 @@ public interface IAuditService
     void LogAction(INsdmsDbContext db, string entityName, long recordId, string actionName, string actor, object? beforeState = null, object? afterState = null);
     Task LogActionAsync(INsdmsDbContext db, string entityName, long recordId, string actionName, string actor, object? beforeState = null, object? afterState = null);
     Task<List<AuditLog>> GetRecentLogsAsync(int count = 500);
+    Task<List<AuditLog>> GetLogsForEntityAsync(string entityName, long recordId, CancellationToken cancellationToken = default);
 }
 
 public class AuditService : IAuditService
@@ -148,5 +149,15 @@ public class AuditService : IAuditService
             .OrderByDescending(a => a.Timestamp)
             .Take(count)
             .ToListAsync();
+    }
+
+    public async Task<List<AuditLog>> GetLogsForEntityAsync(string entityName, long recordId, CancellationToken cancellationToken = default)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        return await db.AuditLogs
+            .AsNoTracking()
+            .Where(a => a.EntityName == entityName && a.RecordId == recordId)
+            .OrderByDescending(a => a.Timestamp)
+            .ToListAsync(cancellationToken);
     }
 }

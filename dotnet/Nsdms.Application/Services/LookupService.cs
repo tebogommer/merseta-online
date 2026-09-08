@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Interfaces;
 using Nsdms.Domain.Common;
 using Nsdms.Domain.Lookups;
 
@@ -36,15 +37,20 @@ public class LookupService : ILookupService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
+    private readonly ISystemConfigurationService? _configService;
 
-    // OPT-005 In-memory cache with declared 1-hour expiry
+    // OPT-005 In-memory cache with declared configurable expiry
     private static readonly ConcurrentDictionary<string, (DateTime ExpiryUtc, List<LookupItemDto> Items)> _lookupCache = new();
-    private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(1);
+    private static readonly TimeSpan DefaultCacheTtl = TimeSpan.FromHours(1);
 
-    public LookupService(INsdmsDbContextFactory contextFactory, IAuditService audit)
+    public LookupService(
+        INsdmsDbContextFactory contextFactory, 
+        IAuditService audit,
+        ISystemConfigurationService? configService = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
+        _configService = configService;
     }
 
     private static readonly List<LookupCategoryMetadata> _lookupRegistry = new()
@@ -171,7 +177,10 @@ public class LookupService : ILookupService
 
         if (string.IsNullOrWhiteSpace(search))
         {
-            _lookupCache[cacheKey] = (DateTime.UtcNow.Add(CacheTtl), result);
+            var ttlMinutes = _configService != null
+                ? await _configService.GetValueAsync<int>("Caching:LookupTtlMinutes", 60)
+                : 60;
+            _lookupCache[cacheKey] = (DateTime.UtcNow.AddMinutes(ttlMinutes), result);
         }
 
         return result;

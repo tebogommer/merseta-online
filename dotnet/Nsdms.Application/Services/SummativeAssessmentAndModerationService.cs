@@ -12,15 +12,18 @@ public class SummativeAssessmentAndModerationService : ISummativeAssessmentAndMo
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly AuditService _audit;
     private readonly INotificationService? _notificationService;
+    private readonly ISystemConfigurationService? _configService;
 
     public SummativeAssessmentAndModerationService(
         INsdmsDbContextFactory contextFactory, 
         AuditService audit,
-        INotificationService? notificationService = null)
+        INotificationService? notificationService = null,
+        ISystemConfigurationService? configService = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
         _notificationService = notificationService;
+        _configService = configService;
     }
 
     public async Task<SummativeAssessmentReport> CreateSummativeAssessmentReportAsync(
@@ -773,6 +776,10 @@ public class SummativeAssessmentAndModerationService : ISummativeAssessmentAndMo
         var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(rawPayload));
         var tamperHash = Convert.ToHexString(hashBytes).ToLowerInvariant();
 
+        var baseUrl = _configService != null
+            ? await _configService.GetValueAsync<string>("System:PublicVerificationBaseUrl", "https://verify.merseta.org.za")
+            : "https://verify.merseta.org.za";
+
         var sor = new StatementOfResults
         {
             SummativeAssessmentReportId = reportId,
@@ -783,7 +790,7 @@ public class SummativeAssessmentAndModerationService : ISummativeAssessmentAndMo
             TotalCreditsCertified = report.TotalCreditsEarned,
             AchievementTypeCode = "FullAchievement",
             TamperProofHashSha256 = tamperHash,
-            QrVerificationUrl = $"https://verify.merseta.org.za/sor/{tamperHash}",
+            QrVerificationUrl = $"{baseUrl.TrimEnd('/')}/sor/{tamperHash}",
             IssuedByUserId = currentUsername,
             CreatedAt = DateTime.UtcNow,
             CreatedBy = currentUsername
@@ -824,6 +831,10 @@ public class SummativeAssessmentAndModerationService : ISummativeAssessmentAndMo
         var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(rawPayload));
         var tamperHash = Convert.ToHexString(hashBytes).ToLowerInvariant();
 
+        var baseUrl = _configService != null
+            ? await _configService.GetValueAsync<string>("System:PublicVerificationBaseUrl", "https://verify.merseta.org.za")
+            : "https://verify.merseta.org.za";
+
         var sor = new StatementOfResults
         {
             SummativeAssessmentReportId = reportId,
@@ -835,7 +846,7 @@ public class SummativeAssessmentAndModerationService : ISummativeAssessmentAndMo
             AchievementTypeCode = "PartialAchievement",
             EarlyExitReasonCode = earlyExitReason,
             TamperProofHashSha256 = tamperHash,
-            QrVerificationUrl = $"https://verify.merseta.org.za/sor/{tamperHash}",
+            QrVerificationUrl = $"{baseUrl.TrimEnd('/')}/sor/{tamperHash}",
             IssuedByUserId = currentUsername,
             CreatedAt = DateTime.UtcNow,
             CreatedBy = currentUsername

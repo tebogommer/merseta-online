@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-06 19:59:33 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 226
+> **Generated:** 2026-09-08 19:45:25 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 230
 
 ---
 
@@ -70,6 +70,8 @@
 | `dbo` | [`EtqaAssessor`](#etqaassessor) | `EtqaAssessor` | 18 | `Id` | Registered ETQA Assessors and Moderators with approved qualification scopes, capturing all statutory fields required for SETMIS File 401 (Person Designation) reporting. |
 | `dbo` | [`FieldDispatchAssignment`](#fielddispatchassignment) | `FieldDispatchAssignment` | 21 | `Id` | Field visit scheduling and dispatch assignment created by a Client Liaison Coordinator (CLC) or Regional Manager (CRM). Connects a pending visit/monitoring event to a qualified officer holding verified capabilities. |
 | `dbo` | [`FinancialApprovalThreshold`](#financialapprovalthreshold) | `FinancialApprovalThreshold` | 12 | `Id` | Represents a tiered financial delegation limit (DoA) enforcing role-based threshold caps on grants and disbursements. |
+| `dbo` | [`FinancialQuarter`](#financialquarter) | `FinancialQuarter` | 13 | `Id` | Constituent statutory quarter belonging to a specific FinancialYear. Supports arbitrary, customizable date boundaries. |
+| `dbo` | [`FinancialYear`](#financialyear) | `FinancialYear` | 22 | `Id` | Master statutory financial scheme year definition (e.g. 2026/2027). Supports customizable start and end dates with dynamic quarterly projections. |
 | `dbo` | [`FundingWindowPriority`](#fundingwindowpriority) | `FundingWindowPriority` | 12 | `Id` | Gazetted Strategic Priority sub-budget envelope and beneficiary quota allocated to a Discretionary Grant Funding Window. |
 | `dbo` | [`GrantApplication`](#grantapplication) | `GrantApplication` | 20 | `Id` | Discretionary Grant funding applications submitted by employers for skills development projects. |
 | `dbo` | [`GrantFundingWindow`](#grantfundingwindow) | `GrantFundingWindow` | 13 | `Id` | Gazette-announced Discretionary Grant funding window opening and allocation cycle. |
@@ -80,7 +82,7 @@
 | `dbo` | [`GrantTranchePayment`](#granttranchepayment) | `GrantTranchePayment` | 19 | `Id` | Tranche Invoices and Payment Requisitions. |
 | `dbo` | [`InterSetaTransfer`](#intersetatransfer) | `InterSetaTransfer` | 16 | `Id` | Inter-SETA Transfer of employer registration and levy funds between SETAs. |
 | `dbo` | [`LearnerAssessment`](#learnerassessment) | `LearnerAssessment` | 30 | `Id` | Formative and summative learning programme unit standard assessment evaluations, capturing all statutory fields required for SETMIS File 503 (Unit Standard Enrolment) reporting. |
-| `dbo` | [`LearnerBulkBatch`](#learnerbulkbatch) | `LearnerBulkBatch` | 14 | `Id` | Represents a bulk intake batch for high-speed learner registrations submitted by an Employer or SDP. Implements the ATM channel of the Dual-Channel Learner Registration Architecture. |
+| `dbo` | [`LearnerBulkBatch`](#learnerbulkbatch) | `LearnerBulkBatch` | 14 | `Id` | Represents a bulk intake batch for high-speed learner registrations submitted by an Employer or SDP. Implements the automated bulk fast-track channel of the Dual-Channel Learner Registration Architecture. |
 | `dbo` | [`LearnerBulkBatchRow`](#learnerbulkbatchrow) | `LearnerBulkBatchRow` | 29 | `Id` | Individual candidate learner row staged within a LearnerBulkBatch. Allows fractional processing and inline error correction. |
 | `dbo` | [`LearnerCertificate`](#learnercertificate) | `LearnerCertificate` | 17 | `Id` | Statutory qualification certificate issued upon full completion. |
 | `dbo` | [`LearnerRegisteredUnitStandard`](#learnerregisteredunitstandard) | `LearnerRegisteredUnitStandard` | 12 | `Id` | Tracks individual Unit Standards or Skills Sets registered against a CompanyLearner for Skills Programme and Unit Standard enrolments (SETMIS File 503). |
@@ -100,6 +102,7 @@
 | `dbo` | [`NambSubmissionBatch`](#nambsubmissionbatch) | `NambSubmissionBatch` | 15 | `Id` | Represents a formal National Artisan Moderation Body (NAMB) moderation and serial allocation submission batch. |
 | `dbo` | [`NonSetaCompany`](#nonsetacompany) | `NonSetaCompany` | 13 | `Id` | Non-SETA External Employer / Organisation registered with other Quality Councils / SETAs. |
 | `dbo` | [`NonSetaQualificationsCompletion`](#nonsetaqualificationscompletion) | `NonSetaQualificationsCompletion` | 19 | `Id` | Cross-SETA Qualification & TVET College Achievement Verification for merSETA articulation. |
+| `dbo` | [`NonWorkingDay`](#nonworkingday) | `NonWorkingDay` | 17 | `Id` | Master definition for national statutory public holidays, merSETA annual year-end shutdowns, and ad-hoc institutional closures. Governs universal workflow SLA business day calculations. |
 | `dbo` | [`Organisation`](#organisation) | `Organisation` | 49 | `Id` | Registered employer, host workplace, or skills development entity under MerSETA jurisdiction, fully normalized with statutory columns required for SETMIS File 100 and File 200 reporting. |
 | `dbo` | [`OrganisationContact`](#organisationcontact) | `OrganisationContact` | 12 | `Id` | Liaison contact person link associating an individual Person with an Employer Organisation. |
 | `dbo` | [`OrganisationPortfolio`](#organisationportfolio) | `OrganisationPortfolio` | 17 | `Id` | Dynamic Account Management Portfolio allocating an Employer Organisation to a dedicated Relationship Officer. Natively supports cross-regional appointments (e.g. national key accounts, specialized industry groups). |
@@ -144,7 +147,7 @@
 | `dbo` | [`TradeTestTask`](#tradetesttask) | `TradeTestTask` | 19 | `Id` | Practical Task and Scoring Item evaluated during the Trade Test. |
 | `dbo` | [`TrainingCommittee`](#trainingcommittee) | `TrainingCommittee` | 10 | `Id` | Employer Workplace Training Committee constituted per statutory merSETA guidelines. |
 | `dbo` | [`TrainingCommitteeMember`](#trainingcommitteemember) | `TrainingCommitteeMember` | 10 | `Id` | Individual Union and Employer representatives on a Training Committee. |
-| `dbo` | [`TrainingProvider`](#trainingprovider) | `TrainingProvider` | 39 | `Id` | Accredited Skills Development Provider (SDP) offering registered occupational qualifications and skills programmes, capturing all statutory fields required for SETMIS File 100 reporting. |
+| `dbo` | [`TrainingProvider`](#trainingprovider) | `TrainingProvider` | 44 | `Id` | Accredited Skills Development Provider (SDP) offering registered occupational qualifications and skills programmes, capturing all statutory fields required for SETMIS File 100 reporting. |
 | `dbo` | [`TrainingProviderAssessorLink`](#trainingproviderassessorlink) | `TrainingProviderAssessorLink` | 18 | `Id` | Relational binding between an accredited ETQA Assessor/Moderator and an SDP delivery campus. |
 | `dbo` | [`TrainingProviderCampus`](#trainingprovidercampus) | `TrainingProviderCampus` | 22 | `Id` | Physical training site or delivery location belonging to an accredited Skills Development Provider (SDP). (Statutory nomenclature: Delivery Site / Site). |
 | `dbo` | [`TrainingProviderContact`](#trainingprovidercontact) | `TrainingProviderContact` | 16 | `Id` | System entity for TrainingProviderContact data governance. |
@@ -173,6 +176,7 @@
 | `dbo` | [`WorkplaceMonitoringSiteVisit`](#workplacemonitoringsitevisit) | `WorkplaceMonitoringSiteVisit` | 21 | `Id` | Comprehensive Workplace Monitoring and Quality Assurance Site Visit. |
 | `dbo` | [`WspDispute`](#wspdispute) | `WspDispute` | 13 | `Id` | Dispute logged regarding Workplace Skills Plan (WSP) approval or committee sign-off. |
 | `dbo` | [`WspEmploymentSummary`](#wspemploymentsummary) | `WspEmploymentSummary` | 18 | `Id` | Employment profile demographic breakdown by occupational category (SETMIS Form 500). |
+| `dbo` | [`WspExtensionRequest`](#wspextensionrequest) | `WspExtensionRequest` | 26 | `Id` | System entity for WspExtensionRequest data governance. |
 | `dbo` | [`WspSignoffAttestation`](#wspsignoffattestation) | `WspSignoffAttestation` | 20 | `Id` | Cryptographically sealed attestation for WSP/ATR multi-party sign-off (SDF, Labour Union, CEO). |
 | `dbo` | [`WspSkillsGap`](#wspskillsgap) | `WspSkillsGap` | 11 | `Id` | Critical and Scarce Skills Gap identified during WSP compilation. |
 | `dbo` | [`WspStrategicPriority`](#wspstrategicpriority) | `WspStrategicPriority` | 11 | `Id` | Strategic priorities and alignment with National Skills Development Plan (NSDP) goals in WSP submissions. |
@@ -1737,7 +1741,7 @@
 | `PriorQualificationId` | `nvarchar(50)` | NULL |  | Prior completed TVET / Higher Education qualification ID achieved before entering internship. |
 | `ProfessionalRegistrationNumber` | `nvarchar(100)` | NULL |  | Professional council candidate registration number (e.g. ECSA Candidate Engineer) for Candidacy programmes. |
 | `QualificationTitle` | `nvarchar(250)` | NULL |  | Title of the registered SAQA / QCTO qualification or learning programme. |
-| `RegistrationChannel` | `nvarchar(max)` | **NOT NULL** |  | Registration intake channel: "ManualWizard" (The Teller) or "AutomatedBulk" (The ATM). |
+| `RegistrationChannel` | `nvarchar(max)` | **NOT NULL** |  | Registration intake channel: "ManualWizard" (Manual Single Registration) or "AutomatedBulk" (Automated Bulk Fast-Track). |
 | `RegistrationDate` | `datetime2` | **NOT NULL** |  | Official date when the learner contract was officially registered with MerSETA. |
 | `SaqaQualificationId` | `int` | NULL |  | SAQA Registered Qualification ID code (SETMIS File 501, 505, 506). |
 | `SetaRegion` | `nvarchar(max)` | NULL |  | MerSETA regional office responsible for managing this learner agreement. |
@@ -2838,6 +2842,89 @@
 
 ---
 
+### <a id="financialquarter"></a> `dbo.FinancialQuarter`
+
+**Description:** Constituent statutory quarter belonging to a specific FinancialYear. Supports arbitrary, customizable date boundaries.  
+**CLR Model:** `Nsdms.Domain.Entities.FinancialQuarter`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `Description` | `nvarchar(250)` | NULL |  | Optional administrative description or milestone notes. |
+| `EndDate` | `datetime2` | **NOT NULL** |  | Closing date of this statutory quarter. |
+| `FinancialYearId` | `int` | **NOT NULL** | 🔗 **FK** | Relational foreign key referencing the parent FinancialYear. |
+| `IsClosed` | `bit` | **NOT NULL** |  | Indicates whether this quarter is finalized. |
+| `IsLocked` | `bit` | **NOT NULL** |  | Indicates whether transactions and metrics for this quarter are locked against modifications. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `QuarterCode` | `nvarchar(10)` | **NOT NULL** |  | Statutory quarter code (e.g. "Q1", "Q2", "Q3", "Q4"). |
+| `QuarterNumber` | `int` | **NOT NULL** |  | Sequential quarter ordinal (1, 2, 3, or 4). |
+| `StartDate` | `datetime2` | **NOT NULL** |  | Effective starting date of this statutory quarter. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_FinancialQuarter_FinancialYear_FinancialYearId` | `FinancialYearId` | `dbo.FinancialYear` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_FinancialQuarter_FinancialYearId_QuarterCode` | `FinancialYearId, QuarterCode` | ✅ Yes |
+| `IX_FinancialQuarter_FinancialYearId_QuarterNumber` | `FinancialYearId, QuarterNumber` | No |
+| `IX_FinancialQuarter_StartDate_EndDate` | `StartDate, EndDate` | No |
+
+---
+
+### <a id="financialyear"></a> `dbo.FinancialYear`
+
+**Description:** Master statutory financial scheme year definition (e.g. 2026/2027). Supports customizable start and end dates with dynamic quarterly projections.  
+**CLR Model:** `Nsdms.Domain.Entities.FinancialYear`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AmendmentReason` | `nvarchar(500)` | NULL |  | Justification captured when requesting an amendment against an active financial year. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `Description` | `nvarchar(500)` | NULL |  | Optional administrative description or gazette notice reference. |
+| `EndDate` | `datetime2` | **NOT NULL** |  | Official statutory closing date of the financial year. |
+| `EndYear` | `int` | **NOT NULL** |  | Calendar end year (e.g. 2027). |
+| `FinYearCode` | `nvarchar(50)` | **NOT NULL** |  | Formatted statutory code representing the financial year (e.g. "2026/2027" or "2026"). |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this financial year is currently active for allocations and submissions. |
+| `IsClosed` | `bit` | **NOT NULL** |  | Indicates whether this financial year has been finalized and closed for further transaction postings. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `ReviewNotes` | `nvarchar(500)` | NULL |  | Reviewer feedback or reason for rejection. |
+| `ReviewedAt` | `datetime2` | NULL |  | Timestamp when the submission was adjudicated (approved or rejected). |
+| `ReviewedBy` | `nvarchar(100)` | NULL |  | User identifier of the authority who adjudicated the submission (Checker). |
+| `RevisionNumber` | `int` | **NOT NULL** |  | Sequential revision number incremented upon each approved amendment. |
+| `StartDate` | `datetime2` | **NOT NULL** |  | Official statutory effective starting date of the financial year. |
+| `StartYear` | `int` | **NOT NULL** |  | Calendar start year (e.g. 2026). |
+| `StatusCode` | `nvarchar(50)` | **NOT NULL** |  | Operational workflow status code (e.g. "Draft", "Under Review", "Active", "Inactive", "Amendment Draft"). |
+| `SubmissionNotes` | `nvarchar(500)` | NULL |  | Submitter notes or justification submitted with the calendar schedule. |
+| `SubmittedAt` | `datetime2` | NULL |  | Timestamp when the financial year was formally submitted for review. |
+| `SubmittedBy` | `nvarchar(100)` | NULL |  | User identifier of the officer who prepared and submitted the financial year for review (Maker). |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_FinancialYear_FinYearCode` | `FinYearCode` | ✅ Yes |
+| `IX_FinancialYear_StartDate_EndDate` | `StartDate, EndDate` | No |
+| `IX_FinancialYear_StatusCode_IsActive` | `StatusCode, IsActive` | No |
+
+---
+
 ### <a id="fundingwindowpriority"></a> `dbo.FundingWindowPriority`
 
 **Description:** Gazetted Strategic Priority sub-budget envelope and beneficiary quota allocated to a Discretionary Grant Funding Window.  
@@ -3311,7 +3398,7 @@
 
 ### <a id="learnerbulkbatch"></a> `dbo.LearnerBulkBatch`
 
-**Description:** Represents a bulk intake batch for high-speed learner registrations submitted by an Employer or SDP. Implements the ATM channel of the Dual-Channel Learner Registration Architecture.  
+**Description:** Represents a bulk intake batch for high-speed learner registrations submitted by an Employer or SDP. Implements the automated bulk fast-track channel of the Dual-Channel Learner Registration Architecture.  
 **CLR Model:** `Nsdms.Domain.Entities.LearnerBulkBatch`  
 **Primary Key:** `Id`
 
@@ -3573,7 +3660,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ApplicationNumber` | `nvarchar(50)` | **NOT NULL** |  | Domain property for ApplicationNumber. |
-| `ApplicationTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Section26D (Standard Apprenticeship), Section28 (ARPL - Recognition of Prior Learning), Section26F |
+| `ApplicationTypeCode` | `nvarchar(50)` | NULL |  | Section26D (Standard Apprenticeship), Section28 (ARPL - Recognition of Prior Learning), Section26F |
 | `AssessmentCenterName` | `nvarchar(max)` | NULL |  | Domain property for AssessmentCenterName. |
 | `AssessmentDate` | `datetime2` | NULL |  | Domain property for AssessmentDate. |
 | `AssessorName` | `nvarchar(max)` | NULL |  | Domain property for AssessorName. |
@@ -3586,11 +3673,11 @@
 | `ClaRejectionReason` | `nvarchar(max)` | NULL |  | Domain property for ClaRejectionReason. |
 | `ClaUserId` | `nvarchar(max)` | NULL |  | Domain property for ClaUserId. |
 | `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
-| `CompetencyStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Assessment outcome: Competent, NotYetCompetent, Absent, Deferred |
+| `CompetencyStatusCode` | `nvarchar(50)` | NULL |  | Assessment outcome: Competent, NotYetCompetent, Absent, Deferred |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DesignatedTradeLevel` | `nvarchar(max)` | NULL |  | Domain property for DesignatedTradeLevel. |
-| `EmploymentStatus` | `nvarchar(50)` | **NOT NULL** |  | Statutory employment status: Employed vs Unemployed (Section 4.2.3 of Signed Use Case). |
+| `EmploymentStatus` | `nvarchar(50)` | NULL |  | Statutory employment status: Employed vs Unemployed (Section 4.2.3 of Signed Use Case). |
 | `HasAttemptedTradeTestPreviously` | `bit` | **NOT NULL** |  | Indicates whether the candidate attempted a trade test previously. |
 | `IsFinalRejection` | `bit` | **NOT NULL** |  | Domain property for IsFinalRejection. |
 | `IsSelectedForQaAuditSample` | `bit` | **NOT NULL** |  | Quality Assurance 10% achievement audit sampling flag (DFD Step 4.0). |
@@ -3602,7 +3689,7 @@
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NambApprovalDate` | `datetime2` | NULL |  | Domain property for NambApprovalDate. |
-| `NambDecisionStatusCode` | `nvarchar(max)` | **NOT NULL** |  | Domain property for NambDecisionStatusCode. |
+| `NambDecisionStatusCode` | `nvarchar(max)` | NULL |  | Domain property for NambDecisionStatusCode. |
 | `NambPackDocumentAttachmentId` | `int` | NULL |  | Domain property for NambPackDocumentAttachmentId. |
 | `NambPackVerifiedAt` | `datetime2` | NULL |  | Domain property for NambPackVerifiedAt. |
 | `NambPackVerifiedByUserId` | `nvarchar(max)` | NULL |  | Domain property for NambPackVerifiedByUserId. |
@@ -3620,7 +3707,7 @@
 | `PreviousTrainingCenterId` | `int` | NULL |  | Domain property for PreviousTrainingCenterId. |
 | `QaApprovalDate` | `datetime2` | NULL |  | Domain property for QaApprovalDate. |
 | `QaApprovalStatus` | `nvarchar(max)` | NULL |  | Domain property for QaApprovalStatus. |
-| `QaAuditSampleStatus` | `nvarchar(max)` | **NOT NULL** |  | Domain property for QaAuditSampleStatus. |
+| `QaAuditSampleStatus` | `nvarchar(max)` | NULL |  | Domain property for QaAuditSampleStatus. |
 | `QaRejectionReason` | `nvarchar(max)` | NULL |  | Domain property for QaRejectionReason. |
 | `QaSignedApplicationDocumentAttachmentId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `QaUserId` | `nvarchar(max)` | NULL |  | Domain property for QaUserId. |
@@ -4230,6 +4317,47 @@
 | `IX_NonSetaQualificationsCompletion_ExternalCertificateNumber` | `ExternalCertificateNumber` | No |
 | `IX_NonSetaQualificationsCompletion_PersonId` | `PersonId` | No |
 | `IX_NonSetaQualificationsCompletion_VerificationStatusCode` | `VerificationStatusCode` | No |
+
+---
+
+### <a id="nonworkingday"></a> `dbo.NonWorkingDay`
+
+**Description:** Master definition for national statutory public holidays, merSETA annual year-end shutdowns, and ad-hoc institutional closures. Governs universal workflow SLA business day calculations.  
+**CLR Model:** `Nsdms.Domain.Entities.NonWorkingDay`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AffectsSla` | `bit` | **NOT NULL** |  | When true, workflow SLA countdowns (e.g. 20-day Workplace Approval, 14-day Dispute SLA) skip this period. |
+| `CalendarYear` | `int` | **NOT NULL** |  | Calendar year to which this holiday or closure record applies. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `Description` | `nvarchar(500)` | NULL |  | Administrative description, operational notes, or justification for institutional closure. |
+| `EndDate` | `datetime2` | **NOT NULL** |  | Calendar end date of the closure (inclusive). Same as StartDate for single-day holidays. |
+| `GazetteOrResolutionRef` | `nvarchar(200)` | NULL |  | Official statutory gazette number, board resolution reference, or executive circular (e.g. "Act 36 of 1994", "merSETA Circular 2026-12"). |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this non-working day is active and observed by the system. |
+| `IsClosed` | `bit` | **NOT NULL** |  | Indicates whether this historical closure is locked and archived. |
+| `IsRecurringAnnually` | `bit` | **NOT NULL** |  | Indicates whether this holiday recurs annually on the same calendar month/day. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `Name` | `nvarchar(150)` | **NOT NULL** |  | Official title or holiday designation (e.g. "Day of Goodwill", "merSETA Annual Year-End Shutdown"). |
+| `StartDate` | `datetime2` | **NOT NULL** |  | Calendar start date of the closure (inclusive). |
+| `StatusCode` | `nvarchar(50)` | **NOT NULL** |  | Operational status code ("Draft", "Approved", "Inactive"). |
+| `TypeCode` | `nvarchar(50)` | **NOT NULL** |  | Closure typology code (e.g. "NAT_STATUTORY", "INST_SHUTDOWN", "ADHOC_GAZETTED", "SPEC_CLOSURE"). |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_NonWorkingDay_AffectsSla` | `AffectsSla` | No |
+| `IX_NonWorkingDay_CalendarYear` | `CalendarYear` | No |
+| `IX_NonWorkingDay_Name` | `Name` | No |
+| `IX_NonWorkingDay_TypeCode` | `TypeCode` | No |
+| `IX_NonWorkingDay_StartDate_EndDate` | `StartDate, EndDate` | No |
+| `IX_NonWorkingDay_StatusCode_IsActive` | `StatusCode, IsActive` | No |
 
 ---
 
@@ -6266,6 +6394,11 @@
 | `ProviderStatusId` | `nvarchar(10)` | NULL |  | Current accreditation standing code (references lookup.ProviderStatusType: 01 Accredited, 02 Provisional, 03 De-accredited). |
 | `ProviderTypeCode` | `nvarchar(15)` | NULL |  | Legacy Provider Type Code mapping. |
 | `ProviderTypeId` | `nvarchar(10)` | NULL |  | Provider functional operational type code (references lookup.ProviderType: 01 Education, 02 Training, 03 Employer Provider). |
+| `QctoAccreditationEndDate` | `datetime2` | NULL |  | QCTO accreditation validity cycle end date. |
+| `QctoAccreditationNumber` | `nvarchar(50)` | NULL |  | Official QCTO Accreditation Number (e.g. QCTOSDP0120230501). |
+| `QctoAccreditationStartDate` | `datetime2` | NULL |  | QCTO accreditation validity cycle start date. |
+| `QctoCentreCode` | `nvarchar(50)` | NULL |  | QCTO allocated Centre Code. |
+| `QctoLetterAttachmentRef` | `nvarchar(255)` | NULL |  | Document storage reference or ID for official QCTO accreditation confirmation letter. |
 | `ReAccreditationEffectiveDate` | `datetime2` | NULL |  | Timestamp when re-accreditation application was initiated. |
 | `ReAccreditationUnderway` | `bit` | **NOT NULL** |  | Indicates whether a re-accreditation application is currently underway. Statutory Invariant (BR4): Operational status must NOT revert to Pending Approval during renewal. |
 | `SarsNumber` | `nvarchar(50)` | NULL |  | SARS Income Tax reference number (SETMIS File 100). |
@@ -6286,12 +6419,14 @@
 | `IX_TrainingProvider_AccreditationStream` | `AccreditationStream` | No |
 | `IX_TrainingProvider_EtqaId` | `EtqaId` | No |
 | `IX_TrainingProvider_IsActive` | `IsActive` | No |
+| `IX_TrainingProvider_NambRegistrationNumber` | `NambRegistrationNumber` | No |
 | `IX_TrainingProvider_OrganisationId` | `OrganisationId` | No |
 | `IX_TrainingProvider_PrimaryContactPersonId` | `PrimaryContactPersonId` | No |
 | `IX_TrainingProvider_ProviderClassId` | `ProviderClassId` | No |
 | `IX_TrainingProvider_ProviderCode` | `ProviderCode` | No |
 | `IX_TrainingProvider_ProviderStatusId` | `ProviderStatusId` | No |
 | `IX_TrainingProvider_ProviderTypeId` | `ProviderTypeId` | No |
+| `IX_TrainingProvider_QctoAccreditationNumber` | `QctoAccreditationNumber` | No |
 
 ---
 
@@ -7468,6 +7603,63 @@
 | :--- | :--- | :--- |
 | `IX_WspEmploymentSummary_OfoCode` | `OfoCode` | No |
 | `IX_WspEmploymentSummary_WspSubmissionId` | `WspSubmissionId` | No |
+
+---
+
+### <a id="wspextensionrequest"></a> `dbo.WspExtensionRequest`
+
+**Description:** System entity for WspExtensionRequest data governance.  
+**CLR Model:** `Nsdms.Domain.Entities.WspExtensionRequest`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ApplicationReference` | `nvarchar(50)` | **NOT NULL** |  | Masked statutory business tracking reference number (e.g. EXT-2026-0415-001). |
+| `ApprovalComments` | `nvarchar(max)` | NULL |  | Adjudication rationale or formal rejection reason recorded by the executive authority. |
+| `ApprovalStatusCode` | `nvarchar(30)` | **NOT NULL** |  | Current approval lifecycle status code (PendingReview, Recommended, Approved, Rejected). |
+| `ApprovedAt` | `datetime2` | NULL |  | UTC timestamp of formal executive adjudication. |
+| `ApprovedByUserId` | `nvarchar(100)` | NULL |  | User ID of the merSETA Executive Officer (COO / CEO) who formally adjudicated the extension request. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DeclarationAccepted` | `bit` | **NOT NULL** |  | Confirms applicant acceptance of the statutory legal declaration under the Skills Development Act. |
+| `EvidenceDocumentId` | `nvarchar(100)` | NULL |  | Storage identifier or reference for attached supporting evidentiary documentation. |
+| `EvidenceFileName` | `nvarchar(250)` | NULL |  | File name of the attached evidentiary document/affidavit. |
+| `GrantedExtensionDate` | `datetime2` | NULL |  | Official extended submission date granted upon executive approval. |
+| `GroundsDescription` | `nvarchar(max)` | NULL |  | Plain-language description of the grounds for extension. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the submitting Employer Organisation. |
+| `ReasonCode` | `nvarchar(50)` | **NOT NULL** |  | Categorical grounds for extension (e.g. BusinessRescue, TechnicalOutage, NaturalDisaster, IndustrialAction, OwnershipRestructure, OtherExceptional). |
+| `RequestedExtensionDate` | `datetime2` | **NOT NULL** |  | Proposed extended submission date requested by the applicant (statutory max: 31 May). |
+| `ReviewedAt` | `datetime2` | NULL |  | UTC timestamp of the CLO/CRM review recommendation. |
+| `ReviewedByUserId` | `nvarchar(100)` | NULL |  | User ID of the Client Liaison Officer (CLO) or Project Manager who reviewed and recommended/queried the request. |
+| `ReviewerComments` | `nvarchar(max)` | NULL |  | Evaluative notes and compliance observations from the reviewing officer. |
+| `SchemeYear` | `int` | **NOT NULL** |  | Statutory financial/scheme year for this extension request (e.g. 2026). |
+| `StatutoryMotivation` | `nvarchar(max)` | **NOT NULL** |  | Statutory motivation and justification detailed by the applicant SDF. |
+| `SubmittedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the request was officially submitted. |
+| `SubmittedByUserId` | `nvarchar(100)` | **NOT NULL** |  | Identity of the applicant user who submitted the request. |
+| `WspSubmissionId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing an existing WSP submission record (null if requested prior to WSP initiation). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_WspExtensionRequest_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `Restrict` |
+| `FK_WspExtensionRequest_WspSubmission_WspSubmissionId` | `WspSubmissionId` | `dbo.WspSubmission` | `SetNull` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_WspExtensionRequest_ApplicationReference` | `ApplicationReference` | No |
+| `IX_WspExtensionRequest_ApprovalStatusCode` | `ApprovalStatusCode` | No |
+| `IX_WspExtensionRequest_OrganisationId` | `OrganisationId` | No |
+| `IX_WspExtensionRequest_ReasonCode` | `ReasonCode` | No |
+| `IX_WspExtensionRequest_SchemeYear` | `SchemeYear` | No |
+| `IX_WspExtensionRequest_WspSubmissionId` | `WspSubmissionId` | No |
 
 ---
 

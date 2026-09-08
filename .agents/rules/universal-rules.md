@@ -154,8 +154,33 @@ When user's prompt is NOT in English:
    - QA rejection requires setting `IsFinalRejection`: `false` routes for candidate resubmission (`RejectedForResubmission`); `true` marks terminal rejection (`RejectedApplication`).
 4. **Dynamic Document Upload Gate**:
    - Toolkit trades require 7 mandatory verified documents; non-toolkit trades require 6 verified documents per Section 4.2.7.
+---
 
+### 🛡️ Zero-Hardcoding & Dynamic Configuration Invariant
+1. **Dynamic Business Rules Resolution**:
+   - Never embed literal values for statutory SLAs, attempt limits, validity tenures, monetary approval thresholds, levy split percentages, or mentor ratios directly inside application service classes or UI components.
+   - Always inject `ISystemConfigurationService` and resolve parameters using:
+     `await _configService.GetValueAsync<T>("Category:KeyName", fallbackConstant)`
+   - Constant literals may only be used as fallback defaults passed to `GetValueAsync<T>`.
+2. **Dynamic Tenancy & Identity Resolution**:
+   - Never write fallback logic containing hardcoded organisation names (e.g., `"toyota"`), SDL numbers (e.g., `"700100200"`), or usernames (e.g., `"Admin"`, `"sysadmin@merseta.org.za"`).
+   - Tenancy and user identities must resolve strictly from database relations (`OrganisationContact`, `SdfCompany`) and authenticated claims (`IHttpContextAccessor` / `AuthenticationStateProvider`).
+3. **MudBlazor Design Token Invariant**:
+   - Never write hardcoded hex color codes (`#cc9c47`) or inline RGB strings in `.razor` markup.
+   - All colors and theme accents must reference MudBlazor design variables (e.g., `var(--mud-palette-primary)` or `Color.Primary`).
 
+---
 
-
+### 🛡️ Anti-Synthetic Data & Zero-Hardcoding Architecture Invariant
+1. **Zero Synthetic Dummy Entity Creation**:
+   - Application services and UI components MUST NEVER synthesize placeholder records (e.g. dummy `Person` with `"Primary Contact"`, `"contact@employer.co.za"`, or `"011-555-0100"`) when a foreign key is missing.
+   - Missing required relations must fail fast with descriptive domain validation exceptions requiring the user to select or link a verified record.
+2. **Zero Hardcoded Scheme/Financial Years**:
+   - Never write literal `"2026"` or `"2026/2027"` in entity property initializers, document templates, or UI `<MudSelectItem>` elements.
+   - Dynamic year selectors must compute ranges relative to `DateTime.UtcNow.Year` and resolve the active scheme year via `ISystemConfigurationService.GetValueAsync("Governance:CurrentSchemeYear", DateTime.UtcNow.Year.ToString())`.
+3. **Zero Hardcoded URLs & Endpoints**:
+   - Verification URLs, QR code links, and external ERP integration endpoints must never contain static domain names (e.g. `"https://verify.merseta.org.za"` or `"https://erp.merseta.org.za"`).
+   - All external/public URLs must be constructed from configurable base URLs resolved from `ISystemConfigurationService` or `IConfiguration`.
+4. **Zero Inline Timeouts & File Caps**:
+   - File upload limits (`maxAllowedSize`), cache TTLs (`MemoryCacheEntryOptions`), and HTTP client timeouts must reference centralized system configuration keys with statutory constants strictly as fallback defaults.
 

@@ -1,10 +1,10 @@
-﻿using Nsdms.Domain.Common;
+using Nsdms.Domain.Common;
 
 namespace Nsdms.Domain.Entities;
 
 /// <summary>
 /// Represents a bulk intake batch for high-speed learner registrations submitted by an Employer or SDP.
-/// Implements the ATM channel of the Dual-Channel Learner Registration Architecture.
+/// Implements the automated bulk fast-track channel of the Dual-Channel Learner Registration Architecture.
 /// </summary>
 public class LearnerBulkBatch : BaseEntity
 {

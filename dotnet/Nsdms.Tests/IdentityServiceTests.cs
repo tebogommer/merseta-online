@@ -247,14 +247,16 @@ public class IdentityServiceTests
 
         var sdf = await service.GetUserByEmailAsync("sdf.employer@toyota.co.za");
         Assert.NotNull(sdf);
-        var sdfRoles = await service.GetUserRolesAsync(sdf.Id);
-        Assert.Contains("SDF", sdfRoles);
+        var checker = await service.GetUserByEmailAsync("admin.checker@merseta.org.za");
+        Assert.NotNull(checker);
+        var checkerRoles = await service.GetUserRolesAsync(checker.Id);
+        Assert.Contains("Admin", checkerRoles);
 
         // Seeder run second time must be idempotent
         await service.SeedDefaultUsersAsync();
 
         var totalUsers = await service.GetAllUsersAsync();
-        Assert.Equal(5, totalUsers.Count);
+        Assert.Equal(6, totalUsers.Count);
     }
 
     [Fact]

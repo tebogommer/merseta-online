@@ -21,6 +21,11 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
         if (provider == null)
             throw new KeyNotFoundException($"TrainingProvider with ID {providerId} not found.");
 
+        if (AccreditationStreamType.IsQctoOrSecondary(provider.AccreditationStream))
+        {
+            throw new InvalidOperationException($"merSETA cannot issue a Primary Certificate of Accreditation (Form ETQ-TP-002) for {provider.AccreditationStream} providers. QCTO is the statutory accrediting authority under SDA §26I. Use GenerateQctoEndorsementLetterPdfAsync instead.");
+        }
+
         var setaName = await _config.GetValueAsync("General.SetaName", "Manufacturing, Engineering and Related Services SETA (merSETA)");
         var certSerial = $"CERT-SDP-{provider.AccreditationStartDate?.Year ?? DateTime.UtcNow.Year}-{provider.Id:D5}";
         var baseUrl = await _config.GetValueAsync("System.BaseUrl", "https://nsdms.merseta.org.za");
@@ -122,6 +127,147 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
         return document.GeneratePdf();
     }
 
+    public async Task<byte[]> GenerateQctoEndorsementLetterPdfAsync(int providerId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var provider = await db.TrainingProviders
+            .Include(p => p.Organisation)
+            .Include(p => p.Qualifications)
+            .FirstOrDefaultAsync(p => p.Id == providerId);
+
+        if (provider == null)
+            throw new KeyNotFoundException($"TrainingProvider with ID {providerId} not found.");
+
+        var setaName = await _config.GetValueAsync("General.SetaName", "Manufacturing, Engineering and Related Services SETA (merSETA)");
+        var letterRef = $"ENDORSE-QCTO-{DateTime.UtcNow.Year}-{provider.Id:D5}";
+        var baseUrl = await _config.GetValueAsync("System.BaseUrl", "https://nsdms.merseta.org.za");
+        var verifyUrl = $"{baseUrl.TrimEnd('/')}/verify/document/{letterRef}";
+        var qrBytes = GenerateQrBytes(verifyUrl);
+        var securitySeal = provider.DigitalSecuritySeal ?? "SEC-" + Guid.NewGuid().ToString("N")[..16].ToUpper();
+
+        var qctoAccNum = !string.IsNullOrWhiteSpace(provider.QctoAccreditationNumber)
+            ? provider.QctoAccreditationNumber
+            : (!string.IsNullOrWhiteSpace(provider.NambRegistrationNumber) ? provider.NambRegistrationNumber : provider.AccreditationNumber);
+
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(2, Unit.Centimetre);
+                page.PageColor(Colors.White);
+                page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
+
+                page.Header().Column(col =>
+                {
+                    col.Item().Row(row =>
+                    {
+                        row.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text(setaName).Bold().FontSize(13).FontColor(Colors.Blue.Darken4);
+                            c.Item().Text("EDUCATION AND TRAINING QUALITY ASSURANCE (ETQA) DIVISION").FontSize(8).FontColor(Colors.Grey.Darken2);
+                            c.Item().Text("National Skills Development Management System (NSDMS)").FontSize(8).Italic();
+                        });
+                        row.ConstantItem(60).Image(qrBytes);
+                    });
+                    col.Item().PaddingTop(4).LineHorizontal(1.5f).LineColor(Colors.Amber.Darken3);
+                });
+
+                page.Content().PaddingVertical(10).Column(col =>
+                {
+                    col.Spacing(10);
+
+                    // Date & Ref
+                    col.Item().Row(row =>
+                    {
+                        row.RelativeItem().Text($"Date: {DateTime.UtcNow:dd MMMM yyyy}").Bold();
+                        row.RelativeItem().AlignRight().Text($"Our Ref: {letterRef}").Bold();
+                    });
+
+                    col.Item().Column(c =>
+                    {
+                        c.Item().Text("The Principal / Chief Executive Officer").Bold();
+                        c.Item().Text(provider.Organisation?.CompanyName ?? "Skills Development Provider");
+                        c.Item().Text(provider.Organisation?.PhysicalAddress ?? "South Africa");
+                        if (!string.IsNullOrWhiteSpace(provider.Organisation?.SdlNumber))
+                        {
+                            c.Item().Text($"SDL Number: {provider.Organisation.SdlNumber}");
+                        }
+                    });
+
+                    // Subject
+                    col.Item().PaddingTop(6).Background(Colors.Grey.Lighten4).Padding(8).Column(c =>
+                    {
+                        c.Item().Text("OFFICIAL ENDORSEMENT & OCCUPATIONAL SCOPE RECOGNITION").Bold().FontSize(12).FontColor(Colors.Blue.Darken4);
+                        c.Item().Text($"RE: QCTO ACCREDITATION CREDENTIAL RECORDING — {qctoAccNum}").Bold().FontSize(10);
+                        c.Item().Text($"Statutory Intake Stream: {provider.AccreditationStream}").FontSize(9).Italic();
+                    });
+
+                    // Body
+                    col.Item().Text($"Dear Sir / Madam,");
+                    col.Item().Text($"1. This official notice serves to confirm that the {setaName} has recorded and validated the accreditation credentials awarded to {provider.Organisation?.CompanyName ?? "the institution"} by the Quality Council for Trades and Occupations (QCTO) pursuant to Section 26I of the Skills Development Act (Act No. 97 of 1998, as amended).");
+
+                    col.Item().Text($"2. Official Recorded QCTO Credentials:");
+                    col.Item().PaddingLeft(15).Column(c =>
+                    {
+                        c.Item().Text($"• QCTO Accreditation Number: {qctoAccNum}").Bold();
+                        if (!string.IsNullOrWhiteSpace(provider.QctoCentreCode))
+                        {
+                            c.Item().Text($"• QCTO Allocated Centre Code: {provider.QctoCentreCode}");
+                        }
+                        c.Item().Text($"• Validity Period: {provider.AccreditationStartDate:dd MMMM yyyy} to {provider.AccreditationEndDate:dd MMMM yyyy}");
+                        c.Item().Text($"• merSETA Provider Code: {provider.ProviderCode ?? ("PRV-" + provider.Id.ToString("D5"))}");
+                        c.Item().Text($"• ETQA Minute Resolution: {provider.EtqaDecisionNumber ?? provider.EtqaCommitteeDecisionNumber ?? "ENDORS_RATIFIED"}");
+                    });
+
+                    col.Item().Text($"3. In accordance with statutory directives, merSETA recognizes your occupational delivery and assessment capability within the designated manufacturing and engineering sub-sectors for the registered occupational scopes:");
+
+                    if (provider.Qualifications != null && provider.Qualifications.Any())
+                    {
+                        col.Item().PaddingLeft(15).Column(c =>
+                        {
+                            foreach (var qual in provider.Qualifications.Take(5))
+                            {
+                                c.Item().Text($"• SAQA ID {qual.SaqaQualificationId}: {qual.QualificationTitle} (NQF Level {qual.NqfLevel})");
+                            }
+                        });
+                    }
+
+                    col.Item().Text($"4. This endorsement entitles the provider to enrol merSETA-funded learners, submit learner registrations, participate in Discretionary Grant (DG) strategic projects, and administer occupational trade assessments.");
+
+                    col.Item().PaddingTop(15).Row(row =>
+                    {
+                        row.RelativeItem().Column(c =>
+                        {
+                            c.Item().LineHorizontal(1).LineColor(Colors.Grey.Medium);
+                            c.Item().PaddingTop(2).Text("Senior Manager: Quality Assurance & ETQA").Bold().FontSize(9);
+                            c.Item().Text(setaName).FontSize(8);
+                        });
+                        row.ConstantItem(40);
+                        row.RelativeItem().Column(c =>
+                        {
+                            c.Item().LineHorizontal(1).LineColor(Colors.Grey.Medium);
+                            c.Item().PaddingTop(2).Text("Executive: Learning Programmes").Bold().FontSize(9);
+                            c.Item().Text("merSETA Quality Assurance Division").FontSize(8);
+                        });
+                    });
+                });
+
+                page.Footer().Column(col =>
+                {
+                    col.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+                    col.Item().Row(row =>
+                    {
+                        row.RelativeItem().Text($"Digital Security Seal: {securitySeal}").FontFamily("Courier").FontSize(7).FontColor(Colors.Grey.Darken2);
+                        row.RelativeItem().AlignRight().Text("Page 1 of 1 | merSETA Statutory Form ETQ-QCTO-001").FontSize(8).FontColor(Colors.Grey.Darken2);
+                    });
+                });
+            });
+        });
+
+        return document.GeneratePdf();
+    }
+
     public async Task<byte[]> GenerateSdpDisciplinaryNoticePdfAsync(int caseId)
     {
         using var db = await _contextFactory.CreateDbContextAsync();
@@ -133,9 +279,10 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
         if (disciplinaryCase == null)
             throw new KeyNotFoundException($"SdpDisciplinaryCase with ID {caseId} not found.");
 
-        var setaName = await _config.GetValueAsync("General.SetaName", "merSETA");
         var provider = disciplinaryCase.TrainingProvider;
-        var verifyUrl = $"https://nsdms.merseta.org.za/verify/sanction/{disciplinaryCase.CaseNumber}";
+        var setaName = await _config.GetValueAsync("General.SetaName", "merSETA");
+        var portalBaseUrl = await _config.GetValueAsync("System:BaseUrl", "https://nsdms.merseta.org.za");
+        var verifyUrl = $"{portalBaseUrl.TrimEnd('/')}/verify/sanction/{disciplinaryCase.CaseNumber}";
         var qrBytes = GenerateQrBytes(verifyUrl);
 
         var document = Document.Create(container =>
@@ -244,9 +391,10 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
         if (inspection == null)
             throw new KeyNotFoundException($"SdpSiteInspection with ID {inspectionId} not found.");
 
-        var setaName = await _config.GetValueAsync("General.SetaName", "merSETA");
         var provider = inspection.TrainingProvider;
-        var verifyUrl = $"https://nsdms.merseta.org.za/verify/site-inspection/{inspection.Id}";
+        var setaName = await _config.GetValueAsync("General.SetaName", "merSETA");
+        var portalBaseUrl = await _config.GetValueAsync("System:BaseUrl", "https://nsdms.merseta.org.za");
+        var verifyUrl = $"{portalBaseUrl.TrimEnd('/')}/verify/site-inspection/{inspection.Id}";
         var qrBytes = GenerateQrBytes(verifyUrl);
 
         var document = Document.Create(container =>

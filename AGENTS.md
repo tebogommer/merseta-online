@@ -50,6 +50,24 @@ Every page must pass all 16 items before being declared complete:
 
 ---
 
+### 🛡️ Enterprise Holiday & Institutional Closure Governance Standard
+1. **Dynamic Configurability & Multi-Day Date-Span Support**:
+   - Both statutory South African public holidays (Act No. 36 of 1994, Butcher's Computus, and Sunday rollovers) and annual merSETA institutional shutdowns (e.g. 24 December to 03 January) must be stored in the database (`NonWorkingDay`) and manageable via `/admin/non-working-days` (Archetype A1 List) and `/admin/non-working-days/{id}` (Archetype A3 Detail).
+   - Both single-day holidays and multi-day closure spans are supported with inclusive `StartDate` and `EndDate`, automatic `TotalDays` computation, and `CalendarYear` alignment.
+2. **Universal Officer Workflow SLA Pausing**:
+   - All human officer SLAs (20-day Workplace Approval, 14-day Dispute/Termination, 5-day SDP Site Visit, etc.) MUST evaluate `IWorkingDayCalculationEngine.AddBusinessDays` or `IsNonWorkingDate`.
+   - Any approved closure tagged with `AffectsSla = true` automatically pauses the countdown timer and pushes due dates forward across all statutory modules.
+3. **Typology Classification & Gazette Provenance**:
+   - Every non-working day must be categorized into one of 4 official typologies: `NAT_STATUTORY` (National statutory public holiday), `INST_SHUTDOWN` (merSETA annual year-end shutdown), `ADHOC_GAZETTED` (Ad-hoc gazetted public holiday), or `SPEC_CLOSURE` (Special administrative closure).
+   - Ad-hoc and special closures require capturing statutory authority / resolution provenance (`GazetteOrResolutionRef`).
+4. **Master-Detail View-by-Default & SLA Simulator**:
+   - Records open in View mode (`/{id}`) with `<ReadOnlyField>` components. Edits are isolated to `/{id}/edit` with Save and Cancel buttons.
+   - Master-Detail views must feature an interactive SLA Impact Simulator allowing administrators to input arbitrary start dates and business day horizons to visually verify pause spans and target delivery dates.
+5. **Audited Double-Write & Segregation of Duties**:
+   - All holiday/closure creations, updates, approvals, and deletions must record immutable double-write snapshots in `audit_logs` with before and after state captures.
+
+---
+
 ### 🛡️ UI Plain-Language & Anti-Jargon Governance Invariant
 1. **Zero Database/Architecture Jargon**: Replace "Double-Write / MetadataJson" with **"Audited Change Log"**; replace "Temporal Tables" with **"Historical Version Timeline"**.
 2. **Zero Cryptography Jargon**: Replace "SHA-256 Hash / Fingerprint" with **"Digital Security Seal"** or **"Verification Reference"**. Keep 64-character hashes hidden under an expandable "Technical Verification Data" drawer.
@@ -189,9 +207,9 @@ The Option and Lookup Controls Standard v1.1 (Rules E.1 and E.2, OPT-001 through
 
 ---
 
-### 🛡️ Learner Registration Dual-Channel (ATM vs Teller) Statutory Invariant
+### 🛡️ Learner Registration Dual-Channel (Automated Bulk vs Manual Single) Statutory Invariant
 1. **Dual-Channel Coexistence**:
-   - The automated self-service bulk ingestion channel ("The ATM", `/learners/bulk-register`) MUST exist alongside the manual single-registration wizard workflows ("The Teller", `LearnerAgreementRegistrationWizard.razor` and `BursaryRegistrationWizard.razor`). Automated options must NEVER replace or deprecate manual teller routes.
+   - The automated self-service bulk ingestion channel (`/learners/bulk-register`) MUST exist alongside the manual single-registration wizard workflows (`LearnerAgreementRegistrationWizard.razor` and `BursaryRegistrationWizard.razor`). Automated options must NEVER replace or deprecate manual registration routes.
 2. **Straight-Through Processing (STP) 6-Gate Safeguards**:
    - Automated registration through `ILearnerStpRiskEngine` is strictly limited to 100% compliant submissions matching 6 gates: active levy-paying employer, verified workplace approval with mentor ratios (`IMentorRatioPolicyEngine`), active non-expired SAQA qualification, valid RSA ID Luhn algorithm check, mandatory guardian details for minors under 18, and execution date within 30 working days.
 3. **Graceful Exception Routing**:
@@ -219,5 +237,57 @@ The Option and Lookup Controls Standard v1.1 (Rules E.1 and E.2, OPT-001 through
    - Provide statutory constants strictly as fallback arguments.
 3. **Startup Seeding Requirement**:
    - Any newly introduced configuration parameter MUST be added to `SystemConfigurationService.SeedDefaultConfigsAsync()` with its category, data type, description, and default value so it appears automatically in the System Settings administration portal.
+
+---
+
+### 🛡️ View-Backed Entities & SETMIS Schema-Type Synchronization Invariant
+1. **Physical Table Alterations for Backward-Compatible Views**:
+   - When backward-compatibility views (e.g. `dbo.CompanyLearner` defined over `dbo.LearnerEnrolment`) are mapped to EF Core entities, any schema alteration (`ALTER COLUMN`, `ADD CONSTRAINT`, `CREATE INDEX`) MUST target the underlying physical base table (e.g. `dbo.LearnerEnrolment`).
+   - After altering the physical table, always invoke `EXEC sp_refreshview '[ViewName]'` to synchronize metadata in `sys.columns` and prevent `InvalidCastException` during EF Core materialized queries.
+2. **SETMIS Alphanumeric Lookup Columns Standard**:
+   - All statutory SETMIS lookup and identifier columns (`FundingId`, `PartOfId`, `EnrolmentTypeId`, `EnrolmentStatusId`, `EconomicStatusId`, `UrbanRuralId`, `InternshipStatusId`) MUST be physically stored as `NVARCHAR(10)` or `NVARCHAR(50)`, NEVER as `INT`.
+   - In entity classes, declare them as `string?` with Fluent API configuration `entity.Property(e => e.Property).HasMaxLength(10)`.
+3. **Detached Navigation Property Nullification**:
+   - When persisting child or master entities resolved from external or temporary DbContext instances (e.g. `Person` loaded by RSA ID), always set the navigation property to `null` (`learner.Person = null;`) before calling `db.Add(learner)`. This ensures EF Core attaches strictly via foreign key (`PersonId`) and prevents accidental duplicate inserts or identity tracking conflicts.
+
+---
+
+### 🛡️ Hierarchical Relational Fiscal Calendar & Working Day Governance Standard
+1. **Relational Model & Contiguity Invariant**:
+   - Every financial year record (`FinancialYear`) must manage 4 sequential relational quarters (`FinancialQuarter`, 1:4).
+   - Quarter dates must satisfy strict contiguity: $Q_n.\text{EndDate} + 1\text{ day} == Q_{n+1}.\text{StartDate}$, with $Q_1.\text{StartDate} == \text{FinancialYear.StartDate}$ and $Q_4.\text{EndDate} == \text{FinancialYear.EndDate}$. Overlaps and gaps must be rejected at both domain and UI validation levels.
+2. **Statutory South African Working Days Computation**:
+   - Calculation of working days across months and quarters must use `SouthAfricanPublicHolidays` (Butcher's Computus algorithm for Easter/Good Friday/Family Day and Section 2(1) Sunday rollover to Monday under Act No 36 of 1994).
+   - February days must dynamically evaluate `DateTime.IsLeapYear(year)` (29 days for leap years, 28 for non-leap years).
+3. **Master-Detail & View-by-Default Architecture**:
+   - Fiscal calendar management must reside at `/admin/financial-years` (Archetype A1 List) and `/admin/financial-years/{id}` (Archetype A3 Detail).
+   - Viewing records (`/{id}`) is strictly read-only by default. Edits are confined to `/{id}/edit` with Save and Cancel buttons.
+4. **Audited Double-Write & Dynamic Configuration**:
+   - All mutations (financial year creation, quarter modifications, deletions, and template updates) must perform atomic double-writes into `audit_logs` with before/after state snapshots.
+   - Statutory default dates must resolve dynamically from `SystemConfigurationService` (`Fiscal:Default*`) with fallback constants.
+5. **Native Maker-Checker Governance Lifecycle & Segregation of Duties**:
+   - Fiscal year lifecycles follow: `Draft` $\rightarrow$ `Under Review` $\rightarrow$ `Active` $\rightarrow$ `Inactive` $\rightarrow$ `Amendment Draft` (Rev #2).
+   - Segregation of Duties is strictly enforced: the preparer/submitter cannot approve their own submission (`SubmittedBy != userId`). An independent reviewer is required unless dynamically overridden by `Fiscal:AllowAnyAdminReviewer == true`.
+   - Active scheme years are strictly locked against direct modification; updates require clicking "Request amendment" with mandatory justification, automatically generating `Revision #2` in `Amendment Draft` mode.
+   - All human UAT test cases must strictly avoid technical URLs (using UI menus, breadcrumbs, action buttons, and modal dialogs). Automated Playwright tests must verify Segregation of Duties rejections and use `evaluate("el => el.click()")` when switching tabs underneath sticky headers.
+
+---
+
+### 🛡️ QCTO Occupational Accreditation & Trade Test Centre Statutory Governance (SDA §26I)
+1. **Statutory Scope Separation (SDA §26I)**:
+   - Primary accreditation for occupational qualifications and part-qualifications is held exclusively with the Quality Council for Trades and Occupations (QCTO). MerSETA acts strictly to verify, record, and endorse QCTO-accredited Skills Development Providers (SDPs) and Trade Test Centres (TTCs) for discretionary grant funding and provincial artisan training delivery.
+2. **Prohibition of Illegal Form ETQ-TP-002 Issuance**:
+   - MerSETA MUST NEVER issue a Form ETQ-TP-002 "Certificate of Accreditation" to providers whose intake stream is `QctoSkillsDevelopmentProvider`, `QctoTradeTestCentre`, or `ProgrammeApproval`.
+   - Calling `QuestPdfDocumentService.GenerateSdpAccreditationCertificatePdfAsync` on QCTO/secondary stream providers MUST throw `InvalidOperationException` with a clear reference to SDA §26I.
+3. **Letter of Endorsement & Scope Confirmation (Form ETQ-QCTO-001)**:
+   - For QCTO SDPs and Trade Test Centres, merSETA generates an official **Letter of Endorsement & Scope Confirmation** (`GenerateQctoEndorsementLetterPdfAsync`, Form ETQ-QCTO-001) that verifies the provider's registered delivery sites, scope qualifications, and QCTO accreditation reference.
+4. **Mandatory Dedicated QCTO & NAMB Model Properties**:
+   - Domain model `TrainingProvider` and SQL Server tables MUST define dedicated columns for QCTO credentials: `QctoAccreditationNumber`, `QctoAccreditationStartDate`, `QctoAccreditationEndDate`, `QctoCentreCode`, `QctoLetterAttachmentRef`, and `NambRegistrationNumber`.
+   - When registering or endorsing, validity dates must preserve the QCTO/NAMB cycle dates rather than defaulting to merSETA's 5-year cycle.
+5. **Stream Validation & Maker-Checker Workflow**:
+   - Domain validator `TrainingProviderDomainValidator.ValidateAccreditationStream` and application service `TrainingProviderService` MUST enforce presence of `QctoAccreditationNumber` for QCTO SDPs, and `NambRegistrationNumber` for QCTO TTCs.
+   - The Stage 3 review queue must route QCTO streams to "Verify & Endorse QCTO / Secondary Credentials" rather than standard primary committee adjudication.
+
+
 
 

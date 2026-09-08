@@ -370,9 +370,9 @@ public class CompanyLearner : BaseEntity
     public bool? ContinuationAcademicResultsPassed { get; set; }
     #endregion
 
-    #region Dual-Channel Registration (Manual Teller vs Automated STP Engine)
+    #region Dual-Channel Registration (Manual Single Wizard vs Automated Bulk Ingestion)
     /// <summary>
-    /// Registration intake channel: "ManualWizard" (The Teller) or "AutomatedBulk" (The ATM).
+    /// Registration intake channel: "ManualWizard" (Manual Single Registration) or "AutomatedBulk" (Automated Bulk Fast-Track).
     /// </summary>
     public string RegistrationChannel { get; set; } = "ManualWizard";
 

@@ -14,8 +14,8 @@ public record StpEvaluationResult(
 
 /// <summary>
 /// Straight-Through Processing (STP) Risk Engine for Learner Registration.
-/// Determines whether an incoming registration agreement qualifies for automated approval (The ATM)
-/// or mandates human officer verification (The Teller).
+/// Determines whether an incoming registration agreement qualifies for automated straight-through processing approval
+/// or mandates human officer verification via the manual registration workflow.
 /// </summary>
 public interface ILearnerStpRiskEngine
 {

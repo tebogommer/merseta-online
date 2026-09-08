@@ -1,11 +1,11 @@
-﻿# Implementation Plan - Hybrid Evolutionary Learner Registration (Dual-Channel Architecture)
+# Implementation Plan - Hybrid Evolutionary Learner Registration (Dual-Channel Architecture)
 
-## Context & Architecture Principle: The ATM & The Teller
+## Context & Architecture Principle: Dual-Channel Architecture
 Modernise the MerSETA Learner Registration pipeline by introducing high-speed automated digital alternatives while strictly preserving all existing manual registration processes (LearnerAgreementRegistrationWizard.razor, BursaryRegistrationWizard.razor, and regional officer verification).
 
-Just as a retail bank allows a customer to either use an ATM/mobile app or visit a human teller at a branch, the system provides two concurrent operational channels feeding into the identical underlying statutory ledger (CompanyLearner, audit_logs, and SETMIS/NLRD engines):
-- Channel 1 (The Teller - Existing Manual Workflow): Multi-step UI wizards, manual file attachments, manual officer maker-checker review, and manual condonation approvals.
-- Channel 2 (The ATM - New Automated Fast-Track): Interactive bulk spreadsheet ingestion with in-browser pre-flight linting, automated document OCR/verification checks, and rule-based Straight-Through Processing (STP) for 100% compliant, low-risk corporate intakes.
+The system provides two concurrent operational channels feeding into the identical underlying statutory ledger (CompanyLearner, audit_logs, and SETMIS/NLRD engines):
+- Channel 1 (Existing Manual Single Registration Workflow): Multi-step UI wizards, manual file attachments, manual officer maker-checker review, and manual condonation approvals.
+- Channel 2 (New Automated Bulk Fast-Track): Interactive bulk spreadsheet ingestion with in-browser pre-flight linting, automated document OCR/verification checks, and rule-based Straight-Through Processing (STP) for 100% compliant, low-risk corporate intakes.
 
 ## User Review Required
 - Zero Regression Invariant: The existing manual wizards (/learners/register-agreement, /learners/register-bursary) remain 100% functional and untouched in their core routing.

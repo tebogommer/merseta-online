@@ -271,23 +271,20 @@
             _selectedOrgName = org?.CompanyName ?? "Organisation";
             _generatedReference = $"EXT-{_schemeYear}-{DateTime.UtcNow:MMdd}-{_selectedOrgId:D3}";
 
-            // Perform double-write audit logging
-            await AuditService.LogAsync(
-                "WspExtensionRequest",
-                _selectedOrgId,
-                "SubmitDeadlineExtension",
-                "SDF_USER",
-                System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    Reference = _generatedReference,
-                    OrganisationId = _selectedOrgId,
-                    OrganisationName = _selectedOrgName,
-                    SchemeYear = _schemeYear,
-                    Reason = _extensionReason,
-                    RequestedDate = _requestedDate,
-                    Motivation = _motivation,
-                    EvidenceFile = _uploadedFileName
-                }));
+            var request = new WspExtensionRequest
+            {
+                OrganisationId = _selectedOrgId,
+                SchemeYear = _schemeYear,
+                ApplicationReference = _generatedReference,
+                ReasonCode = _extensionReason,
+                StatutoryMotivation = _motivation,
+                RequestedExtensionDate = _requestedDate ?? new DateTime(_schemeYear, 5, 15, 23, 59, 59, DateTimeKind.Utc),
+                EvidenceFileName = _uploadedFileName,
+                EvidenceDocumentId = !string.IsNullOrEmpty(_uploadedFileName) ? Guid.NewGuid().ToString("N") : null,
+                DeclarationAccepted = _declarationAccepted
+            };
+
+            await WspService.SubmitExtensionRequestAsync(request, "SDF_USER");
 
             _isSuccess = true;
             Snackbar.Add($"Extension application {_generatedReference} submitted successfully.", Severity.Success);

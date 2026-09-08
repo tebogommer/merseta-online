@@ -173,7 +173,27 @@ public class LearnerService : ILearnerService
     {
         if (learner.PersonId <= 0)
         {
-            throw new ArgumentException("A valid PersonId (learner) is required.");
+            if (learner.Person != null && !string.IsNullOrWhiteSpace(learner.Person.RsaIdNumber))
+            {
+                await using var tempContext = await _contextFactory.CreateDbContextAsync();
+                var rsaId = learner.Person.RsaIdNumber.Trim();
+                var existingPerson = await tempContext.People.FirstOrDefaultAsync(p => p.RsaIdNumber == rsaId);
+                if (existingPerson != null)
+                {
+                    learner.PersonId = existingPerson.Id;
+                    learner.Person = existingPerson;
+                }
+                else
+                {
+                    tempContext.People.Add(learner.Person);
+                    await tempContext.SaveChangesAsync();
+                    learner.PersonId = learner.Person.Id;
+                }
+            }
+            else
+            {
+                throw new ArgumentException("A valid PersonId (learner) is required.");
+            }
         }
 
         bool isBursary = string.Equals(learner.LearningProgrammeTypeCode, "05", StringComparison.OrdinalIgnoreCase) ||
@@ -247,6 +267,7 @@ public class LearnerService : ILearnerService
         using var db = await _contextFactory.CreateDbContextAsync();
         learner.CreatedAt = DateTime.UtcNow;
         learner.CreatedBy = currentUsername;
+        learner.Person = null;
 
         db.CompanyLearners.Add(learner);
         await db.SaveChangesAsync();

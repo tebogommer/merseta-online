@@ -26,6 +26,8 @@ public class BackgroundSchedulerHostedService : BackgroundService
         {
             await Task.Delay(10000, stoppingToken);
 
+            var pollingInterval = TimeSpan.FromSeconds(60);
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -33,12 +35,21 @@ public class BackgroundSchedulerHostedService : BackgroundService
                     using var scope = _serviceProvider.CreateScope();
                     var featureFlags = scope.ServiceProvider.GetRequiredService<IFeatureFlagService>();
                     var isSchedulerEnabled = await featureFlags.IsFeatureEnabledAsync("Scheduler.BackgroundWorker", false);
+                    var configService = scope.ServiceProvider.GetService<ISystemConfigurationService>();
+
+                    if (configService != null)
+                    {
+                        var dynamicSeconds = await configService.GetValueAsync<int>("Scheduler:PollingIntervalSeconds", 60);
+                        if (dynamicSeconds > 0)
+                        {
+                            pollingInterval = TimeSpan.FromSeconds(dynamicSeconds);
+                        }
+                    }
 
                     if (isSchedulerEnabled)
                     {
                         _logger.LogInformation("Background Scheduler: Executing active scheduled maintenance cycle...");
                         var levyService = scope.ServiceProvider.GetRequiredService<LevyService>();
-                        var configService = scope.ServiceProvider.GetRequiredService<ISystemConfigurationService>();
                         var statutoryScheduler = scope.ServiceProvider.GetService<IStatutorySchedulerService>();
 
                         if (statutoryScheduler != null)
@@ -68,7 +79,10 @@ public class BackgroundSchedulerHostedService : BackgroundService
                         }
 
                         var lastRun = DateTime.UtcNow;
-                        await configService.SetConfigAsync("Scheduler.LastHeartbeat", lastRun.ToString("o"), "Scheduler", "Last recorded background scheduler execution timestamp", "String", "SYSTEM");
+                        if (configService != null)
+                        {
+                            await configService.SetConfigAsync("Scheduler.LastHeartbeat", lastRun.ToString("o"), "Scheduler", "Last recorded background scheduler execution timestamp", "String", "SYSTEM");
+                        }
                     }
                     else
                     {
@@ -84,8 +98,8 @@ public class BackgroundSchedulerHostedService : BackgroundService
                     _logger.LogError(ex, "Error occurred during background scheduler execution cycle.");
                 }
 
-                // Sleep for 60 seconds between cycles
-                await Task.Delay(TimeSpan.FromSeconds(60), stoppingToken);
+                // Sleep for configurable duration between cycles
+                await Task.Delay(pollingInterval, stoppingToken);
             }
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

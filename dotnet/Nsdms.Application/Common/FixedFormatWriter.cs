@@ -130,9 +130,9 @@ public static class FixedFormatWriter
 
     /// <summary>
     /// Generates a SAQA NLRD standard header record.
-    /// Format: "HEADER" (6) + SupplierID (3, default "599") + FileDescription (19) + RecordCount (9, zero-padded) + Filler (padded to recordLength).
+    /// Format: "HEADER" (6) + SupplierID (3, default from StatutoryConstants) + FileDescription (19) + RecordCount (9, zero-padded) + Filler (padded to recordLength).
     /// </summary>
-    public static string FormatNlrdHeader(string fileDescription, int recordCount, int recordLength, string supplierId = "599")
+    public static string FormatNlrdHeader(string fileDescription, int recordCount, int recordLength, string supplierId = Nsdms.Domain.Common.StatutoryConstants.SaqaMerSetaSupplierCode)
     {
         var sb = new StringBuilder();
         sb.Append(FormatString("HEADER", 6, toUpper: true));

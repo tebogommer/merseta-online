@@ -1214,7 +1214,10 @@ public class GrantService : IGrantService
 
             var provReq = provApps.Sum(a => a.RequestedAmount);
             var provAppr = provApps.Where(a => a.ApprovedAmount.HasValue).Sum(a => a.ApprovedAmount!.Value);
-            var provLearners = provApps.Count * 25; // standard cohort projection
+            var cohortMultiplier = _configService != null
+                ? await _configService.GetValueAsync<int>("Grants:StandardCohortProjection", 25)
+                : 25;
+            var provLearners = provApps.Count * cohortMultiplier; // standard cohort projection
 
             tacticalProvinces.Add(new ProvincialTacticalDto(
                 ProvinceName: provName,
@@ -1231,6 +1234,10 @@ public class GrantService : IGrantService
         var outcomeGroups = priorities.GroupBy(p => p.NsdpOutcomeCode).ToList();
         var strategicNsdp = new List<NsdpStrategicDto>();
 
+        var avgBeneficiaries = _configService != null
+            ? await _configService.GetValueAsync<int>("Grants:AverageBeneficiariesPerProject", 35)
+            : 35;
+
         foreach (var og in outcomeGroups)
         {
             var outcomeCode = og.Key;
@@ -1241,7 +1248,7 @@ public class GrantService : IGrantService
             var outcomeBudget = operationalThemes.Where(t => outcomePriorityIds.Contains(t.PriorityId)).Sum(t => t.AllocatedBudget);
             var outcomeCommitted = outcomeApps.Where(a => a.ApprovedAmount.HasValue).Sum(a => a.ApprovedAmount!.Value);
             var outcomeTarget = operationalThemes.Where(t => outcomePriorityIds.Contains(t.PriorityId)).Sum(t => t.TargetBeneficiaries);
-            var outcomeActual = outcomeApps.Count(a => a.StatusCode == "Approved") * 35;
+            var outcomeActual = outcomeApps.Count(a => a.StatusCode == "Approved") * avgBeneficiaries;
             var targetAchieve = outcomeTarget > 0 ? Math.Round(((decimal)outcomeActual / outcomeTarget) * 100m, 1) : 0m;
 
             strategicNsdp.Add(new NsdpStrategicDto(
@@ -1256,16 +1263,22 @@ public class GrantService : IGrantService
         }
 
         // 4. Transformation Demographics Equity
+        var femaleTarget = _configService != null ? await _configService.GetValueAsync<decimal>("Demographics:TargetFemalePercent", 54.2m) : 54.2m;
+        var youthTarget = _configService != null ? await _configService.GetValueAsync<decimal>("Demographics:TargetYouthPercent", 62.8m) : 62.8m;
+        var disabledTarget = _configService != null ? await _configService.GetValueAsync<decimal>("Demographics:TargetDisabledPercent", 6.5m) : 6.5m;
+        var ruralTarget = _configService != null ? await _configService.GetValueAsync<decimal>("Demographics:TargetRuralPercent", 38.4m) : 38.4m;
+        var blackTarget = _configService != null ? await _configService.GetValueAsync<decimal>("Demographics:TargetBlackOwnershipPercent", 78.5m) : 78.5m;
+
         var equity = new TransformationEquityDto(
-            FemalePercent: 54.2m,
-            YouthPercent: 62.8m,
-            DisabledPercent: 6.5m,
-            RuralPercent: 38.4m,
-            BlackOwnershipPercent: 78.5m
+            FemalePercent: femaleTarget,
+            YouthPercent: youthTarget,
+            DisabledPercent: disabledTarget,
+            RuralPercent: ruralTarget,
+            BlackOwnershipPercent: blackTarget
         );
 
         var overallBurnRate = totalAllocated > 0 ? Math.Round((totalApproved / totalAllocated) * 100m, 1) : 0m;
-        var totalLearnersActual = applications.Count(a => a.StatusCode == "Approved") * 35;
+        var totalLearnersActual = applications.Count(a => a.StatusCode == "Approved") * avgBeneficiaries;
 
         return new StrategicReportDashboardDto(
             TotalPrioritiesCount: priorities.Count,

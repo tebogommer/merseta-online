@@ -160,6 +160,9 @@ public class TrainingProvider : BaseEntity
     public string? NambRegistrationNumber { get; set; }
 
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string? PrimaryQualityAssuranceBody { get => PrimaryEtqaName; set => PrimaryEtqaName = value; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public string? PrimaryEtqaAccreditationNumber { get => PrimaryAccreditationNumber; set => PrimaryAccreditationNumber = value; }
 
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
@@ -177,6 +180,35 @@ public class TrainingProvider : BaseEntity
     /// NAMB Trade Test Centre accreditation end date.
     /// </summary>
     public DateTime? NambRegistrationEndDate { get; set; }
+
+    /// <summary>
+    /// Official QCTO Accreditation Number (e.g. QCTOSDP0120230501).
+    /// </summary>
+    public string? QctoAccreditationNumber { get; set; }
+
+    /// <summary>
+    /// QCTO accreditation validity cycle start date.
+    /// </summary>
+    public DateTime? QctoAccreditationStartDate { get; set; }
+
+    /// <summary>
+    /// QCTO accreditation validity cycle end date.
+    /// </summary>
+    public DateTime? QctoAccreditationEndDate { get; set; }
+
+    /// <summary>
+    /// QCTO allocated Centre Code.
+    /// </summary>
+    public string? QctoCentreCode { get; set; }
+
+    /// <summary>
+    /// Document storage reference or ID for official QCTO accreditation confirmation letter.
+    /// </summary>
+    public string? QctoLetterAttachmentRef { get; set; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public DateTime? QctoAccreditationExpiryDate { get => QctoAccreditationEndDate; set => QctoAccreditationEndDate = value; }
+
 
     /// <summary>
     /// MerSETA ETQA Review Committee decision minute reference number (Table 7 Step N, Table 15 Attribute 19).

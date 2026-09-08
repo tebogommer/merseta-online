@@ -1,0 +1,444 @@
+@page "/admin/financial-years"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@inject IFiscalCalendarService FiscalService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A1 (Master List - Financial Years & Quarters)
+  Clauses: 4.2, 4.3, 6.1, 7.2, 8.1, 8.3, 11.1–11.9
+*@
+
+<PageTitle>Financial Years &amp; Quarters | merSETA NSDMS</PageTitle>
+
+<div class="fiscal-calendar-list-container" style="max-width: 1600px; margin: 0 auto;">
+    <EntityHeader Title="Financial Years &amp; Quarters"
+                  Subtitle="Manage statutory financial scheme years, customize quarter boundaries, and view computed month and working day projections."
+                  ReferenceKey="SYS-FISCAL-YEARS"
+                  Status="Active"
+                  BreadcrumbItems="@_breadcrumbs">
+        <ActionZone>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.Settings"
+                       OnClick="@(() => Navigation.NavigateTo("/admin/settings"))"
+                       Class="mr-2">
+                System Settings
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => Navigation.NavigateTo("/admin/financial-years/create"))">
+                Add Financial Year
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+
+    <!-- Filter Bar -->
+    <FilterBar SearchPlaceholder="Search by Financial Year Code, description..."
+               @bind-SearchText="_searchString"
+               OnSearch="HandleFilterChanged"
+               OnClear="HandleFilterCleared">
+        <FilterContent>
+            <MudSelect T="string"
+                       Label="Status Filter"
+                       @bind-Value="_selectedStatus"
+                       @bind-Value:after="HandleFilterChanged"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Dense="true"
+                       Style="min-width: 180px;">
+                <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
+                <MudSelectItem Value="@(FinancialYearStatus.Draft)">Draft</MudSelectItem>
+                <MudSelectItem Value="@(FinancialYearStatus.UnderReview)">Under Review</MudSelectItem>
+                <MudSelectItem Value="@(FinancialYearStatus.Active)">Active</MudSelectItem>
+                <MudSelectItem Value="@(FinancialYearStatus.Inactive)">Inactive</MudSelectItem>
+                <MudSelectItem Value="@(FinancialYearStatus.AmendmentDraft)">Amendment Draft</MudSelectItem>
+            </MudSelect>
+        </FilterContent>
+    </FilterBar>
+
+    <!-- Data Table -->
+    <MudTable Items="@FilteredYears"
+              Hover="true"
+              Striped="true"
+              Dense="true"
+              Loading="@_loading"
+              Elevation="1"
+              Class="rounded-lg mt-4"
+              T="FinancialYear">
+        <HeaderContent>
+            <MudTh>Financial Year Code</MudTh>
+            <MudTh>Effective Period</MudTh>
+            <MudTh>Calendar Days</MudTh>
+            <MudTh>Quarters (Q1 – Q4)</MudTh>
+            <MudTh>Revision</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh Class="text-right">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Financial Year Code">
+                <MudLink Href="@($"/admin/financial-years/{context.Id}")" Typo="Typo.body2" Class="font-mono font-weight-bold">
+                    @context.FinYearCode
+                </MudLink>
+                @if (!string.IsNullOrWhiteSpace(context.Description))
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block text-truncate" Style="max-width: 320px;">
+                        @context.Description
+                    </MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="Effective Period">
+                <div class="d-flex align-center gap-1 font-mono">
+                    <MudIcon Icon="@Icons.Material.Filled.DateRange" Size="Size.Small" Color="Color.Default" />
+                    <span>@context.StartDate.ToString("dd MMM yyyy")</span>
+                    <span class="text-secondary mx-1">→</span>
+                    <span>@context.EndDate.ToString("dd MMM yyyy")</span>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Calendar Days">
+                <span class="font-mono font-weight-bold">
+                    @((int)(context.EndDate - context.StartDate).TotalDays + 1) days
+                </span>
+            </MudTd>
+            <MudTd DataLabel="Quarters">
+                <div class="d-flex flex-wrap gap-1">
+                    @if (context.Quarters != null && context.Quarters.Any())
+                    {
+                        @foreach (var q in context.Quarters.OrderBy(q => q.QuarterNumber))
+                        {
+                            <MudTooltip Text="@($"{q.QuarterCode}: {q.StartDate:dd MMM yyyy} to {q.EndDate:dd MMM yyyy} ({(int)(q.EndDate - q.StartDate).TotalDays + 1} days)")" Placement="Placement.Top">
+                                <MudChip T="string"
+                                         Size="Size.Small"
+                                         Variant="Variant.Outlined"
+                                         Color="@GetQuarterColor(q.QuarterNumber)"
+                                         Class="font-mono">
+                                    @q.QuarterCode
+                                </MudChip>
+                            </MudTooltip>
+                        }
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">No quarters defined</MudText>
+                    }
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Revision">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default" Class="font-mono">
+                    Rev #@context.RevisionNumber
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@GetStatusColor(context.StatusCode)">
+                    @context.StatusCode
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Actions" Class="text-right">
+                <div class="d-flex justify-end align-center gap-1">
+                    <MudTooltip Text="View Financial Year Details">
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                       Size="Size.Small"
+                                       Color="Color.Primary"
+                                       OnClick="@(() => Navigation.NavigateTo($"/admin/financial-years/{context.Id}"))"
+                                       aria-label="View financial year details" />
+                    </MudTooltip>
+
+                    @if (context.StatusCode == FinancialYearStatus.Draft || context.StatusCode == FinancialYearStatus.AmendmentDraft)
+                    {
+                        <MudTooltip Text="Edit Financial Year & Quarters">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Size="Size.Small"
+                                           Color="Color.Secondary"
+                                           OnClick="@(() => Navigation.NavigateTo($"/admin/financial-years/{context.Id}/edit"))"
+                                           aria-label="Edit financial year" />
+                        </MudTooltip>
+                        <MudTooltip Text="Submit for Review (Maker action)">
+                            <MudIconButton Icon="@Icons.Material.Filled.Send"
+                                           Size="Size.Small"
+                                           Color="Color.Warning"
+                                           OnClick="@(() => SubmitForReviewAsync(context))"
+                                           aria-label="Submit for review" />
+                        </MudTooltip>
+                        <MudTooltip Text="Delete Financial Year">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Size="Size.Small"
+                                           Color="Color.Error"
+                                           OnClick="@(() => DeleteFinancialYearAsync(context))"
+                                           aria-label="Delete financial year" />
+                        </MudTooltip>
+                    }
+                    else if (context.StatusCode == FinancialYearStatus.UnderReview)
+                    {
+                        <MudTooltip Text="Direct editing locked while Under Review. Click to Adjudicate / Review.">
+                            <MudIconButton Icon="@Icons.Material.Filled.FactCheck"
+                                           Size="Size.Small"
+                                           Color="Color.Primary"
+                                           OnClick="@(() => Navigation.NavigateTo($"/admin/financial-years/{context.Id}"))"
+                                           aria-label="Adjudicate review" />
+                        </MudTooltip>
+                    }
+                    else if (context.StatusCode == FinancialYearStatus.Active)
+                    {
+                        <MudTooltip Text="Direct editing locked on active year. Request Amendment to revise.">
+                            <MudIconButton Icon="@Icons.Material.Filled.EditNote"
+                                           Size="Size.Small"
+                                           Color="Color.Info"
+                                           OnClick="@(() => RequestAmendmentAsync(context))"
+                                           aria-label="Request amendment" />
+                        </MudTooltip>
+                    }
+                    else if (context.StatusCode == FinancialYearStatus.Inactive)
+                    {
+                        <MudTooltip Text="Inactive financial year is locked and archived.">
+                            <MudIconButton Icon="@Icons.Material.Filled.Lock"
+                                           Size="Size.Small"
+                                           Color="Color.Default"
+                                           Disabled="true"
+                                           aria-label="Locked" />
+                        </MudTooltip>
+                    }
+                </div>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <div class="pa-8 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+                <MudText Typo="Typo.h6">No Financial Years Found</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    @(_searchString != null ? "Try clearing your filters." : "Click 'Add Financial Year' to define the first financial scheme year.")
+                </MudText>
+            </div>
+        </NoRecordsContent>
+        <LoadingContent>
+            <div class="pa-8 text-center">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                <MudText Typo="Typo.body2" Class="mt-2">Loading financial years...</MudText>
+            </div>
+        </LoadingContent>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
+        </PagerContent>
+    </MudTable>
+</div>
+
+@code {
+    private List<FinancialYear> _financialYears = new();
+    private string? _searchString;
+    private string _selectedStatus = "All";
+    private bool _loading = true;
+
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Administration", href: "/admin/settings"),
+        new BreadcrumbItem("Financial Years & Quarters", href: null, disabled: true)
+    };
+
+    private IEnumerable<FinancialYear> FilteredYears
+    {
+        get
+        {
+            var query = _financialYears.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var term = _searchString.Trim();
+                query = query.Where(f =>
+                    f.FinYearCode.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    (f.Description != null && f.Description.Contains(term, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_selectedStatus) && _selectedStatus != "All")
+            {
+                query = query.Where(f => f.StatusCode.Equals(_selectedStatus, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return query;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        try
+        {
+            _financialYears = await FiscalService.GetAllFinancialYearsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load financial years: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void HandleFilterChanged()
+    {
+        StateHasChanged();
+    }
+
+    private void HandleFilterCleared()
+    {
+        _searchString = null;
+        _selectedStatus = "All";
+        StateHasChanged();
+    }
+
+    private async Task<(string UserId, List<string> Roles)> GetCurrentUserAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userId = user.Identity?.Name ?? "SYSTEM_ADMIN";
+        var roles = user.Claims
+            .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role || c.Type == "role")
+            .Select(c => c.Value)
+            .ToList();
+        if (!roles.Any())
+        {
+            roles.Add("System Administrator");
+        }
+        return (userId, roles);
+    }
+
+    private async Task SubmitForReviewAsync(FinancialYear year)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Submit for Review" },
+            { x => x.Consequence, $"Submit Financial Year '{year.FinYearCode}' for administrative review? Once submitted, dates and quarters will be locked against direct modification until review concludes." },
+            { x => x.ConfirmLabel, "Submit for Review" },
+            { x => x.RequiresReason, false },
+            { x => x.IsDestructive, false }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Submit for Review", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            try
+            {
+                var (userId, _) = await GetCurrentUserAsync();
+                var notes = result.Data as string;
+                await FiscalService.SubmitForReviewAsync(year.Id, notes, userId);
+                Snackbar.Add($"Financial Year '{year.FinYearCode}' submitted for review successfully.", Severity.Success);
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error submitting financial year: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task RequestAmendmentAsync(FinancialYear year)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Request Amendment" },
+            { x => x.Consequence, $"Active Financial Year '{year.FinYearCode}' is strictly locked against accidental modifications. Requesting an amendment creates a revision (Amendment Draft) where dates and quarters can be safely updated." },
+            { x => x.ConfirmLabel, "Create Amendment Draft" },
+            { x => x.RequiresReason, true },
+            { x => x.IsDestructive, false }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Request Amendment", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            var reason = result.Data as string;
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                Snackbar.Add("Amendment justification reason is mandatory.", Severity.Warning);
+                return;
+            }
+
+            try
+            {
+                var (userId, _) = await GetCurrentUserAsync();
+                var revised = await FiscalService.RequestAmendmentAsync(year.Id, reason, userId);
+                Snackbar.Add($"Amendment draft created for '{revised.FinYearCode}' (Rev #{revised.RevisionNumber}). You may now edit quarters.", Severity.Success);
+                Navigation.NavigateTo($"/admin/financial-years/{revised.Id}/edit");
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error requesting amendment: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task DeleteFinancialYearAsync(FinancialYear year)
+    {
+        if (year.StatusCode == FinancialYearStatus.Active || year.StatusCode == FinancialYearStatus.UnderReview)
+        {
+            Snackbar.Add($"Cannot delete financial year in '{year.StatusCode}' status.", Severity.Warning);
+            return;
+        }
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Confirm Deletion" },
+            { x => x.Consequence, $"Are you sure you want to delete Financial Year '{year.FinYearCode}' and all its associated quarters? This action will be audited." },
+            { x => x.ConfirmLabel, "Delete" },
+            { x => x.IsDestructive, true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Deletion", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            try
+            {
+                var (userId, _) = await GetCurrentUserAsync();
+                var success = await FiscalService.DeleteFinancialYearAsync(year.Id, userId);
+                if (success)
+                {
+                    Snackbar.Add($"Financial Year '{year.FinYearCode}' deleted successfully.", Severity.Success);
+                    await LoadDataAsync();
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete financial year.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting financial year: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private static Color GetQuarterColor(int quarterNumber) => quarterNumber switch
+    {
+        1 => Color.Primary,
+        2 => Color.Secondary,
+        3 => Color.Tertiary,
+        4 => Color.Info,
+        _ => Color.Default
+    };
+
+    private static Color GetStatusColor(string status) => status?.Trim() switch
+    {
+        FinancialYearStatus.Active => Color.Success,
+        FinancialYearStatus.UnderReview => Color.Warning,
+        FinancialYearStatus.Draft => Color.Default,
+        FinancialYearStatus.AmendmentDraft => Color.Info,
+        FinancialYearStatus.Inactive => Color.Secondary,
+        _ => Color.Default
+    };
+}

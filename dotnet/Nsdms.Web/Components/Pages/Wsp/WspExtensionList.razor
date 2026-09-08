@@ -1,0 +1,296 @@
+@page "/wsp/extensions"
+@page "/admin/wsp-extensions"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IWspService WspService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A2 (Administrative Work Queue - WSP Deadline Extension Requests)
+  Regulation 4(2) of SETA Grant Regulations. Two-Tier Maker-Checker Queue.
+*@
+
+<PageTitle>WSP Deadline Extensions Work Queue - NSDMS</PageTitle>
+
+<EntityHeader Title="WSP Deadline Extension Requests"
+              Subtitle="Administrative work queue for reviewing statutory WSP/ATR submission extension applications per Regulation 4(2)"
+              ReferenceKey="A2-WSP-EXT"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Default"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="@(() => NavManager.NavigateTo("/wsp"))"
+                   aria-label="Back to WSP Submissions">
+            Back to WSP
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="@(() => NavManager.NavigateTo("/wsp/extension-request"))"
+                   aria-label="Lodge New Extension Request">
+            New Extension Request
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<!-- Filter Bar -->
+<FilterBar SearchPlaceholder="Search by reference, organisation, reason code..."
+           @bind-SearchText="_searchString"
+           OnSearch="HandleFilterChanged"
+           OnClear="HandleFilterCleared">
+    <FilterContent>
+        <div class="d-flex flex-column gap-1">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Status filter</MudText>
+            <MudToggleGroup T="string"
+                            Value="_statusFilter"
+                            ValueChanged="HandleStatusToggleChanged"
+                            SelectionMode="SelectionMode.SingleSelection"
+                            Color="Color.Primary"
+                            Variant="Variant.Outlined"
+                            Dense="true"
+                            Size="Size.Small"
+                            aria-label="Filter extensions by status">
+                <MudToggleItem Value="@("All")" Text="All" />
+                <MudToggleItem Value="@("PendingReview")" Text="Pending review" />
+                <MudToggleItem Value="@("Recommended")" Text="Recommended" />
+                <MudToggleItem Value="@("Approved")" Text="Approved" />
+                <MudToggleItem Value="@("Rejected")" Text="Rejected" />
+            </MudToggleGroup>
+        </div>
+        <div class="d-flex flex-column gap-1 ml-md-3">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Scheme year</MudText>
+            <MudSelect T="int?"
+                       Value="_schemeYearFilter"
+                       ValueChanged="HandleSchemeYearChanged"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Margin="Margin.Dense">
+                <MudSelectItem T="int?" Value="@((int?)null)">All scheme years</MudSelectItem>
+                <MudSelectItem T="int?" Value="@((int?)2026)">2026/2027</MudSelectItem>
+                <MudSelectItem T="int?" Value="@((int?)2025)">2025/2026</MudSelectItem>
+            </MudSelect>
+        </div>
+    </FilterContent>
+    <ActiveFilterChips>
+        @if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; HandleFilterChanged(); })">
+                Search: @_searchString
+            </MudChip>
+        }
+        @if (_statusFilter != "All")
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
+                Status: @_statusFilter
+            </MudChip>
+        }
+        @if (_schemeYearFilter.HasValue)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" OnClose="@(() => { _schemeYearFilter = null; HandleFilterChanged(); })">
+                Year: @_schemeYearFilter.Value
+            </MudChip>
+        }
+    </ActiveFilterChips>
+</FilterBar>
+
+<!-- Data Grid Shell -->
+<DataGridShell TItem="WspExtensionRequest"
+               GridKey="WspExtensionRequestsGrid"
+               Items="@_filteredItems"
+               Loading="@_loading"
+               TotalItems="@_filteredItems.Count"
+               EmptyDbMessage="No statutory deadline extension requests found in the system."
+               EmptyFilterMessage="No extension applications match your search criteria."
+               Elevation="1">
+    <Columns>
+        <MudTh>Application ref</MudTh>
+        <MudTh>Organisation</MudTh>
+        <MudTh>Scheme year</MudTh>
+        <MudTh>Grounds / Reason</MudTh>
+        <MudTh>Requested date</MudTh>
+        <MudTh>Granted date</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh Style="text-align: right;">Action</MudTh>
+    </Columns>
+    <RowTemplate>
+        <MudTd DataLabel="Application ref">
+            <MudLink Href="@($"/wsp/extensions/{context.Id}")" Color="Color.Primary" Underline="Underline.Hover">
+                <span class="font-mono fw-bold">@context.ApplicationReference</span>
+            </MudLink>
+        </MudTd>
+        <MudTd DataLabel="Organisation">
+            <div>
+                <strong>@(context.Organisation?.CompanyName ?? $"Organisation #{context.OrganisationId}")</strong>
+            </div>
+            <div class="text-caption text-secondary font-mono">
+                @(context.Organisation?.SdlNumber ?? "SDL Pending")
+            </div>
+        </MudTd>
+        <MudTd DataLabel="Scheme year">
+            @context.SchemeYear
+        </MudTd>
+        <MudTd DataLabel="Grounds / Reason">
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">
+                @FormatReasonCode(context.ReasonCode)
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Requested date">
+            @context.RequestedExtensionDate.ToString("yyyy-MM-dd")
+        </MudTd>
+        <MudTd DataLabel="Granted date">
+            @if (context.GrantedExtensionDate.HasValue)
+            {
+                <span class="text-success fw-bold">@context.GrantedExtensionDate.Value.ToString("yyyy-MM-dd")</span>
+            }
+            else
+            {
+                <span class="text-secondary">—</span>
+            }
+        </MudTd>
+        <MudTd DataLabel="Status">
+            <MudChip T="string"
+                     Color="@GetStatusColor(context.ApprovalStatusCode)"
+                     Variant="Variant.Filled"
+                     Size="Size.Small">
+                @FormatStatus(context.ApprovalStatusCode)
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Action" Style="text-align: right;">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.Visibility"
+                       OnClick="@(() => NavManager.NavigateTo($"/wsp/extensions/{context.Id}"))">
+                Review
+            </MudButton>
+        </MudTd>
+    </RowTemplate>
+</DataGridShell>
+
+@code {
+    private List<WspExtensionRequest> _allItems = new();
+    private List<WspExtensionRequest> _filteredItems = new();
+    private bool _loading = true;
+    private string _searchString = string.Empty;
+    private string _statusFilter = "All";
+    private int? _schemeYearFilter;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("WSP & Mandatory Grants", href: "/wsp"),
+        new BreadcrumbItem("Extension requests queue", href: "/admin/wsp-extensions", disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            _loading = true;
+            _allItems = await WspService.GetExtensionRequestsAsync();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading extension requests: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        var query = _allItems.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            var s = _searchString.Trim();
+            query = query.Where(r =>
+                (r.ApplicationReference != null && r.ApplicationReference.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                (r.Organisation != null && r.Organisation.CompanyName != null && r.Organisation.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                (r.Organisation != null && r.Organisation.SdlNumber != null && r.Organisation.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                (r.ReasonCode != null && r.ReasonCode.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                (r.StatutoryMotivation != null && r.StatutoryMotivation.Contains(s, StringComparison.OrdinalIgnoreCase))
+            );
+        }
+
+        if (_statusFilter != "All")
+        {
+            query = query.Where(r => string.Equals(r.ApprovalStatusCode, _statusFilter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (_schemeYearFilter.HasValue)
+        {
+            query = query.Where(r => r.SchemeYear == _schemeYearFilter.Value);
+        }
+
+        _filteredItems = query.ToList();
+    }
+
+    private void HandleFilterChanged()
+    {
+        ApplyFilters();
+    }
+
+    private void HandleFilterCleared()
+    {
+        _searchString = string.Empty;
+        _statusFilter = "All";
+        _schemeYearFilter = null;
+        ApplyFilters();
+    }
+
+    private void HandleStatusToggleChanged(string val)
+    {
+        _statusFilter = val;
+        ApplyFilters();
+    }
+
+    private void HandleSchemeYearChanged(int? year)
+    {
+        _schemeYearFilter = year;
+        ApplyFilters();
+    }
+
+    private Color GetStatusColor(string? status) => status switch
+    {
+        "PendingReview" => Color.Warning,
+        "Recommended" => Color.Info,
+        "Approved" => Color.Success,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+
+    private string FormatStatus(string? status) => status switch
+    {
+        "PendingReview" => "Pending review",
+        "Recommended" => "Recommended",
+        "Approved" => "Approved",
+        "Rejected" => "Rejected",
+        _ => status ?? "Unknown"
+    };
+
+    private string FormatReasonCode(string? code) => code switch
+    {
+        "BusinessRescue" => "Business rescue",
+        "TechnicalOutage" => "Technical outage",
+        "NaturalDisaster" => "Natural disaster",
+        "IndustrialAction" => "Industrial action",
+        "OwnershipRestructure" => "Restructuring",
+        "OtherExceptional" => "Other exceptional",
+        _ => code ?? "Not specified"
+    };
+}

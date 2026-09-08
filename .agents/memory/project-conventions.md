@@ -1,7 +1,7 @@
 ---
 type: project
 created: 2026-05-25
-updated: 2026-08-31
+updated: 2026-09-08
 ---
 
 # Project Conventions
@@ -11,9 +11,10 @@ updated: 2026-08-31
 - All legacy business rules, workflows, calculations, and data structures must be referenced directly from this directory.
 - **Strict Read-Only Invariant**: NEVER modify, delete, format, or write code into the `NSDMS-Latest/` folder. It is an immutable legacy reference source.
 
-## Git Workflow
+## Git Workflow & DDL Synchronization
 - Always create a new dedicated branch for major code changes.
 - Branch name format should follow: `feature/[task-slug]` or `fix/[bug-slug]`.
+- **DDL SQL Script & Lookup Values**: When pushing to Git, always generate the DDL SQL script including all database tables, lookup tables (`lookup.*`), and lookup seed values. These must be committed and pushed to Git aligned with the corresponding application code.
 
 ## Supported AI platforms (AG Kit)
 - AG Kit **only supports Gemini CLI and Google Antigravity**.

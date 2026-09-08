@@ -142,6 +142,8 @@ public class TrainingProviderService : ITrainingProviderService
             provider.AccreditationStream = "PrimaryAccreditation";
         }
 
+        ValidateAccreditationStream(provider);
+
         if (!provider.InspectionDueDate.HasValue)
         {
             provider.InspectionDueDate = Calculate5WorkingDaysDueDate(DateTime.UtcNow);
@@ -163,6 +165,8 @@ public class TrainingProviderService : ITrainingProviderService
 
     public async Task<TrainingProvider> UpdateAsync(TrainingProvider provider, string currentUsername = "SYSTEM")
     {
+        ValidateAccreditationStream(provider);
+
         using var db = await _contextFactory.CreateDbContextAsync();
         var existing = await db.TrainingProviders.FindAsync(provider.Id);
         if (existing == null)
@@ -203,6 +207,11 @@ public class TrainingProviderService : ITrainingProviderService
         existing.NambRegistrationNumber = provider.NambRegistrationNumber;
         existing.NambRegistrationStartDate = provider.NambRegistrationStartDate;
         existing.NambRegistrationEndDate = provider.NambRegistrationEndDate;
+        existing.QctoAccreditationNumber = provider.QctoAccreditationNumber;
+        existing.QctoAccreditationStartDate = provider.QctoAccreditationStartDate;
+        existing.QctoAccreditationEndDate = provider.QctoAccreditationEndDate;
+        existing.QctoCentreCode = provider.QctoCentreCode;
+        existing.QctoLetterAttachmentRef = provider.QctoLetterAttachmentRef;
         existing.EtqaCommitteeDecisionNumber = provider.EtqaCommitteeDecisionNumber;
         existing.EtqaCommitteeMeetingDate = provider.EtqaCommitteeMeetingDate;
         existing.ReAccreditationUnderway = provider.ReAccreditationUnderway;
@@ -758,9 +767,48 @@ public class TrainingProviderService : ITrainingProviderService
 
     public string GenerateAccreditationSecuritySeal(TrainingProvider provider)
     {
-        var raw = $"{provider.AccreditationNumber}:{provider.OrganisationId}:{provider.AccreditationStream}:{provider.AccreditationStartDate:yyyy-MM-dd}:{provider.AccreditationEndDate:yyyy-MM-dd}:{provider.EtqaDecisionNumber}:{provider.ProviderCode}";
+        var raw = $"{provider.AccreditationNumber}:{provider.OrganisationId}:{provider.AccreditationStream}:{provider.QctoAccreditationNumber}:{provider.AccreditationStartDate:yyyy-MM-dd}:{provider.AccreditationEndDate:yyyy-MM-dd}:{provider.EtqaDecisionNumber}:{provider.ProviderCode}";
         using var sha = SHA256.Create();
         var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(raw));
         return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
+
+    private static void ValidateAccreditationStream(TrainingProvider provider)
+    {
+        if (provider.AccreditationStream == AccreditationStreamType.QctoSkillsDevelopmentProvider)
+        {
+            if (string.IsNullOrWhiteSpace(provider.QctoAccreditationNumber))
+            {
+                throw new InvalidOperationException("QCTO Accreditation Number is mandatory for QCTO Skills Development Providers.");
+            }
+            if (provider.QctoAccreditationStartDate.HasValue && provider.QctoAccreditationEndDate.HasValue &&
+                provider.QctoAccreditationStartDate.Value > provider.QctoAccreditationEndDate.Value)
+            {
+                throw new InvalidOperationException("QCTO Accreditation End Date cannot precede Start Date.");
+            }
+        }
+        else if (provider.AccreditationStream == AccreditationStreamType.QctoTradeTestCentre)
+        {
+            if (string.IsNullOrWhiteSpace(provider.NambRegistrationNumber))
+            {
+                throw new InvalidOperationException("NAMB Trade Test Centre Registration Number is mandatory for QCTO Trade Test Centres.");
+            }
+            if (provider.NambRegistrationStartDate.HasValue && provider.NambRegistrationEndDate.HasValue &&
+                provider.NambRegistrationStartDate.Value > provider.NambRegistrationEndDate.Value)
+            {
+                throw new InvalidOperationException("NAMB Trade Test Centre Registration End Date cannot precede Start Date.");
+            }
+        }
+        else if (provider.AccreditationStream == AccreditationStreamType.ProgrammeApproval)
+        {
+            if (string.IsNullOrWhiteSpace(provider.PrimaryEtqaName))
+            {
+                throw new InvalidOperationException("Primary ETQA / SETA Name is mandatory for Programme Approval stream.");
+            }
+            if (string.IsNullOrWhiteSpace(provider.PrimaryAccreditationNumber))
+            {
+                throw new InvalidOperationException("Primary SETA Accreditation Number is mandatory for Programme Approval stream.");
+            }
+        }
     }
 }
