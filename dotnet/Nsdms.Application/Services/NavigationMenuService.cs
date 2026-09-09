@@ -1865,6 +1865,21 @@ public class NavigationMenuService : INavigationMenuService
             },
             new()
             {
+                Id = "nav-admin-document-rejection-reasons",
+                Title = "Document rejection reasons",
+                Href = "admin/document-rejection-reasons",
+                Icon = "FactCheck",
+                Category = "System administration",
+                Description = "Manageable multi-select rejection reason catalog categorized by document type for statutory evidence verification",
+                RequiredModule = AppPermissions.ModuleSystem,
+                RequiredAction = AppPermissions.ActionManage,
+                RequiredRoles = new() { "SuperAdmin", "Admin" },
+                PersonaTags = new() { "Admin", "CLO", "Compliance" },
+                DisplayOrder = 5,
+                Keywords = new() { "rejection reasons", "document verification", "evidence check", "statutory documents", "compliance reasons" }
+            },
+            new()
+            {
                 Id = "nav-admin-roles",
                 Title = "Roles & permissions",
                 Href = "admin/roles",

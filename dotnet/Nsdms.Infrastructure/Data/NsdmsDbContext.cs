@@ -35,6 +35,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<Visit> Visits => Set<Visit>();
     public DbSet<WspSubmission> WspSubmissions => Set<WspSubmission>();
     public DbSet<WspExtensionRequest> WspExtensionRequests => Set<WspExtensionRequest>();
+    public DbSet<MgWindowScheduleProposal> MgWindowScheduleProposals => Set<MgWindowScheduleProposal>();
     public DbSet<LevyFile> LevyFiles => Set<LevyFile>();
     public DbSet<LevyFileLine> LevyFileLines => Set<LevyFileLine>();
     public DbSet<SarsLevyStaging> SarsLevyStagings => Set<SarsLevyStaging>();
@@ -121,6 +122,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
 
     // Document & File Management
     public DbSet<DocumentAttachment> DocumentAttachments => Set<DocumentAttachment>();
+    public DbSet<DocumentRejectionReasonType> DocumentRejectionReasonTypes => Set<DocumentRejectionReasonType>();
 
     // Learner Lifecycle Transitions
     public DbSet<CompanyLearnerTransfer> CompanyLearnerTransfers => Set<CompanyLearnerTransfer>();
@@ -494,6 +496,13 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(r => r.DisabilitySupportNotes).HasMaxLength(1000);
             entity.Property(r => r.AssessedBy).HasMaxLength(150);
             entity.HasIndex(r => r.DisabilityCode);
+        });
+
+        modelBuilder.Entity<MgWindowScheduleProposal>(entity =>
+        {
+            entity.ToTable("MgWindowScheduleProposal");
+            entity.HasIndex(p => p.SchemeYear);
+            entity.HasIndex(p => p.Status);
         });
 
         // Organisation table & indexes
@@ -2262,10 +2271,32 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(d => d.StoragePath).HasMaxLength(500).IsRequired();
             entity.Property(d => d.FileHashSha256).HasMaxLength(100);
             entity.Property(d => d.DocumentCategoryCode).HasMaxLength(50);
+            entity.Property(d => d.VerificationStatusCode).HasMaxLength(50).HasDefaultValue("Pending");
+            entity.Property(d => d.VerifiedBy).HasMaxLength(150);
+            entity.Property(d => d.RejectionReason).HasMaxLength(2000);
+            entity.Property(d => d.VerificationNotes).HasMaxLength(2000);
 
             entity.HasIndex(d => new { d.TargetEntityName, d.TargetEntityId });
             entity.HasIndex(d => d.DocumentCategoryCode);
             entity.HasIndex(d => d.IsArchived);
+            entity.HasIndex(d => d.VerificationStatusCode);
+        });
+
+        // Managed Document Rejection Reasons
+        modelBuilder.Entity<DocumentRejectionReasonType>(entity =>
+        {
+            entity.ToTable("DocumentRejectionReasonType", "lookup");
+            entity.HasKey(r => r.Code);
+            entity.Property(r => r.Code).HasMaxLength(50).IsRequired();
+            entity.Property(r => r.Name).HasMaxLength(200).IsRequired();
+            entity.Property(r => r.DocumentCategoryCode).HasMaxLength(50).IsRequired();
+            entity.Property(r => r.Description).HasMaxLength(1000);
+            entity.Property(r => r.Active).HasDefaultValue(true);
+            entity.Property(r => r.DisplayOrder).HasDefaultValue(0);
+
+            entity.HasIndex(r => r.DocumentCategoryCode);
+            entity.HasIndex(r => r.Active);
+            entity.HasIndex(r => r.DisplayOrder);
         });
 
         // Learner Lifecycle Transitions

@@ -1,0 +1,643 @@
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using MudBlazor
+@using System.Security.Claims
+@inject IMgWindowGovernanceService WindowGovService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ISnackbar Snackbar
+
+<MudDialog MaxWidth="MaxWidth.Large" FullWidth="true">
+    <TitleContent>
+        <div class="d-flex align-center justify-space-between w-100">
+            <div class="d-flex align-center gap-2">
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
+                    <MudIcon Icon="@Icons.Material.Filled.Security" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h6" Class="fw-bold">Mandatory Grant (MG) Window Governance</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Maker-Checker segregation of duties, statutory dates, and audited schedule lifecycle
+                    </MudText>
+                </div>
+            </div>
+            @if (_pendingProposal != null)
+            {
+                <MudChip T="string" Color="Color.Warning" Variant="Variant.Filled" Size="Size.Small" Icon="@Icons.Material.Filled.PendingActions">
+                    Pending Checker Review
+                </MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Color="@(_currentSchedule?.IsWindowOpen == true ? Color.Success : Color.Default)" Variant="Variant.Filled" Size="Size.Small">
+                    @(_currentSchedule?.StatusBadgeText ?? "Active")
+                </MudChip>
+            }
+        </div>
+    </TitleContent>
+    <DialogContent>
+        @if (_isLoading)
+        {
+            <div class="d-flex justify-center py-8">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            </div>
+        }
+        else
+        {
+            <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-4">
+                <!-- TAB 1: Window Schedule & Maker-Checker Workflow -->
+                <MudTabPanel Text="Window Schedule &amp; Governance" Icon="@Icons.Material.Filled.DateRange">
+                    @if (_pendingProposal != null)
+                    {
+                        <!-- PENDING MAKER-CHECKER ADJUDICATION VIEW -->
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4" Icon="@Icons.Material.Filled.HourglassTop">
+                            <div class="d-flex justify-space-between align-center flex-wrap gap-2">
+                                <div>
+                                    <strong class="text-warning">Maker-Checker Review Required</strong>
+                                    <MudText Typo="Typo.body2">
+                                        A schedule change has been proposed by <strong>@_pendingProposal.ProposedByUserName</strong> on @_pendingProposal.ProposedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm").
+                                        Under merSETA PFMA governance, an independent Checker must review and adjudicate before changes take effect.
+                                    </MudText>
+                                </div>
+                                <MudChip T="string" Color="Color.Warning" Variant="Variant.Filled" Size="Size.Small">
+                                    Awaiting Checker Adjudication
+                                </MudChip>
+                            </div>
+                        </MudAlert>
+
+                        <MudGrid Spacing="3" Class="mb-4">
+                            <!-- Current Active Schedule Card -->
+                            <MudItem xs="12" md="6">
+                                <MudCard Outlined="true" Class="pa-3 h-100">
+                                    <MudCardHeader>
+                                        <CardHeaderContent>
+                                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="fw-bold">
+                                                CURRENT ACTIVE SCHEDULE
+                                            </MudText>
+                                        </CardHeaderContent>
+                                    </MudCardHeader>
+                                    <MudCardContent Class="pt-0">
+                                        <div class="d-flex flex-column gap-2">
+                                            <div>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Scheme Year</MudText>
+                                                <MudText Typo="Typo.body2" Class="fw-bold">@_currentSchedule?.SchemeYear</MudText>
+                                            </div>
+                                            <div>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Opening Date &amp; Time</MudText>
+                                                <MudText Typo="Typo.body2" Class="fw-bold">
+                                                    @_currentSchedule?.OpeningDate.ToString("yyyy-MM-dd HH:mm") UTC
+                                                </MudText>
+                                            </div>
+                                            <div>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Closing Deadline Date &amp; Time (Reg 4(1))</MudText>
+                                                <MudText Typo="Typo.body2" Class="fw-bold text-error">
+                                                    @_currentSchedule?.ClosingDate.ToString("yyyy-MM-dd HH:mm") UTC
+                                                </MudText>
+                                            </div>
+                                            <div>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Extension Cutoff Date (Reg 4(2))</MudText>
+                                                <MudText Typo="Typo.body2" Class="fw-bold text-warning">
+                                                    @_currentSchedule?.ExtensionCutoffDate.ToString("yyyy-MM-dd")
+                                                </MudText>
+                                            </div>
+                                        </div>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <!-- Proposed Schedule Card -->
+                            <MudItem xs="12" md="6">
+                                <MudCard Outlined="true" Class="pa-3 h-100" Style="border-color: var(--mud-palette-warning);">
+                                    <MudCardHeader>
+                                        <CardHeaderContent>
+                                            <MudText Typo="Typo.subtitle2" Color="Color.Warning" Class="fw-bold">
+                                                PROPOSED SCHEDULE (PENDING APPROVAL)
+                                            </MudText>
+                                        </CardHeaderContent>
+                                    </MudCardHeader>
+                                    <MudCardContent Class="pt-0">
+                                        <div class="d-flex flex-column gap-2">
+                                            <div>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Scheme Year</MudText>
+                                                <MudText Typo="Typo.body2" Class="fw-bold">@_pendingProposal.SchemeYear</MudText>
+                                            </div>
+                                            <div>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Proposed Opening Date &amp; Time</MudText>
+                                                <MudText Typo="Typo.body2" Class="fw-bold text-primary">
+                                                    @_pendingProposal.ProposedOpeningDate.ToString("yyyy-MM-dd HH:mm") UTC
+                                                </MudText>
+                                            </div>
+                                            <div>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Proposed Closing Deadline Date &amp; Time</MudText>
+                                                <MudText Typo="Typo.body2" Class="fw-bold text-error">
+                                                    @_pendingProposal.ProposedClosingDate.ToString("yyyy-MM-dd HH:mm") UTC
+                                                </MudText>
+                                            </div>
+                                            <div>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Proposed Extension Cutoff Date</MudText>
+                                                <MudText Typo="Typo.body2" Class="fw-bold text-warning">
+                                                    @_pendingProposal.ProposedExtensionCutoffDate.ToString("yyyy-MM-dd")
+                                                </MudText>
+                                            </div>
+                                        </div>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        </MudGrid>
+
+                        <!-- Proposal Rationale & Governance Provenance -->
+                        <MudCard Outlined="true" Class="pa-3 mb-4">
+                            <MudCardContent>
+                                <MudGrid Spacing="2">
+                                    <MudItem xs="12" md="6">
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Proposed By (Maker)</MudText>
+                                        <MudText Typo="Typo.body2" Class="fw-bold">@_pendingProposal.ProposedByUserName (@_pendingProposal.ProposedByUserId)</MudText>
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Gazette / Resolution / Circular Reference</MudText>
+                                        <MudText Typo="Typo.body2" Class="fw-bold">@(!string.IsNullOrWhiteSpace(_pendingProposal.GazetteOrResolutionRef) ? _pendingProposal.GazetteOrResolutionRef : "N/A")</MudText>
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Statutory Motivation / Justification</MudText>
+                                        <MudText Typo="Typo.body2" Class="mt-1">@_pendingProposal.Justification</MudText>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudCardContent>
+                        </MudCard>
+
+                        @if (_isProposer)
+                        {
+                            <!-- Segregation of Duties Notice for the Proposer -->
+                            <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mb-2" Icon="@Icons.Material.Filled.Lock">
+                                <strong>Segregation of Duties Invariant:</strong> You submitted this schedule proposal as the Maker. Under merSETA PFMA 4-Eyes policy, you cannot adjudicate your own proposal. Another authorized checker or executive must review.
+                            </MudAlert>
+                        }
+                        else
+                        {
+                            <!-- Checker Decision Form -->
+                            <MudCard Outlined="true" Class="pa-3 mb-2" Style="border-color: var(--mud-palette-primary);">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.subtitle2" Class="fw-bold text-primary">
+                                            CHECKER ADJUDICATION &amp; VERIFICATION
+                                        </MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent Class="pt-0">
+                                    <MudTextField @bind-Value="_adjudicationComments"
+                                                  Label="Checker Comments / Decision Notes"
+                                                  Placeholder="Enter adjudication notes or justification for approval/rejection..."
+                                                  Variant="Variant.Outlined"
+                                                  Lines="2"
+                                                  HelperText="Mandatory when rejecting a schedule proposal" />
+                                </MudCardContent>
+                            </MudCard>
+                        }
+                    }
+                    else
+                    {
+                        <!-- PROPOSE SCHEDULE CHANGE FORM (MAKER) -->
+                        <MudAlert Severity="@(_currentSchedule?.IsWindowOpen == true ? Severity.Success : Severity.Warning)" Variant="Variant.Outlined" Class="mb-4">
+                            <div class="d-flex justify-space-between align-center flex-wrap gap-2">
+                                <div>
+                                    <strong>Statutory Status: @(_currentSchedule?.StatusBadgeText)</strong>
+                                    <MudText Typo="Typo.body2">
+                                        Current Window: Open @_currentSchedule?.OpeningDate.ToString("yyyy-MM-dd HH:mm") UTC &mdash; Deadline @_currentSchedule?.ClosingDate.ToString("yyyy-MM-dd HH:mm") UTC
+                                    </MudText>
+                                </div>
+                                <MudChip T="string" Color="@(_currentSchedule?.IsWindowOpen == true ? Color.Success : Color.Default)" Variant="Variant.Filled" Size="Size.Small">
+                                    @_currentSchedule?.StatusBadgeText
+                                </MudChip>
+                            </div>
+                        </MudAlert>
+
+                        <MudText Typo="Typo.subtitle2" Class="fw-bold mb-2">
+                            Propose New Window Schedule (Maker Stage)
+                        </MudText>
+
+                        <MudGrid Spacing="3">
+                            <MudItem xs="12" md="6">
+                                <MudDatePicker Label="Window Opening Date*"
+                                               @bind-Date="_openingDate"
+                                               Editable="true"
+                                               Variant="Variant.Outlined"
+                                               DateFormat="yyyy-MM-dd"
+                                               Color="Color.Primary"
+                                               HelperText="Date when employers can begin lodging WSP/ATR submissions" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudTimePicker Label="Window Opening Time (UTC/SAST)*"
+                                               @bind-Time="_openingTime"
+                                               Editable="true"
+                                               Variant="Variant.Outlined"
+                                               Color="Color.Primary"
+                                               HelperText="Daily time on the opening date when the portal unlocks (e.g. 08:00)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudDatePicker Label="Standard Closing Deadline Date*"
+                                               @bind-Date="_closingDate"
+                                               Editable="true"
+                                               Variant="Variant.Outlined"
+                                               DateFormat="yyyy-MM-dd"
+                                               Color="Color.Error"
+                                               HelperText="Statutory cutoff date under Regulation 4(1) (default 30 April)" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudTimePicker Label="Closing Deadline Time*"
+                                               @bind-Time="_closingTime"
+                                               Editable="true"
+                                               Variant="Variant.Outlined"
+                                               Color="Color.Error"
+                                               HelperText="Daily time cutoff on the deadline date (e.g. 23:59)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudDatePicker Label="Extension Application Cutoff Date*"
+                                               @bind-Date="_extensionCutoffDate"
+                                               Editable="true"
+                                               Variant="Variant.Outlined"
+                                               DateFormat="yyyy-MM-dd"
+                                               Color="Color.Warning"
+                                               HelperText="Regulation 4(2) final filing date for extension requests (default 15 April)" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudNumericField Label="Financial Scheme Year*"
+                                                 @bind-Value="_schemeYear"
+                                                 Variant="Variant.Outlined"
+                                                 HelperText="Statutory financial scheme year for this grant cycle (e.g. 2026)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudTextField Label="Gazette / Board Resolution / Circular Reference"
+                                              @bind-Value="_gazetteRef"
+                                              Placeholder="e.g. Government Gazette No. 49872, merSETA Circular 02/2026"
+                                              Variant="Variant.Outlined"
+                                              HelperText="Statutory authority or governance provenance for this schedule change" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudTextField Label="Statutory Justification / Rationale*"
+                                              @bind-Value="_justification"
+                                              Placeholder="State the operational or legal grounds for this submission window schedule..."
+                                              Variant="Variant.Outlined"
+                                              Required="true"
+                                              HelperText="Mandatory rationale captured in the audited change log" />
+                            </MudItem>
+                        </MudGrid>
+                    }
+                </MudTabPanel>
+
+                <!-- TAB 2: Audited Change Log & History -->
+                <MudTabPanel Text="Maker-Checker Change Log" Icon="@Icons.Material.Filled.History">
+                    <MudText Typo="Typo.subtitle2" Class="fw-bold mb-3">
+                        Audited History of Window Schedule Proposals &amp; Adjudications
+                    </MudText>
+
+                    @if (_history == null || _history.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="py-4 text-center">
+                            No previous window schedule proposals recorded.
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudTable Items="@_history" Dense="true" Hover="true" Elevation="0" Class="border rounded">
+                            <HeaderContent>
+                                <MudTh>Scheme Year</MudTh>
+                                <MudTh>Status</MudTh>
+                                <MudTh>Proposed Opening</MudTh>
+                                <MudTh>Proposed Deadline</MudTh>
+                                <MudTh>Maker (Proposed By)</MudTh>
+                                <MudTh>Checker (Adjudicated By)</MudTh>
+                                <MudTh>Justification / Ref</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd><strong>@context.SchemeYear</strong></MudTd>
+                                <MudTd>
+                                    @switch (context.Status)
+                                    {
+                                        case "Approved":
+                                            <MudChip T="string" Color="Color.Success" Size="Size.Small">Approved</MudChip>
+                                            break;
+                                        case "Rejected":
+                                            <MudChip T="string" Color="Color.Error" Size="Size.Small">Rejected</MudChip>
+                                            break;
+                                        case "PendingReview":
+                                            <MudChip T="string" Color="Color.Warning" Size="Size.Small">Pending Review</MudChip>
+                                            break;
+                                        default:
+                                            <MudChip T="string" Color="Color.Default" Size="Size.Small">@context.Status</MudChip>
+                                            break;
+                                    }
+                                </MudTd>
+                                <MudTd>@context.ProposedOpeningDate.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                                <MudTd>@context.ProposedClosingDate.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                                <MudTd>
+                                    <div>@context.ProposedByUserName</div>
+                                    <div class="text-secondary" style="font-size: 0.75rem;">@context.ProposedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                                </MudTd>
+                                <MudTd>
+                                    @if (!string.IsNullOrEmpty(context.AdjudicatedByUserName))
+                                    {
+                                        <div>@context.AdjudicatedByUserName</div>
+                                        <div class="text-secondary" style="font-size: 0.75rem;">@context.AdjudicatedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-secondary">&mdash;</span>
+                                    }
+                                </MudTd>
+                                <MudTd>
+                                    <div class="text-truncate" style="max-width: 250px;" title="@context.Justification">
+                                        @context.Justification
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(context.GazetteOrResolutionRef))
+                                    {
+                                        <div class="text-secondary" style="font-size: 0.75rem;">Ref: @context.GazetteOrResolutionRef</div>
+                                    }
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudTabPanel>
+            </MudTabs>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Close" OnClick="CloseDialog">
+            Close
+        </MudButton>
+
+        @if (_pendingProposal != null)
+        {
+            @if (_isProposer)
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           OnClick="WithdrawProposalAsync"
+                           Disabled="_isSaving">
+                    Withdraw Proposal
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.Cancel"
+                           OnClick="RejectProposalAsync"
+                           Disabled="_isSaving">
+                    Reject Proposal
+                </MudButton>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.CheckCircle"
+                           OnClick="ApproveProposalAsync"
+                           Disabled="_isSaving">
+                    Approve &amp; Activate Schedule
+                </MudButton>
+            }
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Send"
+                       OnClick="SubmitProposalAsync"
+                       Disabled="_isSaving || _isLoading">
+                Submit for Checker Review (Maker)
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private bool _isLoading = true;
+    private bool _isSaving = false;
+
+    // Current Active Schedule
+    private MgWindowScheduleDto? _currentSchedule;
+    private MgWindowScheduleProposal? _pendingProposal;
+    private List<MgWindowScheduleProposal> _history = new();
+
+    // Maker Proposal Input State
+    private DateTime? _openingDate;
+    private TimeSpan? _openingTime;
+    private DateTime? _closingDate;
+    private TimeSpan? _closingTime;
+    private DateTime? _extensionCutoffDate;
+    private int _schemeYear = DateTime.UtcNow.Year;
+    private string _justification = string.Empty;
+    private string? _gazetteRef;
+
+    // Checker Adjudication Input State
+    private string? _adjudicationComments;
+
+    // Current User Context
+    private string _currentUserId = "Admin";
+    private string _currentUserName = "Administrator";
+    private IList<string> _currentUserRoles = new List<string>();
+    private bool _isProposer => _pendingProposal != null &&
+        string.Equals(_pendingProposal.ProposedByUserId, _currentUserId, StringComparison.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ResolveCurrentUserAsync();
+        await LoadDataAsync();
+    }
+
+    private async Task ResolveCurrentUserAsync()
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                _currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                    ?? user.FindFirst("sub")?.Value 
+                    ?? user.Identity.Name 
+                    ?? "Admin";
+                _currentUserName = user.Identity.Name ?? _currentUserId;
+                _currentUserRoles = user.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
+            }
+        }
+        catch
+        {
+            _currentUserId = "Admin";
+            _currentUserName = "Administrator";
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _currentSchedule = await WindowGovService.GetCurrentScheduleAsync();
+            _pendingProposal = await WindowGovService.GetActivePendingProposalAsync(_currentSchedule.SchemeYear);
+            _history = await WindowGovService.GetProposalHistoryAsync(_currentSchedule.SchemeYear);
+
+            if (_pendingProposal == null && _currentSchedule != null)
+            {
+                _schemeYear = _currentSchedule.SchemeYear;
+                _openingDate = _currentSchedule.OpeningDate.Date;
+                _openingTime = _currentSchedule.OpeningDate.TimeOfDay;
+                _closingDate = _currentSchedule.ClosingDate.Date;
+                _closingTime = _currentSchedule.ClosingDate.TimeOfDay;
+                _extensionCutoffDate = _currentSchedule.ExtensionCutoffDate.Date;
+                _justification = $"Annual Statutory Schedule Proposal for Scheme Year {_schemeYear}";
+                _gazetteRef = $"Regulation 4(1) & 4(2) Notice";
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading window schedule: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task SubmitProposalAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_justification))
+        {
+            Snackbar.Add("Statutory justification / rationale is mandatory for Maker-Checker submission.", Severity.Warning);
+            return;
+        }
+
+        if (!_openingDate.HasValue || !_closingDate.HasValue || !_extensionCutoffDate.HasValue)
+        {
+            Snackbar.Add("Please specify Opening Date, Closing Deadline, and Extension Cutoff Date.", Severity.Warning);
+            return;
+        }
+
+        var openDateTime = _openingDate.Value.Date.Add(_openingTime ?? TimeSpan.Zero);
+        var closeDateTime = _closingDate.Value.Date.Add(_closingTime ?? new TimeSpan(23, 59, 0));
+        var extDateTime = _extensionCutoffDate.Value.Date.Add(new TimeSpan(23, 59, 0));
+
+        if (openDateTime >= closeDateTime)
+        {
+            Snackbar.Add("Window opening date/time must precede the standard closing deadline.", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            var proposal = await WindowGovService.SubmitScheduleProposalAsync(
+                _schemeYear,
+                openDateTime,
+                closeDateTime,
+                extDateTime,
+                _justification,
+                _gazetteRef,
+                _currentUserId,
+                _currentUserName);
+
+            Snackbar.Add($"Window schedule proposal #{proposal.Id} submitted for Maker-Checker review.", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to submit proposal: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task ApproveProposalAsync()
+    {
+        if (_pendingProposal == null) return;
+
+        _isSaving = true;
+        try
+        {
+            await WindowGovService.AdjudicateProposalAsync(
+                _pendingProposal.Id,
+                true,
+                _adjudicationComments ?? "Approved in accordance with merSETA grant regulations.",
+                _currentUserId,
+                _currentUserName,
+                _currentUserRoles);
+
+            Snackbar.Add($"Proposal #{_pendingProposal.Id} APPROVED and activated as the live submission window schedule.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Adjudication failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task RejectProposalAsync()
+    {
+        if (_pendingProposal == null) return;
+
+        if (string.IsNullOrWhiteSpace(_adjudicationComments))
+        {
+            Snackbar.Add("Checker decision comments are required when rejecting a proposal.", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            await WindowGovService.AdjudicateProposalAsync(
+                _pendingProposal.Id,
+                false,
+                _adjudicationComments,
+                _currentUserId,
+                _currentUserName,
+                _currentUserRoles);
+
+            Snackbar.Add($"Proposal #{_pendingProposal.Id} was REJECTED.", Severity.Warning);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Rejection failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task WithdrawProposalAsync()
+    {
+        if (_pendingProposal == null) return;
+
+        _isSaving = true;
+        try
+        {
+            await WindowGovService.WithdrawProposalAsync(_pendingProposal.Id, _currentUserId);
+            Snackbar.Add($"Proposal #{_pendingProposal.Id} withdrawn.", Severity.Info);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Withdrawal failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void CloseDialog()
+    {
+        MudDialog.Cancel();
+    }
+}

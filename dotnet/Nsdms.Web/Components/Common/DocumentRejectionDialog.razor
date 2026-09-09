@@ -1,0 +1,278 @@
+@namespace Nsdms.Web.Components.Common
+@using MudBlazor
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@using Nsdms.Domain.Lookups
+@using System.Text.Json
+@inject IFileStorageService FileStorage
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Medium" />
+            <MudText Typo="Typo.h6">Reject Document (Not OK / Non-Compliant)</MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Elevation="0" Outlined="true" Class="pa-3 mb-3 rounded bg-surface">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" sm="8">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Document File Name</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="fw-bold font-mono">@Attachment.FileName</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Document Category</MudText>
+                    <div>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled">
+                            @Attachment.CategoryCode
+                        </MudChip>
+                    </div>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+            Select one or more standardized rejection reasons below. These will be communicated to the submitting stakeholder to guide compliant resubmission.
+        </MudAlert>
+
+        <div class="mb-3">
+            <MudText Typo="Typo.subtitle2" Class="fw-semibold mb-1">
+                Selectable Rejection Reasons (Multiple selections allowed)
+            </MudText>
+            
+            @if (_isLoadingReasons)
+            {
+                <div class="d-flex align-center gap-2 py-3">
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Loading applicable rejection reasons...</MudText>
+                </div>
+            }
+            else if (_availableReasons.Count == 0)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
+                    No predefined rejection reasons configured for category '@Attachment.CategoryCode'. Please specify your detailed remarks below.
+                </MudAlert>
+            }
+            else
+            {
+                <MudPaper Outlined="true" Class="pa-2 overflow-y-auto" Style="max-height: 220px;">
+                    <MudStack Spacing="1">
+                        @foreach (var reason in _availableReasons)
+                        {
+                            var isChecked = _selectedReasonCodes.Contains(reason.Code);
+                            <div class="pa-1 rounded hover:bg-action-hover d-flex align-start gap-2 cursor-pointer"
+                                 @onclick="@(() => ToggleReason(reason.Code, !isChecked))">
+                                <MudCheckBox T="bool" 
+                                             Value="@isChecked" 
+                                             ValueChanged="@((b) => ToggleReason(reason.Code, b))" 
+                                             Color="Color.Error" 
+                                             Dense="true" 
+                                             Class="mt-0" />
+                                <div class="flex-grow-1">
+                                    <MudText Typo="Typo.body2" Class="fw-medium">@reason.Name</MudText>
+                                    @if (!string.IsNullOrWhiteSpace(reason.Description))
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@reason.Description</MudText>
+                                    }
+                                </div>
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@(reason.DocumentCategoryCode == "ALL" ? Color.Default : Color.Primary)" Class="px-1 py-0" Style="font-size: 0.65rem; height: 18px;">
+                                    @reason.DocumentCategoryCode
+                                </MudChip>
+                            </div>
+                        }
+                    </MudStack>
+                </MudPaper>
+                <div class="d-flex justify-space-between align-center mt-1 px-1">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Selected reasons: <strong>@_selectedReasonCodes.Count</strong>
+                    </MudText>
+                    @if (_selectedReasonCodes.Any())
+                    {
+                        <MudButton Variant="Variant.Text" Color="Color.Default" Size="Size.Small" OnClick="ClearSelectedReasons">
+                            Clear selections
+                        </MudButton>
+                    }
+                </div>
+            }
+        </div>
+
+        <MudGrid Spacing="2">
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_customRemarks"
+                              Label="Additional Officer Remarks & Resubmission Instructions"
+                              Variant="Variant.Outlined"
+                              Lines="3"
+                              Placeholder="Provide specific instructions (e.g., 'Page 2 commissioner stamp is cut off; please re-upload complete certified copy')..."
+                              HelperText="Detailed feedback visible to the applicant" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_verifiedBy"
+                              Label="Reviewing Officer Name & Role"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Required="true"
+                              HelperText="Full name and title of officer rejecting document" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker @bind-Date="_reviewDate"
+                               Label="Rejection Date (SAST)"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               ReadOnly="true"
+                               HelperText="Official timestamp of rejection" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" 
+                   StartIcon="@Icons.Material.Filled.Cancel" 
+                   OnClick="Cancel">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Error" 
+                   StartIcon="@Icons.Material.Filled.ThumbDown" 
+                   Disabled="@_isSubmitting"
+                   OnClick="SubmitAsync">
+            @if (_isSubmitting)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Saving Rejection...</MudText>
+            }
+            else
+            {
+                <MudText>Confirm Rejection (Not OK)</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public DocumentAttachment Attachment { get; set; } = default!;
+
+    [Parameter]
+    public string CurrentUserName { get; set; } = "Officer";
+
+    private List<DocumentRejectionReasonType> _availableReasons = new();
+    private HashSet<string> _selectedReasonCodes = new();
+    private string _verifiedBy = string.Empty;
+    private DateTime? _reviewDate = DateTime.UtcNow;
+    private string? _customRemarks;
+    private bool _isLoadingReasons = true;
+    private bool _isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _verifiedBy = !string.IsNullOrWhiteSpace(Attachment.VerifiedBy) 
+            ? Attachment.VerifiedBy 
+            : CurrentUserName;
+        _customRemarks = Attachment.VerificationNotes;
+
+        // Pre-populate previously selected reasons if already rejected
+        if (!string.IsNullOrWhiteSpace(Attachment.RejectionReasonCodesJson))
+        {
+            try
+            {
+                var pastCodes = JsonSerializer.Deserialize<List<string>>(Attachment.RejectionReasonCodesJson);
+                if (pastCodes != null)
+                {
+                    _selectedReasonCodes = new HashSet<string>(pastCodes);
+                }
+            }
+            catch
+            {
+                // Ignore parse exceptions on legacy text
+            }
+        }
+
+        await LoadRejectionReasonsAsync();
+    }
+
+    private async Task LoadRejectionReasonsAsync()
+    {
+        _isLoadingReasons = true;
+        try
+        {
+            _availableReasons = await FileStorage.GetRejectionReasonsAsync(Attachment.CategoryCode, activeOnly: true);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading rejection reasons: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoadingReasons = false;
+        }
+    }
+
+    private void ToggleReason(string code, bool isSelected)
+    {
+        if (isSelected)
+        {
+            _selectedReasonCodes.Add(code);
+        }
+        else
+        {
+            _selectedReasonCodes.Remove(code);
+        }
+    }
+
+    private void ClearSelectedReasons()
+    {
+        _selectedReasonCodes.Clear();
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_verifiedBy))
+        {
+            Snackbar.Add("Reviewing officer name is required.", Severity.Warning);
+            return;
+        }
+
+        if (!_selectedReasonCodes.Any() && string.IsNullOrWhiteSpace(_customRemarks))
+        {
+            Snackbar.Add("Please select at least one rejection reason or enter detailed officer remarks.", Severity.Warning);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var updated = await FileStorage.VerifyAttachmentAsync(
+                Attachment.Id,
+                isCompliant: false,
+                rejectionReasonCodes: _selectedReasonCodes.ToList(),
+                customNotes: _customRemarks,
+                certificationDate: Attachment.DocumentCertificationDate,
+                expiryDate: Attachment.DocumentExpiryDate,
+                currentUsername: _verifiedBy.Trim()
+            );
+
+            if (updated != null)
+            {
+                Snackbar.Add($"Document '{Attachment.FileName}' marked as Rejected (Not OK).", Severity.Warning);
+                MudDialog.Close(DialogResult.Ok(updated));
+            }
+            else
+            {
+                Snackbar.Add("Failed to update rejection status.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving rejection: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

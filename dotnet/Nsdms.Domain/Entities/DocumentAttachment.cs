@@ -64,4 +64,53 @@ public class DocumentAttachment : BaseEntity
     /// Indicates whether the document has been archived or soft-deleted.
     /// </summary>
     public bool IsArchived { get; set; } = false;
+
+    /// <summary>
+    /// Verification and compliance status: "Pending", "Compliant" (OK), "NonCompliant" (Not OK / Rejected).
+    /// </summary>
+    public string VerificationStatusCode { get; set; } = "Pending";
+
+    /// <summary>
+    /// Full name and role of the officer who performed the verification check.
+    /// </summary>
+    public string? VerifiedBy { get; set; }
+
+    /// <summary>
+    /// UTC timestamp when the document was verified or rejected.
+    /// </summary>
+    public DateTime? VerifiedAt { get; set; }
+
+    /// <summary>
+    /// Date when the document was certified or originally issued (e.g. 3-month statutory validity window for RSA IDs).
+    /// </summary>
+    public DateTime? DocumentCertificationDate { get; set; }
+
+    /// <summary>
+    /// Optional expiration date for the document (e.g. Tax Clearance PIN or accreditation expiry).
+    /// </summary>
+    public DateTime? DocumentExpiryDate { get; set; }
+
+    /// <summary>
+    /// Officer evaluation notes or compliance remarks.
+    /// </summary>
+    public string? VerificationNotes { get; set; }
+
+    /// <summary>
+    /// Consolidated human-readable summary of rejection reasons.
+    /// </summary>
+    public string? RejectionReason { get; set; }
+
+    /// <summary>
+    /// Serialized JSON array of selected DocumentRejectionReasonType codes (e.g. ["ID_EXPIRED_CERT", "ID_BLURRY"]).
+    /// </summary>
+    public string? RejectionReasonCodesJson { get; set; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public bool IsCompliant => VerificationStatusCode == "Compliant";
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public bool IsNonCompliant => VerificationStatusCode == "NonCompliant";
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public bool IsPendingReview => string.IsNullOrWhiteSpace(VerificationStatusCode) || VerificationStatusCode == "Pending";
 }

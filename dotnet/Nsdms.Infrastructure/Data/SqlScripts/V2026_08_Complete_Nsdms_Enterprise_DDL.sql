@@ -2291,7 +2291,89 @@ BEGIN
     PRINT 'Created NonWorkingDay table and indexes.';
 END;
 
+-- =========================================================================================
+-- Phase 42: Universal Document Verification, Quality Marking, and Rejection Reasons Catalog
+-- =========================================================================================
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'lookup')
+BEGIN
+    EXEC('CREATE SCHEMA [lookup]');
+END;
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'DocumentAttachment' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE [dbo].[DocumentAttachment] (
+        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [TargetEntityName] NVARCHAR(100) NOT NULL,
+        [TargetEntityId] INT NOT NULL,
+        [FileName] NVARCHAR(255) NOT NULL,
+        [OriginalFileName] NVARCHAR(255) NOT NULL,
+        [ContentType] NVARCHAR(100) NOT NULL,
+        [FileSizeBytes] BIGINT NOT NULL,
+        [StorageProvider] NVARCHAR(50) NOT NULL DEFAULT 'Local',
+        [StoragePath] NVARCHAR(500) NOT NULL,
+        [FileHashSha256] NVARCHAR(100) NULL,
+        [DocumentCategoryCode] NVARCHAR(50) NULL,
+        [IsArchived] BIT NOT NULL DEFAULT 0,
+        [VerificationStatusCode] NVARCHAR(50) NOT NULL DEFAULT 'Pending',
+        [VerifiedBy] NVARCHAR(150) NULL,
+        [VerifiedAt] DATETIME2 NULL,
+        [DocumentCertificationDate] DATETIME2 NULL,
+        [DocumentExpiryDate] DATETIME2 NULL,
+        [VerificationNotes] NVARCHAR(2000) NULL,
+        [RejectionReason] NVARCHAR(2000) NULL,
+        [RejectionReasonCodesJson] NVARCHAR(MAX) NULL,
+        [CreatedAt] DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        [CreatedBy] NVARCHAR(100) NULL DEFAULT 'SYSTEM',
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL
+    );
+
+    CREATE NONCLUSTERED INDEX [IX_DocumentAttachment_TargetEntity] ON [dbo].[DocumentAttachment] ([TargetEntityName], [TargetEntityId]);
+    CREATE NONCLUSTERED INDEX [IX_DocumentAttachment_DocumentCategoryCode] ON [dbo].[DocumentAttachment] ([DocumentCategoryCode]);
+    CREATE NONCLUSTERED INDEX [IX_DocumentAttachment_IsArchived] ON [dbo].[DocumentAttachment] ([IsArchived]);
+    CREATE NONCLUSTERED INDEX [IX_DocumentAttachment_VerificationStatusCode] ON [dbo].[DocumentAttachment] ([VerificationStatusCode]);
+    PRINT 'Created DocumentAttachment table and indexes.';
+END
+ELSE
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[DocumentAttachment]') AND name = 'VerificationStatusCode')
+    BEGIN
+        ALTER TABLE [dbo].[DocumentAttachment] ADD [VerificationStatusCode] NVARCHAR(50) NOT NULL CONSTRAINT [DF_DocumentAttachment_VerificationStatusCode] DEFAULT 'Pending';
+        ALTER TABLE [dbo].[DocumentAttachment] ADD [VerifiedBy] NVARCHAR(150) NULL;
+        ALTER TABLE [dbo].[DocumentAttachment] ADD [VerifiedAt] DATETIME2 NULL;
+        ALTER TABLE [dbo].[DocumentAttachment] ADD [DocumentCertificationDate] DATETIME2 NULL;
+        ALTER TABLE [dbo].[DocumentAttachment] ADD [DocumentExpiryDate] DATETIME2 NULL;
+        ALTER TABLE [dbo].[DocumentAttachment] ADD [VerificationNotes] NVARCHAR(2000) NULL;
+        ALTER TABLE [dbo].[DocumentAttachment] ADD [RejectionReason] NVARCHAR(2000) NULL;
+        ALTER TABLE [dbo].[DocumentAttachment] ADD [RejectionReasonCodesJson] NVARCHAR(MAX) NULL;
+        CREATE NONCLUSTERED INDEX [IX_DocumentAttachment_VerificationStatusCode] ON [dbo].[DocumentAttachment] ([VerificationStatusCode]);
+        PRINT 'Added verification columns to DocumentAttachment table.';
+    END;
+END;
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'DocumentRejectionReasonType' AND schema_id = SCHEMA_ID('lookup'))
+BEGIN
+    CREATE TABLE [lookup].[DocumentRejectionReasonType] (
+        [Code] NVARCHAR(50) NOT NULL PRIMARY KEY,
+        [Name] NVARCHAR(200) NOT NULL,
+        [Description] NVARCHAR(1000) NULL,
+        [DocumentCategoryCode] NVARCHAR(50) NOT NULL DEFAULT 'ALL',
+        [DisplayOrder] INT NOT NULL DEFAULT 0,
+        [Active] BIT NOT NULL DEFAULT 1,
+        [CreatedAt] DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        [CreatedBy] NVARCHAR(100) NULL DEFAULT 'SYSTEM',
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL
+    );
+
+    CREATE NONCLUSTERED INDEX [IX_DocumentRejectionReasonType_DocumentCategoryCode] ON [lookup].[DocumentRejectionReasonType] ([DocumentCategoryCode]);
+    CREATE NONCLUSTERED INDEX [IX_DocumentRejectionReasonType_Active] ON [lookup].[DocumentRejectionReasonType] ([Active]);
+    CREATE NONCLUSTERED INDEX [IX_DocumentRejectionReasonType_DisplayOrder] ON [lookup].[DocumentRejectionReasonType] ([DisplayOrder]);
+    PRINT 'Created lookup.DocumentRejectionReasonType table and indexes.';
+END;
+
 PRINT 'Complete Idempotent Enterprise DDL Deployment Succeeded!';
+
 
 
 

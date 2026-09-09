@@ -141,6 +141,7 @@ builder.Services.AddScoped<SdpDisciplinaryService>();
 builder.Services.AddScoped<ISdpDisciplinaryService>(sp => sp.GetRequiredService<SdpDisciplinaryService>());
 builder.Services.AddScoped<WspService>();
 builder.Services.AddScoped<IWspService>(sp => sp.GetRequiredService<WspService>());
+builder.Services.AddScoped<IMgWindowGovernanceService, MgWindowGovernanceService>();
 builder.Services.AddScoped<GrantService>();
 builder.Services.AddScoped<IGrantService>(sp => sp.GetRequiredService<GrantService>());
 builder.Services.AddScoped<LevyService>();
@@ -295,6 +296,7 @@ builder.Services.AddScoped<ISqlBulkBatchIngestionService, Nsdms.Infrastructure.S
 // Universal Document Template & Cryptographic Verification Engine (Strategic Action Items)
 builder.Services.AddScoped<IDocumentVerificationService, DocumentVerificationService>();
 builder.Services.AddScoped<IEnterpriseDocumentTemplateService, EnterpriseDocumentTemplateService>();
+builder.Services.AddScoped<IDocumentIngestionBarcodeService, Nsdms.Infrastructure.Services.DocumentIngestionBarcodeService>();
 
 // Option B: Dynamic Portfolio & Capability Dispatch Engine
 builder.Services.AddScoped<IPortfolioDispatchService, PortfolioDispatchService>();
@@ -526,6 +528,16 @@ app.MapGet("/api/documents/moa-templates/{id:int}/simulation-pdf", async (int id
     return Results.File(bytes, "application/pdf", $"MoaTemplate_Simulation_{id}_{selectedScenario}.pdf");
 }).RequireAuthorization();
 
+app.MapGet("/api/documents/attachments/{id:int}/download", async (int id, IFileStorageService storage) =>
+{
+    var fileResult = await storage.GetFileAsync(id);
+    if (fileResult == null)
+    {
+        return Results.NotFound(new { message = $"Document attachment #{id} not found or inaccessible." });
+    }
+    return Results.File(fileResult.Value.ContentStream, fileResult.Value.ContentType, fileResult.Value.FileName);
+}).RequireAuthorization();
+
 // ASP.NET Core Identity & Cookie Authentication Endpoints
 app.MapPost("/api/auth/login", async (
     HttpContext context,
@@ -690,6 +702,8 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase39FiscalCalendar", () => Phase13FiscalCalendarMigrator.MigrateFiscalCalendarSchemaAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase40HolidayAndClosure", () => Phase14HolidayAndClosureMigrator.MigrateHolidayAndClosureSchemaAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase41WspExtensionRequest", () => Phase15WspExtensionRequestMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase42DocumentVerification", () => Phase42DocumentVerificationAndRejectionReasonsMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase43MgWindowMakerChecker", () => Phase43MgWindowMakerCheckerMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
     RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
     RunMigrator("SystemConfigs", () => scope.ServiceProvider.GetRequiredService<ISystemConfigurationService>().SeedDefaultConfigsAsync().GetAwaiter().GetResult());

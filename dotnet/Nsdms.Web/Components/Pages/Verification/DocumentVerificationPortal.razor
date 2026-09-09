@@ -101,6 +101,21 @@
                                 @(_result.DocumentTitle)
                             </MudText>
 
+                            @if (_result.DocumentTypeCode.Contains("WSP", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Class="mb-4" Icon="@Icons.Material.Filled.Verified">
+                                    <strong>B-BBEE Priority Element Recognized:</strong>
+                                    <span> This verified Workplace Skills Plan (WSP) approval certifies compliance with the Skills Development Act, qualifying the measured entity for skills development spend points on their B-BBEE Scorecard and the 20% Mandatory Grant levy rebate.</span>
+                                </MudAlert>
+                            }
+                            else if (_result.DocumentTypeCode.Contains("TRADE", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4" Icon="@Icons.Material.Filled.School">
+                                    <strong>National Artisan Trade Credential:</strong>
+                                    <span> Verified against the National Artisan Moderation Body (NAMB) and merSETA ETQA registries under the Skills Development Act 97 of 1998.</span>
+                                </MudAlert>
+                            }
+
                             <MudSimpleTable Dense="true" Hover="true" Striped="true" Class="mb-4">
                                 <tbody>
                                     <tr>
@@ -117,7 +132,7 @@
                                     </tr>
                                     <tr>
                                         <td class="font-weight-bold">Recipient ID / SDL Number</td>
-                                        <td><code>@_result.RecipientIdentifier</code></td>
+                                        <td><code>@MaskIdentifier(_result.RecipientIdentifier)</code></td>
                                     </tr>
                                     <tr>
                                         <td class="font-weight-bold">Date of Issuance</td>
@@ -284,5 +299,17 @@
         if (r.IsRevoked) return Icons.Material.Filled.Cancel;
         if (r.IsAuthentic) return Icons.Material.Filled.CheckCircle;
         return Icons.Material.Filled.Warning;
+    }
+
+    private static string MaskIdentifier(string? id)
+    {
+        if (string.IsNullOrWhiteSpace(id)) return "N/A";
+        id = id.Trim();
+        // If 13-digit RSA National ID number, mask middle digits for POPIA compliance (e.g. 9504******082)
+        if (id.Length == 13 && id.All(char.IsDigit))
+        {
+            return $"{id[..4]}******{id[10..]}";
+        }
+        return id;
     }
 }

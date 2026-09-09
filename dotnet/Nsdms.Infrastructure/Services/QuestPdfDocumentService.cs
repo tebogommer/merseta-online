@@ -5,6 +5,7 @@ using Nsdms.Domain.Entities;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using Nsdms.Infrastructure.Services.PdfComponents;
 
 namespace Nsdms.Infrastructure.Services;
 
@@ -309,6 +310,39 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
     public async Task<byte[]> GenerateWspApprovalLetterAsync(WspSubmission wsp)
     {
         var setaName = await _config.GetValueAsync("General.SetaName", "merSETA");
+        var baseUrl = await _config.GetValueAsync("System.BaseUrl", "https://nsdms.merseta.org.za");
+
+        var refNum = wsp.ReferenceNumber ?? $"WSP-{wsp.FinYear}-{wsp.Id:D5}";
+        var contentToHash = $"WSP_APPROVAL|{wsp.Id}|{refNum}|{wsp.Organisation?.SdlNumber}|{wsp.FinYear}|{wsp.EmployeeCount}|{wsp.PlannedTrainingBudget:F2}";
+        var hashBytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(contentToHash));
+        var sha256Hex = Convert.ToHexStringLower(hashBytes);
+
+        var verifyUrl = $"{baseUrl.TrimEnd('/')}/verify/document/{sha256Hex}";
+        if (_verificationService != null)
+        {
+            try
+            {
+                var snapshot = await _verificationService.CreateAndFreezeDocumentSnapshotAsync(new DocumentSnapshotRequest
+                {
+                    DocumentTypeCode = "WSP_APPROVAL_LETTER",
+                    RelatedEntityType = "WspSubmission",
+                    RelatedEntityId = wsp.Id,
+                    RecipientName = wsp.Organisation?.CompanyName ?? "Employer",
+                    RecipientIdentifier = wsp.Organisation?.SdlNumber ?? "N/A",
+                    DocumentSnapshotNumber = refNum,
+                    AssembledContent = contentToHash,
+                    BaseVerificationUrl = baseUrl
+                }, "System/QuestPdf");
+                sha256Hex = snapshot.RenderedContentHash;
+                verifyUrl = snapshot.VerificationUri;
+            }
+            catch
+            {
+                // Fallback to local cryptographic computation
+            }
+        }
+
+        var qrBytes = GenerateQrBytes(verifyUrl);
 
         var document = Document.Create(container =>
         {
@@ -325,14 +359,14 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
                     col.Item().PaddingTop(5).LineHorizontal(1).LineColor(Colors.Blue.Darken2);
                 });
 
-                page.Content().PaddingVertical(20).Column(col =>
+                page.Content().PaddingVertical(15).Column(col =>
                 {
-                    col.Spacing(12);
+                    col.Spacing(10);
                     col.Item().Text($"Date: {DateTime.UtcNow:yyyy-MM-dd}").Bold();
                     col.Item().Text($"Organisation: {wsp.Organisation?.CompanyName} (SDL No: {wsp.Organisation?.SdlNumber})");
-                    col.Item().Text($"WSP Reference: {wsp.ReferenceNumber} | Scheme Year: {wsp.FinYear}").Bold();
+                    col.Item().Text($"WSP Reference: {refNum} | Scheme Year: {wsp.FinYear}").Bold();
 
-                    col.Item().PaddingTop(10).Text("APPROVAL OF WORKPLACE SKILLS PLAN SUBMISSION").Bold().FontSize(12).FontColor(Colors.Green.Darken3);
+                    col.Item().PaddingTop(5).Text("APPROVAL OF WORKPLACE SKILLS PLAN SUBMISSION").Bold().FontSize(12).FontColor(Colors.Green.Darken3);
                     col.Item().Text($"This letter serves to confirm that your Workplace Skills Plan (WSP) and Annual Training Report (ATR) for the {wsp.FinYear} financial year has been reviewed and APPROVED.");
                     col.Item().Text($"Your organisation meets the statutory criteria under the Skills Development Levies Act to qualify for the 20% Mandatory Grant disbursement.");
 
@@ -340,13 +374,23 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
                     col.Item().Text($"• Planned Training Budget: R {wsp.PlannedTrainingBudget:N2}");
                     col.Item().Text($"• Submission Timestamp: {wsp.SubmissionDate:yyyy-MM-dd HH:mm} UTC");
 
-                    col.Item().PaddingTop(20).Text("Mandatory Grants Administration").Bold();
+                    col.Item().PaddingTop(5).Border(1).BorderColor(Colors.Green.Lighten2).Background(Colors.Green.Lighten5).Padding(6).Column(b =>
+                    {
+                        b.Item().Text("B-BBEE SKILLS DEVELOPMENT PRIORITY ELEMENT CERTIFICATION").Bold().FontSize(8.5f).FontColor(Colors.Green.Darken4);
+                        b.Item().Text("This approved WSP/ATR confirms statutory compliance with the Skills Development Act 97 of 1998, qualifying the measured entity for skills development expenditure recognition on the B-BBEE Scorecard.")
+                                .FontSize(7.5f).FontColor(Colors.Grey.Darken3);
+                    });
+
+                    col.Item().PaddingTop(10).DocumentVerificationSeal(qrBytes, refNum, sha256Hex, verifyUrl, compact: false);
+
+                    col.Item().PaddingTop(10).Text("Mandatory Grants Administration").Bold();
                     col.Item().Text(setaName);
                 });
 
                 page.Footer().AlignCenter().Text(x =>
                 {
-                    x.Span("Statutory Approval Record • merSETA Mandatory Grants Department");
+                    x.Span("Statutory Approval Record • merSETA Mandatory Grants Department • Verification Ref: ");
+                    x.Span(refNum).FontFamily("Consolas");
                 });
             });
         });
@@ -357,6 +401,39 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
     public async Task<byte[]> GenerateArtisanTradeCertificatePdfAsync(LearnerTradeTestApplication app)
     {
         var setaName = await _config.GetValueAsync("General.SetaName", "Manufacturing, Engineering and Related Services SETA (merSETA)");
+        var baseUrl = await _config.GetValueAsync("System.BaseUrl", "https://nsdms.merseta.org.za");
+
+        var certNum = app.SerialCertificateNumber ?? $"TT-{DateTime.UtcNow.Year}-{app.Id:D5}";
+        var contentToHash = $"TRADE_CERTIFICATE|{app.Id}|{certNum}|{app.Person?.RsaIdNumber}|{app.TradeTitle}|{app.CertificateIssueDate:yyyy-MM-dd}";
+        var hashBytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(contentToHash));
+        var sha256Hex = Convert.ToHexStringLower(hashBytes);
+
+        var verifyUrl = $"{baseUrl.TrimEnd('/')}/verify/document/{sha256Hex}";
+        if (_verificationService != null)
+        {
+            try
+            {
+                var snapshot = await _verificationService.CreateAndFreezeDocumentSnapshotAsync(new DocumentSnapshotRequest
+                {
+                    DocumentTypeCode = "TRADE_TEST_CERTIFICATE",
+                    RelatedEntityType = "LearnerTradeTestApplication",
+                    RelatedEntityId = app.Id,
+                    RecipientName = $"{app.Person?.FirstName} {app.Person?.LastName}".Trim(),
+                    RecipientIdentifier = app.Person?.RsaIdNumber ?? app.Person?.PassportNumber ?? "N/A",
+                    DocumentSnapshotNumber = certNum,
+                    AssembledContent = contentToHash,
+                    BaseVerificationUrl = baseUrl
+                }, "System/QuestPdf");
+                sha256Hex = snapshot.RenderedContentHash;
+                verifyUrl = snapshot.VerificationUri;
+            }
+            catch
+            {
+                // Fallback to local cryptographic computation
+            }
+        }
+
+        var qrBytes = GenerateQrBytes(verifyUrl);
 
         var document = Document.Create(container =>
         {
@@ -375,9 +452,9 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
                     col.Item().PaddingTop(5).LineHorizontal(2).LineColor(Colors.Blue.Darken2);
                 });
 
-                page.Content().PaddingVertical(15).Column(col =>
+                page.Content().PaddingVertical(12).Column(col =>
                 {
-                    col.Spacing(10);
+                    col.Spacing(8);
                     col.Item().AlignCenter().Text("This is to certify that").Italic().FontSize(12);
                     col.Item().AlignCenter().Text($"{app.Person?.FirstName} {app.Person?.LastName}").Bold().FontSize(22).FontColor(Colors.Blue.Darken4);
                     col.Item().AlignCenter().Text($"National Identity / Passport: {app.Person?.RsaIdNumber ?? "N/A"}").FontSize(11);
@@ -389,17 +466,19 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
                     col.Item().AlignCenter().Text(app.TradeTitle).Bold().FontSize(15);
                     col.Item().AlignCenter().Text($"OFO Code: {app.TradeOfoCode ?? "N/A"} | Application Type: {app.ApplicationTypeCode}").FontSize(10).FontColor(Colors.Grey.Darken2);
 
-                    col.Item().PaddingTop(10).Row(row =>
+                    col.Item().PaddingTop(8).Row(row =>
                     {
-                        row.RelativeItem().Column(c =>
+                        row.RelativeItem(2).Column(c =>
                         {
-                            c.Item().Text($"Certificate Number: {app.SerialCertificateNumber ?? "CERT-PENDING"}").Bold();
+                            c.Item().Text($"Certificate Number: {certNum}").Bold();
                             c.Item().Text($"NAMB Serial: {app.NambSerialNumber ?? "N/A"}").FontSize(10);
                             c.Item().Text($"Issue Date: {app.CertificateIssueDate?.ToString("yyyy-MM-dd") ?? DateTime.UtcNow.ToString("yyyy-MM-dd")}");
                             c.Item().Text($"Test Centre: {app.AssessmentCenterName ?? "Accredited Artisan Assessment Centre"}");
                         });
 
-                        row.RelativeItem().AlignRight().Column(c =>
+                        row.RelativeItem(3).PaddingHorizontal(10).DocumentVerificationSeal(qrBytes, certNum, sha256Hex, verifyUrl, compact: true);
+
+                        row.RelativeItem(2).AlignRight().Column(c =>
                         {
                             c.Item().Text("National Artisan Moderation Body (NAMB)").Bold().FontSize(10);
                             c.Item().PaddingTop(15).LineHorizontal(1).LineColor(Colors.Grey.Darken1);
@@ -410,7 +489,8 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
 
                 page.Footer().AlignCenter().Text(x =>
                 {
-                    x.Span("Official National Artisan Credential • Skills Development Act, 1998 (Act No. 97 of 1998)");
+                    x.Span("Official National Artisan Credential • Skills Development Act, 1998 (Act No. 97 of 1998) • Serial: ");
+                    x.Span(certNum).FontFamily("Consolas");
                 });
             });
         });
@@ -421,6 +501,7 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
     public async Task<byte[]> GenerateStatementOfResultsPdfAsync(SummativeAssessmentReport report, StatementOfResults sor)
     {
         var setaName = await _config.GetValueAsync("General.SetaName", "merSETA");
+        var baseUrl = await _config.GetValueAsync("System.BaseUrl", "https://nsdms.merseta.org.za");
 
         var document = Document.Create(container =>
         {
@@ -480,12 +561,12 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
 
                     col.Item().PaddingTop(15).Row(row =>
                     {
-                        row.RelativeItem().Column(c =>
-                        {
-                            c.Item().Text("Cryptographic Verification").Bold();
-                            c.Item().Text($"SHA-256 Hash: {sor.TamperProofHashSha256}").FontSize(7).FontColor(Colors.Grey.Darken2);
-                            c.Item().Text($"Issued By: {sor.IssuedByUserId} on {sor.DateIssued:yyyy-MM-dd HH:mm} UTC").FontSize(8);
-                        });
+                        var sorVerifyUrl = !string.IsNullOrWhiteSpace(sor.QrVerificationUrl)
+                            ? sor.QrVerificationUrl
+                            : $"{baseUrl.TrimEnd('/')}/verify/document/{sor.TamperProofHashSha256}";
+                        var sorQr = GenerateQrBytes(sorVerifyUrl);
+
+                        row.RelativeItem().DocumentVerificationSeal(sorQr, sor.SorSerialNumber, sor.TamperProofHashSha256, sorVerifyUrl, compact: true);
                     });
                 });
 

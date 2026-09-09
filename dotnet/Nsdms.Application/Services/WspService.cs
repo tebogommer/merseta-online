@@ -552,24 +552,31 @@ public class WspService : IWspService
             deadlineConfig = await _configService.GetValueAsync("Governance:WspAnnualSubmissionDeadline", "04-30") ?? "04-30";
         }
 
-        int month = 4;
-        int day = 30;
-        if (deadlineConfig.Contains('-'))
+        DateTime baseDeadline;
+        if (DateTime.TryParse(deadlineConfig, out var parsedExactDeadline))
         {
-            var parts = deadlineConfig.Split('-');
-            if (parts.Length == 2 && int.TryParse(parts[0], out var m) && int.TryParse(parts[1], out var d))
-            {
-                month = m;
-                day = d;
-            }
-            else if (parts.Length == 3 && int.TryParse(parts[1], out var m3) && int.TryParse(parts[2], out var d3))
-            {
-                month = m3;
-                day = d3;
-            }
+            baseDeadline = DateTime.SpecifyKind(parsedExactDeadline, DateTimeKind.Utc);
         }
-
-        var baseDeadline = new DateTime(schemeYear, month, day, 23, 59, 59, DateTimeKind.Utc);
+        else
+        {
+            int month = 4;
+            int day = 30;
+            if (deadlineConfig.Contains('-'))
+            {
+                var parts = deadlineConfig.Split('-');
+                if (parts.Length == 2 && int.TryParse(parts[0], out var m) && int.TryParse(parts[1], out var d))
+                {
+                    month = m;
+                    day = d;
+                }
+                else if (parts.Length == 3 && int.TryParse(parts[1], out var m3) && int.TryParse(parts[2], out var d3))
+                {
+                    month = m3;
+                    day = d3;
+                }
+            }
+            baseDeadline = new DateTime(schemeYear, month, day, 23, 59, 59, DateTimeKind.Utc);
+        }
 
         // 2. Check if an approved extension request exists for this organisation and scheme year
         using var db = await _contextFactory.CreateDbContextAsync();
@@ -599,19 +606,27 @@ public class WspService : IWspService
             openConfig = await _configService.GetValueAsync("Governance:WspWindowOpenDate", "01-01") ?? "01-01";
         }
 
-        int openMonth = 1;
-        int openDay = 1;
-        if (openConfig.Contains('-'))
+        DateTime windowOpen;
+        if (DateTime.TryParse(openConfig, out var parsedExactOpen))
         {
-            var parts = openConfig.Split('-');
-            if (parts.Length == 2 && int.TryParse(parts[0], out var m) && int.TryParse(parts[1], out var d))
+            windowOpen = DateTime.SpecifyKind(parsedExactOpen, DateTimeKind.Utc);
+        }
+        else
+        {
+            int openMonth = 1;
+            int openDay = 1;
+            if (openConfig.Contains('-'))
             {
-                openMonth = m;
-                openDay = d;
+                var parts = openConfig.Split('-');
+                if (parts.Length == 2 && int.TryParse(parts[0], out var m) && int.TryParse(parts[1], out var d))
+                {
+                    openMonth = m;
+                    openDay = d;
+                }
             }
+            windowOpen = new DateTime(schemeYear, openMonth, openDay, 0, 0, 0, DateTimeKind.Utc);
         }
 
-        var windowOpen = new DateTime(schemeYear, openMonth, openDay, 0, 0, 0, DateTimeKind.Utc);
         var now = DateTime.UtcNow;
 
         if (now < windowOpen)

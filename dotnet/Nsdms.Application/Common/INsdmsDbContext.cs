@@ -25,6 +25,7 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<Visit> Visits { get; }
     DbSet<WspSubmission> WspSubmissions { get; }
     DbSet<WspExtensionRequest> WspExtensionRequests { get; }
+    DbSet<MgWindowScheduleProposal> MgWindowScheduleProposals { get; }
     DbSet<LevyFile> LevyFiles { get; }
     DbSet<LevyFileLine> LevyFileLines { get; }
     DbSet<SarsLevyStaging> SarsLevyStagings { get; }
@@ -111,6 +112,7 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
 
     // Document & File Management
     DbSet<DocumentAttachment> DocumentAttachments { get; }
+    DbSet<DocumentRejectionReasonType> DocumentRejectionReasonTypes { get; }
 
     // Learner Lifecycle Transitions
     DbSet<CompanyLearnerTransfer> CompanyLearnerTransfers { get; }

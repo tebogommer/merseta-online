@@ -1,54 +1,95 @@
+@namespace Nsdms.Web.Components.Common
 @using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Authorization
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @inject IFileStorageService FileStorage
 @inject ISystemConfigurationService ConfigService
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JS
 
 <MudCard Elevation="2" Class="mb-4">
     <MudCardHeader>
         <CardHeaderAvatar>
             <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
-                <MudIcon Icon="@Icons.Material.Filled.AttachFile" />
+                <MudIcon Icon="@Icons.Material.Filled.FactCheck" />
             </MudAvatar>
         </CardHeaderAvatar>
         <CardHeaderContent>
-            <MudText Typo="Typo.h6">Supporting Documents & Attachments</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">Upload proof of ID, certified certificates, site photos, or signed contracts</MudText>
+            <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+                <div>
+                    <MudText Typo="Typo.h6">Supporting Documents & Verification</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Upload evidence, inspect compliance, and stamp verification status with audit trail
+                    </MudText>
+                </div>
+                @if (_attachments.Any())
+                {
+                    <div class="d-flex align-center gap-2">
+                        @{
+                            var compliantCount = _attachments.Count(a => a.IsCompliant);
+                            var rejectedCount = _attachments.Count(a => a.IsNonCompliant);
+                            var pendingCount = _attachments.Count(a => a.IsPendingReview);
+                        }
+                        @if (compliantCount > 0)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">
+                                @compliantCount OK
+                            </MudChip>
+                        }
+                        @if (rejectedCount > 0)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Cancel">
+                                @rejectedCount Rejected
+                            </MudChip>
+                        }
+                        @if (pendingCount > 0)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled" Icon="@Icons.Material.Filled.HourglassEmpty">
+                                @pendingCount Pending
+                            </MudChip>
+                        }
+                    </div>
+                }
+            </div>
         </CardHeaderContent>
     </MudCardHeader>
     <MudCardContent>
-        <MudGrid Class="align-center mb-4">
-            <MudItem xs="12" md="4">
-                <MudSelect @bind-Value="_selectedCategory" Label="Document Category" Variant="Variant.Outlined" Dense="true">
-                    <MudSelectItem Value="@("GENERAL")">General Supporting Document</MudSelectItem>
-                    <MudSelectItem Value="@("ID_DOCUMENT")">Certified ID / Passport</MudSelectItem>
-                    <MudSelectItem Value="@("QUALIFICATION_CERT")">Qualification / Unit Standard Certificate</MudSelectItem>
-                    <MudSelectItem Value="@("SITE_PHOTO")">Workplace Site Inspection Photo</MudSelectItem>
-                    <MudSelectItem Value="@("BANK_CONFIRMATION")">Bank Account Confirmation Letter</MudSelectItem>
-                    <MudSelectItem Value="@("SIGNED_MOA")">Signed Grant Agreement MOA</MudSelectItem>
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" md="8">
-                <MudFileUpload T="IBrowserFile" FilesChanged="UploadFilesAsync" Accept="@_allowedExtensions" MaximumFileCount="1">
-                    <ActivatorContent>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" Disabled="@_isUploading">
-                            @if (_isUploading)
-                            {
-                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                <MudText Class="ms-2">Uploading...</MudText>
-                            }
-                            else
-                            {
-                                <MudText>Select & Upload File</MudText>
-                            }
-                        </MudButton>
-                    </ActivatorContent>
-                </MudFileUpload>
-            </MudItem>
-        </MudGrid>
+        @if (!ReadOnly)
+        {
+            <MudGrid Class="align-center mb-4">
+                <MudItem xs="12" md="4">
+                    <MudSelect @bind-Value="_selectedCategory" Label="Document Category" Variant="Variant.Outlined" Dense="true">
+                        <MudSelectItem Value="@("GENERAL")">General Supporting Document</MudSelectItem>
+                        <MudSelectItem Value="@("ID_DOCUMENT")">Certified ID / Passport</MudSelectItem>
+                        <MudSelectItem Value="@("QUALIFICATION_CERT")">Qualification / Unit Standard Certificate</MudSelectItem>
+                        <MudSelectItem Value="@("SITE_PHOTO")">Workplace Site Inspection Photo</MudSelectItem>
+                        <MudSelectItem Value="@("BANK_CONFIRMATION")">Bank Account Confirmation Letter</MudSelectItem>
+                        <MudSelectItem Value="@("SIGNED_MOA")">Signed Grant Agreement MOA</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="8">
+                    <MudFileUpload T="IBrowserFile" FilesChanged="UploadFilesAsync" Accept="@_allowedExtensions" MaximumFileCount="1">
+                        <ActivatorContent>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" Disabled="@_isUploading">
+                                @if (_isUploading)
+                                {
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                    <MudText Class="ms-2">Uploading...</MudText>
+                                }
+                                else
+                                {
+                                    <MudText>Select & Upload File</MudText>
+                                }
+                            </MudButton>
+                        </ActivatorContent>
+                    </MudFileUpload>
+                </MudItem>
+            </MudGrid>
+        }
 
         @if (_isLoading)
         {
@@ -66,26 +107,130 @@
                 <HeaderContent>
                     <MudTh>File Name</MudTh>
                     <MudTh>Category</MudTh>
-                    <MudTh>Size</MudTh>
-                    <MudTh>Uploaded By</MudTh>
-                    <MudTh>Date</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Verification Annotation</MudTh>
+                    <MudTh>Uploaded</MudTh>
                     <MudTh Style="text-align: right;">Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="File Name">
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                             <MudIcon Icon="@GetFileIcon(context.ContentType)" Color="Color.Primary" Size="Size.Small" />
-                            <MudText Typo="Typo.body2" Class="fw-semibold">@context.FileName</MudText>
+                            <div>
+                                <MudText Typo="Typo.body2" Class="fw-semibold">@context.FileName</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@FormatBytes(context.FileSizeBytes)</MudText>
+                            </div>
                         </MudStack>
                     </MudTd>
                     <MudTd DataLabel="Category">
-                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">@context.CategoryCode</MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">
+                            @context.CategoryCode
+                        </MudChip>
                     </MudTd>
-                    <MudTd DataLabel="Size">@FormatBytes(context.FileSizeBytes)</MudTd>
-                    <MudTd DataLabel="Uploaded By">@context.CreatedBy</MudTd>
-                    <MudTd DataLabel="Date">@context.CreatedAt.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    <MudTd DataLabel="Status">
+                        @if (context.IsCompliant)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">
+                                Compliant (OK)
+                            </MudChip>
+                        }
+                        else if (context.IsNonCompliant)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Cancel">
+                                Rejected (Not OK)
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.HourglassEmpty">
+                                Pending Check
+                            </MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Verification Annotation">
+                        @if (!string.IsNullOrWhiteSpace(context.VerifiedBy))
+                        {
+                            <div class="d-flex flex-column gap-1" style="max-width: 320px;">
+                                <div class="d-flex align-center gap-1">
+                                    <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Small" Color="@(context.IsCompliant ? Color.Success : Color.Error)" Style="font-size: 0.85rem;" />
+                                    <span class="fw-semibold" style="font-size: 0.78rem;">@context.VerifiedBy</span>
+                                    <span class="text-secondary" style="font-size: 0.72rem;">(@context.VerifiedAt?.ToString("yyyy-MM-dd HH:mm"))</span>
+                                </div>
+                                @if (context.DocumentCertificationDate.HasValue)
+                                {
+                                    <div class="d-flex align-center gap-1" style="font-size: 0.72rem; color: var(--mud-palette-info);">
+                                        <MudIcon Icon="@Icons.Material.Filled.EventAvailable" Size="Size.Small" Style="font-size: 0.8rem;" />
+                                        <span>Certified: @context.DocumentCertificationDate?.ToString("yyyy-MM-dd")</span>
+                                    </div>
+                                }
+                                @if (context.DocumentExpiryDate.HasValue)
+                                {
+                                    <div class="d-flex align-center gap-1 text-secondary" style="font-size: 0.72rem;">
+                                        <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" Style="font-size: 0.8rem;" />
+                                        <span>Expires: @context.DocumentExpiryDate?.ToString("yyyy-MM-dd")</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(context.RejectionReason))
+                                {
+                                    <div class="pa-1 rounded" style="background-color: var(--mud-palette-error-hover); border-left: 3px solid var(--mud-palette-error); font-size: 0.73rem;">
+                                        <span class="fw-bold" style="color: var(--mud-palette-error);">Deficiencies:</span> @context.RejectionReason
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(context.VerificationNotes) && context.IsCompliant)
+                                {
+                                    <div class="text-secondary" style="font-size: 0.72rem; font-style: italic;">
+                                        "@context.VerificationNotes"
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-secondary" style="font-size: 0.75rem; font-style: italic;">
+                                Awaiting officer review
+                            </span>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Uploaded">
+                        <div style="font-size: 0.78rem;">@context.CreatedBy</div>
+                        <div class="text-secondary" style="font-size: 0.72rem;">@context.CreatedAt.ToString("yyyy-MM-dd HH:mm")</div>
+                    </MudTd>
                     <MudTd DataLabel="Actions" Style="text-align: right;">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAttachmentAsync(context.Id))" />
+                        <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="1">
+                            <MudTooltip Text="Download Document">
+                                <MudIconButton Icon="@Icons.Material.Filled.Download" 
+                                               Color="Color.Primary" 
+                                               Size="Size.Small" 
+                                               Href="@($"/api/documents/attachments/{context.Id}/download")" 
+                                               Target="_blank" />
+                            </MudTooltip>
+
+                            @if (CanVerify)
+                            {
+                                <MudTooltip Text="Mark as Compliant (OK)">
+                                    <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" 
+                                                   Color="Color.Success" 
+                                                   Size="Size.Small" 
+                                                   OnClick="@(() => OpenVerificationDialogAsync(context))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Mark as Non-Compliant (Not OK)">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Cancel" 
+                                                   Color="Color.Error" 
+                                                   Size="Size.Small" 
+                                                   OnClick="@(() => OpenRejectionDialogAsync(context))" />
+                                </MudTooltip>
+                            }
+
+                            @if (!ReadOnly)
+                            {
+                                <MudTooltip Text="Delete Attachment">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                                   Color="Color.Default" 
+                                                   Size="Size.Small" 
+                                                   OnClick="@(() => DeleteAttachmentAsync(context.Id))" />
+                                </MudTooltip>
+                            }
+                        </MudStack>
                     </MudTd>
                 </RowTemplate>
             </MudTable>
@@ -100,6 +245,15 @@
     [Parameter, EditorRequired]
     public int TargetEntityId { get; set; }
 
+    [Parameter]
+    public bool CanVerify { get; set; } = true;
+
+    [Parameter]
+    public bool ReadOnly { get; set; } = false;
+
+    [Parameter]
+    public string? OfficerName { get; set; }
+
     private List<DocumentAttachment> _attachments = new();
     private string _selectedCategory = "GENERAL";
     private bool _isLoading = true;
@@ -107,6 +261,28 @@
     private long _maxUploadSizeBytes = 26214400; // 25MB default
     private string _allowedExtensions = ".pdf,.png,.jpg,.jpeg,.docx,.xlsx";
     private bool _configsLoaded = false;
+    private string _currentUserName = "Admin";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var givenName = user.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value;
+                var role = user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+                _currentUserName = !string.IsNullOrWhiteSpace(givenName)
+                    ? (string.IsNullOrWhiteSpace(role) ? givenName : $"{givenName} ({role})")
+                    : (user.Identity.Name ?? "Officer");
+            }
+        }
+        catch
+        {
+            _currentUserName = "Officer";
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -140,6 +316,42 @@
         }
     }
 
+    private async Task OpenVerificationDialogAsync(DocumentAttachment attachment)
+    {
+        var parameters = new DialogParameters<DocumentVerificationDialog>
+        {
+            { x => x.Attachment, attachment },
+            { x => x.CurrentUserName, OfficerName ?? _currentUserName }
+        };
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<DocumentVerificationDialog>("Verify Document", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadAttachmentsAsync();
+        }
+    }
+
+    private async Task OpenRejectionDialogAsync(DocumentAttachment attachment)
+    {
+        var parameters = new DialogParameters<DocumentRejectionDialog>
+        {
+            { x => x.Attachment, attachment },
+            { x => x.CurrentUserName, OfficerName ?? _currentUserName }
+        };
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<DocumentRejectionDialog>("Reject Document", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadAttachmentsAsync();
+        }
+    }
+
     private async Task UploadFilesAsync(IBrowserFile file)
     {
         if (file == null) return;
@@ -161,7 +373,7 @@
                 file.ContentType,
                 stream,
                 _selectedCategory,
-                "AdminUser"
+                _currentUserName
             );
 
             Snackbar.Add($"File '{file.Name}' uploaded successfully.", Severity.Success);
@@ -181,7 +393,7 @@
     {
         try
         {
-            var success = await FileStorage.DeleteAttachmentAsync(attachmentId, "AdminUser");
+            var success = await FileStorage.DeleteAttachmentAsync(attachmentId, _currentUserName);
             if (success)
             {
                 Snackbar.Add("Attachment deleted.", Severity.Info);

@@ -1,4 +1,5 @@
 using Nsdms.Domain.Entities;
+using Nsdms.Domain.Lookups;
 
 namespace Nsdms.Application.Common.Interfaces;
 
@@ -8,6 +9,38 @@ public interface IFileStorageService
     Task<(Stream ContentStream, string ContentType, string FileName)?> GetFileAsync(int documentAttachmentId);
     Task<List<DocumentAttachment>> GetAttachmentsAsync(string targetEntityName, int targetEntityId);
     Task<bool> DeleteAttachmentAsync(int documentAttachmentId, string currentUsername = "SYSTEM");
+
+    /// <summary>
+    /// Verifies or rejects an uploaded document attachment, recording reviewer details, timestamp, certification date, rejection reasons, and audit double-write.
+    /// </summary>
+    Task<DocumentAttachment?> VerifyAttachmentAsync(
+        int documentAttachmentId,
+        bool isCompliant,
+        List<string>? rejectionReasonCodes = null,
+        string? customNotes = null,
+        DateTime? certificationDate = null,
+        DateTime? expiryDate = null,
+        string currentUsername = "SYSTEM");
+
+    /// <summary>
+    /// Retrieves active rejection reasons matching the specified document category code plus universal 'ALL' reasons.
+    /// </summary>
+    Task<List<DocumentRejectionReasonType>> GetRejectionReasonsAsync(string? categoryCode = null, bool activeOnly = true);
+
+    /// <summary>
+    /// Retrieves all rejection reasons with optional text search for administration.
+    /// </summary>
+    Task<List<DocumentRejectionReasonType>> GetAllRejectionReasonsAsync(string? search = null, string? categoryCode = null);
+
+    /// <summary>
+    /// Creates or updates a managed document rejection reason.
+    /// </summary>
+    Task<DocumentRejectionReasonType> SaveRejectionReasonAsync(DocumentRejectionReasonType reason, string currentUsername = "Admin");
+
+    /// <summary>
+    /// Deactivates / soft-deletes a document rejection reason.
+    /// </summary>
+    Task<bool> DeleteRejectionReasonAsync(string code, string currentUsername = "Admin");
 }
 
 public interface IPdfDocumentService

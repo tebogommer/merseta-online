@@ -21,6 +21,13 @@
               BreadcrumbItems="@_breadcrumbs">
     <ActionZone>
         <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.DateRange"
+                   OnClick="OpenWindowSettingsDialogAsync"
+                   aria-label="Configure Mandatory Grant Submission Window Dates and Times">
+            Window Settings
+        </MudButton>
+        <MudButton Variant="Variant.Outlined"
                    Color="Color.Warning"
                    StartIcon="@Icons.Material.Filled.AssignmentLate"
                    OnClick="@(() => NavManager.NavigateTo("/admin/wsp-extensions"))"
@@ -312,6 +319,17 @@
             {
                 Snackbar.Add("Could not delete the WSP submission.", Severity.Error);
             }
+        }
+    }
+
+    private async Task OpenWindowSettingsDialogAsync()
+    {
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ConfigureMgWindowDialog>("Mandatory Grant (MG) Window Schedule", options);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadData();
         }
     }
 }

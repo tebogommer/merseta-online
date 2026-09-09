@@ -48,6 +48,21 @@ Every page must pass all 16 items before being declared complete:
 - [ ] **15. Dual-theme support:** Tested in both Light and Dark mode with zero contrast loss.
 - [ ] **16. Responsive containment:** Verified at 360px, 768px, and 1440px viewport widths with no canvas blowouts.
 
+### 🛡️ Enterprise 2D Barcode & Document Verification Governance Standard
+1. **Universal 2D Barcode Verification Seal**:
+   - All official outgoing certificates, outcome letters, and contracts (e.g. WSP Approval Letters, Artisan Trade Test Certificates, Statements of Results, Discretionary Grant MoAs) MUST render the standardized QuestPDF `DocumentVerificationSealComponent`.
+   - The seal must include a high-contrast 2D QR code (Model 2, ECC Q/M), the document tracking reference (e.g., `WSP-2026-0042`, `TT-2026-00101`), the truncated SHA-256 digital security seal prefix, and mobile scanning instructions.
+2. **Immutable Document Snapshots & Hash Anchoring**:
+   - Generation of official outcome documents must invoke `IDocumentVerificationService.CreateAndFreezeDocumentSnapshotAsync` to persist an immutable point-in-time snapshot (`DocumentSnapshot`) and calculate its cryptographic SHA-256 digital fingerprint.
+   - Point-in-time snapshots and scan lookups must record double-write entries in `audit_logs`.
+3. **Public Verification Portal & POPIA Privacy Compliance**:
+   - Scanned QR codes resolve to `/verify/document/{hash}` accessible anonymously without requiring login.
+   - For statutory compliance and B-BBEE audits, the portal must display official validity status, employer name, SDL number, scheme year, and B-BBEE Priority Element certification.
+   - For individual citizens/learners, confidential 13-digit RSA National ID numbers MUST be masked (e.g. `9504******082`) in compliance with the Protection of Personal Information Act (POPIA).
+4. **Machine-Readable Ingestion Barcodes for Wet-Ink Returns**:
+   - Multi-page printable return forms (WSP Tripartite Sign-Off, DG MoAs, Learner Agreements) must stamp an ingestion barcode encoding structured metadata (`Module`, `DocumentType`, `RecordId`, `PageNumber`, `TotalPages`, and tamper-proof checksum) via `IDocumentIngestionBarcodeService`.
+   - The DMS upload pipeline must decode these machine barcodes to automate document sorting, validation, and auto-indexing with zero manual staff tagging.
+
 ---
 
 ### 🛡️ Enterprise Holiday & Institutional Closure Governance Standard

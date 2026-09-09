@@ -1,0 +1,449 @@
+@page "/admin/document-rejection-reasons"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Lookups
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IFileStorageService FileStorage
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: T3 (Reference Data Maintenance View/Edit)
+  Features:
+  - View by default with search and category filtering
+  - Manageable multi-select rejection reasons per document category
+  - Cancel and Save buttons in edit mode
+  - Confirmation toasts on save and status updates
+*@
+
+<EntityHeader Title="Document Rejection Reasons"
+              Subtitle="Manageable multi-select rejection reasons categorized by document type for statutory evidence verification"
+              ReferenceKey="DocumentRejectionReasonType"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        @if (!_isEditing)
+        {
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Primary" 
+                       StartIcon="@Icons.Material.Filled.Add" 
+                       OnClick="StartCreateNew">
+                Add Rejection Reason
+            </MudButton>
+        }
+    </ActionZone>
+</EntityHeader>
+
+<main id="main-content" style="max-width: 1600px; margin: 0 auto;" class="mt-4">
+    @if (_isEditing && _editingItem != null)
+    {
+        <MudCard Outlined="true" Class="pa-4 mb-4 border-default">
+            <MudCardHeader Class="pa-0 mb-3">
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">
+                        @(_isNewItem ? "Create New Document Rejection Reason" : $"Edit Rejection Reason: {_editingItem.Code}")
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        This reason will appear in the reviewer's multi-select rejection checklist when inspecting supporting documents.
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent Class="pa-0">
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="3">
+                        <MudTextField @bind-Value="_editingItem.Code"
+                                      Label="Reason Code"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Required="true"
+                                      Disabled="@(!_isNewItem)"
+                                      HelperText="Unique alphanumeric identifier (e.g. ID_EXPIRED_CERT)" />
+                    </MudItem>
+                    <MudItem xs="12" md="5">
+                        <MudTextField @bind-Value="_editingItem.Name"
+                                      Label="Display Title"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Required="true"
+                                      HelperText="Short, clear reason displayed in reviewer checklists" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudSelect @bind-Value="_editingItem.DocumentCategoryCode"
+                                   Label="Target Document Category"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Required="true">
+                            <MudSelectItem Value="@("ALL")">Universal (All Document Types)</MudSelectItem>
+                            <MudSelectItem Value="@("ID_DOCUMENT")">Certified ID / Passport</MudSelectItem>
+                            <MudSelectItem Value="@("QUALIFICATION_CERT")">Qualification / Unit Standard Certificate</MudSelectItem>
+                            <MudSelectItem Value="@("BANK_CONFIRMATION")">Bank Account Confirmation Letter</MudSelectItem>
+                            <MudSelectItem Value="@("SITE_PHOTO")">Workplace Site Inspection Photo</MudSelectItem>
+                            <MudSelectItem Value="@("SIGNED_MOA")">Signed Grant Agreement MOA</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="10">
+                        <MudTextField @bind-Value="_editingItem.Description"
+                                      Label="Statutory / Policy Description"
+                                      Variant="Variant.Outlined"
+                                      Lines="2"
+                                      HelperText="Detailed legal or policy guidance explaining the compliance deficiency" />
+                    </MudItem>
+                    <MudItem xs="12" md="2">
+                        <MudNumericField @bind-Value="_editingItem.DisplayOrder"
+                                         Label="Display Order"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Min="0"
+                                         Max="999" />
+                        <MudSwitch @bind-Value="_editingItem.Active"
+                                   Color="Color.Success"
+                                   Label="Active & Selectable"
+                                   Class="mt-2" />
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+            <MudCardActions Class="pa-0 mt-4 d-flex justify-end gap-2">
+                <MudButton Variant="Variant.Text" 
+                           Color="Color.Default" 
+                           StartIcon="@Icons.Material.Filled.Cancel" 
+                           OnClick="CancelEdit">
+                    Cancel
+                </MudButton>
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           StartIcon="@Icons.Material.Filled.Save" 
+                           Disabled="@_isSaving"
+                           OnClick="SaveItemAsync">
+                    @if (_isSaving)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ms-2">Saving...</MudText>
+                    }
+                    else
+                    {
+                        <MudText>Save Rejection Reason</MudText>
+                    }
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    }
+
+    <!-- Search & Filter Toolbar -->
+    <MudPaper Elevation="1" Class="pa-3 mb-4 rounded">
+        <MudGrid Spacing="2" Class="align-center">
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_searchTerm"
+                              Placeholder="Search reasons by code, title, or description..."
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Clearable="true"
+                              OnClearButtonClick="@(() => { _searchTerm = string.Empty; LoadDataAsync(); })"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate="true"
+                              DebounceInterval="300"
+                              OnDebounceIntervalElapsed="LoadDataAsync" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect @bind-Value="_selectedCategoryFilter"
+                           @bind-Value:after="LoadDataAsync"
+                           Label="Filter by Category"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Clearable="true">
+                    <MudSelectItem Value="@("ALL_CATEGORIES")">All Categories</MudSelectItem>
+                    <MudSelectItem Value="@("ALL")">Universal (ALL)</MudSelectItem>
+                    <MudSelectItem Value="@("ID_DOCUMENT")">ID Document</MudSelectItem>
+                    <MudSelectItem Value="@("QUALIFICATION_CERT")">Qualification Cert</MudSelectItem>
+                    <MudSelectItem Value="@("BANK_CONFIRMATION")">Bank Confirmation</MudSelectItem>
+                    <MudSelectItem Value="@("SITE_PHOTO")">Site Photo</MudSelectItem>
+                    <MudSelectItem Value="@("SIGNED_MOA")">Signed MOA</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="2" Class="d-flex justify-end">
+                <MudButton Variant="Variant.Outlined" 
+                           Color="Color.Primary" 
+                           StartIcon="@Icons.Material.Filled.Refresh" 
+                           OnClick="LoadDataAsync">
+                    Refresh
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Reasons Data Table -->
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+    }
+    else
+    {
+        <MudTable Items="_reasons" Hover="true" Dense="true" Elevation="1" Class="rounded">
+            <HeaderContent>
+                <MudTh>Code</MudTh>
+                <MudTh>Display Title</MudTh>
+                <MudTh>Category</MudTh>
+                <MudTh>Statutory Guidance / Description</MudTh>
+                <MudTh Style="text-align: center;">Order</MudTh>
+                <MudTh Style="text-align: center;">Status</MudTh>
+                <MudTh Style="text-align: right;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Code">
+                    <span class="font-mono fw-bold" style="font-size: 0.8125rem;">@context.Code</span>
+                </MudTd>
+                <MudTd DataLabel="Display Title">
+                    <MudText Typo="Typo.body2" Class="fw-semibold">@context.Name</MudText>
+                </MudTd>
+                <MudTd DataLabel="Category">
+                    <MudChip T="string" Size="Size.Small" Color="@GetCategoryColor(context.DocumentCategoryCode)" Variant="Variant.Filled">
+                        @context.DocumentCategoryCode
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Description">
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Style="font-size: 0.8rem;">
+                        @context.Description
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Order" Style="text-align: center;">
+                    @context.DisplayOrder
+                </MudTd>
+                <MudTd DataLabel="Status" Style="text-align: center;">
+                    @if (context.Active)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">Active</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">Inactive</MudChip>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Actions" Style="text-align: right;">
+                    <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="1">
+                        <MudTooltip Text="Edit reason">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                           Color="Color.Primary" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => StartEdit(context))" />
+                        </MudTooltip>
+                        @if (context.Active)
+                        {
+                            <MudTooltip Text="Deactivate reason">
+                                <MudIconButton Icon="@Icons.Material.Filled.Block" 
+                                               Color="Color.Warning" 
+                                               Size="Size.Small" 
+                                               OnClick="@(() => ToggleActiveStatusAsync(context.Code, false))" />
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="Reactivate reason">
+                                <MudIconButton Icon="@Icons.Material.Filled.CheckCircleOutline" 
+                                               Color="Color.Success" 
+                                               Size="Size.Small" 
+                                               OnClick="@(() => ToggleActiveStatusAsync(context.Code, true))" />
+                            </MudTooltip>
+                        }
+                        <MudTooltip Text="Delete reason">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                           Color="Color.Error" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => HandleDeleteAsync(context.Code, context.Name))" />
+                        </MudTooltip>
+                    </MudStack>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="pa-4 text-center">
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">
+                        No rejection reasons match the selected filter criteria.
+                    </MudText>
+                </div>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 20, 50, 100 }" />
+            </PagerContent>
+        </MudTable>
+    }
+</main>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new("Home", href: "/"),
+        new("Administration", href: "/admin"),
+        new("Document Rejection Reasons", href: "/admin/document-rejection-reasons", disabled: true)
+    };
+
+    private List<DocumentRejectionReasonType> _reasons = new();
+    private string _searchTerm = string.Empty;
+    private string _selectedCategoryFilter = "ALL_CATEGORIES";
+    private bool _isLoading = true;
+    private bool _isEditing = false;
+    private bool _isNewItem = false;
+    private bool _isSaving = false;
+    private DocumentRejectionReasonType? _editingItem;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _reasons = await FileStorage.GetAllRejectionReasonsAsync(_searchTerm, _selectedCategoryFilter);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading reasons: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void StartCreateNew()
+    {
+        _editingItem = new DocumentRejectionReasonType
+        {
+            Code = string.Empty,
+            Name = string.Empty,
+            DocumentCategoryCode = _selectedCategoryFilter != "ALL_CATEGORIES" ? _selectedCategoryFilter : "ALL",
+            Active = true,
+            DisplayOrder = _reasons.Any() ? _reasons.Max(r => r.DisplayOrder) + 1 : 1
+        };
+        _isNewItem = true;
+        _isEditing = true;
+    }
+
+    private void StartEdit(DocumentRejectionReasonType item)
+    {
+        _editingItem = new DocumentRejectionReasonType
+        {
+            Code = item.Code,
+            Name = item.Name,
+            Description = item.Description,
+            DocumentCategoryCode = item.DocumentCategoryCode,
+            DisplayOrder = item.DisplayOrder,
+            Active = item.Active
+        };
+        _isNewItem = false;
+        _isEditing = true;
+    }
+
+    private void CancelEdit()
+    {
+        _editingItem = null;
+        _isEditing = false;
+    }
+
+    private async Task SaveItemAsync()
+    {
+        if (_editingItem == null) return;
+
+        if (string.IsNullOrWhiteSpace(_editingItem.Code))
+        {
+            Snackbar.Add("Reason code is required.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_editingItem.Name))
+        {
+            Snackbar.Add("Display title is required.", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            _editingItem.Code = _editingItem.Code.Trim().ToUpperInvariant().Replace(" ", "_");
+            _editingItem.Name = _editingItem.Name.Trim();
+            _editingItem.DocumentCategoryCode = _editingItem.DocumentCategoryCode.Trim().ToUpperInvariant();
+
+            await FileStorage.SaveRejectionReasonAsync(_editingItem, "Admin");
+            Snackbar.Add($"Rejection reason '{_editingItem.Code}' saved successfully.", Severity.Success);
+
+            _isEditing = false;
+            _editingItem = null;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving rejection reason: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task ToggleActiveStatusAsync(string code, bool makeActive)
+    {
+        try
+        {
+            var item = _reasons.FirstOrDefault(r => r.Code == code);
+            if (item != null)
+            {
+                item.Active = makeActive;
+                await FileStorage.SaveRejectionReasonAsync(item, "Admin");
+                Snackbar.Add($"Rejection reason '{code}' {(makeActive ? "activated" : "deactivated")}.", Severity.Info);
+                await LoadDataAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating status: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task HandleDeleteAsync(string code, string name)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Confirm Deletion" },
+            { x => x.Consequence, $"Are you sure you want to delete rejection reason '{name}' ({code})? This will remove it from future reviewer checklists." },
+            { x => x.ConfirmLabel, "Delete reason" },
+            { x => x.IsDestructive, true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Deletion", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            try
+            {
+                var success = await FileStorage.DeleteRejectionReasonAsync(code, "Admin");
+                if (success)
+                {
+                    Snackbar.Add($"Rejection reason '{name}' was deleted successfully.", Severity.Success);
+                    await LoadDataAsync();
+                }
+                else
+                {
+                    Snackbar.Add($"Could not delete '{code}'. Record not found.", Severity.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting rejection reason: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private static Color GetCategoryColor(string category) => category switch
+    {
+        "ID_DOCUMENT" => Color.Primary,
+        "QUALIFICATION_CERT" => Color.Secondary,
+        "BANK_CONFIRMATION" => Color.Tertiary,
+        "SITE_PHOTO" => Color.Warning,
+        "SIGNED_MOA" => Color.Info,
+        _ => Color.Default
+    };
+}

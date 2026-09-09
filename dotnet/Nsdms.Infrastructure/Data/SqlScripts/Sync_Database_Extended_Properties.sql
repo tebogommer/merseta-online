@@ -1,6 +1,6 @@
 -- ===========================================================================
 -- MerSETA NSDMS — SQL Server MS_Description Extended Properties Synchronizer
--- Generated: 2026-09-08 19:45:26 UTC
+-- Generated: 2026-09-09 09:46:47 UTC
 -- Target Engine: Microsoft SQL Server Express (localhost / NSDMS-NET)
 -- ===========================================================================
 
@@ -11520,6 +11520,34 @@ BEGIN
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Document categorization code (e.g. ID_DOCUMENT, QUALIFICATION_CERT, SITE_PHOTO, BANK_CONFIRMATION, SIGNED_MOA).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'DocumentCategoryCode';
 END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'DocumentCertificationDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'DocumentCertificationDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Date when the document was certified or originally issued (e.g. 3-month statutory validity window for RSA IDs).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'DocumentCertificationDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Date when the document was certified or originally issued (e.g. 3-month statutory validity window for RSA IDs).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'DocumentCertificationDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'DocumentExpiryDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'DocumentExpiryDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Optional expiration date for the document (e.g. Tax Clearance PIN or accreditation expiry).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'DocumentExpiryDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Optional expiration date for the document (e.g. Tax Clearance PIN or accreditation expiry).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'DocumentExpiryDate';
+END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'FileHashSha256')
 BEGIN
     IF NOT EXISTS (
@@ -11618,6 +11646,34 @@ BEGIN
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Original file name as uploaded by the user.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'OriginalFileName';
 END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'RejectionReason')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'RejectionReason'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Consolidated human-readable summary of rejection reasons.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'RejectionReason';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Consolidated human-readable summary of rejection reasons.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'RejectionReason';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'RejectionReasonCodesJson')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'RejectionReasonCodesJson'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Serialized JSON array of selected DocumentRejectionReasonType codes (e.g. ["ID_EXPIRED_CERT", "ID_BLURRY"]).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'RejectionReasonCodesJson';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Serialized JSON array of selected DocumentRejectionReasonType codes (e.g. ["ID_EXPIRED_CERT", "ID_BLURRY"]).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'RejectionReasonCodesJson';
+END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'StoragePath')
 BEGIN
     IF NOT EXISTS (
@@ -11673,6 +11729,62 @@ BEGIN
         EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Name of the target entity type (e.g. Organisation, CompanyLearner, GrantMoa, WorkplaceApproval).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'TargetEntityName';
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Name of the target entity type (e.g. Organisation, CompanyLearner, GrantMoa, WorkplaceApproval).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'TargetEntityName';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'VerificationNotes')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'VerificationNotes'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Officer evaluation notes or compliance remarks.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'VerificationNotes';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Officer evaluation notes or compliance remarks.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'VerificationNotes';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'VerificationStatusCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'VerificationStatusCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Verification and compliance status: "Pending", "Compliant" (OK), "NonCompliant" (Not OK / Rejected).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'VerificationStatusCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Verification and compliance status: "Pending", "Compliant" (OK), "NonCompliant" (Not OK / Rejected).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'VerificationStatusCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'VerifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'VerifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the document was verified or rejected.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'VerifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the document was verified or rejected.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'VerifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'VerifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'DocumentAttachment' AND c.name = N'VerifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Full name and role of the officer who performed the verification check.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'VerifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Full name and role of the officer who performed the verification check.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'DocumentAttachment', @level2type=N'COLUMN', @level2name=N'VerifiedBy';
 END
 
 -- Table: dbo.DocumentClause
@@ -46560,6 +46672,161 @@ BEGIN
         EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Display name / title of the lookup option.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DisabilityType', @level2type=N'COLUMN', @level2name=N'Name';
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Display name / title of the lookup option.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DisabilityType', @level2type=N'COLUMN', @level2name=N'Name';
+END
+
+-- Table: lookup.DocumentRejectionReasonType
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Managed statutory and operational rejection reasons categorized by document type. Allows reviewing officers to select single or multiple standardized reasons when rejecting evidence attachments.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Managed statutory and operational rejection reasons categorized by document type. Allows reviewing officers to select single or multiple standardized reasons when rejecting evidence attachments.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'Code')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'Code'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Unique alphanumeric code identifier acting as primary key.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'Code';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Unique alphanumeric code identifier acting as primary key.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'Code';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'Active')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'Active'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Indicates whether the lookup value is active and selectable in UI workflows.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'Active';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Indicates whether the lookup value is active and selectable in UI workflows.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'Active';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'CreatedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'CreatedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the lookup record was created.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the lookup record was created.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'CreatedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'CreatedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the lookup record.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that created the lookup record.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'Description')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'Description'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Detailed description and statutory context of the lookup code.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'Description';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Detailed description and statutory context of the lookup code.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'Description';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'DisplayOrder')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'DisplayOrder'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sequence display order for UI presentation in multi-select dropdowns and chip lists.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'DisplayOrder';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Sequence display order for UI presentation in multi-select dropdowns and chip lists.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'DisplayOrder';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'DocumentCategoryCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'DocumentCategoryCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Document category code to which this rejection reason applies (e.g. "ALL", "ID_DOCUMENT", "QUALIFICATION_CERT", "BANK_CONFIRMATION", "SITE_PHOTO", "SIGNED_MOA"). If set to "ALL", the reason is available across all document categories.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'DocumentCategoryCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Document category code to which this rejection reason applies (e.g. "ALL", "ID_DOCUMENT", "QUALIFICATION_CERT", "BANK_CONFIRMATION", "SITE_PHOTO", "SIGNED_MOA"). If set to "ALL", the reason is available across all document categories.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'DocumentCategoryCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'ModifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'ModifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the lookup record was last modified.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the lookup record was last modified.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'ModifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'ModifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the lookup record.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Username or system process that last modified the lookup record.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'Name')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'lookup' AND t.name = N'DocumentRejectionReasonType' AND c.name = N'Name'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Display name / title of the lookup option.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'Name';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Display name / title of the lookup option.', @level0type=N'SCHEMA', @level0name=N'lookup', @level1type=N'TABLE', @level1name=N'DocumentRejectionReasonType', @level2type=N'COLUMN', @level2name=N'Name';
 END
 
 -- Table: lookup.EconomicStatusType

@@ -1,0 +1,173 @@
+@namespace Nsdms.Web.Components.Common
+@using MudBlazor
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IFileStorageService FileStorage
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Medium" />
+            <MudText Typo="Typo.h6">Verify Document as Compliant (OK)</MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Elevation="0" Outlined="true" Class="pa-3 mb-4 rounded bg-surface">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" sm="8">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Document File Name</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="fw-bold font-mono">@Attachment.FileName</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Category</MudText>
+                    <div>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
+                            @Attachment.CategoryCode
+                        </MudChip>
+                    </div>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true" Class="mb-4">
+            Marking this document as <strong>OK (Compliant)</strong> certifies that you have inspected the evidence and verified that it satisfies all statutory requirements.
+        </MudAlert>
+
+        <MudGrid Spacing="2">
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_verifiedBy"
+                              Label="Verifying Officer Name & Role"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Required="true"
+                              HelperText="Full name and official title of reviewer" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker @bind-Date="_verifiedDate"
+                               Label="Verification Date (SAST)"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               ReadOnly="true"
+                               HelperText="Official timestamp of inspection" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker @bind-Date="_certificationDate"
+                               Label="Document Certification Date (Optional)"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Clearable="true"
+                               HelperText="Date stamped by Commissioner of Oaths (statutory 90-day check)" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker @bind-Date="_expiryDate"
+                               Label="Validity Expiry Date (Optional)"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Clearable="true"
+                               HelperText="Official expiration date (e.g. Tax PIN, lease, or accreditation)" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_notes"
+                              Label="Compliance Remarks / Annotation Notes"
+                              Variant="Variant.Outlined"
+                              Lines="3"
+                              Placeholder="e.g., Commissioner of Oaths stamp legible; ID number confirmed against National Population Register..."
+                              HelperText="Optional annotation preserved in the audit log" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" 
+                   StartIcon="@Icons.Material.Filled.Cancel" 
+                   OnClick="Cancel">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Success" 
+                   StartIcon="@Icons.Material.Filled.CheckCircle" 
+                   Disabled="@_isSubmitting"
+                   OnClick="SubmitAsync">
+            @if (_isSubmitting)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Saving Verification...</MudText>
+            }
+            else
+            {
+                <MudText>Confirm Compliant (OK)</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public DocumentAttachment Attachment { get; set; } = default!;
+
+    [Parameter]
+    public string CurrentUserName { get; set; } = "Officer";
+
+    private string _verifiedBy = string.Empty;
+    private DateTime? _verifiedDate = DateTime.UtcNow;
+    private DateTime? _certificationDate;
+    private DateTime? _expiryDate;
+    private string? _notes;
+    private bool _isSubmitting = false;
+
+    protected override void OnInitialized()
+    {
+        _verifiedBy = !string.IsNullOrWhiteSpace(Attachment.VerifiedBy) 
+            ? Attachment.VerifiedBy 
+            : CurrentUserName;
+        _certificationDate = Attachment.DocumentCertificationDate;
+        _expiryDate = Attachment.DocumentExpiryDate;
+        _notes = Attachment.VerificationNotes;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_verifiedBy))
+        {
+            Snackbar.Add("Verifying officer name is required.", Severity.Warning);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var updated = await FileStorage.VerifyAttachmentAsync(
+                Attachment.Id,
+                isCompliant: true,
+                rejectionReasonCodes: null,
+                customNotes: _notes,
+                certificationDate: _certificationDate,
+                expiryDate: _expiryDate,
+                currentUsername: _verifiedBy.Trim()
+            );
+
+            if (updated != null)
+            {
+                Snackbar.Add($"Document '{Attachment.FileName}' marked as Compliant (OK).", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(updated));
+            }
+            else
+            {
+                Snackbar.Add("Failed to update verification status.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving verification: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

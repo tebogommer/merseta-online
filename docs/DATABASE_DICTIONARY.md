@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-08 19:45:25 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 230
+> **Generated:** 2026-09-09 09:46:47 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 231
 
 ---
 
@@ -56,7 +56,7 @@
 | `dbo` | [`ContractTerminationRequest`](#contractterminationrequest) | `ContractTerminationRequest` | 15 | `Id` | System entity for ContractTerminationRequest data governance. |
 | `dbo` | [`CurriculumWorkingGroupMember`](#curriculumworkinggroupmember) | `CurriculumWorkingGroupMember` | 13 | `Id` | Expert stakeholder member participating in the QCTO Qualification Development Working Group. |
 | `dbo` | [`DistributionLetter`](#distributionletter) | `DistributionLetter` | 11 | `Id` | Release / Distribution letter generated per batch and training provider accreditation number. |
-| `dbo` | [`DocumentAttachment`](#documentattachment) | `DocumentAttachment` | 16 | `Id` | Polymorphic document attachment linked to any entity record. |
+| `dbo` | [`DocumentAttachment`](#documentattachment) | `DocumentAttachment` | 24 | `Id` | Polymorphic document attachment linked to any entity record. |
 | `dbo` | [`DocumentClause`](#documentclause) | `DocumentClause` | 11 | `Id` | Reusable atomic document clause or statutory boilerplate paragraph. |
 | `dbo` | [`DocumentMetadata`](#documentmetadata) | `DocumentMetadata` | 19 | `Id` | SHA-256 integrity-verified digital document evidence stored in the Document Vault. |
 | `dbo` | [`DocumentRequirementRule`](#documentrequirementrule) | `DocumentRequirementRule` | 11 | `Id` | Governance rule defining mandatory document evidence required before workflow gate advancement. |
@@ -196,6 +196,7 @@
 | `lookup` | [`DesignationStructureStatusType`](#designationstructurestatustype) | `DesignationStructureStatusType` | 8 | `Code` | Assessor and Moderator ETQA registration structure status codes (Field: Designation_Structure_Status_Id - Registered, Deregistered, etc.). |
 | `lookup` | [`DesignationType`](#designationtype) | `DesignationType` | 8 | `Code` | Assessor and Moderator statutory designation types (Field: Designation_Id - 1: Assessor, 0: Moderator). |
 | `lookup` | [`DisabilityType`](#disabilitytype) | `DisabilityType` | 8 | `Code` | Disability impairment classifications per Employment Equity & SETMIS standards. |
+| `lookup` | [`DocumentRejectionReasonType`](#documentrejectionreasontype) | `DocumentRejectionReasonType` | 10 | `Code` | Managed statutory and operational rejection reasons categorized by document type. Allows reviewing officers to select single or multiple standardized reasons when rejecting evidence attachments. |
 | `lookup` | [`EconomicStatusType`](#economicstatustype) | `EconomicStatusType` | 8 | `Code` | Learner / employee economic employment status classifications (Field: Economic_Status_Id - Employed, Unemployed, etc.). |
 | `lookup` | [`EmployerApprovalStatusType`](#employerapprovalstatustype) | `EmployerApprovalStatusType` | 8 | `Code` | Employer workplace approval hosting eligibility status codes (Field: Employer_Approval_Status_Id - Active, Inactive, Legacy). |
 | `lookup` | [`EnrolmentStatusReasonType`](#enrolmentstatusreasontype) | `EnrolmentStatusReasonType` | 8 | `Code` | Reasons for learner enrolment status transitions (Field: Enrolment_Status_Reason_Id - Medical, Financial, Social, etc.). |
@@ -2277,6 +2278,8 @@
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DocumentCategoryCode` | `nvarchar(50)` | NULL |  | Document categorization code (e.g. ID_DOCUMENT, QUALIFICATION_CERT, SITE_PHOTO, BANK_CONFIRMATION, SIGNED_MOA). |
+| `DocumentCertificationDate` | `datetime2` | NULL |  | Date when the document was certified or originally issued (e.g. 3-month statutory validity window for RSA IDs). |
+| `DocumentExpiryDate` | `datetime2` | NULL |  | Optional expiration date for the document (e.g. Tax Clearance PIN or accreditation expiry). |
 | `FileHashSha256` | `nvarchar(100)` | NULL |  | Cryptographic SHA-256 integrity hash for document tampering verification. |
 | `FileName` | `nvarchar(255)` | **NOT NULL** |  | Stored sanitized file name. |
 | `FileSizeBytes` | `bigint` | **NOT NULL** |  | File size in bytes. |
@@ -2284,10 +2287,16 @@
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OriginalFileName` | `nvarchar(255)` | **NOT NULL** |  | Original file name as uploaded by the user. |
+| `RejectionReason` | `nvarchar(2000)` | NULL |  | Consolidated human-readable summary of rejection reasons. |
+| `RejectionReasonCodesJson` | `nvarchar(max)` | NULL |  | Serialized JSON array of selected DocumentRejectionReasonType codes (e.g. ["ID_EXPIRED_CERT", "ID_BLURRY"]). |
 | `StoragePath` | `nvarchar(500)` | **NOT NULL** |  | Relative or absolute storage path URI. |
 | `StorageProvider` | `nvarchar(50)` | **NOT NULL** |  | Storage provider engine (e.g. Local, AzureBlob, Database). |
 | `TargetEntityId` | `int` | **NOT NULL** |  | Primary key identifier of the associated target entity. |
 | `TargetEntityName` | `nvarchar(100)` | **NOT NULL** |  | Name of the target entity type (e.g. Organisation, CompanyLearner, GrantMoa, WorkplaceApproval). |
+| `VerificationNotes` | `nvarchar(2000)` | NULL |  | Officer evaluation notes or compliance remarks. |
+| `VerificationStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Verification and compliance status: "Pending", "Compliant" (OK), "NonCompliant" (Not OK / Rejected). |
+| `VerifiedAt` | `datetime2` | NULL |  | UTC timestamp when the document was verified or rejected. |
+| `VerifiedBy` | `nvarchar(150)` | NULL |  | Full name and role of the officer who performed the verification check. |
 
 #### Performance Indexes
 
@@ -2295,6 +2304,7 @@
 | :--- | :--- | :--- |
 | `IX_DocumentAttachment_DocumentCategoryCode` | `DocumentCategoryCode` | No |
 | `IX_DocumentAttachment_IsArchived` | `IsArchived` | No |
+| `IX_DocumentAttachment_VerificationStatusCode` | `VerificationStatusCode` | No |
 | `IX_DocumentAttachment_TargetEntityName_TargetEntityId` | `TargetEntityName, TargetEntityId` | No |
 
 ---
@@ -8276,6 +8286,37 @@
 | :--- | :--- | :--- |
 | `IX_DisabilityType_Active` | `Active` | No |
 | `IX_DisabilityType_Name` | `Name` | No |
+
+---
+
+### <a id="documentrejectionreasontype"></a> `lookup.DocumentRejectionReasonType`
+
+**Description:** Managed statutory and operational rejection reasons categorized by document type. Allows reviewing officers to select single or multiple standardized reasons when rejecting evidence attachments.  
+**CLR Model:** `Nsdms.Domain.Entities.DocumentRejectionReasonType`  
+**Primary Key:** `Code`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Code` | `nvarchar(50)` | **NOT NULL** | 🔑 **PK** | Unique alphanumeric code identifier acting as primary key. |
+| `Active` | `bit` | **NOT NULL** |  | Indicates whether the lookup value is active and selectable in UI workflows. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the lookup record was created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the lookup record. |
+| `Description` | `nvarchar(1000)` | NULL |  | Detailed description and statutory context of the lookup code. |
+| `DisplayOrder` | `int` | **NOT NULL** |  | Sequence display order for UI presentation in multi-select dropdowns and chip lists. |
+| `DocumentCategoryCode` | `nvarchar(50)` | **NOT NULL** |  | Document category code to which this rejection reason applies (e.g. "ALL", "ID_DOCUMENT", "QUALIFICATION_CERT", "BANK_CONFIRMATION", "SITE_PHOTO", "SIGNED_MOA"). If set to "ALL", the reason is available across all document categories. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the lookup record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the lookup record. |
+| `Name` | `nvarchar(200)` | **NOT NULL** |  | Display name / title of the lookup option. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_DocumentRejectionReasonType_Active` | `Active` | No |
+| `IX_DocumentRejectionReasonType_DisplayOrder` | `DisplayOrder` | No |
+| `IX_DocumentRejectionReasonType_DocumentCategoryCode` | `DocumentCategoryCode` | No |
 
 ---
 
