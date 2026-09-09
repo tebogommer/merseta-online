@@ -376,7 +376,7 @@ public class RolePermissionService : IRolePermissionService
                 AppPermissions.Create(AppPermissions.ModuleCompliance, AppPermissions.ActionView)
             });
 
-        // 4. CLO (Client Liaison Officer)
+        // 4. CLO (Client Liaison Officer / Verification Officer)
         await EnsureRoleWithPermissionsAsync(db, "CLO", "Client Liaison Officer conducting workplace monitoring, site audits & desktop reviews.",
             new List<string>
             {
@@ -391,11 +391,13 @@ public class RolePermissionService : IRolePermissionService
                 AppPermissions.Create(AppPermissions.ModuleWsp, AppPermissions.ActionApprove),
                 AppPermissions.Create(AppPermissions.ModuleGrants, AppPermissions.ActionView),
                 AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionView),
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionReview),
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionVerify),
                 AppPermissions.Create(AppPermissions.ModuleOrganisations, AppPermissions.ActionView)
             });
 
         // 5. SDF (Skills Development Facilitator)
-        await EnsureRoleWithPermissionsAsync(db, "SDF", "External Skills Development Facilitator submitting WSP/ATR and Grant Applications.",
+        await EnsureRoleWithPermissionsAsync(db, "SDF", "External Skills Development Facilitator submitting WSP/ATR, Grant Applications, and Learner Agreements.",
             new List<string>
             {
                 AppPermissions.Create(AppPermissions.ModuleWsp, AppPermissions.ActionView),
@@ -408,12 +410,38 @@ public class RolePermissionService : IRolePermissionService
                 AppPermissions.Create(AppPermissions.ModuleGrants, AppPermissions.ActionSubmit),
                 AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionView),
                 AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionCreate),
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionSubmit),
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionWithdraw),
                 AppPermissions.Create(AppPermissions.ModuleWorkplace, AppPermissions.ActionView),
                 AppPermissions.Create(AppPermissions.ModuleWorkplace, AppPermissions.ActionCreate),
                 AppPermissions.Create(AppPermissions.ModuleOrganisations, AppPermissions.ActionView)
             });
 
-        // 6. ReviewCommittee (Adjudication & Grant Approvals)
+        // 6. TrainingProvider (Accredited Skills Development Provider - SDP)
+        await EnsureRoleWithPermissionsAsync(db, "TrainingProvider", "Accredited Skills Development Provider (SDP) submitting learner registration agreements and assessments.",
+            new List<string>
+            {
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionView),
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionCreate),
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionSubmit),
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionWithdraw),
+                AppPermissions.Create(AppPermissions.ModuleOrganisations, AppPermissions.ActionView),
+                AppPermissions.Create(AppPermissions.ModuleEtqa, AppPermissions.ActionView)
+            });
+
+        // 6b. SDP (Skills Development Provider alias role)
+        await EnsureRoleWithPermissionsAsync(db, "SDP", "Skills Development Provider contact submitting learner registration agreements.",
+            new List<string>
+            {
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionView),
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionCreate),
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionSubmit),
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionWithdraw),
+                AppPermissions.Create(AppPermissions.ModuleOrganisations, AppPermissions.ActionView),
+                AppPermissions.Create(AppPermissions.ModuleEtqa, AppPermissions.ActionView)
+            });
+
+        // 7. ReviewCommittee (Adjudication & Grant Approvals / Approval Authority)
         await EnsureRoleWithPermissionsAsync(db, "ReviewCommittee", "Review & Adjudication Committee member approving grant allocations & scopes.",
             new List<string>
             {
@@ -424,10 +452,13 @@ public class RolePermissionService : IRolePermissionService
                 AppPermissions.Create(AppPermissions.ModuleEtqa, AppPermissions.ActionApprove),
                 AppPermissions.Create(AppPermissions.ModuleWorkplace, AppPermissions.ActionView),
                 AppPermissions.Create(AppPermissions.ModuleWorkplace, AppPermissions.ActionApprove),
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionView),
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionApprove),
+                AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionReject),
                 AppPermissions.Create(AppPermissions.ModuleCompliance, AppPermissions.ActionView)
             });
 
-        // 7. Standard User (Self-Registered Applicant)
+        // 8. Standard User (Self-Registered Applicant)
         await EnsureRoleWithPermissionsAsync(db, "User", "Standard registered user with basic profile access and rights to apply for statutory stakeholder roles (SDF, SDP Contact, Organisation Contact, Assessor, Moderator).",
             new List<string>());
 

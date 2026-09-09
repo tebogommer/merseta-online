@@ -1,6 +1,7 @@
 @page "/learners/register-agreement"
 @page "/learners/create"
 @page "/learners/agreement-wizard"
+@using Microsoft.AspNetCore.Components.Authorization
 @using Nsdms.Application.Services
 @using Nsdms.Application.Common.Utilities
 @using Nsdms.Domain.Entities
@@ -12,6 +13,8 @@
 @inject IPersonService PersonService
 @inject IOrganisationService OrgService
 @inject ITrainingProviderService ProviderService
+@inject ICaslAbilityService CaslService
+@inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IWizardDraftService DraftService
@@ -170,12 +173,12 @@ else
         <!-- STEP 5: Mandatory Document Checklist (Table 14) -->
         <WizardStep Label="Documents"
                     Heading="Mandatory compliance document verification"
-                    Description="Verify statutory documentation attachments per merSETA Table 14 programme gating"
+                    Description="Verify statutory documentation attachments per merSETA Table 14 programme requirements"
                     ValidateAsync="ValidateStep5Async">
             <MudGrid Spacing="2">
                 <MudItem xs="12">
                     <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">
-                        Statutory Evidence Gate: All mandatory documents must be confirmed attached prior to agreement registration.
+                        Statutory Evidence Requirement: All mandatory documents must be confirmed attached prior to agreement registration.
                     </MudAlert>
                 </MudItem>
                 <MudItem xs="12">
@@ -384,10 +387,21 @@ else
         public bool LearnerPopiaConsent { get; init; }
     }
 
+    private string _currentUsername = "Proposer";
+    private CaslUserContext? _userContext;
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (user?.Identity?.IsAuthenticated == true && !string.IsNullOrWhiteSpace(user.Identity.Name))
+            {
+                _currentUsername = user.Identity.Name;
+                _userContext = await CaslService.GetUserContextByUsernameAsync(_currentUsername);
+            }
+
             _organisations = await OrgService.GetAllAsync();
             _providers = await ProviderService.GetAllAsync();
 
@@ -672,7 +686,7 @@ else
     {
         try
         {
-            var draft = await DraftService.GetActiveDraftAsync("LearnerAgreement", "SdfUser", _organisationId > 0 ? _organisationId : null);
+            var draft = await DraftService.GetActiveDraftAsync("LearnerAgreement", _currentUsername, _organisationId > 0 ? _organisationId : null);
             if (draft != null && draft.CurrentStepIndex > 0)
             {
                 _loadedDraft = draft;
@@ -760,7 +774,7 @@ else
                 "LearnerAgreement",
                 "Tripartite learnership agreement registration",
                 "/learners/register-agreement",
-                "SdfUser",
+                _currentUsername,
                 _organisationId > 0 ? _organisationId : null,
                 _activeStep,
                 5,
@@ -789,6 +803,16 @@ else
         _isProcessing = true;
         try
         {
+            if (_userContext != null)
+            {
+                var canSubmit = CaslService.CanSubmitLearnerAgreement(_userContext, _organisationId > 0 ? _organisationId : null, _trainingProviderId);
+                if (!canSubmit)
+                {
+                    Snackbar.Add("Access denied: You do not have permissions or an active affiliation with the host employer or SDP to register this agreement.", Severity.Error);
+                    return;
+                }
+            }
+
             if (_personId <= 0 && !string.IsNullOrWhiteSpace(_rsaIdNumber))
             {
                 var existing = await PersonService.GetByRsaIdAsync(_rsaIdNumber.Trim());
@@ -813,7 +837,7 @@ else
             }
 
             var learner = BuildLearnerEntity("Registered");
-            var result = await LearnerService.RegisterLearnerAsync(learner, "SdfUser");
+            var result = await LearnerService.RegisterLearnerAsync(learner, _currentUsername);
             _registeredLearnerId = result.Id;
             _registeredContractNo = result.LearnerContractNumber ?? $"LNK-{result.Id:D5}";
 
@@ -874,7 +898,7 @@ else
                 ContactNumber = _guardianContactNumber,
                 RelationshipTypeId = _guardianRelationship,
                 CreatedAt = DateTime.UtcNow,
-                CreatedBy = "SdfUser"
+                CreatedBy = _currentUsername
             });
         }
 

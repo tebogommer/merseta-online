@@ -34,6 +34,8 @@ public static class AppPermissions
     public const string ActionRemediate = "Remediate";
     public const string ActionModerate = "Moderate";
     public const string ActionCertificate = "Certificate";
+    public const string ActionReview = "Review";
+    public const string ActionWithdraw = "Withdraw";
     public const string ActionReconcile = "Reconcile";
     public const string ActionTransfer = "Transfer";
     public const string ActionDelegate = "Delegate";
@@ -46,7 +48,7 @@ public static class AppPermissions
         { ModuleWsp, new() { ActionView, ActionCreate, ActionEdit, ActionSubmit, ActionSign, ActionEndorse, ActionQuery, ActionRemediate, ActionApprove, ActionReject, ActionManage } },
         { ModuleGrants, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionSubmit, ActionSign, ActionVerify, ActionQuery, ActionRemediate, ActionApprove, ActionReject, ActionDisburse, ActionManage } },
         { ModuleFinance, new() { ActionView, ActionCreate, ActionEdit, ActionVerify, ActionApprove, ActionDisburse, ActionReconcile, ActionTransfer, ActionManage } },
-        { ModuleLearners, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionSubmit, ActionModerate, ActionCertificate, ActionApprove, ActionManage } },
+        { ModuleLearners, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionSubmit, ActionReview, ActionVerify, ActionModerate, ActionCertificate, ActionApprove, ActionReject, ActionWithdraw, ActionManage } },
         { ModuleEtqa, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionQuery, ActionRemediate, ActionVerify, ActionModerate, ActionApprove, ActionReject, ActionManage } },
         { ModuleWorkplace, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionVerify, ActionApprove, ActionReject, ActionManage } },
         { ModuleCompliance, new() { ActionView, ActionCreate, ActionEdit, ActionSubmit, ActionVerify, ActionManage } },

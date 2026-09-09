@@ -90,6 +90,17 @@ Every page must pass all 16 items before being declared complete:
 4. **Natural Workflow State Language**: Replace "Terminal State" with **"Completed / Finalised"**; replace "Workflow Blueprint" with **"Approval Process Lifecycle"**.
 5. **Task Management Clarity**: Replace "Task Lease" with **"Reserved / In Review by [Officer]"**.
 6. **Mask All Database Integer Keys**: Dropdowns, headers, badges, and table cells must only display statutory business references (e.g. `DG-2026-TOYOTA-01`, `WSP-2026-0042`, `SDL: L123456789`).
+7. **Strict Anti-Design-Pattern UI Invariant ('Maker-Checker' Prohibition)**: Design pattern terms (`Maker-Checker`, `Maker`, `Checker`, `4-Eyes`) must **NEVER** be displayed on user-facing UI surfaces (headers, badges, tabs, tables, tooltips, dialogs, toasts, or field helper text). Always use natural statutory and business governance language:
+   - Use **Proposer** instead of *Maker*
+   - Use **Reviewer** or **Approver** instead of *Checker*
+   - Use **Dual Authorisation Control** or **Dual Authorisation Governance** instead of *Maker-Checker Pattern / Governance*
+   - Use **Independent Review & Approval** or **Segregation of Duties Conflict** instead of *Maker-Checker Workflow / 4-Eyes Invariant*
+8. **Prohibition of Technical Engineering Jargon ("Gate", "Gating", "Blueprint", "Payload")**:
+   - Technical architecture and workflow engine jargon must **NEVER** appear in user-facing UI markup, tooltips, dialogs, toasts, or helper texts:
+     - Replace **"Gate" / "Gating"** with **"Requirement"**, **"Criterion"**, **"Workflow Stage"**, **"Threshold"**, or **"Compliance Status"** (e.g. *WSP Compliance* instead of *WSP Gate*; *Funded Progress Requirement* instead of *Funded Progress Gate*).
+     - Replace **"Blueprint"** with **"Process Definition"**, **"Approval Lifecycle"**, or **"Workflow Specification"**.
+     - Replace **"Payload"** with **"Transaction Data"**, **"Evaluation Parameters"**, or **"Test Records"**.
+   - Enforced continuously by the automated xUnit build guard `StatutoryUiLexiconTests.cs`.
 
 ---
 
@@ -98,7 +109,7 @@ Every page must pass all 16 items before being declared complete:
 2. **Contracting via MoA**: The legal contracting instrument for Discretionary Grants is the **Memorandum of Agreement (MoA)**, never generic "Contracts".
 3. **Skills Development Providers (SDP)**: Refer to accredited training institutions as **Skills Development Providers (SDPs)** per QCTO statutory guidelines.
 4. **Artisan Mentorship Ratios**: Enforce NAMB / QCTO artisan mentor-to-apprentice ratios via `IMentorRatioPolicyEngine`, respecting trade-specific caps.
-5. **Governance & PFMA Controls**: Adhere to financial approval delegation, Segregation of Duties (Maker-Checker), and non-repudiation audit logging for all approval gates.
+5. **Governance & PFMA Controls**: Adhere to financial approval delegation, Segregation of Duties (Dual Authorisation Control), and non-repudiation audit logging for all approval gates.
 
 ---
 

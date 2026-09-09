@@ -8,7 +8,7 @@
     <TitleContent>
         <div class="d-flex align-center gap-2">
             <MudIcon Icon="@(Rule.Id == 0 ? Icons.Material.Filled.AddCircle : Icons.Material.Filled.Edit)" Color="Color.Primary" />
-            <MudText Typo="Typo.h6">@(Rule.Id == 0 ? "Add Document Requirement Gate" : "Edit Document Requirement Gate")</MudText>
+            <MudText Typo="Typo.h6">@(Rule.Id == 0 ? "Add Document Requirement" : "Edit Document Requirement")</MudText>
         </div>
     </TitleContent>
     <DialogContent>
@@ -17,7 +17,7 @@
                 <MudItem xs="12" md="6">
                     <MudSelect T="int"
                                @bind-Value="Rule.RequiredAtStateId"
-                               Label="Enforcement Stage / Gate State"
+                               Label="Enforcement Stage / Lifecycle State"
                                Required="true"
                                RequiredError="Enforcement state is required"
                                Variant="Variant.Outlined"
@@ -80,7 +80,7 @@
             }
             else
             {
-                <span>Save Gate Rule</span>
+                <span>Save Requirement</span>
             }
         </MudButton>
     </DialogActions>
@@ -111,7 +111,7 @@
             Rule.DocumentTypeName = Rule.DocumentTypeName.Trim();
 
             var saved = await WorkflowService.SaveDocumentRequirementAsync(Rule, "admin@merseta.org.za", "System Administrator");
-            Snackbar.Add($"Document gate rule for '{saved.DocumentTypeName}' saved successfully.", Severity.Success);
+            Snackbar.Add($"Document requirement for '{saved.DocumentTypeName}' saved successfully.", Severity.Success);
             MudDialog.Close(DialogResult.Ok(saved));
         }
         catch (Exception ex)

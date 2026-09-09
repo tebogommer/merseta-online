@@ -17,7 +17,7 @@
 *@
 
 <EntityHeader Title="Approval Process Lifecycles &amp; Studio"
-              Subtitle="Enterprise approval process lifecycle stages, gate transition matrices, and SLA policies"
+              Subtitle="Enterprise approval process lifecycles, stage transition rules, and statutory SLA policies"
               Status="Active"
               BreadcrumbItems="@_breadcrumbItems">
     <ActionZone>
@@ -43,11 +43,11 @@
     <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg border-default" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
         <div class="d-flex align-center justify-space-between">
             <div>
-                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Total Process Lifecycles</MudText>
-                <MudText Typo="Typo.h5" Class="font-weight-bold mt-1">@_definitions.Count</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Total Configured</MudText>
+                <MudText Typo="Typo.h5" Class="font-weight-bold">@_definitions.Count</MudText>
             </div>
             <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Medium">
-                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.AccountTree" />
             </MudAvatar>
         </div>
     </MudPaper>
@@ -55,11 +55,11 @@
     <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg border-default" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
         <div class="d-flex align-center justify-space-between">
             <div>
-                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Active Workflows</MudText>
-                <MudText Typo="Typo.h5" Class="font-weight-bold mt-1" Color="Color.Success">@_definitions.Count(d => d.IsActive)</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Active Lifecycles</MudText>
+                <MudText Typo="Typo.h5" Class="font-weight-bold text-success">@_definitions.Count(d => d.IsActive)</MudText>
             </div>
             <MudAvatar Color="Color.Success" Variant="Variant.Filled" Size="Size.Medium">
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
             </MudAvatar>
         </div>
     </MudPaper>
@@ -67,11 +67,11 @@
     <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg border-default" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
         <div class="d-flex align-center justify-space-between">
             <div>
-                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Workflow Stages</MudText>
-                <MudText Typo="Typo.h5" Class="font-weight-bold mt-1" Color="Color.Info">@_definitions.Sum(d => d.States.Count)</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Configured States</MudText>
+                <MudText Typo="Typo.h5" Class="font-weight-bold text-info">@_definitions.Sum(d => d.States.Count)</MudText>
             </div>
             <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Medium">
-                <MudIcon Icon="@Icons.Material.Filled.LinearScale" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.LinearScale" />
             </MudAvatar>
         </div>
     </MudPaper>
@@ -79,11 +79,11 @@
     <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg border-default" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
         <div class="d-flex align-center justify-space-between">
             <div>
-                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Active Records</MudText>
-                <MudText Typo="Typo.h5" Class="font-weight-bold mt-1" Color="Color.Warning">@_definitions.Sum(d => d.Instances.Count)</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Configured Transitions</MudText>
+                <MudText Typo="Typo.h5" Class="font-weight-bold text-warning">@_definitions.Sum(d => d.Transitions.Count)</MudText>
             </div>
             <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Medium">
-                <MudIcon Icon="@Icons.Material.Filled.PlayCircleFilled" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" />
             </MudAvatar>
         </div>
     </MudPaper>
@@ -151,7 +151,7 @@
                 Refresh
             </MudButton>
             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-monospace">
-                @FilteredDefinitions.Count blueprint@(FilteredDefinitions.Count == 1 ? "" : "s")
+                @FilteredDefinitions.Count process definition@(FilteredDefinitions.Count == 1 ? "" : "s")
             </MudText>
         </div>
     </div>
@@ -291,17 +291,17 @@
                         <MudIconButton Icon="@Icons.Material.Filled.Visibility"
                                        Color="Color.Primary"
                                        Size="Size.Small"
-                                       Title="View / Edit Blueprint"
+                                       Title="View / Edit Process Definition"
                                        OnClick="@(() => Navigation.NavigateTo($"/admin/workflows/{context.Id}"))" />
                         <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
                                        Color="Color.Secondary"
                                        Size="Size.Small"
-                                       Title="Clone Blueprint"
+                                       Title="Clone Process Definition"
                                        OnClick="@(() => OpenCloneDialog(context))" />
                         <MudIconButton Icon="@(context.IsActive ? Icons.Material.Filled.ToggleOn : Icons.Material.Filled.ToggleOff)"
                                        Color="@(context.IsActive ? Color.Success : Color.Default)"
                                        Size="Size.Small"
-                                       Title="@(context.IsActive ? "Deactivate Blueprint" : "Activate Blueprint")"
+                                       Title="@(context.IsActive ? "Deactivate Process Definition" : "Activate Process Definition")"
                                        OnClick="@(() => ToggleActiveStatusAsync(context))" />
                     </div>
                 </MudTd>
@@ -309,7 +309,7 @@
             <PagerContent>
                 <div class="d-flex flex-wrap justify-space-between align-center pa-3 border-top" style="border-top: 1px solid var(--mud-palette-lines-default);">
                     <MudText Typo="Typo.caption" Color="Color.Secondary">
-                        Total Blueprints: <strong class="font-monospace">@FilteredDefinitions.Count</strong>
+                        Total Process Definitions: <strong class="font-monospace">@FilteredDefinitions.Count</strong>
                     </MudText>
                     <MudTablePager PageSizeOptions="new int[] { 10, 20, 50 }" />
                 </div>
@@ -346,7 +346,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading workflow blueprints: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error loading workflow process definitions: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -417,7 +417,7 @@
         {
             definition.IsActive = !definition.IsActive;
             await WorkflowService.SaveDefinitionAsync(definition, "admin@merseta.org.za", "System Administrator");
-            Snackbar.Add($"Blueprint '{definition.Code}' is now {(definition.IsActive ? "Active" : "Inactive")}.", Severity.Success);
+            Snackbar.Add($"Process definition '{definition.Code}' is now {(definition.IsActive ? "Active" : "Inactive")}.", Severity.Success);
             await LoadDefinitionsAsync();
         }
         catch (Exception ex)

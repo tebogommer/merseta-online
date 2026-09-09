@@ -774,7 +774,7 @@ public class WspService : IWspService
 
         if (!string.IsNullOrEmpty(existing.ReviewedByUserId) && string.Equals(existing.ReviewedByUserId, approverUserId, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("Maker-Checker segregation of duties violation: The reviewer cannot adjudicate the final approval.");
+            throw new InvalidOperationException("Segregation of duties violation: The reviewer cannot adjudicate the final approval.");
         }
 
         var beforeState = new

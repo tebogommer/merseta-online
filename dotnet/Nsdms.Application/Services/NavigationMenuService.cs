@@ -1587,7 +1587,7 @@ public class NavigationMenuService : INavigationMenuService
                 Href = "etqa/applications",
                 Icon = "Assignment",
                 Category = "Quality assurance & ETQA",
-                Description = "Assessor and moderator initial registration applications and 4-stage maker-checker review queue",
+                Description = "Assessor and moderator initial registration applications and 4-stage statutory review and approval queue",
                 RequiredModule = AppPermissions.ModuleEtqa,
                 RequiredAction = AppPermissions.ActionView,
                 RequiredRoles = new() { "SuperAdmin", "Admin", "Assessor", "CLO", "Compliance" },

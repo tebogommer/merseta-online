@@ -70,8 +70,8 @@ def test_mandatory_grant_window():
             page.screenshot(path=os.path.join(SCREENSHOTS_DIR, "03_mg_window_governance_dialog.png"))
             page.screenshot(path=os.path.join(ARTIFACT_DIR, "03_mg_window_governance_dialog.png"))
 
-            # 4. If Maker stage is active, propose a new window schedule
-            submit_btn = dialog.locator("button:has-text('Submit for Checker Review')")
+            # 4. If Proposer stage is active, propose a new window schedule
+            submit_btn = dialog.locator("button:has-text('Submit for Independent Review')")
             if submit_btn.is_visible():
                 print("\n[4/7] Submitting Maker Proposal for Schedule Change...")
                 # Fill justification if empty
@@ -93,23 +93,23 @@ def test_mandatory_grant_window():
                 page.screenshot(path=os.path.join(SCREENSHOTS_DIR, "05_maker_proposal_submitted.png"))
                 page.screenshot(path=os.path.join(ARTIFACT_DIR, "05_maker_proposal_submitted.png"))
 
-            # 5. Verify Pending Maker-Checker State & Segregation of Duties
-            print("\n[5/7] Verifying Maker-Checker Segregation of Duties & Diff Cards...")
+            # 5. Verify Pending Dual Authorisation State & Segregation of Duties
+            print("\n[5/7] Verifying Segregation of Duties & Diff Cards...")
             dialog_content = dialog.inner_text()
-            if "Maker-Checker Review Required" in dialog_content or "Pending Checker Review" in dialog_content:
-                print("  --> Maker-Checker state ACTIVE: Proposer/Checker segregation enforced.")
+            if "Independent Review Required" in dialog_content or "Pending Independent Review" in dialog_content:
+                print("  --> Dual Authorisation state ACTIVE: Proposer/Reviewer segregation enforced.")
                 page.screenshot(path=os.path.join(SCREENSHOTS_DIR, "06_maker_checker_pending_review.png"))
                 page.screenshot(path=os.path.join(ARTIFACT_DIR, "06_maker_checker_pending_review.png"))
 
-            # 6. Switch to Tab 2: Maker-Checker Change Log
-            print("\n[6/7] Inspecting Maker-Checker Change Log & Audit History Tab...")
-            history_tab = dialog.locator(".mud-tab:has-text('Maker-Checker Change Log')")
+            # 6. Switch to Tab 2: Proposal & Review History
+            print("\n[6/7] Inspecting Proposal & Review History Tab...")
+            history_tab = dialog.locator(".mud-tab:has-text('Proposal & Review History')")
             if history_tab.is_visible():
                 history_tab.click()
                 time.sleep(2)
                 page.screenshot(path=os.path.join(SCREENSHOTS_DIR, "07_maker_checker_audit_log.png"))
                 page.screenshot(path=os.path.join(ARTIFACT_DIR, "07_maker_checker_audit_log.png"))
-                print("  --> Maker-Checker Audited History Table loaded and verified!")
+                print("  --> Proposal & Review History Table loaded and verified!")
 
             # Close dialog
             close_btn = dialog.locator("button:has-text('Close')")

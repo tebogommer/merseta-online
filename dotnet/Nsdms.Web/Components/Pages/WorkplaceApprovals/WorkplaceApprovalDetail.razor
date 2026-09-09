@@ -91,7 +91,7 @@
                     Conduct Workplace Verification (Audit)
                 </MudMenuItem>
                 <MudMenuItem Icon="@Icons.Material.Filled.AssignmentTurnedIn" OnClick="OpenEvaluationDialog" Disabled="@(_approval.ApprovalStatusCode != "VERIFIED" && _approval.ApprovalStatusCode != "UNDER_EVALUATION")">
-                    Render Committee Decision (Maker-Checker)
+                    Render Committee Decision (Independent Approval)
                 </MudMenuItem>
                 <MudMenuItem Icon="@Icons.Material.Filled.Autorenew" IconColor="Color.Info" OnClick="OpenRenewalDialog" Disabled="@(_approval.ApprovalStatusCode != "APPROVED" && _approval.ApprovalStatusCode != "Approved" && _approval.ApprovalStatusCode != "EXPIRED" && _approval.ApprovalStatusCode != "Expired")">
                     Apply for Re-Approval (Renewal)
@@ -900,11 +900,11 @@ else
                                 </CardHeaderAvatar>
                                 <CardHeaderContent>
                                     <MudText Typo="Typo.h6">Committee / Executive Decision</MudText>
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Rendered by Approval Authority (Maker-Checker)</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Rendered by Approval Authority (Dual Authorisation Control)</MudText>
                                 </CardHeaderContent>
                             </MudCardHeader>
                             <MudCardContent>
-                                <ReadOnlyField Label="Decision Maker" Value="@(_approval.DecisionByPerson?.FullName ?? "—")" />
+                                <ReadOnlyField Label="Authorising Authority" Value="@(_approval.DecisionByPerson?.FullName ?? "—")" />
                                 <ReadOnlyField Label="Decision Date" Value="@(_approval.DecisionDate?.ToString("yyyy-MM-dd") ?? "—")" />
                                 <ReadOnlyField Label="Approval Outcome" Value="@_approval.ApprovalStatusCode" />
                                 @if (!string.IsNullOrWhiteSpace(_approval.ApprovalReason))
@@ -1025,7 +1025,7 @@ else
     <TitleContent>
         <div class="d-flex align-center gap-2">
             <MudIcon Icon="@Icons.Material.Filled.Gavel" Color="Color.Success" />
-            <MudText Typo="Typo.h6">Render Statutory Approval Decision (Maker-Checker)</MudText>
+            <MudText Typo="Typo.h6">Render Statutory Approval Decision (Independent Approval)</MudText>
         </div>
     </TitleContent>
     <DialogContent>
@@ -1054,7 +1054,7 @@ else
             {
                 <MudItem xs="12">
                     <MudAlert Severity="Severity.Warning" Dense="true" Class="my-1">
-                        <strong>Maker-Checker Segregation Warning:</strong> The selected decision-maker (@_people.FirstOrDefault(p => p.Id == _evalDecisionMakerPersonId.Value)?.FullName) is also the Verification Officer who inspected this site. merSETA PFMA guidelines mandate independent committee evaluation.
+                        <strong>Segregation of Duties Conflict:</strong> The selected authorising authority (@_people.FirstOrDefault(p => p.Id == _evalDecisionMakerPersonId.Value)?.FullName) is also the Verification Officer who inspected this site. merSETA PFMA dual authorisation policy mandates independent committee evaluation.
                     </MudAlert>
                     <MudCheckBox T="bool" @bind-Value="_evalAllowSelfApprovalOverride" Color="Color.Warning" Label="Authorize Administrative Committee Override (Will be recorded in Audited Change Log)" />
                 </MudItem>

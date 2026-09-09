@@ -71,7 +71,7 @@ public class MgWindowMakerCheckerTests
                 2026, openDate, closeDate, extCutoff,
                 "Duplicate Proposal", null, "Another_Maker", "Another Officer"));
 
-        Assert.Contains("already pending Maker-Checker review", ex.Message);
+        Assert.Contains("already pending independent review", ex.Message);
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public class MgWindowMakerCheckerTests
                 "Grant Officer Maker",
                 new List<string> { "Admin" }));
 
-        Assert.Contains("Maker-Checker Segregation of Duties violation", ex.Message);
+        Assert.Contains("Segregation of Duties violation", ex.Message);
     }
 
     [Fact]

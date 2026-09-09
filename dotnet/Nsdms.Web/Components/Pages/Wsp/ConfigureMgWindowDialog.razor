@@ -17,14 +17,14 @@
                 <div>
                     <MudText Typo="Typo.h6" Class="fw-bold">Mandatory Grant (MG) Window Governance</MudText>
                     <MudText Typo="Typo.caption" Color="Color.Secondary">
-                        Maker-Checker segregation of duties, statutory dates, and audited schedule lifecycle
+                        Dual authorisation governance, statutory dates, and audited schedule lifecycle
                     </MudText>
                 </div>
             </div>
             @if (_pendingProposal != null)
             {
                 <MudChip T="string" Color="Color.Warning" Variant="Variant.Filled" Size="Size.Small" Icon="@Icons.Material.Filled.PendingActions">
-                    Pending Checker Review
+                    Pending Independent Review
                 </MudChip>
             }
             else
@@ -45,22 +45,22 @@
         else
         {
             <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-4">
-                <!-- TAB 1: Window Schedule & Maker-Checker Workflow -->
+                <!-- TAB 1: Window Schedule & Dual Authorisation Workflow -->
                 <MudTabPanel Text="Window Schedule &amp; Governance" Icon="@Icons.Material.Filled.DateRange">
                     @if (_pendingProposal != null)
                     {
-                        <!-- PENDING MAKER-CHECKER ADJUDICATION VIEW -->
+                        <!-- PENDING INDEPENDENT REVIEW & APPROVAL VIEW -->
                         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4" Icon="@Icons.Material.Filled.HourglassTop">
                             <div class="d-flex justify-space-between align-center flex-wrap gap-2">
                                 <div>
-                                    <strong class="text-warning">Maker-Checker Review Required</strong>
+                                    <strong class="text-warning">Independent Review Required</strong>
                                     <MudText Typo="Typo.body2">
                                         A schedule change has been proposed by <strong>@_pendingProposal.ProposedByUserName</strong> on @_pendingProposal.ProposedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm").
-                                        Under merSETA PFMA governance, an independent Checker must review and adjudicate before changes take effect.
+                                        Under merSETA PFMA governance, an independent Reviewer must adjudicate before changes take effect.
                                     </MudText>
                                 </div>
                                 <MudChip T="string" Color="Color.Warning" Variant="Variant.Filled" Size="Size.Small">
-                                    Awaiting Checker Adjudication
+                                    Awaiting Independent Review
                                 </MudChip>
                             </div>
                         </MudAlert>
@@ -150,7 +150,7 @@
                             <MudCardContent>
                                 <MudGrid Spacing="2">
                                     <MudItem xs="12" md="6">
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Proposed By (Maker)</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Proposed By (Proposer)</MudText>
                                         <MudText Typo="Typo.body2" Class="fw-bold">@_pendingProposal.ProposedByUserName (@_pendingProposal.ProposedByUserId)</MudText>
                                     </MudItem>
                                     <MudItem xs="12" md="6">
@@ -169,23 +169,23 @@
                         {
                             <!-- Segregation of Duties Notice for the Proposer -->
                             <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mb-2" Icon="@Icons.Material.Filled.Lock">
-                                <strong>Segregation of Duties Invariant:</strong> You submitted this schedule proposal as the Maker. Under merSETA PFMA 4-Eyes policy, you cannot adjudicate your own proposal. Another authorized checker or executive must review.
+                                <strong>Segregation of Duties Invariant:</strong> You submitted this schedule proposal as the Proposer. Under merSETA PFMA dual authorisation policy, you cannot adjudicate your own proposal. Another authorized reviewer or executive must review.
                             </MudAlert>
                         }
                         else
                         {
-                            <!-- Checker Decision Form -->
+                            <!-- Reviewer Decision Form -->
                             <MudCard Outlined="true" Class="pa-3 mb-2" Style="border-color: var(--mud-palette-primary);">
                                 <MudCardHeader>
                                     <CardHeaderContent>
                                         <MudText Typo="Typo.subtitle2" Class="fw-bold text-primary">
-                                            CHECKER ADJUDICATION &amp; VERIFICATION
+                                            INDEPENDENT REVIEW &amp; ADJUDICATION
                                         </MudText>
                                     </CardHeaderContent>
                                 </MudCardHeader>
                                 <MudCardContent Class="pt-0">
                                     <MudTextField @bind-Value="_adjudicationComments"
-                                                  Label="Checker Comments / Decision Notes"
+                                                  Label="Reviewer Comments / Decision Notes"
                                                   Placeholder="Enter adjudication notes or justification for approval/rejection..."
                                                   Variant="Variant.Outlined"
                                                   Lines="2"
@@ -196,7 +196,7 @@
                     }
                     else
                     {
-                        <!-- PROPOSE SCHEDULE CHANGE FORM (MAKER) -->
+                        <!-- PROPOSE SCHEDULE CHANGE FORM (PROPOSER) -->
                         <MudAlert Severity="@(_currentSchedule?.IsWindowOpen == true ? Severity.Success : Severity.Warning)" Variant="Variant.Outlined" Class="mb-4">
                             <div class="d-flex justify-space-between align-center flex-wrap gap-2">
                                 <div>
@@ -212,7 +212,7 @@
                         </MudAlert>
 
                         <MudText Typo="Typo.subtitle2" Class="fw-bold mb-2">
-                            Propose New Window Schedule (Maker Stage)
+                            Propose New Window Schedule (Proposal Stage)
                         </MudText>
 
                         <MudGrid Spacing="3">
@@ -288,7 +288,7 @@
                 </MudTabPanel>
 
                 <!-- TAB 2: Audited Change Log & History -->
-                <MudTabPanel Text="Maker-Checker Change Log" Icon="@Icons.Material.Filled.History">
+                <MudTabPanel Text="Proposal &amp; Review History" Icon="@Icons.Material.Filled.History">
                     <MudText Typo="Typo.subtitle2" Class="fw-bold mb-3">
                         Audited History of Window Schedule Proposals &amp; Adjudications
                     </MudText>
@@ -307,8 +307,8 @@
                                 <MudTh>Status</MudTh>
                                 <MudTh>Proposed Opening</MudTh>
                                 <MudTh>Proposed Deadline</MudTh>
-                                <MudTh>Maker (Proposed By)</MudTh>
-                                <MudTh>Checker (Adjudicated By)</MudTh>
+                                <MudTh>Proposed By (Proposer)</MudTh>
+                                <MudTh>Adjudicated By (Reviewer)</MudTh>
                                 <MudTh>Justification / Ref</MudTh>
                             </HeaderContent>
                             <RowTemplate>
@@ -405,7 +405,7 @@
                        StartIcon="@Icons.Material.Filled.Send"
                        OnClick="SubmitProposalAsync"
                        Disabled="_isSaving || _isLoading">
-                Submit for Checker Review (Maker)
+                Submit for Independent Review
             </MudButton>
         }
     </DialogActions>
@@ -423,7 +423,7 @@
     private MgWindowScheduleProposal? _pendingProposal;
     private List<MgWindowScheduleProposal> _history = new();
 
-    // Maker Proposal Input State
+    // Proposer Input State
     private DateTime? _openingDate;
     private TimeSpan? _openingTime;
     private DateTime? _closingDate;
@@ -433,7 +433,7 @@
     private string _justification = string.Empty;
     private string? _gazetteRef;
 
-    // Checker Adjudication Input State
+    // Reviewer Adjudication Input State
     private string? _adjudicationComments;
 
     // Current User Context
@@ -507,7 +507,7 @@
     {
         if (string.IsNullOrWhiteSpace(_justification))
         {
-            Snackbar.Add("Statutory justification / rationale is mandatory for Maker-Checker submission.", Severity.Warning);
+            Snackbar.Add("Statutory justification / rationale is mandatory when submitting a schedule proposal.", Severity.Warning);
             return;
         }
 
@@ -540,7 +540,7 @@
                 _currentUserId,
                 _currentUserName);
 
-            Snackbar.Add($"Window schedule proposal #{proposal.Id} submitted for Maker-Checker review.", Severity.Success);
+            Snackbar.Add($"Window schedule proposal #{proposal.Id} submitted for independent review.", Severity.Success);
             await LoadDataAsync();
         }
         catch (Exception ex)
@@ -587,7 +587,7 @@
 
         if (string.IsNullOrWhiteSpace(_adjudicationComments))
         {
-            Snackbar.Add("Checker decision comments are required when rejecting a proposal.", Severity.Warning);
+            Snackbar.Add("Reviewer decision comments are required when rejecting a proposal.", Severity.Warning);
             return;
         }
 

@@ -10,6 +10,8 @@ public class CaslUserContext
     public string Username { get; set; } = string.Empty;
     public List<string> Roles { get; set; } = new();
     public int? DefaultOrganisationId { get; set; }
+    public List<int> AssociatedOrganisationIds { get; set; } = new();
+    public List<int> AssociatedTrainingProviderIds { get; set; } = new();
     public bool IsAdmin { get; set; } = false;
     public HashSet<string> Permissions { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }
@@ -21,6 +23,7 @@ public interface ICaslAbilityService
     bool Can(CaslUserContext context, string action, string subject, int? targetOrganisationId = null);
     bool CanViewOrManage(CaslUserContext context, string subject, int? targetOrganisationId = null);
     bool IsOrganisationAccessible(CaslUserContext context, int targetOrganisationId);
+    bool CanSubmitLearnerAgreement(CaslUserContext context, int? targetOrganisationId = null, int? targetTrainingProviderId = null);
 }
 
 public class CaslAbilityService : ICaslAbilityService
@@ -57,12 +60,46 @@ public class CaslAbilityService : ICaslAbilityService
         var isAdmin = roles.Any(r => r.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase) || 
                                      r.Equals("Admin", StringComparison.OrdinalIgnoreCase));
 
+        var associatedOrgIds = new List<int>();
+        var associatedSdpIds = new List<int>();
+
+        if (user.DefaultOrganisationId.HasValue && user.DefaultOrganisationId.Value > 0)
+        {
+            associatedOrgIds.Add(user.DefaultOrganisationId.Value);
+        }
+
+        if (user.PersonId.HasValue && user.PersonId.Value > 0)
+        {
+            var orgContacts = await db.OrganisationContacts
+                .Where(oc => oc.PersonId == user.PersonId.Value && oc.IsActive)
+                .Select(oc => oc.OrganisationId)
+                .ToListAsync();
+            associatedOrgIds.AddRange(orgContacts);
+
+            var sdpContacts = await db.TrainingProviderContacts
+                .Where(tc => tc.PersonId == user.PersonId.Value && tc.IsActive)
+                .Select(tc => tc.TrainingProviderId)
+                .ToListAsync();
+            associatedSdpIds.AddRange(sdpContacts);
+        }
+
+        if (!string.IsNullOrWhiteSpace(user.Email))
+        {
+            var sdpByEmail = await db.TrainingProviderContacts
+                .Where(tc => tc.Email == user.Email && tc.IsActive)
+                .Select(tc => tc.TrainingProviderId)
+                .ToListAsync();
+            associatedSdpIds.AddRange(sdpByEmail);
+        }
+
         return new CaslUserContext
         {
             UserId = user.Id,
             Username = user.UserName ?? user.Email ?? "Unknown",
             Roles = roles,
             DefaultOrganisationId = user.DefaultOrganisationId,
+            AssociatedOrganisationIds = associatedOrgIds.Distinct().ToList(),
+            AssociatedTrainingProviderIds = associatedSdpIds.Distinct().ToList(),
             IsAdmin = isAdmin,
             Permissions = new HashSet<string>(perms, StringComparer.OrdinalIgnoreCase)
         };
@@ -106,7 +143,8 @@ public class CaslAbilityService : ICaslAbilityService
         {
             if (context.DefaultOrganisationId.HasValue && context.DefaultOrganisationId.Value > 0)
             {
-                if (context.DefaultOrganisationId.Value != targetOrganisationId.Value)
+                if (context.DefaultOrganisationId.Value != targetOrganisationId.Value &&
+                    !context.AssociatedOrganisationIds.Contains(targetOrganisationId.Value))
                 {
                     return false;
                 }
@@ -129,7 +167,36 @@ public class CaslAbilityService : ICaslAbilityService
     public bool IsOrganisationAccessible(CaslUserContext context, int targetOrganisationId)
     {
         if (context.IsAdmin) return true;
-        if (!context.DefaultOrganisationId.HasValue) return true;
-        return context.DefaultOrganisationId.Value == targetOrganisationId;
+        if (!context.DefaultOrganisationId.HasValue && context.AssociatedOrganisationIds.Count == 0) return true;
+        return (context.DefaultOrganisationId.HasValue && context.DefaultOrganisationId.Value == targetOrganisationId) ||
+               context.AssociatedOrganisationIds.Contains(targetOrganisationId);
+    }
+
+    public bool CanSubmitLearnerAgreement(CaslUserContext context, int? targetOrganisationId = null, int? targetTrainingProviderId = null)
+    {
+        if (context.IsAdmin) return true;
+
+        bool hasSubmitPermission = context.Permissions.Contains("Learners:Submit") ||
+                                   context.Permissions.Contains("Learners:Create") ||
+                                   context.Permissions.Contains("Learners:Manage");
+
+        if (!hasSubmitPermission) return false;
+
+        // If no specific employer or provider is targeted, basic permission check passed
+        if ((!targetOrganisationId.HasValue || targetOrganisationId.Value <= 0) &&
+            (!targetTrainingProviderId.HasValue || targetTrainingProviderId.Value <= 0))
+        {
+            return true;
+        }
+
+        // Target was specified: user must be associated with the Employer OR the Training Provider
+        bool isEmployerContact = targetOrganisationId.HasValue && targetOrganisationId.Value > 0 &&
+            ((context.DefaultOrganisationId.HasValue && context.DefaultOrganisationId.Value == targetOrganisationId.Value) ||
+             context.AssociatedOrganisationIds.Contains(targetOrganisationId.Value));
+
+        bool isSdpContact = targetTrainingProviderId.HasValue && targetTrainingProviderId.Value > 0 &&
+            context.AssociatedTrainingProviderIds.Contains(targetTrainingProviderId.Value);
+
+        return isEmployerContact || isSdpContact;
     }
 }

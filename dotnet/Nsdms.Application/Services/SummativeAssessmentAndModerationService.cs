@@ -99,7 +99,7 @@ public class SummativeAssessmentAndModerationService : ISummativeAssessmentAndMo
 
         if (report.InternalModeratorPersonId.HasValue && report.InternalModeratorPersonId.Value == assessorPersonId)
         {
-            throw new InvalidOperationException("Maker-Checker Violation: An assessor cannot be assigned as the internal moderator on the same assessment.");
+            throw new InvalidOperationException("Segregation of duties violation: An assessor cannot be assigned as the internal moderator on the same assessment.");
         }
 
         var assessor = await db.EtqaAssessors.FirstOrDefaultAsync(a => a.PersonId == assessorPersonId);

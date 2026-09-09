@@ -425,5 +425,186 @@ public class RolePermissionAndCaslTests
         var context4 = await caslService.GetUserContextAsync(55);
         Assert.True(caslService.Can(context4, "Verify", "Workplace"));
     }
+
+    [Fact]
+    public async Task LearnerAgreement_SdfAndSdpRoles_ShouldHaveSubmitPermissionsAndRoleNeutralNaming()
+    {
+        var (roleService, caslService, factory) = CreateServices();
+        await roleService.SeedDefaultRolePermissionsAsync();
+
+        var roles = await roleService.GetAllRolesAsync();
+        
+        // 1. SDF must have Learners:Submit
+        var sdfRole = await roleService.GetRoleByIdAsync(roles.First(r => r.Name == "SDF").Id);
+        Assert.NotNull(sdfRole);
+        Assert.Contains("Learners:Submit", sdfRole.PermissionClaims);
+        Assert.Contains("Learners:Withdraw", sdfRole.PermissionClaims);
+
+        // 2. TrainingProvider and SDP must have Learners:Submit
+        var tpRole = await roleService.GetRoleByIdAsync(roles.First(r => r.Name == "TrainingProvider").Id);
+        Assert.NotNull(tpRole);
+        Assert.Contains("Learners:Submit", tpRole.PermissionClaims);
+        Assert.Contains("Learners:Create", tpRole.PermissionClaims);
+
+        var sdpRole = await roleService.GetRoleByIdAsync(roles.First(r => r.Name == "SDP").Id);
+        Assert.NotNull(sdpRole);
+        Assert.Contains("Learners:Submit", sdpRole.PermissionClaims);
+
+        // 3. Verification Officer (CLO) must have Learners:Review and Learners:Verify
+        var cloRole = await roleService.GetRoleByIdAsync(roles.First(r => r.Name == "CLO").Id);
+        Assert.NotNull(cloRole);
+        Assert.Contains("Learners:Review", cloRole.PermissionClaims);
+        Assert.Contains("Learners:Verify", cloRole.PermissionClaims);
+
+        // 4. Approval Authority (ReviewCommittee) must have Learners:Approve
+        var committeeRole = await roleService.GetRoleByIdAsync(roles.First(r => r.Name == "ReviewCommittee").Id);
+        Assert.NotNull(committeeRole);
+        Assert.Contains("Learners:Approve", committeeRole.PermissionClaims);
+    }
+
+    [Fact]
+    public async Task LearnerAgreement_RelationshipScoping_ShouldAllowAssociatedSdfOrSdpContact()
+    {
+        var (roleService, caslService, factory) = CreateServices();
+        await roleService.SeedDefaultRolePermissionsAsync();
+
+        using var db = await factory.CreateDbContextAsync();
+
+        // Seed Employer & Training Provider
+        var employer = new Organisation { Id = 101, CompanyName = "Bell Equipment", SdlNumber = "L101010101" };
+        var sdp = new TrainingProvider { Id = 202, ProviderName = "Ekurhuleni Artisan Academy", AccreditationNumber = "ACC-202" };
+        db.Organisations.Add(employer);
+        db.TrainingProviders.Add(sdp);
+
+        // Seed People
+        var sdfPerson = new Person { Id = 301, FirstName = "Sipho", LastName = "Dlamini", RsaIdNumber = "8001015009087" };
+        var sdpPerson = new Person { Id = 302, FirstName = "Nomvula", LastName = "Khumalo", RsaIdNumber = "8502025009088" };
+        var unaffiliatedPerson = new Person { Id = 303, FirstName = "John", LastName = "Doe", RsaIdNumber = "9003035009089" };
+        db.People.AddRange(sdfPerson, sdpPerson, unaffiliatedPerson);
+
+        // Link SDF Person to Employer
+        db.OrganisationContacts.Add(new OrganisationContact
+        {
+            OrganisationId = employer.Id,
+            PersonId = sdfPerson.Id,
+            ContactTypeCode = "SDF",
+            IsActive = true
+        });
+
+        // Link SDP Person to Provider
+        db.TrainingProviderContacts.Add(new TrainingProviderContact
+        {
+            TrainingProviderId = sdp.Id,
+            PersonId = sdpPerson.Id,
+            Email = "nomvula@ekurhuleni-academy.co.za",
+            ContactDesignation = "Primary SDP Contact",
+            IsActive = true
+        });
+
+        // Users
+        var sdfUser = new ApplicationUser 
+        { 
+            Id = 401, 
+            UserName = "sipho_sdf", 
+            NormalizedUserName = "SIPHO_SDF",
+            Email = "sipho@bell.co.za", 
+            NormalizedEmail = "SIPHO@BELL.CO.ZA",
+            PersonId = sdfPerson.Id 
+        };
+        var sdpUser = new ApplicationUser 
+        { 
+            Id = 402, 
+            UserName = "nomvula_sdp", 
+            NormalizedUserName = "NOMVULA_SDP",
+            Email = "nomvula@ekurhuleni-academy.co.za", 
+            NormalizedEmail = "NOMVULA@EKURHULENI-ACADEMY.CO.ZA",
+            PersonId = sdpPerson.Id 
+        };
+        var outsiderUser = new ApplicationUser 
+        { 
+            Id = 403, 
+            UserName = "outsider", 
+            NormalizedUserName = "OUTSIDER",
+            Email = "outsider@other.co.za", 
+            NormalizedEmail = "OUTSIDER@OTHER.CO.ZA",
+            PersonId = unaffiliatedPerson.Id 
+        };
+        db.Users.AddRange(sdfUser, sdpUser, outsiderUser);
+        await db.SaveChangesAsync();
+
+        var roles = await roleService.GetAllRolesAsync();
+        var sdfRoleId = roles.First(r => r.Name == "SDF").Id;
+        var sdpRoleId = roles.First(r => r.Name == "SDP").Id;
+
+        db.UserRoles.Add(new IdentityUserRole<int> { UserId = sdfUser.Id, RoleId = sdfRoleId });
+        db.UserRoles.Add(new IdentityUserRole<int> { UserId = sdpUser.Id, RoleId = sdpRoleId });
+        db.UserRoles.Add(new IdentityUserRole<int> { UserId = outsiderUser.Id, RoleId = sdfRoleId }); // has SDF claim but not linked to this org
+        await db.SaveChangesAsync();
+
+        // Act & Assert 1: SDF can submit for employer 101
+        var sdfContext = await caslService.GetUserContextAsync(sdfUser.Id);
+        Assert.Contains(101, sdfContext.AssociatedOrganisationIds);
+        Assert.True(caslService.CanSubmitLearnerAgreement(sdfContext, targetOrganisationId: 101, targetTrainingProviderId: 202));
+        // SDF cannot submit for unlinked employer 999
+        Assert.False(caslService.CanSubmitLearnerAgreement(sdfContext, targetOrganisationId: 999, targetTrainingProviderId: null));
+
+        // Act & Assert 2: SDP Contact can submit for training provider 202
+        var sdpContext = await caslService.GetUserContextAsync(sdpUser.Id);
+        Assert.Contains(202, sdpContext.AssociatedTrainingProviderIds);
+        Assert.True(caslService.CanSubmitLearnerAgreement(sdpContext, targetOrganisationId: 101, targetTrainingProviderId: 202));
+        // SDP Contact cannot submit for unlinked provider 888
+        Assert.False(caslService.CanSubmitLearnerAgreement(sdpContext, targetOrganisationId: null, targetTrainingProviderId: 888));
+
+        // Act & Assert 3: Outsider with SDF role cannot submit for employer 101 or provider 202 because they are not affiliated
+        var outsiderContext = await caslService.GetUserContextAsync(outsiderUser.Id);
+        Assert.Empty(outsiderContext.AssociatedOrganisationIds);
+        Assert.Empty(outsiderContext.AssociatedTrainingProviderIds);
+        // Outsider has no affiliation with employer 101 or provider 202
+        Assert.False(caslService.CanSubmitLearnerAgreement(outsiderContext, targetOrganisationId: 101, targetTrainingProviderId: 202));
+    }
+
+    [Fact]
+    public async Task LearnerAgreement_WorkflowDefinition_ShouldUseRoleNeutralFunctionalNomenclature()
+    {
+        var (_, _, factory) = CreateServices();
+        using var context = await factory.CreateDbContextAsync();
+
+        await WorkflowDefinitionSeeder.SeedWorkflowDefinitionsAsync(context);
+
+        var lrn = await context.WorkflowDefinitions
+            .Include(w => w.States)
+            .Include(w => w.Transitions)
+            .FirstOrDefaultAsync(w => w.Code == "LRN");
+
+        Assert.NotNull(lrn);
+        Assert.True(lrn.States.Count >= 8);
+
+        // Verify role-neutral functional aliases on all active states
+        var draftState = lrn.States.First(s => s.StateCode == "DRAFT");
+        Assert.Equal("Proposer / Submitter", draftState.AllowedGroupRole);
+
+        var submittedState = lrn.States.First(s => s.StateCode == "SUBMITTED");
+        Assert.Equal("Verification Officer", submittedState.AllowedGroupRole);
+
+        var resubmitState = lrn.States.First(s => s.StateCode == "REJECTED_RESUBMIT");
+        Assert.Equal("Proposer / Submitter", resubmitState.AllowedGroupRole);
+
+        var resubmittedState = lrn.States.First(s => s.StateCode == "RESUBMITTED");
+        Assert.Equal("Verification Officer", resubmittedState.AllowedGroupRole);
+
+        var recommendedState = lrn.States.First(s => s.StateCode == "RECOMMENDED");
+        Assert.Equal("Approval Authority", recommendedState.AllowedGroupRole);
+
+        // Verify that NO state has legacy hardcoded job titles
+        foreach (var state in lrn.States)
+        {
+            if (state.AllowedGroupRole != null)
+            {
+                Assert.DoesNotContain("Primary SDF", state.AllowedGroupRole);
+                Assert.DoesNotContain("CLO", state.AllowedGroupRole);
+                Assert.DoesNotContain("Quality Assurance Manager", state.AllowedGroupRole);
+            }
+        }
+    }
 }
 

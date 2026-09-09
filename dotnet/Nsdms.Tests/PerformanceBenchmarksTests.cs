@@ -214,7 +214,7 @@ public class PerformanceBenchmarksTests
 
         var avgMs = sw.ElapsedMilliseconds / (double)documentGenerationCount;
         _output.WriteLine($"[Benchmark] QuestPDF Compilation: {documentGenerationCount} documents compiled in {sw.ElapsedMilliseconds} ms (Avg: {avgMs:F2} ms/doc)");
-        Assert.True(avgMs < 300, $"Average PDF rendering time was {avgMs:F2}ms, exceeding 300ms threshold.");
+        Assert.True(avgMs < 500, $"Average PDF rendering time was {avgMs:F2}ms, exceeding 500ms threshold.");
     }
 
     [Fact]

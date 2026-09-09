@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-09 09:46:47 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 231
+> **Generated:** 2026-09-09 21:20:31 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 232
 
 ---
 
@@ -92,6 +92,7 @@
 | `dbo` | [`LevyFile`](#levyfile) | `LevyFile` | 16 | `Id` | Monthly SARS Skills Development Levy file import batches. |
 | `dbo` | [`LevyFileLine`](#levyfileline) | `LevyFileLine` | 21 | `Id` | Individual employer monthly SARS levy transaction breakdown. |
 | `dbo` | [`MandatoryGrantDisbursement`](#mandatorygrantdisbursement) | `MandatoryGrantDisbursement` | 17 | `Id` | Mandatory Grant 20% Rebate Payouts for compliant employers submitting WSP/ATR. |
+| `dbo` | [`MgWindowScheduleProposal`](#mgwindowscheduleproposal) | `MgWindowScheduleProposal` | 20 | `Id` | Mandatory Grant (MG / WSP / ATR) Window Schedule Proposal governed by Dual Authorisation Control and Segregation of Duties. A Proposer prepares and submits a schedule change proposal, and an independent Reviewer reviews and adjudicates. |
 | `dbo` | [`MoaClause`](#moaclause) | `MoaClause` | 11 | `Id` | Reusable atomic legal clause in the MerSETA clause library. |
 | `dbo` | [`MoaExecutionSnapshot`](#moaexecutionsnapshot) | `MoaExecutionSnapshot` | 14 | `Id` | Cryptographically frozen snapshot of an issued MoA contract for legal non-repudiation and audit defense. |
 | `dbo` | [`MoaTemplate`](#moatemplate) | `MoaTemplate` | 17 | `Id` | Master legal template defining an MoA contract structure for a specific financial year and grant policy. |
@@ -3940,6 +3941,46 @@
 | `IX_MandatoryGrantDisbursement_DisbursementStatusCode` | `DisbursementStatusCode` | No |
 | `IX_MandatoryGrantDisbursement_OrganisationId` | `OrganisationId` | No |
 | `IX_MandatoryGrantDisbursement_WspSubmissionId` | `WspSubmissionId` | No |
+
+---
+
+### <a id="mgwindowscheduleproposal"></a> `dbo.MgWindowScheduleProposal`
+
+**Description:** Mandatory Grant (MG / WSP / ATR) Window Schedule Proposal governed by Dual Authorisation Control and Segregation of Duties. A Proposer prepares and submits a schedule change proposal, and an independent Reviewer reviews and adjudicates.  
+**CLR Model:** `Nsdms.Domain.Entities.MgWindowScheduleProposal`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AdjudicatedAt` | `datetime2` | NULL |  | Timestamp when the Checker adjudicated the proposal. |
+| `AdjudicatedByUserId` | `nvarchar(max)` | NULL |  | User ID of the Reviewer / Approver who adjudicated this proposal. Must be distinct from ProposedByUserId per Segregation of Duties. |
+| `AdjudicatedByUserName` | `nvarchar(max)` | NULL |  | Display name of the Checker / Approver. |
+| `AdjudicationComments` | `nvarchar(max)` | NULL |  | Checker decision comments or rejection reasons. |
+| `AppliedToSystemConfig` | `bit` | **NOT NULL** |  | Whether this proposal was successfully activated and written to SystemConfig. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `GazetteOrResolutionRef` | `nvarchar(max)` | NULL |  | Statutory authority, resolution reference, Government Gazette, or CEO circular reference. |
+| `Justification` | `nvarchar(max)` | **NOT NULL** |  | Mandatory administrative justification or rationale for this schedule proposal. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `ProposedAt` | `datetime2` | **NOT NULL** |  | Timestamp when this proposal was submitted for independent review. |
+| `ProposedByUserId` | `nvarchar(max)` | **NOT NULL** |  | User ID of the Proposer who prepared and submitted this proposal. |
+| `ProposedByUserName` | `nvarchar(max)` | **NOT NULL** |  | Display name of the Proposer. |
+| `ProposedClosingDate` | `datetime2` | **NOT NULL** |  | Proposed statutory closing deadline date and time under Regulation 4(1). |
+| `ProposedExtensionCutoffDate` | `datetime2` | **NOT NULL** |  | Proposed deadline for filing statutory extension requests under Regulation 4(2). |
+| `ProposedOpeningDate` | `datetime2` | **NOT NULL** |  | Proposed opening date and time when the submission portal opens for employers. |
+| `SchemeYear` | `int` | **NOT NULL** |  | Financial scheme year (e.g. 2026). |
+| `Status` | `nvarchar(max)` | **NOT NULL** |  | Workflow status: "PendingReview", "Approved", "Rejected", "Withdrawn". |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_MgWindowScheduleProposal_SchemeYear` | `SchemeYear` | No |
+| `IX_MgWindowScheduleProposal_Status` | `Status` | No |
 
 ---
 

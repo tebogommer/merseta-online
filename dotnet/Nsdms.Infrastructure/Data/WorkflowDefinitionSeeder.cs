@@ -178,9 +178,9 @@ public static class WorkflowDefinitionSeeder
             .Include(d => d.Transitions)
             .FirstOrDefaultAsync(d => d.Code == "LRN");
 
-        if (existingLrn != null && existingLrn.States.Count < 8)
+        if (existingLrn != null && (existingLrn.States.Count < 8 || existingLrn.States.Any(s => s.AllowedGroupRole != null && (s.AllowedGroupRole.Contains("SDF") || s.AllowedGroupRole.Contains("CLO") || s.AllowedGroupRole.Contains("Manager")))))
         {
-            // Remove legacy simplified 3-state definition to allow re-seeding full 8-state statutory workflow
+            // Remove legacy or job-titled definition to allow re-seeding full 8-state statutory workflow with role-neutral functional aliases
             context.WorkflowTransitions.RemoveRange(existingLrn.Transitions);
             context.WorkflowStates.RemoveRange(existingLrn.States);
             context.WorkflowDefinitions.Remove(existingLrn);
@@ -201,11 +201,11 @@ public static class WorkflowDefinitionSeeder
             context.WorkflowDefinitions.Add(lrnDef);
             await context.SaveChangesAsync();
 
-            var lrnS1 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "DRAFT", StateName = "Application Started (Not Submitted)", StepOrder = 1, IsInitial = true, AllowedGroupRole = "Primary SDF" };
-            var lrnS2 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "SUBMITTED", StateName = "Application Submitted (Under Review)", StepOrder = 2, AllowedGroupRole = "Client Liaison Officer (CLO)" };
-            var lrnS3 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "REJECTED_RESUBMIT", StateName = "Rejected for Resubmission", StepOrder = 3, AllowedGroupRole = "Primary SDF" };
-            var lrnS4 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "RESUBMITTED", StateName = "Resubmitted Application", StepOrder = 4, AllowedGroupRole = "Client Liaison Officer (CLO)" };
-            var lrnS5 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "RECOMMENDED", StateName = "Recommended for Registration", StepOrder = 5, AllowedGroupRole = "Quality Assurance Manager" };
+            var lrnS1 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "DRAFT", StateName = "Application Started (Not Submitted)", StepOrder = 1, IsInitial = true, AllowedGroupRole = "Proposer / Submitter" };
+            var lrnS2 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "SUBMITTED", StateName = "Application Submitted (Under Review)", StepOrder = 2, AllowedGroupRole = "Verification Officer" };
+            var lrnS3 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "REJECTED_RESUBMIT", StateName = "Rejected for Resubmission", StepOrder = 3, AllowedGroupRole = "Proposer / Submitter" };
+            var lrnS4 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "RESUBMITTED", StateName = "Resubmitted Application", StepOrder = 4, AllowedGroupRole = "Verification Officer" };
+            var lrnS5 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "RECOMMENDED", StateName = "Recommended for Registration", StepOrder = 5, AllowedGroupRole = "Approval Authority" };
             var lrnS6 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "REGISTERED", StateName = "Registered (Approved by merSETA)", StepOrder = 6, IsTerminal = true };
             var lrnS7 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "REJECTED", StateName = "Application Rejected", StepOrder = 7, IsTerminal = true };
             var lrnS8 = new WorkflowState { WorkflowDefinitionId = lrnDef.Id, StateCode = "WITHDRAWN", StateName = "Application Withdrawn", StepOrder = 8, IsTerminal = true };
@@ -608,7 +608,7 @@ public static class WorkflowDefinitionSeeder
         if (sampleLearner != null && !await context.WorkflowInstances.AnyAsync(i => i.WorkflowDefinition!.Code == "LRN" && i.EntityId == sampleLearner.Id))
         {
             var lrnDef = await context.WorkflowDefinitions.FirstAsync(d => d.Code == "LRN");
-            var lrnS2 = await context.WorkflowStates.FirstAsync(s => s.WorkflowDefinitionId == lrnDef.Id && s.StateCode == "QA_CHECK");
+            var lrnS2 = await context.WorkflowStates.FirstAsync(s => s.WorkflowDefinitionId == lrnDef.Id && s.StateCode == "SUBMITTED");
 
             var lrnInstance = new WorkflowInstance
             {
@@ -616,7 +616,7 @@ public static class WorkflowDefinitionSeeder
                 EntityId = sampleLearner.Id,
                 EntityTitle = $"Learner Registration: {sampleLearner.QualificationTitle}",
                 EntityReferenceNumber = sampleLearner.LearnerContractNumber,
-                CurrentWorkflowStateId = lrnS2.Id, // Under QA Review
+                CurrentWorkflowStateId = lrnS2.Id, // Under Verification
                 InitiatorUserId = "admin@merseta.org.za",
                 InitiatorName = "Denel Dynamics Training Dept",
                 InitiatedDate = DateTime.UtcNow.AddDays(-5)
@@ -629,7 +629,7 @@ public static class WorkflowDefinitionSeeder
                 WorkflowInstanceId = lrnInstance.Id,
                 TaskTitle = "Verify Apprentice Contract & RSA ID Verification",
                 TaskDescription = "Check apprentice biometric details, RSA ID validation, and provider accreditation alignment.",
-                AssignedGroupRole = "Client Liaison Officer (CLO)",
+                AssignedGroupRole = "Verification Officer",
                 TaskStatus = "Open",
                 Priority = "Normal",
                 DueDate = DateTime.UtcNow.AddDays(2),

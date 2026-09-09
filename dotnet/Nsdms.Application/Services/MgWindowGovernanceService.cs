@@ -147,7 +147,7 @@ public class MgWindowGovernanceService : IMgWindowGovernanceService
 
         if (pending != null)
         {
-            throw new InvalidOperationException($"A window schedule proposal (ID #{pending.Id}) is already pending Maker-Checker review for Scheme Year {schemeYear}. Please adjudicate or withdraw the existing proposal first.");
+            throw new InvalidOperationException($"A window schedule proposal (ID #{pending.Id}) is already pending independent review for Scheme Year {schemeYear}. Please adjudicate or withdraw the existing proposal first.");
         }
 
         var proposal = new MgWindowScheduleProposal
@@ -196,13 +196,13 @@ public class MgWindowGovernanceService : IMgWindowGovernanceService
             throw new InvalidOperationException($"Proposal #{proposalId} is in status '{proposal.Status}' and cannot be adjudicated.");
         }
 
-        // MAKER-CHECKER SEGREGATION OF DUTIES INVARIANT:
-        // The Maker (proposer) cannot act as the Checker (approver/rejecter)
+        // SEGREGATION OF DUTIES INVARIANT (PFMA Dual Authorisation):
+        // The Proposer cannot act as the Authorising Approver
         if (!string.IsNullOrWhiteSpace(proposal.ProposedByUserId) &&
             string.Equals(proposal.ProposedByUserId, checkerUserId, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                "Maker-Checker Segregation of Duties violation: The officer who submitted this window schedule proposal cannot adjudicate their own proposal. An independent checker/approver is required.");
+                "Segregation of Duties violation: The officer who submitted this window schedule proposal cannot adjudicate their own proposal. An independent reviewer or authorising official is required.");
         }
 
         var beforeState = new

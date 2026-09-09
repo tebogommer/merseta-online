@@ -128,7 +128,7 @@ public class LearnerStpRiskEngine : ILearnerStpRiskEngine
 
             foreach (var passed in ruleOutcome.PassedRuleNames)
             {
-                compliantFactors.Add($"Verified compliant rule gate: {passed}");
+                compliantFactors.Add($"Verified compliant statutory rule: {passed}");
             }
         }
         else

@@ -445,10 +445,10 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         var existing = await db.WorkplaceApprovals.FindAsync(id);
         if (existing == null) throw new KeyNotFoundException($"WorkplaceApproval with ID {id} not found.");
 
-        // Maker-Checker Segregation of Duties Enforcement (PFMA / Signed Spec Section 4.2.7)
+        // Segregation of Duties Enforcement (PFMA / Signed Spec Section 4.2.7)
         if (!allowSelfApprovalOverride && decisionMakerPersonId.HasValue && existing.VerifiedByPersonId.HasValue && decisionMakerPersonId.Value == existing.VerifiedByPersonId.Value)
         {
-            throw new InvalidOperationException("Maker-Checker Segregation of Duties violation: The Verification Officer who inspected this workplace cannot act as the Approval Authority. Another authorised committee member or manager must evaluate and approve.");
+            throw new InvalidOperationException("Segregation of Duties violation: The Verification Officer who inspected this workplace cannot act as the Approval Authority. Another authorised committee member or manager must evaluate and approve.");
         }
 
         var beforeState = new { existing.ApprovalStatusCode, existing.ApprovalDate };

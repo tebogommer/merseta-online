@@ -151,7 +151,7 @@ else
                                            Color="Color.Success"
                                            Class="mb-2" />
                                 <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">
-                                    When inactive, existing instances can still be completed, but new entity lifecycles cannot be initiated with this blueprint.
+                                    When inactive, existing instances can still be completed, but new lifecycles cannot be initiated with this process definition.
                                 </MudText>
                             </div>
 
@@ -176,9 +176,9 @@ else
         <MudTabPanel Text="Lifecycle States" Icon="@Icons.Material.Filled.LinearScale">
             <div class="d-flex align-center justify-space-between flex-wrap gap-2 mb-4">
                 <div>
-                    <MudText Typo="Typo.h6">Sequential Lifecycle Stages &amp; Gates</MudText>
+                    <MudText Typo="Typo.h6">Sequential Lifecycle Stages &amp; Requirements</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        Configure ordered step gates, initial draft entry points, completed / finalised stages, and authorized actor roles.
+                        Configure ordered approval stages, initial draft entry points, completed / finalised stages, and authorized actor roles.
                     </MudText>
                 </div>
                 <MudButton Variant="Variant.Filled"
@@ -192,7 +192,7 @@ else
             @if (!_definition.States.Any())
             {
                 <MudAlert Severity="Severity.Warning" Class="rounded-lg">
-                    This process lifecycle has no configured stages. Click <strong>Add State</strong> to create your first step gate.
+                    This process lifecycle has no configured stages. Click <strong>Add State</strong> to create your first lifecycle stage.
                 </MudAlert>
             }
             else
@@ -286,7 +286,7 @@ else
                 <div>
                     <MudText Typo="Typo.h6">Authorized State Transitions &amp; Action Triggers</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        Define allowable paths between states, action bridge button styling, CASL permission gates, and entity status code synchronizations.
+                        Define allowable paths between stages, action button styling, role authorisation rules, and entity status code synchronizations.
                     </MudText>
                 </div>
                 <MudButton Variant="Variant.Filled"
@@ -317,7 +317,7 @@ else
                         <MudTh>Originating State (From)</MudTh>
                         <MudTh>Action Button Trigger</MudTh>
                         <MudTh>Destination State (To)</MudTh>
-                        <MudTh>Permission Gate</MudTh>
+                        <MudTh>Authorisation Rule</MudTh>
                         <MudTh>Audit Remarks</MudTh>
                         <MudTh>Pushed Entity Status</MudTh>
                         <MudTh Style="text-align: right;">Actions</MudTh>
@@ -386,18 +386,18 @@ else
             }
         </MudTabPanel>
 
-        <!-- Tab 4: Process Blueprint Visual Graph -->
+        <!-- Tab 4: Process Lifecycle Visual Graph -->
         <MudTabPanel Text="Visual Flowchart" Icon="@Icons.Material.Filled.AccountTree">
             <WorkflowGraphViewer States="@_definition.States.ToList()"
                                  Transitions="@_definition.Transitions.ToList()"
                                  OnStateSelected="HandleGraphStateSelected" />
         </MudTabPanel>
 
-        <!-- Tab 5: Document Gate Requirements -->
-        <MudTabPanel Text="Document Gate Rules" Icon="@Icons.Material.Filled.FactCheck">
+        <!-- Tab 5: Mandatory Document Requirements -->
+        <MudTabPanel Text="Mandatory Document Rules" Icon="@Icons.Material.Filled.FactCheck">
             <div class="d-flex align-center justify-space-between flex-wrap gap-2 mb-4">
                 <div>
-                    <MudText Typo="Typo.h6">Mandatory Document Evidence Gates</MudText>
+                    <MudText Typo="Typo.h6">Mandatory Document Evidence Requirements</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary">
                         Enforce required document uploads (e.g. Certified ID, Proof of Banking, Tool Lists) before workflow advancement.
                     </MudText>
@@ -407,14 +407,14 @@ else
                            StartIcon="@Icons.Material.Filled.Add"
                            OnClick="OpenAddRequirementDialog"
                            Disabled="@(!_definition.States.Any())">
-                    Add Gate Rule
+                    Add Document Rule
                 </MudButton>
             </div>
 
             @if (!_requirementRules.Any())
             {
                 <MudAlert Severity="Severity.Info" Class="rounded-lg">
-                    No document requirement gates are configured for process <code>@_definition.Code</code>. Advancing across states will not require mandatory document verification.
+                    No document requirements are configured for process <code>@_definition.Code</code>. Advancing across stages will not require mandatory document verification.
                 </MudAlert>
             }
             else
@@ -596,7 +596,7 @@ else
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading blueprint: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error loading process lifecycle: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -823,7 +823,7 @@ else
             ["ProcessCode"] = _definition.Code
         };
         var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
-        var dialog = await DialogService.ShowAsync<WorkflowRequirementDialog>("Add Document Requirement Gate", parameters, options);
+        var dialog = await DialogService.ShowAsync<WorkflowRequirementDialog>("Add Document Requirement", parameters, options);
         var result = await dialog.Result;
 
         if (result != null && !result.Canceled)
@@ -843,7 +843,7 @@ else
             ["ProcessCode"] = _definition.Code
         };
         var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
-        var dialog = await DialogService.ShowAsync<WorkflowRequirementDialog>("Edit Document Requirement Gate", parameters, options);
+        var dialog = await DialogService.ShowAsync<WorkflowRequirementDialog>("Edit Document Requirement", parameters, options);
         var result = await dialog.Result;
 
         if (result != null && !result.Canceled)
@@ -855,7 +855,7 @@ else
     private async Task DeleteRequirementAsync(DocumentRequirementRule rule)
     {
         var confirmed = await DialogService.ShowMessageBoxAsync(
-            "Confirm Gate Deletion",
+            "Confirm Requirement Deletion",
             $"Are you sure you want to remove the document requirement for '{rule.DocumentTypeName}'?",
             yesText: "Delete",
             cancelText: "Cancel");
@@ -865,7 +865,7 @@ else
             var success = await WorkflowService.DeleteDocumentRequirementAsync(rule.Id, "admin@merseta.org.za", "System Administrator");
             if (success)
             {
-                Snackbar.Add($"Document requirement gate removed.", Severity.Success);
+                Snackbar.Add($"Document requirement removed.", Severity.Success);
                 await LoadBlueprintAsync();
             }
         }

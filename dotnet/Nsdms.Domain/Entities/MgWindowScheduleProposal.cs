@@ -4,8 +4,8 @@ using Nsdms.Domain.Common;
 namespace Nsdms.Domain.Entities;
 
 /// <summary>
-/// Mandatory Grant (MG / WSP / ATR) Window Schedule Proposal governed by Maker-Checker Segregation of Duties.
-/// A Maker prepares and submits a schedule change proposal, and an independent Checker reviews and adjudicates.
+/// Mandatory Grant (MG / WSP / ATR) Window Schedule Proposal governed by Dual Authorisation Control and Segregation of Duties.
+/// A Proposer prepares and submits a schedule change proposal, and an independent Reviewer reviews and adjudicates.
 /// </summary>
 [Table("MgWindowScheduleProposal")]
 public class MgWindowScheduleProposal : BaseEntity
@@ -46,22 +46,22 @@ public class MgWindowScheduleProposal : BaseEntity
     public string Status { get; set; } = "PendingReview";
 
     /// <summary>
-    /// User ID of the Maker who prepared and submitted this proposal.
+    /// User ID of the Proposer who prepared and submitted this proposal.
     /// </summary>
     public string ProposedByUserId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Display name of the Maker.
+    /// Display name of the Proposer.
     /// </summary>
     public string ProposedByUserName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Timestamp when this proposal was submitted for Maker-Checker review.
+    /// Timestamp when this proposal was submitted for independent review.
     /// </summary>
     public DateTime ProposedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// User ID of the Checker / Approver who adjudicated this proposal.
+    /// User ID of the Reviewer / Approver who adjudicated this proposal.
     /// Must be distinct from ProposedByUserId per Segregation of Duties.
     /// </summary>
     public string? AdjudicatedByUserId { get; set; }
