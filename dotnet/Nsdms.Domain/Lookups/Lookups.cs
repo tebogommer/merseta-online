@@ -321,10 +321,33 @@ public class BursaryFundingType : BaseLookupType { }
 public class GrantTypeType : BaseLookupType { }
 
 /// <summary>
-/// Targeted skills development intervention categories.
+/// Stakeholder institutional and legal eligibility classifications for Discretionary Grants.
+/// (e.g. Levy Paying Employer, Public TVET College, Private SDP, University, NGO/CBO, Trade Union).
+/// </summary>
+[Table("StakeholderEligibilityType", Schema = "lookup")]
+public class StakeholderEligibilityType : BaseLookupType { }
+
+/// <summary>
+/// Targeted skills development intervention categories (both PIVOTAL and Non-PIVOTAL).
 /// </summary>
 [Table("InterventionType", Schema = "lookup")]
-public class InterventionType : BaseLookupType { }
+public class InterventionType : BaseLookupType
+{
+    /// <summary>
+    /// Indicates whether this intervention is PIVOTAL (qualification/credit bearing) or Non-PIVOTAL (project/equipment/capacity).
+    /// </summary>
+    public bool IsPivotal { get; set; } = true;
+
+    /// <summary>
+    /// Functional grouping category (e.g. PIVOTAL, NON_PIVOTAL, STRATEGIC_PROJECT, INFRASTRUCTURE).
+    /// </summary>
+    public string? Category { get; set; }
+
+    /// <summary>
+    /// Standard benchmark or statutory unit cost norm in ZAR (if applicable).
+    /// </summary>
+    public decimal DefaultUnitCost { get; set; } = 0m;
+}
 
 /// <summary>
 /// Employer on-site inspection and monitoring visit activity types.

@@ -49,9 +49,14 @@ builder.Services.AddAuthentication(options =>
 });
 builder.Services.AddAuthorization();
 
-// Add Razor components with Interactive Server mode
+// Add Razor components with Interactive Server mode and tuned circuit resilience
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents(options =>
+    {
+        options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(15);
+        options.DisconnectedCircuitMaxRetained = 2000;
+        options.DetailedErrors = builder.Environment.IsDevelopment();
+    });
 
 // Database & Interceptors
 builder.Services.AddSingleton<AuditableEntityInterceptor>();
@@ -315,6 +320,19 @@ builder.Services.AddScoped<ISlaMonitoringService, Nsdms.Infrastructure.Services.
 
 // Background Scheduler Hosted Service (Off by default)
 builder.Services.AddHostedService<Nsdms.Infrastructure.Services.BackgroundSchedulerHostedService>();
+
+// Sprint 1 & 2: Background Job Queue Pipeline & Processing Worker
+builder.Services.AddSingleton<IBackgroundJobQueue, InMemoryBackgroundJobQueue>();
+builder.Services.AddHostedService<BackgroundJobProcessingWorker>();
+
+// Client-Side Draft State Hydration
+builder.Services.AddScoped<IFormDraftService, Nsdms.Web.Services.FormDraftService>();
+
+// SQL Server AuditLog Partitioning & Archival Service
+builder.Services.AddScoped<IAuditLogArchivalService, AuditLogArchivalService>();
+
+// Production APM & Native OpenTelemetry Prometheus Metrics Exporter
+builder.Services.AddScoped<IMetricsScraperService, MetricsScraperService>();
 
 var app = builder.Build();
 
@@ -634,6 +652,61 @@ app.MapPost("/api/auth/logout", async (HttpContext context) =>
     return Results.Redirect("/login?loggedOut=true");
 });
 
+// --- Sprint 1 & 2: Background Jobs, Metrics & Archival Endpoints ---
+app.MapGet("/metrics", async (IMetricsScraperService metricsService, CancellationToken ct) =>
+{
+    var text = await metricsService.GetPrometheusMetricsTextAsync(ct);
+    return Results.Content(text, "text/plain; version=0.0.4; charset=utf-8");
+});
+
+app.MapGet("/api/jobs/{id:guid}/status", (Guid id, IBackgroundJobQueue jobQueue) =>
+{
+    var job = jobQueue.GetJob(id);
+    return job != null ? Results.Ok(new
+    {
+        job.JobId,
+        job.JobType,
+        job.Description,
+        Status = job.Status.ToString(),
+        job.ProgressPercentage,
+        job.CurrentStep,
+        job.CreatedAt,
+        job.StartedAt,
+        job.CompletedAt,
+        job.ResultDownloadUrl,
+        job.ErrorMessage
+    }) : Results.NotFound(new { message = $"Job #{id} not found." });
+});
+
+app.MapGet("/api/jobs/{id:guid}/download", (Guid id, IBackgroundJobQueue jobQueue) =>
+{
+    var job = jobQueue.GetJob(id);
+    if (job == null) return Results.NotFound(new { message = $"Job #{id} not found." });
+    if (job.Status != BackgroundJobStatus.Completed || job.ResultData == null)
+        return Results.BadRequest(new { message = $"Job #{id} is not completed or has no binary data." });
+
+    return Results.File(job.ResultData, job.ResultContentType ?? "application/pdf", job.ResultFileName ?? $"JobResult_{id}.pdf");
+});
+
+app.MapPost("/api/documents/async-generate", async (AsyncDocumentRequest req, IBackgroundJobQueue jobQueue, HttpContext httpContext) =>
+{
+    var user = httpContext.User.Identity?.Name ?? "ANONYMOUS";
+    var ticket = await jobQueue.EnqueueDocumentGenerationAsync(req.DocumentType, req.RecordId, user, req.FileName);
+    return Results.Accepted($"/api/jobs/{ticket.JobId}/status", new
+    {
+        ticket.JobId,
+        ticket.Description,
+        Status = ticket.Status.ToString(),
+        StatusUrl = $"/api/jobs/{ticket.JobId}/status"
+    });
+}).RequireAuthorization();
+
+app.MapGet("/api/admin/audit-logs/archival-metrics", async (IAuditLogArchivalService archivalService, CancellationToken ct) =>
+{
+    var metrics = await archivalService.GetArchivalMetricsAsync(ct);
+    return Results.Ok(metrics);
+}).RequireAuthorization();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
@@ -704,6 +777,12 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase41WspExtensionRequest", () => Phase15WspExtensionRequestMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase42DocumentVerification", () => Phase42DocumentVerificationAndRejectionReasonsMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase43MgWindowMakerChecker", () => Phase43MgWindowMakerCheckerMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase44EnterprisePerformanceAndIndexing", () => Phase44EnterprisePerformanceAndIndexingMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase45AuditLogPartitioning", () => Phase45AuditLogPartitioningMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase46DgFundingWindowGovernance", () => Phase46DgFundingWindowGovernanceMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase47DgWindowConfigurationAndBlueprint", () => Phase47DgWindowConfigurationAndBlueprintMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase48SarsLevySetBasedPromotion", () => Phase48SarsLevySetBasedPromotionMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase49GrantApplicationCompositeStructure", () => Phase49GrantApplicationCompositeStructureMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
     RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
     RunMigrator("SystemConfigs", () => scope.ServiceProvider.GetRequiredService<ISystemConfigurationService>().SeedDefaultConfigsAsync().GetAwaiter().GetResult());
@@ -713,3 +792,5 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+public record AsyncDocumentRequest(string DocumentType, int RecordId, string? FileName = null);

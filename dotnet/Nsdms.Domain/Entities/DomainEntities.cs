@@ -412,9 +412,69 @@ public class GrantApplication : BaseEntity
     public string? WspExemptionReason { get; set; }
 
     /// <summary>
+    /// Narrative project description outlining the strategic initiative.
+    /// </summary>
+    public string? ProjectDescription { get; set; }
+
+    /// <summary>
+    /// Narrative project purpose answering "What do you want to do?".
+    /// </summary>
+    public string? Purpose { get; set; }
+
+    /// <summary>
+    /// Narrative project outcomes answering "What do you want to achieve with this project?".
+    /// </summary>
+    public string? Outcomes { get; set; }
+
+    /// <summary>
+    /// Narrative project benefits answering "What will the benefits be and who would benefit – target group?".
+    /// </summary>
+    public string? Benefits { get; set; }
+
+    /// <summary>
+    /// Narrative potential risks and mitigation actions.
+    /// </summary>
+    public string? PotentialRisks { get; set; }
+
+    /// <summary>
+    /// Estimated overall total project cost in ZAR (non-pivotal project scope).
+    /// </summary>
+    public decimal EstimatedOverallProjectCost { get; set; }
+
+    /// <summary>
+    /// Target number of total project beneficiaries.
+    /// </summary>
+    public int NumberOfBeneficiaries { get; set; }
+
+    /// <summary>
+    /// Indicates whether a Project Administration fee is requested for this project.
+    /// </summary>
+    public bool RequireProjectAdministrationCosts { get; set; }
+
+    /// <summary>
+    /// Targeted provinces and project location footprint (e.g. "Gauteng, KwaZulu-Natal" or "National").
+    /// </summary>
+    public string? TargetProvinces { get; set; }
+
+    /// <summary>
+    /// Indicates whether the application contains PIVOTAL skills development interventions.
+    /// </summary>
+    public bool HasPivotalInterventions { get; set; } = false;
+
+    /// <summary>
+    /// Indicates whether the application contains Non-PIVOTAL strategic project interventions.
+    /// </summary>
+    public bool HasNonPivotalInterventions { get; set; } = false;
+
+    /// <summary>
     /// Cost line items and budget breakdown for the grant project.
     /// </summary>
     public ICollection<GrantProjectBudget> ProjectBudgets { get; set; } = new List<GrantProjectBudget>();
+
+    /// <summary>
+    /// Structured interventions and training plan line items attached to this grant application.
+    /// </summary>
+    public ICollection<GrantApplicationIntervention> Interventions { get; set; } = new List<GrantApplicationIntervention>();
 }
 
 /// <summary>

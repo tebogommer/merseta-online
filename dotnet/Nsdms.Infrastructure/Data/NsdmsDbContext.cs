@@ -40,6 +40,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<LevyFileLine> LevyFileLines => Set<LevyFileLine>();
     public DbSet<SarsLevyStaging> SarsLevyStagings => Set<SarsLevyStaging>();
     public DbSet<GrantApplication> GrantApplications => Set<GrantApplication>();
+    public DbSet<GrantApplicationIntervention> GrantApplicationInterventions => Set<GrantApplicationIntervention>();
     public DbSet<EtqaAssessor> EtqaAssessors => Set<EtqaAssessor>();
     public DbSet<TrainingProvider> TrainingProviders => Set<TrainingProvider>();
     public DbSet<TrainingProviderQualification> TrainingProviderQualifications => Set<TrainingProviderQualification>();
@@ -47,6 +48,11 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<WspEmploymentSummary> WspEmploymentSummaries => Set<WspEmploymentSummary>();
     public DbSet<WspTrainingPlan> WspTrainingPlans => Set<WspTrainingPlan>();
     public DbSet<GrantFundingWindow> GrantFundingWindows => Set<GrantFundingWindow>();
+    public DbSet<GrantWindowEligibility> GrantWindowEligibilities => Set<GrantWindowEligibility>();
+    public DbSet<GrantWindowIntervention> GrantWindowInterventions => Set<GrantWindowIntervention>();
+    public DbSet<GrantWindowTemplate> GrantWindowTemplates => Set<GrantWindowTemplate>();
+    public DbSet<GrantWindowTemplateEligibility> GrantWindowTemplateEligibilities => Set<GrantWindowTemplateEligibility>();
+    public DbSet<GrantWindowTemplateIntervention> GrantWindowTemplateInterventions => Set<GrantWindowTemplateIntervention>();
     public DbSet<GrantProjectBudget> GrantProjectBudgets => Set<GrantProjectBudget>();
     public DbSet<StrategicPriority> StrategicPriorities => Set<StrategicPriority>();
     public DbSet<FundingWindowPriority> FundingWindowPriorities => Set<FundingWindowPriority>();
@@ -272,6 +278,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<ProviderStatusType> ProviderStatusTypes => Set<ProviderStatusType>();
     public DbSet<LearnerEvidenceType> LearnerEvidenceTypes => Set<LearnerEvidenceType>();
     public DbSet<GrantTypeType> GrantTypeTypes => Set<GrantTypeType>();
+    public DbSet<StakeholderEligibilityType> StakeholderEligibilityTypes => Set<StakeholderEligibilityType>();
     public DbSet<InterventionType> InterventionTypes => Set<InterventionType>();
     public DbSet<OfoCodeType> OfoCodeTypes => Set<OfoCodeType>();
     public DbSet<VisitTypeType> VisitTypeTypes => Set<VisitTypeType>();
@@ -787,6 +794,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(g => g.ProjectTitle).HasMaxLength(300);
             entity.Property(g => g.RequestedAmount).HasPrecision(18, 2);
             entity.Property(g => g.ApprovedAmount).HasPrecision(18, 2);
+            entity.Property(g => g.EstimatedOverallProjectCost).HasPrecision(18, 2);
 
             entity.Property(g => g.WspExemptionReason).HasMaxLength(500);
 
@@ -817,6 +825,9 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
 
             entity.HasIndex(g => g.OrganisationId);
             entity.HasIndex(g => g.FundingWindowId);
+            entity.HasIndex(g => new { g.OrganisationId, g.FundingWindowId })
+                  .IsUnique()
+                  .HasFilter("[FundingWindowId] IS NOT NULL");
             entity.HasIndex(g => g.StrategicPriorityId);
             entity.HasIndex(g => g.FundingWindowPriorityId);
             entity.HasIndex(g => g.WspSubmissionId);
@@ -824,6 +835,36 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(g => g.ApplicationStatusCode);
 
             entity.HasQueryFilter(g => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || g.OrganisationId == _tenantProvider.CurrentOrganisationId);
+        });
+
+        // GrantApplicationIntervention (PIVOTAL training plans and Non-PIVOTAL project deliverables)
+        modelBuilder.Entity<GrantApplicationIntervention>(entity =>
+        {
+            entity.ToTable("GrantApplicationIntervention");
+            entity.Property(i => i.InterventionTypeCode).HasMaxLength(50);
+            entity.Property(i => i.SaqaId).HasMaxLength(50);
+            entity.Property(i => i.QualificationTitle).HasMaxLength(300);
+            entity.Property(i => i.NqfLevel).HasMaxLength(50);
+            entity.Property(i => i.OfoCode).HasMaxLength(100);
+            entity.Property(i => i.DeliverableName).HasMaxLength(300);
+            entity.Property(i => i.UnitCost).HasPrecision(18, 2);
+            entity.Property(i => i.EstimatedCost).HasPrecision(18, 2);
+            entity.Property(i => i.TotalAmount).HasPrecision(18, 2);
+
+            entity.HasOne(i => i.GrantApplication)
+                  .WithMany(a => a.Interventions)
+                  .HasForeignKey(i => i.GrantApplicationId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(i => i.InterventionType)
+                  .WithMany()
+                  .HasForeignKey(i => i.InterventionTypeCode)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(i => i.GrantApplicationId);
+            entity.HasIndex(i => i.InterventionTypeCode);
+            entity.HasIndex(i => i.IsPivotal);
         });
 
         // EtqaAssessor
@@ -995,10 +1036,121 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(w => w.WindowName).HasMaxLength(200).IsRequired();
             entity.Property(w => w.GrantTypeCode).HasMaxLength(15);
             entity.Property(w => w.TotalAvailableBudget).HasPrecision(18, 2);
+            entity.Property(w => w.ApprovalStatusCode).HasMaxLength(50).HasDefaultValue("Active");
+            entity.Property(w => w.ProposedByUserId).HasMaxLength(100);
+            entity.Property(w => w.ApprovedByUserId).HasMaxLength(100);
+            entity.Property(w => w.ApprovalJustification).HasMaxLength(1000);
+            entity.Property(w => w.WindowClassification).HasMaxLength(50).HasDefaultValue("Pivotal");
+            entity.Property(w => w.IsPivotal).HasDefaultValue(true);
+            entity.Property(w => w.RequireWspCompliance).HasDefaultValue(false);
+
+            entity.HasOne(w => w.Template)
+                  .WithMany()
+                  .HasForeignKey(w => w.TemplateId)
+                  .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(w => w.FinYear);
             entity.HasIndex(w => w.GrantTypeCode);
             entity.HasIndex(w => w.IsActive);
+            entity.HasIndex(w => w.ApprovalStatusCode);
+            entity.HasIndex(w => w.IsPivotal);
+            entity.HasIndex(w => w.TemplateId);
+        });
+
+        // GrantWindowEligibility
+        modelBuilder.Entity<GrantWindowEligibility>(entity =>
+        {
+            entity.ToTable("GrantWindowEligibility");
+            entity.Property(e => e.StakeholderEligibilityTypeCode).HasMaxLength(50).IsRequired();
+
+            entity.HasOne(e => e.FundingWindow)
+                  .WithMany(w => w.EligibleStakeholders)
+                  .HasForeignKey(e => e.FundingWindowId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.StakeholderEligibilityType)
+                  .WithMany()
+                  .HasForeignKey(e => e.StakeholderEligibilityTypeCode)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.FundingWindowId, e.StakeholderEligibilityTypeCode }).IsUnique();
+            entity.HasIndex(e => e.StakeholderEligibilityTypeCode);
+        });
+
+        // GrantWindowIntervention
+        modelBuilder.Entity<GrantWindowIntervention>(entity =>
+        {
+            entity.ToTable("GrantWindowIntervention");
+            entity.Property(i => i.InterventionTypeCode).HasMaxLength(50).IsRequired();
+            entity.Property(i => i.MaxBudgetCap).HasPrecision(18, 2);
+
+            entity.HasOne(i => i.FundingWindow)
+                  .WithMany(w => w.AllowedInterventions)
+                  .HasForeignKey(i => i.FundingWindowId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(i => i.InterventionType)
+                  .WithMany()
+                  .HasForeignKey(i => i.InterventionTypeCode)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(i => new { i.FundingWindowId, i.InterventionTypeCode }).IsUnique();
+            entity.HasIndex(i => i.InterventionTypeCode);
+        });
+
+        // GrantWindowTemplate
+        modelBuilder.Entity<GrantWindowTemplate>(entity =>
+        {
+            entity.ToTable("GrantWindowTemplate");
+            entity.Property(t => t.TemplateCode).HasMaxLength(50).IsRequired();
+            entity.Property(t => t.Name).HasMaxLength(200).IsRequired();
+            entity.Property(t => t.Description).HasMaxLength(1000);
+            entity.Property(t => t.WindowClassification).HasMaxLength(50).HasDefaultValue("Pivotal");
+            entity.Property(t => t.IsPivotal).HasDefaultValue(true);
+            entity.Property(t => t.RequireWspComplianceDefault).HasDefaultValue(false);
+
+            entity.HasIndex(t => t.TemplateCode).IsUnique();
+            entity.HasIndex(t => t.IsActive);
+        });
+
+        // GrantWindowTemplateEligibility
+        modelBuilder.Entity<GrantWindowTemplateEligibility>(entity =>
+        {
+            entity.ToTable("GrantWindowTemplateEligibility");
+            entity.Property(e => e.StakeholderEligibilityTypeCode).HasMaxLength(50).IsRequired();
+
+            entity.HasOne(e => e.Template)
+                  .WithMany(t => t.DefaultEligibilities)
+                  .HasForeignKey(e => e.TemplateId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.StakeholderEligibilityType)
+                  .WithMany()
+                  .HasForeignKey(e => e.StakeholderEligibilityTypeCode)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.TemplateId, e.StakeholderEligibilityTypeCode }).IsUnique();
+            entity.HasIndex(e => e.StakeholderEligibilityTypeCode);
+        });
+
+        // GrantWindowTemplateIntervention
+        modelBuilder.Entity<GrantWindowTemplateIntervention>(entity =>
+        {
+            entity.ToTable("GrantWindowTemplateIntervention");
+            entity.Property(i => i.InterventionTypeCode).HasMaxLength(50).IsRequired();
+
+            entity.HasOne(i => i.Template)
+                  .WithMany(t => t.DefaultInterventions)
+                  .HasForeignKey(i => i.TemplateId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(i => i.InterventionType)
+                  .WithMany()
+                  .HasForeignKey(i => i.InterventionTypeCode)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(i => new { i.TemplateId, i.InterventionTypeCode }).IsUnique();
+            entity.HasIndex(i => i.InterventionTypeCode);
         });
 
         // GrantProjectBudget
@@ -3542,7 +3694,15 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         ConfigureLookup<ProviderStatusType>(modelBuilder, "ProviderStatusType");
         ConfigureLookup<LearnerEvidenceType>(modelBuilder, "LearnerEvidenceType");
         ConfigureLookup<GrantTypeType>(modelBuilder, "GrantTypeType");
+        ConfigureLookup<StakeholderEligibilityType>(modelBuilder, "StakeholderEligibilityType");
         ConfigureLookup<InterventionType>(modelBuilder, "InterventionType");
+        modelBuilder.Entity<InterventionType>(entity =>
+        {
+            entity.Property(i => i.Category).HasMaxLength(50);
+            entity.Property(i => i.DefaultUnitCost).HasPrecision(18, 2);
+            entity.HasIndex(i => i.IsPivotal);
+            entity.HasIndex(i => i.Category);
+        });
         ConfigureLookup<OfoCodeType>(modelBuilder, "OfoCodeType");
         modelBuilder.Entity<OfoCodeType>(entity =>
         {

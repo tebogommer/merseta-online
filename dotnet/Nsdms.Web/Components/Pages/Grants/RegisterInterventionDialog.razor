@@ -1,0 +1,137 @@
+@using MudBlazor
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Lookups
+@inject IGrantService GrantService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.LibraryAdd" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">Add New Intervention to Catalog</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                Register a new skills development or special project intervention into the central merSETA catalog. 
+                Once registered, it can be immediately selected and scoped for this Discretionary Grant funding window.
+            </MudText>
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Intervention Code"
+                                  Required="true"
+                                  RequiredError="Code is mandatory"
+                                  @bind-Value="_model.Code"
+                                  Variant="Variant.Outlined"
+                                  Placeholder="e.g. BURS_EQUIP_2026"
+                                  HelperText="Unique alphanumeric identifier (uppercase)" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               Label="Functional Category"
+                               Required="true"
+                               @bind-Value="_model.Category"
+                               Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("Non-Credit Bursary")">Non-Credit Bursary</MudSelectItem>
+                        <MudSelectItem Value="@("Career Guidance")">Career Guidance &amp; STEM</MudSelectItem>
+                        <MudSelectItem Value="@("Workshop Equipment")">TVET / CET Workshop Equipment</MudSelectItem>
+                        <MudSelectItem Value="@("Trade Union Capacity")">Trade Union Worker Education</MudSelectItem>
+                        <MudSelectItem Value="@("Research & Innovation")">Research &amp; Innovation Chair</MudSelectItem>
+                        <MudSelectItem Value="@("Special Strategic Project")">Special Strategic Project</MudSelectItem>
+                        <MudSelectItem Value="@("Infrastructure & Tools")">Infrastructure &amp; Tools</MudSelectItem>
+                        <MudSelectItem Value="@("Skills Programme")">Skills Programme</MudSelectItem>
+                        <MudSelectItem Value="@("Apprenticeship")">Apprenticeship</MudSelectItem>
+                        <MudSelectItem Value="@("Learnership")">Learnership</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string"
+                                  Label="Intervention Title / Descriptive Name"
+                                  Required="true"
+                                  RequiredError="Title is mandatory"
+                                  @bind-Value="_model.Name"
+                                  Variant="Variant.Outlined"
+                                  Placeholder="e.g. Non-Credit Student Tooling &amp; Safety Equipment Allowance" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField T="decimal"
+                                     Label="Benchmark / Statutory Unit Cost (ZAR)"
+                                     @bind-Value="_model.DefaultUnitCost"
+                                     Variant="Variant.Outlined"
+                                     Format="N2"
+                                     Min="0"
+                                     HelperText="Standard benchmark unit cost per participant" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <div class="pt-3">
+                        <MudSwitch T="bool" 
+                                   @bind-Value="_model.IsPivotal" 
+                                   Color="Color.Primary" 
+                                   Label="@(_model.IsPivotal ? "PIVOTAL (Credit / NQF Qualification Bound)" : "Non-PIVOTAL (Special Project / Non-Credit)")" />
+                    </div>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string"
+                                  Label="Scope / Regulatory Description"
+                                  Lines="2"
+                                  @bind-Value="_model.Description"
+                                  Variant="Variant.Outlined"
+                                  Placeholder="Provide details on eligibility, target groups, or DHET / QCTO guidelines..." />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="Save" Disabled="_isSubmitting">
+            @(_isSubmitting ? "Registering..." : "Add to Catalog")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private MudForm? _form;
+    private bool _isValid;
+    private bool _isSubmitting;
+
+    private InterventionType _model = new()
+    {
+        IsPivotal = false,
+        Category = "Special Strategic Project",
+        Active = true
+    };
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Save()
+    {
+        if (_form != null)
+        {
+            await _form.Validate();
+            if (!_isValid) return;
+        }
+
+        _model.Code = _model.Code?.Trim().ToUpperInvariant() ?? string.Empty;
+        _model.Name = _model.Name?.Trim() ?? string.Empty;
+
+        _isSubmitting = true;
+        try
+        {
+            var result = await GrantService.AddInterventionToCatalogAsync(_model, "AdminUser");
+            Snackbar.Add($"Intervention '{result.Name}' ({result.Code}) successfully registered into catalog.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(result));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

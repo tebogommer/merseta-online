@@ -45,6 +45,37 @@ Every page must pass all 16 items before being declared complete:
 
 ---
 
+### 🛡️ Enterprise SQL Server Concurrency & High-Volume Ingestion Standard
+1. **Zero Auto-Close Invariant**:
+   - Every production, staging, and load-test database MUST have `AUTO_CLOSE` disabled (`ALTER DATABASE [NSDMS-NET] SET AUTO_CLOSE OFF WITH NO_WAIT;`). Leaving `AUTO_CLOSE` on causes SQL Server to dismount the database on connection idle, purging buffer pools and stalling subsequent transactions.
+2. **Mandatory Read Committed Snapshot Isolation (RCSI)**:
+   - Databases MUST have `READ_COMMITTED_SNAPSHOT ON` and `ALLOW_SNAPSHOT_ISOLATION ON`. Under default locking, readers take shared locks (`S-locks`) that block writers, and writers block readers. RCSI uses the row version store in `tempdb` to guarantee non-blocking reads during high-volume submissions.
+3. **TempDB Multi-File Balanced Sizing**:
+   - `tempdb` MUST be configured with multiple equal-sized data files (minimum 4 files of $\ge 256\text{ MB}$ with 64 MB growth) matching the logical CPU core topology to eliminate PFS/SGAM page allocation latch contention under heavy RCSI version store activity.
+4. **Universal Foreign Key Indexing (Zero Table Scans)**:
+   - Every physical foreign key column MUST have a covering non-clustered index (`IX_{Table}_{Column}`). Unindexed foreign keys cause SQL Server to escalate to shared table scans on child updates or cascade checks, causing deadlock spikes during multi-user workloads.
+5. **Database File Pre-Allocation & Indirect Checkpoints**:
+   - Primary database files (`.mdf`) must be pre-allocated to at least 1 GB and transaction logs (`.ldf`) to at least 512 MB with fixed autogrowth chunks ($\ge 128\text{ MB}$ data, $\ge 64\text{ MB}$ log). Set `TARGET_RECOVERY_TIME = 60 SECONDS` to smooth disk I/O bursts during batch operations.
+
+---
+
+### 🛡️ Background Job Pipeline, Circuit Resilience & Observability Standard
+1. **Interactive Thread Protection & Channel Decoupling**:
+   - Heavy CPU operations (QuestPDF compilation, statutory batch extractions, SARS bulk reconciliations) MUST NEVER execute synchronously within Blazor interactive circuit threads.
+   - All asynchronous documents and long-running batch operations MUST be dispatched to `IBackgroundJobQueue` via `System.Threading.Channels` and processed by background worker hosted services (`BackgroundJobProcessingWorker`).
+   - Results are delivered through non-blocking streaming endpoints (`/api/jobs/{id}/download`) with real-time SignalR notifications via `ISignalRNotificationPublisher`.
+2. **Circuit Resilience & Client-Side Draft State Hydration**:
+   - Blazor Server circuit options must maintain generous disconnection horizons (`DisconnectedCircuitRetentionPeriod = 15m`, `DisconnectedCircuitMaxRetained = 2000`) to absorb network flickers and tab switching.
+   - All multi-step statutory forms and critical edit views MUST implement draft persistence via `IFormDraftService` (`wwwroot/js/form-drafts.js`) and render `DraftRecoveryBanner.razor` to protect against lost user progress.
+3. **High-Volume Audit Partitioning & Tiered Archival**:
+   - High-velocity append-only tables (`audit_logs`) MUST use range-right temporal partitioning (`PF_AuditLog_Timestamp` and `PS_AuditLog_Timestamp`) aligned to quarterly horizons.
+   - Tiered archival (`audit_logs_archive`) and batched minimal-logging data migration (`usp_ArchiveAuditLogs`) MUST be used for retention management to prevent clustered index fragmentation and buffer pool starvation.
+4. **Native OpenTelemetry & Prometheus Metrics Observability**:
+   - Statutory transaction throughput, double-write counts, document generation latencies, and circuit resilience events MUST be instrumented via `NsdmsDiagnostics` (.NET 10 Meter `MerSETA.Nsdms` and `ActivitySource`).
+   - All enterprise deployments must expose a standard Prometheus scrape endpoint (`/metrics`) via `IMetricsScraperService`.
+
+---
+
 ### 🛡️ Mandatory Grant (MG / WSP) Submission Window & Extension Governance Standard
 1. **Statutory Submission Deadline & Cutoff Invariant**:
    - In terms of Regulation 4(1) of the SETA Grant Regulations under the Skills Development Act 97 of 1998, the statutory annual submission window for Workplace Skills Plans (WSP) and Annual Training Reports (ATR) closes strictly on **30 April** (`Governance:WspAnnualSubmissionDeadline`).
@@ -79,6 +110,47 @@ Every page must pass all 16 items before being declared complete:
 4. **Machine-Readable Ingestion Barcodes for Wet-Ink Returns**:
    - Multi-page printable return forms (WSP Tripartite Sign-Off, DG MoAs, Learner Agreements) must stamp an ingestion barcode encoding structured metadata (`Module`, `DocumentType`, `RecordId`, `PageNumber`, `TotalPages`, and tamper-proof checksum) via `IDocumentIngestionBarcodeService`.
    - The DMS upload pipeline must decode these machine barcodes to automate document sorting, validation, and auto-indexing with zero manual staff tagging.
+
+---
+
+### 🛡️ Discretionary Grant (DG) Funding Window & Template Blueprint Standard (Option B)
+1. **Dynamic Gazette Window Timeframe & Decoupled Workflow**:
+   - Discretionary Grant (DG) windows operate on dynamically gazetted timeframes (`OpeningDate` and `ClosingDate`), strictly decoupled from the statutory Mandatory Grant (MG / WSP) deadline of 30 April.
+   - PIVOTAL DG applications utilize training plan data structures but operate through an independent approval and adjudication workflow lifecycle.
+2. **Normalized Stakeholder Eligibility Tags**:
+   - Eligibility is governed by normalized lookup classifications (`lookup.StakeholderEligibilityType`) rather than hardcoded booleans.
+   - Supports granular multi-selection per window (e.g. `LEVY_PAYING`, `SMME_EXEMPT`, `PUBLIC_TVET`, `PRIVATE_TVET_SDP`, `PUBLIC_UNIVERSITY`, `CET_COLLEGE`, `NGO_CBO`, `TRADE_UNION`, `EMPLOYER_ASSOC`, `GOV_ENTITY`).
+   - `GrantService.CreateApplicationAsync` evaluates the applying organisation's legal status, levy contribution status, and institutional entity category against window eligibilities (`GrantWindowEligibility`).
+3. **Mandatory Grant (WSP) Compliance Precondition Toggle**:
+   - Every window specifies `RequireWspCompliance` (boolean toggle).
+   - When `RequireWspCompliance = true`, applicants must have an approved WSP for the scheme year.
+   - When `RequireWspCompliance = false`, early, strategic, or special project windows open without blocking employers who submit prior to the WSP cycle.
+4. **Skills Development & Project Intervention Scoping**:
+   - Windows whitelist permitted interventions (`GrantWindowIntervention`), classified as either `IsPivotal = true` (qualification/credit-bearing) or `IsPivotal = false` (special projects, TVET workshop equipment, non-credit bursaries, career guidance, research chairs).
+   - Administrators can dynamically register new interventions to the central catalog (`lookup.InterventionType`) directly from the window configuration UI via `RegisterInterventionDialog`.
+5. **1-Click Template Blueprint Engine**:
+   - Reusable blueprint templates (`GrantWindowTemplate`) bundle standard window settings, duration, default stakeholder eligibilities (`GrantWindowTemplateEligibility`), and default interventions (`GrantWindowTemplateIntervention`).
+   - Selecting a blueprint instantly provisions and pre-configures a new funding window with full administrative customisability.
+6. **Dual Authorisation Governance & Audited Double-Write**:
+   - Opening and activating a window enforces Segregation of Duties (Dual Authorisation Control): the proposing officer cannot approve their own window (`ProposedByUserId != currentUsername`).
+   - All window creations, template initializations, eligibility updates, and intervention assignments perform atomic double-writes to `audit_logs`.
+
+---
+
+### 🛡️ Discretionary Grant (DG) Multi-Section Composite Application Standard (Option A)
+1. **Dynamic Hybrid Window & Intervention Scoping**:
+   - Discretionary Grant funding windows can permit PIVOTAL interventions only, Non-PIVOTAL (strategic projects) only, or both concurrently (`WindowClassification == "Hybrid"`).
+   - The application intake wizard (`DgGrantApplicationWizard.razor`) and field renderer (`DgGrantApplicationFields.razor`) adapt dynamically to the window's intervention scope, displaying only relevant sections.
+2. **Unified PIVOTAL & Strategic Project Structure**:
+   - **PIVOTAL Interventions**: Captured using the normalized training plan format (`GrantApplicationIntervention` with `IsPivotal = true`), including SAQA ID, Qualification Title, OFO Code, NQF Level, Employed (18.1) and Unemployed (18.2) learner counts, unit costs, and automated totals.
+   - **Non-PIVOTAL Interventions**: Modeled after legacy Strategic Projects (`projectmotivation.xhtml`, `projectimplementationplan.xhtml`), capturing 5 narrative motivation questions (Description, Purpose, Outcomes, Benefits, Potential Risks), total estimated cost, beneficiary headcount, project administration fee toggle, target provinces, and deliverable implementation milestones (`GrantApplicationIntervention` with `IsPivotal = false`).
+3. **Consolidated Budget Rollup & Single MoA Contracting**:
+   - In Hybrid applications, requested amounts from both PIVOTAL training plans and Non-PIVOTAL deliverable lines roll up automatically into a single consolidated grant application budget (`GrantApplication.RequestedAmount`).
+   - Approved applications result in a single unified Memorandum of Agreement (MoA), preventing fractured contracts for the same employer.
+4. **Master-Detail View-by-Default Architecture**:
+   - Applications open in read-only View mode by default (`/dg-grants/{id}`), displaying dedicated tabs for General Information, PIVOTAL Training Plan (with line item breakdown), Strategic Project Motivation & Footprint, and Implementation Plan Deliverables & Tranches.
+5. **Audited Double-Write & Resilience**:
+   - All application creations, composite edits, line item additions, and milestone updates perform atomic double-writes into `audit_logs` with before and after state captures.
 
 ---
 
@@ -409,6 +481,12 @@ Every page must pass all 16 items before being declared complete:
    - Before any staging records (`SarsLevyStaging`) or financial ledger records (`LevyFile`) are written, the raw file stream must pass pre-flight compliance inspection via `ISarsCompliancePreProcessor`.
    - Structural encoding, statutory SDL number regex (`^L\d{9}$`), 5-digit SIC codes, non-negative monetary values, duplicate Digital Security Seals, and trailer control reconciliations must be 100% compliant.
    - Any compliance violation must immediately throw `SarsComplianceException`, aborting ingestion with zero database modifications and returning a line-by-line forensic diagnostic log.
+6. **Asynchronous Channel Decoupling & Interactive Circuit Protection (Option A)**:
+   - High-volume statutory SARS schedules must be dispatched to `IBackgroundJobQueue` via `EnqueueSarsLevyIngestionAsync` and processed out-of-band by `BackgroundJobProcessingWorker`.
+   - The interactive Blazor circuit thread is strictly shielded from multi-minute stream parsing or bulk inserts. Real-time progress and completion alerts are published via SignalR notifications (`ISignalRNotificationPublisher`).
+7. **Set-Based SQL Promotion Engine (`usp_PromoteSarsLevyBatch`)**:
+   - Ledger promotion from `SarsLevyStaging` into `LevyFileLine`, `SarsLevyReconAudit`, and `InterSetaTransfer` MUST execute set-based stored procedures (`usp_PromoteSarsLevyBatch`) on SQL Server rather than iterating entities via EF Core ChangeTracker memory loops.
+   - Non-SQL Server environments (e.g. SQLite xUnit test harness) utilize an automated in-memory LINQ fallback to preserve 100% test isolation.
 
 ---
 
@@ -861,4 +939,23 @@ Every page must pass all 16 items before being declared complete:
 3. **Relationship & Tenant Scoping Verification**:
    - Submissions evaluated via `ICaslAbilityService.CanSubmitLearnerAgreement` must verify that non-admin submitters are linked to either the host Employer (`OrganisationId`) or the accredited Skills Development Provider (`TrainingProviderId`).
    - If a submitter has no registered link to either party, the request must fail with an authorization violation.
+
+---
+
+### 🛡️ Discretionary Grant (DG) Funding Window & Strategic Allocation Governance Standard
+1. **Strict Terminology & Decoupled Window Timing Invariant**:
+   - Never mix Mandatory Grant (MG / WSP / ATR) deadlines (30 April) with Discretionary Grant (DG) funding window dates.
+   - DG application submission dates are gazette-driven and dynamically evaluated strictly against `GrantFundingWindow.OpeningDate` and `GrantFundingWindow.ClosingDate`. Submissions outside these dates must be actively rejected by `IGrantService.CreateApplicationAsync` and `CrossEntityDateValidator.ValidateGrantFundingWindow`.
+2. **Dual Authorisation Governance (Segregation of Duties)**:
+   - Creating, proposing, and publishing DG funding windows and budget envelopes requires independent Proposer and Approver roles before opening to employer submissions (`ApprovalStatusCode` transition: `Draft` -> `PendingApproval` -> `Active`).
+   - The proposing officer cannot approve and activate their own window proposal (`ApprovedByUserId != ProposedByUserId`). Any self-approval attempt throws a `Dual Authorisation Governance Violation`.
+3. **Compound Unique Constraints (Zero Duplicate Applications)**:
+   - The database and domain model strictly enforce a compound unique constraint on `GrantApplication (OrganisationId, FundingWindowId)`.
+   - An employer organisation can lodge strictly one (1) comprehensive application per gazetted funding window. Duplicate application attempts must fail fast at both domain service and SQL Server index levels (`IX_GrantApplication_Org_FundingWindow_Unique`).
+4. **Real-Time Strategic Sub-Budget Envelope Consumption**:
+   - Every strategic priority theme (`FundingWindowPriority`) manages an explicit sub-budget allocation envelope.
+   - Applications evaluating against `FundingWindowPriority` must dynamically check cumulative requested/awarded budgets via `IGrantService.EvaluateBudgetConsumptionAsync`. If incoming demand exceeds the allocation envelope, the system immediately flags `IsOverSubscribed = true` and records an audited alert (`BudgetOverSubscribedAlert`) to ensure officer visibility.
+5. **Audited Double-Write & Non-Repudiation**:
+   - All funding window creations, status transitions, budget adjustments, and theme assignments must perform atomic double-writes to `audit_logs` with before and after state snapshots.
+
 

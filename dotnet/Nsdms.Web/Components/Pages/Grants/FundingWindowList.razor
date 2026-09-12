@@ -18,7 +18,7 @@
 <PageTitle>DG Funding Windows - merSETA NSDMS</PageTitle>
 
 <EntityHeader Title="Discretionary Grant (DG) Funding Windows"
-              Subtitle="Gazetted Discretionary Grant funding allocation cycles, opening and closing deadlines, and budget allocations"
+              Subtitle="Gazetted Discretionary Grant funding allocation cycles, opening and closing deadlines, specification templates, and budget envelopes"
               ReferenceKey="T1-DG-WINDOWS"
               Status="Active"
               BreadcrumbItems="@_breadcrumbs">
@@ -40,13 +40,13 @@
 </EntityHeader>
 
 <!-- Filter Bar -->
-<FilterBar SearchPlaceholder="Search by Window Title, Scheme Year, Grant Type..."
+<FilterBar SearchPlaceholder="Search by Window Title, Scheme Year, Classification..."
            @bind-SearchText="_searchString"
            OnSearch="HandleFilterChanged"
            OnClear="HandleFilterCleared">
     <FilterContent>
         <MudSelect T="string" 
-                   Label="Status Filter" 
+                   Label="Operational Status" 
                    @bind-Value="_statusFilter" 
                    @bind-Value:after="HandleFilterChanged"
                    Variant="Variant.Outlined" 
@@ -56,6 +56,17 @@
             <MudSelectItem Value="@("Open")">Open &amp; Active</MudSelectItem>
             <MudSelectItem Value="@("Upcoming")">Upcoming</MudSelectItem>
             <MudSelectItem Value="@("Closed")">Closed / Expired</MudSelectItem>
+        </MudSelect>
+        <MudSelect T="string" 
+                   Label="Grant Type" 
+                   @bind-Value="_pivotalFilter" 
+                   @bind-Value:after="HandleFilterChanged"
+                   Variant="Variant.Outlined" 
+                   Margin="Margin.Dense"
+                   Dense="true">
+            <MudSelectItem Value="@("All")">All Types</MudSelectItem>
+            <MudSelectItem Value="@("PIVOTAL")">PIVOTAL Only</MudSelectItem>
+            <MudSelectItem Value="@("NON_PIVOTAL")">Non-PIVOTAL Only</MudSelectItem>
         </MudSelect>
     </FilterContent>
     <ActiveFilterChips>
@@ -69,6 +80,12 @@
         {
             <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
                 Status: @_statusFilter
+            </MudChip>
+        }
+        @if (_pivotalFilter != "All")
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" OnClose="@(() => { _pivotalFilter = "All"; HandleFilterChanged(); })">
+                Type: @_pivotalFilter
             </MudChip>
         }
     </ActiveFilterChips>
@@ -94,7 +111,8 @@
             <HeaderContent>
                 <MudTh>Window Name</MudTh>
                 <MudTh>Fin Year</MudTh>
-                <MudTh>Grant Type</MudTh>
+                <MudTh>Classification</MudTh>
+                <MudTh>WSP Precondition</MudTh>
                 <MudTh>Opening Date</MudTh>
                 <MudTh>Closing Date</MudTh>
                 <MudTh>Available Budget</MudTh>
@@ -117,17 +135,27 @@
                 <MudTd DataLabel="Fin Year">
                     <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">@context.FinYear</MudChip>
                 </MudTd>
-                <MudTd DataLabel="Grant Type">
-                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
-                        @(!string.IsNullOrWhiteSpace(context.GrantTypeCode) ? context.GrantTypeCode : "PIVOTAL")
+                <MudTd DataLabel="Classification">
+                    <MudChip T="string" Size="Size.Small" Color="@(context.IsPivotal ? Color.Primary : Color.Secondary)" Variant="Variant.Filled">
+                        @(context.IsPivotal ? "PIVOTAL" : "Non-PIVOTAL")
                     </MudChip>
                 </MudTd>
+                <MudTd DataLabel="WSP Precondition">
+                    @if (context.RequireWspCompliance)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Enforced</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">Optional</MudChip>
+                    }
+                </MudTd>
                 <MudTd DataLabel="Opening Date">
-                    <MudText Typo="Typo.body2">@context.OpeningDate.ToString("yyyy-MM-dd HH:mm")</MudText>
+                    <MudText Typo="Typo.body2">@context.OpeningDate.ToString("yyyy-MM-dd")</MudText>
                 </MudTd>
                 <MudTd DataLabel="Closing Date">
                     <MudText Typo="Typo.body2" Class="@(context.ClosingDate < DateTime.UtcNow ? "text-error fw-bold" : "fw-bold")">
-                        @context.ClosingDate.ToString("yyyy-MM-dd HH:mm")
+                        @context.ClosingDate.ToString("yyyy-MM-dd")
                     </MudText>
                 </MudTd>
                 <MudTd DataLabel="Available Budget">
@@ -192,6 +220,7 @@
     private bool _loading = true;
     private string _searchString = string.Empty;
     private string _statusFilter = "All";
+    private string _pivotalFilter = "All";
 
     private List<BreadcrumbItem> _breadcrumbs = new()
     {
@@ -204,11 +233,15 @@
         .Where(w => string.IsNullOrWhiteSpace(_searchString) ||
                     w.WindowName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
                     (w.GrantTypeCode != null && w.GrantTypeCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
+                    (w.WindowClassification != null && w.WindowClassification.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
                     w.FinYear.ToString().Contains(_searchString))
         .Where(w => _statusFilter == "All" ||
                     (_statusFilter == "Open" && w.IsActive && w.OpeningDate <= DateTime.UtcNow && w.ClosingDate >= DateTime.UtcNow) ||
                     (_statusFilter == "Upcoming" && w.IsActive && w.OpeningDate > DateTime.UtcNow) ||
                     (_statusFilter == "Closed" && (!w.IsActive || w.ClosingDate < DateTime.UtcNow)))
+        .Where(w => _pivotalFilter == "All" ||
+                    (_pivotalFilter == "PIVOTAL" && w.IsPivotal) ||
+                    (_pivotalFilter == "NON_PIVOTAL" && !w.IsPivotal))
         .ToList();
 
     protected override async Task OnInitializedAsync()
@@ -238,6 +271,7 @@
     {
         _searchString = string.Empty;
         _statusFilter = "All";
+        _pivotalFilter = "All";
         StateHasChanged();
     }
 

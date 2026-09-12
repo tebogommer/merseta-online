@@ -30,6 +30,7 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<LevyFileLine> LevyFileLines { get; }
     DbSet<SarsLevyStaging> SarsLevyStagings { get; }
     DbSet<GrantApplication> GrantApplications { get; }
+    DbSet<GrantApplicationIntervention> GrantApplicationInterventions { get; }
     DbSet<EtqaAssessor> EtqaAssessors { get; }
     DbSet<TrainingProvider> TrainingProviders { get; }
     DbSet<TrainingProviderQualification> TrainingProviderQualifications { get; }
@@ -40,6 +41,11 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<GrantProjectBudget> GrantProjectBudgets { get; }
     DbSet<StrategicPriority> StrategicPriorities { get; }
     DbSet<FundingWindowPriority> FundingWindowPriorities { get; }
+    DbSet<GrantWindowEligibility> GrantWindowEligibilities { get; }
+    DbSet<GrantWindowIntervention> GrantWindowInterventions { get; }
+    DbSet<GrantWindowTemplate> GrantWindowTemplates { get; }
+    DbSet<GrantWindowTemplateEligibility> GrantWindowTemplateEligibilities { get; }
+    DbSet<GrantWindowTemplateIntervention> GrantWindowTemplateInterventions { get; }
     DbSet<AssessorModeratorScope> AssessorModeratorScopes { get; }
     DbSet<AssessorUnitStandardScope> AssessorUnitStandardScopes { get; }
     DbSet<AssessorProviderLink> AssessorProviderLinks { get; }
@@ -222,6 +228,7 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<ProviderStatusType> ProviderStatusTypes { get; }
     DbSet<LearnerEvidenceType> LearnerEvidenceTypes { get; }
     DbSet<GrantTypeType> GrantTypeTypes { get; }
+    DbSet<StakeholderEligibilityType> StakeholderEligibilityTypes { get; }
     DbSet<InterventionType> InterventionTypes { get; }
     DbSet<OfoCodeType> OfoCodeTypes { get; }
     DbSet<VisitTypeType> VisitTypeTypes { get; }

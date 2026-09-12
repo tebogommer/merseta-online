@@ -1,0 +1,104 @@
+@namespace Nsdms.Web.Components.Shared
+@using MudBlazor
+@using Nsdms.Application.Services
+@inject IFormDraftService DraftService
+@inject ISnackbar Snackbar
+
+@if (_hasDraft && _draft != null)
+{
+    <MudAlert Severity="Severity.Info" 
+              Variant="Variant.Filled" 
+              Class="mb-4 d-flex align-center justify-space-between" 
+              Elevation="2"
+              Icon="@Icons.Material.Filled.Restore">
+        <div class="d-flex align-center flex-grow-1 justify-space-between flex-wrap gap-2">
+            <div>
+                <strong>Unsaved Draft Detected:</strong>
+                <span> A draft for this record from @_draft.SavedAt.ToLocalTime().ToString("g") was recovered.</span>
+            </div>
+            <div class="d-flex gap-2">
+                <MudButton Size="Size.Small" 
+                           Variant="Variant.Filled" 
+                           Color="Color.Surface" 
+                           StartIcon="@Icons.Material.Filled.SettingsBackupRestore"
+                           OnClick="RestoreDraftAsync">
+                    Restore Draft
+                </MudButton>
+                <MudButton Size="Size.Small" 
+                           Variant="Variant.Outlined" 
+                           Color="Color.Surface" 
+                           StartIcon="@Icons.Material.Filled.DeleteOutline"
+                           OnClick="DiscardDraftAsync">
+                    Discard
+                </MudButton>
+            </div>
+        </div>
+    </MudAlert>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public string FormKey { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? RecordId { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnDraftRestored { get; set; }
+
+    [Parameter]
+    public EventCallback OnDraftDiscarded { get; set; }
+
+    private bool _hasDraft = false;
+    private FormDraftDto? _draft;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !string.IsNullOrWhiteSpace(FormKey))
+        {
+            await CheckForDraftAsync();
+        }
+    }
+
+    private async Task CheckForDraftAsync()
+    {
+        try
+        {
+            _draft = await DraftService.GetDraftAsync(FormKey, RecordId);
+            if (_draft != null && !string.IsNullOrWhiteSpace(_draft.DataJson))
+            {
+                _hasDraft = true;
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            // Ignored if JS not yet ready
+        }
+    }
+
+    private async Task RestoreDraftAsync()
+    {
+        if (_draft != null)
+        {
+            if (OnDraftRestored.HasDelegate)
+            {
+                await OnDraftRestored.InvokeAsync(_draft.DataJson);
+            }
+            Snackbar.Add("Draft restored into active form.", Severity.Success);
+            _hasDraft = false;
+        }
+    }
+
+    private async Task DiscardDraftAsync()
+    {
+        await DraftService.RemoveDraftAsync(FormKey, RecordId);
+        _hasDraft = false;
+        _draft = null;
+        if (OnDraftDiscarded.HasDelegate)
+        {
+            await OnDraftDiscarded.InvokeAsync();
+        }
+        Snackbar.Add("Unsaved draft discarded.", Severity.Info);
+    }
+}

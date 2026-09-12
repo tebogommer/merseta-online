@@ -895,12 +895,28 @@ BEGIN
         ALTER TABLE dbo.GrantApplication ADD WspExemptionReason NVARCHAR(500) NULL;
     IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GrantApplication_WspSubmission' AND object_id = OBJECT_ID('GrantApplication'))
         CREATE NONCLUSTERED INDEX IX_GrantApplication_WspSubmission ON dbo.GrantApplication (WspSubmissionId);
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GrantApplication_Org_FundingWindow_Unique' AND object_id = OBJECT_ID('GrantApplication'))
+        CREATE UNIQUE NONCLUSTERED INDEX IX_GrantApplication_Org_FundingWindow_Unique ON dbo.GrantApplication (OrganisationId, FundingWindowId) WHERE FundingWindowId IS NOT NULL;
 END
 
 IF EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantFundingWindow')
 BEGIN
     IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantFundingWindow') AND name = 'Description')
         ALTER TABLE dbo.GrantFundingWindow ADD Description NVARCHAR(MAX) NULL;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantFundingWindow') AND name = 'ApprovalStatusCode')
+        ALTER TABLE dbo.GrantFundingWindow ADD ApprovalStatusCode NVARCHAR(50) NOT NULL CONSTRAINT DF_GrantFundingWindow_ApprovalStatus DEFAULT 'Active';
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantFundingWindow') AND name = 'ProposedByUserId')
+        ALTER TABLE dbo.GrantFundingWindow ADD ProposedByUserId NVARCHAR(100) NULL;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantFundingWindow') AND name = 'ProposedDate')
+        ALTER TABLE dbo.GrantFundingWindow ADD ProposedDate DATETIME2 NULL;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantFundingWindow') AND name = 'ApprovedByUserId')
+        ALTER TABLE dbo.GrantFundingWindow ADD ApprovedByUserId NVARCHAR(100) NULL;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantFundingWindow') AND name = 'ApprovedDate')
+        ALTER TABLE dbo.GrantFundingWindow ADD ApprovedDate DATETIME2 NULL;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantFundingWindow') AND name = 'ApprovalJustification')
+        ALTER TABLE dbo.GrantFundingWindow ADD ApprovalJustification NVARCHAR(1000) NULL;
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GrantFundingWindow_ApprovalStatus' AND object_id = OBJECT_ID('GrantFundingWindow'))
+        CREATE NONCLUSTERED INDEX IX_GrantFundingWindow_ApprovalStatus ON dbo.GrantFundingWindow (ApprovalStatusCode);
 END
 
 -- 29. Training Committees, Members & WSP Disputes
@@ -2370,6 +2386,217 @@ BEGIN
     CREATE NONCLUSTERED INDEX [IX_DocumentRejectionReasonType_Active] ON [lookup].[DocumentRejectionReasonType] ([Active]);
     CREATE NONCLUSTERED INDEX [IX_DocumentRejectionReasonType_DisplayOrder] ON [lookup].[DocumentRejectionReasonType] ([DisplayOrder]);
     PRINT 'Created lookup.DocumentRejectionReasonType table and indexes.';
+END;
+
+-- Phase 47: Discretionary Grant Funding Window Configuration, Stakeholder Eligibility & Template Blueprint Engine
+IF NOT EXISTS (SELECT * FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = 'lookup' AND t.name = 'StakeholderEligibilityType')
+BEGIN
+    CREATE TABLE [lookup].[StakeholderEligibilityType] (
+        [Code] NVARCHAR(50) NOT NULL PRIMARY KEY,
+        [Name] NVARCHAR(250) NOT NULL,
+        [Description] NVARCHAR(500) NULL,
+        [Active] BIT NOT NULL CONSTRAINT DF_StakeholderEligibilityType_Active DEFAULT 1,
+        [CreatedAt] DATETIME2 NOT NULL CONSTRAINT DF_StakeholderEligibilityType_CreatedAt DEFAULT SYSUTCDATETIME(),
+        [CreatedBy] NVARCHAR(100) NOT NULL CONSTRAINT DF_StakeholderEligibilityType_CreatedBy DEFAULT 'SYSTEM',
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL
+    );
+    CREATE INDEX [IX_StakeholderEligibilityType_Name] ON [lookup].[StakeholderEligibilityType] ([Name]);
+    CREATE INDEX [IX_StakeholderEligibilityType_Active] ON [lookup].[StakeholderEligibilityType] ([Active]);
+END;
+
+IF EXISTS (SELECT * FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = 'lookup' AND t.name = 'InterventionType')
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('lookup.InterventionType') AND name = 'IsPivotal')
+        ALTER TABLE [lookup].[InterventionType] ADD [IsPivotal] BIT NOT NULL CONSTRAINT DF_InterventionType_IsPivotal DEFAULT 1;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('lookup.InterventionType') AND name = 'Category')
+        ALTER TABLE [lookup].[InterventionType] ADD [Category] NVARCHAR(50) NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('lookup.InterventionType') AND name = 'DefaultUnitCost')
+        ALTER TABLE [lookup].[InterventionType] ADD [DefaultUnitCost] DECIMAL(18,2) NOT NULL CONSTRAINT DF_InterventionType_Cost DEFAULT 0.00;
+END;
+
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantFundingWindow')
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantFundingWindow') AND name = 'IsPivotal')
+        ALTER TABLE [dbo].[GrantFundingWindow] ADD [IsPivotal] BIT NOT NULL CONSTRAINT DF_GrantFundingWindow_IsPivotal DEFAULT 1;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantFundingWindow') AND name = 'WindowClassification')
+        ALTER TABLE [dbo].[GrantFundingWindow] ADD [WindowClassification] NVARCHAR(50) NOT NULL CONSTRAINT DF_GrantFundingWindow_Classification DEFAULT 'Pivotal';
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantFundingWindow') AND name = 'RequireWspCompliance')
+        ALTER TABLE [dbo].[GrantFundingWindow] ADD [RequireWspCompliance] BIT NOT NULL CONSTRAINT DF_GrantFundingWindow_RequireWsp DEFAULT 0;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantFundingWindow') AND name = 'TemplateId')
+        ALTER TABLE [dbo].[GrantFundingWindow] ADD [TemplateId] INT NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GrantFundingWindow_IsPivotal' AND object_id = OBJECT_ID('GrantFundingWindow'))
+        CREATE INDEX [IX_GrantFundingWindow_IsPivotal] ON [dbo].[GrantFundingWindow] ([IsPivotal]);
+
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GrantFundingWindow_TemplateId' AND object_id = OBJECT_ID('GrantFundingWindow'))
+        CREATE INDEX [IX_GrantFundingWindow_TemplateId] ON [dbo].[GrantFundingWindow] ([TemplateId]);
+END;
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantWindowEligibility')
+BEGIN
+    CREATE TABLE [dbo].[GrantWindowEligibility] (
+        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [FundingWindowId] INT NOT NULL CONSTRAINT FK_GrantWindowEligibility_Window FOREIGN KEY REFERENCES [dbo].[GrantFundingWindow]([Id]) ON DELETE CASCADE,
+        [StakeholderEligibilityTypeCode] NVARCHAR(50) NOT NULL CONSTRAINT FK_GrantWindowEligibility_Type FOREIGN KEY REFERENCES [lookup].[StakeholderEligibilityType]([Code]),
+        [CreatedAt] DATETIME2 NOT NULL CONSTRAINT DF_GrantWindowEligibility_CreatedAt DEFAULT SYSUTCDATETIME(),
+        [CreatedBy] NVARCHAR(100) NOT NULL CONSTRAINT DF_GrantWindowEligibility_CreatedBy DEFAULT 'SYSTEM',
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL,
+        CONSTRAINT UQ_GrantWindowEligibility UNIQUE ([FundingWindowId], [StakeholderEligibilityTypeCode])
+    );
+    CREATE INDEX [IX_GrantWindowEligibility_WindowId] ON [dbo].[GrantWindowEligibility] ([FundingWindowId]);
+    CREATE INDEX [IX_GrantWindowEligibility_TypeCode] ON [dbo].[GrantWindowEligibility] ([StakeholderEligibilityTypeCode]);
+END;
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantWindowIntervention')
+BEGIN
+    CREATE TABLE [dbo].[GrantWindowIntervention] (
+        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [FundingWindowId] INT NOT NULL CONSTRAINT FK_GrantWindowIntervention_Window FOREIGN KEY REFERENCES [dbo].[GrantFundingWindow]([Id]) ON DELETE CASCADE,
+        [InterventionTypeCode] NVARCHAR(50) NOT NULL CONSTRAINT FK_GrantWindowIntervention_Type FOREIGN KEY REFERENCES [lookup].[InterventionType]([Code]),
+        [MaxBudgetCap] DECIMAL(18,2) NULL,
+        [MaxLearnerCap] INT NULL,
+        [CreatedAt] DATETIME2 NOT NULL CONSTRAINT DF_GrantWindowIntervention_CreatedAt DEFAULT SYSUTCDATETIME(),
+        [CreatedBy] NVARCHAR(100) NOT NULL CONSTRAINT DF_GrantWindowIntervention_CreatedBy DEFAULT 'SYSTEM',
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL,
+        CONSTRAINT UQ_GrantWindowIntervention UNIQUE ([FundingWindowId], [InterventionTypeCode])
+    );
+    CREATE INDEX [IX_GrantWindowIntervention_WindowId] ON [dbo].[GrantWindowIntervention] ([FundingWindowId]);
+    CREATE INDEX [IX_GrantWindowIntervention_TypeCode] ON [dbo].[GrantWindowIntervention] ([InterventionTypeCode]);
+END;
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantWindowTemplate')
+BEGIN
+    CREATE TABLE [dbo].[GrantWindowTemplate] (
+        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [TemplateCode] NVARCHAR(50) NOT NULL CONSTRAINT UQ_GrantWindowTemplate_Code UNIQUE,
+        [Name] NVARCHAR(200) NOT NULL,
+        [Description] NVARCHAR(1000) NULL,
+        [IsPivotal] BIT NOT NULL CONSTRAINT DF_GrantWindowTemplate_IsPivotal DEFAULT 1,
+        [WindowClassification] NVARCHAR(50) NOT NULL CONSTRAINT DF_GrantWindowTemplate_Classification DEFAULT 'Pivotal',
+        [RequireWspComplianceDefault] BIT NOT NULL CONSTRAINT DF_GrantWindowTemplate_RequireWsp DEFAULT 0,
+        [EstimatedDurationDays] INT NOT NULL CONSTRAINT DF_GrantWindowTemplate_Duration DEFAULT 45,
+        [IsActive] BIT NOT NULL CONSTRAINT DF_GrantWindowTemplate_Active DEFAULT 1,
+        [CreatedAt] DATETIME2 NOT NULL CONSTRAINT DF_GrantWindowTemplate_CreatedAt DEFAULT SYSUTCDATETIME(),
+        [CreatedBy] NVARCHAR(100) NOT NULL CONSTRAINT DF_GrantWindowTemplate_CreatedBy DEFAULT 'SYSTEM',
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL
+    );
+    CREATE INDEX [IX_GrantWindowTemplate_Active] ON [dbo].[GrantWindowTemplate] ([IsActive]);
+END;
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantWindowTemplateEligibility')
+BEGIN
+    CREATE TABLE [dbo].[GrantWindowTemplateEligibility] (
+        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [TemplateId] INT NOT NULL CONSTRAINT FK_GrantWindowTemplateEligibility_Template FOREIGN KEY REFERENCES [dbo].[GrantWindowTemplate]([Id]) ON DELETE CASCADE,
+        [StakeholderEligibilityTypeCode] NVARCHAR(50) NOT NULL CONSTRAINT FK_GrantWindowTemplateEligibility_Type FOREIGN KEY REFERENCES [lookup].[StakeholderEligibilityType]([Code]),
+        [CreatedAt] DATETIME2 NOT NULL CONSTRAINT DF_GrantWindowTemplateEligibility_CreatedAt DEFAULT SYSUTCDATETIME(),
+        [CreatedBy] NVARCHAR(100) NOT NULL CONSTRAINT DF_GrantWindowTemplateEligibility_CreatedBy DEFAULT 'SYSTEM',
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL,
+        CONSTRAINT UQ_GrantWindowTemplateEligibility UNIQUE ([TemplateId], [StakeholderEligibilityTypeCode])
+    );
+    CREATE INDEX [IX_GrantWindowTemplateEligibility_TemplateId] ON [dbo].[GrantWindowTemplateEligibility] ([TemplateId]);
+END;
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantWindowTemplateIntervention')
+BEGIN
+    CREATE TABLE [dbo].[GrantWindowTemplateIntervention] (
+        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [TemplateId] INT NOT NULL CONSTRAINT FK_GrantWindowTemplateIntervention_Template FOREIGN KEY REFERENCES [dbo].[GrantWindowTemplate]([Id]) ON DELETE CASCADE,
+        [InterventionTypeCode] NVARCHAR(50) NOT NULL CONSTRAINT FK_GrantWindowTemplateIntervention_Type FOREIGN KEY REFERENCES [lookup].[InterventionType]([Code]),
+        [CreatedAt] DATETIME2 NOT NULL CONSTRAINT DF_GrantWindowTemplateIntervention_CreatedAt DEFAULT SYSUTCDATETIME(),
+        [CreatedBy] NVARCHAR(100) NOT NULL CONSTRAINT DF_GrantWindowTemplateIntervention_CreatedBy DEFAULT 'SYSTEM',
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL,
+        CONSTRAINT UQ_GrantWindowTemplateIntervention UNIQUE ([TemplateId], [InterventionTypeCode])
+    );
+    CREATE INDEX [IX_GrantWindowTemplateIntervention_TemplateId] ON [dbo].[GrantWindowTemplateIntervention] ([TemplateId]);
+END;
+
+-- Phase 49: Option A - Dynamic Multi-Section Composite DG Structure & Interventions
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantApplication')
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'ProjectDescription')
+        ALTER TABLE [dbo].[GrantApplication] ADD [ProjectDescription] NVARCHAR(MAX) NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'Purpose')
+        ALTER TABLE [dbo].[GrantApplication] ADD [Purpose] NVARCHAR(MAX) NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'Outcomes')
+        ALTER TABLE [dbo].[GrantApplication] ADD [Outcomes] NVARCHAR(MAX) NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'Benefits')
+        ALTER TABLE [dbo].[GrantApplication] ADD [Benefits] NVARCHAR(MAX) NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'PotentialRisks')
+        ALTER TABLE [dbo].[GrantApplication] ADD [PotentialRisks] NVARCHAR(MAX) NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'EstimatedOverallProjectCost')
+        ALTER TABLE [dbo].[GrantApplication] ADD [EstimatedOverallProjectCost] DECIMAL(18,2) NOT NULL CONSTRAINT DF_GrantApplication_EstimatedCost DEFAULT 0.00;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'NumberOfBeneficiaries')
+        ALTER TABLE [dbo].[GrantApplication] ADD [NumberOfBeneficiaries] INT NOT NULL CONSTRAINT DF_GrantApplication_Beneficiaries DEFAULT 0;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'RequireProjectAdministrationCosts')
+        ALTER TABLE [dbo].[GrantApplication] ADD [RequireProjectAdministrationCosts] BIT NOT NULL CONSTRAINT DF_GrantApplication_AdminCosts DEFAULT 0;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'TargetProvinces')
+        ALTER TABLE [dbo].[GrantApplication] ADD [TargetProvinces] NVARCHAR(500) NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'HasPivotalInterventions')
+        ALTER TABLE [dbo].[GrantApplication] ADD [HasPivotalInterventions] BIT NOT NULL CONSTRAINT DF_GrantApplication_HasPivotal DEFAULT 1;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('GrantApplication') AND name = 'HasNonPivotalInterventions')
+        ALTER TABLE [dbo].[GrantApplication] ADD [HasNonPivotalInterventions] BIT NOT NULL CONSTRAINT DF_GrantApplication_HasNonPivotal DEFAULT 0;
+
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GrantApplication_HasPivotal' AND object_id = OBJECT_ID('GrantApplication'))
+        CREATE INDEX [IX_GrantApplication_HasPivotal] ON [dbo].[GrantApplication] ([HasPivotalInterventions]);
+
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GrantApplication_HasNonPivotal' AND object_id = OBJECT_ID('GrantApplication'))
+        CREATE INDEX [IX_GrantApplication_HasNonPivotal] ON [dbo].[GrantApplication] ([HasNonPivotalInterventions]);
+END;
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantApplicationIntervention')
+BEGIN
+    CREATE TABLE [dbo].[GrantApplicationIntervention] (
+        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [GrantApplicationId] INT NOT NULL CONSTRAINT FK_GrantApplicationIntervention_App FOREIGN KEY REFERENCES [dbo].[GrantApplication]([Id]) ON DELETE CASCADE,
+        [InterventionTypeCode] NVARCHAR(50) NOT NULL CONSTRAINT FK_GrantApplicationIntervention_Type FOREIGN KEY REFERENCES [lookup].[InterventionType]([Code]),
+        [IsPivotal] BIT NOT NULL CONSTRAINT DF_GrantApplicationIntervention_IsPivotal DEFAULT 1,
+        [SaqaId] NVARCHAR(50) NULL,
+        [QualificationTitle] NVARCHAR(300) NULL,
+        [NqfLevel] NVARCHAR(50) NULL,
+        [OfoCode] NVARCHAR(100) NULL,
+        [LearnerCountEmployed] INT NOT NULL CONSTRAINT DF_GrantAppIntervention_18_1 DEFAULT 0,
+        [LearnerCountUnemployed] INT NOT NULL CONSTRAINT DF_GrantAppIntervention_18_2 DEFAULT 0,
+        [UnitCost] DECIMAL(18,2) NOT NULL CONSTRAINT DF_GrantAppIntervention_UnitCost DEFAULT 0.00,
+        [DeliverableName] NVARCHAR(300) NULL,
+        [TargetQuantity] INT NULL,
+        [EstimatedCost] DECIMAL(18,2) NOT NULL CONSTRAINT DF_GrantAppIntervention_EstCost DEFAULT 0.00,
+        [ProjectedStartDate] DATETIME2 NULL,
+        [ProjectedEndDate] DATETIME2 NULL,
+        [ActualEndDate] DATETIME2 NULL,
+        [MilestoneNumber] INT NULL,
+        [TotalAmount] DECIMAL(18,2) NOT NULL CONSTRAINT DF_GrantAppIntervention_Total DEFAULT 0.00,
+        [Comments] NVARCHAR(MAX) NULL,
+        [CreatedAt] DATETIME2 NOT NULL CONSTRAINT DF_GrantAppIntervention_CreatedAt DEFAULT SYSUTCDATETIME(),
+        [CreatedBy] NVARCHAR(100) NOT NULL CONSTRAINT DF_GrantAppIntervention_CreatedBy DEFAULT 'SYSTEM',
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL
+    );
+
+    CREATE INDEX [IX_GrantApplicationIntervention_AppId] ON [dbo].[GrantApplicationIntervention] ([GrantApplicationId]);
+    CREATE INDEX [IX_GrantApplicationIntervention_TypeCode] ON [dbo].[GrantApplicationIntervention] ([InterventionTypeCode]);
+    CREATE INDEX [IX_GrantApplicationIntervention_IsPivotal] ON [dbo].[GrantApplicationIntervention] ([IsPivotal]);
 END;
 
 PRINT 'Complete Idempotent Enterprise DDL Deployment Succeeded!';

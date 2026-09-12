@@ -6,6 +6,7 @@
 @page "/grants/windows/create"
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
+@using Nsdms.Domain.Lookups
 @using Nsdms.Web.Components.Shared
 @using MudBlazor
 @inject IGrantService GrantService
@@ -41,6 +42,12 @@
                     <MudChip T="string" Color="@GetStatusColor()" Size="Size.Small" Variant="Variant.Filled">
                         @_window.StatusDisplay
                     </MudChip>
+                    <MudChip T="string" Color="@(_window.IsPivotal ? Color.Primary : Color.Secondary)" Size="Size.Small" Variant="Variant.Outlined">
+                        @(_window.IsPivotal ? "PIVOTAL" : "Non-PIVOTAL")
+                    </MudChip>
+                    <MudChip T="string" Color="@(_window.RequireWspCompliance ? Color.Warning : Color.Success)" Size="Size.Small" Variant="Variant.Text">
+                        @(_window.RequireWspCompliance ? "WSP Enforced" : "WSP Optional")
+                    </MudChip>
                 }
             </div>
             @if (Id > 0)
@@ -49,12 +56,41 @@
                     Scheme Year: <strong>@_window.FinYear</strong> | 
                     Type: <strong>@(!string.IsNullOrWhiteSpace(_window.GrantTypeCode) ? _window.GrantTypeCode : "PIVOTAL")</strong> | 
                     Budget: <strong>@_window.TotalAvailableBudget.ToString("C")</strong> | 
+                    Eligible Stakeholders: <strong>@_selectedStakeholderCodes.Count</strong> |
+                    Allowed Interventions: <strong>@_selectedInterventionCodes.Count</strong> |
                     Applications: <strong>@(_window.Applications?.Count ?? 0)</strong>
                 </MudText>
             }
         </div>
     </div>
     <div class="d-flex align-center gap-2">
+        @if (Id > 0 && _window.ApprovalStatusCode == "Draft")
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Info"
+                       StartIcon="@Icons.Material.Filled.Send"
+                       OnClick="ProposeWindow"
+                       aria-label="Propose Window for Approval">
+                Propose for Approval
+            </MudButton>
+        }
+        @if (Id > 0 && _window.ApprovalStatusCode == "PendingApproval")
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Success"
+                       StartIcon="@Icons.Material.Filled.VerifiedUser"
+                       OnClick="ApproveWindow"
+                       aria-label="Approve & Activate Window">
+                Approve &amp; Activate
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.ThumbDown"
+                       OnClick="RejectWindow"
+                       aria-label="Reject Window Proposal">
+                Reject
+            </MudButton>
+        }
         @if (Id > 0 && _window.IsActive && _window.ClosingDate >= DateTime.UtcNow)
         {
             <MudButton Variant="Variant.Outlined"
@@ -100,6 +136,61 @@
     }
     else
     {
+        <!-- Specification Template Selection Banner (Option B) -->
+        @if (Id == 0 || _showTemplatePicker)
+        {
+            <MudCard Outlined="true" Class="pa-4 mb-4 border-primary" Style="border: 2px dashed var(--mud-palette-primary); background-color: var(--mud-palette-background-grey);">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.AutoFixHigh" Color="Color.Primary" />
+                        <MudText Typo="Typo.subtitle1" Class="fw-bold">
+                            Template Specification Engine (1-Click Window Pre-Configuration)
+                        </MudText>
+                    </div>
+                    @if (Id > 0)
+                    {
+                        <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => _showTemplatePicker = false)">Dismiss</MudButton>
+                    }
+                </div>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                    Select a standardized template specification to instantly populate funding window parameters, eligible stakeholder groups, and permitted skills development interventions:
+                </MudText>
+                <MudGrid Spacing="2">
+                    @foreach (var tmpl in _templates)
+                    {
+                        <MudItem xs="12" md="4">
+                            <MudCard Outlined="true" Class="@($"pa-3 h-100 cursor-pointer {(_selectedTemplateId == tmpl.Id ? "border-primary bg-primary-lighten" : "")}")"
+                                     Style="@(_selectedTemplateId == tmpl.Id ? "border: 2px solid var(--mud-palette-primary);" : "")"
+                                     @onclick="@(() => ApplyTemplate(tmpl))">
+                                <div class="d-flex justify-space-between align-start mb-1">
+                                    <MudChip T="string" Size="Size.Small" Color="@(tmpl.IsPivotal ? Color.Primary : Color.Secondary)" Variant="Variant.Filled">
+                                        @(tmpl.IsPivotal ? "PIVOTAL" : "Non-PIVOTAL")
+                                    </MudChip>
+                                    <MudChip T="string" Size="Size.Small" Color="@(tmpl.RequireWspComplianceDefault ? Color.Warning : Color.Success)" Variant="Variant.Outlined">
+                                        @(tmpl.RequireWspComplianceDefault ? "WSP Required" : "WSP Optional")
+                                    </MudChip>
+                                </div>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold mt-1">@tmpl.Name</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-2">
+                                    @tmpl.Description
+                                </MudText>
+                                <div class="d-flex justify-space-between align-center text-secondary small mt-auto pt-2 border-top">
+                                    <span>Duration: <strong>@tmpl.EstimatedDurationDays days</strong></span>
+                                    <span>Stakeholders: <strong>@tmpl.DefaultEligibilities.Count</strong></span>
+                                    <span>Interventions: <strong>@tmpl.DefaultInterventions.Count</strong></span>
+                                </div>
+                                <div class="text-end mt-2">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Check">
+                                        Apply Template
+                                    </MudButton>
+                                </div>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudCard>
+        }
+
         <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" @bind-ActivePanelIndex="_activeTabIndex">
             <!-- TAB 1: Window Configuration -->
             <MudTabPanel Text="Window Configuration" Icon="@Icons.Material.Filled.Settings">
@@ -107,7 +198,19 @@
                     <MudGrid Spacing="3">
                         <MudItem xs="12" lg="8">
                             <MudCard Outlined="true" Class="pa-4 mb-4">
-                                <MudText Typo="Typo.h6" Class="fw-bold mb-3">Gazetted Funding Cycle Details</MudText>
+                                <div class="d-flex justify-space-between align-center mb-3">
+                                    <MudText Typo="Typo.h6" Class="fw-bold">Gazetted Funding Cycle Details</MudText>
+                                    @if (Id > 0 && !_showTemplatePicker)
+                                    {
+                                        <MudButton Variant="Variant.Outlined" 
+                                                   Color="Color.Primary" 
+                                                   Size="Size.Small" 
+                                                   StartIcon="@Icons.Material.Filled.AutoFixHigh" 
+                                                   OnClick="@(() => _showTemplatePicker = true)">
+                                            Apply Template Specification
+                                        </MudButton>
+                                    }
+                                </div>
                                 <MudGrid>
                                     <MudItem xs="12" md="4">
                                         <MudNumericField T="int"
@@ -119,12 +222,20 @@
                                                          Min="2020"
                                                          Max="2040" />
                                     </MudItem>
-                                    <MudItem xs="12" md="8">
-                                        <MudSelect T="string" Label="Grant Funding Programme Type" Required="true" @bind-Value="_window.GrantTypeCode" Variant="Variant.Outlined">
+                                    <MudItem xs="12" md="4">
+                                        <MudSelect T="string" Label="Grant Funding Programme" Required="true" @bind-Value="_window.GrantTypeCode" Variant="Variant.Outlined">
                                             @foreach (var gt in _grantTypes)
                                             {
                                                 <MudSelectItem Value="@gt.Code">@gt.Name (@gt.Code)</MudSelectItem>
                                             }
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="12" md="4">
+                                        <MudSelect T="string" Label="Window Classification" Required="true" @bind-Value="_window.WindowClassification" Variant="Variant.Outlined">
+                                            <MudSelectItem Value="@("PIVOTAL")">PIVOTAL (Credit / NQF Bound)</MudSelectItem>
+                                            <MudSelectItem Value="@("NON_PIVOTAL")">Non-PIVOTAL (Special Projects)</MudSelectItem>
+                                            <MudSelectItem Value="@("SPECIAL_PROJECT")">Special Strategic Allocation</MudSelectItem>
+                                            <MudSelectItem Value="@("HYBRID")">Hybrid (PIVOTAL &amp; Special)</MudSelectItem>
                                         </MudSelect>
                                     </MudItem>
                                     <MudItem xs="12">
@@ -136,6 +247,45 @@
                                                        Variant="Variant.Outlined"
                                                        Placeholder="e.g. 2026/27 Discretionary Grant Funding Window 1 (PIVOTAL &amp; Apprenticeships)" />
                                     </MudItem>
+
+                                    <!-- Governance Toggles: PIVOTAL vs Non-PIVOTAL and WSP Compliance Requirement -->
+                                    <MudItem xs="12" md="6">
+                                        <MudCard Outlined="true" Class="pa-3 bg-surface">
+                                            <div class="d-flex align-center justify-space-between">
+                                                <div>
+                                                    <MudText Typo="Typo.subtitle2" Class="fw-bold">Grant Intervention Type</MudText>
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                        @(_window.IsPivotal 
+                                                            ? "PIVOTAL: Credit-bearing qualifications, artisan apprenticeships, learnerships." 
+                                                            : "Non-PIVOTAL: Non-credit bursaries, career guidance, TVET equipment, research.")
+                                                    </MudText>
+                                                </div>
+                                                <MudSwitch T="bool" 
+                                                           @bind-Value="_window.IsPivotal" 
+                                                           Color="Color.Primary" 
+                                                           Label="@(_window.IsPivotal ? "PIVOTAL" : "Non-PIVOTAL")" />
+                                            </div>
+                                        </MudCard>
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudCard Outlined="true" Class="pa-3 bg-surface">
+                                            <div class="d-flex align-center justify-space-between">
+                                                <div>
+                                                    <MudText Typo="Typo.subtitle2" Class="fw-bold">Mandatory Grant (WSP) Precondition</MudText>
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                        @(_window.RequireWspCompliance 
+                                                            ? "Enforced: Applicants must have an approved WSP for the scheme year." 
+                                                            : "Optional: Independent/early window opening before WSP deadlines.")
+                                                    </MudText>
+                                                </div>
+                                                <MudSwitch T="bool" 
+                                                           @bind-Value="_window.RequireWspCompliance" 
+                                                           Color="Color.Warning" 
+                                                           Label="@(_window.RequireWspCompliance ? "Enforced" : "Optional")" />
+                                            </div>
+                                        </MudCard>
+                                    </MudItem>
+
                                     <MudItem xs="12" md="6">
                                         <MudDatePicker Label="Opening Date"
                                                        Required="true"
@@ -192,6 +342,14 @@
                                         <MudText Typo="Typo.body2" Class="fw-bold text-success">@_window.TotalAvailableBudget.ToString("C")</MudText>
                                     </div>
                                     <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.body2">Eligible Stakeholder Tags:</MudText>
+                                        <MudText Typo="Typo.body2" Class="fw-bold text-primary">@_selectedStakeholderCodes.Count selected</MudText>
+                                    </div>
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.body2">Allowed Interventions:</MudText>
+                                        <MudText Typo="Typo.body2" Class="fw-bold text-primary">@_selectedInterventionCodes.Count selected</MudText>
+                                    </div>
+                                    <div class="d-flex justify-space-between">
                                         <MudText Typo="Typo.body2">Applications Lodged:</MudText>
                                         <MudText Typo="Typo.body2" Class="fw-bold">@(_window.Applications?.Count ?? 0)</MudText>
                                     </div>
@@ -215,7 +373,140 @@
                 </MudForm>
             </MudTabPanel>
 
-            <!-- TAB 2: Strategic Themes & Priorities -->
+            <!-- TAB 2: Eligible Stakeholder Types -->
+            <MudTabPanel Text="Eligible Stakeholders" Icon="@Icons.Material.Filled.GroupWork" BadgeData="@_selectedStakeholderCodes.Count" BadgeColor="Color.Primary">
+                <div class="pa-4">
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <div>
+                            <MudText Typo="Typo.h6" Class="fw-bold">Eligible Stakeholder Classifications</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Configure which organizational entities and institutional classifications are permitted to submit grant applications against this window.
+                            </MudText>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="SelectAllStakeholders">Select All</MudButton>
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="SelectEmployersOnly">Employers Only</MudButton>
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="SelectProvidersOnly">TVETs &amp; Providers</MudButton>
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Secondary" OnClick="ClearAllStakeholders">Clear All</MudButton>
+                        </div>
+                    </div>
+
+                    <MudGrid Spacing="2">
+                        @foreach (var st in _stakeholderTypes)
+                        {
+                            var isChecked = _selectedStakeholderCodes.Contains(st.Code);
+                            <MudItem xs="12" md="6">
+                                <MudCard Outlined="true" Class="@($"pa-3 cursor-pointer {(isChecked ? "border-primary" : "")}")"
+                                         Style="@(isChecked ? "border: 2px solid var(--mud-palette-primary);" : "")"
+                                         @onclick="@(() => ToggleStakeholder(st.Code))">
+                                    <div class="d-flex align-center justify-space-between">
+                                        <div class="d-flex align-center gap-3">
+                                            <MudCheckBox T="bool" Value="@isChecked" ValueChanged="@((bool val) => SetStakeholder(st.Code, val))" Color="Color.Primary" />
+                                            <div>
+                                                <div class="d-flex align-center gap-2">
+                                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Class="font-monospace">
+                                                        @st.Code
+                                                    </MudChip>
+                                                    <MudText Typo="Typo.subtitle2" Class="fw-bold">@st.Name</MudText>
+                                                </div>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mt-1">
+                                                    @st.Description
+                                                </MudText>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </div>
+            </MudTabPanel>
+
+            <!-- TAB 3: Allowed Interventions & Dynamic Catalog -->
+            <MudTabPanel Text="Allowed Interventions" Icon="@Icons.Material.Filled.ChecklistRtl" BadgeData="@_selectedInterventionCodes.Count" BadgeColor="Color.Secondary">
+                <div class="pa-4">
+                    <div class="d-flex flex-wrap justify-space-between align-center gap-2 mb-3">
+                        <div>
+                            <MudText Typo="Typo.h6" Class="fw-bold">Skills Development &amp; Strategic Interventions</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Whitelist which learning programmes, apprenticeships, bursaries, or special strategic projects applicants may request funding for.
+                            </MudText>
+                        </div>
+                        <div class="d-flex flex-wrap align-center gap-2">
+                            <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small">
+                                <MudButton Color="@(_interventionFilter == "All" ? Color.Primary : Color.Default)" OnClick="@(() => _interventionFilter = "All")">All (@_interventionCatalog.Count)</MudButton>
+                                <MudButton Color="@(_interventionFilter == "Pivotal" ? Color.Primary : Color.Default)" OnClick="@(() => _interventionFilter = "Pivotal")">PIVOTAL (@_interventionCatalog.Count(i => i.IsPivotal))</MudButton>
+                                <MudButton Color="@(_interventionFilter == "NonPivotal" ? Color.Primary : Color.Default)" OnClick="@(() => _interventionFilter = "NonPivotal")">Non-PIVOTAL (@_interventionCatalog.Count(i => !i.IsPivotal))</MudButton>
+                            </MudButtonGroup>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.LibraryAdd"
+                                       OnClick="OpenAddInterventionDialog">
+                                Add New Intervention to Catalog
+                            </MudButton>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <div class="d-flex gap-2">
+                            <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="SelectAllInterventions">Select All Visible</MudButton>
+                            <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Secondary" OnClick="ClearAllInterventions">Clear Visible</MudButton>
+                        </div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Showing @FilteredInterventions.Count interventions (@_selectedInterventionCodes.Count selected for window)
+                        </MudText>
+                    </div>
+
+                    <MudTable Items="@FilteredInterventions" Hover="true" Dense="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh Style="width: 50px;">Allow</MudTh>
+                            <MudTh>Code</MudTh>
+                            <MudTh>Intervention Name</MudTh>
+                            <MudTh>Classification</MudTh>
+                            <MudTh>Category</MudTh>
+                            <MudTh>Benchmark Unit Cost</MudTh>
+                            <MudTh>Regulatory Scope</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            @{
+                                var isAllowed = _selectedInterventionCodes.Contains(context.Code);
+                            }
+                            <MudTd>
+                                <MudCheckBox T="bool" Value="@isAllowed" ValueChanged="@((bool val) => SetIntervention(context.Code, val))" Color="Color.Primary" />
+                            </MudTd>
+                            <MudTd>
+                                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined" Class="font-monospace">
+                                    @context.Code
+                                </MudChip>
+                            </MudTd>
+                            <MudTd>
+                                <div class="fw-bold">@context.Name</div>
+                            </MudTd>
+                            <MudTd>
+                                <MudChip T="string" Size="Size.Small" Color="@(context.IsPivotal ? Color.Primary : Color.Secondary)" Variant="Variant.Filled">
+                                    @(context.IsPivotal ? "PIVOTAL" : "Non-PIVOTAL")
+                                </MudChip>
+                            </MudTd>
+                            <MudTd>
+                                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">
+                                    @(context.Category ?? "Standard")
+                                </MudChip>
+                            </MudTd>
+                            <MudTd Class="fw-bold text-success">
+                                @(context.DefaultUnitCost > 0 ? context.DefaultUnitCost.ToString("C") : "Variable / Project")
+                            </MudTd>
+                            <MudTd>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    @(context.Description ?? "-")
+                                </MudText>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </div>
+            </MudTabPanel>
+
+            <!-- TAB 4: Strategic Themes & Priorities -->
             @if (Id > 0)
             {
                 <MudTabPanel Text="Strategic Themes &amp; Priorities" Icon="@Icons.Material.Filled.Stars" BadgeData="@(_window.StrategicPriorities?.Count(p => p.IsActive) ?? 0)" BadgeColor="Color.Secondary">
@@ -371,7 +662,7 @@
                     </div>
                 </MudTabPanel>
 
-                <!-- TAB 3: Applications Lodged -->
+                <!-- TAB 5: Applications Lodged -->
                 <MudTabPanel Text="Applications Lodged" Icon="@Icons.Material.Filled.Assignment" BadgeData="@(_window.Applications?.Count ?? 0)" BadgeColor="Color.Primary">
                     <div class="pa-4">
                         @if (_window.Applications != null && _window.Applications.Any())
@@ -429,7 +720,7 @@
                     </div>
                 </MudTabPanel>
 
-                <!-- TAB 4: Budget & Allocation Metrics -->
+                <!-- TAB 6: Budget & Allocation Metrics -->
                 <MudTabPanel Text="Budget Metrics" Icon="@Icons.Material.Filled.PieChart">
                     <div class="pa-4">
                         @if (_summary != null)
@@ -478,7 +769,7 @@
                     </div>
                 </MudTabPanel>
 
-                <!-- TAB 5: Evidence Vault -->
+                <!-- TAB 7: Evidence Vault -->
                 <MudTabPanel Text="Gazette Documents" Icon="@Icons.Material.Filled.FolderZip">
                     <DocumentVault TargetEntityName="GrantFundingWindow" TargetEntityId="@Id" />
                 </MudTabPanel>
@@ -500,8 +791,18 @@
 
     private List<LookupItemDto> _grantTypes = new();
     private List<StrategicPriority> _allStrategicPriorities = new();
+    private List<GrantWindowTemplate> _templates = new();
+    private List<StakeholderEligibilityType> _stakeholderTypes = new();
+    private List<InterventionType> _interventionCatalog = new();
+
+    private HashSet<string> _selectedStakeholderCodes = new(StringComparer.OrdinalIgnoreCase);
+    private HashSet<string> _selectedInterventionCodes = new(StringComparer.OrdinalIgnoreCase);
+
     private DateTime? _openDate;
     private DateTime? _closeDate;
+    private int? _selectedTemplateId;
+    private bool _showTemplatePicker = false;
+    private string _interventionFilter = "All";
 
     // Add Theme form state
     private int _newPriorityId = 0;
@@ -511,11 +812,21 @@
     private bool _newIsRingFenced = false;
     private bool _isAddingTheme = false;
 
+    private List<InterventionType> FilteredInterventions => _interventionFilter switch
+    {
+        "Pivotal" => _interventionCatalog.Where(i => i.IsPivotal).ToList(),
+        "NonPivotal" => _interventionCatalog.Where(i => !i.IsPivotal).ToList(),
+        _ => _interventionCatalog
+    };
+
     protected override async Task OnInitializedAsync()
     {
         _loading = true;
         _grantTypes = await LookupService.GetLookupItemsAsync("GrantTypeType");
         _allStrategicPriorities = await GrantService.GetStrategicPrioritiesAsync(activeOnly: true);
+        _templates = await GrantService.GetWindowTemplatesAsync(activeOnly: true);
+        _stakeholderTypes = await GrantService.GetStakeholderEligibilityTypesAsync(activeOnly: true);
+        _interventionCatalog = await GrantService.GetInterventionCatalogAsync(isPivotal: null, activeOnly: true);
 
         if (Id > 0)
         {
@@ -523,11 +834,15 @@
         }
         else
         {
+            _showTemplatePicker = true;
             _window = new GrantFundingWindow
             {
                 FinYear = DateTime.UtcNow.Year,
                 WindowName = $"{DateTime.UtcNow.Year}/{DateTime.UtcNow.Year + 1} Discretionary Grant Funding Window",
                 GrantTypeCode = "PIVOTAL",
+                WindowClassification = "PIVOTAL",
+                IsPivotal = true,
+                RequireWspCompliance = false,
                 OpeningDate = DateTime.UtcNow.Date,
                 ClosingDate = DateTime.UtcNow.Date.AddMonths(2),
                 TotalAvailableBudget = 25000000m,
@@ -535,6 +850,22 @@
             };
             _openDate = _window.OpeningDate;
             _closeDate = _window.ClosingDate;
+
+            // Default to first template if available
+            if (_templates.Any())
+            {
+                ApplyTemplate(_templates.First());
+            }
+            else
+            {
+                // Select standard employer eligibility by default
+                _selectedStakeholderCodes.Add("LEVY_PAYING");
+                _selectedStakeholderCodes.Add("SMME_EXEMPT");
+                foreach (var it in _interventionCatalog.Where(i => i.IsPivotal))
+                {
+                    _selectedInterventionCodes.Add(it.Code);
+                }
+            }
         }
 
         _loading = false;
@@ -549,11 +880,125 @@
             _openDate = _window.OpeningDate;
             _closeDate = _window.ClosingDate;
             _summary = await GrantService.GetFundingWindowSummaryAsync(Id);
+
+            // Load window stakeholder eligibilities
+            var eligibilities = await GrantService.GetWindowEligibilitiesAsync(Id);
+            _selectedStakeholderCodes = eligibilities
+                .Select(e => e.StakeholderEligibilityTypeCode)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            // Load window interventions
+            var interventions = await GrantService.GetWindowInterventionsAsync(Id);
+            _selectedInterventionCodes = interventions
+                .Select(i => i.InterventionTypeCode)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
         }
         else
         {
             Snackbar.Add("Discretionary Grant Funding Window not found.", Severity.Error);
             NavManager.NavigateTo("/dg-funding-windows");
+        }
+    }
+
+    private void ApplyTemplate(GrantWindowTemplate tmpl)
+    {
+        _selectedTemplateId = tmpl.Id;
+        _window.TemplateId = tmpl.Id;
+        _window.WindowName = $"{_window.FinYear}/{_window.FinYear + 1} {tmpl.Name}";
+        _window.GrantTypeCode = tmpl.IsPivotal ? "PIVOTAL" : "PROJECT";
+        _window.WindowClassification = tmpl.WindowClassification;
+        _window.IsPivotal = tmpl.IsPivotal;
+        _window.RequireWspCompliance = tmpl.RequireWspComplianceDefault;
+        _window.Description = tmpl.Description;
+
+        _openDate = DateTime.UtcNow.Date;
+        _closeDate = DateTime.UtcNow.Date.AddDays(tmpl.EstimatedDurationDays);
+
+        // Pre-populate eligibilities from blueprint
+        _selectedStakeholderCodes.Clear();
+        foreach (var el in tmpl.DefaultEligibilities)
+        {
+            _selectedStakeholderCodes.Add(el.StakeholderEligibilityTypeCode);
+        }
+
+        // Pre-populate interventions from blueprint
+        _selectedInterventionCodes.Clear();
+        foreach (var it in tmpl.DefaultInterventions)
+        {
+            _selectedInterventionCodes.Add(it.InterventionTypeCode);
+        }
+
+        Snackbar.Add($"Template specification '{tmpl.Name}' applied successfully. {_selectedStakeholderCodes.Count} stakeholders and {_selectedInterventionCodes.Count} interventions configured.", Severity.Info);
+    }
+
+    // Stakeholder Selection Handlers
+    private void ToggleStakeholder(string code)
+    {
+        if (_selectedStakeholderCodes.Contains(code))
+            _selectedStakeholderCodes.Remove(code);
+        else
+            _selectedStakeholderCodes.Add(code);
+    }
+
+    private void SetStakeholder(string code, bool isSelected)
+    {
+        if (isSelected) _selectedStakeholderCodes.Add(code);
+        else _selectedStakeholderCodes.Remove(code);
+    }
+
+    private void SelectAllStakeholders()
+    {
+        foreach (var st in _stakeholderTypes) _selectedStakeholderCodes.Add(st.Code);
+    }
+
+    private void SelectEmployersOnly()
+    {
+        _selectedStakeholderCodes.Clear();
+        _selectedStakeholderCodes.Add("LEVY_PAYING");
+        _selectedStakeholderCodes.Add("SMME_EXEMPT");
+        _selectedStakeholderCodes.Add("EMPLOYER_ASSOC");
+    }
+
+    private void SelectProvidersOnly()
+    {
+        _selectedStakeholderCodes.Clear();
+        _selectedStakeholderCodes.Add("PUBLIC_TVET");
+        _selectedStakeholderCodes.Add("PRIVATE_TVET_SDP");
+        _selectedStakeholderCodes.Add("PUBLIC_UNIVERSITY");
+        _selectedStakeholderCodes.Add("CET_COLLEGE");
+    }
+
+    private void ClearAllStakeholders() => _selectedStakeholderCodes.Clear();
+
+    // Intervention Selection Handlers
+    private void SetIntervention(string code, bool isSelected)
+    {
+        if (isSelected) _selectedInterventionCodes.Add(code);
+        else _selectedInterventionCodes.Remove(code);
+    }
+
+    private void SelectAllInterventions()
+    {
+        foreach (var it in FilteredInterventions) _selectedInterventionCodes.Add(it.Code);
+    }
+
+    private void ClearAllInterventions()
+    {
+        foreach (var it in FilteredInterventions) _selectedInterventionCodes.Remove(it.Code);
+    }
+
+    private async Task OpenAddInterventionDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<RegisterInterventionDialog>("Add New Intervention to Catalog", options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled && result.Data is InterventionType newIntervention)
+        {
+            // Refresh catalog and add to selected list
+            _interventionCatalog = await GrantService.GetInterventionCatalogAsync(isPivotal: null, activeOnly: true);
+            _selectedInterventionCodes.Add(newIntervention.Code);
+            StateHasChanged();
         }
     }
 
@@ -654,16 +1099,40 @@
                 return;
             }
 
+            if (!_selectedStakeholderCodes.Any())
+            {
+                Snackbar.Add("Please configure at least one eligible stakeholder classification.", Severity.Warning);
+                return;
+            }
+
+            if (!_selectedInterventionCodes.Any())
+            {
+                Snackbar.Add("Please configure at least one allowed skills development intervention.", Severity.Warning);
+                return;
+            }
+
+            GrantFundingWindow savedWindow;
             if (Id == 0)
             {
-                var created = await GrantService.CreateFundingWindowAsync(_window, "AdminUser");
-                Snackbar.Add($"Funding window '{created.WindowName}' gazetted and opened successfully.", Severity.Success);
-                NavManager.NavigateTo($"/dg-funding-windows/{created.Id}");
+                savedWindow = await GrantService.CreateFundingWindowAsync(_window, "AdminUser");
             }
             else
             {
-                var updated = await GrantService.UpdateFundingWindowAsync(_window, "AdminUser");
-                Snackbar.Add($"Funding window '{updated.WindowName}' updated successfully.", Severity.Success);
+                savedWindow = await GrantService.UpdateFundingWindowAsync(_window, "AdminUser");
+            }
+
+            // Save relational eligibilities and interventions
+            await GrantService.SetWindowEligibilitiesAsync(savedWindow.Id, _selectedStakeholderCodes, "AdminUser");
+            await GrantService.SetWindowInterventionsAsync(savedWindow.Id, _selectedInterventionCodes, "AdminUser");
+
+            if (Id == 0)
+            {
+                Snackbar.Add($"Funding window '{savedWindow.WindowName}' gazetted and opened successfully.", Severity.Success);
+                NavManager.NavigateTo($"/dg-funding-windows/{savedWindow.Id}");
+            }
+            else
+            {
+                Snackbar.Add($"Funding window '{savedWindow.WindowName}' updated successfully with {_selectedStakeholderCodes.Count} eligible stakeholders and {_selectedInterventionCodes.Count} interventions.", Severity.Success);
                 await LoadWindowData();
             }
         }
@@ -674,6 +1143,64 @@
         finally
         {
             _isSaving = false;
+        }
+    }
+
+    private async Task ProposeWindow()
+    {
+        try
+        {
+            var res = await GrantService.ProposeFundingWindowAsync(Id, "OfficerProposer");
+            Snackbar.Add($"Funding Window '{res.WindowName}' proposed for approval. Pending independent executive review.", Severity.Info);
+            await LoadWindowData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task ApproveWindow()
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Dual Authorisation: Approve Funding Window",
+            $"Approve and activate '{_window.WindowName}' with budget of {_window.TotalAvailableBudget:C}? This opens the window for external employer applications.",
+            yesText: "Approve & Activate", cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            try
+            {
+                var res = await GrantService.ApproveAndActivateFundingWindowAsync(Id, "ExecutiveApprover", "Approved per MANCO gazette notice");
+                Snackbar.Add($"Funding Window '{res.WindowName}' approved and activated successfully.", Severity.Success);
+                await LoadWindowData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+
+    private async Task RejectWindow()
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Reject Funding Window Proposal",
+            $"Are you sure you want to reject the proposal for '{_window.WindowName}'?",
+            yesText: "Reject", cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            try
+            {
+                var res = await GrantService.RejectFundingWindowAsync(Id, "ExecutiveApprover", "Proposal returned for revision");
+                Snackbar.Add("Funding window proposal rejected.", Severity.Warning);
+                await LoadWindowData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
         }
     }
 

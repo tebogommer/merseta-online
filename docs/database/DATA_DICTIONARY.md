@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-09 21:20:31 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 232
+> **Generated:** 2026-09-12 15:48:12 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 239
 
 ---
 
@@ -73,13 +73,19 @@
 | `dbo` | [`FinancialQuarter`](#financialquarter) | `FinancialQuarter` | 13 | `Id` | Constituent statutory quarter belonging to a specific FinancialYear. Supports arbitrary, customizable date boundaries. |
 | `dbo` | [`FinancialYear`](#financialyear) | `FinancialYear` | 22 | `Id` | Master statutory financial scheme year definition (e.g. 2026/2027). Supports customizable start and end dates with dynamic quarterly projections. |
 | `dbo` | [`FundingWindowPriority`](#fundingwindowpriority) | `FundingWindowPriority` | 12 | `Id` | Gazetted Strategic Priority sub-budget envelope and beneficiary quota allocated to a Discretionary Grant Funding Window. |
-| `dbo` | [`GrantApplication`](#grantapplication) | `GrantApplication` | 20 | `Id` | Discretionary Grant funding applications submitted by employers for skills development projects. |
-| `dbo` | [`GrantFundingWindow`](#grantfundingwindow) | `GrantFundingWindow` | 13 | `Id` | Gazette-announced Discretionary Grant funding window opening and allocation cycle. |
+| `dbo` | [`GrantApplication`](#grantapplication) | `GrantApplication` | 31 | `Id` | Discretionary Grant funding applications submitted by employers for skills development projects. |
+| `dbo` | [`GrantApplicationIntervention`](#grantapplicationintervention) | `GrantApplicationIntervention` | 24 | `Id` | Structured intervention line item attached to a Discretionary Grant Application. Supports both PIVOTAL structured training plans (accredited qualifications/unit standards) and Non-PIVOTAL project implementation deliverables (milestones/equipment/bursaries). |
+| `dbo` | [`GrantFundingWindow`](#grantfundingwindow) | `GrantFundingWindow` | 23 | `Id` | Gazette-announced Discretionary Grant funding window opening and allocation cycle. |
 | `dbo` | [`GrantMoa`](#grantmoa) | `GrantMoa` | 16 | `Id` | Memorandum of Agreement (MOA) for approved Discretionary Grants. |
 | `dbo` | [`GrantMoaMilestone`](#grantmoamilestone) | `GrantMoaMilestone` | 17 | `Id` | Delivery milestones linked to MOA tranches. |
 | `dbo` | [`GrantPaymentClaim`](#grantpaymentclaim) | `GrantPaymentClaim` | 23 | `Id` | Milestone-based Payment Claim against a Project Implementation Plan. |
 | `dbo` | [`GrantProjectBudget`](#grantprojectbudget) | `GrantProjectBudget` | 12 | `Id` | Detailed cost item and financial budget breakdown submitted in a Discretionary Grant application. |
 | `dbo` | [`GrantTranchePayment`](#granttranchepayment) | `GrantTranchePayment` | 19 | `Id` | Tranche Invoices and Payment Requisitions. |
+| `dbo` | [`GrantWindowEligibility`](#grantwindoweligibility) | `GrantWindowEligibility` | 7 | `Id` | Stakeholder eligibility mapping for a Discretionary Grant funding window. Specifies which organizational categories (e.g. Levy-paying, Public TVET, NGO) may apply. |
+| `dbo` | [`GrantWindowIntervention`](#grantwindowintervention) | `GrantWindowIntervention` | 9 | `Id` | Whitelisted skills development intervention permitted under a specific funding window. Scopes whether learners, apprenticeships, bursaries, or non-pivotal projects are eligible. |
+| `dbo` | [`GrantWindowTemplate`](#grantwindowtemplate) | `GrantWindowTemplate` | 13 | `Id` | Reusable Blueprint Template for rapid 1-click Discretionary Grant funding window creation. Bundles default stakeholder eligibilities and whitelisted interventions. |
+| `dbo` | [`GrantWindowTemplateEligibility`](#grantwindowtemplateeligibility) | `GrantWindowTemplateEligibility` | 7 | `Id` | Default stakeholder eligibility presets attached to a funding window template. |
+| `dbo` | [`GrantWindowTemplateIntervention`](#grantwindowtemplateintervention) | `GrantWindowTemplateIntervention` | 7 | `Id` | Default whitelisted interventions attached to a funding window template. |
 | `dbo` | [`InterSetaTransfer`](#intersetatransfer) | `InterSetaTransfer` | 16 | `Id` | Inter-SETA Transfer of employer registration and levy funds between SETAs. |
 | `dbo` | [`LearnerAssessment`](#learnerassessment) | `LearnerAssessment` | 30 | `Id` | Formative and summative learning programme unit standard assessment evaluations, capturing all statutory fields required for SETMIS File 503 (Unit Standard Enrolment) reporting. |
 | `dbo` | [`LearnerBulkBatch`](#learnerbulkbatch) | `LearnerBulkBatch` | 14 | `Id` | Represents a bulk intake batch for high-speed learner registrations submitted by an Employer or SDP. Implements the automated bulk fast-track channel of the Dual-Channel Learner Registration Architecture. |
@@ -211,7 +217,7 @@
 | `lookup` | [`HomeLanguageType`](#homelanguagetype) | `HomeLanguageType` | 8 | `Code` | Official South African home language classifications (Field: Home_Language_Code - 14 statutory codes including SASL). |
 | `lookup` | [`HonoursClassType`](#honoursclasstype) | `HonoursClassType` | 8 | `Code` | Higher Education and Umalusi academic achievement classification distinctions (Field: HONOURS_CLASS_ID - Cum Laude, Honours, etc.). |
 | `lookup` | [`InternshipStatusType`](#internshipstatustype) | `InternshipStatusType` | 8 | `Code` | Work Integrated Learning (WIL) and Internship lifecycle status (Field: Internship_Status_Id - Active, Completed, Discontinued). |
-| `lookup` | [`InterventionType`](#interventiontype) | `InterventionType` | 8 | `Code` | Targeted skills development intervention categories. |
+| `lookup` | [`InterventionType`](#interventiontype) | `InterventionType` | 11 | `Code` | Targeted skills development intervention categories (both PIVOTAL and Non-PIVOTAL). |
 | `lookup` | [`LearnerEvidenceType`](#learnerevidencetype) | `LearnerEvidenceType` | 8 | `Code` | Portfolio of Evidence (PoE) digital artifact and evidence document types. |
 | `lookup` | [`LearningProgrammeType`](#learningprogrammetype) | `LearningProgrammeType` | 8 | `Code` | Learning intervention modality types (Field: Learning_Programme_Type_Id - Learnership, Apprenticeship, Skills Programme, Internship, Bursary, etc.). |
 | `lookup` | [`NationalityType`](#nationalitytype) | `NationalityType` | 8 | `Code` | SETMIS regional nationality classifications (Field: Nationality_Code - 23 statutory nationality codes). |
@@ -232,6 +238,7 @@
 | `lookup` | [`SetaType`](#setatype) | `SetaType` | 8 | `Code` | South African Sector Education and Training Authorities (Field: SETA_Id - 21 SETAs including MerSETA). |
 | `lookup` | [`SicCodeType`](#siccodetype) | `SicCodeType` | 10 | `Code` | Standard Industrial Classification (SIC) 5-digit economic activity codes (Field: SIC_Code - 815 statutory codes). |
 | `lookup` | [`SiteVisitApprovalStatusType`](#sitevisitapprovalstatustype) | `SiteVisitApprovalStatusType` | 8 | `Code` | On-site physical facility inspection approval status codes. |
+| `lookup` | [`StakeholderEligibilityType`](#stakeholdereligibilitytype) | `StakeholderEligibilityType` | 8 | `Code` | Stakeholder institutional and legal eligibility classifications for Discretionary Grants. (e.g. Levy Paying Employer, Public TVET College, Private SDP, University, NGO/CBO, Trade Union). |
 | `lookup` | [`StatssaAreaCodeType`](#statssaareacodetype) | `StatssaAreaCodeType` | 8 | `Code` | Stats SA spatial geographic sub-place and municipal area codes (Field: STATSSA_Area_Code - 22,108 statutory codes). |
 | `lookup` | [`StatusType`](#statustype) | `StatusType` | 8 | `Code` | General system and workflow operational status codes (Active, Inactive, Pending, Approved, Rejected, Suspended). |
 | `lookup` | [`SubfieldType`](#subfieldtype) | `SubfieldType` | 8 | `Code` | SAQA National Qualifications Framework subfield classifications (Field: Subfield_Id - 68 statutory subfields). |
@@ -2992,19 +2999,30 @@
 | `ApplicationNumber` | `nvarchar(50)` | **NOT NULL** |  | Unique grant application reference tracking number (e.g. DG-2026-0001). |
 | `ApplicationStatusCode` | `nvarchar(15)` | NULL |  | Current workflow review and adjudication status code. |
 | `ApprovedAmount` | `decimal(18,2)` | NULL |  | Final grant funding amount approved by the MerSETA adjudication committee in ZAR. |
+| `Benefits` | `nvarchar(max)` | NULL |  | Narrative project benefits answering "What will the benefits be and who would benefit – target group?". |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `EstimatedOverallProjectCost` | `decimal(18,2)` | **NOT NULL** |  | Estimated overall total project cost in ZAR (non-pivotal project scope). |
 | `FundingWindowId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the open GrantFundingWindow. |
 | `FundingWindowPriorityId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the specific FundingWindowPriority allocation envelope. |
 | `GrantTypeCode` | `nvarchar(15)` | NULL |  | Discretionary grant funding type code (e.g. PIVOTAL, NON_PIVOTAL, BURSARY, APPRENTICESHIP). |
+| `HasNonPivotalInterventions` | `bit` | **NOT NULL** |  | Indicates whether the application contains Non-PIVOTAL strategic project interventions. |
+| `HasPivotalInterventions` | `bit` | **NOT NULL** |  | Indicates whether the application contains PIVOTAL skills development interventions. |
 | `IsWspCompliant` | `bit` | **NOT NULL** |  | Indicates whether the applicant has an approved, compliant WSP/ATR on file for the scheme year. |
 | `IsWspExempt` | `bit` | **NOT NULL** |  | Indicates whether the applicant is legally exempt from WSP submission (e.g. Non-Levy Payer, Public TVET, NGO, Community Trust). |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `NumberOfBeneficiaries` | `int` | **NOT NULL** |  | Target number of total project beneficiaries. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the applying Employer Organisation. |
+| `Outcomes` | `nvarchar(max)` | NULL |  | Narrative project outcomes answering "What do you want to achieve with this project?". |
+| `PotentialRisks` | `nvarchar(max)` | NULL |  | Narrative potential risks and mitigation actions. |
+| `ProjectDescription` | `nvarchar(max)` | NULL |  | Narrative project description outlining the strategic initiative. |
 | `ProjectTitle` | `nvarchar(300)` | **NOT NULL** |  | Descriptive title of the skills development project. |
+| `Purpose` | `nvarchar(max)` | NULL |  | Narrative project purpose answering "What do you want to do?". |
 | `RequestedAmount` | `decimal(18,2)` | **NOT NULL** |  | Total grant funding amount requested by the applicant in ZAR. |
+| `RequireProjectAdministrationCosts` | `bit` | **NOT NULL** |  | Indicates whether a Project Administration fee is requested for this project. |
 | `StrategicPriorityId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the primary StrategicPriority theme addressed by this application. |
+| `TargetProvinces` | `nvarchar(max)` | NULL |  | Targeted provinces and project location footprint (e.g. "Gauteng, KwaZulu-Natal" or "National"). |
 | `WspExemptionReason` | `nvarchar(500)` | NULL |  | Statutory justification or rationale for WSP submission exemption. |
 | `WspSubmissionId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the compliant Mandatory Grant WSP submission for this financial year (SETA Grant Regulation 4(4)). |
 
@@ -3029,6 +3047,59 @@
 | `IX_GrantApplication_OrganisationId` | `OrganisationId` | No |
 | `IX_GrantApplication_StrategicPriorityId` | `StrategicPriorityId` | No |
 | `IX_GrantApplication_WspSubmissionId` | `WspSubmissionId` | No |
+| `IX_GrantApplication_OrganisationId_FundingWindowId` | `OrganisationId, FundingWindowId` | ✅ Yes |
+
+---
+
+### <a id="grantapplicationintervention"></a> `dbo.GrantApplicationIntervention`
+
+**Description:** Structured intervention line item attached to a Discretionary Grant Application. Supports both PIVOTAL structured training plans (accredited qualifications/unit standards) and Non-PIVOTAL project implementation deliverables (milestones/equipment/bursaries).  
+**CLR Model:** `Nsdms.Domain.Entities.GrantApplicationIntervention`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ActualEndDate` | `datetime2` | NULL |  | Actual completion or signoff date. |
+| `Comments` | `nvarchar(max)` | NULL |  | Implementation comments, location details, or justification notes. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DeliverableName` | `nvarchar(300)` | NULL |  | Deliverable title or milestone description. |
+| `EstimatedCost` | `decimal(18,2)` | **NOT NULL** |  | Estimated milestone cost / deliverable award amount in ZAR. |
+| `GrantApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent GrantApplication. |
+| `InterventionTypeCode` | `nvarchar(50)` | NULL | 🔗 **FK** | Foreign key referencing the catalog InterventionType code. |
+| `IsPivotal` | `bit` | **NOT NULL** |  | Distinguishes PIVOTAL (accredited learning programme) from Non-PIVOTAL (strategic project deliverable). |
+| `LearnerCountEmployed` | `int` | **NOT NULL** |  | Target headcount of employed (Section 18.1) learners. |
+| `LearnerCountUnemployed` | `int` | **NOT NULL** |  | Target headcount of unemployed (Section 18.2) learners. |
+| `MilestoneNumber` | `int` | NULL |  | Payment tranche award percentage or milestone sequence number. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `NqfLevel` | `nvarchar(50)` | NULL |  | NQF Level descriptor (e.g. NQF Level 2, 3, 4, 5, 6, 7). |
+| `OfoCode` | `nvarchar(100)` | NULL |  | Organising Framework for Occupations (OFO) Code (e.g. 651202 - Welder). |
+| `ProjectedEndDate` | `datetime2` | NULL |  | Projected deliverable or training completion end date. |
+| `ProjectedStartDate` | `datetime2` | NULL |  | Projected deliverable or cohort recruitment start date. |
+| `QualificationTitle` | `nvarchar(300)` | NULL |  | Registered title of the qualification, learnership, or skills programme. |
+| `SaqaId` | `nvarchar(50)` | NULL |  | SAQA ID / Qualification Registration Code (e.g. 58241). |
+| `TargetQuantity` | `int` | NULL |  | Target quantity of items, sites, workshops, or equipment units. |
+| `TotalAmount` | `decimal(18,2)` | **NOT NULL** |  | Total financial amount requested or allocated for this line item in ZAR. |
+| `UnitCost` | `decimal(18,2)` | **NOT NULL** |  | Benchmark or agreed unit cost per learner in ZAR. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_GrantApplicationIntervention_GrantApplication_GrantApplicationId` | `GrantApplicationId` | `dbo.GrantApplication` | `Cascade` |
+| `FK_GrantApplicationIntervention_InterventionType_InterventionTypeCode` | `InterventionTypeCode` | `lookup.InterventionType` | `Restrict` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_GrantApplicationIntervention_GrantApplicationId` | `GrantApplicationId` | No |
+| `IX_GrantApplicationIntervention_InterventionTypeCode` | `InterventionTypeCode` | No |
+| `IX_GrantApplicationIntervention_IsPivotal` | `IsPivotal` | No |
 
 ---
 
@@ -3043,6 +3114,10 @@
 | Column | SQL Store Type | Nullable | Key | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ApprovalJustification` | `nvarchar(1000)` | NULL |  | Gazette citation, MANCO resolution, or approval comments. |
+| `ApprovalStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Dual Authorisation approval lifecycle status (Draft, PendingApproval, Active, Closed, Rejected). |
+| `ApprovedByUserId` | `nvarchar(100)` | NULL |  | User ID of the independent authority who approved and activated the funding window. Segregation of duties invariant: ApprovedByUserId != ProposedByUserId. |
+| `ApprovedDate` | `datetime2` | NULL |  | Timestamp when the funding window was formally approved. |
 | `ClosingDate` | `datetime2` | **NOT NULL** |  | Hard deadline closing date and time after which no new applications are accepted. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
@@ -3050,19 +3125,34 @@
 | `FinYear` | `int` | **NOT NULL** |  | Financial scheme year for this funding allocation window (e.g. 2026). |
 | `GrantTypeCode` | `nvarchar(15)` | NULL |  | Grant funding type code (e.g. PIVOTAL, APPRENTICESHIP, SKILLS_PROGRAMME, BURSARY). |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this funding window is active and accepting submissions. |
+| `IsPivotal` | `bit` | **NOT NULL** |  | Indicates whether this funding window is PIVOTAL (accredited qualification/unit-standard bearing) or Non-PIVOTAL (project/equipment/capacity). |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OpeningDate` | `datetime2` | **NOT NULL** |  | Official window opening date and time for employer application submissions. |
+| `ProposedByUserId` | `nvarchar(100)` | NULL |  | User ID of the officer who proposed the funding window and allocation schedule. |
+| `ProposedDate` | `datetime2` | NULL |  | Timestamp when the funding window proposal was lodged. |
+| `RequireWspCompliance` | `bit` | **NOT NULL** |  | Enforce prior-year Mandatory Grant (WSP/ATR) submission compliance as an eligibility pre-condition. Toggleable: some DG windows open before or independently of the WSP window. |
+| `TemplateId` | `int` | NULL | 🔗 **FK** | Optional Blueprint Template from which this funding window was initialized. |
 | `TotalAvailableBudget` | `decimal(18,2)` | **NOT NULL** |  | Total aggregate discretionary budget allocated to this funding window in ZAR. |
+| `WindowClassification` | `nvarchar(50)` | **NOT NULL** |  | Window strategic classification (Pivotal, NonPivotal, Hybrid). |
 | `WindowName` | `nvarchar(200)` | **NOT NULL** |  | Descriptive window name (e.g. 2026/27 Discretionary Grant Funding Window 1). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_GrantFundingWindow_GrantWindowTemplate_TemplateId` | `TemplateId` | `dbo.GrantWindowTemplate` | `SetNull` |
 
 #### Performance Indexes
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
+| `IX_GrantFundingWindow_ApprovalStatusCode` | `ApprovalStatusCode` | No |
 | `IX_GrantFundingWindow_FinYear` | `FinYear` | No |
 | `IX_GrantFundingWindow_GrantTypeCode` | `GrantTypeCode` | No |
 | `IX_GrantFundingWindow_IsActive` | `IsActive` | No |
+| `IX_GrantFundingWindow_IsPivotal` | `IsPivotal` | No |
+| `IX_GrantFundingWindow_TemplateId` | `TemplateId` | No |
 
 ---
 
@@ -3290,6 +3380,177 @@
 | `IX_GrantTranchePayment_GrantMoaMilestoneId` | `GrantMoaMilestoneId` | No |
 | `IX_GrantTranchePayment_PaymentReferenceNumber` | `PaymentReferenceNumber` | ✅ Yes |
 | `IX_GrantTranchePayment_PaymentStatusCode` | `PaymentStatusCode` | No |
+
+---
+
+### <a id="grantwindoweligibility"></a> `dbo.GrantWindowEligibility`
+
+**Description:** Stakeholder eligibility mapping for a Discretionary Grant funding window. Specifies which organizational categories (e.g. Levy-paying, Public TVET, NGO) may apply.  
+**CLR Model:** `Nsdms.Domain.Entities.GrantWindowEligibility`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `FundingWindowId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `StakeholderEligibilityTypeCode` | `nvarchar(50)` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_GrantWindowEligibility_GrantFundingWindow_FundingWindowId` | `FundingWindowId` | `dbo.GrantFundingWindow` | `Cascade` |
+| `FK_GrantWindowEligibility_StakeholderEligibilityType_StakeholderEligibilityTypeCode` | `StakeholderEligibilityTypeCode` | `lookup.StakeholderEligibilityType` | `Restrict` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_GrantWindowEligibility_StakeholderEligibilityTypeCode` | `StakeholderEligibilityTypeCode` | No |
+| `IX_GrantWindowEligibility_FundingWindowId_StakeholderEligibilityTypeCode` | `FundingWindowId, StakeholderEligibilityTypeCode` | ✅ Yes |
+
+---
+
+### <a id="grantwindowintervention"></a> `dbo.GrantWindowIntervention`
+
+**Description:** Whitelisted skills development intervention permitted under a specific funding window. Scopes whether learners, apprenticeships, bursaries, or non-pivotal projects are eligible.  
+**CLR Model:** `Nsdms.Domain.Entities.GrantWindowIntervention`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `FundingWindowId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `InterventionTypeCode` | `nvarchar(50)` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `MaxBudgetCap` | `decimal(18,2)` | NULL |  | Domain property for MaxBudgetCap. |
+| `MaxLearnerCap` | `int` | NULL |  | Domain property for MaxLearnerCap. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_GrantWindowIntervention_GrantFundingWindow_FundingWindowId` | `FundingWindowId` | `dbo.GrantFundingWindow` | `Cascade` |
+| `FK_GrantWindowIntervention_InterventionType_InterventionTypeCode` | `InterventionTypeCode` | `lookup.InterventionType` | `Restrict` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_GrantWindowIntervention_InterventionTypeCode` | `InterventionTypeCode` | No |
+| `IX_GrantWindowIntervention_FundingWindowId_InterventionTypeCode` | `FundingWindowId, InterventionTypeCode` | ✅ Yes |
+
+---
+
+### <a id="grantwindowtemplate"></a> `dbo.GrantWindowTemplate`
+
+**Description:** Reusable Blueprint Template for rapid 1-click Discretionary Grant funding window creation. Bundles default stakeholder eligibilities and whitelisted interventions.  
+**CLR Model:** `Nsdms.Domain.Entities.GrantWindowTemplate`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `Description` | `nvarchar(1000)` | NULL |  | Detailed description and contextual notes. |
+| `EstimatedDurationDays` | `int` | **NOT NULL** |  | Domain property for EstimatedDurationDays. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active and operational. |
+| `IsPivotal` | `bit` | **NOT NULL** |  | Domain property for IsPivotal. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `Name` | `nvarchar(200)` | **NOT NULL** |  | Display title / name of the record. |
+| `RequireWspComplianceDefault` | `bit` | **NOT NULL** |  | Domain property for RequireWspComplianceDefault. |
+| `TemplateCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for TemplateCode. |
+| `WindowClassification` | `nvarchar(50)` | **NOT NULL** |  | Domain property for WindowClassification. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_GrantWindowTemplate_IsActive` | `IsActive` | No |
+| `IX_GrantWindowTemplate_TemplateCode` | `TemplateCode` | ✅ Yes |
+
+---
+
+### <a id="grantwindowtemplateeligibility"></a> `dbo.GrantWindowTemplateEligibility`
+
+**Description:** Default stakeholder eligibility presets attached to a funding window template.  
+**CLR Model:** `Nsdms.Domain.Entities.GrantWindowTemplateEligibility`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `StakeholderEligibilityTypeCode` | `nvarchar(50)` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `TemplateId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_GrantWindowTemplateEligibility_StakeholderEligibilityType_StakeholderEligibilityTypeCode` | `StakeholderEligibilityTypeCode` | `lookup.StakeholderEligibilityType` | `Restrict` |
+| `FK_GrantWindowTemplateEligibility_GrantWindowTemplate_TemplateId` | `TemplateId` | `dbo.GrantWindowTemplate` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_GrantWindowTemplateEligibility_StakeholderEligibilityTypeCode` | `StakeholderEligibilityTypeCode` | No |
+| `IX_GrantWindowTemplateEligibility_TemplateId_StakeholderEligibilityTypeCode` | `TemplateId, StakeholderEligibilityTypeCode` | ✅ Yes |
+
+---
+
+### <a id="grantwindowtemplateintervention"></a> `dbo.GrantWindowTemplateIntervention`
+
+**Description:** Default whitelisted interventions attached to a funding window template.  
+**CLR Model:** `Nsdms.Domain.Entities.GrantWindowTemplateIntervention`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `InterventionTypeCode` | `nvarchar(50)` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `TemplateId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_GrantWindowTemplateIntervention_InterventionType_InterventionTypeCode` | `InterventionTypeCode` | `lookup.InterventionType` | `Restrict` |
+| `FK_GrantWindowTemplateIntervention_GrantWindowTemplate_TemplateId` | `TemplateId` | `dbo.GrantWindowTemplate` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_GrantWindowTemplateIntervention_InterventionTypeCode` | `InterventionTypeCode` | No |
+| `IX_GrantWindowTemplateIntervention_TemplateId_InterventionTypeCode` | `TemplateId, InterventionTypeCode` | ✅ Yes |
 
 ---
 
@@ -8727,7 +8988,7 @@
 
 ### <a id="interventiontype"></a> `lookup.InterventionType`
 
-**Description:** Targeted skills development intervention categories.  
+**Description:** Targeted skills development intervention categories (both PIVOTAL and Non-PIVOTAL).  
 **CLR Model:** `Nsdms.Domain.Entities.InterventionType`  
 **Primary Key:** `Code`
 
@@ -8737,9 +8998,12 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Code` | `nvarchar(50)` | **NOT NULL** | 🔑 **PK** | Unique alphanumeric code identifier acting as primary key. |
 | `Active` | `bit` | **NOT NULL** |  | Indicates whether the lookup value is active and selectable in UI workflows. |
+| `Category` | `nvarchar(50)` | NULL |  | Functional grouping category (e.g. PIVOTAL, NON_PIVOTAL, STRATEGIC_PROJECT, INFRASTRUCTURE). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the lookup record was created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the lookup record. |
+| `DefaultUnitCost` | `decimal(18,2)` | **NOT NULL** |  | Standard benchmark or statutory unit cost norm in ZAR (if applicable). |
 | `Description` | `nvarchar(500)` | NULL |  | Detailed description and statutory context of the lookup code. |
+| `IsPivotal` | `bit` | **NOT NULL** |  | Indicates whether this intervention is PIVOTAL (qualification/credit bearing) or Non-PIVOTAL (project/equipment/capacity). |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the lookup record was last modified. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the lookup record. |
 | `Name` | `nvarchar(250)` | **NOT NULL** |  | Display name / title of the lookup option. |
@@ -8749,6 +9013,8 @@
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
 | `IX_InterventionType_Active` | `Active` | No |
+| `IX_InterventionType_Category` | `Category` | No |
+| `IX_InterventionType_IsPivotal` | `IsPivotal` | No |
 | `IX_InterventionType_Name` | `Name` | No |
 
 ---
@@ -9316,6 +9582,34 @@
 | :--- | :--- | :--- |
 | `IX_SiteVisitApprovalStatusType_Active` | `Active` | No |
 | `IX_SiteVisitApprovalStatusType_Name` | `Name` | No |
+
+---
+
+### <a id="stakeholdereligibilitytype"></a> `lookup.StakeholderEligibilityType`
+
+**Description:** Stakeholder institutional and legal eligibility classifications for Discretionary Grants. (e.g. Levy Paying Employer, Public TVET College, Private SDP, University, NGO/CBO, Trade Union).  
+**CLR Model:** `Nsdms.Domain.Entities.StakeholderEligibilityType`  
+**Primary Key:** `Code`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Code` | `nvarchar(50)` | **NOT NULL** | 🔑 **PK** | Unique alphanumeric code identifier acting as primary key. |
+| `Active` | `bit` | **NOT NULL** |  | Indicates whether the lookup value is active and selectable in UI workflows. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the lookup record was created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the lookup record. |
+| `Description` | `nvarchar(500)` | NULL |  | Detailed description and statutory context of the lookup code. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the lookup record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the lookup record. |
+| `Name` | `nvarchar(250)` | **NOT NULL** |  | Display name / title of the lookup option. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_StakeholderEligibilityType_Active` | `Active` | No |
+| `IX_StakeholderEligibilityType_Name` | `Name` | No |
 
 ---
 

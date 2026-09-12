@@ -507,6 +507,20 @@ The agent may only declare testing phase complete when:
 
 ---
 
+### 🛡️ Enterprise SQL Server Concurrency & High-Volume Ingestion Standard
+1. **Zero Auto-Close Invariant**:
+   - Every production, staging, and load-test database MUST have `AUTO_CLOSE` disabled (`ALTER DATABASE [NSDMS-NET] SET AUTO_CLOSE OFF WITH NO_WAIT;`). Leaving `AUTO_CLOSE` on causes SQL Server to dismount the database on connection idle, purging buffer pools and stalling subsequent transactions.
+2. **Mandatory Read Committed Snapshot Isolation (RCSI)**:
+   - Databases MUST have `READ_COMMITTED_SNAPSHOT ON` and `ALLOW_SNAPSHOT_ISOLATION ON`. Under default locking, readers take shared locks (`S-locks`) that block writers, and writers block readers. RCSI uses the row version store in `tempdb` to guarantee non-blocking reads during high-volume submissions.
+3. **TempDB Multi-File Balanced Sizing**:
+   - `tempdb` MUST be configured with multiple equal-sized data files (minimum 4 files of $\ge 256\text{ MB}$ with 64 MB growth) matching the logical CPU core topology to eliminate PFS/SGAM page allocation latch contention under heavy RCSI version store activity.
+4. **Universal Foreign Key Indexing (Zero Table Scans)**:
+   - Every physical foreign key column MUST have a covering non-clustered index (`IX_{Table}_{Column}`). Unindexed foreign keys cause SQL Server to escalate to shared table scans on child updates or cascade checks, causing deadlock spikes during multi-user workloads.
+5. **Database File Pre-Allocation & Indirect Checkpoints**:
+   - Primary database files (`.mdf`) must be pre-allocated to at least 1 GB and transaction logs (`.ldf`) to at least 512 MB with fixed autogrowth chunks ($\ge 128\text{ MB}$ data, $\ge 64\text{ MB}$ log). Set `TARGET_RECOVERY_TIME = 60 SECONDS` to smooth disk I/O bursts during batch operations.
+
+---
+
 ### 📘 Phase Documentation & Database Governance Standard
 1. **Database Schema Standard**:
    - Table names must always use singular PascalCase (`GrantMoa`, `SetmisSubmissionBatch`, `MandatoryGrantDisbursement`).
@@ -525,6 +539,33 @@ The agent may only declare testing phase complete when:
 ### ⚙️ Dynamic Configuration & Feature Flags Governance
 1. **Zero Hardcoding Invariant**: No business parameter, threshold, storage path, or external integration endpoint may be hardcoded. Always use `ISystemConfigurationService` with cascading database overrides.
 2. **Integrations Off-By-Default**: All external integrations (Dynamics GP, Sage, Live DHET SFTP, Live SARS FTP, SMS OTP, Azure Blob) MUST default to `IsEnabled = false`. Workflows must cleanly execute in mock simulation mode when disabled.
+
+---
+
+### 🛡️ Discretionary Grant (DG) Funding Window & Template Blueprint Standard (Option B)
+1. **Dynamic Gazette Window Timeframe & Decoupled Workflow**:
+   - Discretionary Grant (DG) windows operate on dynamically gazetted timeframes (`OpeningDate` and `ClosingDate`), strictly decoupled from the statutory Mandatory Grant (MG / WSP) deadline of 30 April.
+   - PIVOTAL DG applications utilize training plan data structures but operate through an independent approval and adjudication workflow lifecycle.
+2. **Normalized Stakeholder Eligibility Tags**:
+   - Eligibility is governed by normalized lookup classifications (`lookup.StakeholderEligibilityType`) rather than hardcoded booleans.
+   - Supports granular multi-selection per window (e.g. `LEVY_PAYING`, `SMME_EXEMPT`, `PUBLIC_TVET`, `PRIVATE_TVET_SDP`, `PUBLIC_UNIVERSITY`, `CET_COLLEGE`, `NGO_CBO`, `TRADE_UNION`, `EMPLOYER_ASSOC`, `GOV_ENTITY`).
+   - `GrantService.CreateApplicationAsync` evaluates the applying organisation's legal status, levy contribution status, and institutional entity category against window eligibilities (`GrantWindowEligibility`).
+3. **Mandatory Grant (WSP) Compliance Precondition Toggle**:
+   - Every window specifies `RequireWspCompliance` (boolean toggle).
+   - When `RequireWspCompliance = true`, applicants must have an approved WSP for the scheme year.
+   - When `RequireWspCompliance = false`, early, strategic, or special project windows open without blocking employers who submit prior to the WSP cycle.
+4. **Skills Development & Project Intervention Scoping**:
+   - Windows whitelist permitted interventions (`GrantWindowIntervention`), classified as either `IsPivotal = true` (qualification/credit-bearing) or `IsPivotal = false` (special projects, TVET workshop equipment, non-credit bursaries, career guidance, research chairs).
+   - Administrators can dynamically register new interventions to the central catalog (`lookup.InterventionType`) directly from the window configuration UI via `RegisterInterventionDialog`.
+5. **1-Click Template Blueprint Engine**:
+   - Reusable blueprint templates (`GrantWindowTemplate`) bundle standard window settings, duration, default stakeholder eligibilities (`GrantWindowTemplateEligibility`), and default interventions (`GrantWindowTemplateIntervention`).
+   - Selecting a blueprint instantly provisions and pre-configures a new funding window with full administrative customisability.
+6. **Dual Authorisation Governance & Audited Double-Write**:
+   - Opening and activating a window enforces Segregation of Duties (Dual Authorisation Control): the proposing officer cannot approve their own window (`ProposedByUserId != currentUsername`).
+   - All window creations, template initializations, eligibility updates, and intervention assignments perform atomic double-writes to `audit_logs`.
+
+---
+
 ### 🛡️ Hierarchical Relational Fiscal Calendar & Working Day Governance Standard
 1. **Relational Model & Contiguity Invariant**:
    - Every financial year record (`FinancialYear`) must manage 4 sequential relational quarters (`FinancialQuarter`, 1:4).
@@ -774,8 +815,25 @@ Cite the clause identifier. If the standard does not cover what is needed, stop 
 4. **Zero Inline Timeouts & File Caps**:
    - File upload limits (`maxAllowedSize`), cache TTLs (`MemoryCacheEntryOptions`), and HTTP client timeouts must reference centralized system configuration keys with statutory constants strictly as fallback defaults.
 
+### 🛡️ Discretionary Grant (DG) Funding Window & Strategic Allocation Governance Standard
+1. **Strict Terminology & Decoupled Window Timing Invariant**:
+   - Never mix Mandatory Grant (MG / WSP / ATR) deadlines (30 April) with Discretionary Grant (DG) funding window dates.
+   - DG application submission dates are gazette-driven and dynamically evaluated strictly against `GrantFundingWindow.OpeningDate` and `GrantFundingWindow.ClosingDate`. Submissions outside these dates must be actively rejected by `IGrantService.CreateApplicationAsync` and `CrossEntityDateValidator.ValidateGrantFundingWindow`.
+2. **Dual Authorisation Governance (Segregation of Duties)**:
+   - Creating, proposing, and publishing DG funding windows and budget envelopes requires independent Proposer and Approver roles before opening to employer submissions (`ApprovalStatusCode` transition: `Draft` -> `PendingApproval` -> `Active`).
+   - The proposing officer cannot approve and activate their own window proposal (`ApprovedByUserId != ProposedByUserId`). Any self-approval attempt throws a `Dual Authorisation Governance Violation`.
+3. **Compound Unique Constraints (Zero Duplicate Applications)**:
+   - The database and domain model strictly enforce a compound unique constraint on `GrantApplication (OrganisationId, FundingWindowId)`.
+   - An employer organisation can lodge strictly one (1) comprehensive application per gazetted funding window. Duplicate application attempts must fail fast at both domain service and SQL Server index levels (`IX_GrantApplication_Org_FundingWindow_Unique`).
+4. **Real-Time Strategic Sub-Budget Envelope Consumption**:
+   - Every strategic priority theme (`FundingWindowPriority`) manages an explicit sub-budget allocation envelope.
+   - Applications evaluating against `FundingWindowPriority` must dynamically check cumulative requested/awarded budgets via `IGrantService.EvaluateBudgetConsumptionAsync`. If incoming demand exceeds the allocation envelope, the system immediately flags `IsOverSubscribed = true` and records an audited alert (`BudgetOverSubscribedAlert`) to ensure officer visibility.
+5. **Audited Double-Write & Non-Repudiation**:
+   - All funding window creations, status transitions, budget adjustments, and theme assignments must perform atomic double-writes to `audit_logs` with before and after state snapshots.
+
 ---
 
 # END OF POLICY — NON-NEGOTIABLE
+
 
 

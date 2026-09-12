@@ -21,7 +21,7 @@
     <EntityHeader Title="@_grant.ProjectTitle"
                   ReferenceKey="@_grant.ApplicationNumber"
                   Status="@_grant.StatusCode"
-                  Subtitle="@($"Requested: {_grant.RequestedAmount:C} | Approved: {(_grant.ApprovedAmount.HasValue ? _grant.ApprovedAmount.Value.ToString("C") : "Pending")} | Type: {_grant.GrantTypeCode}")"
+                  Subtitle="@($"Requested: {_grant.RequestedAmount:C} | Approved: {(_grant.ApprovedAmount.HasValue ? _grant.ApprovedAmount.Value.ToString("C") : "Pending")} | Type: {_grant.GrantTypeCode} | {GetClassificationBadgeText()}")"
                   BreadcrumbItems="@_breadcrumbItems">
         <ActionZone>
             <MudButton Variant="Variant.Text"
@@ -53,7 +53,7 @@ else
     <EntityHeader Title="@(Id == 0 ? "New Discretionary Grant (DG) Application" : $"Edit {_grant.ApplicationNumber}")"
                   ReferenceKey="@_grant.ApplicationNumber"
                   Status="@(Id == 0 ? "Draft" : "Editing")"
-                  Subtitle="@(Id == 0 ? "Apply for PIVOTAL funding window allocations" : $"Modify project goals and budget allocations for {_grant.ProjectTitle}")"
+                  Subtitle="@(Id == 0 ? "Apply for PIVOTAL & strategic project funding window allocations" : $"Modify project goals and budget allocations for {_grant.ProjectTitle}")"
                   BreadcrumbItems="@_breadcrumbItems">
         <ActionZone>
             <MudButton Variant="Variant.Outlined"
@@ -105,7 +105,14 @@ else
                     <MudGrid Spacing="3">
                         <MudItem xs="12" lg="8">
                             <MudCard Outlined="true" Class="pa-4 mb-4">
-                                <MudText Typo="Typo.h6" Class="fw-bold mb-3">Discretionary Grant Project Specification</MudText>
+                                <div class="d-flex justify-space-between align-center mb-3">
+                                    <MudText Typo="Typo.h6" Class="fw-bold">Discretionary Grant Project Specification</MudText>
+                                    <MudChip T="string" Size="Size.Small"
+                                             Color="@(_grant.HasPivotalInterventions && _grant.HasNonPivotalInterventions ? Color.Primary : (_grant.HasNonPivotalInterventions ? Color.Warning : Color.Success))"
+                                             Variant="Variant.Filled">
+                                        @GetClassificationBadgeText()
+                                    </MudChip>
+                                </div>
                                 <MudGrid>
                                     <MudItem xs="12" md="6">
                                         <MudSelect T="int" 
@@ -148,9 +155,15 @@ else
                                     </MudItem>
                                     <MudItem xs="12" md="6">
                                         <MudSelect T="string" Label="Discretionary Grant Type" @bind-Value="_grant.GrantTypeCode" Variant="Variant.Outlined">
+                                            <MudSelectItem Value="@("HYBRID")">Hybrid (PIVOTAL &amp; Strategic Project)</MudSelectItem>
+                                            <MudSelectItem Value="@("PIVOTAL")">PIVOTAL (Structured Qualifications)</MudSelectItem>
+                                            <MudSelectItem Value="@("NON_PIVOTAL")">Non-PIVOTAL (Strategic Project)</MudSelectItem>
                                             @foreach (var gt in _grantTypes)
                                             {
-                                                <MudSelectItem Value="@gt.Code">@gt.Name (@gt.Code)</MudSelectItem>
+                                                if (gt.Code != "HYBRID" && gt.Code != "PIVOTAL" && gt.Code != "NON_PIVOTAL")
+                                                {
+                                                    <MudSelectItem Value="@gt.Code">@gt.Name (@gt.Code)</MudSelectItem>
+                                                }
                                             }
                                         </MudSelect>
                                     </MudItem>
@@ -256,6 +269,10 @@ else
                                         <MudText Typo="Typo.caption" Class="fw-bold">@(Id > 0 ? Id.ToString() : "Draft")</MudText>
                                     </div>
                                     <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.caption">Application Classification:</MudText>
+                                        <MudText Typo="Typo.caption" Class="fw-bold">@GetClassificationBadgeText()</MudText>
+                                    </div>
+                                    <div class="d-flex justify-space-between">
                                         <MudText Typo="Typo.caption">Created At:</MudText>
                                         <MudText Typo="Typo.caption">@(_grant.CreatedAt > DateTime.MinValue ? _grant.CreatedAt.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
                                     </div>
@@ -338,7 +355,387 @@ else
                 </div>
             </MudTabPanel>
 
-            <!-- TAB 3: Project Budget -->
+            <!-- TAB 3: PIVOTAL Training Plan -->
+            @if (_grant.HasPivotalInterventions || _grant.Interventions.Any(i => i.IsPivotal) || _grant.GrantTypeCode == "PIVOTAL" || _grant.GrantTypeCode == "HYBRID")
+            {
+                <MudTabPanel Text="PIVOTAL Training Plan" Icon="@Icons.Material.Filled.School">
+                    <div class="pa-4">
+                        <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
+                            <div>
+                                <MudText Typo="Typo.h6">PIVOTAL Structured Training Plan Table</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    Accredited qualifications, learnerships, apprenticeships, skills programmes, and planned 18.1/18.2 cohorts
+                                </MudText>
+                            </div>
+                            @if (Id > 0 && _isEditMode)
+                            {
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddPivotalForm">
+                                    Add Training Intervention
+                                </MudButton>
+                            }
+                        </div>
+
+                        @if (_showAddPivotalForm && _isEditMode)
+                        {
+                            <MudCard Outlined="true" Class="pa-4 mb-4 border-primary" Elevation="3">
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Add PIVOTAL Training Line Item</MudText>
+                                <MudGrid Spacing="2">
+                                    <MudItem xs="12" md="4">
+                                        <MudSelect T="string" Label="Intervention Type" Required="true" @bind-Value="_newPivotal.InterventionTypeCode" Variant="Variant.Outlined">
+                                            <MudSelectItem Value="@("APPRENTICESHIP")">Artisan Apprenticeship</MudSelectItem>
+                                            <MudSelectItem Value="@("LEARNERSHIP")">Learnership Programme</MudSelectItem>
+                                            <MudSelectItem Value="@("BURSARY")">Bursary (Higher Education / TVET)</MudSelectItem>
+                                            <MudSelectItem Value="@("SKILLS_PROGRAMME")">Accredited Skills Programme</MudSelectItem>
+                                            <MudSelectItem Value="@("INTERNSHIP")">Workplace Graduate Internship</MudSelectItem>
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="12" md="5">
+                                        <MudTextField T="string" Label="Qualification / Programme Title" Required="true" @bind-Value="_newPivotal.QualificationTitle" Variant="Variant.Outlined" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <MudTextField T="string" Label="SAQA ID" @bind-Value="_newPivotal.SaqaId" Variant="Variant.Outlined" Class="font-mono" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <MudSelect T="string" Label="NQF Level" @bind-Value="_newPivotal.NqfLevel" Variant="Variant.Outlined">
+                                            <MudSelectItem Value="@("NQF Level 2")">NQF Level 2</MudSelectItem>
+                                            <MudSelectItem Value="@("NQF Level 3")">NQF Level 3</MudSelectItem>
+                                            <MudSelectItem Value="@("NQF Level 4")">NQF Level 4</MudSelectItem>
+                                            <MudSelectItem Value="@("NQF Level 5")">NQF Level 5</MudSelectItem>
+                                            <MudSelectItem Value="@("NQF Level 6")">NQF Level 6</MudSelectItem>
+                                            <MudSelectItem Value="@("NQF Level 7")">NQF Level 7</MudSelectItem>
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <MudTextField T="string" Label="OFO Code" @bind-Value="_newPivotal.OfoCode" Variant="Variant.Outlined" Class="font-mono" />
+                                    </MudItem>
+                                    <MudItem xs="6" md="2">
+                                        <MudNumericField T="int" Label="Employed (18.1)" @bind-Value="_newPivotal.LearnerCountEmployed" Variant="Variant.Outlined" Min="0" />
+                                    </MudItem>
+                                    <MudItem xs="6" md="2">
+                                        <MudNumericField T="int" Label="Unemployed (18.2)" @bind-Value="_newPivotal.LearnerCountUnemployed" Variant="Variant.Outlined" Min="0" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="2">
+                                        <MudNumericField T="decimal" Label="Unit Cost (ZAR)" Required="true" @bind-Value="_newPivotal.UnitCost" Variant="Variant.Outlined" Format="N2" Min="0" />
+                                    </MudItem>
+                                    <MudItem xs="12" Class="d-flex justify-end gap-2 mt-2">
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="() => _showAddPivotalForm = false">Cancel</MudButton>
+                                        <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="SavePivotalLine">Save Training Line</MudButton>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudCard>
+                        }
+
+                        <MudTable Items="@(_grant.Interventions.Where(i => i.IsPivotal))" Dense="true" Striped="true" Hover="true" Class="mb-4">
+                            <HeaderContent>
+                                <MudTh>Intervention Type</MudTh>
+                                <MudTh>Qualification Title</MudTh>
+                                <MudTh>SAQA / NQF</MudTh>
+                                <MudTh>OFO Code</MudTh>
+                                <MudTh>18.1</MudTh>
+                                <MudTh>18.2</MudTh>
+                                <MudTh>Total Headcount</MudTh>
+                                <MudTh>Unit Cost</MudTh>
+                                <MudTh>Total Funding</MudTh>
+                                @if (_isEditMode)
+                                {
+                                    <MudTh Style="text-align:right">Action</MudTh>
+                                }
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Type">
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.InterventionTypeCode</MudChip>
+                                </MudTd>
+                                <MudTd DataLabel="Qualification"><strong>@context.QualificationTitle</strong></MudTd>
+                                <MudTd DataLabel="SAQA/NQF">
+                                    <span class="font-mono">@(context.SaqaId ?? "-")</span> / @(context.NqfLevel ?? "-")
+                                </MudTd>
+                                <MudTd DataLabel="OFO" Class="font-mono">@(context.OfoCode ?? "-")</MudTd>
+                                <MudTd DataLabel="18.1">@context.LearnerCountEmployed</MudTd>
+                                <MudTd DataLabel="18.2">@context.LearnerCountUnemployed</MudTd>
+                                <MudTd DataLabel="Total Headcount"><strong class="text-primary">@context.TotalLearnerCount</strong></MudTd>
+                                <MudTd DataLabel="Unit Cost">@context.UnitCost.ToString("C0")</MudTd>
+                                <MudTd DataLabel="Total Funding">
+                                    <strong class="text-success">@((context.TotalAmount > 0 ? context.TotalAmount : context.UnitCost * context.TotalLearnerCount).ToString("C"))</strong>
+                                </MudTd>
+                                @if (_isEditMode)
+                                {
+                                    <MudTd Style="text-align:right" DataLabel="Action">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveInterventionLine(context.Id))" />
+                                    </MudTd>
+                                }
+                            </RowTemplate>
+                            <NoRecordsContent>
+                                <div class="pa-4 text-center">
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">No PIVOTAL training interventions registered.</MudText>
+                                </div>
+                            </NoRecordsContent>
+                        </MudTable>
+
+                        <!-- PIVOTAL Summary Card -->
+                        <MudCard Outlined="true" Class="pa-4">
+                            <div class="d-flex flex-wrap justify-space-between align-center gap-4">
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Employed (18.1):</MudText>
+                                    <MudText Typo="Typo.h6" Class="fw-bold">@(_grant.Interventions.Where(i => i.IsPivotal).Sum(i => i.LearnerCountEmployed))</MudText>
+                                </div>
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Unemployed (18.2):</MudText>
+                                    <MudText Typo="Typo.h6" Class="fw-bold">@(_grant.Interventions.Where(i => i.IsPivotal).Sum(i => i.LearnerCountUnemployed))</MudText>
+                                </div>
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total PIVOTAL Headcount:</MudText>
+                                    <MudText Typo="Typo.h6" Class="fw-bold text-primary">@(_grant.Interventions.Where(i => i.IsPivotal).Sum(i => i.TotalLearnerCount)) Candidates</MudText>
+                                </div>
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">PIVOTAL Training Plan Subtotal:</MudText>
+                                    <MudText Typo="Typo.h6" Class="fw-bold text-success">@(_grant.Interventions.Where(i => i.IsPivotal).Sum(i => i.TotalAmount > 0 ? i.TotalAmount : i.UnitCost * i.TotalLearnerCount).ToString("C"))</MudText>
+                                </div>
+                            </div>
+                        </MudCard>
+                    </div>
+                </MudTabPanel>
+            }
+
+            <!-- TAB 4: Strategic Project Motivation -->
+            @if (_grant.HasNonPivotalInterventions || _grant.Interventions.Any(i => !i.IsPivotal) || _grant.GrantTypeCode == "NON_PIVOTAL" || _grant.GrantTypeCode == "HYBRID")
+            {
+                <MudTabPanel Text="Strategic Project Motivation" Icon="@Icons.Material.Filled.Lightbulb">
+                    <div class="pa-4">
+                        <MudText Typo="Typo.h6" Class="fw-bold mb-1">Non-PIVOTAL Strategic Project Motivation Narrative</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-4 d-block">
+                            Statutory project motivation in terms of merSETA Discretionary Grant Policy (5 core narrative dimensions)
+                        </MudText>
+
+                        <MudGrid Spacing="3">
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="1. Project Description (Comprehensive Summary &amp; Background)"
+                                              @bind-Value="_grant.ProjectDescription"
+                                              ReadOnly="@(!_isEditMode)"
+                                              Variant="Variant.Outlined"
+                                              Lines="4"
+                                              Placeholder="Provide narrative background, contextual industry problem, and proposed initiative..." />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="2. Purpose (What specific interventions and activities do you want to implement?)"
+                                              @bind-Value="_grant.Purpose"
+                                              ReadOnly="@(!_isEditMode)"
+                                              Variant="Variant.Outlined"
+                                              Lines="3"
+                                              Placeholder="Define operational purpose and scope..." />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="3. Outcomes (What specific outputs and measurable impacts will be achieved?)"
+                                              @bind-Value="_grant.Outcomes"
+                                              ReadOnly="@(!_isEditMode)"
+                                              Variant="Variant.Outlined"
+                                              Lines="3"
+                                              Placeholder="Outline target outputs, qualifications, or infrastructure capability..." />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="4. Benefits (Who are the target beneficiaries and what is the socio-economic impact?)"
+                                              @bind-Value="_grant.Benefits"
+                                              ReadOnly="@(!_isEditMode)"
+                                              Variant="Variant.Outlined"
+                                              Lines="3"
+                                              Placeholder="Describe beneficiary cohort profile and industry advantages..." />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="5. Potential Risks &amp; Mitigation Strategy (Operational, financial, and regulatory risks)"
+                                              @bind-Value="_grant.PotentialRisks"
+                                              ReadOnly="@(!_isEditMode)"
+                                              Variant="Variant.Outlined"
+                                              Lines="3"
+                                              Placeholder="Itemize key implementation risks and proactive control actions..." />
+                            </MudItem>
+                            
+                            <MudItem xs="12" md="4">
+                                <MudNumericField T="int"
+                                                 Label="Target Project Beneficiaries"
+                                                 @bind-Value="_grant.NumberOfBeneficiaries"
+                                                 ReadOnly="@(!_isEditMode)"
+                                                 Variant="Variant.Outlined"
+                                                 Min="0" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudNumericField T="decimal"
+                                                 Label="Estimated Overall Project Cost (ZAR)"
+                                                 @bind-Value="_grant.EstimatedOverallProjectCost"
+                                                 ReadOnly="@(!_isEditMode)"
+                                                 Variant="Variant.Outlined"
+                                                 Format="N2"
+                                                 Min="0" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <div class="d-flex flex-column pt-2">
+                                    <MudSwitch T="bool"
+                                               Label="Project Administration Costs Included (7.5%)"
+                                               @bind-Value="_grant.RequireProjectAdministrationCosts"
+                                               Disabled="@(!_isEditMode)"
+                                               Color="Color.Primary" />
+                                    @if (_grant.RequireProjectAdministrationCosts)
+                                    {
+                                        var adminFee = Math.Round(_grant.Interventions.Where(i => !i.IsPivotal).Sum(d => d.TotalAmount > 0 ? d.TotalAmount : d.EstimatedCost) * 0.075m, 2);
+                                        <MudText Typo="Typo.caption" Color="Color.Primary" Class="fw-semibold">
+                                            Calculated Admin Fee: @adminFee.ToString("C")
+                                        </MudText>
+                                    }
+                                </div>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="Target Provinces / Implementation Footprint"
+                                              @bind-Value="_grant.TargetProvinces"
+                                              ReadOnly="@(!_isEditMode)"
+                                              Variant="Variant.Outlined"
+                                              Placeholder="e.g. Gauteng, KwaZulu-Natal, Eastern Cape" />
+                            </MudItem>
+                        </MudGrid>
+                    </div>
+                </MudTabPanel>
+            }
+
+            <!-- TAB 5: Deliverables & Implementation Plan -->
+            @if (_grant.HasNonPivotalInterventions || _grant.Interventions.Any(i => !i.IsPivotal) || _grant.GrantTypeCode == "NON_PIVOTAL" || _grant.GrantTypeCode == "HYBRID")
+            {
+                <MudTabPanel Text="Deliverables &amp; Tranches" Icon="@Icons.Material.Filled.PlaylistAddCheck">
+                    <div class="pa-4">
+                        <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
+                            <div>
+                                <MudText Typo="Typo.h6">Project Deliverables &amp; Milestone Tranches</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    Tangible milestone outputs, workshop infrastructure, equipment commissioning, and disbursement tranches
+                                </MudText>
+                            </div>
+                            @if (Id > 0 && _isEditMode)
+                            {
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddDeliverableForm">
+                                    Add Deliverable Milestone
+                                </MudButton>
+                            }
+                        </div>
+
+                        @if (_showAddDeliverableForm && _isEditMode)
+                        {
+                            <MudCard Outlined="true" Class="pa-4 mb-4 border-primary" Elevation="3">
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Add Project Deliverable Milestone</MudText>
+                                <MudGrid Spacing="2">
+                                    <MudItem xs="12" md="4">
+                                        <MudSelect T="string" Label="Intervention Category" Required="true" @bind-Value="_newDeliverable.InterventionTypeCode" Variant="Variant.Outlined">
+                                            <MudSelectItem Value="@("INFRA_WORKSHOP")">TVET Workshop Tooling Equipment</MudSelectItem>
+                                            <MudSelectItem Value="@("BURSARY_NON_CREDIT")">Special Non-Credit Bursary Support</MudSelectItem>
+                                            <MudSelectItem Value="@("CAREER_GUIDANCE")">Career Guidance &amp; Rural Outreach</MudSelectItem>
+                                            <MudSelectItem Value="@("RESEARCH_CHAIR")">University Research Chair Support</MudSelectItem>
+                                            <MudSelectItem Value="@("SPECIAL_PROJECT")">Strategic Industry Transformation Project</MudSelectItem>
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="12" md="5">
+                                        <MudTextField T="string" Label="Deliverable Name / Description" Required="true" @bind-Value="_newDeliverable.DeliverableName" Variant="Variant.Outlined" />
+                                    </MudItem>
+                                    <MudItem xs="6" md="3">
+                                        <MudNumericField T="int?" Label="Target Units / Sites" @bind-Value="_newDeliverable.TargetQuantity" Variant="Variant.Outlined" Min="1" />
+                                    </MudItem>
+                                    <MudItem xs="6" md="3">
+                                        <MudDatePicker Label="Projected Start Date" @bind-Date="_delivStartDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                                    </MudItem>
+                                    <MudItem xs="6" md="3">
+                                        <MudDatePicker Label="Projected End Date" @bind-Date="_delivEndDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                                    </MudItem>
+                                    <MudItem xs="6" md="3">
+                                        <MudNumericField T="int?" Label="Milestone Sequence #" @bind-Value="_newDeliverable.MilestoneNumber" Variant="Variant.Outlined" Min="1" Max="10" />
+                                    </MudItem>
+                                    <MudItem xs="6" md="3">
+                                        <MudNumericField T="decimal" Label="Milestone Amount (ZAR)" Required="true" @bind-Value="_newDeliverable.EstimatedCost" Variant="Variant.Outlined" Format="N2" Min="0" />
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudTextField T="string" Label="Implementation &amp; Compliance Notes" @bind-Value="_newDeliverable.Comments" Variant="Variant.Outlined" />
+                                    </MudItem>
+                                    <MudItem xs="12" Class="d-flex justify-end gap-2 mt-2">
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="() => _showAddDeliverableForm = false">Cancel</MudButton>
+                                        <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveDeliverableLine">Save Milestone</MudButton>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudCard>
+                        }
+
+                        <MudTable Items="@(_grant.Interventions.Where(i => !i.IsPivotal))" Dense="true" Striped="true" Hover="true" Class="mb-4">
+                            <HeaderContent>
+                                <MudTh>#</MudTh>
+                                <MudTh>Intervention Category</MudTh>
+                                <MudTh>Deliverable Name</MudTh>
+                                <MudTh>Units</MudTh>
+                                <MudTh>Projected Timeline</MudTh>
+                                <MudTh>Milestone Amount</MudTh>
+                                <MudTh>Delivery Notes</MudTh>
+                                @if (_isEditMode)
+                                {
+                                    <MudTh Style="text-align:right">Action</MudTh>
+                                }
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="#">@(context.MilestoneNumber?.ToString() ?? "-")</MudTd>
+                                <MudTd DataLabel="Category">
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">@context.InterventionTypeCode</MudChip>
+                                </MudTd>
+                                <MudTd DataLabel="Deliverable"><strong>@context.DeliverableName</strong></MudTd>
+                                <MudTd DataLabel="Units">@(context.TargetQuantity?.ToString() ?? "1")</MudTd>
+                                <MudTd DataLabel="Timeline">
+                                    @(context.ProjectedStartDate?.ToString("yyyy-MM-dd") ?? "-") to @(context.ProjectedEndDate?.ToString("yyyy-MM-dd") ?? "-")
+                                </MudTd>
+                                <MudTd DataLabel="Amount">
+                                    <strong class="text-success">@((context.TotalAmount > 0 ? context.TotalAmount : context.EstimatedCost).ToString("C"))</strong>
+                                </MudTd>
+                                <MudTd DataLabel="Notes">@(!string.IsNullOrWhiteSpace(context.Comments) ? context.Comments : "-")</MudTd>
+                                @if (_isEditMode)
+                                {
+                                    <MudTd Style="text-align:right" DataLabel="Action">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveInterventionLine(context.Id))" />
+                                    </MudTd>
+                                }
+                            </RowTemplate>
+                            <NoRecordsContent>
+                                <div class="pa-4 text-center">
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">No project milestone deliverables registered.</MudText>
+                                </div>
+                            </NoRecordsContent>
+                        </MudTable>
+
+                        <!-- Deliverables Summary Card -->
+                        <MudCard Outlined="true" Class="pa-4">
+                            <div class="d-flex flex-wrap justify-space-between align-center gap-4">
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Milestone Deliverables:</MudText>
+                                    <MudText Typo="Typo.h6" Class="fw-bold">@(_grant.Interventions.Count(i => !i.IsPivotal)) Items</MudText>
+                                </div>
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Deliverables Subtotal:</MudText>
+                                    <MudText Typo="Typo.h6" Class="fw-bold text-primary">
+                                        @(_grant.Interventions.Where(i => !i.IsPivotal).Sum(i => i.TotalAmount > 0 ? i.TotalAmount : i.EstimatedCost).ToString("C"))
+                                    </MudText>
+                                </div>
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Project Admin Fee (7.5%):</MudText>
+                                    <MudText Typo="Typo.h6" Class="fw-bold text-warning">
+                                        @((_grant.RequireProjectAdministrationCosts ? Math.Round(_grant.Interventions.Where(i => !i.IsPivotal).Sum(i => i.TotalAmount > 0 ? i.TotalAmount : i.EstimatedCost) * 0.075m, 2) : 0m).ToString("C"))
+                                    </MudText>
+                                </div>
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Deliverables &amp; Admin:</MudText>
+                                    <MudText Typo="Typo.h6" Class="fw-bold text-success">
+                                        @((_grant.Interventions.Where(i => !i.IsPivotal).Sum(i => i.TotalAmount > 0 ? i.TotalAmount : i.EstimatedCost) + (_grant.RequireProjectAdministrationCosts ? Math.Round(_grant.Interventions.Where(i => !i.IsPivotal).Sum(i => i.TotalAmount > 0 ? i.TotalAmount : i.EstimatedCost) * 0.075m, 2) : 0m)).ToString("C"))
+                                    </MudText>
+                                </div>
+                            </div>
+                        </MudCard>
+                    </div>
+                </MudTabPanel>
+            }
+
+            <!-- TAB 6: Project Budget -->
             <MudTabPanel Text="Project Budget" Icon="@Icons.Material.Filled.AttachMoney">
                 <div class="pa-4">
                     <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
@@ -445,7 +842,7 @@ else
                 </div>
             </MudTabPanel>
 
-            <!-- TAB 4: Contracting MoA & Tranches -->
+            <!-- TAB 7: Contracting MoA & Tranches -->
             <MudTabPanel Text="Contracting MoA" Icon="@Icons.Material.Filled.Handshake" Disabled="Id == 0">
                 <div class="pa-4">
                     @if (_linkedMoa != null)
@@ -515,7 +912,7 @@ else
                             <MudIcon Icon="@Icons.Material.Filled.Handshake" Size="Size.Large" Color="Color.Primary" Class="mb-3" />
                             <MudText Typo="Typo.h6" Class="fw-bold mb-2">No MoA Contract Generated Yet</MudText>
                             <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
-                                Once the Discretionary Grant is approved, you can generate the bilateral Memorandum of Agreement (MoA) contract with pre-configured 4-tranche milestones and deliverable requirements.
+                                Once the Discretionary Grant is approved, you can generate the bilateral Memorandum of Agreement (MoA) contract with pre-configured milestone payment tranches and deliverable requirements.
                             </MudText>
                             <MudButton Variant="Variant.Filled" 
                                        Color="Color.Primary" 
@@ -530,14 +927,14 @@ else
                 </div>
             </MudTabPanel>
 
-            <!-- TAB 5: Evidence Vault -->
+            <!-- TAB 8: Evidence Vault -->
             @if (Id > 0)
             {
                 <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
                     <DocumentVault TargetEntityName="GrantApplication" TargetEntityId="@Id" />
                 </MudTabPanel>
 
-                <!-- TAB 6: Workflow History -->
+                <!-- TAB 9: Workflow History -->
                 <MudTabPanel Text="Workflow History" Icon="@Icons.Material.Filled.History">
                     <WorkflowTimeline ProcessCode="DG" EntityId="@Id" />
                 </MudTabPanel>
@@ -570,6 +967,16 @@ else
     // Budget form
     private bool _showAddBudgetForm = false;
     private GrantProjectBudget _newBudget = new();
+
+    // PIVOTAL intervention inline form
+    private bool _showAddPivotalForm = false;
+    private GrantApplicationIntervention _newPivotal = new() { IsPivotal = true, UnitCost = 50000m, NqfLevel = "NQF Level 4" };
+
+    // Non-PIVOTAL deliverable inline form
+    private bool _showAddDeliverableForm = false;
+    private GrantApplicationIntervention _newDeliverable = new() { IsPivotal = false, TargetQuantity = 1, EstimatedCost = 100000m };
+    private DateTime? _delivStartDate = DateTime.UtcNow.AddMonths(1);
+    private DateTime? _delivEndDate = DateTime.UtcNow.AddMonths(6);
 
     private List<BreadcrumbItem> _breadcrumbItems = new();
     private bool _isEditMode;
@@ -619,10 +1026,12 @@ else
             {
                 OrganisationId = _organisations.FirstOrDefault()?.Id ?? 0,
                 ApplicationNumber = $"DG-{DateTime.UtcNow.Year}-{new Random().Next(10000, 99999)}",
-                GrantTypeCode = "PIVOTAL",
+                GrantTypeCode = "HYBRID",
                 StatusCode = "DRAFT",
                 RequestedAmount = 1500000m,
-                ApplicationDate = DateTime.Today
+                ApplicationDate = DateTime.Today,
+                HasPivotalInterventions = true,
+                HasNonPivotalInterventions = true
             };
             _appDate = DateTime.Today;
             await CheckWspCompliance();
@@ -639,6 +1048,15 @@ else
             new BreadcrumbItem("Discretionary Grants (DG)", href: "/dg-grants"),
             new BreadcrumbItem(Id == 0 ? "New DG Application" : _grant.ApplicationNumber, href: null, disabled: true)
         };
+    }
+
+    private string GetClassificationBadgeText()
+    {
+        if (_grant.HasPivotalInterventions && _grant.HasNonPivotalInterventions)
+            return "Hybrid (PIVOTAL & Strategic Project)";
+        if (_grant.HasNonPivotalInterventions)
+            return "Strategic Project (Non-PIVOTAL)";
+        return "PIVOTAL (Structured Learning)";
     }
 
     private string FormatOrganisationDisplay(int orgId)
@@ -703,6 +1121,87 @@ else
                     _grant.WspExemptionReason = _wspResult.Reason;
                 }
             }
+        }
+    }
+
+    private void OpenAddPivotalForm()
+    {
+        _newPivotal = new GrantApplicationIntervention
+        {
+            GrantApplicationId = Id,
+            IsPivotal = true,
+            InterventionTypeCode = "APPRENTICESHIP",
+            NqfLevel = "NQF Level 4",
+            LearnerCountEmployed = 5,
+            LearnerCountUnemployed = 10,
+            UnitCost = 55000m
+        };
+        _showAddPivotalForm = true;
+    }
+
+    private async Task SavePivotalLine()
+    {
+        try
+        {
+            _newPivotal.GrantApplicationId = Id;
+            _newPivotal.TotalAmount = _newPivotal.UnitCost * (_newPivotal.LearnerCountEmployed + _newPivotal.LearnerCountUnemployed);
+            await GrantService.AddApplicationInterventionAsync(Id, _newPivotal, "CoordinatorUser");
+            _showAddPivotalForm = false;
+            Snackbar.Add("PIVOTAL training intervention added.", Severity.Success);
+            await LoadGrantData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding PIVOTAL line: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OpenAddDeliverableForm()
+    {
+        _newDeliverable = new GrantApplicationIntervention
+        {
+            GrantApplicationId = Id,
+            IsPivotal = false,
+            InterventionTypeCode = "INFRA_WORKSHOP",
+            TargetQuantity = 1,
+            EstimatedCost = 150000m,
+            MilestoneNumber = _grant.Interventions.Count(i => !i.IsPivotal) + 1
+        };
+        _delivStartDate = DateTime.UtcNow.AddMonths(1);
+        _delivEndDate = DateTime.UtcNow.AddMonths(6);
+        _showAddDeliverableForm = true;
+    }
+
+    private async Task SaveDeliverableLine()
+    {
+        try
+        {
+            _newDeliverable.GrantApplicationId = Id;
+            _newDeliverable.ProjectedStartDate = _delivStartDate;
+            _newDeliverable.ProjectedEndDate = _delivEndDate;
+            _newDeliverable.TotalAmount = _newDeliverable.EstimatedCost;
+            await GrantService.AddApplicationInterventionAsync(Id, _newDeliverable, "CoordinatorUser");
+            _showAddDeliverableForm = false;
+            Snackbar.Add("Project deliverable milestone added.", Severity.Success);
+            await LoadGrantData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding deliverable: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveInterventionLine(int interventionId)
+    {
+        try
+        {
+            await GrantService.RemoveApplicationInterventionAsync(interventionId, "CoordinatorUser");
+            Snackbar.Add("Intervention line item removed.", Severity.Success);
+            await LoadGrantData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing intervention: {ex.Message}", Severity.Error);
         }
     }
 
@@ -850,14 +1349,4 @@ else
     }
 
     private void BackToList() => NavManager.NavigateTo("/dg-grants");
-
-    private static Color GetStatusColor(string? status) => status switch
-    {
-        "APPROVED" or "Approved" => Color.Success,
-        "SUBMITTED" or "Submitted" or "EVALUATING" => Color.Info,
-        "PENDING_COMMITTEE" or "DRAFT" or "Draft" => Color.Warning,
-        "REJECTED" or "Rejected" => Color.Error,
-        _ => Color.Default
-    };
 }
-

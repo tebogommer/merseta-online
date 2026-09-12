@@ -2,6 +2,7 @@
 @inject ILevyService LevyService
 @inject ISarsLevyStreamingPipeline StreamingPipeline
 @inject ISarsCompliancePreProcessor CompliancePreProcessor
+@inject IBackgroundJobQueue JobQueue
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @rendermode InteractiveServer
@@ -151,8 +152,16 @@
                 </MudItem>
             }
 
-            <MudItem xs="12" Class="d-flex justify-end gap-2 mt-2">
+            <MudItem xs="12" Class="d-flex justify-end gap-2 mt-2 flex-wrap">
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="@(() => _showImportDialog = false)">Cancel</MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Bolt"
+                           OnClick="SubmitImportBatchAsyncQueue"
+                           Disabled="@(_isImporting || (_complianceReport != null && !_complianceReport.IsCompliant))">
+                    Dispatch to Background Worker (Option A)
+                </MudButton>
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Success"
                            Size="Size.Small"
@@ -164,6 +173,33 @@
             </MudItem>
         </MudGrid>
     </MudCard>
+}
+
+@{
+    var activeSarsJobs = JobQueue.GetRecentJobs(10).Where(j => j.JobType == "SarsLevyIngestion" && (j.Status == BackgroundJobStatus.Running || j.Status == BackgroundJobStatus.Queued)).ToList();
+}
+@if (activeSarsJobs.Any())
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mb-4 rounded-lg" Elevation="2">
+        <div class="d-flex justify-space-between align-center flex-wrap gap-2">
+            <div>
+                <div class="d-flex align-center gap-2 mb-1">
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Surface" />
+                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Asynchronous SARS File Ingestion in Progress (Option A Decoupled Worker)</MudText>
+                </div>
+                @foreach (var job in activeSarsJobs)
+                {
+                    <MudText Typo="Typo.body2">
+                        <strong>@(job.ResultFileName ?? "SARS File"):</strong> @(job.CurrentStep ?? "Processing...") (@job.ProgressPercentage%)
+                    </MudText>
+                    <MudProgressLinear Color="Color.Secondary" Value="@job.ProgressPercentage" Class="my-1" Style="max-width: 500px;" />
+                }
+            </div>
+            <MudButton Variant="Variant.Outlined" Color="Color.Surface" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadData">
+                Refresh Ledger
+            </MudButton>
+        </div>
+    </MudAlert>
 }
 
 <MudPaper Class="pa-4 mb-4" Elevation="1">
@@ -438,6 +474,45 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Error importing batch: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isImporting = false;
+        }
+    }
+
+    private async Task SubmitImportBatchAsyncQueue()
+    {
+        if (string.IsNullOrWhiteSpace(_newFile.FileName))
+        {
+            Snackbar.Add("File Name is required.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_rawFileContent) || !_parsedPreviewLines.Any())
+        {
+            Snackbar.Add("Please upload or paste valid SARS file content.", Severity.Warning);
+            return;
+        }
+
+        if (_complianceReport != null && !_complianceReport.IsCompliant)
+        {
+            Snackbar.Add("Cannot dispatch non-compliant file. Fix syntax or control totals first.", Severity.Error);
+            return;
+        }
+
+        _isImporting = true;
+        try
+        {
+            var bytes = System.Text.Encoding.UTF8.GetBytes(_rawFileContent);
+            var ticket = await JobQueue.EnqueueSarsLevyIngestionAsync(_newFile.FileName, bytes, "Admin");
+            Snackbar.Add($"SARS schedule '{_newFile.FileName}' dispatched to Background Worker (Job #{ticket.JobId.ToString()[..8]}). Processing asynchronously via Option A.", Severity.Success);
+            _showImportDialog = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error dispatching batch: {ex.Message}", Severity.Error);
         }
         finally
         {

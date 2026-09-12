@@ -4,6 +4,7 @@
 @page "/grants/create"
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
+@using Nsdms.Domain.Lookups
 @using Nsdms.Web.Components.Shared
 @using Nsdms.Web.Components.Shared.Forms
 @using Nsdms.Web.Components.Shared.Wizard
@@ -39,7 +40,7 @@ else if (_isSuccess)
         <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" Class="mb-3" />
         <h1 class="text-h5 font-weight-bold text-primary mb-2">Discretionary Grant (DG) application submitted</h1>
         <p class="text-body1 text-secondary mb-4">
-            Application reference <strong class="font-mono">@_submittedAppNumber</strong> has been staged for committee adjudication.
+            Application reference <strong class="font-mono">@_submittedAppNumber</strong> has been lodged and staged for adjudication.
         </p>
         <div class="d-flex justify-center gap-3">
             <MudButton Variant="Variant.Filled"
@@ -59,7 +60,7 @@ else if (_isSuccess)
 else
 {
     <WizardShell Title="Discretionary Grant (DG) application"
-                 Subtitle="Statutory PIVOTAL strategic skills development funding allocation application"
+                 Subtitle="Statutory Discretionary Grant funding application (PIVOTAL structured training &amp; Non-PIVOTAL strategic projects)"
                  ActiveStepIndex="@_activeStep"
                  ActiveStepIndexChanged="OnStepChanged"
                  FinishButtonText="Submit DG application"
@@ -76,22 +77,22 @@ else
         <!-- STEP 1: Funding Window & Strategy -->
         <WizardStep Label="Funding window"
                     Heading="Select funding window &amp; grant category"
-                    Description="Choose the gazetted Discretionary Grant funding allocation window and intervention type"
+                    Description="Choose the gazetted Discretionary Grant funding allocation window and intervention category"
                     ValidateAsync="ValidateStep1Async">
             <DgGrantApplicationFields Section="Window"
                                       FundingWindows="@_fundingWindows"
                                       FundingWindowId="@_fundingWindowId"
                                       FundingWindowIdChanged="OnFundingWindowChanged"
                                       GrantTypeCode="@_grantTypeCode"
-                                      GrantTypeCodeChanged="@((val) => _grantTypeCode = val)"
+                                      GrantTypeCodeChanged="OnGrantTypeCodeChanged"
                                       ProjectTitle="@_projectTitle"
-                                      ProjectTitleChanged="@((val) => _projectTitle = val)" />
+                                      ProjectTitleChanged="@((val) => { _projectTitle = val; UpdateReviewGroups(); })" />
         </WizardStep>
 
         <!-- STEP 2: Applying Organisation Profile -->
         <WizardStep Label="Organisation"
                     Heading="Verify employer profile &amp; levy status"
-                    Description="Confirm the legal applying entity, SDL registration number, and WSP compliance status"
+                    Description="Confirm the legal applying entity, SDL registration number, and Mandatory Grant (WSP) compliance status"
                     ValidateAsync="ValidateStep2Async">
             <DgGrantApplicationFields Section="Organisation"
                                       Organisations="@_organisations"
@@ -99,44 +100,135 @@ else
                                       OrganisationIdChanged="OnOrganisationChanged"
                                       SdlNumber="@_sdlNumber"
                                       IsWspCompliant="@_isWspCompliant"
-                                      IsWspCompliantChanged="@((val) => _isWspCompliant = val)"
+                                      IsWspCompliantChanged="@((val) => { _isWspCompliant = val; UpdateReviewGroups(); })"
                                       IsWspExempt="@_isWspExempt"
-                                      IsWspExemptChanged="@((val) => _isWspExempt = val)"
+                                      IsWspExemptChanged="@((val) => { _isWspExempt = val; UpdateReviewGroups(); })"
                                       WspExemptionReason="@_wspExemptionReason"
-                                      WspExemptionReasonChanged="@((val) => _wspExemptionReason = val)" />
+                                      WspExemptionReasonChanged="@((val) => { _wspExemptionReason = val; UpdateReviewGroups(); })" />
         </WizardStep>
 
-        <!-- STEP 3: Financial Budget & Learners -->
-        <WizardStep Label="Budget &amp; targets"
-                    Heading="Define requested budget envelope &amp; beneficiary targets"
-                    Description="Specify total funding requested, target learner headcount, and implementation milestones"
+        <!-- STEP 3: Intervention Scope & Selection -->
+        <WizardStep Label="Intervention scope"
+                    Heading="Scope PIVOTAL &amp; strategic project interventions"
+                    Description="Select which skills development programmes and/or strategic projects this application covers"
                     ValidateAsync="ValidateStep3Async">
+            <DgGrantApplicationFields Section="InterventionScope"
+                                      FundingWindows="@_fundingWindows"
+                                      FundingWindowId="@_fundingWindowId"
+                                      CatalogInterventions="@_catalogInterventions"
+                                      SelectedInterventionCodes="@_selectedInterventionCodes"
+                                      SelectedInterventionCodesChanged="OnSelectedInterventionsChanged" />
+        </WizardStep>
+
+        <!-- STEP 4: PIVOTAL Structured Training Plan -->
+        <WizardStep Label="PIVOTAL plan"
+                    Heading="PIVOTAL structured training plan table"
+                    Description="Capture accredited qualification titles, NQF levels, OFO occupations, and 18.1/18.2 cohorts"
+                    ValidateAsync="ValidateStep4Async">
+            @if (_hasPivotal)
+            {
+                <DgGrantApplicationFields Section="PivotalTrainingPlan"
+                                          PivotalInterventions="@_pivotalInterventions"
+                                          PivotalInterventionsChanged="OnPivotalInterventionsChanged"
+                                          CatalogInterventions="@_catalogInterventions" />
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-4">
+                    <strong>PIVOTAL training plan not applicable</strong>: Your selected application scope focuses entirely on Non-PIVOTAL strategic projects. You may proceed directly to the project motivation section.
+                </MudAlert>
+            }
+        </WizardStep>
+
+        <!-- STEP 5: Strategic Project Motivation -->
+        <WizardStep Label="Motivation"
+                    Heading="Strategic project narrative motivation &amp; footprint"
+                    Description="Provide comprehensive responses to statutory motivation questions, beneficiary counts, and target provinces"
+                    ValidateAsync="ValidateStep5Async">
+            @if (_hasNonPivotal)
+            {
+                <DgGrantApplicationFields Section="ProjectMotivation"
+                                          ProjectDescription="@_projectDescription"
+                                          ProjectDescriptionChanged="@((val) => { _projectDescription = val; UpdateReviewGroups(); })"
+                                          Purpose="@_purpose"
+                                          PurposeChanged="@((val) => { _purpose = val; UpdateReviewGroups(); })"
+                                          Outcomes="@_outcomes"
+                                          OutcomesChanged="@((val) => { _outcomes = val; UpdateReviewGroups(); })"
+                                          Benefits="@_benefits"
+                                          BenefitsChanged="@((val) => { _benefits = val; UpdateReviewGroups(); })"
+                                          PotentialRisks="@_potentialRisks"
+                                          PotentialRisksChanged="@((val) => { _potentialRisks = val; UpdateReviewGroups(); })"
+                                          EstimatedOverallProjectCost="@_estimatedOverallProjectCost"
+                                          EstimatedOverallProjectCostChanged="@((val) => { _estimatedOverallProjectCost = val; UpdateBudgetRollup(); })"
+                                          NumberOfBeneficiaries="@_numberOfBeneficiaries"
+                                          NumberOfBeneficiariesChanged="@((val) => { _numberOfBeneficiaries = val; UpdateBudgetRollup(); })"
+                                          RequireProjectAdministrationCosts="@_requireProjectAdministrationCosts"
+                                          RequireProjectAdministrationCostsChanged="OnRequireAdminCostsChanged"
+                                          TargetProvinces="@_targetProvinces"
+                                          TargetProvincesChanged="@((val) => { _targetProvinces = val; UpdateReviewGroups(); })" />
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-4">
+                    <strong>Narrative project motivation not applicable</strong>: Your selected application scope is PIVOTAL-only. Structured qualification and headcount specifications were completed in the previous step.
+                </MudAlert>
+            }
+        </WizardStep>
+
+        <!-- STEP 6: Implementation Plan & Deliverables -->
+        <WizardStep Label="Deliverables"
+                    Heading="Implementation plan deliverables &amp; tranches"
+                    Description="Itemize project deliverable milestones, target outputs, tranche percentages, and schedules"
+                    ValidateAsync="ValidateStep6Async">
+            @if (_hasNonPivotal)
+            {
+                <DgGrantApplicationFields Section="ImplementationPlan"
+                                          NonPivotalInterventions="@_nonPivotalInterventions"
+                                          NonPivotalInterventionsChanged="OnNonPivotalInterventionsChanged"
+                                          CatalogInterventions="@_catalogInterventions" />
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-4">
+                    <strong>Milestone deliverables not applicable</strong>: Deliverables and tranche schedules are managed via statutory tripartite agreements for PIVOTAL programmes.
+                </MudAlert>
+            }
+        </WizardStep>
+
+        <!-- STEP 7: Financial Budget & Targets -->
+        <WizardStep Label="Budget &amp; targets"
+                    Heading="Consolidated funding envelope &amp; beneficiary targets"
+                    Description="Review automated budget rollup across PIVOTAL programmes, strategic project deliverables, and administration fees"
+                    ValidateAsync="ValidateStep7Async">
             <DgGrantApplicationFields Section="Budget"
                                       RequestedAmount="@_requestedAmount"
-                                      RequestedAmountChanged="@((val) => _requestedAmount = val)"
+                                      RequestedAmountChanged="@((val) => { _requestedAmount = val; UpdateReviewGroups(); })"
                                       LearnerCount="@_learnerCount"
-                                      LearnerCountChanged="@((val) => _learnerCount = val)"
+                                      LearnerCountChanged="@((val) => { _learnerCount = val; UpdateReviewGroups(); })"
                                       ImplementationPlanSummary="@_implementationPlanSummary"
-                                      ImplementationPlanSummaryChanged="@((val) => _implementationPlanSummary = val)" />
+                                      ImplementationPlanSummaryChanged="@((val) => { _implementationPlanSummary = val; UpdateReviewGroups(); })"
+                                      PivotalInterventions="@_pivotalInterventions"
+                                      NonPivotalInterventions="@_nonPivotalInterventions"
+                                      RequireProjectAdministrationCosts="@_requireProjectAdministrationCosts" />
         </WizardStep>
 
-        <!-- STEP 4: Statutory Compliance & Consents -->
+        <!-- STEP 8: Statutory Compliance & Consents -->
         <WizardStep Label="Compliance"
                     Heading="Upload statutory compliance details &amp; legal consent"
-                    Description="Provide valid SARS Tax Compliance Status PIN, B-BBEE contributor level, and POPIA consent"
-                    ValidateAsync="ValidateStep4Async">
+                    Description="Provide valid SARS Tax Compliance Status PIN, B-BBEE contributor level, and statutory consents"
+                    ValidateAsync="ValidateStep8Async">
             <DgGrantApplicationFields Section="Compliance"
                                       TaxCompliancePin="@_taxCompliancePin"
-                                      TaxCompliancePinChanged="@((val) => _taxCompliancePin = val)"
+                                      TaxCompliancePinChanged="@((val) => { _taxCompliancePin = val; UpdateReviewGroups(); })"
                                       BbbeeLevel="@_bbbeeLevel"
-                                      BbbeeLevelChanged="@((val) => _bbbeeLevel = val)"
+                                      BbbeeLevelChanged="@((val) => { _bbbeeLevel = val; UpdateReviewGroups(); })"
                                       ConfirmStatutoryCompliance="@_confirmStatutoryCompliance"
-                                      ConfirmStatutoryComplianceChanged="@((val) => _confirmStatutoryCompliance = val)"
+                                      ConfirmStatutoryComplianceChanged="@((val) => { _confirmStatutoryCompliance = val; UpdateReviewGroups(); })"
                                       PopiaConsent="@_popiaConsent"
-                                      PopiaConsentChanged="@((val) => _popiaConsent = val)" />
+                                      PopiaConsentChanged="@((val) => { _popiaConsent = val; UpdateReviewGroups(); })" />
         </WizardStep>
 
-        <!-- STEP 5: Review & Statutory Submission -->
+        <!-- STEP 9: Review & Statutory Submission -->
         <WizardReviewStep ReviewGroups="@_reviewGroups"
                           OnEditStep="OnEditStepRequested">
             <LifecycleContent>
@@ -144,10 +236,10 @@ else
                     <MudIcon Icon="@Icons.Material.Filled.Security" Color="Color.Primary" Size="Size.Medium" />
                     <div>
                         <span class="d-block text-body2 font-weight-bold text-primary">
-                            Statutory non-repudiation &amp; audit logging
+                            Statutory non-repudiation &amp; audited change log
                         </span>
                         <span class="d-block text-caption text-secondary">
-                            Submitting this application creates an immutable audited change log entry with a digital security seal.
+                            Submitting this application creates an immutable audited change log entry with a digital security seal and freezes the project specification snapshot.
                         </span>
                     </div>
                 </div>
@@ -169,25 +261,48 @@ else
 
     private List<GrantFundingWindow> _fundingWindows = new();
     private List<Organisation> _organisations = new();
+    private List<InterventionType> _catalogInterventions = new();
 
-    // Step 1
+    // Step 1: Window
     private int? _fundingWindowId;
-    private string _grantTypeCode = "PIVOTAL";
+    private string _grantTypeCode = "HYBRID";
     private string _projectTitle = string.Empty;
 
-    // Step 2
+    // Step 2: Organisation
     private int _organisationId;
     private string _sdlNumber = string.Empty;
     private bool _isWspCompliant = true;
     private bool _isWspExempt = false;
     private string? _wspExemptionReason;
 
-    // Step 3
-    private decimal _requestedAmount = 350000m;
-    private int _learnerCount = 15;
+    // Step 3: Scope
+    private HashSet<string> _selectedInterventionCodes = new();
+    private bool _hasPivotal = true;
+    private bool _hasNonPivotal = true;
+
+    // Step 4: PIVOTAL Plan
+    private List<GrantApplicationIntervention> _pivotalInterventions = new();
+
+    // Step 5: Strategic Project Motivation
+    private string? _projectDescription;
+    private string? _purpose;
+    private string? _outcomes;
+    private string? _benefits;
+    private string? _potentialRisks;
+    private decimal _estimatedOverallProjectCost = 0m;
+    private int _numberOfBeneficiaries = 0;
+    private bool _requireProjectAdministrationCosts = false;
+    private string? _targetProvinces;
+
+    // Step 6: Non-PIVOTAL Deliverables
+    private List<GrantApplicationIntervention> _nonPivotalInterventions = new();
+
+    // Step 7: Budget & Targets
+    private decimal _requestedAmount = 0m;
+    private int _learnerCount = 0;
     private string _implementationPlanSummary = string.Empty;
 
-    // Step 4
+    // Step 8: Compliance
     private string _taxCompliancePin = string.Empty;
     private string _bbbeeLevel = "Level 2";
     private bool _confirmStatutoryCompliance = false;
@@ -203,26 +318,46 @@ else
 
     private List<WizardReviewGroup> _reviewGroups = new();
 
-    // Draft Persistence & Resume Lifecycle Engine
+    // Draft Persistence Engine
     private bool _hasDraftToResume = false;
     private int _draftStepIndex = 0;
     private string? _draftSavedTimeAgo;
     private string? _activeDraftKey;
     private WizardDraftSession? _loadedDraft;
 
-    private record DgApplicationDraftModel
+    private record DgApplicationCompositeDraftModel
     {
         public int? FundingWindowId { get; init; }
-        public string GrantTypeCode { get; init; } = "PIVOTAL";
+        public string GrantTypeCode { get; init; } = "HYBRID";
         public string ProjectTitle { get; init; } = string.Empty;
         public int OrganisationId { get; init; }
         public string SdlNumber { get; init; } = string.Empty;
         public bool IsWspCompliant { get; init; } = true;
         public bool IsWspExempt { get; init; } = false;
         public string? WspExemptionReason { get; init; }
-        public decimal RequestedAmount { get; init; } = 350000m;
-        public int LearnerCount { get; init; } = 15;
+
+        public List<string> SelectedInterventionCodes { get; init; } = new();
+        public bool HasPivotal { get; init; } = true;
+        public bool HasNonPivotal { get; init; } = true;
+
+        public List<GrantApplicationIntervention> PivotalInterventions { get; init; } = new();
+
+        public string? ProjectDescription { get; init; }
+        public string? Purpose { get; init; }
+        public string? Outcomes { get; init; }
+        public string? Benefits { get; init; }
+        public string? PotentialRisks { get; init; }
+        public decimal EstimatedOverallProjectCost { get; init; }
+        public int NumberOfBeneficiaries { get; init; }
+        public bool RequireProjectAdministrationCosts { get; init; }
+        public string? TargetProvinces { get; init; }
+
+        public List<GrantApplicationIntervention> NonPivotalInterventions { get; init; } = new();
+
+        public decimal RequestedAmount { get; init; }
+        public int LearnerCount { get; init; }
         public string ImplementationPlanSummary { get; init; } = string.Empty;
+
         public string TaxCompliancePin { get; init; } = string.Empty;
         public string BbbeeLevel { get; init; } = "Level 2";
         public bool ConfirmStatutoryCompliance { get; init; } = false;
@@ -235,6 +370,7 @@ else
         {
             _fundingWindows = await GrantService.GetFundingWindowsAsync(activeOnly: true);
             _organisations = await OrgService.GetAllAsync();
+            _catalogInterventions = await GrantService.GetInterventionCatalogAsync();
 
             if (FundingWindowId.HasValue && FundingWindowId.Value > 0)
             {
@@ -251,16 +387,30 @@ else
                 _sdlNumber = _organisations.First().SdlNumber;
             }
 
-            _projectTitle = "Strategic Artisan Development Initiative 2026";
-            _implementationPlanSummary = "Cohort recruitment in month 1, accredited theoretical training months 2-4, workplace practical placement months 5-12.";
+            // Apply window defaults
+            ApplyWindowDefaults();
+
+            _projectTitle = "Strategic Artisan & Technical Capacity Initiative 2026";
+            _projectDescription = "Comprehensive technical skills enhancement project integrating credit-bearing artisan apprenticeships with advanced workshop simulation infrastructure.";
+            _purpose = "Address critical scarce skills shortages across engineering, tooling, and precision manufacturing sectors.";
+            _outcomes = "Accredited trade test readiness for 25 apprentices and established regional TVET simulation capacity.";
+            _benefits = "High-absorption workplace placement, improved productivity, and enhanced artisan throughput.";
+            _potentialRisks = "Workplace rotation delays; mitigated through structured MoA host employer placement agreements.";
+            _targetProvinces = "Gauteng, KwaZulu-Natal";
+            _implementationPlanSummary = "Cohort recruitment in month 1, dual-system theory and simulation months 2-6, workplace apprentice rotations months 7-18.";
             _taxCompliancePin = "9823471029";
 
-            // Check for available in-progress draft for the current user
+            // Default mock interventions for initial state
+            SeedDefaultInterventions();
+
+            RefreshInterventionScopes();
+
+            // Check for available in-progress draft
             await CheckForActiveDraftAsync();
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading funding windows: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error initializing DG application wizard: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -269,10 +419,96 @@ else
         }
     }
 
+    private void SeedDefaultInterventions()
+    {
+        if (!_selectedInterventionCodes.Any())
+        {
+            _selectedInterventionCodes.Add("APPRENTICESHIP");
+            _selectedInterventionCodes.Add("INFRA_WORKSHOP");
+        }
+
+        if (!_pivotalInterventions.Any())
+        {
+            _pivotalInterventions.Add(new GrantApplicationIntervention
+            {
+                IsPivotal = true,
+                InterventionTypeCode = "APPRENTICESHIP",
+                QualificationTitle = "National Certificate: Mechanical Fitting",
+                SaqaId = "63414",
+                NqfLevel = "NQF Level 4",
+                OfoCode = "653301",
+                LearnerCountEmployed = 5,
+                LearnerCountUnemployed = 10,
+                UnitCost = 55000m,
+                TotalAmount = 825000m
+            });
+        }
+
+        if (!_nonPivotalInterventions.Any())
+        {
+            _nonPivotalInterventions.Add(new GrantApplicationIntervention
+            {
+                IsPivotal = false,
+                InterventionTypeCode = "INFRA_WORKSHOP",
+                DeliverableName = "Advanced CNC Milling Simulation Workstations",
+                TargetQuantity = 3,
+                EstimatedCost = 350000m,
+                TotalAmount = 350000m,
+                MilestoneNumber = 1,
+                ProjectedStartDate = DateTime.UtcNow.AddMonths(1),
+                ProjectedEndDate = DateTime.UtcNow.AddMonths(4),
+                Comments = "Procurement, installation, and commissioning of 3 CNC simulation training benches"
+            });
+            _nonPivotalInterventions.Add(new GrantApplicationIntervention
+            {
+                IsPivotal = false,
+                InterventionTypeCode = "INFRA_WORKSHOP",
+                DeliverableName = "Commissioning & Safety Certification",
+                TargetQuantity = 1,
+                EstimatedCost = 150000m,
+                TotalAmount = 150000m,
+                MilestoneNumber = 2,
+                ProjectedStartDate = DateTime.UtcNow.AddMonths(5),
+                ProjectedEndDate = DateTime.UtcNow.AddMonths(8),
+                Comments = "Accreditation site verification and health & safety signoff"
+            });
+        }
+    }
+
+    private void ApplyWindowDefaults()
+    {
+        if (_fundingWindowId.HasValue)
+        {
+            var win = _fundingWindows.FirstOrDefault(w => w.Id == _fundingWindowId.Value);
+            if (win != null)
+            {
+                if (win.WindowClassification == "NonPivotal")
+                {
+                    _grantTypeCode = "NON_PIVOTAL";
+                }
+                else if (win.WindowClassification == "Hybrid")
+                {
+                    _grantTypeCode = "HYBRID";
+                }
+                else if (win.WindowClassification == "Pivotal")
+                {
+                    _grantTypeCode = "PIVOTAL";
+                }
+            }
+        }
+    }
+
     private void OnFundingWindowChanged(int? id)
     {
         _fundingWindowId = id;
-        UpdateReviewGroups();
+        ApplyWindowDefaults();
+        RefreshInterventionScopes();
+    }
+
+    private void OnGrantTypeCodeChanged(string code)
+    {
+        _grantTypeCode = code;
+        RefreshInterventionScopes();
     }
 
     private void OnOrganisationChanged(int id)
@@ -284,6 +520,86 @@ else
             _sdlNumber = org.SdlNumber;
         }
         UpdateReviewGroups();
+    }
+
+    private void OnSelectedInterventionsChanged(HashSet<string> codes)
+    {
+        _selectedInterventionCodes = codes;
+        RefreshInterventionScopes();
+    }
+
+    private void OnPivotalInterventionsChanged(List<GrantApplicationIntervention> items)
+    {
+        _pivotalInterventions = items;
+        UpdateBudgetRollup();
+        UpdateReviewGroups();
+    }
+
+    private void OnNonPivotalInterventionsChanged(List<GrantApplicationIntervention> items)
+    {
+        _nonPivotalInterventions = items;
+        UpdateBudgetRollup();
+        UpdateReviewGroups();
+    }
+
+    private void OnRequireAdminCostsChanged(bool val)
+    {
+        _requireProjectAdministrationCosts = val;
+        UpdateBudgetRollup();
+        UpdateReviewGroups();
+    }
+
+    private void RefreshInterventionScopes()
+    {
+        var selectedTypes = _catalogInterventions
+            .Where(i => _selectedInterventionCodes.Contains(i.Code))
+            .ToList();
+
+        bool hasSelectedPivotal = selectedTypes.Any(i => i.IsPivotal);
+        bool hasSelectedNonPivotal = selectedTypes.Any(i => !i.IsPivotal);
+
+        if (_grantTypeCode == "PIVOTAL")
+        {
+            _hasPivotal = true;
+            _hasNonPivotal = hasSelectedNonPivotal;
+        }
+        else if (_grantTypeCode == "NON_PIVOTAL")
+        {
+            _hasPivotal = hasSelectedPivotal;
+            _hasNonPivotal = true;
+        }
+        else if (_grantTypeCode == "HYBRID")
+        {
+            _hasPivotal = true;
+            _hasNonPivotal = true;
+        }
+        else
+        {
+            _hasPivotal = true;
+            _hasNonPivotal = hasSelectedNonPivotal;
+        }
+
+        UpdateBudgetRollup();
+        UpdateReviewGroups();
+    }
+
+    private void UpdateBudgetRollup()
+    {
+        decimal pivotalSum = _hasPivotal ? _pivotalInterventions.Sum(p => p.TotalAmount > 0 ? p.TotalAmount : p.UnitCost * p.TotalLearnerCount) : 0m;
+        decimal nonPivotalSum = _hasNonPivotal ? _nonPivotalInterventions.Sum(d => d.TotalAmount > 0 ? d.TotalAmount : d.EstimatedCost) : 0m;
+        decimal adminFee = (_hasNonPivotal && _requireProjectAdministrationCosts) ? Math.Round(nonPivotalSum * 0.075m, 2) : 0m;
+
+        _requestedAmount = pivotalSum + nonPivotalSum + adminFee;
+
+        int totalPivotalLearners = _pivotalInterventions.Sum(p => p.TotalLearnerCount);
+        if (_hasPivotal && totalPivotalLearners > 0)
+        {
+            _learnerCount = totalPivotalLearners;
+        }
+        else if (_hasNonPivotal && _numberOfBeneficiaries > 0)
+        {
+            _learnerCount = _numberOfBeneficiaries;
+        }
     }
 
     private void OnStepChanged(int step)
@@ -339,21 +655,9 @@ else
 
     private Task<bool> ValidateStep3Async()
     {
-        if (_requestedAmount <= 0)
+        if (!_selectedInterventionCodes.Any() && !_pivotalInterventions.Any() && !_nonPivotalInterventions.Any())
         {
-            Snackbar.Add("Requested funding amount must be greater than zero.", Severity.Warning);
-            return Task.FromResult(false);
-        }
-
-        if (_learnerCount <= 0)
-        {
-            Snackbar.Add("Target learner headcount must be at least 1.", Severity.Warning);
-            return Task.FromResult(false);
-        }
-
-        if (string.IsNullOrWhiteSpace(_implementationPlanSummary))
-        {
-            Snackbar.Add("Please provide an implementation plan summary.", Severity.Warning);
+            Snackbar.Add("Please select at least one intervention from the catalog.", Severity.Warning);
             return Task.FromResult(false);
         }
 
@@ -361,6 +665,71 @@ else
     }
 
     private Task<bool> ValidateStep4Async()
+    {
+        if (!_hasPivotal)
+        {
+            return Task.FromResult(true);
+        }
+
+        if (!_pivotalInterventions.Any())
+        {
+            Snackbar.Add("Please add at least one PIVOTAL training plan intervention line item.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep5Async()
+    {
+        if (!_hasNonPivotal)
+        {
+            return Task.FromResult(true);
+        }
+
+        if (string.IsNullOrWhiteSpace(_projectDescription))
+        {
+            Snackbar.Add("Please provide a project description for this strategic project.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(_purpose))
+        {
+            Snackbar.Add("Please describe the strategic purpose of this initiative.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep6Async()
+    {
+        if (!_hasNonPivotal)
+        {
+            return Task.FromResult(true);
+        }
+
+        if (!_nonPivotalInterventions.Any())
+        {
+            Snackbar.Add("Please add at least one deliverable milestone for this project implementation plan.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep7Async()
+    {
+        if (_requestedAmount <= 0)
+        {
+            Snackbar.Add("Consolidated requested funding amount must be greater than zero.", Severity.Warning);
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(true);
+    }
+
+    private Task<bool> ValidateStep8Async()
     {
         if (string.IsNullOrWhiteSpace(_taxCompliancePin) || _taxCompliancePin.Length < 8)
         {
@@ -388,17 +757,17 @@ else
         var window = _fundingWindows.FirstOrDefault(w => w.Id == _fundingWindowId);
         var org = _organisations.FirstOrDefault(o => o.Id == _organisationId);
 
-        _reviewGroups = new List<WizardReviewGroup>
+        var groups = new List<WizardReviewGroup>
         {
             new()
             {
-                Title = "Funding window & grant category",
+                Title = "Funding window & category",
                 Icon = Icons.Material.Filled.EventNote,
                 TargetStepIndex = 0,
                 Items = new()
                 {
-                    new("Funding window", window != null ? $"FY{window.FinYear} - {window.WindowName}" : "Not selected"),
-                    new("Grant type", _grantTypeCode),
+                    new("Funding window", window != null ? $"FY{winYear(window)} - {window.WindowName}" : "Not selected"),
+                    new("Grant category", _grantTypeCode),
                     new("Project title", _projectTitle)
                 }
             },
@@ -411,42 +780,111 @@ else
                 {
                     new("Organisation", org?.CompanyName ?? "Not selected"),
                     new("SDL number", _sdlNumber, isMonospace: true),
-                    new("WSP compliance", _isWspCompliant ? "Compliant" : (_isWspExempt ? $"Exempt ({_wspExemptionReason})" : "Non-compliant"))
+                    new("WSP compliance", _isWspCompliant ? "Compliant (Regulation 4(4))" : (_isWspExempt ? $"Exempt ({_wspExemptionReason})" : "Non-compliant"))
                 }
             },
             new()
             {
-                Title = "Budget & implementation targets",
-                Icon = Icons.Material.Filled.Payments,
+                Title = "Intervention scope",
+                Icon = Icons.Material.Filled.Category,
                 TargetStepIndex = 2,
                 Items = new()
                 {
-                    new("Requested amount", _requestedAmount.ToString("C2", System.Globalization.CultureInfo.InvariantCulture)),
-                    new("Target learners", $"{_learnerCount} beneficiaries"),
-                    new("Implementation plan", _implementationPlanSummary)
-                }
-            },
-            new()
-            {
-                Title = "Statutory declarations",
-                Icon = Icons.Material.Filled.VerifiedUser,
-                TargetStepIndex = 3,
-                Items = new()
-                {
-                    new("SARS tax PIN", _taxCompliancePin, isMonospace: true),
-                    new("B-BBEE level", _bbbeeLevel),
-                    new("Statutory consent", _confirmStatutoryCompliance ? "Certified compliant" : "Pending"),
-                    new("POPIA consent", _popiaConsent ? "Granted" : "Pending")
+                    new("Selected interventions", $"{_selectedInterventionCodes.Count} catalog types selected"),
+                    new("Includes PIVOTAL", _hasPivotal ? "Yes" : "No"),
+                    new("Includes Non-PIVOTAL", _hasNonPivotal ? "Yes" : "No")
                 }
             }
         };
+
+        if (_hasPivotal)
+        {
+            int totalEmployed = _pivotalInterventions.Sum(p => p.LearnerCountEmployed);
+            int totalUnemployed = _pivotalInterventions.Sum(p => p.LearnerCountUnemployed);
+            decimal pivotalCost = _pivotalInterventions.Sum(p => p.TotalAmount > 0 ? p.TotalAmount : p.UnitCost * p.TotalLearnerCount);
+
+            groups.Add(new WizardReviewGroup
+            {
+                Title = "PIVOTAL training plan",
+                Icon = Icons.Material.Filled.School,
+                TargetStepIndex = 3,
+                Items = new()
+                {
+                    new("Intervention line items", $"{_pivotalInterventions.Count} qualification lines"),
+                    new("Employed learners (18.1)", $"{totalEmployed} candidates"),
+                    new("Unemployed learners (18.2)", $"{totalUnemployed} candidates"),
+                    new("PIVOTAL funding subtotal", pivotalCost.ToString("C2", System.Globalization.CultureInfo.InvariantCulture))
+                }
+            });
+        }
+
+        if (_hasNonPivotal)
+        {
+            groups.Add(new WizardReviewGroup
+            {
+                Title = "Strategic project motivation",
+                Icon = Icons.Material.Filled.Lightbulb,
+                TargetStepIndex = 4,
+                Items = new()
+                {
+                    new("Target beneficiaries", $"{_numberOfBeneficiaries} participants"),
+                    new("Target provinces", !string.IsNullOrWhiteSpace(_targetProvinces) ? _targetProvinces : "All national"),
+                    new("Project admin fee (7.5%)", _requireProjectAdministrationCosts ? "Included" : "Excluded"),
+                    new("Overall estimated cost", _estimatedOverallProjectCost.ToString("C2", System.Globalization.CultureInfo.InvariantCulture))
+                }
+            });
+
+            decimal nonPivotalCost = _nonPivotalInterventions.Sum(d => d.TotalAmount > 0 ? d.TotalAmount : d.EstimatedCost);
+            groups.Add(new WizardReviewGroup
+            {
+                Title = "Implementation plan deliverables",
+                Icon = Icons.Material.Filled.PlaylistAddCheck,
+                TargetStepIndex = 5,
+                Items = new()
+                {
+                    new("Milestone deliverables", $"{_nonPivotalInterventions.Count} deliverables itemized"),
+                    new("Deliverables funding subtotal", nonPivotalCost.ToString("C2", System.Globalization.CultureInfo.InvariantCulture))
+                }
+            });
+        }
+
+        groups.Add(new WizardReviewGroup
+        {
+            Title = "Consolidated budget envelope",
+            Icon = Icons.Material.Filled.Payments,
+            TargetStepIndex = 6,
+            Items = new()
+            {
+                new("Total requested allocation", _requestedAmount.ToString("C2", System.Globalization.CultureInfo.InvariantCulture)),
+                new("Total target beneficiaries", $"{_learnerCount} beneficiaries"),
+                new("Implementation plan summary", !string.IsNullOrWhiteSpace(_implementationPlanSummary) ? _implementationPlanSummary : "Provided")
+            }
+        });
+
+        groups.Add(new WizardReviewGroup
+        {
+            Title = "Statutory declarations",
+            Icon = Icons.Material.Filled.VerifiedUser,
+            TargetStepIndex = 7,
+            Items = new()
+            {
+                new("SARS tax PIN", _taxCompliancePin, isMonospace: true),
+                new("B-BBEE level", _bbbeeLevel),
+                new("Statutory compliance", _confirmStatutoryCompliance ? "Certified compliant" : "Pending"),
+                new("POPIA consent", _popiaConsent ? "Granted" : "Pending")
+            }
+        });
+
+        _reviewGroups = groups;
     }
+
+    private static string winYear(GrantFundingWindow win) => win.FinYear.ToString();
 
     private async Task CheckForActiveDraftAsync()
     {
         try
         {
-            var draft = await DraftService.GetActiveDraftAsync("DgGrantApplication", "CurrentSdf", _organisationId > 0 ? _organisationId : null);
+            var draft = await DraftService.GetActiveDraftAsync("DgGrantApplicationComposite", "CurrentSdf", _organisationId > 0 ? _organisationId : null);
             if (draft != null && draft.CurrentStepIndex > 0)
             {
                 _loadedDraft = draft;
@@ -459,7 +897,6 @@ else
         }
         catch (Exception ex)
         {
-            // Non-blocking draft lookup
             Console.WriteLine($"Draft check skipped: {ex.Message}");
         }
     }
@@ -468,7 +905,7 @@ else
     {
         if (_loadedDraft == null) return;
 
-        var model = DraftService.DeserializeDraftModel<DgApplicationDraftModel>(_loadedDraft);
+        var model = DraftService.DeserializeDraftModel<DgApplicationCompositeDraftModel>(_loadedDraft);
         if (model != null)
         {
             _fundingWindowId = model.FundingWindowId;
@@ -479,6 +916,31 @@ else
             _isWspCompliant = model.IsWspCompliant;
             _isWspExempt = model.IsWspExempt;
             _wspExemptionReason = model.WspExemptionReason;
+
+            _selectedInterventionCodes = new HashSet<string>(model.SelectedInterventionCodes);
+            _hasPivotal = model.HasPivotal;
+            _hasNonPivotal = model.HasNonPivotal;
+
+            if (model.PivotalInterventions != null && model.PivotalInterventions.Any())
+            {
+                _pivotalInterventions = model.PivotalInterventions;
+            }
+
+            _projectDescription = model.ProjectDescription;
+            _purpose = model.Purpose;
+            _outcomes = model.Outcomes;
+            _benefits = model.Benefits;
+            _potentialRisks = model.PotentialRisks;
+            _estimatedOverallProjectCost = model.EstimatedOverallProjectCost;
+            _numberOfBeneficiaries = model.NumberOfBeneficiaries;
+            _requireProjectAdministrationCosts = model.RequireProjectAdministrationCosts;
+            _targetProvinces = model.TargetProvinces;
+
+            if (model.NonPivotalInterventions != null && model.NonPivotalInterventions.Any())
+            {
+                _nonPivotalInterventions = model.NonPivotalInterventions;
+            }
+
             _requestedAmount = model.RequestedAmount;
             _learnerCount = model.LearnerCount;
             _implementationPlanSummary = model.ImplementationPlanSummary;
@@ -489,7 +951,7 @@ else
 
             _activeStep = _loadedDraft.CurrentStepIndex;
             _hasDraftToResume = false;
-            UpdateReviewGroups();
+            RefreshInterventionScopes();
             Snackbar.Add($"Resumed application draft from Step {_activeStep + 1}.", Severity.Info);
         }
     }
@@ -511,7 +973,7 @@ else
         _isProcessing = true;
         try
         {
-            var draftModel = new DgApplicationDraftModel
+            var draftModel = new DgApplicationCompositeDraftModel
             {
                 FundingWindowId = _fundingWindowId,
                 GrantTypeCode = _grantTypeCode,
@@ -521,6 +983,20 @@ else
                 IsWspCompliant = _isWspCompliant,
                 IsWspExempt = _isWspExempt,
                 WspExemptionReason = _wspExemptionReason,
+                SelectedInterventionCodes = _selectedInterventionCodes.ToList(),
+                HasPivotal = _hasPivotal,
+                HasNonPivotal = _hasNonPivotal,
+                PivotalInterventions = _pivotalInterventions,
+                ProjectDescription = _projectDescription,
+                Purpose = _purpose,
+                Outcomes = _outcomes,
+                Benefits = _benefits,
+                PotentialRisks = _potentialRisks,
+                EstimatedOverallProjectCost = _estimatedOverallProjectCost,
+                NumberOfBeneficiaries = _numberOfBeneficiaries,
+                RequireProjectAdministrationCosts = _requireProjectAdministrationCosts,
+                TargetProvinces = _targetProvinces,
+                NonPivotalInterventions = _nonPivotalInterventions,
                 RequestedAmount = _requestedAmount,
                 LearnerCount = _learnerCount,
                 ImplementationPlanSummary = _implementationPlanSummary,
@@ -531,13 +1007,13 @@ else
             };
 
             var session = await DraftService.SaveDraftAsync(
-                "DgGrantApplication",
+                "DgGrantApplicationComposite",
                 "Discretionary Grant (DG) application",
                 "/dg-grants/apply",
                 "CurrentSdf",
                 _organisationId > 0 ? _organisationId : null,
                 _activeStep,
-                5,
+                8,
                 draftModel,
                 _activeDraftKey
             );
@@ -566,7 +1042,7 @@ else
             _submittedAppId = result.Id;
             _submittedAppNumber = result.ApplicationNumber;
 
-            // Clear submitted draft
+            // Clear draft
             if (!string.IsNullOrWhiteSpace(_activeDraftKey))
             {
                 await DraftService.MarkAsSubmittedAsync(_activeDraftKey);
@@ -587,7 +1063,7 @@ else
 
     private GrantApplication BuildApplicationEntity(string status)
     {
-        return new GrantApplication
+        var app = new GrantApplication
         {
             FundingWindowId = _fundingWindowId,
             OrganisationId = _organisationId,
@@ -598,8 +1074,34 @@ else
             IsWspCompliant = _isWspCompliant,
             IsWspExempt = _isWspExempt,
             WspExemptionReason = _wspExemptionReason,
-            ApplicationDate = DateTime.UtcNow
+            ApplicationDate = DateTime.UtcNow,
+
+            // Composite fields
+            HasPivotalInterventions = _hasPivotal,
+            HasNonPivotalInterventions = _hasNonPivotal,
+            ProjectDescription = _projectDescription,
+            Purpose = _purpose,
+            Outcomes = _outcomes,
+            Benefits = _benefits,
+            PotentialRisks = _potentialRisks,
+            EstimatedOverallProjectCost = _estimatedOverallProjectCost,
+            NumberOfBeneficiaries = _numberOfBeneficiaries > 0 ? _numberOfBeneficiaries : _learnerCount,
+            RequireProjectAdministrationCosts = _requireProjectAdministrationCosts,
+            TargetProvinces = _targetProvinces
         };
+
+        var allItems = new List<GrantApplicationIntervention>();
+        if (_hasPivotal && _pivotalInterventions.Any())
+        {
+            allItems.AddRange(_pivotalInterventions);
+        }
+        if (_hasNonPivotal && _nonPivotalInterventions.Any())
+        {
+            allItems.AddRange(_nonPivotalInterventions);
+        }
+
+        app.Interventions = allItems;
+        return app;
     }
 
     private void GoBack()

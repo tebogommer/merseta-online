@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Services;
 using Nsdms.Domain.Entities;
+using Nsdms.Domain.Lookups;
 using Nsdms.Infrastructure.Data;
 using Xunit;
 
@@ -361,8 +362,9 @@ public class GrantServiceTests
         // Arrange
         var (factory, db, audit, service) = CreateTestContext();
 
-        var org = new Organisation { CompanyName = "Skills Org", SdlNumber = "L888999111" };
-        db.Organisations.Add(org);
+        var org1 = new Organisation { CompanyName = "Skills Org 1", SdlNumber = "L888999111" };
+        var org2 = new Organisation { CompanyName = "Skills Org 2", SdlNumber = "L888999222" };
+        db.Organisations.AddRange(org1, org2);
         await db.SaveChangesAsync();
 
         var window = await service.CreateFundingWindowAsync(new GrantFundingWindow
@@ -377,7 +379,7 @@ public class GrantServiceTests
 
         await service.CreateApplicationAsync(new GrantApplication
         {
-            OrganisationId = org.Id,
+            OrganisationId = org1.Id,
             FundingWindowId = window.Id,
             ProjectTitle = "App 1",
             RequestedAmount = 1000000m,
@@ -387,7 +389,7 @@ public class GrantServiceTests
 
         await service.CreateApplicationAsync(new GrantApplication
         {
-            OrganisationId = org.Id,
+            OrganisationId = org2.Id,
             FundingWindowId = window.Id,
             ProjectTitle = "App 2",
             RequestedAmount = 1500000m,
@@ -616,4 +618,675 @@ public class GrantServiceTests
         Assert.Equal(6000000m, outcome.TotalBudgetCommitted);
         Assert.Equal(1800000m, outcome.TotalDisbursed); // 30% first tranche
     }
+
+    [Fact]
+    public async Task CreateApplicationAsync_DuplicateApplicationSameWindow_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        var org = new Organisation { CompanyName = "Single App Employer", SdlNumber = "L999888777" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var window = await service.CreateFundingWindowAsync(new GrantFundingWindow
+        {
+            WindowName = "Unique Test Window",
+            FinYear = 2026,
+            TotalAvailableBudget = 10000000m,
+            OpeningDate = DateTime.UtcNow.AddDays(-2),
+            ClosingDate = DateTime.UtcNow.AddDays(30),
+            IsActive = true,
+            ApprovalStatusCode = "Active"
+        });
+
+        // First application succeeds
+        var app1 = new GrantApplication
+        {
+            OrganisationId = org.Id,
+            FundingWindowId = window.Id,
+            ProjectTitle = "First Valid Application",
+            RequestedAmount = 2500000m,
+            ApplicationStatusCode = "Submitted"
+        };
+        await service.CreateApplicationAsync(app1, "OfficerA");
+
+        // Second application by same employer in same window must fail
+        var app2 = new GrantApplication
+        {
+            OrganisationId = org.Id,
+            FundingWindowId = window.Id,
+            ProjectTitle = "Duplicate Forbidden Application",
+            RequestedAmount = 1500000m,
+            ApplicationStatusCode = "Submitted"
+        };
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateApplicationAsync(app2, "OfficerA"));
+        Assert.Contains("only one application is permitted per funding window", ex.Message);
+    }
+
+    [Fact]
+    public async Task DualAuthorisation_ProposeAndApprove_SucceedsForDistinctUsers()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        var window = await service.CreateFundingWindowAsync(new GrantFundingWindow
+        {
+            WindowName = "Gazetted DG 2026 Window",
+            FinYear = 2026,
+            TotalAvailableBudget = 25000000m,
+            OpeningDate = DateTime.UtcNow.AddDays(-1),
+            ClosingDate = DateTime.UtcNow.AddDays(45),
+            IsActive = false,
+            ApprovalStatusCode = "Draft"
+        });
+
+        // Act 1: Propose by Officer A
+        var proposed = await service.ProposeFundingWindowAsync(window.Id, "OfficerA");
+        Assert.Equal("PendingApproval", proposed.ApprovalStatusCode);
+        Assert.Equal("OfficerA", proposed.ProposedByUserId);
+        Assert.NotNull(proposed.ProposedDate);
+
+        // Act 2: Approve & Activate by Executive B
+        var approved = await service.ApproveAndActivateFundingWindowAsync(window.Id, "ExecutiveB", "Gazetted per MANCO Res 2026/01");
+        Assert.Equal("Active", approved.ApprovalStatusCode);
+        Assert.True(approved.IsActive);
+        Assert.Equal("ExecutiveB", approved.ApprovedByUserId);
+        Assert.NotNull(approved.ApprovedDate);
+    }
+
+    [Fact]
+    public async Task DualAuthorisation_SelfApproval_ThrowsSegregationOfDutiesViolation()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        var window = await service.CreateFundingWindowAsync(new GrantFundingWindow
+        {
+            WindowName = "Self-Approval Test Window",
+            FinYear = 2026,
+            TotalAvailableBudget = 10000000m,
+            OpeningDate = DateTime.UtcNow.AddDays(-1),
+            ClosingDate = DateTime.UtcNow.AddDays(45),
+            IsActive = false,
+            ApprovalStatusCode = "Draft"
+        });
+
+        await service.ProposeFundingWindowAsync(window.Id, "OfficerA");
+
+        // Act & Assert: Proposing officer OfficerA attempts to self-approve
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.ApproveAndActivateFundingWindowAsync(window.Id, "OfficerA"));
+
+        Assert.Contains("Dual Authorisation Governance Violation", ex.Message);
+        Assert.Contains("cannot approve and activate their own DG funding window", ex.Message);
+    }
+
+    [Fact]
+    public async Task RealTimeBudgetConsumption_OverSubscription_FlagsAlertAndComputesCapacity()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        var org1 = new Organisation { CompanyName = "Steel Corp", SdlNumber = "L111222333" };
+        var org2 = new Organisation { CompanyName = "Motor Works", SdlNumber = "L444555666" };
+        db.Organisations.AddRange(org1, org2);
+
+        var priority = new StrategicPriority
+        {
+            Code = "SP-AERO-01",
+            Name = "Aerospace Precision Engineering",
+            NsdpOutcomeCode = "NSDP-OUTCOME-1"
+        };
+        db.StrategicPriorities.Add(priority);
+        await db.SaveChangesAsync();
+
+        var window = await service.CreateFundingWindowAsync(new GrantFundingWindow
+        {
+            WindowName = "Aerospace Window 2026",
+            FinYear = 2026,
+            TotalAvailableBudget = 10000000m,
+            OpeningDate = DateTime.UtcNow.AddDays(-1),
+            ClosingDate = DateTime.UtcNow.AddDays(60),
+            IsActive = true,
+            ApprovalStatusCode = "Active"
+        });
+
+        var windowPriority = await service.AddWindowPriorityAsync(new FundingWindowPriority
+        {
+            FundingWindowId = window.Id,
+            StrategicPriorityId = priority.Id,
+            AllocatedBudget = 3000000m, // R3,000,000 budget envelope
+            TargetBeneficiaries = 50
+        });
+
+        // App 1 consumes R2,000,000 (R1,000,000 remaining)
+        await service.CreateApplicationAsync(new GrantApplication
+        {
+            OrganisationId = org1.Id,
+            FundingWindowId = window.Id,
+            FundingWindowPriorityId = windowPriority.Id,
+            ProjectTitle = "App 1 Precision Lathe Training",
+            RequestedAmount = 2000000m,
+            ApplicationStatusCode = "Submitted"
+        });
+
+        // Act: Evaluate an incoming application requesting R2,500,000 (would push total to R4.5m against R3.0m envelope)
+        var consumption = await service.EvaluateBudgetConsumptionAsync(windowPriority.Id, 2500000m);
+
+        // Assert
+        Assert.True(consumption.IsOverSubscribed);
+        Assert.Equal(2000000m, consumption.CurrentCommittedAmount);
+        Assert.Equal(1000000m, consumption.RemainingBudget);
+        Assert.Equal(1500000m, consumption.OverSubscriptionAmount); // 4.5M - 3.0M = 1.5M over-subscribed
+        Assert.Contains("is over-subscribed by", consumption.AdvisoryMessage);
+    }
+
+    [Fact]
+    public async Task CreateApplicationAsync_OutsideWindowDates_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        var org = new Organisation { CompanyName = "Late Submitter Ltd", SdlNumber = "L777888999" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        // Expired window
+        var closedWindow = await service.CreateFundingWindowAsync(new GrantFundingWindow
+        {
+            WindowName = "Past Expired Window",
+            FinYear = 2025,
+            TotalAvailableBudget = 5000000m,
+            OpeningDate = DateTime.UtcNow.AddMonths(-3),
+            ClosingDate = DateTime.UtcNow.AddMonths(-1),
+            IsActive = true,
+            ApprovalStatusCode = "Active"
+        });
+
+        var app = new GrantApplication
+        {
+            OrganisationId = org.Id,
+            FundingWindowId = closedWindow.Id,
+            ProjectTitle = "Late Submission",
+            RequestedAmount = 1000000m
+        };
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateApplicationAsync(app, "Officer"));
+        Assert.Contains("funding window 'Past Expired Window' is currently closed", ex.Message);
+    }
+
+    [Fact]
+    public async Task InitializeWindowFromTemplateAsync_PopulatesTemplateEligibilitiesAndInterventions()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        db.StakeholderEligibilityTypes.Add(new StakeholderEligibilityType { Code = "LEVY_PAYING", Name = "Levy Paying Employers", Active = true });
+        db.StakeholderEligibilityTypes.Add(new StakeholderEligibilityType { Code = "SMME_EXEMPT", Name = "Non-Levy Paying SMMEs", Active = true });
+        db.InterventionTypes.Add(new InterventionType { Code = "APPRENTICE", Name = "Apprenticeship", IsPivotal = true, Active = true });
+        await db.SaveChangesAsync();
+
+        var template = new GrantWindowTemplate
+        {
+            TemplateCode = "TMPL_TEST_PIVOTAL",
+            Name = "Unit Test PIVOTAL Template",
+            Description = "Automated test template for DG window",
+            IsPivotal = true,
+            WindowClassification = "PIVOTAL",
+            RequireWspComplianceDefault = true,
+            EstimatedDurationDays = 30,
+            IsActive = true
+        };
+        db.GrantWindowTemplates.Add(template);
+        await db.SaveChangesAsync();
+
+        db.GrantWindowTemplateEligibilities.Add(new GrantWindowTemplateEligibility
+        {
+            TemplateId = template.Id,
+            StakeholderEligibilityTypeCode = "LEVY_PAYING"
+        });
+        db.GrantWindowTemplateEligibilities.Add(new GrantWindowTemplateEligibility
+        {
+            TemplateId = template.Id,
+            StakeholderEligibilityTypeCode = "SMME_EXEMPT"
+        });
+
+        db.GrantWindowTemplateInterventions.Add(new GrantWindowTemplateIntervention
+        {
+            TemplateId = template.Id,
+            InterventionTypeCode = "APPRENTICE"
+        });
+        await db.SaveChangesAsync();
+
+        // Act
+        var window = await service.InitializeWindowFromTemplateAsync(
+            template.Id,
+            2026,
+            "2026 Gazetted PIVOTAL Window",
+            DateTime.UtcNow,
+            DateTime.UtcNow.AddDays(30),
+            10000000m,
+            "OfficerAdmin"
+        );
+
+        // Assert
+        Assert.NotNull(window);
+        Assert.Equal(template.Id, window.TemplateId);
+        Assert.True(window.IsPivotal);
+        Assert.True(window.RequireWspCompliance);
+        Assert.Equal("Draft", window.ApprovalStatusCode);
+
+        var eligibilities = await service.GetWindowEligibilitiesAsync(window.Id);
+        Assert.Equal(2, eligibilities.Count);
+        Assert.Contains(eligibilities, e => e.StakeholderEligibilityTypeCode == "LEVY_PAYING");
+        Assert.Contains(eligibilities, e => e.StakeholderEligibilityTypeCode == "SMME_EXEMPT");
+
+        var interventions = await service.GetWindowInterventionsAsync(window.Id);
+        Assert.Single(interventions);
+        Assert.Equal("APPRENTICE", interventions[0].InterventionTypeCode);
+    }
+
+    [Fact]
+    public async Task AddInterventionToCatalogAsync_PersistsNewNonPivotalIntervention()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var newIntervention = new InterventionType
+        {
+            Code = "TOOL_ALLOW_2026",
+            Name = "STEM Workshop Tooling Allowance",
+            Description = "Workshop tools grant for TVET artisan workshops",
+            IsPivotal = false,
+            Category = "Workshop Equipment",
+            DefaultUnitCost = 45000m,
+            Active = true
+        };
+
+        // Act
+        var created = await service.AddInterventionToCatalogAsync(newIntervention, "SystemAdmin");
+
+        // Assert
+        Assert.NotNull(created);
+        Assert.Equal("TOOL_ALLOW_2026", created.Code);
+        Assert.False(created.IsPivotal);
+
+        var catalog = await service.GetInterventionCatalogAsync(isPivotal: false);
+        Assert.Contains(catalog, i => i.Code == "TOOL_ALLOW_2026" && i.DefaultUnitCost == 45000m);
+    }
+
+    [Fact]
+    public async Task CreateApplicationAsync_WithRequireWspComplianceTrue_ThrowsWhenWspNotApproved()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation
+        {
+            CompanyName = "Non-Compliant Employer",
+            SdlNumber = "L111222333",
+            LevyCategoryCode = "LEVY_PAYING"
+        };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var window = await service.CreateFundingWindowAsync(new GrantFundingWindow
+        {
+            WindowName = "WSP Enforced DG Window",
+            FinYear = 2026,
+            IsActive = true,
+            ApprovalStatusCode = "Active",
+            OpeningDate = DateTime.UtcNow.AddDays(-1),
+            ClosingDate = DateTime.UtcNow.AddMonths(1),
+            TotalAvailableBudget = 5000000m,
+            RequireWspCompliance = true // Enforce WSP
+        });
+
+        var app = new GrantApplication
+        {
+            OrganisationId = org.Id,
+            FundingWindowId = window.Id,
+            ProjectTitle = "Apprenticeship 2026",
+            RequestedAmount = 500000m
+        };
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateApplicationAsync(app, "Officer"));
+        Assert.Contains("Mandatory Grant Compliance Requirement", ex.Message);
+        Assert.Contains("approved Workplace Skills Plan", ex.Message);
+    }
+
+    [Fact]
+    public async Task CreateApplicationAsync_WithRequireWspComplianceFalse_SucceedsEvenWithoutWsp()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation
+        {
+            CompanyName = "Early Window Employer",
+            SdlNumber = "L444555666",
+            LevyCategoryCode = "LEVY_PAYING"
+        };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var window = await service.CreateFundingWindowAsync(new GrantFundingWindow
+        {
+            WindowName = "Early Independent DG Window",
+            FinYear = 2026,
+            IsActive = true,
+            ApprovalStatusCode = "Active",
+            OpeningDate = DateTime.UtcNow.AddDays(-1),
+            ClosingDate = DateTime.UtcNow.AddMonths(1),
+            TotalAvailableBudget = 5000000m,
+            RequireWspCompliance = false // WSP is NOT enforced
+        });
+
+        var app = new GrantApplication
+        {
+            OrganisationId = org.Id,
+            FundingWindowId = window.Id,
+            ProjectTitle = "Early Window Project",
+            RequestedAmount = 300000m
+        };
+
+        // Act
+        var created = await service.CreateApplicationAsync(app, "Officer");
+
+        // Assert
+        Assert.NotNull(created);
+        Assert.True(created.Id > 0);
+        Assert.Equal("Submitted", created.ApplicationStatusCode);
+    }
+
+    [Fact]
+    public async Task CreateApplicationAsync_WithIneligibleStakeholder_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        // Standard employer (not a TVET college)
+        var org = new Organisation
+        {
+            CompanyName = "Standard Manufacturing Corp",
+            SdlNumber = "L999888777",
+            LevyCategoryCode = "LEVY_PAYING",
+            NonEmployerEntityType = null
+        };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var window = await service.CreateFundingWindowAsync(new GrantFundingWindow
+        {
+            WindowName = "TVET Colleges Only Window",
+            FinYear = 2026,
+            IsActive = true,
+            ApprovalStatusCode = "Active",
+            OpeningDate = DateTime.UtcNow.AddDays(-1),
+            ClosingDate = DateTime.UtcNow.AddMonths(1),
+            TotalAvailableBudget = 5000000m,
+            RequireWspCompliance = false
+        });
+
+        // Configure window so only PUBLIC_TVET is eligible
+        await service.SetWindowEligibilitiesAsync(window.Id, new[] { "PUBLIC_TVET" }, "AdminUser");
+
+        var app = new GrantApplication
+        {
+            OrganisationId = org.Id,
+            FundingWindowId = window.Id,
+            ProjectTitle = "Employer Applying to TVET Window",
+            RequestedAmount = 250000m
+        };
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateApplicationAsync(app, "Officer"));
+        Assert.Contains("Stakeholder Eligibility Violation", ex.Message);
+        Assert.Contains("does not match the configured eligible stakeholder classifications", ex.Message);
+    }
+
+    [Fact]
+    public async Task CreateApplicationAsync_WithCompositePivotalAndNonPivotalInterventions_CalculatesRollupAndPersistsMotivation()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation
+        {
+            CompanyName = "Precision Engineering Consortium",
+            SdlNumber = "L102938475",
+            LevyCategoryCode = "LEVY_PAYING"
+        };
+        db.Organisations.Add(org);
+        db.InterventionTypes.AddRange(
+            new InterventionType { Code = "APPRENTICESHIP", Name = "Apprenticeship", IsPivotal = true, Active = true },
+            new InterventionType { Code = "INFRA_WORKSHOP", Name = "TVET Workshop Infrastructure & Equipment", IsPivotal = false, Active = true }
+        );
+        await db.SaveChangesAsync();
+
+        var window = await service.CreateFundingWindowAsync(new GrantFundingWindow
+        {
+            WindowName = "Hybrid PIVOTAL & Strategic Infrastructure Window 2026",
+            FinYear = 2026,
+            WindowClassification = "Hybrid",
+            IsActive = true,
+            ApprovalStatusCode = "Active",
+            OpeningDate = DateTime.UtcNow.AddDays(-1),
+            ClosingDate = DateTime.UtcNow.AddMonths(2),
+            TotalAvailableBudget = 20000000m,
+            RequireWspCompliance = false
+        });
+
+        var app = new GrantApplication
+        {
+            OrganisationId = org.Id,
+            FundingWindowId = window.Id,
+            ProjectTitle = "National Tooling & Apprenticeship Modernisation Programme",
+            GrantTypeCode = "HYBRID",
+            ApplicationStatusCode = "Submitted",
+            
+            // Strategic Project Motivation Questions
+            ProjectDescription = "Dual-intervention initiative combining accredited artisan apprenticeships with regional TVET tooling modernisation.",
+            Purpose = "Upgrade tooling infrastructure and train high-absorption toolmakers.",
+            Outcomes = "20 certified artisans and 2 upgraded training facilities.",
+            Benefits = "Direct employment opportunities and enhanced local industrial tooling capacity.",
+            PotentialRisks = "Supply chain delays on equipment; mitigated via pre-qualified vendors.",
+            EstimatedOverallProjectCost = 2500000m,
+            NumberOfBeneficiaries = 20,
+            RequireProjectAdministrationCosts = true,
+            TargetProvinces = "Gauteng, Eastern Cape",
+
+            // Interventions: 1 PIVOTAL + 1 Non-PIVOTAL
+            Interventions = new List<GrantApplicationIntervention>
+            {
+                new()
+                {
+                    IsPivotal = true,
+                    InterventionTypeCode = "APPRENTICESHIP",
+                    QualificationTitle = "National Certificate: Toolmaker",
+                    SaqaId = "65432",
+                    NqfLevel = "NQF Level 4",
+                    OfoCode = "653302",
+                    LearnerCountEmployed = 8,
+                    LearnerCountUnemployed = 12,
+                    UnitCost = 60000m,
+                    TotalAmount = 1200000m
+                },
+                new()
+                {
+                    IsPivotal = false,
+                    InterventionTypeCode = "INFRA_WORKSHOP",
+                    DeliverableName = "Precision Tooling Simulation Benches",
+                    TargetQuantity = 2,
+                    EstimatedCost = 450000m,
+                    TotalAmount = 450000m,
+                    MilestoneNumber = 1,
+                    ProjectedStartDate = DateTime.UtcNow.AddMonths(1),
+                    ProjectedEndDate = DateTime.UtcNow.AddMonths(4),
+                    Comments = "Installation and commissioning of 2 tooling simulation rigs"
+                }
+            }
+        };
+
+        // Act
+        var created = await service.CreateApplicationAsync(app, "SdfUser");
+
+        // Assert
+        Assert.NotNull(created);
+        Assert.True(created.Id > 0);
+        Assert.True(created.HasPivotalInterventions);
+        Assert.True(created.HasNonPivotalInterventions);
+        Assert.Equal("National Tooling & Apprenticeship Modernisation Programme", created.ProjectTitle);
+        Assert.Equal("Dual-intervention initiative combining accredited artisan apprenticeships with regional TVET tooling modernisation.", created.ProjectDescription);
+        Assert.Equal(20, created.NumberOfBeneficiaries);
+        Assert.True(created.RequireProjectAdministrationCosts);
+        Assert.Equal("Gauteng, Eastern Cape", created.TargetProvinces);
+
+        // Verify budget rollup: 1,200,000 + 450,000 = 1,650,000
+        Assert.Equal(1650000m, created.RequestedAmount);
+
+        // Verify persisted interventions in database
+        var persistedInterventions = await service.GetApplicationInterventionsAsync(created.Id);
+        Assert.Equal(2, persistedInterventions.Count);
+        Assert.Contains(persistedInterventions, i => i.IsPivotal && i.QualificationTitle == "National Certificate: Toolmaker");
+        Assert.Contains(persistedInterventions, i => !i.IsPivotal && i.DeliverableName == "Precision Tooling Simulation Benches");
+
+        // Verify double-write audit trail
+        var auditLogs = await db.AuditLogs.Where(a => a.EntityName == "GrantApplication" && a.RecordId == created.Id).ToListAsync();
+        Assert.NotEmpty(auditLogs);
+    }
+
+    [Fact]
+    public async Task AddApplicationInterventionAsync_ForPivotalAndNonPivotal_UpdatesApplicationFlagsAndTotals()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Aero Engineering", SdlNumber = "L111222333" };
+        db.Organisations.Add(org);
+        db.InterventionTypes.AddRange(
+            new InterventionType { Code = "LEARNERSHIP", Name = "Learnership", IsPivotal = true, Active = true },
+            new InterventionType { Code = "INFRA_WORKSHOP", Name = "TVET Workshop Infrastructure & Equipment", IsPivotal = false, Active = true }
+        );
+        await db.SaveChangesAsync();
+
+        var app = await service.CreateApplicationAsync(new GrantApplication
+        {
+            OrganisationId = org.Id,
+            ProjectTitle = "Aerospace Manufacturing Development",
+            GrantTypeCode = "HYBRID",
+            RequestedAmount = 0m
+        });
+
+        // Initially no interventions
+        Assert.False(app.HasPivotalInterventions);
+        Assert.False(app.HasNonPivotalInterventions);
+
+        // Act 1: Add PIVOTAL intervention
+        var pivotal = new GrantApplicationIntervention
+        {
+            GrantApplicationId = app.Id,
+            IsPivotal = true,
+            InterventionTypeCode = "LEARNERSHIP",
+            QualificationTitle = "Aeronautical Component Assembly",
+            LearnerCountEmployed = 5,
+            LearnerCountUnemployed = 5,
+            UnitCost = 40000m
+        };
+        var addedPivotal = await service.AddApplicationInterventionAsync(app.Id, pivotal, "Officer");
+
+        // Assert 1
+        Assert.True(addedPivotal.Id > 0);
+        Assert.Equal(400000m, addedPivotal.TotalAmount);
+
+        var refreshedApp = await service.GetApplicationByIdAsync(app.Id);
+        Assert.NotNull(refreshedApp);
+        Assert.True(refreshedApp.HasPivotalInterventions);
+        Assert.False(refreshedApp.HasNonPivotalInterventions);
+        Assert.Equal(400000m, refreshedApp.RequestedAmount);
+
+        // Act 2: Add Non-PIVOTAL deliverable
+        var nonPivotal = new GrantApplicationIntervention
+        {
+            GrantApplicationId = app.Id,
+            IsPivotal = false,
+            InterventionTypeCode = "INFRA_WORKSHOP",
+            DeliverableName = "Clean Room Assembly Pod",
+            TargetQuantity = 1,
+            EstimatedCost = 250000m
+        };
+        var addedNonPivotal = await service.AddApplicationInterventionAsync(app.Id, nonPivotal, "Officer");
+
+        // Assert 2
+        Assert.True(addedNonPivotal.Id > 0);
+        Assert.Equal(250000m, addedNonPivotal.TotalAmount);
+
+        refreshedApp = await service.GetApplicationByIdAsync(app.Id);
+        Assert.NotNull(refreshedApp);
+        Assert.True(refreshedApp.HasPivotalInterventions);
+        Assert.True(refreshedApp.HasNonPivotalInterventions);
+        Assert.Equal(650000m, refreshedApp.RequestedAmount); // 400k + 250k
+    }
+
+    [Fact]
+    public async Task RemoveApplicationInterventionAsync_RemovesLineItemAndRecalculatesApplicationTotals()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Marine Engineering", SdlNumber = "L555666777" };
+        db.Organisations.Add(org);
+        db.InterventionTypes.AddRange(
+            new InterventionType { Code = "APPRENTICESHIP", Name = "Apprenticeship", IsPivotal = true, Active = true },
+            new InterventionType { Code = "INFRA_WORKSHOP", Name = "TVET Workshop Infrastructure & Equipment", IsPivotal = false, Active = true }
+        );
+        await db.SaveChangesAsync();
+
+        var app = await service.CreateApplicationAsync(new GrantApplication
+        {
+            OrganisationId = org.Id,
+            ProjectTitle = "Shipbuilding Skills Project",
+            GrantTypeCode = "HYBRID",
+            Interventions = new List<GrantApplicationIntervention>
+            {
+                new()
+                {
+                    IsPivotal = true,
+                    InterventionTypeCode = "APPRENTICESHIP",
+                    QualificationTitle = "Shipbuilder",
+                    LearnerCountEmployed = 10,
+                    UnitCost = 50000m,
+                    TotalAmount = 500000m
+                },
+                new()
+                {
+                    IsPivotal = false,
+                    InterventionTypeCode = "INFRA_WORKSHOP",
+                    DeliverableName = "Welding Bays Setup",
+                    EstimatedCost = 200000m,
+                    TotalAmount = 200000m
+                }
+            }
+        });
+
+        var interventions = await service.GetApplicationInterventionsAsync(app.Id);
+        Assert.Equal(2, interventions.Count);
+        var deliverable = interventions.First(i => !i.IsPivotal);
+
+        // Act: Remove the non-pivotal deliverable
+        var removed = await service.RemoveApplicationInterventionAsync(deliverable.Id, "Officer");
+
+        // Assert
+        Assert.True(removed);
+        var remaining = await service.GetApplicationInterventionsAsync(app.Id);
+        Assert.Single(remaining);
+        Assert.True(remaining.First().IsPivotal);
+
+        var refreshedApp = await service.GetApplicationByIdAsync(app.Id);
+        Assert.NotNull(refreshedApp);
+        Assert.True(refreshedApp.HasPivotalInterventions);
+        Assert.False(refreshedApp.HasNonPivotalInterventions);
+        Assert.Equal(500000m, refreshedApp.RequestedAmount);
+    }
 }
+
