@@ -26,3 +26,14 @@
 7. **Traceability Matrix:** Verified and bound exact code file paths, test file paths, and commit SHAs for all functional requirements.
 8. **Statutory Compliance Matrix:** Linked all compliance-tagged requirements to the Statutory Compliance Matrix in `COMPLIANCE.md` (`SDA`, `SDLA`, `SETAREG`, `PFMA`, `POPIA`, `QCTO`, `NAMB`, `SETMIS`, `NLRD`).
 9. **Governance Protection:** Protected `requirements_lint.py` under `CODEOWNERS` and wired the CI validation gate.
+
+### [Register Revision 1.1] — 2026-09-13
+
+**Trigger:** Document Provenance & Section-Anchored Linking Enhancement  
+**Author / Steward:** Tebogo Moepi (`@tmoepi`)  
+**Linter Status:** `requirements_lint.py v1.1` — Exit 0 (0 errors, 0 warnings, strict mode passed)  
+
+#### Summary of Changes:
+1. **Source Document Registry Table:** Added dedicated Document Registry table in `REQUIREMENTS.md` tracking 17 core specifications and statutory legal authorities (both internal repository specs with section anchors and external official gazettes/legislation URLs).
+2. **Doc Ref Column Integration:** Enriched the Functional Requirements table with a normalized `Doc Ref` column binding each FR to its originating specification(s) and legal mandate(s).
+3. **Section Anchor Precision:** Attached specific section anchors (e.g. `#1-domain-overview`) for instantaneous navigation into internal specification markdown files.

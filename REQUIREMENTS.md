@@ -1,7 +1,7 @@
 # Requirements Register — merSETA NSDMS
 
 > **Schema Version:** 3.0
-> **Register Revision:** 1.0
+> **Register Revision:** 1.1
 > **Owner:** Tebogo Moepi
 > **Last Updated:** 2026-09-13
 > **Validated:** requirements_lint.py v1.1 — exit 0 — 2026-09-13
@@ -23,25 +23,49 @@
 
 ---
 
+## Source Document Registry
+
+| Doc ID | Document Title | Category | Scope / Module | Location / Link |
+|---|---|---|---|---|
+| DOC-SPEC-WSP | Spec 06: Workplace Skills Plan (WSP) Submission Flow | Technical Specification | Mandatory Grants / WSP | [Spec-06-WSP-Submission-Flow.md](docs/specifications/4-Workplace-Skills-Plan-WSP/Spec-06-WSP-Submission-Flow.md#1-domain-overview) |
+| DOC-SPEC-MG | Spec 07: Mandatory Grants (Levy Rebates) | Technical Specification | Finance / Mandatory Grants | [Spec-07-Mandatory-Grants.md](docs/specifications/7-Financials-Mandatory-Grants/Spec-07-Mandatory-Grants.md#1-domain-overview) |
+| DOC-SPEC-DG | Spec 03: Discretionary Grants Allocation & MoA | Technical Specification | Grants / Discretionary Grants | [Spec-03-Discretionary-Grants.md](docs/specifications/6-Financials-Discretionary-Grants/Spec-03-Discretionary-Grants.md#1-domain-overview) |
+| DOC-SPEC-TT | Spec 12: Trade Testing & ARPL Governance | Technical Specification | Artisan Development / Trade Tests | [Spec-12-Trade-Testing-And-Artisan.md](docs/specifications/11-Trade-Testing/Spec-12-Trade-Testing-And-Artisan.md#1-domain-overview) |
+| DOC-SPEC-WPA | Spec 11: Workplace Approvals & Monitoring | Technical Specification | Quality Assurance / Workplace | [Spec-11-Workplace-Approvals-And-Monitoring.md](docs/specifications/10-Workplace-Approvals/Spec-11-Workplace-Approvals-And-Monitoring.md#1-domain-overview) |
+| DOC-SPEC-LRN | Spec 08: Learner Management & Registrations | Technical Specification | Learner Administration / STP | [Spec-08-Learner-Registrations.md](docs/specifications/5-Learner-Management/Spec-08-Learner-Registrations.md#1-domain-overview) |
+| DOC-SPEC-DMS | Spec 15: Document Management & 2D Verification | Technical Specification | Core Platform / Documents | [Spec-15-Document-Management.md](docs/specifications/14-Document-Management/Spec-15-Document-Management.md#1-domain-overview) |
+| DOC-SPEC-SARS | Spec 09: SARS Electronic Levy File Ingestion | Technical Specification | Integrations / SARS Levies | [Spec-09-SARS-Levy-Integration.md](docs/specifications/8-Integrations-SARS/Spec-09-SARS-Levy-Integration.md#1-domain-overview) |
+| DOC-SPEC-SETMIS | Spec 13: DHET SETMIS Statutory Reporting | Technical Specification | Statutory Reporting / DHET | [Spec-13-Statutory-Reporting.md](docs/specifications/12-Statutory-Reporting/Spec-13-Statutory-Reporting.md#1-domain-overview) |
+| DOC-SPEC-OKF | Spec 17: Open Knowledge Catalog & Attestation | Technical Specification | Governance / OKF Attestation | [SPECIFICATION.md](docs/specifications/17-Open-Knowledge-Catalog/SPECIFICATION.md#1-domain-overview) |
+| DOC-STAT-SDA | Skills Development Act 97 of 1998 | Statutory Legislation | National Skills Framework | [Act No. 97 of 1998](https://www.gov.za/documents/skills-development-act) |
+| DOC-STAT-SDLA | Skills Development Levies Act 9 of 1999 | Statutory Legislation | Levy Collection & Distribution | [Act No. 9 of 1999](https://www.gov.za/documents/skills-development-levies-act) |
+| DOC-STAT-SETAREG | SETA Grant Regulations (Government Gazette No. 35940) | Statutory Gazette | Mandatory & Discretionary Grants | [Gazette No. 35940](https://www.gov.za/documents/skills-development-act-regulations-monies-received-seta-and-related-matters) |
+| DOC-STAT-PFMA | Public Finance Management Act 1 of 1999 | Statutory Legislation | Financial Control & Dual Authorisation | [Act No. 1 of 1999](https://www.gov.za/documents/public-finance-management-act) |
+| DOC-STAT-POPIA | Protection of Personal Information Act 4 of 2013 | Statutory Legislation | Data Privacy & ID Masking | [Act No. 4 of 2013](https://www.gov.za/documents/protection-personal-information-act) |
+| DOC-STAT-NAMB | NAMB National Artisan Trade Testing Criteria & ARPL Guidelines (2023) | Regulatory Specification | Trade Testing & Mentor Ratios | [NAMB Criteria 2023](https://www.dhet.gov.za/) |
+| DOC-STAT-NLRD | SAQA NLRD Edu.Dex Load Specifications v2.4 | Regulatory Specification | SAQA Extracts (Supplier 599) | [SAQA NLRD Spec](https://www.saqa.org.za/) |
+
+---
+
 ## Functional Requirements (FR)
 
-| ID | Description | Status | Priority | Class | Owner | Source | Conf | Fingerprint | Depends On | Compliance | Ticket | Notes |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| FR-001 | Mandatory Grant (WSP/ATR) statutory 30 April submission cutoff and automatic rejection | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:WspService.CreateAsync | - | SDA, SETAREG | NSDMS-FR-001 | Enforces statutory deadline; rejects submissions post-deadline without approved extension. |
-| FR-002 | Mandatory Grant two-tier maker-checker extension request workflow capped at 31 May | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:WspService.AdjudicateExtensionAsync | FR-001 | SDA, SETAREG, PFMA | NSDMS-FR-002 | Review by CLO and adjudication by Executive Authority; enforces segregation of duties. |
-| FR-003 | Discretionary Grant funding window configuration engine and 1-click blueprint templates | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:GrantService.CreateFundingWindowAsync | - | SDLA, PFMA | NSDMS-FR-003 | Decoupled window timeframes, blueprint cloning, and dynamic eligibility tags. |
-| FR-004 | Discretionary Grant hybrid application intake and consolidated single-MoA budget rollup | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:GrantService.CreateApplicationAsync | FR-003 | SDLA, PFMA | NSDMS-FR-004 | Consolidates PIVOTAL training plans and strategic project deliverables into one MoA. |
-| FR-005 | Artisan trade test 2-tier regional recommendation, QA approval, and serial generation | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:TradeTestAndArplService.ApproveRegionalQaAsync | - | SDA, QCTO, NAMB | NSDMS-FR-005 | Regional CLA recommendation to QA approval; issues unique trade test serial number. |
-| FR-006 | 17 designated trade toolkit whitelist enforcement and 50% practical task credit retention | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:TradeTestAndArplService.EvaluateTradeEligibility | FR-005 | SDA, NAMB | NSDMS-FR-006 | Whitelist restricted to 17 designated trades; retains passed task credits for 18 months. |
-| FR-007 | Artisan mentor-to-apprentice ratio policy engine with 5-tier cascading precedence | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:MentorRatioPolicyEngine.EvaluateWorkplaceApprovalCapacityAsync | - | SDA, QCTO, NAMB | NSDMS-FR-007 | Evaluates mentor overrides, workplace caps, org exemptions, trade policy, and system config. |
-| FR-008 | Learner enrolment tripartite agreement intake, dual-channel STP, and RSA ID validation | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:LearnerService.RegisterLearnerAsync | - | SDA, POPIA, SETMIS | NSDMS-FR-008 | Captures employer, learner, and SDP tripartite commitments; validates 13-digit RSA ID. |
-| FR-009 | Universal QuestPDF 2D barcode verification seal and anonymous public verification portal | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:DocumentVerificationService.CreateAndFreezeDocumentSnapshotAsync | - | POPIA, PFMA | NSDMS-FR-009 | Renders tamper-evident QR verification seal; masks personal ID numbers per POPIA. |
-| FR-010 | Monthly SARS levy file reactive streaming pipeline, digital seal check, and bulk staging | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:SarsLevyStreamingPipeline.StreamProcessLevyFileAsync | - | SDLA, PFMA | NSDMS-FR-010 | Constant-memory streaming; verifies security seal and stages records via SqlBulkCopy. |
-| FR-011 | DHET SETMIS statutory flat-file batch extract engine across all 11 standard files | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:SetmisExtractService.GenerateBatchAsync | FR-008 | SDA, SETMIS | NSDMS-FR-011 | Produces positional flat files strictly adhering to exact character width specifications. |
-| FR-012 | SAQA NLRD Edu.Dex statutory flat-file export pipeline for Supplier Code 599 | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:NlrdExtractService.GenerateBatchAsync | FR-008 | SDA, NLRD | NSDMS-FR-012 | Formats SAQA Edu.Dex extracts prepended with statutory HEADER599 records. |
-| FR-013 | Institutional non-working day calendar management and universal officer SLA pause engine | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:WorkingDayCalculationEngine.AddBusinessDays | - | PFMA | NSDMS-FR-013 | Computes public holidays and merSETA shutdowns; pauses workflow SLA timers dynamically. |
-| FR-014 | PFMA interest declaration, institutional shareholder scan, and conflict review queue | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:ConflictManagementService.ScanMeetingConflictsAsync | - | PFMA, POPIA | NSDMS-FR-014 | Captures annual declarations of interest, links shareholdings, and automates meeting scans. |
-| FR-015 | Open Knowledge Format (OKF) statutory concept catalog, parser, and T-SQL attestation | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:KnowledgeCatalogService.VerifyConceptAsync | - | PFMA | NSDMS-FR-015 | Maintains living statutory concept definitions with mathematical and T-SQL attestation. |
+| ID | Description | Status | Priority | Class | Owner | Source | Conf | Fingerprint | Depends On | Compliance | Doc Ref | Ticket | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FR-001 | Mandatory Grant (WSP/ATR) statutory 30 April submission cutoff and automatic rejection | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:WspService.CreateAsync | - | SDA, SETAREG | DOC-SPEC-WSP, DOC-STAT-SETAREG | NSDMS-FR-001 | Enforces statutory deadline; rejects submissions post-deadline without approved extension. |
+| FR-002 | Mandatory Grant two-tier maker-checker extension request workflow capped at 31 May | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:WspService.AdjudicateExtensionAsync | FR-001 | SDA, SETAREG, PFMA | DOC-SPEC-WSP, DOC-STAT-SETAREG | NSDMS-FR-002 | Review by CLO and adjudication by Executive Authority; enforces segregation of duties. |
+| FR-003 | Discretionary Grant funding window configuration engine and 1-click blueprint templates | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:GrantService.CreateFundingWindowAsync | - | SDLA, PFMA | DOC-SPEC-DG, DOC-STAT-SDLA | NSDMS-FR-003 | Decoupled window timeframes, blueprint cloning, and dynamic eligibility tags. |
+| FR-004 | Discretionary Grant hybrid application intake and consolidated single-MoA budget rollup | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:GrantService.CreateApplicationAsync | FR-003 | SDLA, PFMA | DOC-SPEC-DG, DOC-STAT-SDLA | NSDMS-FR-004 | Consolidates PIVOTAL training plans and strategic project deliverables into one MoA. |
+| FR-005 | Artisan trade test 2-tier regional recommendation, QA approval, and serial generation | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:TradeTestAndArplService.ApproveRegionalQaAsync | - | SDA, QCTO, NAMB | DOC-SPEC-TT, DOC-STAT-NAMB | NSDMS-FR-005 | Regional CLA recommendation to QA approval; issues unique trade test serial number. |
+| FR-006 | 17 designated trade toolkit whitelist enforcement and 50% practical task credit retention | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:TradeTestAndArplService.EvaluateTradeEligibility | FR-005 | SDA, NAMB | DOC-SPEC-TT, DOC-STAT-NAMB | NSDMS-FR-006 | Whitelist restricted to 17 designated trades; retains passed task credits for 18 months. |
+| FR-007 | Artisan mentor-to-apprentice ratio policy engine with 5-tier cascading precedence | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:MentorRatioPolicyEngine.EvaluateWorkplaceApprovalCapacityAsync | - | SDA, QCTO, NAMB | DOC-SPEC-WPA, DOC-STAT-NAMB | NSDMS-FR-007 | Evaluates mentor overrides, workplace caps, org exemptions, trade policy, and system config. |
+| FR-008 | Learner enrolment tripartite agreement intake, dual-channel STP, and RSA ID validation | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:LearnerService.RegisterLearnerAsync | - | SDA, POPIA, SETMIS | DOC-SPEC-LRN, DOC-STAT-SDA | NSDMS-FR-008 | Captures employer, learner, and SDP tripartite commitments; validates 13-digit RSA ID. |
+| FR-009 | Universal QuestPDF 2D barcode verification seal and anonymous public verification portal | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:DocumentVerificationService.CreateAndFreezeDocumentSnapshotAsync | - | POPIA, PFMA | DOC-SPEC-DMS, DOC-STAT-POPIA | NSDMS-FR-009 | Renders tamper-evident QR verification seal; masks personal ID numbers per POPIA. |
+| FR-010 | Monthly SARS levy file reactive streaming pipeline, digital seal check, and bulk staging | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:SarsLevyStreamingPipeline.StreamProcessLevyFileAsync | - | SDLA, PFMA | DOC-SPEC-SARS, DOC-STAT-SDLA | NSDMS-FR-010 | Constant-memory streaming; verifies security seal and stages records via SqlBulkCopy. |
+| FR-011 | DHET SETMIS statutory flat-file batch extract engine across all 11 standard files | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:SetmisExtractService.GenerateBatchAsync | FR-008 | SDA, SETMIS | DOC-SPEC-SETMIS, DOC-STAT-SDA | NSDMS-FR-011 | Produces positional flat files strictly adhering to exact character width specifications. |
+| FR-012 | SAQA NLRD Edu.Dex statutory flat-file export pipeline for Supplier Code 599 | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:NlrdExtractService.GenerateBatchAsync | FR-008 | SDA, NLRD | DOC-SPEC-SETMIS, DOC-STAT-NLRD | NSDMS-FR-012 | Formats SAQA Edu.Dex extracts prepended with statutory HEADER599 records. |
+| FR-013 | Institutional non-working day calendar management and universal officer SLA pause engine | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:WorkingDayCalculationEngine.AddBusinessDays | - | PFMA | DOC-SPEC-WPA, DOC-STAT-PFMA | NSDMS-FR-013 | Computes public holidays and merSETA shutdowns; pauses workflow SLA timers dynamically. |
+| FR-014 | PFMA interest declaration, institutional shareholder scan, and conflict review queue | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:ConflictManagementService.ScanMeetingConflictsAsync | - | PFMA, POPIA | DOC-SPEC-DG, DOC-STAT-PFMA | NSDMS-FR-014 | Captures annual declarations of interest, links shareholdings, and automates meeting scans. |
+| FR-015 | Open Knowledge Format (OKF) statutory concept catalog, parser, and T-SQL attestation | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:KnowledgeCatalogService.VerifyConceptAsync | - | PFMA | DOC-SPEC-OKF, DOC-STAT-PFMA | NSDMS-FR-015 | Maintains living statutory concept definitions with mathematical and T-SQL attestation. |
 
 ---
 
@@ -155,3 +179,4 @@
 | Version | Date | Author | Trigger | Changes |
 |---|---|---|---|---|
 | 1.0 | 2026-09-13 | Tebogo Moepi | Schema 3.0 Bootstrap | Initialized living requirements register with 15 verified functional requirements, 4 measurable NFRs, 6 business rules, 5 architecture decisions, and full traceability. |
+| 1.1 | 2026-09-13 | Tebogo Moepi | Document Provenance & Linking Enhancement | Added Source Document Registry table with internal markdown links, section anchors, external statutory gazettes, and bound Doc Ref column in FR table. |
