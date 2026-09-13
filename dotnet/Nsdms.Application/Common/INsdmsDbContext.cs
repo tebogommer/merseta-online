@@ -114,6 +114,9 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<SystemConfig> SystemConfigs { get; }
     DbSet<SystemFeatureFlag> SystemFeatureFlags { get; }
     DbSet<SystemNotification> SystemNotifications { get; }
+    DbSet<BroadcastMessage> BroadcastMessages { get; }
+    DbSet<EmailOutboxItem> EmailOutboxItems { get; }
+    DbSet<EmailDailyQuotaTracker> EmailDailyQuotaTrackers { get; }
     DbSet<WizardDraftSession> WizardDraftSessions { get; }
 
     // Document & File Management

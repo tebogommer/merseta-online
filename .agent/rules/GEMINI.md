@@ -904,6 +904,44 @@ Cite the clause identifier. If the standard does not cover what is needed, stop 
 
 ---
 
+### 🛡️ Blazor Endpoint Routing Case-Sensitivity Invariant
+- In ASP.NET Core and Blazor Server, route templates are case-insensitive.
+- Never define duplicate `@page` directives that differ only by parameter casing (e.g. `@page "/admin/document-templates/{Id:int}"` alongside `@page "/admin/document-templates/{id:int}"`).
+- Doing so triggers a runtime `Microsoft.AspNetCore.Routing.Matching.AmbiguousMatchException` during endpoint selection.
+
+---
+
+### 🛡️ Statutory "No Levy, No Grant" Mandatory Rebate Governance
+- In terms of SETA Grant Regulations (Regulation 4), Mandatory Grant (MG / WSP) levy rebates must strictly evaluate reconciled SARS monthly levy contributions.
+- If no SARS levy contributions have been collected or reconciled for the submitting organisation for the scheme year, the calculated rebate amount must evaluate to zero (`0m`).
+- Under no circumstances should provisional rebates be disbursed against unapproved WSP submissions or zero levy reconciliations.
+
+---
+
+### 🛡️ Universal Segregation of Duties (Dual Authorisation Control)
+- Dual Authorisation Control is strictly enforced across all statutory workflows:
+  - WSP extension requests: `ReviewedByUserId != ApproverUserId` and `CreatedBy != ApproverUserId`.
+  - Discretionary Grant tranche claims: `pay.CreatedBy != currentUsername` and `pay.FinanceApproverUserId != currentUsername` for CFO escalation.
+  - Mandatory Grant disbursements: `disb.CreatedBy != currentUsername`.
+  - Trade Test & ARPL QA approval: `app.ClaUserId != currentUsername`.
+  - Contract variations (Addenda, Extensions, Terminations): `entity.CreatedBy != currentUsername`.
+  - Learner change requests: `changeRequest.CreatedBy != currentUsername`.
+- Any attempt at self-review or self-approval must fail fast by throwing an `InvalidOperationException` citing Dual Authorisation Governance breach.
+
+---
+
+### 🛡️ Universal Working Day SLA Engine Integration
+- All statutory countdown timers, officer task due dates, and compliance cooling-off periods (such as the 14-day banking cooling-off and trade test result upload deadlines) must compute deadlines using `IWorkingDayCalculationEngine.AddBusinessDaysAsync`.
+- Countdown timers must dynamically pause across South African statutory public holidays (Act No. 36 of 1994) and merSETA annual year-end shutdowns.
+
+---
+
+### 🛡️ POPIA Full-Spectrum 13-Digit RSA ID Masking
+- Confidential 13-digit RSA National ID numbers must be masked (e.g. `9504******082`) using `PopiaMaskingUtility.MaskRsaId` across all UI screens, queues, grids, tables, and public verification portals.
+- When rendering unstructured text, markdown snapshots, or document previews containing embedded IDs, `PopiaMaskingUtility.MaskRsaIdsInText` must be applied.
+
+---
+
 # END OF POLICY — NON-NEGOTIABLE
 
 

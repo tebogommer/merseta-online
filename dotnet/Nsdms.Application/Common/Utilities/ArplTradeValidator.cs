@@ -1,4 +1,5 @@
 using Nsdms.Domain.Entities;
+using Nsdms.Application.Common.Interfaces;
 
 namespace Nsdms.Application.Common.Utilities;
 
@@ -197,5 +198,14 @@ public static class ArplTradeValidator
     public static bool IsNoticeAdvanceCompliant(DateTime noticeDate, DateTime assessmentDate)
     {
         return assessmentDate >= noticeDate.Date.AddDays(5);
+    }
+
+    /// <summary>
+    /// Validates the 5-day advance notice rule rigorously evaluating working days, weekends, and institutional closures.
+    /// </summary>
+    public static async Task<bool> IsNoticeAdvanceCompliantAsync(DateTime noticeDate, DateTime assessmentDate, IWorkingDayCalculationEngine engine)
+    {
+        var minDate = await engine.AddBusinessDaysAsync(noticeDate.Date, 5);
+        return assessmentDate >= minDate;
     }
 }

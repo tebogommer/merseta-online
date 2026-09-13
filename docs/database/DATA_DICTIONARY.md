@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-13 14:46:11 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 253
+> **Generated:** 2026-09-13 18:18:38 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 256
 
 ---
 
@@ -42,6 +42,7 @@
 | `dbo` | [`AuditLog`](#auditlog) | `AuditLog` | 11 | `Id` | Immutable operational audit trail recording entity mutations, actor identity, timestamps, and JSON snapshots. |
 | `dbo` | [`BankingDetails`](#bankingdetails) | `BankingDetails` | 34 | `Id` | System entity for BankingDetails data governance. |
 | `dbo` | [`BankingDetailsAudit`](#bankingdetailsaudit) | `BankingDetailsAudit` | 8 | `Id` | System entity for BankingDetailsAudit data governance. |
+| `dbo` | [`BroadcastMessage`](#broadcastmessage) | `BroadcastMessage` | 19 | `Id` | Persistent broadcast campaign representing an official circular, executive communication, or mass notification. |
 | `dbo` | [`BusinessRule`](#businessrule) | `BusinessRule` | 15 | `Id` | Represents an individual business rule containing a dynamic C# lambda expression, error diagnostics, and evaluation order. |
 | `dbo` | [`BusinessRuleWorkflow`](#businessruleworkflow) | `BusinessRuleWorkflow` | 10 | `Id` | Represents a cohesive grouping of statutory or operational business rules evaluated as a unified decision pipeline (e.g. LearnerStpEvaluation, FinancialClaimApproval). |
 | `dbo` | [`CertificateDistributionEvent`](#certificatedistributionevent) | `CertificateDistributionEvent` | 14 | `Id` | Certificate Distribution Event tracking for National Red Seal certificates (Section 4.2.6). |
@@ -73,6 +74,8 @@
 | `dbo` | [`DocumentTemplate`](#documenttemplate) | `DocumentTemplate` | 23 | `Id` | Universal enterprise document template for statutory letters, certificates, agreements, and notices. |
 | `dbo` | [`DocumentTemplateSection`](#documenttemplatesection) | `DocumentTemplateSection` | 12 | `Id` | Ordered section mapping a reusable clause to a document template. |
 | `dbo` | [`EisaAssessmentEntry`](#eisaassessmententry) | `EisaAssessmentEntry` | 15 | `Id` | External Integrated Summative Assessment (EISA) exam entry for QCTO occupational qualifications. |
+| `dbo` | [`EmailDailyQuotaTracker`](#emaildailyquotatracker) | `EmailDailyQuotaTracker` | 12 | `Id` | Daily email quota tracking entity enforcing the statutory Office 365 ceiling of 10,000 emails/day. |
+| `dbo` | [`EmailOutboxItem`](#emailoutboxitem) | `EmailOutboxItem` | 22 | `Id` | High-volume persistent email outbox queue item managed by token-bucket rate limiter. Supports decoupling of immediate in-app notifications from throttled outbound SMTP/Office 365 dispatch. |
 | `dbo` | [`ErpOutboxMessage`](#erpoutboxmessage) | `ErpOutboxMessage` | 22 | `Id` | Transactional Outbox message entity for Microsoft Dynamics GP and ERP Web Services integration. Ensures resilient, decoupled asynchronous execution with automatic pause on GP outage and resumption upon recovery. |
 | `dbo` | [`ErpPaymentBatchEntry`](#erppaymentbatchentry) | `ErpPaymentBatchEntry` | 17 | `Id` | Individual line item voucher within an ERP payment batch. |
 | `dbo` | [`ErpPaymentBatchHeader`](#erppaymentbatchheader) | `ErpPaymentBatchHeader` | 14 | `Id` | ERP Payment Batch Header for staging mandatory/discretionary grant disbursements to Dynamics GP / Sage. |
@@ -161,7 +164,7 @@
 | `dbo` | [`SummativeAssessmentUnitStandard`](#summativeassessmentunitstandard) | `SummativeAssessmentUnitStandard` | 22 | `Id` | Unit Standard credit assessment and moderation outcome line item. |
 | `dbo` | [`SystemConfig`](#systemconfig) | `SystemConfig` | 12 | `Id` | Runtime system configuration key-value overrides. |
 | `dbo` | [`SystemFeatureFlag`](#systemfeatureflag) | `SystemFeatureFlag` | 11 | `Id` | Granular runtime feature flags for enabling/disabling modules and integrations. All external third-party integrations default to IsEnabled = false. |
-| `dbo` | [`SystemNotification`](#systemnotification) | `SystemNotification` | 14 | `Id` | Persistent system notification for real-time SignalR push and user inbox alerts. |
+| `dbo` | [`SystemNotification`](#systemnotification) | `SystemNotification` | 22 | `Id` | Persistent system notification for real-time SignalR push and user inbox alerts. |
 | `dbo` | [`TerritoryDemarcation`](#territorydemarcation) | `TerritoryDemarcation` | 18 | `Id` | Temporal demarcation mapping a municipal town or local area to a merSETA Regional Office and Province. Supports historical boundary shifts through EffectiveFrom and EffectiveTo dates. |
 | `dbo` | [`TerritoryZone`](#territoryzone) | `TerritoryZone` | 15 | `Id` | Sub-regional operational zone grouping contiguous towns or municipal areas within a merSETA Regional Office. Allows regional coordinators to assign default relationship officers and balance caseloads. |
 | `dbo` | [`TradeMentorRatioPolicy`](#tradementorratiopolicy) | `TradeMentorRatioPolicy` | 15 | `Id` | Statutory artisan mentor-to-apprentice ratio policy per trade qualification or OFO occupational code. Regulates maximum learner supervision capacity for workplace approvals under NAMB and QCTO frameworks. |
@@ -1592,6 +1595,46 @@
 
 ---
 
+### <a id="broadcastmessage"></a> `dbo.BroadcastMessage`
+
+**Description:** Persistent broadcast campaign representing an official circular, executive communication, or mass notification.  
+**CLR Model:** `Nsdms.Domain.Entities.BroadcastMessage`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AttachmentContentType` | `nvarchar(100)` | NULL |  | Domain property for AttachmentContentType. |
+| `AttachmentFileName` | `nvarchar(255)` | NULL |  | Domain property for AttachmentFileName. |
+| `AttachmentSizeBytes` | `bigint` | NULL |  | Domain property for AttachmentSizeBytes. |
+| `AttachmentStoragePath` | `nvarchar(1000)` | NULL |  | Domain property for AttachmentStoragePath. |
+| `BodyHtml` | `nvarchar(max)` | **NOT NULL** |  | Domain property for BodyHtml. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DispatchedAt` | `datetime2` | **NOT NULL** |  | Domain property for DispatchedAt. |
+| `DispatchedBy` | `nvarchar(150)` | **NOT NULL** |  | Domain property for DispatchedBy. |
+| `HasAttachment` | `bit` | **NOT NULL** |  | Domain property for HasAttachment. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `RecipientCount` | `int` | **NOT NULL** |  | Domain property for RecipientCount. |
+| `Status` | `nvarchar(50)` | **NOT NULL** |  | Current lifecycle state code in the workflow engine. |
+| `Subject` | `nvarchar(250)` | **NOT NULL** |  | Domain property for Subject. |
+| `TargetFilterDisplay` | `nvarchar(250)` | NULL |  | Domain property for TargetFilterDisplay. |
+| `TargetFilterValue` | `nvarchar(150)` | NULL |  | Domain property for TargetFilterValue. |
+| `TargetType` | `nvarchar(50)` | **NOT NULL** |  | Domain property for TargetType. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_BroadcastMessage_DispatchedAt` | `DispatchedAt` | No |
+| `IX_BroadcastMessage_Status` | `Status` | No |
+| `IX_BroadcastMessage_TargetType` | `TargetType` | No |
+
+---
+
 ### <a id="businessrule"></a> `dbo.BusinessRule`
 
 **Description:** Represents an individual business rule containing a dynamic C# lambda expression, error diagnostics, and evaluation order.  
@@ -2983,6 +3026,82 @@
 | :--- | :--- | :--- |
 | `IX_EisaAssessmentEntry_AssessmentPaperCode` | `AssessmentPaperCode` | No |
 | `IX_EisaAssessmentEntry_SummativeAssessmentReportId` | `SummativeAssessmentReportId` | No |
+
+---
+
+### <a id="emaildailyquotatracker"></a> `dbo.EmailDailyQuotaTracker`
+
+**Description:** Daily email quota tracking entity enforcing the statutory Office 365 ceiling of 10,000 emails/day.  
+**CLR Model:** `Nsdms.Domain.Entities.EmailDailyQuotaTracker`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DailyLimit` | `int` | **NOT NULL** |  | Domain property for DailyLimit. |
+| `FailedCount` | `int` | **NOT NULL** |  | Domain property for FailedCount. |
+| `IsLimitReached` | `bit` | **NOT NULL** |  | Domain property for IsLimitReached. |
+| `LastSentAt` | `datetime2` | NULL |  | Domain property for LastSentAt. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `QuotaDate` | `datetime2` | **NOT NULL** |  | Domain property for QuotaDate. |
+| `SentCount` | `int` | **NOT NULL** |  | Domain property for SentCount. |
+| `ThrottledCount` | `int` | **NOT NULL** |  | Domain property for ThrottledCount. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_EmailDailyQuotaTracker_QuotaDate` | `QuotaDate` | ✅ Yes |
+
+---
+
+### <a id="emailoutboxitem"></a> `dbo.EmailOutboxItem`
+
+**Description:** High-volume persistent email outbox queue item managed by token-bucket rate limiter. Supports decoupling of immediate in-app notifications from throttled outbound SMTP/Office 365 dispatch.  
+**CLR Model:** `Nsdms.Domain.Entities.EmailOutboxItem`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `bigint` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AttachmentContentType` | `nvarchar(100)` | NULL |  | Domain property for AttachmentContentType. |
+| `AttachmentFileName` | `nvarchar(255)` | NULL |  | Domain property for AttachmentFileName. |
+| `AttachmentStoragePath` | `nvarchar(1000)` | NULL |  | Domain property for AttachmentStoragePath. |
+| `AttemptCount` | `int` | **NOT NULL** |  | Domain property for AttemptCount. |
+| `BodyHtml` | `nvarchar(max)` | **NOT NULL** |  | Domain property for BodyHtml. |
+| `BroadcastMessageId` | `int` | NULL |  | Domain property for BroadcastMessageId. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `HasAttachment` | `bit` | **NOT NULL** |  | Domain property for HasAttachment. |
+| `LastError` | `nvarchar(2000)` | NULL |  | Domain property for LastError. |
+| `MaxAttempts` | `int` | **NOT NULL** |  | Domain property for MaxAttempts. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `NextAttemptAt` | `datetime2` | **NOT NULL** |  | Domain property for NextAttemptAt. |
+| `RecipientEmail` | `nvarchar(255)` | **NOT NULL** |  | Domain property for RecipientEmail. |
+| `RecipientName` | `nvarchar(200)` | NULL |  | Domain property for RecipientName. |
+| `SentAt` | `datetime2` | NULL |  | Domain property for SentAt. |
+| `SourceModule` | `nvarchar(100)` | **NOT NULL** |  | Domain property for SourceModule. |
+| `SourceReferenceId` | `nvarchar(100)` | NULL |  | Domain property for SourceReferenceId. |
+| `Status` | `nvarchar(50)` | **NOT NULL** |  | Current lifecycle state code in the workflow engine. |
+| `Subject` | `nvarchar(250)` | **NOT NULL** |  | Domain property for Subject. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_EmailOutboxItem_BroadcastMessageId` | `BroadcastMessageId` | No |
+| `IX_EmailOutboxItem_CreatedAt` | `CreatedAt` | No |
+| `IX_EmailOutboxItem_NextAttemptAt` | `NextAttemptAt` | No |
+| `IX_EmailOutboxItem_RecipientEmail` | `RecipientEmail` | No |
+| `IX_EmailOutboxItem_Status` | `Status` | No |
 
 ---
 
@@ -6990,8 +7109,15 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ActionUrl` | `nvarchar(300)` | NULL |  | Domain property for ActionUrl. |
+| `AttachmentContentType` | `nvarchar(max)` | NULL |  | Domain property for AttachmentContentType. |
+| `AttachmentFileName` | `nvarchar(max)` | NULL |  | Domain property for AttachmentFileName. |
+| `AttachmentSizeBytes` | `bigint` | NULL |  | Domain property for AttachmentSizeBytes. |
+| `AttachmentStoragePath` | `nvarchar(max)` | NULL |  | Domain property for AttachmentStoragePath. |
+| `BodyHtml` | `nvarchar(max)` | NULL |  | Domain property for BodyHtml. |
+| `BroadcastMessageId` | `int` | NULL |  | Domain property for BroadcastMessageId. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `HasAttachment` | `bit` | **NOT NULL** |  | Domain property for HasAttachment. |
 | `IsRead` | `bit` | **NOT NULL** |  | Domain property for IsRead. |
 | `Message` | `nvarchar(1000)` | **NOT NULL** |  | Domain property for Message. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
@@ -7000,6 +7126,7 @@
 | `ReadAt` | `datetime2` | NULL |  | Domain property for ReadAt. |
 | `RecipientRole` | `nvarchar(100)` | NULL |  | Domain property for RecipientRole. |
 | `RecipientUsername` | `nvarchar(150)` | NULL |  | Domain property for RecipientUsername. |
+| `SenderDisplayName` | `nvarchar(max)` | NULL |  | Domain property for SenderDisplayName. |
 | `Severity` | `nvarchar(30)` | **NOT NULL** |  | Domain property for Severity. |
 | `Title` | `nvarchar(200)` | **NOT NULL** |  | Domain property for Title. |
 
@@ -7007,6 +7134,7 @@
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
+| `IX_SystemNotification_BroadcastMessageId` | `BroadcastMessageId` | No |
 | `IX_SystemNotification_CreatedAt` | `CreatedAt` | No |
 | `IX_SystemNotification_IsRead` | `IsRead` | No |
 | `IX_SystemNotification_RecipientRole` | `RecipientRole` | No |

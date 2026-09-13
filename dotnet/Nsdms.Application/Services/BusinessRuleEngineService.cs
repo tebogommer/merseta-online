@@ -181,7 +181,7 @@ public class BusinessRuleEngineService : IBusinessRuleEngineService
                 IsSuccess = true,
                 ExpressionEvaluatedToTrue = isSuccess,
                 ErrorMessage = isSuccess ? null : (firstRes?.ExceptionMessage ?? firstRes?.Rule.ErrorMessage ?? "Expression evaluated to false."),
-                DiagnosticDetails = isSuccess ? "Expression successfully evaluated to true against the supplied JSON payload." : $"Expression failed or evaluated to false. Result: {firstRes?.Rule.ErrorMessage}",
+                DiagnosticDetails = isSuccess ? "Expression successfully evaluated to true against the supplied JSON evaluation parameters." : $"Expression failed or evaluated to false. Result: {firstRes?.Rule.ErrorMessage}",
                 ExecutionDurationMs = sw.ElapsedMilliseconds
             };
         }

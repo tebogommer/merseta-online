@@ -135,10 +135,12 @@ public class EnterpriseDocumentTemplateService : IEnterpriseDocumentTemplateServ
     {
         using var db = await _factory.CreateDbContextAsync();
         return await db.DocumentTemplates
+            .AsNoTracking()
             .Include(t => t.ParentTemplate)
             .Include(t => t.ChildVersions)
             .Include(t => t.Sections.OrderBy(s => s.SequenceOrder))
                 .ThenInclude(s => s.DocumentClause)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 

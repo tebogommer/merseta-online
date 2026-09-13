@@ -2,6 +2,7 @@
 @using Microsoft.EntityFrameworkCore
 @using Nsdms.Application.Common
 @using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Common.Utilities
 @using Nsdms.Domain.Entities
 @inject ISummativeAssessmentAndModerationService AssessmentService
 @inject IPdfDocumentService PdfService
@@ -283,7 +284,7 @@
                 @foreach (var cp in _contactPersons)
                 {
                     <MudSelectItem T="int?" Value="@((int?)cp.Id)">
-                        @cp.FirstName @cp.LastName (RSA ID: @(string.IsNullOrEmpty(cp.RsaIdNumber) ? "N/A" : cp.RsaIdNumber))
+                        @cp.FirstName @cp.LastName (RSA ID: @(string.IsNullOrEmpty(cp.RsaIdNumber) ? "N/A" : PopiaMaskingUtility.MaskRsaId(cp.RsaIdNumber)))
                     </MudSelectItem>
                 }
             </MudSelect>

@@ -2,7 +2,7 @@
 
 > **Companion Document to REQUIREMENTS.md**  
 > **Schema Version:** 3.0  
-> **Register Revision:** 1.0  
+> **Register Revision:** 1.1  
 > **Named Compliance Officer / Owner:** Tebogo Moepi  
 > **Last Updated:** 2026-09-13  
 
@@ -43,3 +43,15 @@
 | **FR-013** | PFMA | PFMA §38(1)(b): Institutional public holiday and merSETA closure tracking with dynamic officer SLA pausing. | NonWorkingDay calendar records; SLA pause computation audit trail. |
 | **FR-014** | PFMA, POPIA | PFMA §50 & POPIA §11: Mandatory annual conflict of interest disclosures and institutional shareholder scans. | Declaration audit log; meeting conflict detection matrix. |
 | **FR-015** | PFMA | PFMA §38(1)(a): Open Knowledge Format (OKF) attested computation and T-SQL formula attestation audit. | Attestation event records; signed concept verification history. |
+| **FR-016** | SDLA, PFMA | SDLA 1999 & PFMA §38(1)(j): Discretionary Grant MoA contracting, 4-tier milestone verification, and tranche disbursement. | Milestone verification audit log; dual authorization signoff on tranche payments. |
+| **FR-017** | SDLA, PFMA | SDLA 1999 & PFMA §38: Discretionary Grant contract variation management (addenda, extensions, clawback terminations). | Addendum approval records; segregation of duties logs between CLO and Executive. |
+| **FR-018** | PFMA | PFMA §38(1)(a)(i): Employer banking details verification, Bankserv AVS validation, and 14-day statutory cooling-off. | Bankserv AVS verification response; cooling-off expiry timestamp logs. |
+| **FR-019** | SDA, NAMB | SDA 1998 §28 & NAMB ARPL Guidelines 2023: ARPL Section 28 assessment workflow and 50% task credit retention. | Toolkit eligibility verification logs; multi-attempt task credit history. |
+| **FR-020** | SDA, QCTO | SDA 1998 §26H & QCTO Assessment Policy: Summative assessment EISA capture, external moderation, and SOR issuance. | Moderation sample records; POPIA-masked Statement of Results issuance logs. |
+| **FR-021** | SDA, NLRD | SDA 1998 & SAQA Policy: Non-SETA qualification verification, cross-SETA endorsement, and NLRD routing. | Cross-SETA endorsement records; NLRD verification query audit logs. |
+| **FR-022** | SDA, QCTO | SDA 1998 §26 & QCTO ETQA Guidelines: Assessor and moderator registration, scope accreditation, and 3-year tenure renewal. | Committee approval audit snapshot; credential expiry tracking records. |
+| **FR-023** | PFMA | PFMA §38 & §44: Institutional financial approval delegation tiers and executive CFO dual-signoff escalation. | Delegated authority threshold checks; CFO approval timestamps on high-value batches. |
+| **FR-024** | PFMA | PFMA §38(1)(a): Universal BPM workflow state machine engine with decoupled status synchronization and audit logging. | State transition logs; dual-write audit records with before/after state snapshots. |
+| **FR-025** | PFMA | PFMA §38(1)(b): Institutional non-working day calendar management and universal officer SLA pause calculation. | NonWorkingDay calendar records; SLA pause calculation audit trail. |
+| **FR-026** | SDA, QCTO | SDA 1998 §17 & QCTO Workplace Standards: Workplace approval audit inspection, monitoring visit tracking, and mentor capacity. | Verified contact person relational links; site visit report snapshots. |
+| **FR-027** | SDA, SDLA, PFMA | SDLA 1999 §3 & SDA 1998 §9: Inter-SETA Transfer (IST) intake, SARS Chamber re-allocation, and financial journal settlement. | DHET approval references; inter-SETA ledger balancing transactions. |

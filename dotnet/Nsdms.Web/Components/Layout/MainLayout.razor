@@ -17,6 +17,7 @@
 @inject IJSRuntime JS
 @inject NavigationManager Nav
 @inject IWizardDraftService DraftService
+@inject IDialogService DialogService
 
 <MudThemeProvider @ref="_mudThemeProvider" Theme="_customTheme" @bind-IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -116,6 +117,12 @@
                                     }
                                 </MudList>
                             }
+                            <MudDivider Class="my-2" />
+                            <div class="d-flex justify-center">
+                                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.List" Href="/notifications">
+                                    View all notifications
+                                </MudButton>
+                            </div>
                         </div>
                     </MudMenu>
                 </MudBadge>
@@ -425,6 +432,30 @@
                 : Severity.Info;
 
             Snackbar.Add($"🔔 {notification.Title}: {notification.Message}", severity);
+            
+            if (_isAuthenticated)
+            {
+                try
+                {
+                    var dialogParams = new DialogParameters<NotificationPopupDialog>
+                    {
+                        { x => x.Notification, notification }
+                    };
+                    var dialogOptions = new DialogOptions
+                    {
+                        MaxWidth = MaxWidth.Small,
+                        FullWidth = true,
+                        CloseButton = true,
+                        BackdropClick = true
+                    };
+                    await DialogService.ShowAsync<NotificationPopupDialog>(notification.Title, dialogParams, dialogOptions);
+                }
+                catch
+                {
+                    // Fallback to snackbar
+                }
+            }
+
             if (_navMenuRef != null)
             {
                 await _navMenuRef.RefreshBadgesAsync();

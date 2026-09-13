@@ -1,0 +1,260 @@
+@namespace Nsdms.Web.Components.Shared
+@using MudBlazor
+@using System.Text.RegularExpressions
+
+<div class="nsdms-rich-editor border rounded overflow-hidden" style="background: var(--mud-palette-surface); border-color: var(--mud-palette-lines-default) !important;">
+    <!-- Editor Mode & Formatting Toolbar -->
+    <div class="d-flex flex-wrap align-center justify-space-between pa-2 border-b gap-1" style="background: var(--mud-palette-background-grey); border-color: var(--mud-palette-lines-default) !important;">
+        <div class="d-flex flex-wrap align-center gap-1">
+            <!-- Text Formatting -->
+            <MudTooltip Text="Bold (Ctrl+B)">
+                <MudIconButton Icon="@Icons.Material.Filled.FormatBold" Size="Size.Small" OnClick="@(() => FormatText("bold"))" Disabled="@(_activeTab == 2)" />
+            </MudTooltip>
+            <MudTooltip Text="Italic (Ctrl+I)">
+                <MudIconButton Icon="@Icons.Material.Filled.FormatItalic" Size="Size.Small" OnClick="@(() => FormatText("italic"))" Disabled="@(_activeTab == 2)" />
+            </MudTooltip>
+            <MudTooltip Text="Underline (Ctrl+U)">
+                <MudIconButton Icon="@Icons.Material.Filled.FormatUnderlined" Size="Size.Small" OnClick="@(() => FormatText("underline"))" Disabled="@(_activeTab == 2)" />
+            </MudTooltip>
+            <MudTooltip Text="Strikethrough">
+                <MudIconButton Icon="@Icons.Material.Filled.StrikethroughS" Size="Size.Small" OnClick="@(() => FormatText("strikeThrough"))" Disabled="@(_activeTab == 2)" />
+            </MudTooltip>
+
+            <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-1" />
+
+            <!-- Headings -->
+            <MudMenu Label="Heading" Dense="true" Size="Size.Small" Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(_activeTab == 2)">
+                <MudMenuItem OnClick="@(() => FormatBlock("h2"))">Heading 1 (Major)</MudMenuItem>
+                <MudMenuItem OnClick="@(() => FormatBlock("h3"))">Heading 2 (Section)</MudMenuItem>
+                <MudMenuItem OnClick="@(() => FormatBlock("h4"))">Heading 3 (Subhead)</MudMenuItem>
+                <MudMenuItem OnClick="@(() => FormatBlock("p"))">Normal Paragraph</MudMenuItem>
+            </MudMenu>
+
+            <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-1" />
+
+            <!-- Lists -->
+            <MudTooltip Text="Bulleted List">
+                <MudIconButton Icon="@Icons.Material.Filled.FormatListBulleted" Size="Size.Small" OnClick="@(() => FormatText("insertUnorderedList"))" Disabled="@(_activeTab == 2)" />
+            </MudTooltip>
+            <MudTooltip Text="Numbered List">
+                <MudIconButton Icon="@Icons.Material.Filled.FormatListNumbered" Size="Size.Small" OnClick="@(() => FormatText("insertOrderedList"))" Disabled="@(_activeTab == 2)" />
+            </MudTooltip>
+            <MudTooltip Text="Blockquote">
+                <MudIconButton Icon="@Icons.Material.Filled.FormatQuote" Size="Size.Small" OnClick="@(() => InsertSnippet("<blockquote>\n  <em>Quoted statutory text or note...</em>\n</blockquote>\n<p></p>"))" Disabled="@(_activeTab == 2)" />
+            </MudTooltip>
+
+            <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-1" />
+
+            <!-- Callout / Box Insertion -->
+            <MudMenu Label="Callout" Dense="true" Size="Size.Small" Variant="Variant.Text" EndIcon="@Icons.Material.Filled.AddCircleOutline" Disabled="@(_activeTab == 2)">
+                <MudMenuItem OnClick="@(() => InsertSnippet("<div style=\"background-color: #e3f2fd; border-left: 4px solid #0d47a1; padding: 12px; margin: 15px 0; border-radius: 4px;\">\n  <strong>ℹ️ Statutory Notice:</strong> Important circular details.\n</div>\n<p></p>"))">
+                    Info Notice
+                </MudMenuItem>
+                <MudMenuItem OnClick="@(() => InsertSnippet("<div style=\"background-color: #fff3e0; border-left: 4px solid #e65100; padding: 12px; margin: 15px 0; border-radius: 4px;\">\n  <strong>⚠️ Statutory Warning:</strong> Compliance deadline applies.\n</div>\n<p></p>"))">
+                    Warning Box
+                </MudMenuItem>
+                <MudMenuItem OnClick="@(() => InsertSnippet("<div style=\"background-color: #e8f5e9; border-left: 4px solid #2e7d32; padding: 12px; margin: 15px 0; border-radius: 4px;\">\n  <strong>✅ Important Outcome:</strong> Submission approved or finalised.\n</div>\n<p></p>"))">
+                    Success Callout
+                </MudMenuItem>
+            </MudMenu>
+
+            <MudTooltip Text="Horizontal Line">
+                <MudIconButton Icon="@Icons.Material.Filled.HorizontalRule" Size="Size.Small" OnClick="@(() => FormatText("insertHorizontalRule"))" Disabled="@(_activeTab == 2)" />
+            </MudTooltip>
+
+            <MudTooltip Text="Clear Formatting">
+                <MudIconButton Icon="@Icons.Material.Filled.FormatClear" Size="Size.Small" OnClick="@(() => FormatText("removeFormat"))" Disabled="@(_activeTab == 2)" />
+            </MudTooltip>
+        </div>
+
+        <!-- Mode Toggle Tabs -->
+        <div class="d-flex align-center gap-1">
+            <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                <MudButton Color="@(_activeTab == 0 ? Color.Primary : Color.Default)"
+                           Variant="@(_activeTab == 0 ? Variant.Filled : Variant.Outlined)"
+                           OnClick="@(() => SetTab(0))"
+                           StartIcon="@Icons.Material.Filled.Edit">
+                    Visual
+                </MudButton>
+                <MudButton Color="@(_activeTab == 1 ? Color.Primary : Color.Default)"
+                           Variant="@(_activeTab == 1 ? Variant.Filled : Variant.Outlined)"
+                           OnClick="@(() => SetTab(1))"
+                           StartIcon="@Icons.Material.Filled.Code">
+                    HTML
+                </MudButton>
+                <MudButton Color="@(_activeTab == 2 ? Color.Primary : Color.Default)"
+                           Variant="@(_activeTab == 2 ? Variant.Filled : Variant.Outlined)"
+                           OnClick="@(() => SetTab(2))"
+                           StartIcon="@Icons.Material.Filled.Visibility">
+                    Preview
+                </MudButton>
+            </MudButtonGroup>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="pa-3" style="min-height: @($"{MinHeightPx}px");">
+        @if (_activeTab == 0)
+        {
+            <!-- Visual Contenteditable Container with JS Bridge -->
+            <div id="@_editorId"
+                 contenteditable="true"
+                 class="rich-editor-canvas pa-2 rounded"
+                 style="min-height: @($"{MinHeightPx - 30}px"); outline: none; line-height: 1.6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;"
+                 @oninput="HandleContentChanged">
+                @((MarkupString)_internalHtml)
+            </div>
+        }
+        else if (_activeTab == 1)
+        {
+            <!-- Raw HTML Code Editor -->
+            <MudTextField T="string"
+                          Value="@_internalHtml"
+                          ValueChanged="HandleRawHtmlChanged"
+                          Lines="12"
+                          Variant="Variant.Outlined"
+                          Class="font-mono text-body2"
+                          Style="font-family: Consolas, 'Courier New', monospace; font-size: 0.875rem;"
+                          HelperText="Direct HTML editing mode. Changes reflect immediately in visual editor and emails." />
+        }
+        else
+        {
+            <!-- Rendered Live Preview (matches outbound email styling) -->
+            <div class="pa-4 border rounded" style="background: var(--mud-palette-surface); min-height: @($"{MinHeightPx - 30}px"); line-height: 1.7;">
+                @if (string.IsNullOrWhiteSpace(_internalHtml))
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="fst-italic">
+                        No content entered yet. Switch to Visual Editor to compose your circular or message.
+                    </MudText>
+                }
+                else
+                {
+                    @((MarkupString)_internalHtml)
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Word & Character Statistics Bar -->
+    <div class="d-flex justify-space-between align-center px-3 py-1 border-t text-secondary" style="font-size: 0.75rem; background: var(--mud-palette-background-grey); border-color: var(--mud-palette-lines-default) !important;">
+        <div>
+            <span>Characters: @_characterCount</span>
+            <span class="mx-2">•</span>
+            <span>Words: @_wordCount</span>
+        </div>
+        <div>
+            @if (_activeTab == 0)
+            {
+                <span>Visual WYSIWYG Mode</span>
+            }
+            else if (_activeTab == 1)
+            {
+                <span>Source Code Mode</span>
+            }
+            else
+            {
+                <span>Live Email &amp; In-App Notice Preview</span>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string? Placeholder { get; set; } = "Compose your message or circular here...";
+    [Parameter] public int MinHeightPx { get; set; } = 280;
+
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+
+    private string _editorId = $"nsdms_rich_editor_{Guid.NewGuid():N}";
+    private string _internalHtml = string.Empty;
+    private int _activeTab = 0; // 0 = Visual, 1 = HTML, 2 = Preview
+
+    private int _characterCount => Regex.Replace(_internalHtml ?? string.Empty, "<.*?>", string.Empty).Trim().Length;
+    private int _wordCount => Regex.Replace(_internalHtml ?? string.Empty, "<.*?>", string.Empty)
+        .Split(new[] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length;
+
+    protected override void OnParametersSet()
+    {
+        if (Value != _internalHtml)
+        {
+            _internalHtml = Value ?? string.Empty;
+        }
+    }
+
+    private async Task SetTab(int tabIndex)
+    {
+        _activeTab = tabIndex;
+        if (_activeTab == 0)
+        {
+            // Sync content to visual editor
+            await Task.Delay(50);
+            try
+            {
+                await JS.InvokeVoidAsync("eval", $"document.getElementById('{_editorId}').innerHTML = {System.Text.Json.JsonSerializer.Serialize(_internalHtml)};");
+            }
+            catch { }
+        }
+    }
+
+    private async Task FormatText(string command)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("document.execCommand", command, false, null);
+            await SyncVisualContentAsync();
+        }
+        catch { }
+    }
+
+    private async Task FormatBlock(string tag)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("document.execCommand", "formatBlock", false, $"<{tag}>");
+            await SyncVisualContentAsync();
+        }
+        catch { }
+    }
+
+    private async Task InsertSnippet(string htmlSnippet)
+    {
+        _internalHtml += "\n" + htmlSnippet;
+        await ValueChanged.InvokeAsync(_internalHtml);
+        if (_activeTab == 0)
+        {
+            await Task.Delay(30);
+            try
+            {
+                await JS.InvokeVoidAsync("eval", $"document.getElementById('{_editorId}').innerHTML = {System.Text.Json.JsonSerializer.Serialize(_internalHtml)};");
+            }
+            catch { }
+        }
+        StateHasChanged();
+    }
+
+    private async Task HandleContentChanged(ChangeEventArgs e)
+    {
+        await SyncVisualContentAsync();
+    }
+
+    private async Task SyncVisualContentAsync()
+    {
+        try
+        {
+            var content = await JS.InvokeAsync<string>("eval", $"document.getElementById('{_editorId}').innerHTML;");
+            _internalHtml = content ?? string.Empty;
+            await ValueChanged.InvokeAsync(_internalHtml);
+            StateHasChanged();
+        }
+        catch { }
+    }
+
+    private async Task HandleRawHtmlChanged(string newHtml)
+    {
+        _internalHtml = newHtml ?? string.Empty;
+        await ValueChanged.InvokeAsync(_internalHtml);
+        StateHasChanged();
+    }
+}

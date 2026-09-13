@@ -9,11 +9,16 @@ public class FinanceService : IFinanceService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly ISystemConfigurationService? _configService;
+    private readonly IWorkflowGovernanceService? _workflowGovernance;
 
-    public FinanceService(INsdmsDbContextFactory contextFactory, ISystemConfigurationService? configService = null)
+    public FinanceService(
+        INsdmsDbContextFactory contextFactory, 
+        ISystemConfigurationService? configService = null,
+        IWorkflowGovernanceService? workflowGovernance = null)
     {
         _contextFactory = contextFactory;
         _configService = configService;
+        _workflowGovernance = workflowGovernance;
     }
 
     public async Task<List<GrantMoa>> GetGrantMoasAsync()
@@ -49,7 +54,7 @@ public class FinanceService : IFinanceService
 
         if (string.IsNullOrWhiteSpace(moa.MoaNumber))
         {
-            moa.MoaNumber = $"MOA-2026-{Guid.NewGuid().ToString()[..8].ToUpperInvariant()}";
+            moa.MoaNumber = $"MOA-{DateTime.UtcNow.Year}-{Guid.NewGuid().ToString()[..8].ToUpperInvariant()}";
         }
 
         // Auto-generate standard 4 tranches with exact residual balancing to eliminate penny drift
@@ -288,6 +293,12 @@ public class FinanceService : IFinanceService
             .FirstOrDefaultAsync(p => p.Id == paymentId);
         if (pay == null) return false;
 
+        // Dual Authorisation Governance: Creator/Submitter cannot approve their own payment claim
+        if (!string.IsNullOrEmpty(pay.CreatedBy) && string.Equals(pay.CreatedBy, userId, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"Dual Authorisation Governance breach: Tranche payment preparer ({pay.CreatedBy}) cannot approve their own payment.");
+        }
+
         // Gatekeeping: Ensure milestone is verified prior to finance approval
         if (pay.GrantMoaMilestone != null && 
             pay.GrantMoaMilestone.MilestoneStatusCode != "Verified" && 
@@ -308,8 +319,19 @@ public class FinanceService : IFinanceService
             ? await _configService.GetValueAsync<decimal>("Finance:MandatoryApprovalDualSignOffThreshold", 500000.00m)
             : 500000.00m;
 
-        // Dual Signoff: Claims >= threshold require mandatory CFO signoff
-        if (pay.ClaimedAmount >= cfoDualSignoffThreshold)
+        // Check configurable financial approval limit if workflow governance engine is active
+        bool exceedsRoleLimit = false;
+        if (_workflowGovernance != null)
+        {
+            var limitCheck = await _workflowGovernance.ValidateFinancialApprovalLimitAsync("FinanceManager", "DISCRETIONARY_GRANT", pay.ClaimedAmount);
+            if (!limitCheck.IsAllowed)
+            {
+                exceedsRoleLimit = true;
+            }
+        }
+
+        // Dual Signoff: Claims >= threshold or exceeding role limit require mandatory CFO signoff
+        if (pay.ClaimedAmount >= cfoDualSignoffThreshold || exceedsRoleLimit)
         {
             pay.PaymentStatusCode = "PendingCfoApproval";
             context.AuditLogs.Add(new AuditLog
@@ -346,6 +368,18 @@ public class FinanceService : IFinanceService
         using var context = await _contextFactory.CreateDbContextAsync();
         var pay = await context.GrantTranchePayments.FirstOrDefaultAsync(p => p.Id == paymentId);
         if (pay == null) return false;
+
+        // Dual Authorisation Governance: Creator cannot CFO-approve
+        if (!string.IsNullOrEmpty(pay.CreatedBy) && string.Equals(pay.CreatedBy, userId, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"Dual Authorisation Governance breach: Tranche payment preparer ({pay.CreatedBy}) cannot CFO-approve their own payment.");
+        }
+
+        // Dual Authorisation Governance: Finance review officer cannot also act as CFO approver
+        if (!string.IsNullOrEmpty(pay.FinanceApproverUserId) && string.Equals(pay.FinanceApproverUserId, userId, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"Dual Authorisation Governance breach: Finance review officer ({pay.FinanceApproverUserId}) cannot also provide CFO executive approval.");
+        }
 
         pay.PaymentStatusCode = "CfoApproved";
         pay.PaymentReferenceNumber = $"PV-{DateTime.UtcNow.Year}-DG-{pay.Id:D5}";
@@ -427,7 +461,7 @@ public class FinanceService : IFinanceService
         using var context = await _contextFactory.CreateDbContextAsync();
         var approvedWsps = await context.WspSubmissions
             .Include(w => w.Organisation)
-            .Where(w => w.FinYear == finYear && (w.WspApprovalStatusCode == "Approved" || w.WspApprovalStatusCode == "Approved by CLO" || w.WspApprovalStatusCode == "SUBMITTED" || w.WspApprovalStatusCode == "APPROVED"))
+            .Where(w => w.FinYear == finYear && (w.WspApprovalStatusCode == "Approved" || w.WspApprovalStatusCode == "Approved by CLO" || w.WspApprovalStatusCode == "APPROVED"))
             .ToListAsync();
 
         int createdCount = 0;
@@ -457,9 +491,9 @@ public class FinanceService : IFinanceService
                 }
                 else
                 {
-                    grossLevy = wsp.PlannedTrainingBudget * 5.0m;
-                    rebate = wsp.PlannedTrainingBudget * 0.20m;
-                    comments = $"Provisional calculation based on submitted WSP baseline (no SARS levy files ingested for SDL {sdl}).";
+                    grossLevy = 0m;
+                    rebate = 0m;
+                    comments = $"Statutory entitlement: R0.00 (No SARS levy receipts reconciled for SDL {sdl} in scheme year {finYear} - 'No Levy, No Grant' statutory mandate under SETA Grant Regulations).";
                 }
 
                 var org = wsp.Organisation;
@@ -500,6 +534,12 @@ public class FinanceService : IFinanceService
             .Include(d => d.WspSubmission)
             .FirstOrDefaultAsync(d => d.Id == id);
         if (disb == null) return false;
+
+        // Dual Authorisation Governance: Submitter/preparer cannot approve their own disbursement
+        if (!string.IsNullOrEmpty(disb.CreatedBy) && string.Equals(disb.CreatedBy, userId, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"Dual Authorisation Governance breach: Mandatory Grant disbursement preparer ({disb.CreatedBy}) cannot approve their own disbursement.");
+        }
 
         // Gatekeeping 1: Ensure linked WSP Submission is approved
         if (disb.WspSubmission != null && 

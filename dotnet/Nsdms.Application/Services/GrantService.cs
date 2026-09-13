@@ -268,11 +268,8 @@ public class GrantService : IGrantService
     public async Task<GrantFundingWindow?> GetFundingWindowByIdAsync(int id)
     {
         using var db = await _contextFactory.CreateDbContextAsync();
-        return await db.GrantFundingWindows
-            .Include(w => w.Applications)
-                .ThenInclude(a => a.Organisation)
-            .Include(w => w.Applications)
-                .ThenInclude(a => a.StrategicPriority)
+        var window = await db.GrantFundingWindows
+            .AsNoTracking()
             .Include(w => w.StrategicPriorities)
                 .ThenInclude(p => p.StrategicPriority)
             .Include(w => w.EligibleStakeholders)
@@ -280,7 +277,23 @@ public class GrantService : IGrantService
             .Include(w => w.AllowedInterventions)
                 .ThenInclude(i => i.InterventionType)
             .Include(w => w.Template)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(w => w.Id == id);
+
+        if (window != null)
+        {
+            // Paginate / cap child applications to top 100 to prevent Cartesian explosion on high-volume windows
+            window.Applications = await db.GrantApplications
+                .AsNoTracking()
+                .Where(a => a.FundingWindowId == id)
+                .Include(a => a.Organisation)
+                .Include(a => a.StrategicPriority)
+                .OrderByDescending(a => a.CreatedAt)
+                .Take(100)
+                .ToListAsync();
+        }
+
+        return window;
     }
 
     public async Task<GrantFundingWindow> UpdateFundingWindowAsync(GrantFundingWindow window, string currentUsername = "SYSTEM")
@@ -518,7 +531,7 @@ public class GrantService : IGrantService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var window = await db.GrantFundingWindows
-            .Include(w => w.Applications)
+            .AsNoTracking()
             .FirstOrDefaultAsync(w => w.Id == id);
 
         if (window == null)
@@ -526,10 +539,21 @@ public class GrantService : IGrantService
             throw new KeyNotFoundException($"Funding window #{id} not found.");
         }
 
-        var apps = window.Applications.ToList();
-        var totalApps = apps.Count;
-        var totalRequested = apps.Sum(a => a.RequestedAmount);
-        var totalApproved = apps.Where(a => a.ApprovedAmount.HasValue).Sum(a => a.ApprovedAmount!.Value);
+        var appStats = await db.GrantApplications
+            .AsNoTracking()
+            .Where(a => a.FundingWindowId == id)
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                TotalApps = g.Count(),
+                TotalRequested = g.Sum(a => a.RequestedAmount),
+                TotalApproved = g.Sum(a => a.ApprovedAmount ?? 0m)
+            })
+            .FirstOrDefaultAsync();
+
+        var totalApps = appStats?.TotalApps ?? 0;
+        var totalRequested = appStats?.TotalRequested ?? 0m;
+        var totalApproved = appStats?.TotalApproved ?? 0m;
         var remaining = window.TotalAvailableBudget - totalApproved;
 
         return new FundingWindowSummaryDto(

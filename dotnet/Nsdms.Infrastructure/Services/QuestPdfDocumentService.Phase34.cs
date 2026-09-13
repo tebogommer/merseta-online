@@ -343,7 +343,7 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
                     }
 
                     col.Item().PaddingTop(6).Text("Statutory Directives & Learner Protection:").Bold();
-                    col.Item().Text("1. During any period of suspension or de-accreditation, all new learner registrations are immediately suspended by system automated gatekeepers.");
+                    col.Item().Text("1. During any period of suspension or de-accreditation, all new learner registrations are immediately suspended by automated statutory compliance controls.");
                     col.Item().Text("2. Currently enrolled learners must continue receiving training under appointed ETQA supervisory monitors or be transferred to accredited alternate facilities.");
                     col.Item().Text("3. Appeals against this determination must be lodged in writing with the Executive Chairperson within 14 calendar days of receipt of this notice.");
 

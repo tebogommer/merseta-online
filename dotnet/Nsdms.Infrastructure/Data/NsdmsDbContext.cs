@@ -124,6 +124,9 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<SystemConfig> SystemConfigs => Set<SystemConfig>();
     public DbSet<SystemFeatureFlag> SystemFeatureFlags => Set<SystemFeatureFlag>();
     public DbSet<SystemNotification> SystemNotifications => Set<SystemNotification>();
+    public DbSet<BroadcastMessage> BroadcastMessages => Set<BroadcastMessage>();
+    public DbSet<EmailOutboxItem> EmailOutboxItems => Set<EmailOutboxItem>();
+    public DbSet<EmailDailyQuotaTracker> EmailDailyQuotaTrackers => Set<EmailDailyQuotaTracker>();
     public DbSet<WizardDraftSession> WizardDraftSessions => Set<WizardDraftSession>();
 
     // Document & File Management
@@ -2435,6 +2438,52 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(n => n.RecipientRole);
             entity.HasIndex(n => n.IsRead);
             entity.HasIndex(n => n.CreatedAt);
+            entity.HasIndex(n => n.BroadcastMessageId);
+        });
+
+        modelBuilder.Entity<BroadcastMessage>(entity =>
+        {
+            entity.ToTable("BroadcastMessage");
+            entity.Property(b => b.Subject).HasMaxLength(250).IsRequired();
+            entity.Property(b => b.TargetType).HasMaxLength(50).IsRequired();
+            entity.Property(b => b.TargetFilterValue).HasMaxLength(150);
+            entity.Property(b => b.TargetFilterDisplay).HasMaxLength(250);
+            entity.Property(b => b.Status).HasMaxLength(50).IsRequired();
+            entity.Property(b => b.DispatchedBy).HasMaxLength(150).IsRequired();
+            entity.Property(b => b.AttachmentFileName).HasMaxLength(255);
+            entity.Property(b => b.AttachmentStoragePath).HasMaxLength(1000);
+            entity.Property(b => b.AttachmentContentType).HasMaxLength(100);
+
+            entity.HasIndex(b => b.TargetType);
+            entity.HasIndex(b => b.Status);
+            entity.HasIndex(b => b.DispatchedAt);
+        });
+
+        modelBuilder.Entity<EmailOutboxItem>(entity =>
+        {
+            entity.ToTable("EmailOutboxItem");
+            entity.Property(e => e.RecipientEmail).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.RecipientName).HasMaxLength(200);
+            entity.Property(e => e.Subject).HasMaxLength(250).IsRequired();
+            entity.Property(e => e.Status).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.SourceModule).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.SourceReferenceId).HasMaxLength(100);
+            entity.Property(e => e.AttachmentFileName).HasMaxLength(255);
+            entity.Property(e => e.AttachmentStoragePath).HasMaxLength(1000);
+            entity.Property(e => e.AttachmentContentType).HasMaxLength(100);
+            entity.Property(e => e.LastError).HasMaxLength(2000);
+
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.NextAttemptAt);
+            entity.HasIndex(e => e.BroadcastMessageId);
+            entity.HasIndex(e => e.RecipientEmail);
+            entity.HasIndex(e => e.CreatedAt);
+        });
+
+        modelBuilder.Entity<EmailDailyQuotaTracker>(entity =>
+        {
+            entity.ToTable("EmailDailyQuotaTracker");
+            entity.HasIndex(q => q.QuotaDate).IsUnique();
         });
 
         // Document & File Attachments

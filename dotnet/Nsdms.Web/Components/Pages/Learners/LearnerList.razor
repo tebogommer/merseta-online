@@ -1,5 +1,6 @@
 @page "/learners"
 @using Nsdms.Application.Common.Models
+@using Nsdms.Application.Common.Utilities
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
@@ -160,7 +161,7 @@
                 <MudTd DataLabel="Learner">
                     <div>
                         <div class="fw-bold">@(context.Person?.FullName ?? "Unknown")</div>
-                        <div class="text-secondary" style="font-size: 0.8rem;">RSA ID: @(context.Person?.RsaIdNumber ?? "N/A")</div>
+                        <div class="text-secondary" style="font-size: 0.8rem;">RSA ID: @(string.IsNullOrEmpty(context.Person?.RsaIdNumber) ? "N/A" : PopiaMaskingUtility.MaskRsaId(context.Person.RsaIdNumber))</div>
                     </div>
                 </MudTd>
                 <MudTd DataLabel="Employer">

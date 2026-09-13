@@ -1,5 +1,6 @@
 @page "/assessments/summative/{Id:int}"
 @using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Common.Utilities
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
 @inject ISummativeAssessmentAndModerationService AssessmentService
@@ -27,7 +28,7 @@ else
                     <div>
                         <MudText Typo="Typo.h5" Class="fw-bold">@_report.ReportNumber — @_report.QualificationTitle</MudText>
                         <MudText Typo="Typo.caption" Color="Color.Secondary">
-                            Learner: <strong>@(_report.Person?.FirstName) @(_report.Person?.LastName)</strong> (RSA ID: @_report.Person?.RsaIdNumber) | Credits: <strong>@_report.TotalCreditsEarned / @_report.TotalCreditsRequired</strong>
+                            Learner: <strong>@(_report.Person?.FirstName) @(_report.Person?.LastName)</strong> (RSA ID: @PopiaMaskingUtility.MaskRsaId(_report.Person?.RsaIdNumber)) | Credits: <strong>@_report.TotalCreditsEarned / @_report.TotalCreditsRequired</strong>
                         </MudText>
                     </div>
                 </MudStack>
@@ -80,7 +81,7 @@ else
                                     <tr><td><strong>SAQA Qualification ID:</strong></td><td>@(_report.SaqaQualificationId ?? "SAQA-65409")</td></tr>
                                     <tr><td><strong>NQF Level:</strong></td><td>Level @_report.NqfLevel</td></tr>
                                     <tr><td><strong>Learner Name:</strong></td><td>@_report.Person?.FirstName @_report.Person?.LastName</td></tr>
-                                    <tr><td><strong>RSA ID:</strong></td><td>@_report.Person?.RsaIdNumber</td></tr>
+                                    <tr><td><strong>RSA ID:</strong></td><td>@PopiaMaskingUtility.MaskRsaId(_report.Person?.RsaIdNumber)</td></tr>
                                     <tr><td><strong>Employer:</strong></td><td>@(_report.Organisation?.CompanyName ?? "Independent")</td></tr>
                                     <tr><td><strong>Intervention Type:</strong></td><td>@_report.InterventionTypeCode</td></tr>
                                 </tbody>

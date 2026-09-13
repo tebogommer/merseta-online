@@ -67,6 +67,12 @@ public class ContractVariationService : IContractVariationService
         using var db = await _factory.CreateDbContextAsync();
         var entity = await db.ContractAddendas.FirstOrDefaultAsync(a => a.Id == id) ?? throw new InvalidOperationException($"Addenda #{id} not found.");
 
+        // Dual Authorisation Governance: Creator cannot executive-approve
+        if (!string.IsNullOrEmpty(entity.CreatedBy) && string.Equals(entity.CreatedBy, executiveUserId, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"Dual Authorisation Governance breach: Addenda preparer ({entity.CreatedBy}) cannot executive-approve their own contract addenda.");
+        }
+
         entity.StatusCode = "ExecutiveApproved";
         entity.ExecutiveApprovedByUserId = executiveUserId;
         entity.ExecutiveApprovalDate = DateTime.UtcNow;
@@ -107,7 +113,7 @@ public class ContractVariationService : IContractVariationService
         var entity = new ContractExtensionRequest
         {
             GrantMoaId = grantMoaId,
-            RequestNumber = $"EXT-2026-{count:D4}",
+            RequestNumber = $"EXT-{DateTime.UtcNow.Year}-{count:D4}",
             RequestedExtensionMonths = extensionMonths,
             CurrentEndDate = moa.ContractEndDate,
             ProposedNewEndDate = proposedEndDate,
@@ -129,6 +135,12 @@ public class ContractVariationService : IContractVariationService
     {
         using var db = await _factory.CreateDbContextAsync();
         var entity = await db.ContractExtensionRequests.FirstOrDefaultAsync(e => e.Id == id) ?? throw new InvalidOperationException($"Extension request #{id} not found.");
+
+        // Dual Authorisation Governance: Creator cannot executive-approve
+        if (!string.IsNullOrEmpty(entity.CreatedBy) && string.Equals(entity.CreatedBy, executiveUserId, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"Dual Authorisation Governance breach: Extension request submitter ({entity.CreatedBy}) cannot executive-approve their own extension request.");
+        }
 
         entity.StatusCode = "ApprovedByExecutive";
         entity.ReviewedByUserId = executiveUserId;
@@ -166,7 +178,7 @@ public class ContractVariationService : IContractVariationService
         var entity = new ContractTerminationRequest
         {
             GrantMoaId = grantMoaId,
-            TerminationNumber = $"TERM-2026-{count:D4}",
+            TerminationNumber = $"TERM-{DateTime.UtcNow.Year}-{count:D4}",
             TerminationReasonCode = reasonCode,
             TotalFundsDisbursedToDate = fundsDisbursed,
             TotalValueDeliverablesAchieved = deliverablesValue,
@@ -187,6 +199,12 @@ public class ContractVariationService : IContractVariationService
     {
         using var db = await _factory.CreateDbContextAsync();
         var entity = await db.ContractTerminationRequests.FirstOrDefaultAsync(t => t.Id == id) ?? throw new InvalidOperationException($"Termination request #{id} not found.");
+
+        // Dual Authorisation Governance: Creator cannot settle
+        if (!string.IsNullOrEmpty(entity.CreatedBy) && string.Equals(entity.CreatedBy, legalUserId, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"Dual Authorisation Governance breach: Termination request submitter ({entity.CreatedBy}) cannot settle their own contract termination.");
+        }
 
         entity.StatusCode = "TerminatedSettled";
         entity.SettledByUserId = legalUserId;

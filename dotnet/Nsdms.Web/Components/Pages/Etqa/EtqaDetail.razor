@@ -2,6 +2,7 @@
 @page "/etqa/assessors/{id:int}"
 @page "/etqa/assessors/{id:int}/edit"
 @page "/etqa/create"
+@using Nsdms.Application.Common.Utilities
 @inject IEtqaService EtqaService
 @inject IPersonService PersonService
 @inject IOrganisationService OrgService
@@ -387,7 +388,7 @@
                             @if (context.Person != null)
                             {
                                 <MudText Typo="Typo.body2" Class="fw-bold">@context.Person.FirstName @context.Person.LastName</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">ID: @(!string.IsNullOrWhiteSpace(context.Person.RsaIdNumber) ? context.Person.RsaIdNumber : "N/A")</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">ID: @(!string.IsNullOrWhiteSpace(context.Person.RsaIdNumber) ? PopiaMaskingUtility.MaskRsaId(context.Person.RsaIdNumber) : "N/A")</MudText>
                             }
                             else
                             {

@@ -1,0 +1,374 @@
+@page "/admin/email-outbox"
+@attribute [Authorize(Roles = "SuperAdmin,Admin,Executive")]
+@namespace Nsdms.Web.Components.Pages.Admin
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Common.Models
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@inject IEmailOutboxService OutboxService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<main id="main-content" style="max-width: 1600px; margin: 0 auto;">
+    <!-- Page Header (Archetype A1/A5 Operational Dashboard) -->
+    <EntityHeader Title="Office 365 Outbound Email Outbox &amp; Rate-Limiter"
+                  Subtitle="Strictly enforces the 10,000 emails/day tenant ceiling and per-minute sliding window rate limits."
+                  BreadcrumbItems="@_breadcrumbs">
+        <Actions>
+            @if (_quotaStatus?.IsQueuePaused == true)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.PlayArrow"
+                           OnClick="ResumeQueueAsync"
+                           Size="Size.Medium">
+                    Resume Outbox Dispatcher
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Warning"
+                           StartIcon="@Icons.Material.Filled.Pause"
+                           OnClick="PauseQueueAsync"
+                           Size="Size.Medium">
+                    Pause Outbox Dispatcher
+                </MudButton>
+            }
+
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Replay"
+                       OnClick="RetryAllFailedAsync"
+                       Disabled="@(_quotaStatus?.FailedQueueCount == 0)"
+                       Size="Size.Medium">
+                Retry All Failed
+            </MudButton>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="LoadDashboardDataAsync"
+                       Size="Size.Medium">
+                Refresh Status
+            </MudButton>
+        </Actions>
+    </EntityHeader>
+
+    <!-- Operational KPI & Quota Health Cards -->
+    <MudGrid Class="mb-6">
+        <!-- Card 1: Today's Quota Gauge -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4 border rounded" Elevation="0" Style="background: var(--mud-palette-surface);">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="fw-bold">TODAY'S OFFICE 365 QUOTA</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Email" Color="Color.Primary" Size="Size.Small" />
+                </div>
+                <div class="d-flex align-baseline gap-2 mb-1">
+                    <MudText Typo="Typo.h5" Class="font-weight-bold font-mono">
+                        @(_quotaStatus?.SentCount.ToString("N0") ?? "0")
+                    </MudText>
+                    <span class="text-secondary" style="font-size: 0.8125rem;">/ 10,000 limit</span>
+                </div>
+                <MudProgressLinear Color="@GetQuotaProgressColor()" Value="@(_quotaStatus?.UtilizationPercentage ?? 0)" Class="my-2 rounded" Style="height: 8px;" />
+                <div class="d-flex justify-space-between text-secondary" style="font-size: 0.75rem;">
+                    <span>@(_quotaStatus?.UtilizationPercentage ?? 0)% consumed</span>
+                    <span>@(_quotaStatus?.RemainingQuota.ToString("N0") ?? "10,000") left</span>
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Card 2: Sliding Rate Limiter -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4 border rounded" Elevation="0" Style="background: var(--mud-palette-surface);">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="fw-bold">PER-MINUTE RATE LIMITER</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Speed" Color="Color.Info" Size="Size.Small" />
+                </div>
+                <div class="d-flex align-baseline gap-2 mb-1">
+                    <MudText Typo="Typo.h5" Class="font-weight-bold font-mono">
+                        @(_quotaStatus?.ConfiguredMaxPerMinute ?? 30)
+                    </MudText>
+                    <span class="text-secondary" style="font-size: 0.8125rem;">emails / min max</span>
+                </div>
+                <div class="mt-3">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">
+                        Sliding Window Active
+                    </MudChip>
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Card 3: Backlog & Pending Queue -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4 border rounded" Elevation="0" Style="background: var(--mud-palette-surface);">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="fw-bold">PENDING QUEUE BACKLOG</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.HourglassTop" Color="Color.Warning" Size="Size.Small" />
+                </div>
+                <div class="d-flex align-baseline gap-2 mb-1">
+                    <MudText Typo="Typo.h5" Class="font-weight-bold font-mono text-warning">
+                        @(_quotaStatus?.PendingQueueCount.ToString("N0") ?? "0")
+                    </MudText>
+                    <span class="text-secondary" style="font-size: 0.8125rem;">items awaiting dispatch</span>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    @if ((_quotaStatus?.ThrottledQueueCount ?? 0) > 0)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled">
+                            @_quotaStatus?.ThrottledQueueCount Throttled
+                        </MudChip>
+                    }
+                    @if ((_quotaStatus?.FailedQueueCount ?? 0) > 0)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled">
+                            @_quotaStatus?.FailedQueueCount Failed
+                        </MudChip>
+                    }
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Card 4: Dispatcher State -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4 border rounded" Elevation="0" Style="background: var(--mud-palette-surface);">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="fw-bold">DISPATCHER STATUS</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Sync" Color="Color.Success" Size="Size.Small" />
+                </div>
+                <div class="d-flex align-baseline gap-2 mb-1">
+                    @if (_quotaStatus?.IsQueuePaused == true)
+                    {
+                        <MudText Typo="Typo.h5" Class="font-weight-bold text-warning">PAUSED</MudText>
+                    }
+                    else if (_quotaStatus?.IsLimitReached == true)
+                    {
+                        <MudText Typo="Typo.h5" Class="font-weight-bold text-error">CEILING HIT</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.h5" Class="font-weight-bold text-success">OPERATIONAL</MudText>
+                    }
+                </div>
+                <div class="mt-3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        UTC Day resets at 00:00 UTC
+                    </MudText>
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Filters & Search Toolbar -->
+    <MudPaper Class="pa-4 mb-4" Elevation="0" Outlined="true">
+        <div class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center gap-3">
+            <MudChipSet T="string" SelectedValue="_statusFilter" SelectedValueChanged="OnStatusFilterChanged" CheckMark="true">
+                <MudChip T="string" Value="@("All")" Color="Color.Default">All Emails</MudChip>
+                <MudChip T="string" Value="@("Pending")" Color="Color.Info">Pending</MudChip>
+                <MudChip T="string" Value="@("InFlight")" Color="Color.Primary">In Flight</MudChip>
+                <MudChip T="string" Value="@("Throttled")" Color="Color.Warning">Throttled</MudChip>
+                <MudChip T="string" Value="@("Sent")" Color="Color.Success">Sent Successfully</MudChip>
+                <MudChip T="string" Value="@("Failed")" Color="Color.Error">Failed</MudChip>
+            </MudChipSet>
+
+            <div style="min-width: 260px; max-width: 380px; width: 100%;">
+                <MudTextField @bind-Value="_searchQuery"
+                              Placeholder="Search recipient email or subject..."
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Clearable="true"
+                              DebounceInterval="300"
+                              OnDebounceIntervalElapsed="OnSearchChanged"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" />
+            </div>
+        </div>
+    </MudPaper>
+
+    <!-- DataGridShell for 13-point data table compliance -->
+    <DataGridShell TItem="EmailOutboxItemDto"
+                   Items="@_pagedQueue.Items"
+                   IsLoading="@_loading"
+                   TotalItemsCount="@_pagedQueue.TotalCount"
+                   EmptyMessage="No outbound email queue items found matching this filter.">
+        <ChildContent>
+            <MudTable Items="@_pagedQueue.Items"
+                      Hover="true"
+                      Dense="true"
+                      Elevation="0"
+                      Class="border rounded">
+                <HeaderContent>
+                    <MudTh>ID</MudTh>
+                    <MudTh>Recipient Email</MudTh>
+                    <MudTh>Subject</MudTh>
+                    <MudTh>Source Subsystem</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Attempts</MudTh>
+                    <MudTh>Sent / Next Attempt</MudTh>
+                    <MudTh>Attachment</MudTh>
+                    <MudTh>Error Reason</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd Class="font-mono" Style="font-size: 0.8125rem;">@context.Id</MudTd>
+                    <MudTd>
+                        <div>
+                            <span class="font-mono fw-bold">@context.RecipientEmail</span>
+                            @if (!string.IsNullOrWhiteSpace(context.RecipientName))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">@context.RecipientName</MudText>
+                            }
+                        </div>
+                    </MudTd>
+                    <MudTd>
+                        <MudText Typo="Typo.body2" Class="text-truncate" Style="max-width: 280px;">
+                            @context.Subject
+                        </MudText>
+                    </MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@context.SourceModule</MudChip>
+                    </MudTd>
+                    <MudTd>
+                        <StatusBadge Status="@context.Status" Size="Size.Small" />
+                    </MudTd>
+                    <MudTd Class="font-mono">@context.AttemptCount</MudTd>
+                    <MudTd>
+                        <span class="font-mono text-secondary" style="font-size: 0.8125rem;">
+                            @(context.SentAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") 
+                              ?? (context.NextAttemptAt.HasValue ? $"Retry: {context.NextAttemptAt.Value.ToLocalTime():HH:mm:ss}" : "-"))
+                        </span>
+                    </MudTd>
+                    <MudTd>
+                        @if (context.HasAttachment)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.AttachFile" Color="Color.Primary" Size="Size.Small" Title="@context.AttachmentFileName" />
+                        }
+                        else
+                        {
+                            <span class="text-secondary">-</span>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        @if (!string.IsNullOrWhiteSpace(context.LastError))
+                        {
+                            <MudTooltip Text="@context.LastError">
+                                <MudText Typo="Typo.caption" Color="Color.Error" Class="text-truncate" Style="max-width: 180px;">
+                                    @context.LastError
+                                </MudText>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <span class="text-secondary">-</span>
+                        }
+                    </MudTd>
+                    <MudTd Style="text-align: right;">
+                        @if (context.Status == "Failed" || context.Status == "Throttled")
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Replay"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => RetryItemAsync(context.Id))"
+                                           Title="Retry Dispatch" />
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </ChildContent>
+    </DataGridShell>
+</main>
+
+@code {
+    private bool _loading = true;
+    private EmailDailyQuotaStatusDto? _quotaStatus;
+    private string _statusFilter = "All";
+    private string _searchQuery = string.Empty;
+    private int _pageIndex = 0;
+    private int _pageSize = 25;
+
+    private PagedResult<EmailOutboxItemDto> _pagedQueue = new(new List<EmailOutboxItemDto>(), 0, 0, 25);
+
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Enterprise Admin", href: "/admin/broadcasts"),
+        new BreadcrumbItem("Email Outbox Queue", href: null, disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardDataAsync();
+    }
+
+    private async Task LoadDashboardDataAsync()
+    {
+        _loading = true;
+        try
+        {
+            _quotaStatus = await OutboxService.GetDailyQuotaStatusAsync();
+            var query = new PaginationQuery(_pageIndex, _pageSize);
+            _pagedQueue = await OutboxService.GetOutboxQueuePagedAsync(query, _statusFilter, _searchQuery);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading email outbox status: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnStatusFilterChanged(string newStatus)
+    {
+        _statusFilter = newStatus;
+        _pageIndex = 0;
+        await LoadDashboardDataAsync();
+    }
+
+    private async Task OnSearchChanged(string newSearch)
+    {
+        _searchQuery = newSearch;
+        _pageIndex = 0;
+        await LoadDashboardDataAsync();
+    }
+
+    private async Task PauseQueueAsync()
+    {
+        await OutboxService.PauseOutboxQueueAsync("ADMIN");
+        Snackbar.Add("Office 365 Outbox queue paused.", Severity.Warning);
+        await LoadDashboardDataAsync();
+    }
+
+    private async Task ResumeQueueAsync()
+    {
+        await OutboxService.ResumeOutboxQueueAsync("ADMIN");
+        Snackbar.Add("Office 365 Outbox queue resumed.", Severity.Success);
+        await LoadDashboardDataAsync();
+    }
+
+    private async Task RetryItemAsync(long id)
+    {
+        await OutboxService.RetryOutboxItemAsync(id, "ADMIN");
+        Snackbar.Add($"Email #{id} reset to Pending.", Severity.Success);
+        await LoadDashboardDataAsync();
+    }
+
+    private async Task RetryAllFailedAsync()
+    {
+        var count = await OutboxService.RetryAllFailedOutboxItemsAsync("ADMIN");
+        Snackbar.Add($"Reset {count} failed email(s) to Pending.", Severity.Success);
+        await LoadDashboardDataAsync();
+    }
+
+    private Color GetQuotaProgressColor()
+    {
+        var util = _quotaStatus?.UtilizationPercentage ?? 0;
+        if (util >= 90) return Color.Error;
+        if (util >= 75) return Color.Warning;
+        return Color.Primary;
+    }
+}

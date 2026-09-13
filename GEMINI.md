@@ -1094,4 +1094,59 @@ Every page must pass all 16 items before being declared complete:
 2. **MudChip OnClose Event Handlers**:
    - In MudBlazor 8, avoid binding inline `async () => { await ... }` expressions directly to `MudChip.OnClose`. Always bind to a dedicated parameterless asynchronous method (e.g., `OnClose="@ClearKeywordFilter"`).
 
+---
+
+### 🛡️ Enterprise Broadcast Messaging, Outbox Pattern & Office 365 Rate Limiting Governance Standard
+1. **Decoupled Immediate In-App Notifications & Outbound Throttling**:
+   - In-app notifications (`SystemNotification`) and real-time SignalR pop-up alerts must be dispatched immediately to all targeted recipients within the primary transaction without waiting for outbound SMTP delivery.
+   - Outbound emails MUST NEVER be sent synchronously during interactive web requests; they must be written to `EmailOutboxItem` and dispatched asynchronously via `ThrottledEmailOutboxWorker`.
+2. **Office 365 Daily Ceiling & Token-Bucket Rate Limiter**:
+   - Daily volume is capped at a statutory ceiling of 10,000 emails per UTC calendar day (`EmailDailyQuotaTracker`). If reached, the outbox worker pauses dispatch until 00:00:00 UTC.
+   - Per-minute throughput is governed by a sliding window rate limiter (default 30 messages/minute) to eliminate SMTP 421/451 throttling and account suspension on Exchange Online.
+   - SMTP throttling responses must trigger exponential backoff retry schedules ($2^{\text{attempt}}$ minutes) up to 5 attempts before marking as `Failed`.
+3. **Physical Binary Attachments Governance**:
+   - Outgoing circulars and formal communiques (e.g. CEO signed PDF letters) must be stored on persistent disk (`storage/broadcasts/`) and attached as physical binary MIME attachments to outgoing emails, while remaining downloadable in-app via `/notifications/{id}`.
+4. **Holistic Workflow & System Email Consolidation**:
+   - All transactional emails triggered by workflows, approvals, and system alerts (`INotificationService.SendNotificationAsync` with `sendEmail = true` and `IEmailOutboxService.EnqueueEmailAsync`) must be enqueued through `EmailOutboxItem` so they are subject to the same global daily quota and rate limiter.
+5. **Audited Double-Write & Administrative Controls**:
+   - Broadcast dispatches must write an audited change log snapshot into `audit_logs`.
+   - Administrators can monitor real-time queue health, pause/resume dispatch, and retry failed messages via `/admin/email-outbox`.
+
+---
+
+### 🛡️ Blazor Endpoint Routing Case-Sensitivity Invariant
+- In ASP.NET Core and Blazor Server, route templates are case-insensitive.
+- Never define duplicate `@page` directives that differ only by parameter casing (e.g. `@page "/admin/document-templates/{Id:int}"` alongside `@page "/admin/document-templates/{id:int}"`).
+- Doing so triggers a runtime `Microsoft.AspNetCore.Routing.Matching.AmbiguousMatchException` during endpoint selection.
+
+---
+
+### 🛡️ Statutory "No Levy, No Grant" Mandatory Rebate Governance
+- In terms of SETA Grant Regulations (Regulation 4), Mandatory Grant (MG / WSP) levy rebates must strictly evaluate reconciled SARS monthly levy contributions.
+- If no SARS levy contributions have been collected or reconciled for the submitting organisation for the scheme year, the calculated rebate amount must evaluate to zero (`0m`).
+- Under no circumstances should provisional rebates be disbursed against unapproved WSP submissions or zero levy reconciliations.
+
+---
+
+### 🛡️ Universal Segregation of Duties (Dual Authorisation Control)
+- Dual Authorisation Control is strictly enforced across all statutory workflows:
+  - WSP extension requests: `ReviewedByUserId != ApproverUserId` and `CreatedBy != ApproverUserId`.
+  - Discretionary Grant tranche claims: `pay.CreatedBy != currentUsername` and `pay.FinanceApproverUserId != currentUsername` for CFO escalation.
+  - Mandatory Grant disbursements: `disb.CreatedBy != currentUsername`.
+  - Trade Test & ARPL QA approval: `app.ClaUserId != currentUsername`.
+  - Contract variations (Addenda, Extensions, Terminations): `entity.CreatedBy != currentUsername`.
+  - Learner change requests: `changeRequest.CreatedBy != currentUsername`.
+- Any attempt at self-review or self-approval must fail fast by throwing an `InvalidOperationException` citing Dual Authorisation Governance breach.
+
+---
+
+### 🛡️ Universal Working Day SLA Engine Integration
+- All statutory countdown timers, officer task due dates, and compliance cooling-off periods (such as the 14-day banking cooling-off and trade test result upload deadlines) must compute deadlines using `IWorkingDayCalculationEngine.AddBusinessDaysAsync`.
+- Countdown timers must dynamically pause across South African statutory public holidays (Act No. 36 of 1994) and merSETA annual year-end shutdowns.
+
+---
+
+### 🛡️ POPIA Full-Spectrum 13-Digit RSA ID Masking
+- Confidential 13-digit RSA National ID numbers must be masked (e.g. `9504******082`) using `PopiaMaskingUtility.MaskRsaId` across all UI screens, queues, grids, tables, and public verification portals.
+- When rendering unstructured text, markdown snapshots, or document previews containing embedded IDs, `PopiaMaskingUtility.MaskRsaIdsInText` must be applied.
 

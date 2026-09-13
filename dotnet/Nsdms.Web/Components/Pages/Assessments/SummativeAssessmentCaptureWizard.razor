@@ -3,6 +3,7 @@
 @using Microsoft.EntityFrameworkCore
 @using Nsdms.Application.Common
 @using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Common.Utilities
 @using Nsdms.Domain.Entities
 @inject ISummativeAssessmentAndModerationService AssessmentService
 @inject NavigationManager Nav
@@ -84,7 +85,7 @@
                             @foreach (var l in _learners)
                             {
                                 <MudSelectItem T="int?" Value="@((int?)l.Id)">
-                                    @(l.Person?.FirstName) @(l.Person?.LastName) (ID: @(l.Person?.RsaIdNumber ?? l.Person?.PassportNumber ?? "N/A"))
+                                    @(l.Person?.FirstName) @(l.Person?.LastName) (ID: @(string.IsNullOrEmpty(l.Person?.RsaIdNumber) ? (l.Person?.PassportNumber ?? "N/A") : PopiaMaskingUtility.MaskRsaId(l.Person.RsaIdNumber)))
                                 </MudSelectItem>
                             }
                         </MudSelect>
@@ -94,7 +95,7 @@
                             <MudPaper Elevation="0" Class="pa-3 rounded" Style="background-color: var(--mud-palette-background-grey);">
                                 <MudText Typo="Typo.caption" Class="fw-bold text-uppercase d-block mb-1">Learner Profile</MudText>
                                 <MudText Typo="Typo.body2"><strong>Learner:</strong> @(_selectedLearner.Person?.FirstName) @(_selectedLearner.Person?.LastName)</MudText>
-                                <MudText Typo="Typo.body2"><strong>RSA ID:</strong> @(_selectedLearner.Person?.RsaIdNumber ?? _selectedLearner.Person?.PassportNumber ?? "N/A")</MudText>
+                                <MudText Typo="Typo.body2"><strong>RSA ID:</strong> @(string.IsNullOrEmpty(_selectedLearner.Person?.RsaIdNumber) ? (_selectedLearner.Person?.PassportNumber ?? "N/A") : PopiaMaskingUtility.MaskRsaId(_selectedLearner.Person.RsaIdNumber))</MudText>
                                 <MudText Typo="Typo.body2"><strong>Host Employer:</strong> @(_selectedLearner.Organisation?.CompanyName ?? _selectedLearner.Organisation?.TradingName ?? "Independent")</MudText>
                                 <MudText Typo="Typo.body2"><strong>Enrolment Number:</strong> @(_selectedLearner.LearnerContractNumber ?? $"LRN-{_selectedLearner.Id:D5}")</MudText>
                                 

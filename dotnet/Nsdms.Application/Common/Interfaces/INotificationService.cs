@@ -12,7 +12,18 @@ public interface INotificationService
         string? actionUrl = null, 
         string notificationType = "SystemAlert", 
         string severity = "Info", 
-        string actor = "SYSTEM");
+        string actor = "SYSTEM",
+        string? bodyHtml = null,
+        string? senderDisplayName = null,
+        int? broadcastMessageId = null,
+        bool hasAttachment = false,
+        string? attachmentFileName = null,
+        string? attachmentStoragePath = null,
+        long? attachmentSizeBytes = null,
+        string? attachmentContentType = null,
+        bool sendEmail = false);
+
+    Task<SystemNotificationDto?> GetNotificationByIdAsync(int id, string? username = null);
 
     Task<List<SystemNotificationDto>> GetUserNotificationsAsync(
         string username, 

@@ -241,7 +241,111 @@ public class FinanceServiceTests
     }
 
     [Fact]
-    public async Task CalculateMandatoryGrantRebates_ShouldCreate20PercentDisbursement()
+    public async Task ApproveTranchePayment_SelfApprovalAttempt_ThrowsInvalidOperationException()
+    {
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var financeService = new FinanceService(factory);
+
+        var moa = new GrantMoa
+        {
+            MoaNumber = "MOA-2026-DUAL-01",
+            TotalContractValue = 100000m,
+            MoaStatusCode = "Active",
+            ContractStartDate = DateTime.UtcNow,
+            ContractEndDate = DateTime.UtcNow.AddMonths(12)
+        };
+        var created = await financeService.CreateGrantMoaAsync(moa, "admin@merseta.org.za");
+        var milestone = created.Milestones.First();
+        await financeService.VerifyMilestoneAsync(milestone.Id, "clo@merseta.org.za", "Verified");
+
+        var payment = new GrantTranchePayment
+        {
+            GrantMoaMilestoneId = milestone.Id,
+            ClaimedAmount = 25000m,
+            InvoiceNumber = "INV-DUAL-001"
+        };
+        var submitted = await financeService.SubmitTranchePaymentAsync(payment, "preparer@merseta.org.za");
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            financeService.ApproveTranchePaymentAsync(submitted.Id, "preparer@merseta.org.za", "BATCH-01"));
+        Assert.Contains("Dual Authorisation Governance breach", ex.Message);
+    }
+
+    [Fact]
+    public async Task CfoApproveTranchePayment_SelfApprovalAttempt_ThrowsInvalidOperationException()
+    {
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var financeService = new FinanceService(factory);
+
+        var moa = new GrantMoa
+        {
+            MoaNumber = "MOA-2026-DUAL-02",
+            TotalContractValue = 2000000m,
+            MoaStatusCode = "Active",
+            ContractStartDate = DateTime.UtcNow,
+            ContractEndDate = DateTime.UtcNow.AddMonths(12)
+        };
+        var created = await financeService.CreateGrantMoaAsync(moa, "admin@merseta.org.za");
+        var milestone = created.Milestones.First();
+        await financeService.VerifyMilestoneAsync(milestone.Id, "clo@merseta.org.za", "Verified");
+
+        var payment = new GrantTranchePayment
+        {
+            GrantMoaMilestoneId = milestone.Id,
+            ClaimedAmount = 600000m,
+            InvoiceNumber = "INV-DUAL-002"
+        };
+        var submitted = await financeService.SubmitTranchePaymentAsync(payment, "preparer@merseta.org.za");
+        await financeService.ApproveTranchePaymentAsync(submitted.Id, "finance_officer@merseta.org.za", "BATCH-02");
+
+        // Preparer cannot CFO approve
+        var ex1 = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            financeService.CfoApproveTranchePaymentAsync(submitted.Id, "preparer@merseta.org.za"));
+        Assert.Contains("Dual Authorisation Governance breach", ex1.Message);
+
+        // Finance review officer cannot CFO approve
+        var ex2 = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            financeService.CfoApproveTranchePaymentAsync(submitted.Id, "finance_officer@merseta.org.za"));
+        Assert.Contains("Dual Authorisation Governance breach", ex2.Message);
+    }
+
+    [Fact]
+    public async Task ApproveMandatoryDisbursement_SelfApprovalAttempt_ThrowsInvalidOperationException()
+    {
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var financeService = new FinanceService(factory);
+
+        int disbId;
+        using (var ctx = (Nsdms.Infrastructure.Data.NsdmsDbContext)factory.CreateDbContext())
+        {
+            var org = new Organisation { CompanyName = "Beta Industries", SdlNumber = "L555666777" };
+            ctx.Organisations.Add(org);
+            var wsp = new WspSubmission { OrganisationId = org.Id, FinYear = 2026, StatusCode = "Approved" };
+            ctx.WspSubmissions.Add(wsp);
+            await ctx.SaveChangesAsync();
+
+            var disb = new MandatoryGrantDisbursement
+            {
+                OrganisationId = org.Id,
+                WspSubmissionId = wsp.Id,
+                DisbursementReference = "MG-2026-BETA",
+                FinYear = 2026,
+                CalculatedRebateAmount = 50000m,
+                DisbursementStatusCode = "Calculated",
+                CreatedBy = "disb_creator@merseta.org.za"
+            };
+            ctx.MandatoryGrantDisbursements.Add(disb);
+            await ctx.SaveChangesAsync();
+            disbId = disb.Id;
+        }
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            financeService.ApproveMandatoryDisbursementAsync(disbId, "disb_creator@merseta.org.za", "BATCH-01"));
+        Assert.Contains("Dual Authorisation Governance breach", ex.Message);
+    }
+
+    [Fact]
+    public async Task CalculateMandatoryGrantRebates_ShouldEnforceNoLevyNoGrant_WhenNoLevyFilesReconciled()
     {
         // Arrange
         var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
@@ -272,7 +376,8 @@ public class FinanceServiceTests
         Assert.Equal(1, count);
         var disbursements = await financeService.GetMandatoryDisbursementsAsync(2026);
         Assert.Single(disbursements);
-        Assert.Equal(100000m, disbursements[0].CalculatedRebateAmount); // 20% of 500,000
+        Assert.Equal(0m, disbursements[0].CalculatedRebateAmount); // Statutory "No Levy, No Grant"
+        Assert.Contains("No Levy, No Grant", disbursements[0].Comments);
     }
 
     [Fact]

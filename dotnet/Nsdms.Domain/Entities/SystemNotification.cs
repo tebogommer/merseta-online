@@ -11,11 +11,19 @@ public class SystemNotification : BaseEntity
     public string? RecipientRole { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
+    public string? BodyHtml { get; set; }
+    public string? SenderDisplayName { get; set; }
+    public int? BroadcastMessageId { get; set; }
     public string? ActionUrl { get; set; }
     public string NotificationType { get; set; } = "SystemAlert";
     public string Severity { get; set; } = "Info";
     public bool IsRead { get; set; } = false;
     public DateTime? ReadAt { get; set; }
+    public bool HasAttachment { get; set; } = false;
+    public string? AttachmentFileName { get; set; }
+    public string? AttachmentStoragePath { get; set; }
+    public long? AttachmentSizeBytes { get; set; }
+    public string? AttachmentContentType { get; set; }
 }
 
 public class SystemNotificationDto
@@ -25,10 +33,18 @@ public class SystemNotificationDto
     public string? RecipientRole { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
+    public string? BodyHtml { get; set; }
+    public string? SenderDisplayName { get; set; }
+    public int? BroadcastMessageId { get; set; }
     public string? ActionUrl { get; set; }
     public string NotificationType { get; set; } = "SystemAlert";
     public string Severity { get; set; } = "Info";
     public bool IsRead { get; set; }
     public DateTime? ReadAt { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool HasAttachment { get; set; }
+    public string? AttachmentFileName { get; set; }
+    public string? AttachmentStoragePath { get; set; }
+    public long? AttachmentSizeBytes { get; set; }
+    public string? AttachmentContentType { get; set; }
 }

@@ -898,6 +898,18 @@ public class NavigationMenuService : INavigationMenuService
                 DisplayOrder = 4,
                 Keywords = new() { "dispatch", "clc", "coordinator", "field visit", "scheduling", "workload", "capability", "officer" }
             },
+            new()
+            {
+                Id = "nav-notifications",
+                Title = "Notifications inbox",
+                Href = "notifications",
+                Icon = "Notifications",
+                Category = "Overview & tasks",
+                Description = "In-app notifications, official circulars, and system alerts",
+                PersonaTags = new() { "All", "Admin", "SDF", "Finance", "Assessor", "SDP", "CLO", "Legal", "Compliance", "Executive", "User" },
+                DisplayOrder = 5,
+                Keywords = new() { "notifications", "alerts", "inbox", "messages", "broadcasts", "circulars" }
+            },
             // Module 18: Interest & Conflict Governance
             new()
             {
@@ -2198,6 +2210,36 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "All", "Admin", "Executive", "Developer", "SDF", "CLO" },
                 DisplayOrder = 9,
                 Keywords = new() { "wizard matrix", "multi-step", "wizards", "candidate matrix", "wizard shell", "stepper" }
+            },
+            new()
+            {
+                Id = "nav-broadcasts",
+                Title = "Broadcast communications",
+                Href = "admin/broadcasts",
+                Icon = "Campaign",
+                Category = "System administration",
+                Description = "WYSIWYG broadcast messaging, targeted communications, and email dispatches",
+                RequiredModule = AppPermissions.ModuleSystem,
+                RequiredAction = AppPermissions.ActionManage,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Executive" },
+                PersonaTags = new() { "Admin", "Executive" },
+                DisplayOrder = 10,
+                Keywords = new() { "broadcasts", "messages", "campaigns", "announcements", "circulars", "emails", "outbox" }
+            },
+            new()
+            {
+                Id = "nav-email-outbox",
+                Title = "Email outbox & rate limiter",
+                Href = "admin/email-outbox",
+                Icon = "MarkEmailRead",
+                Category = "System administration",
+                Description = "Office 365 daily quota tracker, rate limiting queue, and email dispatch health",
+                RequiredModule = AppPermissions.ModuleSystem,
+                RequiredAction = AppPermissions.ActionManage,
+                RequiredRoles = new() { "SuperAdmin", "Admin" },
+                PersonaTags = new() { "Admin" },
+                DisplayOrder = 11,
+                Keywords = new() { "email outbox", "rate limiter", "office 365", "quota", "smtp", "queue", "throttling" }
             }
         };
     }

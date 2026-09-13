@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Interfaces;
 using Nsdms.Domain.Entities;
 using System.Security.Claims;
 
@@ -13,15 +14,18 @@ public class WorkflowEngineService : IWorkflowEngineService
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IRealtimeNotificationService? _notificationService;
     private readonly ICaslAbilityService? _caslService;
+    private readonly IWorkingDayCalculationEngine? _workingDayEngine;
 
     public WorkflowEngineService(
         INsdmsDbContextFactory contextFactory, 
         IRealtimeNotificationService? notificationService = null,
-        ICaslAbilityService? caslService = null)
+        ICaslAbilityService? caslService = null,
+        IWorkingDayCalculationEngine? workingDayEngine = null)
     {
         _contextFactory = contextFactory;
         _notificationService = notificationService;
         _caslService = caslService;
+        _workingDayEngine = workingDayEngine;
     }
 
     public async Task<WorkflowInstance?> GetInstanceByEntityAsync(string processCode, int entityId)
@@ -165,7 +169,7 @@ public class WorkflowEngineService : IWorkflowEngineService
                 AssignedGroupRole = initialState.AllowedGroupRole,
                 TaskStatus = "Open",
                 Priority = "Normal",
-                DueDate = DateTime.UtcNow.AddDays(7),
+                DueDate = _workingDayEngine != null ? await _workingDayEngine.AddBusinessDaysAsync(DateTime.UtcNow, 7) : DateTime.UtcNow.AddDays(7),
                 TargetRoute = GetTargetRoute(def.TargetEntityName, entityId)
             };
             context.WorkflowTasks.Add(initialTask);
@@ -285,7 +289,7 @@ public class WorkflowEngineService : IWorkflowEngineService
                 AssignedGroupRole = toState.AllowedGroupRole,
                 TaskStatus = "Open",
                 Priority = "Normal",
-                DueDate = DateTime.UtcNow.AddDays(5),
+                DueDate = _workingDayEngine != null ? await _workingDayEngine.AddBusinessDaysAsync(DateTime.UtcNow, 5) : DateTime.UtcNow.AddDays(5),
                 TargetRoute = GetTargetRoute(instance.WorkflowDefinition.TargetEntityName, instance.EntityId)
             };
             context.WorkflowTasks.Add(nextTask);

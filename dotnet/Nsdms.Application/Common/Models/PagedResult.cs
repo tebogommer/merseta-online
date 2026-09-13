@@ -30,6 +30,14 @@ public class PaginationQuery
     public string? SortBy { get; set; }
     public bool SortDescending { get; set; } = false;
     public Dictionary<string, string> FilterParams { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    public PaginationQuery() { }
+
+    public PaginationQuery(int pageIndex, int pageSize)
+    {
+        PageIndex = pageIndex;
+        PageSize = pageSize;
+    }
 }
 
 public record OrganisationListDto(

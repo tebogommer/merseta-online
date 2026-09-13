@@ -46,19 +46,18 @@ public class MentorRatioPolicyEngine : IMentorRatioPolicyEngine
             OrganisationName = approval.Organisation?.CompanyName ?? "Unknown Organisation"
         };
 
-        // 1. Check Global System Configuration
-        var globalEnforcement = await _systemConfig.GetValueAsync<bool>(GlobalConfigKey, true);
-        if (!globalEnforcement)
+        // Cascading Evaluation Precedence:
+        // Tier 2. Check Workplace Approval Scope Exemption
+        if (approval.IsRatioEnforced.HasValue && !approval.IsRatioEnforced.Value)
         {
             result.IsEnforcementActive = false;
-            result.EnforcementState = MentorRatioEnforcementState.GlobalDisabled;
+            result.EnforcementState = MentorRatioEnforcementState.WorkplaceExempt;
             result.Status = MentorRatioComplianceStatus.Exempt;
-            result.StatusMessage = "Global mentor-to-learner ratio enforcement is disabled in system configuration.";
-            result.ExemptionReason = "System-wide Administrator Override / Migration Mode";
+            result.ExemptionReason = approval.MentorRatioExemptionNotes ?? "Workplace Approval granted special dispensation exemption.";
+            result.StatusMessage = "This workplace approval is specifically exempt from mentor ratio restrictions.";
         }
-
-        // 2. Check Organisation-level Exemption
-        if (result.IsEnforcementActive && approval.Organisation != null && approval.Organisation.IsMentorRatioEnforced.HasValue && !approval.Organisation.IsMentorRatioEnforced.Value)
+        // Tier 3. Check Organisation-level Exemption
+        else if (approval.Organisation != null && approval.Organisation.IsMentorRatioEnforced.HasValue && !approval.Organisation.IsMentorRatioEnforced.Value)
         {
             result.IsEnforcementActive = false;
             result.EnforcementState = MentorRatioEnforcementState.OrgExempt;
@@ -66,15 +65,18 @@ public class MentorRatioPolicyEngine : IMentorRatioPolicyEngine
             result.ExemptionReason = approval.Organisation.MentorRatioExemptionReason ?? "Organisation granted statutory exemption from ratio enforcement.";
             result.StatusMessage = $"Host employer ({approval.Organisation.CompanyName}) is exempt from mentor ratio enforcement.";
         }
-
-        // 3. Check Workplace Approval Scope Exemption
-        if (result.IsEnforcementActive && approval.IsRatioEnforced.HasValue && !approval.IsRatioEnforced.Value)
+        // Tier 5. Check Global System Configuration Toggle
+        else
         {
-            result.IsEnforcementActive = false;
-            result.EnforcementState = MentorRatioEnforcementState.WorkplaceExempt;
-            result.Status = MentorRatioComplianceStatus.Exempt;
-            result.ExemptionReason = approval.MentorRatioExemptionNotes ?? "Workplace Approval granted special dispensation exemption.";
-            result.StatusMessage = "This workplace approval is specifically exempt from mentor ratio restrictions.";
+            var globalEnforcement = await _systemConfig.GetValueAsync<bool>(GlobalConfigKey, true);
+            if (!globalEnforcement)
+            {
+                result.IsEnforcementActive = false;
+                result.EnforcementState = MentorRatioEnforcementState.GlobalDisabled;
+                result.Status = MentorRatioComplianceStatus.Exempt;
+                result.StatusMessage = "Global mentor-to-learner ratio enforcement is disabled in system configuration.";
+                result.ExemptionReason = "System-wide Administrator Override / Migration Mode";
+            }
         }
 
         // 4. Resolve Trade Ratio Policy

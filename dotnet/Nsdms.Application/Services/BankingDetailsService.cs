@@ -11,12 +11,18 @@ public class BankingDetailsService : IBankingDetailsService
     private readonly INsdmsDbContextFactory _factory;
     private readonly AuditService _audit;
     private readonly IBankservAvsService? _avsService;
+    private readonly IWorkingDayCalculationEngine? _workingDayEngine;
 
-    public BankingDetailsService(INsdmsDbContextFactory factory, AuditService audit, IBankservAvsService? avsService = null)
+    public BankingDetailsService(
+        INsdmsDbContextFactory factory, 
+        AuditService audit, 
+        IBankservAvsService? avsService = null,
+        IWorkingDayCalculationEngine? workingDayEngine = null)
     {
         _factory = factory;
         _audit = audit;
         _avsService = avsService;
+        _workingDayEngine = workingDayEngine;
     }
 
     public async Task<List<BankingDetails>> GetBankingDetailsListAsync()
@@ -84,7 +90,9 @@ public class BankingDetailsService : IBankingDetailsService
             RequiresForensicApproval = isDuplicateAccount,
             FraudRiskFlags = isDuplicateAccount ? "CROSS_ORGANISATION_DUPLICATE_ACCOUNT" : (avsResult != null && !avsResult.IsValid ? avsResult.ResponseCode : null),
             IsCoolingOffActive = hasExistingActiveBank,
-            CoolingOffExpiresAt = hasExistingActiveBank ? DateTime.UtcNow.AddDays(14) : null,
+            CoolingOffExpiresAt = hasExistingActiveBank 
+                ? (_workingDayEngine != null ? await _workingDayEngine.AddBusinessDaysAsync(DateTime.UtcNow, 14) : DateTime.UtcNow.AddDays(14)) 
+                : null,
             AvsVerificationReference = avsResult?.VerificationReference,
             AvsVerifiedAt = avsResult?.VerifiedAt,
             AvsStatusResponse = avsResult?.ResponseMessage,

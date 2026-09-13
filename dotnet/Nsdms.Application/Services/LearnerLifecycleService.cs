@@ -1005,6 +1005,12 @@ public class LearnerLifecycleService : ILearnerLifecycleService
         if (changeRequest == null)
             throw new KeyNotFoundException($"CompanyLearnerChangeRequest with ID {changeRequestId} not found.");
 
+        // Dual Authorisation Governance: Creator/Submitter cannot review or approve their own change request
+        if (!string.IsNullOrEmpty(changeRequest.CreatedBy) && string.Equals(changeRequest.CreatedBy, currentUsername, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"Dual Authorisation Governance breach: Change request submitter ({changeRequest.CreatedBy}) cannot review or approve their own change request.");
+        }
+
         changeRequest.ChangeStatusCode = approve ? "Approved" : "Rejected";
         changeRequest.ReviewerComments = comments;
         changeRequest.ReviewedByUserId = currentUsername;

@@ -28,6 +28,15 @@ public static class PopiaMaskingUtility
     }
 
     /// <summary>
+    /// Scans arbitrary text or document markdown and masks any embedded 13-digit RSA National ID numbers.
+    /// </summary>
+    public static string MaskRsaIdsInText(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+        return Regex.Replace(text, @"\b(\d{6})(\d{5})(\d{2})\b", m => $"{m.Groups[1].Value}*****{m.Groups[3].Value}");
+    }
+
+    /// <summary>
     /// Masks a bank account number (e.g., "1234567890" -> "******7890").
     /// Preserves only the last 4 digits for financial reconciliation.
     /// </summary>

@@ -816,9 +816,19 @@ public class WspService : IWspService
             throw new KeyNotFoundException($"WspExtensionRequest with ID {id} was not found.");
         }
 
-        if (!string.IsNullOrEmpty(existing.ReviewedByUserId) && string.Equals(existing.ReviewedByUserId, approverUserId, StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrEmpty(existing.ReviewedByUserId))
+        {
+            throw new InvalidOperationException("Two-tier Maker-Checker violation: Extension request must be reviewed and recommended by a Client Liaison Officer prior to executive adjudication.");
+        }
+
+        if (string.Equals(existing.ReviewedByUserId, approverUserId, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException("Segregation of duties violation: The reviewer cannot adjudicate the final approval.");
+        }
+
+        if (!string.IsNullOrEmpty(existing.CreatedBy) && string.Equals(existing.CreatedBy, approverUserId, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Segregation of duties violation: The applicant/creator cannot adjudicate their own extension request.");
         }
 
         var beforeState = new

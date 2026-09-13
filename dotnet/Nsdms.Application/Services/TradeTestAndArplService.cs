@@ -12,17 +12,20 @@ public class TradeTestAndArplService : ITradeTestAndArplService
     private readonly AuditService _audit;
     private readonly INotificationService? _notifications;
     private readonly ISystemConfigurationService? _configService;
+    private readonly IWorkingDayCalculationEngine? _workingDayEngine;
 
     public TradeTestAndArplService(
         INsdmsDbContextFactory contextFactory,
         AuditService audit,
         INotificationService? notifications = null,
-        ISystemConfigurationService? configService = null)
+        ISystemConfigurationService? configService = null,
+        IWorkingDayCalculationEngine? workingDayEngine = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
         _notifications = notifications;
         _configService = configService;
+        _workingDayEngine = workingDayEngine;
     }
 
     public async Task<LearnerTradeTestApplication> CreateTradeTestApplicationAsync(
@@ -281,6 +284,12 @@ public class TradeTestAndArplService : ITradeTestAndArplService
         if (app == null)
         {
             throw new KeyNotFoundException($"LearnerTradeTestApplication with ID {applicationId} not found.");
+        }
+
+        // Dual Authorisation Governance: Reviewing CLA officer cannot approve their own application
+        if (!string.IsNullOrEmpty(app.ClaUserId) && string.Equals(app.ClaUserId, currentUsername, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"Dual Authorisation Governance breach: Recommending CLA officer ({app.ClaUserId}) cannot QA-approve their own trade test application.");
         }
 
         var before = new { app.QaApprovalStatus, app.QaApprovalDate, app.StatusCode, app.TradeTestSerialNumber };
@@ -559,7 +568,9 @@ public class TradeTestAndArplService : ITradeTestAndArplService
         var resultsUploadDays = _configService != null 
             ? await _configService.GetValueAsync<int>("TradeTest:ResultsUploadSlaDays", 5) 
             : 5;
-        app.ResultsUploadDeadlineDate = assessmentDate.AddDays(resultsUploadDays);
+        app.ResultsUploadDeadlineDate = _workingDayEngine != null
+            ? await _workingDayEngine.AddBusinessDaysAsync(assessmentDate, resultsUploadDays)
+            : assessmentDate.AddDays(resultsUploadDays);
 
         // Section 4.0 / DFD: Configurable QA achievement audit sampling percentage
         var samplePct = _configService != null 

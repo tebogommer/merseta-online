@@ -1,0 +1,455 @@
+@page "/admin/broadcasts/new"
+@attribute [Authorize(Roles = "SuperAdmin,Admin,Executive,CLO")]
+@namespace Nsdms.Web.Components.Pages.Admin
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using MudBlazor
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@inject IEmailOutboxService OutboxService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthStateProvider
+
+<main id="main-content" style="max-width: 1400px; margin: 0 auto;">
+    <FormShell Title="Compose Broadcast Communication"
+               Subtitle="Dispatch official circulars, executive notices, and statutory updates to system stakeholders."
+               BreadcrumbItems="@_breadcrumbs"
+               IsBusy="@_isSubmitting"
+               BusyText="Dispatching notifications and enqueuing emails..."
+               OnSave="@ConfirmAndDispatchAsync"
+               OnCancel="@Cancel"
+               SaveButtonText="Dispatch Broadcast"
+               SaveButtonIcon="@Icons.Material.Filled.Send">
+        <ChildContent>
+            <!-- 1. Audience & Targeting Selection Section -->
+            <FormSection Title="1. Audience &amp; Recipient Targeting"
+                         Description="Define which system stakeholders will receive this official circular and email.">
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.subtitle2" Class="fw-bold mb-2">Targeting Strategy</MudText>
+                        <MudRadioGroup T="string" @bind-Value="_targetType" SelectedValueChanged="OnTargetTypeChanged" Class="d-flex flex-wrap gap-4">
+                            <MudRadio Value="@("Role")" Color="Color.Primary">By User Type / Role</MudRadio>
+                            <MudRadio Value="@("Organisation")" Color="Color.Primary">By Organisation / Employer</MudRadio>
+                            <MudRadio Value="@("SpecificUser")" Color="Color.Primary">Specific Individual</MudRadio>
+                            <MudRadio Value="@("BroadcastAll")" Color="Color.Primary">Broadcast to All Users</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
+                    @if (_targetType == "Role")
+                    {
+                        <MudItem xs="12" md="8">
+                            <MudSelect T="string"
+                                       Label="Select User Type / Role"
+                                       Value="_selectedRole"
+                                       ValueChanged="OnRoleSelectedChanged"
+                                       Variant="Variant.Outlined"
+                                       AnchorOrigin="Origin.BottomCenter"
+                                       HelperText="Circular will be delivered to all active users with this assigned statutory role.">
+                                @foreach (var role in _availableRoles)
+                                {
+                                    <MudSelectItem Value="@role">@GetRoleDisplayName(role)</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    }
+                    else if (_targetType == "Organisation")
+                    {
+                        <MudItem xs="12" md="8">
+                            <MudAutocomplete T="TargetOrganisationOptionDto"
+                                             Label="Search Organisation (by Legal Name, Trade Name, or SDL Number)"
+                                             Value="_selectedOrganisation"
+                                             ValueChanged="OnOrganisationSelected"
+                                             SearchFunc="@SearchOrganisationsAsync"
+                                             ToStringFunc="@(o => o == null ? string.Empty : $"{o.LegalName} ({o.SdlNumber})")"
+                                             Variant="Variant.Outlined"
+                                             ResetValueOnEmptyText="true"
+                                             AdornmentIcon="@Icons.Material.Filled.Business"
+                                             HelperText="Select the employer or training provider to target." />
+                        </MudItem>
+
+                        @if (_selectedOrganisation != null)
+                        {
+                            <MudItem xs="12">
+                                <MudPaper Class="pa-3 border rounded" Style="background: var(--mud-palette-background-grey);" Elevation="0">
+                                    <div class="d-flex align-center justify-space-between">
+                                        <div>
+                                            <MudText Typo="Typo.subtitle2" Class="fw-bold">@_selectedOrganisation.LegalName</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">SDL Number: @_selectedOrganisation.SdlNumber</MudText>
+                                        </div>
+                                        <MudChip T="string" Color="Color.Primary" Size="Size.Small">
+                                            Organisation Selected
+                                        </MudChip>
+                                    </div>
+                                </MudPaper>
+                            </MudItem>
+                        }
+                    }
+                    else if (_targetType == "SpecificUser")
+                    {
+                        <MudItem xs="12" md="8">
+                            <MudAutocomplete T="TargetUserOptionDto"
+                                             Label="Search User (by Name, Username, or Email)"
+                                             Value="_selectedUser"
+                                             ValueChanged="OnUserSelected"
+                                             SearchFunc="@SearchUsersAsync"
+                                             ToStringFunc="@(u => u == null ? string.Empty : $"{u.FullName} ({u.Email})")"
+                                             Variant="Variant.Outlined"
+                                             ResetValueOnEmptyText="true"
+                                             AdornmentIcon="@Icons.Material.Filled.PersonSearch"
+                                             HelperText="Search for the specific stakeholder to receive this communication." />
+                        </MudItem>
+                    }
+                    else // BroadcastAll
+                    {
+                        <MudItem xs="12">
+                            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-2">
+                                <strong>System-Wide Broadcast:</strong> This notice will be delivered to every registered active user in the NSDMS database and queued through Office 365 throttled delivery.
+                            </MudAlert>
+                        </MudItem>
+                    }
+
+                    <!-- Live Recipient Estimation Banner -->
+                    <MudItem xs="12">
+                        <div class="d-flex align-center gap-3 pa-3 rounded border" style="background: var(--mud-palette-surface); border-color: var(--mud-palette-primary) !important;">
+                            <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" />
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">
+                                    Estimated Audience: @_estimatedCount recipient(s)
+                                </MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    In-app notifications appear instantly. Outbound emails will throttle at 30/minute within the Office 365 10,000/day limit.
+                                </MudText>
+                            </div>
+                        </div>
+                    </MudItem>
+                </MudGrid>
+            </FormSection>
+
+            <!-- 2. Message Content & WYSIWYG Editor Section -->
+            <FormSection Title="2. Official Message Content"
+                         Description="Compose the formatted circular or communication using the rich WYSIWYG editor.">
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_subject"
+                                      Label="Subject / Circular Title (Mandatory)"
+                                      Placeholder="e.g. merSETA Circular 01/2026: Mandatory Grant Annual Submission Window Extension"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      Counter="300"
+                                      MaxLength="300"
+                                      HelperText="Clear, official title that will appear in email subjects and portal alerts." />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.caption" Class="fw-bold mb-1 d-block">Message Body (Rich Text / WYSIWYG)</MudText>
+                        <RichTextEditor @bind-Value="_bodyHtml"
+                                        Placeholder="Write official communication content here..."
+                                        MinHeightPx="300" />
+                    </MudItem>
+                </MudGrid>
+            </FormSection>
+
+            <!-- 3. Physical Binary Attachment Section -->
+            <FormSection Title="3. Physical Document Attachment"
+                         Description="Attach official signed PDF letters, gazettes, or documentation to accompany the email and notification.">
+                <MudGrid>
+                    <MudItem xs="12">
+                        @if (_attachmentBytes == null)
+                        {
+                            <div class="pa-6 border-dashed rounded text-center" style="border: 2px dashed var(--mud-palette-lines-default); background: var(--mud-palette-background-grey);">
+                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
+                                <MudText Typo="Typo.subtitle1" Class="fw-bold">Upload Binary Attachment (PDF / Document)</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-3">
+                                    Supports PDF, Word (.docx), Excel (.xlsx), or Images (Max 15 MB). Will be physically attached to outgoing emails.
+                                </MudText>
+                                <MudFileUpload T="IBrowserFile" FilesChanged="OnFileSelected" Accept=".pdf,.docx,.xlsx,.png,.jpg,.jpeg">
+                                    <ActivatorContent>
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AttachFile">
+                                            Select Attachment File
+                                        </MudButton>
+                                    </ActivatorContent>
+                                </MudFileUpload>
+                            </div>
+                        }
+                        else
+                        {
+                            <MudPaper Class="pa-4 border rounded" Elevation="0" Style="background: var(--mud-palette-background-grey);">
+                                <div class="d-flex justify-space-between align-center">
+                                    <div class="d-flex align-center gap-3">
+                                        <MudAvatar Color="Color.Error" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" />
+                                        </MudAvatar>
+                                        <div>
+                                            <MudText Typo="Typo.subtitle2" Class="fw-bold">@_attachmentFileName</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                Size: @FormatFileSize(_attachmentBytes.Length) • Content-Type: @_attachmentContentType
+                                            </MudText>
+                                        </div>
+                                    </div>
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Error"
+                                               StartIcon="@Icons.Material.Filled.Delete"
+                                               OnClick="RemoveAttachment"
+                                               Size="Size.Small">
+                                        Remove
+                                    </MudButton>
+                                </div>
+                            </MudPaper>
+                        }
+                    </MudItem>
+                </MudGrid>
+            </FormSection>
+        </ChildContent>
+    </FormShell>
+</main>
+
+@code {
+    private bool _isSubmitting = false;
+    private string _username = "SYSTEM";
+    private string _targetType = "Role";
+    private string _selectedRole = "SDF";
+    private TargetOrganisationOptionDto? _selectedOrganisation;
+    private TargetUserOptionDto? _selectedUser;
+    private int _estimatedCount = 0;
+    private List<string> _availableRoles = new();
+
+    private string _subject = string.Empty;
+    private string _bodyHtml = string.Empty;
+
+    // Physical attachment state
+    private string? _attachmentFileName;
+    private string? _attachmentContentType;
+    private byte[]? _attachmentBytes;
+
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Broadcasts", href: "/admin/broadcasts"),
+        new BreadcrumbItem("Compose New", href: null, disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        _username = auth.User.Identity?.Name ?? "SYSTEM";
+
+        _availableRoles = await OutboxService.GetAvailableTargetRolesAsync();
+        if (_availableRoles.Any())
+        {
+            _selectedRole = _availableRoles.Contains("SDF") ? "SDF" : _availableRoles.First();
+        }
+
+        await RecalculateEstimateAsync();
+    }
+
+    private async Task OnTargetTypeChanged(string newType)
+    {
+        _targetType = newType;
+        await RecalculateEstimateAsync();
+    }
+
+    private async Task OnRoleSelectedChanged(string newRole)
+    {
+        _selectedRole = newRole;
+        await RecalculateEstimateAsync();
+    }
+
+    private async Task OnOrganisationSelected(TargetOrganisationOptionDto? org)
+    {
+        _selectedOrganisation = org;
+        await RecalculateEstimateAsync();
+    }
+
+    private async Task OnUserSelected(TargetUserOptionDto? user)
+    {
+        _selectedUser = user;
+        await RecalculateEstimateAsync();
+    }
+
+    private async Task RecalculateEstimateAsync()
+    {
+        string? filterVal = null;
+        if (_targetType == "Role") filterVal = _selectedRole;
+        else if (_targetType == "Organisation") filterVal = _selectedOrganisation?.Id.ToString();
+        else if (_targetType == "SpecificUser") filterVal = _selectedUser?.Username;
+
+        try
+        {
+            _estimatedCount = await OutboxService.EstimateRecipientCountAsync(_targetType, filterVal);
+        }
+        catch
+        {
+            _estimatedCount = 0;
+        }
+        StateHasChanged();
+    }
+
+    private async Task<IEnumerable<TargetOrganisationOptionDto>> SearchOrganisationsAsync(string value, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length < 2) return Enumerable.Empty<TargetOrganisationOptionDto>();
+        return await OutboxService.SearchOrganisationsAsync(value, 15);
+    }
+
+    private async Task<IEnumerable<TargetUserOptionDto>> SearchUsersAsync(string value, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length < 2) return Enumerable.Empty<TargetUserOptionDto>();
+        return await OutboxService.SearchUsersAsync(value, 15);
+    }
+
+    private async Task OnFileSelected(IBrowserFile file)
+    {
+        if (file == null) return;
+
+        if (file.Size > 15 * 1024 * 1024)
+        {
+            Snackbar.Add("File exceeds maximum allowed size of 15 MB.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _attachmentFileName = file.Name;
+            _attachmentContentType = file.ContentType;
+            using var stream = file.OpenReadStream(maxAllowedSize: 15 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            _attachmentBytes = ms.ToArray();
+            Snackbar.Add($"Attachment loaded: {file.Name} ({FormatFileSize(_attachmentBytes.Length)})", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error reading file: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void RemoveAttachment()
+    {
+        _attachmentFileName = null;
+        _attachmentContentType = null;
+        _attachmentBytes = null;
+    }
+
+    private async Task ConfirmAndDispatchAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_subject))
+        {
+            Snackbar.Add("Subject is required.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_bodyHtml))
+        {
+            Snackbar.Add("Message body content is required.", Severity.Warning);
+            return;
+        }
+
+        if (_estimatedCount == 0)
+        {
+            var proceedWithZero = await DialogService.ShowMessageBoxAsync(
+                "No Recipients Found",
+                "The current targeting criteria matches 0 recipients. Are you sure you want to proceed?",
+                yesText: "Proceed Anyway", cancelText: "Review Targeting");
+
+            if (proceedWithZero != true) return;
+        }
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Confirm Broadcast Dispatch" },
+            { x => x.Consequence, $"This will create instant in-app portal notifications for approximately {_estimatedCount} stakeholder(s) and enqueue rate-limited emails through Office 365. Are you ready to dispatch?" },
+            { x => x.ConfirmLabel, "Dispatch Now" },
+            { x => x.CancelLabel, "Cancel" }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Broadcast", parameters);
+        var result = await dialog.Result;
+
+        if (result == null || result.Canceled) return;
+
+        _isSubmitting = true;
+        try
+        {
+            string? filterValue = null;
+            string filterDisplay = _targetType;
+
+            if (_targetType == "Role")
+            {
+                filterValue = _selectedRole;
+                filterDisplay = $"Role: {GetRoleDisplayName(_selectedRole)}";
+            }
+            else if (_targetType == "Organisation")
+            {
+                filterValue = _selectedOrganisation?.Id.ToString();
+                filterDisplay = $"Organisation: {_selectedOrganisation?.LegalName ?? "N/A"}";
+            }
+            else if (_targetType == "SpecificUser")
+            {
+                filterValue = _selectedUser?.Username;
+                filterDisplay = $"User: {_selectedUser?.FullName ?? "N/A"} ({_selectedUser?.Email})";
+            }
+            else
+            {
+                filterDisplay = "All Active Users";
+            }
+
+            var request = new CreateBroadcastRequest(
+                Subject: _subject.Trim(),
+                BodyHtml: _bodyHtml.Trim(),
+                TargetType: _targetType,
+                TargetFilterValue: filterValue,
+                TargetFilterDisplay: filterDisplay,
+                SelectedUserIds: null,
+                AttachmentFileName: _attachmentFileName,
+                AttachmentContentType: _attachmentContentType,
+                AttachmentBytes: _attachmentBytes,
+                AttachmentSizeBytes: _attachmentBytes?.Length);
+
+            var broadcast = await OutboxService.CreateAndDispatchBroadcastAsync(request, _username);
+
+            Snackbar.Add($"Broadcast '{broadcast.Subject}' successfully dispatched to {broadcast.RecipientCount} stakeholders!", Severity.Success);
+            Nav.NavigateTo($"/admin/broadcasts/{broadcast.Id}");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to dispatch broadcast: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Nav.NavigateTo("/admin/broadcasts");
+    }
+
+    private static string GetRoleDisplayName(string role)
+    {
+        return role switch
+        {
+            "SDF" => "Skills Development Facilitators (SDF)",
+            "Admin" => "Enterprise Administrators",
+            "SuperAdmin" => "Super Administrators",
+            "ReviewCommittee" => "Review Committee Members",
+            "Assessor" => "Registered Assessors",
+            "Moderator" => "Registered Moderators",
+            "Finance" => "Finance Officers",
+            "Learner" => "Registered Learners",
+            "CLO" => "Client Liaison Officers (CLO)",
+            "TrainingProvider" => "Skills Development Providers (SDP)",
+            _ => role
+        };
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        if (bytes <= 0) return "0 B";
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / (1024.0 * 1024.0):F2} MB";
+    }
+}

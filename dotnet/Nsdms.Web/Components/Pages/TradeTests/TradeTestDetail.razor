@@ -3,6 +3,7 @@
 @page "/tradetests/{Id:int}"
 @page "/tradetests/{Id:int}/edit"
 @using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Common.Utilities
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
 @inject ITradeTestAndArplService TradeTestService
@@ -64,7 +65,7 @@ else
                         }
                     </div>
                     <MudText Typo="Typo.caption" Color="Color.Secondary">
-                        Candidate: <strong>@(_app.Person?.FirstName) @(_app.Person?.LastName)</strong> (RSA ID: @_app.Person?.RsaIdNumber) | Type: <strong>@_app.ApplicationTypeCode</strong> | Attempt: #@_app.AttemptNumber
+                        Candidate: <strong>@(_app.Person?.FirstName) @(_app.Person?.LastName)</strong> (RSA ID: @PopiaMaskingUtility.MaskRsaId(_app.Person?.RsaIdNumber)) | Type: <strong>@_app.ApplicationTypeCode</strong> | Attempt: #@_app.AttemptNumber
                         @if (!string.IsNullOrEmpty(_app.TradeTestSerialNumber))
                         {
                             <span> | Serial: <strong class="text-primary font-monospace">@_app.TradeTestSerialNumber</strong></span>

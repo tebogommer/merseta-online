@@ -1,0 +1,114 @@
+@namespace Nsdms.Web.Components.Shared
+@using MudBlazor
+@using Nsdms.Domain.Entities
+
+<MudDialog DefaultFocus="DefaultFocus.LastChild">
+    <TitleContent>
+        <div class="d-flex align-center gap-3">
+            <MudAvatar Color="@GetAvatarColor(Notification.Severity)" Size="Size.Medium">
+                <MudIcon Icon="@GetIcon(Notification.NotificationType, Notification.Severity)" />
+            </MudAvatar>
+            <div>
+                <div class="d-flex align-center gap-2">
+                    <MudText Typo="Typo.h6" Class="font-weight-bold" Style="line-height: 1.2;">
+                        New Official Notification
+                    </MudText>
+                    <StatusBadge Status="@Notification.Severity" Size="Size.Small" />
+                </div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    @(Notification.SenderDisplayName ?? "merSETA National Skills Development Management System")
+                </MudText>
+            </div>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="pa-2">
+            <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2" Style="color: var(--mud-palette-primary);">
+                @Notification.Title
+            </MudText>
+
+            <MudPaper Outlined="true" Class="pa-3 mb-3" Style="background: var(--mud-palette-background-grey); max-height: 200px; overflow-y: auto;">
+                <MudText Typo="Typo.body2" Style="line-height: 1.6;">
+                    @Notification.Message
+                </MudText>
+            </MudPaper>
+
+            @if (Notification.HasAttachment && !string.IsNullOrWhiteSpace(Notification.AttachmentFileName))
+            {
+                <div class="d-flex align-center gap-2 pa-2 border rounded" style="background-color: var(--mud-palette-surface); border-color: var(--mud-palette-lines-default) !important;">
+                    <MudIcon Icon="@Icons.Material.Filled.AttachFile" Color="Color.Primary" Size="Size.Small" />
+                    <div style="flex: 1;">
+                        <MudText Typo="Typo.caption" Class="fw-bold">@Notification.AttachmentFileName</MudText>
+                        @if (Notification.AttachmentSizeBytes.HasValue)
+                        {
+                            <span class="text-secondary" style="font-size: 0.75rem;">(@FormatFileSize(Notification.AttachmentSizeBytes.Value))</span>
+                        }
+                    </div>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">Attachment</MudChip>
+                </div>
+            }
+
+            <div class="d-flex justify-space-between align-center mt-3 text-secondary" style="font-size: 0.75rem;">
+                <span>Dispatched: @Notification.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+                <span>Category: @Notification.NotificationType</span>
+            </div>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" OnClick="Dismiss" Size="Size.Medium">
+            Dismiss
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.OpenInNew"
+                   OnClick="OpenNotification"
+                   Size="Size.Medium">
+            Open Notification
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public SystemNotificationDto Notification { get; set; } = default!;
+
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    private void Dismiss()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void OpenNotification()
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+        var targetUrl = !string.IsNullOrWhiteSpace(Notification.ActionUrl) 
+            ? Notification.ActionUrl 
+            : $"/notifications/{Notification.Id}";
+        Nav.NavigateTo(targetUrl);
+    }
+
+    private Color GetAvatarColor(string severity)
+    {
+        if (severity.Equals("Error", StringComparison.OrdinalIgnoreCase)) return Color.Error;
+        if (severity.Equals("Warning", StringComparison.OrdinalIgnoreCase)) return Color.Warning;
+        if (severity.Equals("Success", StringComparison.OrdinalIgnoreCase)) return Color.Success;
+        return Color.Primary;
+    }
+
+    private string GetIcon(string type, string severity)
+    {
+        if (type.Equals("Broadcast", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Campaign;
+        if (type.Equals("WorkflowTask", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Assignment;
+        if (severity.Equals("Warning", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Warning;
+        if (severity.Equals("Error", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Error;
+        return Icons.Material.Filled.NotificationsActive;
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / (1024.0 * 1024.0):F2} MB";
+    }
+}

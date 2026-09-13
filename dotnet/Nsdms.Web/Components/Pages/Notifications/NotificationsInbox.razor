@@ -1,0 +1,270 @@
+@page "/notifications"
+@attribute [Authorize]
+@namespace Nsdms.Web.Components.Pages.Notifications
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@inject INotificationService NotificationService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<main id="main-content" style="max-width: 1600px; margin: 0 auto;">
+    <!-- Page Header (Archetype A1 List) -->
+    <EntityHeader Title="Notifications &amp; Official Circulars"
+                  Subtitle="Statutory announcements, executive circulars, task assignments, and system alerts."
+                  BreadcrumbItems="@_breadcrumbs">
+        <Actions>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.DoneAll"
+                       OnClick="MarkAllAsReadAsync"
+                       Disabled="@(_unreadCount == 0 || _loading)"
+                       Size="Size.Medium">
+                Mark all read
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="LoadNotificationsAsync"
+                       Disabled="@_loading"
+                       Size="Size.Medium">
+                Refresh
+            </MudButton>
+        </Actions>
+    </EntityHeader>
+
+    <!-- Filter & Category Tabs -->
+    <MudPaper Class="pa-4 mb-4" Elevation="0" Outlined="true">
+        <div class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center gap-3">
+            <MudTabs @bind-ActivePanelIndex="_activeCategoryIndex"
+                     Color="Color.Primary"
+                     ApplyEffectsToContainer="true"
+                     Rounded="true">
+                <MudTabPanel Text="All Notices" BadgeData="@_notifications.Count" BadgeColor="Color.Default" />
+                <MudTabPanel Text="Unread" BadgeData="@_unreadCount" BadgeColor="Color.Error" />
+                <MudTabPanel Text="Broadcasts &amp; Circulars" />
+                <MudTabPanel Text="Workflow Tasks" />
+                <MudTabPanel Text="System Alerts" />
+            </MudTabs>
+
+            <div style="min-width: 260px; max-width: 380px; width: 100%;">
+                <MudTextField @bind-Value="_searchQuery"
+                              Placeholder="Search by subject or content..."
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Clearable="true"
+                              Immediate="true"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" />
+            </div>
+        </div>
+    </MudPaper>
+
+    <!-- DataGridShell for 13-point data table compliance -->
+    <DataGridShell TItem="SystemNotificationDto"
+                   Items="@FilteredNotifications"
+                   IsLoading="@_loading"
+                   TotalItemsCount="@FilteredNotifications.Count"
+                   EmptyMessage="No notifications found in this category.">
+        <ChildContent>
+            <MudTable Items="@FilteredNotifications"
+                      Hover="true"
+                      Dense="false"
+                      Elevation="0"
+                      Class="border rounded">
+                <HeaderContent>
+                    <MudTh Style="width: 48px;"></MudTh>
+                    <MudTh>Subject / Notice Title</MudTh>
+                    <MudTh>Category</MudTh>
+                    <MudTh>Sender</MudTh>
+                    <MudTh>Date &amp; Time</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>
+                        @if (!context.IsRead)
+                        {
+                            <MudTooltip Text="Unread Notification">
+                                <span class="d-inline-block rounded-circle bg-primary" style="width: 10px; height: 10px;"></span>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Outlined.Drafts" Color="Color.Secondary" Size="Size.Small" />
+                        }
+                    </MudTd>
+                    <MudTd>
+                        <div class="d-flex flex-column">
+                            <div class="d-flex align-center gap-2">
+                                <MudLink Href="@($"/notifications/{context.Id}")" Class="fw-bold text-decoration-none">
+                                    @context.Title
+                                </MudLink>
+                                @if (context.HasAttachment)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.AttachFile">
+                                        @(context.AttachmentFileName ?? "PDF")
+                                    </MudChip>
+                                }
+                            </div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-truncate" Style="max-width: 480px;">
+                                @context.Message
+                            </MudText>
+                        </div>
+                    </MudTd>
+                    <MudTd>
+                        <StatusBadge Status="@context.NotificationType" Size="Size.Small" />
+                    </MudTd>
+                    <MudTd>
+                        <MudText Typo="Typo.body2">
+                            @(context.SenderDisplayName ?? "merSETA System")
+                        </MudText>
+                    </MudTd>
+                    <MudTd>
+                        <span class="font-mono text-secondary" style="font-size: 0.8125rem;">
+                            @context.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                        </span>
+                    </MudTd>
+                    <MudTd Style="text-align: right;">
+                        <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           Href="@($"/notifications/{context.Id}")"
+                                           Title="View Details" />
+                            @if (!context.IsRead)
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Check"
+                                               Color="Color.Default"
+                                               Size="Size.Small"
+                                               OnClick="@(() => MarkAsReadAsync(context.Id))"
+                                               Title="Mark as read" />
+                            }
+                            <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                           Color="Color.Error"
+                                           Size="Size.Small"
+                                           OnClick="@(() => DeleteNotificationAsync(context.Id))"
+                                           Title="Delete" />
+                        </MudButtonGroup>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </ChildContent>
+    </DataGridShell>
+</main>
+
+@code {
+    private bool _loading = true;
+    private string _username = string.Empty;
+    private List<string> _roles = new();
+    private List<SystemNotificationDto> _notifications = new();
+    private int _unreadCount = 0;
+    private int _activeCategoryIndex = 0;
+    private string _searchQuery = string.Empty;
+
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Notifications", href: null, disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
+        _username = user.Identity?.Name ?? user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "SYSTEM";
+        _roles = user.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
+
+        await LoadNotificationsAsync();
+    }
+
+    private async Task LoadNotificationsAsync()
+    {
+        _loading = true;
+        try
+        {
+            _notifications = await NotificationService.GetUserNotificationsAsync(_username, _roles, unreadOnly: false, maxCount: 200);
+            _unreadCount = await NotificationService.GetUnreadCountAsync(_username, _roles);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load notifications: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private List<SystemNotificationDto> FilteredNotifications
+    {
+        get
+        {
+            var q = _notifications.AsEnumerable();
+
+            if (_activeCategoryIndex == 1) // Unread
+            {
+                q = q.Where(n => !n.IsRead);
+            }
+            else if (_activeCategoryIndex == 2) // Broadcasts
+            {
+                q = q.Where(n => n.NotificationType.Equals("Broadcast", StringComparison.OrdinalIgnoreCase));
+            }
+            else if (_activeCategoryIndex == 3) // Workflow Tasks
+            {
+                q = q.Where(n => n.NotificationType.Equals("WorkflowTask", StringComparison.OrdinalIgnoreCase) || 
+                                 n.NotificationType.Equals("SignoffRequired", StringComparison.OrdinalIgnoreCase));
+            }
+            else if (_activeCategoryIndex == 4) // System Alerts
+            {
+                q = q.Where(n => n.NotificationType.Equals("SystemAlert", StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_searchQuery))
+            {
+                var s = _searchQuery.Trim();
+                q = q.Where(n => n.Title.Contains(s, StringComparison.OrdinalIgnoreCase) || 
+                                 n.Message.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                                 (n.SenderDisplayName != null && n.SenderDisplayName.Contains(s, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return q.ToList();
+        }
+    }
+
+    private async Task MarkAsReadAsync(int notificationId)
+    {
+        await NotificationService.MarkAsReadAsync(notificationId, _username);
+        var item = _notifications.FirstOrDefault(n => n.Id == notificationId);
+        if (item != null) item.IsRead = true;
+        _unreadCount = Math.Max(0, _unreadCount - 1);
+        Snackbar.Add("Notification marked as read.", Severity.Success);
+    }
+
+    private async Task MarkAllAsReadAsync()
+    {
+        var count = await NotificationService.MarkAllAsReadAsync(_username, _roles);
+        foreach (var n in _notifications) n.IsRead = true;
+        _unreadCount = 0;
+        Snackbar.Add($"{count} notifications marked as read.", Severity.Success);
+    }
+
+    private async Task DeleteNotificationAsync(int notificationId)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "Delete Notification",
+            "Are you sure you want to remove this notification from your inbox?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            await NotificationService.DeleteNotificationAsync(notificationId, _username);
+            _notifications.RemoveAll(n => n.Id == notificationId);
+            _unreadCount = await NotificationService.GetUnreadCountAsync(_username, _roles);
+            Snackbar.Add("Notification removed.", Severity.Info);
+        }
+    }
+}

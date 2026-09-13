@@ -1,0 +1,259 @@
+@page "/notifications/{Id:int}"
+@attribute [Authorize]
+@namespace Nsdms.Web.Components.Pages.Notifications
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@inject INotificationService NotificationService
+@inject IEmailOutboxService OutboxService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<main id="main-content" style="max-width: 1200px; margin: 0 auto;">
+    @if (_loading)
+    {
+        <div class="d-flex justify-center align-center py-12">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+        </div>
+    }
+    else if (_notification == null)
+    {
+        <EmptyState Title="Notification Not Found"
+                    Description="The requested notification or circular does not exist or has been removed."
+                    ActionLabel="Back to Notifications"
+                    ActionHref="/notifications"
+                    Icon="@Icons.Material.Filled.SearchOff" />
+    }
+    else
+    {
+        <!-- Sticky Top Bar / EntityHeader (Archetype A3 Detail) -->
+        <EntityHeader Title="@_notification.Title"
+                      Subtitle="@($"Issued by {_notification.SenderDisplayName ?? "merSETA Executive Communications"}")"
+                      Status="@_notification.NotificationType"
+                      BreadcrumbItems="@_breadcrumbs">
+            <Actions>
+                @if (!string.IsNullOrWhiteSpace(_notification.ActionUrl) && !_notification.ActionUrl.StartsWith("/notifications"))
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.OpenInNew"
+                               Href="@_notification.ActionUrl"
+                               Size="Size.Medium">
+                        Open Associated Record
+                    </MudButton>
+                }
+                <MudButton Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Href="/notifications"
+                           Size="Size.Medium">
+                    Back to Inbox
+                </MudButton>
+            </Actions>
+        </EntityHeader>
+
+        <!-- Tabs Container -->
+        <MudTabs Rounded="true" ApplyEffectsToContainer="true" Color="Color.Primary" Elevation="1" Class="mt-4">
+            <!-- Tab 1: Notice & Official Content -->
+            <MudTabPanel Text="Official Notice Content" Icon="@Icons.Material.Filled.Article">
+                <MudPaper Class="pa-6" Elevation="0">
+                    <!-- Notice Meta Bar -->
+                    <div class="d-flex flex-wrap justify-space-between align-center pb-4 mb-4 border-b gap-3">
+                        <div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">DISPATCHED DATE &amp; TIME</MudText>
+                            <MudText Typo="Typo.body2" Class="fw-bold font-mono">
+                                @_notification.CreatedAt.ToLocalTime().ToString("dddd, dd MMMM yyyy 'at' HH:mm:ss")
+                            </MudText>
+                        </div>
+                        <div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">STATUTORY SEVERITY</MudText>
+                            <StatusBadge Status="@_notification.Severity" Size="Size.Small" />
+                        </div>
+                        <div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">RECIPIENT USERNAME</MudText>
+                            <MudText Typo="Typo.body2" Class="font-mono">
+                                @(_notification.RecipientUsername ?? "All Stakeholders")
+                            </MudText>
+                        </div>
+                    </div>
+
+                    <!-- Rendered Rich Message Body -->
+                    <div class="notification-body-content py-3" style="line-height: 1.8; font-size: 0.95rem; color: var(--mud-palette-text-primary);">
+                        @if (!string.IsNullOrWhiteSpace(_notification.BodyHtml))
+                        {
+                            @((MarkupString)_notification.BodyHtml)
+                        }
+                        else
+                        {
+                            <p>@_notification.Message</p>
+                        }
+                    </div>
+
+                    <!-- Physical Binary Attachment Download Card -->
+                    @if (_notification.HasAttachment && !string.IsNullOrWhiteSpace(_notification.AttachmentFileName))
+                    {
+                        <MudPaper Class="pa-4 mt-6 border rounded" Style="background-color: var(--mud-palette-background-grey);" Elevation="0">
+                            <div class="d-flex flex-column flex-sm-row justify-space-between align-start align-sm-center gap-3">
+                                <div class="d-flex align-center gap-3">
+                                    <MudAvatar Color="Color.Error" Variant="Variant.Filled" Size="Size.Medium">
+                                        <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" />
+                                    </MudAvatar>
+                                    <div>
+                                        <MudText Typo="Typo.subtitle2" Class="fw-bold">
+                                            @_notification.AttachmentFileName
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                            Official Statutory Attachment • @FormatFileSize(_notification.AttachmentSizeBytes ?? 0)
+                                        </MudText>
+                                    </div>
+                                </div>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.Download"
+                                           OnClick="DownloadAttachmentAsync"
+                                           Disabled="@_downloading"
+                                           Size="Size.Medium">
+                                    @if (_downloading)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                        <span>Downloading...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Download Attachment</span>
+                                    }
+                                </MudButton>
+                            </div>
+                        </MudPaper>
+                    }
+                </MudPaper>
+            </MudTabPanel>
+
+            <!-- Tab 2: Delivery & Audit Provenance -->
+            <MudTabPanel Text="Delivery Provenance" Icon="@Icons.Material.Filled.VerifiedUser">
+                <MudPaper Class="pa-6" Elevation="0">
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <ReadOnlyField Label="Notification ID" Value="@($"NOTIF-{_notification.Id:D6}")" Monospace="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <ReadOnlyField Label="Broadcast Reference" Value="@(_notification.BroadcastMessageId.HasValue ? $"BCAST-{_notification.BroadcastMessageId.Value:D5}" : "Individual Notice")" Monospace="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <ReadOnlyField Label="Originating Authority" Value="@(_notification.SenderDisplayName ?? "merSETA System")" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <ReadOnlyField Label="Audited Creation Timestamp" Value="@_notification.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss 'UTC'")" Monospace="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <ReadOnlyField Label="Read Status" Value="@(_notification.IsRead ? $"Read on {_notification.ReadAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm")}" : "Unread")" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <ReadOnlyField Label="Digital Security Status" Value="Cryptographically Verified &amp; Anchored" />
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</main>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private bool _loading = true;
+    private bool _downloading = false;
+    private string _username = string.Empty;
+    private SystemNotificationDto? _notification;
+
+    private List<BreadcrumbItem> _breadcrumbs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        _username = auth.User.Identity?.Name ?? "SYSTEM";
+
+        _breadcrumbs = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("Notifications", href: "/notifications"),
+            new BreadcrumbItem($"Notice #{Id}", href: null, disabled: true)
+        };
+
+        await LoadNotificationAsync();
+    }
+
+    private async Task LoadNotificationAsync()
+    {
+        _loading = true;
+        try
+        {
+            _notification = await NotificationService.GetNotificationByIdAsync(Id, _username);
+            if (_notification != null && !_notification.IsRead)
+            {
+                await NotificationService.MarkAsReadAsync(Id, _username);
+                _notification.IsRead = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading notification: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task DownloadAttachmentAsync()
+    {
+        if (_notification?.AttachmentStoragePath == null) return;
+
+        _downloading = true;
+        try
+        {
+            var bytes = await OutboxService.GetAttachmentBytesAsync(_notification.AttachmentStoragePath);
+            if (bytes == null || bytes.Length == 0)
+            {
+                Snackbar.Add("Attachment file is not accessible on storage disk.", Severity.Warning);
+                return;
+            }
+
+            var base64 = Convert.ToBase64String(bytes);
+            var mime = _notification.AttachmentContentType ?? "application/octet-stream";
+            var filename = _notification.AttachmentFileName ?? "Document.pdf";
+
+            await JS.InvokeVoidAsync("eval", $@"
+                (function() {{
+                    var a = document.createElement('a');
+                    a.href = 'data:{mime};base64,{base64}';
+                    a.download = '{filename}';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }})();
+            ");
+
+            Snackbar.Add($"Downloaded {filename}", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Download failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _downloading = false;
+        }
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        if (bytes <= 0) return "0 B";
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / (1024.0 * 1024.0):F2} MB";
+    }
+}

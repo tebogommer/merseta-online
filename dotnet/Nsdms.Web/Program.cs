@@ -343,6 +343,11 @@ builder.Services.AddScoped<IMetricsScraperService, MetricsScraperService>();
 // Module 18: Interest and Conflict of Interest (COI) Management
 builder.Services.AddScoped<IConflictManagementService, ConflictManagementService>();
 
+// Module 19: Enterprise Broadcast Messaging, Outbox Queue & Office 365 Rate Limiting
+builder.Services.AddScoped<IEmailTransportService, EmailTransportService>();
+builder.Services.AddScoped<IEmailOutboxService, EmailOutboxService>();
+builder.Services.AddHostedService<ThrottledEmailOutboxWorker>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -795,6 +800,7 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase50DocumentTemplateVersioningAndHtmlStudio", () => Phase50DocumentTemplateVersioningAndHtmlStudioMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase51OpenKnowledgeFormat", () => Phase51OpenKnowledgeFormatMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase52InterestAndConflictManagement", () => Phase52InterestAndConflictManagementMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase53BroadcastMessagingAndEmailThrottling", () => Phase53BroadcastMessagingAndEmailThrottlingMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
     RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
     RunMigrator("SystemConfigs", () => scope.ServiceProvider.GetRequiredService<ISystemConfigurationService>().SeedDefaultConfigsAsync().GetAwaiter().GetResult());
