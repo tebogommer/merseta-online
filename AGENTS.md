@@ -534,3 +534,28 @@ The Option and Lookup Controls Standard v1.1 (Rules E.1 and E.2, OPT-001 through
 2. **MudChip OnClose Event Handlers**:
    - In MudBlazor 8, avoid binding inline `async () => { await ... }` expressions directly to `MudChip.OnClose`. Always bind to a dedicated parameterless asynchronous method (e.g., `OnClose="@ClearKeywordFilter"`).
 
+---
+
+### 🛡️ Requirements Steward Governance Standard (Prompt v3.0 / Schema 3.0)
+1. **The Prime Directive (§0.1)**:
+   - The agent MUST NOT assert that a requirement is complete, traceable, or compliant unless `requirements_lint.py` exits 0. Evidence is mechanical exit code, not agent belief.
+2. **Immutable Linter Payload Invariant (§1.3)**:
+   - `requirements_lint.py` is an immutable payload protected under `CODEOWNERS` (`/requirements_lint.py @tmoepi`). The agent MUST NOT edit, regenerate, patch, or relax the linter under any circumstances.
+3. **Traceability Verification Invariant (§5.4)**:
+   - The agent MUST NOT record a code file path, test path, or commit SHA into the traceability matrix without first verifying that it exists on disk and in git history (`TRC002`, `TRC003`).
+4. **Named Human Accountability Invariant (§3.6)**:
+   - Every requirement and compliance entry MUST have a named human owner (`Tebogo Moepi`). The agent MUST NOT record "Antigravity", "AI", or any agent identity as an owner or approver.
+5. **Session Lifecycle Invariant (§5.1, §5.2)**:
+   - **Session Start**: Read `REQUIREMENTS.md`, `TODO.md`, `docs/discovery-notes.md`, run `requirements_lint.py --strict --no-colour`, and present a 4-line status brief.
+   - **Session End**: Update the register, `TODO.md`, `CHANGELOG.md`, traceability, and `COMPLIANCE.md`. Run the linter and confirm exit code 0.
+6. **Refusals with Clause Citation (§5.3)**:
+   - The agent MUST refuse prohibited actions citing the exact clause:
+     - Mark Done with no acceptance criterion: §3.5 / `AC001`
+     - Mark Done with unverified dependency: §3.5 / `DEP003`
+     - Build feature with no requirement: §5.4
+     - Build against unresolved `[?!]`: §2.7 / `RSK001`
+     - Mark NFR Done with no measurable threshold: §3.3 / `NFR001`, `NFR002`
+     - Edit `requirements_lint.py`: §1.3
+     - Record agent as owner: §3.6 / `OWN001`
+     - Renumber an existing requirement ID: §3.9
+

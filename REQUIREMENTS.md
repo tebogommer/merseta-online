@@ -1,0 +1,157 @@
+# Requirements Register — merSETA NSDMS
+
+> **Schema Version:** 3.0
+> **Register Revision:** 1.0
+> **Owner:** Tebogo Moepi
+> **Last Updated:** 2026-09-13
+> **Validated:** requirements_lint.py v1.1 — exit 0 — 2026-09-13
+
+---
+
+## Status Legend
+
+| Symbol | Meaning |
+|---|---|
+| `[ ]` | Not started |
+| `[~]` | In progress |
+| `[x]` | Done & verified |
+| `[!]` | Blocked or conflict |
+| `[?!]` | High risk inference (blocks builds) |
+| `[?]` | Functional inference needing validation |
+| `[?~]` | Cosmetic or minor inference |
+| `[d]` | Dropped or deprecated |
+
+---
+
+## Functional Requirements (FR)
+
+| ID | Description | Status | Priority | Class | Owner | Source | Conf | Fingerprint | Depends On | Compliance | Ticket | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FR-001 | Mandatory Grant (WSP/ATR) statutory 30 April submission cutoff and automatic rejection | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:WspService.CreateAsync | - | SDA, SETAREG | NSDMS-FR-001 | Enforces statutory deadline; rejects submissions post-deadline without approved extension. |
+| FR-002 | Mandatory Grant two-tier maker-checker extension request workflow capped at 31 May | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:WspService.AdjudicateExtensionAsync | FR-001 | SDA, SETAREG, PFMA | NSDMS-FR-002 | Review by CLO and adjudication by Executive Authority; enforces segregation of duties. |
+| FR-003 | Discretionary Grant funding window configuration engine and 1-click blueprint templates | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:GrantService.CreateFundingWindowAsync | - | SDLA, PFMA | NSDMS-FR-003 | Decoupled window timeframes, blueprint cloning, and dynamic eligibility tags. |
+| FR-004 | Discretionary Grant hybrid application intake and consolidated single-MoA budget rollup | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:GrantService.CreateApplicationAsync | FR-003 | SDLA, PFMA | NSDMS-FR-004 | Consolidates PIVOTAL training plans and strategic project deliverables into one MoA. |
+| FR-005 | Artisan trade test 2-tier regional recommendation, QA approval, and serial generation | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:TradeTestAndArplService.ApproveRegionalQaAsync | - | SDA, QCTO, NAMB | NSDMS-FR-005 | Regional CLA recommendation to QA approval; issues unique trade test serial number. |
+| FR-006 | 17 designated trade toolkit whitelist enforcement and 50% practical task credit retention | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:TradeTestAndArplService.EvaluateTradeEligibility | FR-005 | SDA, NAMB | NSDMS-FR-006 | Whitelist restricted to 17 designated trades; retains passed task credits for 18 months. |
+| FR-007 | Artisan mentor-to-apprentice ratio policy engine with 5-tier cascading precedence | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:MentorRatioPolicyEngine.EvaluateWorkplaceApprovalCapacityAsync | - | SDA, QCTO, NAMB | NSDMS-FR-007 | Evaluates mentor overrides, workplace caps, org exemptions, trade policy, and system config. |
+| FR-008 | Learner enrolment tripartite agreement intake, dual-channel STP, and RSA ID validation | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:LearnerService.RegisterLearnerAsync | - | SDA, POPIA, SETMIS | NSDMS-FR-008 | Captures employer, learner, and SDP tripartite commitments; validates 13-digit RSA ID. |
+| FR-009 | Universal QuestPDF 2D barcode verification seal and anonymous public verification portal | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:DocumentVerificationService.CreateAndFreezeDocumentSnapshotAsync | - | POPIA, PFMA | NSDMS-FR-009 | Renders tamper-evident QR verification seal; masks personal ID numbers per POPIA. |
+| FR-010 | Monthly SARS levy file reactive streaming pipeline, digital seal check, and bulk staging | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:SarsLevyStreamingPipeline.StreamProcessLevyFileAsync | - | SDLA, PFMA | NSDMS-FR-010 | Constant-memory streaming; verifies security seal and stages records via SqlBulkCopy. |
+| FR-011 | DHET SETMIS statutory flat-file batch extract engine across all 11 standard files | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:SetmisExtractService.GenerateBatchAsync | FR-008 | SDA, SETMIS | NSDMS-FR-011 | Produces positional flat files strictly adhering to exact character width specifications. |
+| FR-012 | SAQA NLRD Edu.Dex statutory flat-file export pipeline for Supplier Code 599 | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:NlrdExtractService.GenerateBatchAsync | FR-008 | SDA, NLRD | NSDMS-FR-012 | Formats SAQA Edu.Dex extracts prepended with statutory HEADER599 records. |
+| FR-013 | Institutional non-working day calendar management and universal officer SLA pause engine | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:WorkingDayCalculationEngine.AddBusinessDays | - | PFMA | NSDMS-FR-013 | Computes public holidays and merSETA shutdowns; pauses workflow SLA timers dynamically. |
+| FR-014 | PFMA interest declaration, institutional shareholder scan, and conflict review queue | [x] | HIGH | Class A | Tebogo Moepi | CODE | HIGH | svc:ConflictManagementService.ScanMeetingConflictsAsync | - | PFMA, POPIA | NSDMS-FR-014 | Captures annual declarations of interest, links shareholdings, and automates meeting scans. |
+| FR-015 | Open Knowledge Format (OKF) statutory concept catalog, parser, and T-SQL attestation | [x] | HIGH | Class B | Tebogo Moepi | CODE | HIGH | svc:KnowledgeCatalogService.VerifyConceptAsync | - | PFMA | NSDMS-FR-015 | Maintains living statutory concept definitions with mathematical and T-SQL attestation. |
+
+---
+
+## Non-Functional Requirements (NFR)
+
+| ID | Description | Threshold | Measurement Method | Status | Category | Owner | Source | Conf |
+|---|---|---|---|---|---|---|---|---|
+| NFR-001 | Read Committed Snapshot Isolation (RCSI) non-blocking query concurrency | 0 deadlocks across 100 concurrent simulation workers | Measured via SQL Server deadlock monitor and PerformanceBenchmarksTests.cs | [x] | Performance | Tebogo Moepi | CODE | HIGH |
+| NFR-002 | MudBlazor DataGrid server-side pagination index seek execution latency | p95 query execution time under 50 ms on 500k row tables | Measured via SQL Server sys.dm_exec_query_stats and PerformancePagingTests.cs | [x] | Performance | Tebogo Moepi | CODE | HIGH |
+| NFR-003 | Asynchronous QuestPDF document generation interactive circuit decoupling | 0 ms blocking on Blazor Server interactive circuit thread | Measured via BackgroundJobProcessingWorker latency logs and PdfDocumentGenerationTests.cs | [x] | Performance | Tebogo Moepi | CODE | HIGH |
+| NFR-004 | POPIA confidential 13-digit RSA National ID masking on public portals | 100% of public responses mask digits 7 to 10 (e.g. 9504******082) | Verified via PopiaMaskingAndAuditRedactionTests.cs test suite | [x] | Security | Tebogo Moepi | CODE | HIGH |
+
+---
+
+## Business Rules (BR)
+
+| ID | Rule | Source | Notes |
+|---|---|---|---|
+| BR-001 | Annual Mandatory Grant submission window closes strictly at 23:59 on 30 April | SETA Grant Regulations (2012) Reg 4(1) | Submissions past deadline are actively rejected unless an approved extension exists. |
+| BR-002 | Approved Mandatory Grant extensions cannot exceed 31 May of the scheme year | SETA Grant Regulations (2012) Reg 4(2) | Hard statutory boundary; system rejects any extension date beyond 31 May. |
+| BR-003 | Mandatory Grant rebate is strictly 20% of employer statutory SDL levy contributions | Skills Development Levies Act 9 of 1999 | Unclaimed Mandatory Grant funds sweep into the Discretionary Grant funding pool. |
+| BR-004 | Toolkit assessment is whitelisted strictly to 17 designated national trades | NAMB ARPL & Trade Test Specification 2023 | Practical task credits (>=50%) are retained for 18 months or up to 3 attempts. |
+| BR-005 | Maximum artisan mentor-to-apprentice ratio defaults to 1:4 and is capped at 1:6 | NAMB Criteria & Guidelines for Workplace Approval | Policy resolution evaluates mentor, workplace, organisation, and trade overrides. |
+| BR-006 | Dual authorisation control prohibits self-review or self-approval on all workflows | PFMA Act 1 of 1999 §38(1)(a)(i) | Enforced by validating that ProposerUserId does not equal ApproverUserId. |
+
+---
+
+## Architectural Decisions (DEC)
+
+| ID | Decision | Rationale | Implications | Date |
+|---|---|---|---|---|
+| DEC-001 | System-versioned temporal tables for all persistent domain entities | Provides tamper-evident point-in-time state reconstruction for statutory audits | High-velocity append-only tables use BaseLongEntity to avoid int overflow | 2026-08-30 |
+| DEC-002 | Stacked Master-Detail View-by-Default layout pattern across all entity pages | Prevents accidental data modifications and enforces uniform enterprise UX | Detail routes /{id} are strictly read-only; editing is isolated to /{id}/edit | 2026-08-30 |
+| DEC-003 | Decoupled background job pipeline using System.Threading.Channels | Isolates heavy CPU tasks from Blazor interactive UI circuits | Outcomes delivered via streaming download endpoints and SignalR notifications | 2026-08-31 |
+| DEC-004 | Mandatory audited double-write on all entity mutations | Enforces PFMA and AGSA non-repudiation audit trails across the system | Service operations must wrap entity persistence and audit logging atomically | 2026-08-30 |
+| DEC-005 | Dynamic system configuration with cascading database overrides | Enables runtime parameter adjustments without requiring code recompilation | Services inject ISystemConfigurationService and pass fallback constants | 2026-08-30 |
+
+---
+
+## Assumptions & Risks (ASM)
+
+| ID | Assumption | Basis | Expires / Revisit | If False, Affects |
+|---|---|---|---|---|
+| ASM-001 | Annual WSP submission volumes will remain under 60,000 participating employers | 2025/2026 SETA statutory intake statistics | 2027 Scheme Year Intake | FR-001, NFR-002 |
+| ASM-002 | Monthly SARS electronic levy files will contain fewer than 250,000 transaction lines | Historical monthly SARS levy staging volumes | 2027 Q2 SARS Review | FR-010, NFR-001 |
+
+---
+
+## Acceptance Criteria (AC)
+
+| Req ID | Criterion (GIVEN / WHEN / THEN) | Source | Verified |
+|---|---|---|---|
+| FR-001 | GIVEN an employer attempts to submit a WSP AFTER the statutory deadline of 30 April WHEN no approved extension exists THEN the system actively rejects the submission with a statutory non-compliance message. | SPEC | [x] |
+| FR-002 | GIVEN an employer with an active WSP extension request WHEN the reviewing CLO recommends approval THEN an independent executive officer approves the request capping the granted deadline at 31 May. | SPEC | [x] |
+| FR-003 | GIVEN a funding window administrator WHEN selecting a pre-configured window blueprint THEN the system provisions a new Discretionary Grant window pre-populated with gazetted eligibility criteria. | SPEC | [x] |
+| FR-004 | GIVEN a hybrid Discretionary Grant application WHEN the applicant submits both PIVOTAL and non-PIVOTAL interventions THEN the requested amounts roll up into a single consolidated grant budget. | SPEC | [x] |
+| FR-005 | GIVEN an artisan trade test application WHEN regional QA approval is granted THEN the system issues an official Trade Test Serial Number formatted as TT-SER-{yyyy}-{id:D5}. | SPEC | [x] |
+| FR-006 | GIVEN a candidate evaluated on designated trade practical tasks WHEN the candidate passes 50% or more tasks THEN passed task credits are retained for 18 months or 3 attempts. | SPEC | [x] |
+| FR-007 | GIVEN an artisan workplace approval evaluation WHEN apprentice allocations are calculated THEN the policy engine evaluates mentor overrides before falling back to trade policy caps. | SPEC | [x] |
+| FR-008 | GIVEN a learner registration request WHEN tripartite details and RSA ID checksum are validated THEN the learner is enrolled with straight-through processing status. | SPEC | [x] |
+| FR-009 | GIVEN an official outcome document generated via QuestPDF WHEN scanned via the public portal THEN the system displays validity details while masking the 13-digit RSA National ID. | SPEC | [x] |
+| FR-010 | GIVEN a 100k-line SARS levy electronic file WHEN ingested by the reactive pipeline THEN transaction lines stream into staging without exceeding steady-state memory limits. | SPEC | [x] |
+| FR-011 | GIVEN an approved SETMIS submission batch WHEN generating flat files THEN all 11 files strictly conform to statutory positional character widths without delimiters. | SPEC | [x] |
+| FR-012 | GIVEN an NLRD statutory export batch WHEN compiling extracts THEN each file begins with the statutory HEADER599 record matching exact SAQA specification widths. | SPEC | [x] |
+| FR-013 | GIVEN an approved non-working day or shutdown marked AffectsSla WHEN calculating officer task deadlines THEN the SLA calculation engine pauses the countdown timer. | SPEC | [x] |
+| FR-014 | GIVEN an adjudication committee meeting agenda WHEN conflict scanning is executed THEN the system detects shared institutional directorships and flags potential conflicts. | SPEC | [x] |
+| FR-015 | GIVEN an Open Knowledge Format statutory concept document WHEN verified by an authorized officer THEN the attestation engine confirms T-SQL attestation formulas. | SPEC | [x] |
+
+---
+
+## Traceability Matrix (TRC)
+
+| Req ID | Code Files | Test Files | Commits |
+|---|---|---|---|
+| FR-001 | dotnet/Nsdms.Application/Services/WspService.cs | dotnet/Nsdms.Tests/WspServiceTests.cs | 4ccfd45 |
+| FR-002 | dotnet/Nsdms.Application/Services/WspService.cs | dotnet/Nsdms.Tests/MgWindowMakerCheckerTests.cs | 0e5ca2c |
+| FR-003 | dotnet/Nsdms.Application/Services/GrantService.cs | dotnet/Nsdms.Tests/GrantServiceTests.cs | 862938b |
+| FR-004 | dotnet/Nsdms.Application/Services/GrantService.cs | dotnet/Nsdms.Tests/GrantServiceTests.cs | 862938b |
+| FR-005 | dotnet/Nsdms.Application/Services/TradeTestAndArplService.cs | dotnet/Nsdms.Tests/NambBatchAndPracticalRubricTests.cs | 8320619 |
+| FR-006 | dotnet/Nsdms.Application/Services/TradeTestAndArplService.cs | dotnet/Nsdms.Tests/NambBatchAndPracticalRubricTests.cs | 8320619 |
+| FR-007 | dotnet/Nsdms.Application/Services/MentorRatioPolicyEngine.cs | dotnet/Nsdms.Tests/MentorRatioPolicyEngineTests.cs | 483e712 |
+| FR-008 | dotnet/Nsdms.Application/Services/LearnerService.cs | dotnet/Nsdms.Tests/LearnerServiceTests.cs | 6eb2d42 |
+| FR-009 | dotnet/Nsdms.Application/Services/DocumentVerificationService.cs | dotnet/Nsdms.Tests/UniversalDocumentVerificationTests.cs | 4ccfd45 |
+| FR-010 | dotnet/Nsdms.Application/Services/SarsLevyStreamingPipeline.cs | dotnet/Nsdms.Tests/SarsLevyStreamingPipelineTests.cs | 862938b |
+| FR-011 | dotnet/Nsdms.Application/Services/SetmisExtractService.cs | dotnet/Nsdms.Tests/StatutoryExtractEngineTests.cs | 6eb2d42 |
+| FR-012 | dotnet/Nsdms.Application/Services/NlrdExtractService.cs | dotnet/Nsdms.Tests/StatutoryExtractEngineTests.cs | 6eb2d42 |
+| FR-013 | dotnet/Nsdms.Application/Services/WorkingDayCalculationEngine.cs | dotnet/Nsdms.Tests/HolidayAndClosureTests.cs | bf993f7 |
+| FR-014 | dotnet/Nsdms.Application/Services/ConflictManagementService.cs | dotnet/Nsdms.Tests/ConflictManagementServiceTests.cs | 780c035 |
+| FR-015 | dotnet/Nsdms.Application/Services/KnowledgeCatalogService.cs | dotnet/Nsdms.Tests/KnowledgeCatalogTests.cs | 780c035 |
+
+---
+
+## Compliance Matrix (CMP)
+
+| Tag | Statutory Source / Standard | Meaning |
+|---|---|---|
+| SDA | Skills Development Act 97 of 1998 | Governs workplace skills planning, learnership agreements, and artisan trade testing. |
+| SDLA | Skills Development Levies Act 9 of 1999 | Governs collection, calculation, and distribution of statutory skills levies. |
+| SETAREG | SETA Grant Regulations (2012) | Governs Mandatory and Discretionary Grant allocations, windows, and deadlines. |
+| PFMA | Public Finance Management Act 1 of 1999 | Governs financial controls, delegations, dual authorisation, and ethics disclosures. |
+| POPIA | Protection of Personal Information Act 4 of 2013 | Governs confidentiality, consent, and masking of national identity numbers. |
+| QCTO | Quality Council for Trades and Occupations | Governs occupational qualification accreditation and SDP quality assurance. |
+| NAMB | National Artisan Moderation Body | Governs national artisan trade testing standards, toolkits, and mentor ratios. |
+| SETMIS | Higher Education SETMIS Standard | Governs Department of Higher Education statutory flat-file reporting specifications. |
+| NLRD | SAQA National Learners' Records Database | Governs SAQA Edu.Dex data submission specifications for Supplier 599. |
+
+---
+
+## Change Log
+
+| Version | Date | Author | Trigger | Changes |
+|---|---|---|---|---|
+| 1.0 | 2026-09-13 | Tebogo Moepi | Schema 3.0 Bootstrap | Initialized living requirements register with 15 verified functional requirements, 4 measurable NFRs, 6 business rules, 5 architecture decisions, and full traceability. |

@@ -1,0 +1,34 @@
+name: Requirements Gate
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'REQUIREMENTS.md'
+      - 'COMPLIANCE.md'
+      - '.requirements-lint.json'
+      - 'requirements_lint.py'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'REQUIREMENTS.md'
+      - 'COMPLIANCE.md'
+      - '.requirements-lint.json'
+      - 'requirements_lint.py'
+
+jobs:
+  validate-requirements:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Requirements Linter Gate
+        run: |
+          python requirements_lint.py --no-colour --strict
