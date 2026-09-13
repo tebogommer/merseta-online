@@ -6,9 +6,24 @@ using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
 
+public record PersonLookupDto(
+    int Id,
+    string FullName,
+    string? RsaIdNumber,
+    string? PassportNumber,
+    string? Email,
+    string? PhoneNumber)
+{
+    public string DisplayText => string.IsNullOrWhiteSpace(RsaIdNumber) 
+        ? $"{FullName} ({Email ?? PhoneNumber ?? "ID: " + Id})" 
+        : $"{FullName} (ID: {RsaIdNumber})";
+}
+
 public interface IPersonService
 {
     Task<List<Person>> GetAllAsync(string? search = null);
+    Task<List<PersonLookupDto>> SearchLookupAsync(string? search, int limit = 20, CancellationToken cancellationToken = default);
+    Task<PersonLookupDto?> GetLookupByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<PagedResult<PersonListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default);
     Task<Person?> GetByIdAsync(int id);
     Task<Person?> GetByRsaIdAsync(string rsaId);
@@ -95,6 +110,56 @@ public class PersonService : IPersonService
         return new PagedResult<PersonListDto>(items, totalCount, query.PageIndex, query.PageSize);
     }
 
+    public async Task<List<PersonLookupDto>> SearchLookupAsync(string? search, int limit = 20, CancellationToken cancellationToken = default)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var query = db.People.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim();
+            query = query.Where(p =>
+                p.FirstName.Contains(s) ||
+                p.LastName.Contains(s) ||
+                p.RsaIdNumber.Contains(s) ||
+                (p.PassportNumber != null && p.PassportNumber.Contains(s)) ||
+                (p.Email != null && p.Email.Contains(s)) ||
+                (p.PhoneNumber != null && p.PhoneNumber.Contains(s)));
+        }
+
+        var results = await query
+            .OrderBy(p => p.LastName)
+            .ThenBy(p => p.FirstName)
+            .Take(limit)
+            .Select(p => new PersonLookupDto(
+                p.Id,
+                $"{p.FirstName} {p.LastName}".Trim(),
+                p.RsaIdNumber,
+                p.PassportNumber,
+                p.Email,
+                p.PhoneNumber
+            ))
+            .ToListAsync(cancellationToken);
+
+        return results;
+    }
+
+    public async Task<PersonLookupDto?> GetLookupByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var p = await db.People.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (p == null) return null;
+
+        return new PersonLookupDto(
+            p.Id,
+            $"{p.FirstName} {p.LastName}".Trim(),
+            p.RsaIdNumber,
+            p.PassportNumber,
+            p.Email,
+            p.PhoneNumber
+        );
+    }
+
     public async Task<List<Person>> GetAllAsync(string? search = null)
     {
         using var db = await _contextFactory.CreateDbContextAsync();
@@ -115,6 +180,7 @@ public class PersonService : IPersonService
         return await query
             .OrderBy(p => p.LastName)
             .ThenBy(p => p.FirstName)
+            .Take(50)
             .ToListAsync();
     }
 

@@ -1,0 +1,244 @@
+@namespace Nsdms.Web.Components.Pages.Employers.Tabs
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Services
+@using Nsdms.Application.Common.Models
+@using Nsdms.Web.Components.Shared
+@inject IOrganisationService OrgService
+@inject IPersonService PersonService
+@inject ILookupService LookupService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h6">Physical Operating Sites & Branches</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">Branch offices, training centres, workshops, and facilities</MudText>
+    </div>
+    @if (OrganisationId > 0)
+    {
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddLocation" OnClick="OpenAddSiteForm" aria-label="Add Operating Site or Branch">
+            Add Site / Branch
+        </MudButton>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Dense="true">Save the organisation first to add physical sites.</MudAlert>
+    }
+</div>
+
+@if (_showAddSiteForm)
+{
+    <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
+        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Register Operating Branch / Site</MudText>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string" Label="Site / Branch Name" @bind-Value="_newSite.SiteName" Required="true" Variant="Variant.Outlined" Placeholder="e.g. Rosslyn Manufacturing Plant" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField T="string" Label="Site Code / Number" @bind-Value="_newSite.SiteCode" Variant="Variant.Outlined" Placeholder="e.g. SITE-002" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" Label="Province" @bind-Value="_newSite.ProvinceCode" Variant="Variant.Outlined">
+                    @foreach (var p in _provinces)
+                    {
+                        <MudSelectItem Value="@p.Code">@p.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string" Label="Physical Address" @bind-Value="_newSite.PhysicalAddress" Variant="Variant.Outlined" Lines="2" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField T="string" Label="City" @bind-Value="_newSite.City" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField T="string" Label="Postal Code" @bind-Value="_newSite.PostalCode" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudAutocomplete T="PersonLookupDto"
+                                 Label="Branch Site Contact Person"
+                                 Value="_siteContactPersonDto"
+                                 ValueChanged="OnSiteContactPersonChanged"
+                                 SearchFunc="SearchPeopleAsync"
+                                 ToStringFunc="@(p => p != null ? p.DisplayText : string.Empty)"
+                                 Variant="Variant.Outlined"
+                                 Clearable="true"
+                                 DebounceInterval="300"
+                                 MinCharacters="2"
+                                 MaxItems="20"
+                                 Dense="true"
+                                 Placeholder="Search registry by name, RSA ID, or email..."
+                                 HelperText="Search central registry for branch contact" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSwitch T="bool" @bind-Value="_newSite.IsHeadOffice" Color="Color.Primary" Label="Designate as Main Head Office" />
+            </MudItem>
+            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="CancelAddSiteForm">Cancel</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Check" OnClick="SaveNewSite">Save Operating Site</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudCard>
+}
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else
+{
+    <MudTable Items="_sites" Hover="true" Dense="true" Striped="true">
+        <HeaderContent>
+            <MudTh>Site Name</MudTh>
+            <MudTh>Site Code</MudTh>
+            <MudTh>Address & City</MudTh>
+            <MudTh>Province</MudTh>
+            <MudTh>Site Contact</MudTh>
+            <MudTh>Head Office</MudTh>
+            <MudTh Style="text-align:right">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Site Name">
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Primary" Size="Size.Small" />
+                    <MudText Typo="Typo.body2" Class="fw-bold">@context.SiteName</MudText>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Code">@(!string.IsNullOrWhiteSpace(context.SiteCode) ? context.SiteCode : "-")</MudTd>
+            <MudTd DataLabel="Address">@(context.PhysicalAddress ?? "-"), @(context.City ?? "-")</MudTd>
+            <MudTd DataLabel="Province">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@(context.ProvinceCode ?? "GP")</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Contact">
+                @(context.PrimaryContactPerson != null ? $"{context.PrimaryContactPerson.FirstName} {context.PrimaryContactPerson.LastName}" : "-")
+            </MudTd>
+            <MudTd DataLabel="Head Office">
+                @if (context.IsHeadOffice)
+                {
+                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">Head Office</MudChip>
+                }
+            </MudTd>
+            <MudTd Style="text-align:right" DataLabel="Actions">
+                <MudTooltip Text="Delete Site">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => ConfirmRemoveSite(context.Id, context.SiteName))" aria-label="Delete Site" />
+                </MudTooltip>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <div class="pa-4 text-center">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">No branch or operating sites recorded.</MudText>
+            </div>
+        </NoRecordsContent>
+    </MudTable>
+}
+
+@code {
+    [Parameter] public int OrganisationId { get; set; }
+    [Parameter] public string? DefaultProvinceCode { get; set; }
+
+    private bool _loading = true;
+    private List<OrganisationSite> _sites = new();
+    private List<LookupItemDto> _provinces = new();
+
+    private bool _showAddSiteForm = false;
+    private OrganisationSite _newSite = new();
+    private PersonLookupDto? _siteContactPersonDto;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _provinces = await LookupService.GetLookupItemsAsync("ProvinceType");
+        await LoadSitesAsync();
+    }
+
+    private async Task LoadSitesAsync()
+    {
+        if (OrganisationId <= 0) return;
+        _loading = true;
+        try
+        {
+            _sites = await OrgService.GetSitesAsync(OrganisationId);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task<IEnumerable<PersonLookupDto>> SearchPeopleAsync(string search, CancellationToken ct)
+    {
+        return await PersonService.SearchLookupAsync(search, limit: 20, cancellationToken: ct);
+    }
+
+    private void OpenAddSiteForm()
+    {
+        _siteContactPersonDto = null;
+        _newSite = new OrganisationSite
+        {
+            OrganisationId = OrganisationId,
+            ProvinceCode = DefaultProvinceCode ?? "GP",
+            IsActive = true
+        };
+        _showAddSiteForm = true;
+    }
+
+    private void CancelAddSiteForm()
+    {
+        _showAddSiteForm = false;
+    }
+
+    private void OnSiteContactPersonChanged(PersonLookupDto? selected)
+    {
+        _siteContactPersonDto = selected;
+        _newSite.PrimaryContactPersonId = selected?.Id;
+    }
+
+    private async Task SaveNewSite()
+    {
+        if (string.IsNullOrWhiteSpace(_newSite.SiteName))
+        {
+            Snackbar.Add("Site Name is required.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _newSite.OrganisationId = OrganisationId;
+            await OrgService.AddSiteAsync(_newSite, "Admin");
+            Snackbar.Add("Operating site registered successfully with audit log.", Severity.Success);
+            _showAddSiteForm = false;
+            await LoadSitesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding site: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ConfirmRemoveSite(int siteId, string siteName)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Delete Operating Site" },
+            { x => x.Consequence, $"Are you sure you want to delete operating site '{siteName}'? Any active workplace approvals or visits linked to this site will require re-association." },
+            { x => x.ConfirmLabel, "Delete Site" },
+            { x => x.IsDestructive, true }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Site", parameters);
+        var result = await dialog.Result;
+        if (result == null || result.Canceled) return;
+
+        try
+        {
+            var removed = await OrgService.RemoveSiteAsync(siteId, "Admin");
+            if (removed)
+            {
+                Snackbar.Add("Site removed successfully with audit log.", Severity.Success);
+                await LoadSitesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing site: {ex.Message}", Severity.Error);
+        }
+    }
+}

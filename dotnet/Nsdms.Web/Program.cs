@@ -182,6 +182,11 @@ builder.Services.AddScoped<IFeatureFlagService, FeatureFlagService>();
 // Advanced Administration Catalog & Search Engine
 builder.Services.AddScoped<IAdminCatalogService, AdminCatalogService>();
 
+// Module 17: Open Knowledge Format (OKF v0.2) Living Knowledge & Attestation Engine
+builder.Services.AddSingleton<Nsdms.Application.Interfaces.IOkfFrontmatterParser, Nsdms.Application.Services.OkfFrontmatterParser>();
+builder.Services.AddScoped<Nsdms.Application.Interfaces.IKnowledgeCatalogService, Nsdms.Application.Services.KnowledgeCatalogService>();
+builder.Services.AddScoped<Nsdms.Application.Interfaces.ITsqlAttestationEngine, Nsdms.Infrastructure.Services.TsqlAttestationEngine>();
+
 // Grid View Preferences Persistence (Clause 11.2.7)
 builder.Services.AddScoped<IGridViewPreferenceService, GridViewPreferenceService>();
 
@@ -300,6 +305,7 @@ builder.Services.AddScoped<ISqlBulkBatchIngestionService, Nsdms.Infrastructure.S
 
 // Universal Document Template & Cryptographic Verification Engine (Strategic Action Items)
 builder.Services.AddScoped<IDocumentVerificationService, DocumentVerificationService>();
+builder.Services.AddScoped<IDocumentPlaceholderRegistry, DocumentPlaceholderRegistry>();
 builder.Services.AddScoped<IEnterpriseDocumentTemplateService, EnterpriseDocumentTemplateService>();
 builder.Services.AddScoped<IDocumentIngestionBarcodeService, Nsdms.Infrastructure.Services.DocumentIngestionBarcodeService>();
 
@@ -333,6 +339,9 @@ builder.Services.AddScoped<IAuditLogArchivalService, AuditLogArchivalService>();
 
 // Production APM & Native OpenTelemetry Prometheus Metrics Exporter
 builder.Services.AddScoped<IMetricsScraperService, MetricsScraperService>();
+
+// Module 18: Interest and Conflict of Interest (COI) Management
+builder.Services.AddScoped<IConflictManagementService, ConflictManagementService>();
 
 var app = builder.Build();
 
@@ -783,6 +792,9 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase47DgWindowConfigurationAndBlueprint", () => Phase47DgWindowConfigurationAndBlueprintMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase48SarsLevySetBasedPromotion", () => Phase48SarsLevySetBasedPromotionMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase49GrantApplicationCompositeStructure", () => Phase49GrantApplicationCompositeStructureMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase50DocumentTemplateVersioningAndHtmlStudio", () => Phase50DocumentTemplateVersioningAndHtmlStudioMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase51OpenKnowledgeFormat", () => Phase51OpenKnowledgeFormatMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase52InterestAndConflictManagement", () => Phase52InterestAndConflictManagementMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
     RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
     RunMigrator("SystemConfigs", () => scope.ServiceProvider.GetRequiredService<ISystemConfigurationService>().SeedDefaultConfigsAsync().GetAwaiter().GetResult());

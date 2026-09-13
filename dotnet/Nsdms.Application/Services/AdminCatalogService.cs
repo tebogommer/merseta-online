@@ -720,6 +720,23 @@ public class AdminCatalogService : IAdminCatalogService
             StatusBadgeColor = "Primary",
             DisplayOrder = 18
         });
+
+        items.Add(new AdminSearchItemDto
+        {
+            Key = "MOD-KNOWLEDGE-CATALOG",
+            Title = "Open Knowledge Catalog (OKF v0.2)",
+            Category = AdminCategoryConstants.ComplianceAndStatutory,
+            Description = "Open Knowledge Format living concepts, statutory citations, and attested T-SQL computations.",
+            Icon = "Icons.Material.Filled.MenuBook",
+            RouteUrl = "/admin/knowledge-catalog",
+            ItemType = "Module",
+            CurrentValue = "OKF v0.2 Catalog",
+            ValueType = "Badge",
+            IsEditableInline = false,
+            Tags = new List<string> { "okf", "knowledge", "catalog", "attestation", "concepts", "tsql", "citations", "statutory" },
+            StatusBadgeColor = "Primary",
+            DisplayOrder = 19
+        });
         return items;
     }
 

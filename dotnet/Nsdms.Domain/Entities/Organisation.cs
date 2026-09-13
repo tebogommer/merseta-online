@@ -283,4 +283,14 @@ public class Organisation : BaseEntity
     /// Training provider accreditations associated with this organisation.
     /// </summary>
     public ICollection<TrainingProvider> TrainingProviders { get; set; } = new List<TrainingProvider>();
+
+    /// <summary>
+    /// Legal directors, partners, trustees, board members, and shareholders of this organisation.
+    /// </summary>
+    public ICollection<OrganisationGovernanceMember> GovernanceMembers { get; set; } = new List<OrganisationGovernanceMember>();
+
+    /// <summary>
+    /// Conflict of interest flags raised against this organisation.
+    /// </summary>
+    public ICollection<ConflictFlag> ConflictFlags { get; set; } = new List<ConflictFlag>();
 }

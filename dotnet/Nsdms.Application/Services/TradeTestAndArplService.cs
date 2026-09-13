@@ -956,7 +956,7 @@ public class TradeTestAndArplService : ITradeTestAndArplService
             .Include(t => t.Person)
             .Include(t => t.Organisation)
             .Include(t => t.TrainingProvider)
-            .AsQueryable();
+            .AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(statusCode))
         {

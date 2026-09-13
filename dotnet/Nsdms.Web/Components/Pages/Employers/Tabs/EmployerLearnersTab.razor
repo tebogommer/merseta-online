@@ -1,0 +1,147 @@
+@namespace Nsdms.Web.Components.Pages.Employers.Tabs
+@using Nsdms.Application.Services
+@using Nsdms.Application.Common.Models
+@inject IOrganisationService OrgService
+
+<div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
+    <div>
+        <MudText Typo="Typo.h6">Registered & Hosted Learners (SETMIS Files 500 / 501)</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">All learnerships, apprenticeships, skills programmes, and interns linked to this employer</MudText>
+    </div>
+    <div class="d-flex align-center gap-2">
+        <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">
+            @(_filteredLearners.Count) Enrolled Learners
+        </MudChip>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonSearch" Href="/learners" aria-label="Open Learner Registry">
+            Learner Registry
+        </MudButton>
+    </div>
+</div>
+
+<!-- Learner Search & Programme Filters -->
+<MudPaper Class="pa-3 mb-4 rounded-lg d-flex flex-wrap align-center gap-3" Elevation="1">
+    <MudTextField @bind-Value="_learnerSearch" Placeholder="Search by Learner Name, RSA ID, or Contract Number..."
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                  Immediate="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="flex-grow-1" />
+    <MudSelect T="string" Label="Filter Programme Type" @bind-Value="_selectedProgrammeFilter" Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width: 220px;">
+        <MudSelectItem Value="@("All")">All Programmes</MudSelectItem>
+        <MudSelectItem Value="@("Apprenticeship")">Apprenticeship</MudSelectItem>
+        <MudSelectItem Value="@("Learnership")">Learnership</MudSelectItem>
+        <MudSelectItem Value="@("Skills Programme")">Skills Programme</MudSelectItem>
+        <MudSelectItem Value="@("Internship")">Internship</MudSelectItem>
+        <MudSelectItem Value="@("Bursary")">Bursary</MudSelectItem>
+        <MudSelectItem Value="@("Candidacy")">Candidacy</MudSelectItem>
+        <MudSelectItem Value="@("ARPL")">ARPL</MudSelectItem>
+    </MudSelect>
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else
+{
+    <MudTable Items="_filteredLearners" Hover="true" Dense="true" Striped="true" Elevation="1">
+        <HeaderContent>
+            <MudTh>Learner Name</MudTh>
+            <MudTh>RSA ID / Passport</MudTh>
+            <MudTh>Programme Type</MudTh>
+            <MudTh>Qualification / Trade</MudTh>
+            <MudTh>Contract No</MudTh>
+            <MudTh>Training Provider</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh Style="text-align:right">Action</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Learner Name">
+                <div class="d-flex align-center gap-2">
+                    <MudAvatar Color="Color.Primary" Size="Size.Small">
+                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" />
+                    </MudAvatar>
+                    <div>
+                        <MudLink Href="@($"/learners/{context.PersonId}")" Typo="Typo.body2" Class="fw-bold" Color="Color.Primary">
+                            @context.LearnerFullName
+                        </MudLink>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Registered: @(context.RegistrationDate.HasValue ? context.RegistrationDate.Value.ToString("yyyy-MM-dd") : "-")</MudText>
+                    </div>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="ID / Passport">@(context.RsaIdNumber ?? context.PassportNumber ?? "-")</MudTd>
+            <MudTd DataLabel="Programme">
+                <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">
+                    @context.LearningProgrammeTypeName
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Qualification">
+                <MudText Typo="Typo.body2">@(!string.IsNullOrWhiteSpace(context.QualificationTitle) ? context.QualificationTitle : "Skills Intervention")</MudText>
+                @if (context.NqfLevel.HasValue)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">NQF Level @context.NqfLevel</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="Contract No">@(!string.IsNullOrWhiteSpace(context.LearnerContractNumber) ? context.LearnerContractNumber : "-")</MudTd>
+            <MudTd DataLabel="Provider">@(context.TrainingProviderName ?? "-")</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Color="@GetStatusColor(context.EnrolmentStatusName)" Size="Size.Small" Variant="Variant.Filled">
+                    @context.EnrolmentStatusName
+                </MudChip>
+            </MudTd>
+            <MudTd Style="text-align:right" DataLabel="Action">
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility" Href="@($"/learners/{context.PersonId}")" aria-label="View Learner Details">
+                    View
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <div class="pa-4 text-center">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">No registered learners found for this employer.</MudText>
+            </div>
+        </NoRecordsContent>
+    </MudTable>
+}
+
+@code {
+    [Parameter] public int OrganisationId { get; set; }
+
+    private bool _loading = true;
+    private List<OrganisationLearnerDto> _learners = new();
+    private string _learnerSearch = string.Empty;
+    private string _selectedProgrammeFilter = "All";
+
+    private List<OrganisationLearnerDto> _filteredLearners => _learners
+        .Where(l => _selectedProgrammeFilter == "All" || string.Equals(l.LearningProgrammeTypeName, _selectedProgrammeFilter, StringComparison.OrdinalIgnoreCase))
+        .Where(l => string.IsNullOrWhiteSpace(_learnerSearch) ||
+                    l.LearnerFullName.Contains(_learnerSearch, StringComparison.OrdinalIgnoreCase) ||
+                    (l.RsaIdNumber != null && l.RsaIdNumber.Contains(_learnerSearch, StringComparison.OrdinalIgnoreCase)) ||
+                    (l.LearnerContractNumber != null && l.LearnerContractNumber.Contains(_learnerSearch, StringComparison.OrdinalIgnoreCase)) ||
+                    (l.QualificationTitle != null && l.QualificationTitle.Contains(_learnerSearch, StringComparison.OrdinalIgnoreCase)))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLearnersAsync();
+    }
+
+    private async Task LoadLearnersAsync()
+    {
+        if (OrganisationId <= 0) return;
+        _loading = true;
+        try
+        {
+            _learners = await OrgService.GetLinkedLearnersAsync(OrganisationId);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static Color GetStatusColor(string? status) => status switch
+    {
+        "Achieved" or "Certificated" => Color.Success,
+        "Enrolled / Active" or "Active" or "Registered" => Color.Info,
+        "Transferred" => Color.Warning,
+        "Terminated" => Color.Error,
+        _ => Color.Default
+    };
+}

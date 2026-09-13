@@ -1,0 +1,239 @@
+@page "/governance/declarations/{Id:int}"
+@namespace Nsdms.Web.Components.Pages.Governance
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Common.Interfaces
+@attribute [Authorize(Roles = "SuperAdmin,Admin,Executive,Compliance,InternalAudit,RiskManager,ReviewCommittee")]
+@inject IConflictManagementService ConflictService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<main id="main-content" style="max-width: 1600px; margin: 0 auto; width: 100%;">
+    @if (_isLoading)
+    {
+        <div class="pa-8 text-center">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+            <MudText Typo="Typo.body2" Class="mt-2 text-secondary">Loading declaration certificate...</MudText>
+        </div>
+    }
+    else if (_declaration == null)
+    {
+        <EmptyState Title="Declaration not found"
+                    Description="The requested Declaration of Interest record could not be found."
+                    Icon="@Icons.Material.Filled.SearchOff" />
+    }
+    else
+    {
+        <EntityHeader Title="@($"Declaration of Interest: DOI-{_declaration.Id:D5}")"
+                      Reference="@($"DOI-{_declaration.Id:D5}")"
+                      Status="@_declaration.StatusCode"
+                      Subtitle="@($"{FormatDeclarationType(_declaration.DeclarationTypeCode)} • Financial Year {_declaration.DeclarationPeriodYear}")"
+                      BreadcrumbItems="_breadcrumbs">
+            <Actions>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Default"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Href="/governance/declarations">
+                    Back to register
+                </MudButton>
+                @if (_declaration.StatusCode != "CERTIFIED")
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
+                               StartIcon="@Icons.Material.Filled.Verified"
+                               OnClick="CertifyAsync">
+                        Certify &amp; witness declaration
+                    </MudButton>
+                }
+            </Actions>
+        </EntityHeader>
+
+        <!-- Digital Security Seal Banner -->
+        <MudPaper Elevation="0" Class="pa-4 mb-6 border rounded-lg d-flex justify-space-between align-center flex-wrap gap-4" Style="background-color: var(--mud-palette-surface);">
+            <div>
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Fingerprint" Color="Color.Primary" />
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">PFMA Statutory Attestation Seal</MudText>
+                </div>
+                <div class="font-mono text-secondary mt-1" style="font-size: 0.8125rem;">
+                    @(_declaration.DigitalSignatureSeal ?? "UNSIGNED")
+                </div>
+            </div>
+            <div>
+                @if (_declaration.CertifiedAt.HasValue)
+                {
+                    <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Medium">
+                        Certified on @_declaration.CertifiedAt.Value.ToString("yyyy-MM-dd HH:mm") by @_declaration.CertifiedByUserId
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Medium">
+                        Pending Witness Certification
+                    </MudChip>
+                }
+            </div>
+        </MudPaper>
+
+        <MudGrid>
+            <!-- Declarant Profile -->
+            <MudItem xs="12" md="6">
+                <MudCard Outlined="true" Class="pa-4 mb-4">
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Declarant profile</MudText>
+                    <ReadOnlyField Label="Declarant full name" Value="@(_declaration.Person?.FullName ?? "N/A")" />
+                    <ReadOnlyField Label="South African ID number" Value="@(_declaration.Person?.RsaIdNumber ?? "—")" IsMonospace="true" />
+                    <ReadOnlyField Label="Foreign passport" Value="@(_declaration.Person?.PassportNumber ?? "—")" IsMonospace="true" />
+                    <ReadOnlyField Label="Primary email" Value="@(_declaration.Person?.Email ?? "—")" />
+                </MudCard>
+            </MudItem>
+
+            <!-- Submission Details -->
+            <MudItem xs="12" md="6">
+                <MudCard Outlined="true" Class="pa-4 mb-4">
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Submission details</MudText>
+                    <ReadOnlyField Label="Compliance scheme year" Value="@_declaration.DeclarationPeriodYear" IsMonospace="true" />
+                    <ReadOnlyField Label="Declaration category" Value="@FormatDeclarationType(_declaration.DeclarationTypeCode)" />
+                    <ReadOnlyField Label="Submission timestamp" Value="@_declaration.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss UTC")" IsMonospace="true" />
+                    <ReadOnlyField Label="Meeting / Tender reference" Value="@(_declaration.MeetingOrProjectRef ?? "Annual General Disclosure")" />
+                </MudCard>
+            </MudItem>
+
+            <!-- Disclosed Commercial Interests & Directorships -->
+            <MudItem xs="12">
+                <MudCard Outlined="true" Class="pa-4 mb-4">
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
+                            Disclosed commercial interests &amp; outside business activities
+                        </MudText>
+                        <MudChip T="string" Size="Size.Small" Color="@(_declaration.HasConflictsToDeclare ? Color.Warning : Color.Success)">
+                            @(_declaration.HasConflictsToDeclare ? $"{_declaration.Items.Count} Items Declared" : "Nil / Nothing to Declare")
+                        </MudChip>
+                    </div>
+
+                    @if (_declaration.Items.Count == 0)
+                    {
+                        <div class="pa-4 text-center border rounded">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Color="Color.Success" Size="Size.Medium" />
+                            <MudText Typo="Typo.body2" Class="mt-1 text-secondary">
+                                Declarant confirmed having nil outside commercial interests, shareholdings, or private directorships to disclose.
+                            </MudText>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudTable Items="_declaration.Items" Dense="true" Hover="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Organisation name</MudTh>
+                                <MudTh>Registration / SDL</MudTh>
+                                <MudTh>Nature of relationship</MudTh>
+                                <MudTh>Shareholding (%)</MudTh>
+                                <MudTh>Estimated remuneration</MudTh>
+                                <MudTh>RWOPS approval</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Organisation name">
+                                    <span class="font-weight-bold">@context.OrganisationName</span>
+                                </MudTd>
+                                <MudTd DataLabel="Registration / SDL">
+                                    <span class="font-mono">@(context.RegistrationOrSdlNumber ?? "—")</span>
+                                </MudTd>
+                                <MudTd DataLabel="Nature of relationship">
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
+                                        @context.NatureOfRelationship
+                                    </MudChip>
+                                </MudTd>
+                                <MudTd DataLabel="Shareholding (%)">
+                                    <span class="font-mono">@(context.InterestPercentage.HasValue ? $"{context.InterestPercentage.Value:F2}%" : "0.00%")</span>
+                                </MudTd>
+                                <MudTd DataLabel="Estimated remuneration">
+                                    <span class="font-mono">@(context.AnnualRemunerationOrBenefit.HasValue ? context.AnnualRemunerationOrBenefit.Value.ToString("C0", new System.Globalization.CultureInfo("en-ZA")) : "—")</span>
+                                </MudTd>
+                                <MudTd DataLabel="RWOPS approval">
+                                    @if (context.IsApprovedExternalWork)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">
+                                            Approved (@(context.ApprovalReference ?? "Ref on file"))
+                                        </MudChip>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-secondary">N/A</span>
+                                    }
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(_declaration.GeneralDeclarationNotes))
+                    {
+                        <div class="mt-4 pa-3 border rounded bg-surface">
+                            <MudText Typo="Typo.caption" Class="text-secondary font-weight-bold text-uppercase">General explanatory notes:</MudText>
+                            <MudText Typo="Typo.body2" Class="mt-1">@_declaration.GeneralDeclarationNotes</MudText>
+                        </div>
+                    }
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    }
+</main>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private bool _isLoading = true;
+    private InterestDeclaration? _declaration;
+
+    private List<BreadcrumbItem> _breadcrumbs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDeclarationAsync();
+    }
+
+    private async Task LoadDeclarationAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _declaration = await ConflictService.GetDeclarationByIdAsync(Id);
+            _breadcrumbs = new()
+            {
+                new BreadcrumbItem("Home", href: "/"),
+                new BreadcrumbItem("Governance", href: "/governance/dashboard"),
+                new BreadcrumbItem("Declarations", href: "/governance/declarations"),
+                new BreadcrumbItem($"DOI-{Id:D5}", href: null, disabled: true)
+            };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading declaration: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task CertifyAsync()
+    {
+        try
+        {
+            await ConflictService.CertifyDeclarationAsync(Id, "RiskComplianceOfficer");
+            Snackbar.Add("Declaration certified and witnessed.", Severity.Success);
+            await LoadDeclarationAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error certifying declaration: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private string FormatDeclarationType(string code) => code switch
+    {
+        "ANNUAL_COMPLIANCE" => "Annual Fiduciary Compliance",
+        "MEETING_RECUSAL" => "Committee Meeting Recusal",
+        "TENDER_EVALUATION" => "Procurement / Tender Evaluation",
+        "GRANT_ADJUDICATION" => "Grant Adjudication Attestation",
+        _ => code
+    };
+}

@@ -255,6 +255,24 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<BusinessRuleWorkflow> BusinessRuleWorkflows => Set<BusinessRuleWorkflow>();
     public DbSet<BusinessRule> BusinessRules => Set<BusinessRule>();
 
+    // Module 17: Open Knowledge Format (OKF v0.2) Living Knowledge & Attestation Engine
+    public DbSet<KnowledgeBundle> KnowledgeBundles => Set<KnowledgeBundle>();
+    public DbSet<ConceptDocument> ConceptDocuments => Set<ConceptDocument>();
+    public DbSet<ConceptTag> ConceptTags => Set<ConceptTag>();
+    public DbSet<ConceptSource> ConceptSources => Set<ConceptSource>();
+    public DbSet<ConceptVerificationEvent> ConceptVerificationEvents => Set<ConceptVerificationEvent>();
+    public DbSet<AttestedComputation> AttestedComputations => Set<AttestedComputation>();
+    public DbSet<ComputationParameter> ComputationParameters => Set<ComputationParameter>();
+    public DbSet<ComputationExecutionAudit> ComputationExecutionAudits => Set<ComputationExecutionAudit>();
+    public DbSet<ConceptCrossLink> ConceptCrossLinks => Set<ConceptCrossLink>();
+
+    // Module 18: Interest & Conflict of Interest Management (PFMA Section 50/51 & King IV)
+    public DbSet<OrganisationGovernanceMember> OrganisationGovernanceMembers => Set<OrganisationGovernanceMember>();
+    public DbSet<InstitutionalAffiliation> InstitutionalAffiliations => Set<InstitutionalAffiliation>();
+    public DbSet<InterestDeclaration> InterestDeclarations => Set<InterestDeclaration>();
+    public DbSet<InterestDeclarationItem> InterestDeclarationItems => Set<InterestDeclarationItem>();
+    public DbSet<ConflictFlag> ConflictFlags => Set<ConflictFlag>();
+
     // Lookups in `lookup` schema
     public DbSet<GenderType> GenderTypes => Set<GenderType>();
     public DbSet<EquityType> EquityTypes => Set<EquityType>();
@@ -568,7 +586,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(o => o.HasMissingChamberMapping);
             entity.HasIndex(o => o.GpVendorClass);
             entity.HasIndex(o => o.IsActive);
-            entity.HasQueryFilter(o => _tenantProvider.IsAdmin || (_tenantProvider.CurrentOrganisationId != null && o.Id == _tenantProvider.CurrentOrganisationId));
+            entity.HasQueryFilter(o => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || o.Id == _tenantProvider.CurrentOrganisationId);
         });
 
         // OrganisationContact table & indexes
@@ -2194,8 +2212,16 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(t => t.HeaderBannerUrl).HasMaxLength(500);
             entity.Property(t => t.FooterDisclaimerText).HasMaxLength(500);
             entity.Property(t => t.ApprovedBy).HasMaxLength(100);
+            entity.Property(t => t.TemplateBodyHtml).HasColumnType("nvarchar(max)");
+            entity.Property(t => t.VersionNotes).HasMaxLength(1000);
 
-            entity.HasIndex(t => t.TemplateCode).IsUnique();
+            entity.HasOne(t => t.ParentTemplate)
+                .WithMany(t => t.ChildVersions)
+                .HasForeignKey(t => t.ParentTemplateId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(t => new { t.TemplateCode, t.VersionNumber }).IsUnique();
+            entity.HasIndex(t => t.ParentTemplateId);
             entity.HasIndex(t => new { t.DocumentCategory, t.DocumentTypeCode, t.FinancialYear, t.IsActive });
             entity.HasIndex(t => t.ApprovalStatus);
         });
@@ -4278,6 +4304,306 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(a => a.TrainingProviderId);
             entity.HasIndex(a => a.ApplicationNumber).IsUnique();
             entity.HasIndex(a => a.StatusCode);
+        });
+
+        // Module 17: Open Knowledge Format (OKF v0.2) Living Knowledge & Attestation Engine
+        modelBuilder.Entity<KnowledgeBundle>(entity =>
+        {
+            entity.ToTable("KnowledgeBundle");
+            entity.Property(b => b.BundleCode).HasMaxLength(50).IsRequired();
+            entity.Property(b => b.DisplayName).HasMaxLength(150).IsRequired();
+            entity.Property(b => b.Description).HasMaxLength(500);
+            entity.Property(b => b.GitRepositoryUrl).HasMaxLength(255);
+            entity.Property(b => b.FileSystemPath).HasMaxLength(255).IsRequired();
+            entity.Property(b => b.OkfVersion).HasMaxLength(20).HasDefaultValue("0.2");
+            entity.HasIndex(b => b.BundleCode).IsUnique();
+        });
+
+        modelBuilder.Entity<ConceptDocument>(entity =>
+        {
+            entity.ToTable("ConceptDocument");
+            entity.Property(c => c.ConceptId).HasMaxLength(150).IsRequired();
+            entity.Property(c => c.ConceptType).HasMaxLength(80).IsRequired();
+            entity.Property(c => c.Title).HasMaxLength(200).IsRequired();
+            entity.Property(c => c.SummaryDescription).HasMaxLength(500);
+            entity.Property(c => c.ResourceUri).HasMaxLength(500);
+            entity.Property(c => c.BodyMarkdown).IsRequired();
+            entity.Property(c => c.LifecycleStatus).HasConversion<string>().HasMaxLength(30).HasDefaultValue(ConceptLifecycleStatus.Stable);
+            entity.Property(c => c.GeneratedByActor).HasMaxLength(150).IsRequired();
+
+            entity.HasOne(c => c.Bundle)
+                  .WithMany(b => b.Concepts)
+                  .HasForeignKey(c => c.BundleId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(c => c.BundleId);
+            entity.HasIndex(c => c.ConceptId).IsUnique();
+            entity.HasIndex(c => c.ConceptType);
+            entity.HasIndex(c => c.DerivedTrustTier);
+            entity.HasIndex(c => c.StaleAfter);
+        });
+
+        modelBuilder.Entity<ConceptTag>(entity =>
+        {
+            entity.ToTable("ConceptTag");
+            entity.Property(t => t.TagName).HasMaxLength(50).IsRequired();
+
+            entity.HasOne(t => t.Concept)
+                  .WithMany(c => c.Tags)
+                  .HasForeignKey(t => t.ConceptId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(t => new { t.ConceptId, t.TagName }).IsUnique();
+            entity.HasIndex(t => t.TagName);
+        });
+
+        modelBuilder.Entity<ConceptSource>(entity =>
+        {
+            entity.ToTable("ConceptSource");
+            entity.Property(s => s.SourceIdAlias).HasMaxLength(80).IsRequired();
+            entity.Property(s => s.ResourceUri).HasMaxLength(500).IsRequired();
+            entity.Property(s => s.Title).HasMaxLength(200);
+            entity.Property(s => s.AuthorActor).HasMaxLength(150);
+
+            entity.HasOne(s => s.Concept)
+                  .WithMany(c => c.Sources)
+                  .HasForeignKey(s => s.ConceptId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(s => new { s.ConceptId, s.SourceIdAlias }).IsUnique();
+            entity.HasIndex(s => s.ConceptId);
+        });
+
+        modelBuilder.Entity<ConceptVerificationEvent>(entity =>
+        {
+            entity.ToTable("ConceptVerificationEvent");
+            entity.Property(v => v.VerifiedByActor).HasMaxLength(150).IsRequired();
+            entity.Property(v => v.ActorType).HasMaxLength(30).IsRequired();
+            entity.Property(v => v.Notes).HasMaxLength(500);
+
+            entity.HasOne(v => v.Concept)
+                  .WithMany(c => c.Verifications)
+                  .HasForeignKey(v => v.ConceptId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(v => v.ConceptId);
+            entity.HasIndex(v => v.ActorType);
+        });
+
+        modelBuilder.Entity<AttestedComputation>(entity =>
+        {
+            entity.ToTable("AttestedComputation");
+            entity.Property(a => a.Runtime).HasMaxLength(50).HasDefaultValue("tsql").IsRequired();
+            entity.Property(a => a.ExternalScriptPath).HasMaxLength(255);
+            entity.Property(a => a.ExecutorResource).HasMaxLength(255).IsRequired();
+            entity.Property(a => a.AttesterResource).HasMaxLength(255).IsRequired();
+            entity.Property(a => a.ReceiptSchemaJson).HasMaxLength(1000).IsRequired();
+
+            entity.HasOne(a => a.Concept)
+                  .WithOne(c => c.Computation)
+                  .HasForeignKey<AttestedComputation>(a => a.ConceptId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(a => a.ConceptId).IsUnique();
+        });
+
+        modelBuilder.Entity<ComputationParameter>(entity =>
+        {
+            entity.ToTable("ComputationParameter");
+            entity.Property(p => p.ParameterName).HasMaxLength(50).IsRequired();
+            entity.Property(p => p.ParameterType).HasMaxLength(30).IsRequired();
+            entity.Property(p => p.DefaultValue).HasMaxLength(100);
+            entity.Property(p => p.Description).HasMaxLength(250);
+
+            entity.HasOne(p => p.Computation)
+                  .WithMany(a => a.Parameters)
+                  .HasForeignKey(p => p.ComputationId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(p => new { p.ComputationId, p.ParameterName }).IsUnique();
+            entity.HasIndex(p => p.ComputationId);
+        });
+
+        modelBuilder.Entity<ComputationExecutionAudit>(entity =>
+        {
+            entity.ToTable("ComputationExecutionAudit");
+            entity.Property(e => e.InvokedByActor).HasMaxLength(150).IsRequired();
+            entity.Property(e => e.ExecutedSqlDigest).HasMaxLength(64).IsRequired();
+            entity.Property(e => e.AttestationVerdict).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.AttestationFailureReason).HasMaxLength(500);
+            entity.Property(e => e.VerificationReference).HasMaxLength(64).IsRequired();
+
+            entity.HasOne(e => e.Computation)
+                  .WithMany(a => a.Executions)
+                  .HasForeignKey(e => e.ComputationId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.ComputationId, e.ExecutedAt });
+            entity.HasIndex(e => e.AttestationVerdict);
+            entity.HasIndex(e => e.VerificationReference);
+        });
+
+        modelBuilder.Entity<ConceptCrossLink>(entity =>
+        {
+            entity.ToTable("ConceptCrossLink");
+            entity.Property(l => l.TargetConceptPath).HasMaxLength(255).IsRequired();
+            entity.Property(l => l.LinkText).HasMaxLength(200);
+
+            entity.HasOne(l => l.SourceConcept)
+                  .WithMany(c => c.OutgoingCrossLinks)
+                  .HasForeignKey(l => l.SourceConceptId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(l => l.ResolvedTarget)
+                  .WithMany(c => c.IncomingCrossLinks)
+                  .HasForeignKey(l => l.ResolvedTargetId)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasIndex(l => l.SourceConceptId);
+            entity.HasIndex(l => l.ResolvedTargetId);
+        });
+
+        // Module 18: Interest & Conflict of Interest Management (PFMA Section 50/51 & King IV)
+        modelBuilder.Entity<OrganisationGovernanceMember>(entity =>
+        {
+            entity.ToTable("OrganisationGovernanceMember");
+            entity.Property(m => m.GovernanceRoleCode).HasMaxLength(50).IsRequired();
+            entity.Property(m => m.MemberType).HasMaxLength(30).IsRequired();
+            entity.Property(m => m.CorporateEntityName).HasMaxLength(200);
+            entity.Property(m => m.CorporateRegistrationNumber).HasMaxLength(50);
+            entity.Property(m => m.DirectorCategory).HasMaxLength(30);
+            entity.Property(m => m.ShareholdingPercentage).HasPrecision(5, 2);
+
+            entity.HasOne(m => m.Organisation)
+                  .WithMany(o => o.GovernanceMembers)
+                  .HasForeignKey(m => m.OrganisationId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.Person)
+                  .WithMany(p => p.GovernanceMemberships)
+                  .HasForeignKey(m => m.PersonId)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(m => m.ShareholderOrganisation)
+                  .WithMany()
+                  .HasForeignKey(m => m.ShareholderOrganisationId)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(m => m.OrganisationId);
+            entity.HasIndex(m => m.PersonId);
+            entity.HasIndex(m => m.ShareholderOrganisationId);
+            entity.HasIndex(m => m.GovernanceRoleCode);
+            entity.HasIndex(m => m.MemberType);
+            entity.HasIndex(m => m.DirectorCategory);
+            entity.HasIndex(m => new { m.OrganisationId, m.PersonId, m.GovernanceRoleCode });
+        });
+
+        modelBuilder.Entity<InstitutionalAffiliation>(entity =>
+        {
+            entity.ToTable("InstitutionalAffiliation");
+            entity.Property(a => a.AffiliationTypeCode).HasMaxLength(50).IsRequired();
+            entity.Property(a => a.DepartmentOrCommittee).HasMaxLength(150).IsRequired();
+            entity.Property(a => a.Designation).HasMaxLength(150).IsRequired();
+            entity.Property(a => a.EmployeeNumber).HasMaxLength(50);
+
+            entity.HasOne(a => a.Person)
+                  .WithMany(p => p.InstitutionalAffiliations)
+                  .HasForeignKey(a => a.PersonId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(a => a.PersonId);
+            entity.HasIndex(a => a.AffiliationTypeCode);
+            entity.HasIndex(a => a.IsActive);
+        });
+
+        modelBuilder.Entity<InterestDeclaration>(entity =>
+        {
+            entity.ToTable("InterestDeclaration");
+            entity.Property(d => d.DeclarationPeriodYear).HasMaxLength(10).IsRequired();
+            entity.Property(d => d.DeclarationTypeCode).HasMaxLength(50).IsRequired();
+            entity.Property(d => d.MeetingOrProjectRef).HasMaxLength(150);
+            entity.Property(d => d.StatusCode).HasMaxLength(50).IsRequired();
+            entity.Property(d => d.GeneralDeclarationNotes).HasMaxLength(2000);
+            entity.Property(d => d.DigitalSignatureSeal).HasMaxLength(100);
+            entity.Property(d => d.CertifiedByUserId).HasMaxLength(150);
+
+            entity.HasOne(d => d.Person)
+                  .WithMany(p => p.InterestDeclarations)
+                  .HasForeignKey(d => d.PersonId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.FinancialYear)
+                  .WithMany()
+                  .HasForeignKey(d => d.FinancialYearId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(d => d.PersonId);
+            entity.HasIndex(d => d.FinancialYearId);
+            entity.HasIndex(d => d.DeclarationPeriodYear);
+            entity.HasIndex(d => d.StatusCode);
+            entity.HasIndex(d => d.DeclarationTypeCode);
+        });
+
+        modelBuilder.Entity<InterestDeclarationItem>(entity =>
+        {
+            entity.ToTable("InterestDeclarationItem");
+            entity.Property(i => i.OrganisationName).HasMaxLength(250).IsRequired();
+            entity.Property(i => i.RegistrationOrSdlNumber).HasMaxLength(50);
+            entity.Property(i => i.NatureOfRelationship).HasMaxLength(50).IsRequired();
+            entity.Property(i => i.InterestPercentage).HasPrecision(5, 2);
+            entity.Property(i => i.AnnualRemunerationOrBenefit).HasPrecision(18, 2);
+            entity.Property(i => i.ApprovalReference).HasMaxLength(100);
+
+            entity.HasOne(i => i.InterestDeclaration)
+                  .WithMany(d => d.Items)
+                  .HasForeignKey(i => i.InterestDeclarationId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(i => i.InterestDeclarationId);
+        });
+
+        modelBuilder.Entity<ConflictFlag>(entity =>
+        {
+            entity.ToTable("ConflictFlag");
+            entity.Property(f => f.SeverityCode).HasMaxLength(50).IsRequired();
+            entity.Property(f => f.ConflictCategoryCode).HasMaxLength(50).IsRequired();
+            entity.Property(f => f.Title).HasMaxLength(250).IsRequired();
+            entity.Property(f => f.Description).HasMaxLength(2000).IsRequired();
+            entity.Property(f => f.ResolutionStatusCode).HasMaxLength(50).IsRequired();
+            entity.Property(f => f.ResolutionNotes).HasMaxLength(2000);
+            entity.Property(f => f.ClearedByUserId).HasMaxLength(150);
+            entity.Property(f => f.ClearanceAuthorityRole).HasMaxLength(100);
+
+            entity.HasOne(f => f.TargetOrganisation)
+                  .WithMany(o => o.ConflictFlags)
+                  .HasForeignKey(f => f.TargetOrganisationId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(f => f.TargetGrantApplication)
+                  .WithMany(g => g.ConflictFlags)
+                  .HasForeignKey(f => f.TargetGrantApplicationId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(f => f.TargetTrainingProvider)
+                  .WithMany(t => t.ConflictFlags)
+                  .HasForeignKey(f => f.TargetTrainingProviderId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(f => f.Person)
+                  .WithMany(p => p.ConflictFlags)
+                  .HasForeignKey(f => f.PersonId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(f => f.TargetOrganisationId);
+            entity.HasIndex(f => f.TargetGrantApplicationId);
+            entity.HasIndex(f => f.TargetTrainingProviderId);
+            entity.HasIndex(f => f.PersonId);
+            entity.HasIndex(f => f.SeverityCode);
+            entity.HasIndex(f => f.ConflictCategoryCode);
+            entity.HasIndex(f => f.ResolutionStatusCode);
+            entity.HasIndex(f => f.DetectedAt);
         });
 
         // Seed all lookups

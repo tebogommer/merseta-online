@@ -1,0 +1,690 @@
+@page "/admin/knowledge-catalog/{id:int}"
+@namespace Nsdms.Web.Components.Pages.Admin
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Interfaces
+@using Nsdms.Application.DTOs
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@attribute [Authorize(Roles = "SuperAdmin,Admin,Compliance,Finance,Legal")]
+@inject IKnowledgeCatalogService CatalogService
+@inject IOkfFrontmatterParser FrontmatterParser
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A3 (Entity Detail / Read-Only View by Default)
+  Open Knowledge Format (OKF v0.2) Living Knowledge Catalog Concept View
+*@
+
+<PageTitle>@(_concept?.Title ?? "Concept Details") | Open Knowledge Catalog | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    @if (_isLoading)
+    {
+        <div class="pa-8 text-center">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" Class="mb-3" />
+            <MudText Typo="Typo.body1" Color="Color.Secondary">Loading concept record from knowledge catalog...</MudText>
+        </div>
+    }
+    else if (_concept == null)
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-4">
+            Concept record not found or has been removed.
+            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo("/admin/knowledge-catalog"))" Class="ml-2">
+                Return to catalog
+            </MudButton>
+        </MudAlert>
+    }
+    else
+    {
+        <!-- Master Header (EntityHeader) -->
+        <EntityHeader Title="@_concept.Title"
+                      ReferenceKey="@_concept.ConceptId"
+                      Status="@_concept.LifecycleStatus.ToString()"
+                      BreadcrumbItems="@_breadcrumbs">
+            <ActionZone>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Default"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="@(() => Navigation.NavigateTo("/admin/knowledge-catalog"))"
+                           Size="Size.Medium">
+                    Back to catalog
+                </MudButton>
+
+                @if (_concept.Computation != null)
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Info"
+                               StartIcon="@Icons.Material.Filled.PlayArrow"
+                               OnClick="@(() => Navigation.NavigateTo($"/admin/knowledge-catalog/{_concept.Id}/simulate"))"
+                               Size="Size.Medium">
+                        Run simulation
+                    </MudButton>
+                }
+
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.FactCheck"
+                           OnClick="OpenVerificationDialogAsync"
+                           Size="Size.Medium">
+                    Record verification
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           OnClick="@(() => Navigation.NavigateTo($"/admin/knowledge-catalog/{_concept.Id}/edit"))"
+                           Size="Size.Medium">
+                    Edit concept
+                </MudButton>
+
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           OnClick="DeleteConceptAsync"
+                           Size="Size.Medium">
+                    Delete
+                </MudButton>
+            </ActionZone>
+        </EntityHeader>
+
+        <!-- Freshness / Staleness Warning Banner -->
+        @if (_concept.IsStale)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="mb-4" Icon="@Icons.Material.Filled.Schedule">
+                <strong>Statutory Staleness Alert:</strong> This concept reached its scheduled freshness boundary on
+                <code>@(_concept.StaleAfter?.ToString("yyyy-MM-dd") ?? "Unknown")</code>.
+                Its operational Trust Tier has been clamped to <strong>Tier 0: Unverified</strong> until re-validated by statutory authorities.
+            </MudAlert>
+        }
+
+        <!-- Status & Governance Badges Strip -->
+        <MudPaper Elevation="0" Class="pa-3 mb-4 rounded-lg border d-flex flex-wrap gap-4 align-center justify-space-between" Style="background: var(--surface); border-color: var(--border);">
+            <div class="d-flex flex-wrap align-center gap-3">
+                <span class="text-secondary font-weight-medium" style="font-size: 0.8125rem;">Trust Tier:</span>
+                @if (_concept.DerivedTrustTier == TrustTier.HumanReviewed)
+                {
+                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.VerifiedUser">
+                        Tier 2: Human-Reviewed
+                    </MudChip>
+                }
+                else if (_concept.DerivedTrustTier == TrustTier.MachineConfirmed)
+                {
+                    <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">
+                        Tier 1: Machine-Confirmed
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.HelpOutline">
+                        Tier 0: Unverified
+                    </MudChip>
+                }
+
+                <MudDivider Vertical="true" FlexItem="true" Class="mx-2" />
+
+                <span class="text-secondary font-weight-medium" style="font-size: 0.8125rem;">Freshness:</span>
+                @if (_concept.IsStale)
+                {
+                    <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Warning">
+                        Stale
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Check">
+                        Fresh / Current
+                    </MudChip>
+                }
+
+                <MudDivider Vertical="true" FlexItem="true" Class="mx-2" />
+
+                <span class="text-secondary font-weight-medium" style="font-size: 0.8125rem;">Type:</span>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">
+                    @_concept.ConceptType
+                </MudChip>
+            </div>
+
+            <div class="d-flex align-center gap-2">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@GetStatusColor(_concept.LifecycleStatus.ToString())">
+                    @_concept.LifecycleStatus.ToString()
+                </MudChip>
+            </div>
+        </MudPaper>
+
+        <!-- Master Tabs Structure -->
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4" Class="mb-6">
+            <!-- Tab 1: Overview & Frontmatter -->
+            <MudTabPanel Text="Overview & Frontmatter" Icon="@Icons.Material.Filled.Info">
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" md="8">
+                        <MudCard Elevation="0" Class="border rounded-lg pa-4 mb-4" Style="border-color: var(--border); background: var(--surface);">
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3 text-primary">
+                                Concept Identity &amp; Statutory Metadata
+                            </MudText>
+                            <MudGrid Spacing="2">
+                                <MudItem xs="12" sm="6">
+                                    <ReadOnlyField Label="Concept Slug (OKF ID)" Value="@_concept.ConceptId" IsMonospace="true" AllowCopy="true" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <ReadOnlyField Label="Statutory Title" Value="@_concept.Title" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <ReadOnlyField Label="Concept Type" Value="@_concept.ConceptType" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <ReadOnlyField Label="Lifecycle Status" Value="@_concept.LifecycleStatus.ToString()" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <ReadOnlyField Label="Resource URI" Value="@(!string.IsNullOrWhiteSpace(_concept.ResourceUri) ? _concept.ResourceUri : "—")" IsMonospace="true" AllowCopy="true" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <ReadOnlyField Label="Freshness Boundary (Stale After)" Value="@(_concept.StaleAfter?.ToString("yyyy-MM-dd") ?? "No Expiry Specified")" />
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <ReadOnlyField Label="Summary Description" Value="@(!string.IsNullOrWhiteSpace(_concept.SummaryDescription) ? _concept.SummaryDescription : "—")" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudCard>
+
+                        <!-- Categorization Tags -->
+                        <MudCard Elevation="0" Class="border rounded-lg pa-4 mb-4" Style="border-color: var(--border); background: var(--surface);">
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-2 text-primary">
+                                Categorization Tags
+                            </MudText>
+                            @if (_concept.Tags != null && _concept.Tags.Any())
+                            {
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var tag in _concept.Tags)
+                                    {
+                                        <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.LocalOffer">
+                                            @tag
+                                        </MudChip>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Class="text-secondary">No tags mapped to this concept.</MudText>
+                            }
+                        </MudCard>
+
+                        <!-- Provenance Sources & Citations -->
+                        <MudCard Elevation="0" Class="border rounded-lg pa-4" Style="border-color: var(--border); background: var(--surface);">
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                                    Statutory Provenance &amp; Citations
+                                </MudText>
+                                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled">
+                                    @(_concept.Sources?.Count ?? 0) sources
+                                </MudChip>
+                            </div>
+
+                            @if (_concept.Sources != null && _concept.Sources.Any())
+                            {
+                                <MudTable Items="@_concept.Sources" Dense="true" Hover="true" Elevation="0">
+                                    <HeaderContent>
+                                        <MudTh>ID</MudTh>
+                                        <MudTh>Source Title &amp; Document</MudTh>
+                                        <MudTh>Author / Authority</MudTh>
+                                        <MudTh>Usage Count</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate Context="src">
+                                        <MudTd><span class="font-mono font-weight-bold">@src.SourceIdAlias</span></MudTd>
+                                        <MudTd>
+                                            <div class="d-flex flex-column">
+                                                <span class="font-weight-medium">@src.Title</span>
+                                                @if (!string.IsNullOrWhiteSpace(src.ResourceUri))
+                                                {
+                                                    <MudLink Href="@src.ResourceUri" Target="_blank" Typo="Typo.caption" Underline="Underline.Hover">
+                                                        @src.ResourceUri
+                                                    </MudLink>
+                                                }
+                                            </div>
+                                        </MudTd>
+                                        <MudTd>@(string.IsNullOrWhiteSpace(src.AuthorActor) ? "—" : src.AuthorActor)</MudTd>
+                                        <MudTd><span class="font-mono">@(src.UsageCount?.ToString() ?? "—")</span></MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Class="text-secondary">No explicit external sources referenced.</MudText>
+                            }
+                        </MudCard>
+                    </MudItem>
+
+                    <!-- Right Column: Audited Change Log & Governance Summary -->
+                    <MudItem xs="12" md="4">
+                        <MudCard Elevation="0" Class="border rounded-lg pa-4 mb-4" Style="border-color: var(--border); background: var(--surface);">
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3 text-primary">
+                                Audited Change Log
+                            </MudText>
+                            <ReadOnlyField Label="Created By" Value="@_concept.CreatedBy" />
+                            <ReadOnlyField Label="Created Date (UTC)" Value="@_concept.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")" />
+                            <ReadOnlyField Label="Last Modified By" Value="@(!string.IsNullOrWhiteSpace(_concept.ModifiedBy) ? _concept.ModifiedBy : "—")" />
+                            <ReadOnlyField Label="Last Modified (UTC)" Value="@(_concept.ModifiedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "—")" />
+                        </MudCard>
+
+                        <MudCard Elevation="0" Class="border rounded-lg pa-4" Style="border-color: var(--border); background: var(--surface);">
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3 text-primary">
+                                Trust &amp; Governance Matrix
+                            </MudText>
+                            <div class="d-flex flex-column gap-3">
+                                <div class="d-flex align-center justify-space-between">
+                                    <span class="text-secondary" style="font-size: 0.8125rem;">Machine Evaluation:</span>
+                                    @if (_concept.Computation != null)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Check">
+                                            T-SQL Sanctioned
+                                        </MudChip>
+                                    }
+                                    else
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
+                                            None
+                                        </MudChip>
+                                    }
+                                </div>
+                                <div class="d-flex align-center justify-space-between">
+                                    <span class="text-secondary" style="font-size: 0.8125rem;">Human Reviews:</span>
+                                    <span class="font-mono font-weight-bold">@(_concept.Verifications?.Count ?? 0) recorded</span>
+                                </div>
+                            </div>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- Tab 2: Markdown & Statutory Text -->
+            <MudTabPanel Text="Markdown & Statutory Text" Icon="@Icons.Material.Filled.Article">
+                <MudCard Elevation="0" Class="border rounded-lg pa-4" Style="border-color: var(--border); background: var(--surface);">
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                            Statutory Knowledge Content
+                        </MudText>
+                        <MudSwitch @bind-Value="_showRawMarkdown"
+                                   Color="Color.Primary"
+                                   Label="View raw Markdown source" />
+                    </div>
+
+                    @if (_showRawMarkdown)
+                    {
+                        <pre class="pa-4 rounded border font-mono" style="background: var(--background); border-color: var(--border); overflow-x: auto; white-space: pre-wrap; font-size: 0.875rem;">
+@_concept.BodyMarkdown
+                        </pre>
+                    }
+                    else
+                    {
+                        <div class="markdown-rendered-content pa-4 rounded border" style="background: var(--surface); border-color: var(--border); line-height: 1.65;">
+                            @((MarkupString)_renderedHtml)
+                        </div>
+                    }
+                </MudCard>
+            </MudTabPanel>
+
+            <!-- Tab 3: Sanctioned T-SQL & Receipt Spec -->
+            <MudTabPanel Text="Sanctioned T-SQL & Receipt Spec" Icon="@Icons.Material.Filled.Code">
+                @if (_concept.Computation != null)
+                {
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12">
+                            <div class="d-flex justify-space-between align-center mb-3">
+                                <div>
+                                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                                        Attested T-SQL Computation Template
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        Runtime: <code>@_concept.Computation.Runtime</code>
+                                    </MudText>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               StartIcon="@Icons.Material.Filled.PlayArrow"
+                                               OnClick="@(() => Navigation.NavigateTo($"/admin/knowledge-catalog/{_concept.Id}/simulate"))">
+                                        Open Attestation Simulator
+                                    </MudButton>
+                                </div>
+                            </div>
+
+                            <!-- T-SQL Code Block -->
+                            <div class="position-relative mb-4">
+                                <pre class="pa-4 rounded font-mono" style="background: #1e1e1e; color: #d4d4d4; overflow-x: auto; font-size: 0.875rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+@_concept.Computation.ComputationSql
+                                </pre>
+                            </div>
+                        </MudItem>
+
+                        <!-- Declared Computation Parameters -->
+                        <MudItem xs="12" md="8">
+                            <MudCard Elevation="0" Class="border rounded-lg pa-4" Style="border-color: var(--border); background: var(--surface);">
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-2 text-primary">
+                                    Declared Typed Parameters
+                                </MudText>
+                                @if (_concept.Computation.Parameters != null && _concept.Computation.Parameters.Any())
+                                {
+                                    <MudTable Items="@_concept.Computation.Parameters" Dense="true" Hover="true" Elevation="0">
+                                        <HeaderContent>
+                                            <MudTh>Parameter</MudTh>
+                                            <MudTh>SQL Data Type</MudTh>
+                                            <MudTh>Required</MudTh>
+                                            <MudTh>Description</MudTh>
+                                            <MudTh>Default Value</MudTh>
+                                        </HeaderContent>
+                                        <RowTemplate Context="p">
+                                            <MudTd><span class="font-mono font-weight-bold text-primary">@p.ParameterName</span></MudTd>
+                                            <MudTd><span class="font-mono">@p.ParameterType</span></MudTd>
+                                            <MudTd>
+                                                @if (p.IsRequired)
+                                                {
+                                                    <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Outlined">Required</MudChip>
+                                                }
+                                                else
+                                                {
+                                                    <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">Optional</MudChip>
+                                                }
+                                            </MudTd>
+                                            <MudTd>@p.Description</MudTd>
+                                            <MudTd><span class="font-mono">@(p.DefaultValue ?? "—")</span></MudTd>
+                                        </RowTemplate>
+                                    </MudTable>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2" Class="text-secondary">Zero parameter holes declared. Parameterless computation.</MudText>
+                                }
+                            </MudCard>
+                        </MudItem>
+
+                        <!-- Digital Security Seal & Attestation Provenance -->
+                        <MudItem xs="12" md="4">
+                            <MudCard Elevation="0" Class="border rounded-lg pa-4" Style="border-color: var(--border); background: var(--surface);">
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3 text-primary">
+                                    Digital Security Seal
+                                </MudText>
+                                <ReadOnlyField Label="Receipt Schema" Value="@_concept.Computation.ReceiptSchemaJson" IsMonospace="true" />
+                                <ReadOnlyField Label="Executor Resource" Value="@_concept.Computation.ExecutorResource" />
+                                <ReadOnlyField Label="Attester Resource" Value="@_concept.Computation.AttesterResource" />
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                }
+                else
+                {
+                    <div class="pa-8 text-center">
+                        <MudIcon Icon="@Icons.Material.Filled.CodeOff" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+                        <MudText Typo="Typo.h6" Class="font-weight-bold">No computation attached</MudText>
+                        <MudText Typo="Typo.body2" Class="text-secondary mb-4">
+                            This concept is descriptive and does not currently have an executable T-SQL attestation computation template.
+                        </MudText>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Edit"
+                                   OnClick="@(() => Navigation.NavigateTo($"/admin/knowledge-catalog/{_concept.Id}/edit"))">
+                            Attach T-SQL computation
+                        </MudButton>
+                    </div>
+                }
+            </MudTabPanel>
+
+            <!-- Tab 4: Governance Timeline (Human Verifications) -->
+            <MudTabPanel Text="Governance Timeline" Icon="@Icons.Material.Filled.FactCheck">
+                <MudCard Elevation="0" Class="border rounded-lg pa-4" Style="border-color: var(--border); background: var(--surface);">
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <div>
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                                Dual Authorisation Control Reviews
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Statutory verification events that elevate Trust Tier from Tier 1 to Tier 2.
+                            </MudText>
+                        </div>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="OpenVerificationDialogAsync">
+                            Record review
+                        </MudButton>
+                    </div>
+
+                    @if (_concept.Verifications != null && _concept.Verifications.Any())
+                    {
+                        <div class="d-flex flex-column gap-3 mt-3">
+                            @foreach (var ver in _concept.Verifications.OrderByDescending(v => v.VerifiedAt))
+                            {
+                                <MudCard Elevation="1" Class="pa-3 rounded-lg border" Style="border-color: var(--border); background: var(--surface);">
+                                    <div class="d-flex justify-space-between align-center flex-wrap gap-2 mb-2">
+                                        <div class="d-flex align-center gap-2">
+                                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">
+                                                Verification Verified
+                                            </MudChip>
+                                            <span class="font-weight-bold">@ver.ActorType</span>
+                                        </div>
+                                        <span class="font-mono text-secondary" style="font-size: 0.8125rem;">
+                                            @ver.VerifiedAt.ToString("yyyy-MM-dd HH:mm:ss UTC")
+                                        </span>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-4 align-center mb-2">
+                                        <span class="text-secondary" style="font-size: 0.8125rem;">
+                                            Reviewer: <strong>@ver.VerifiedByActor</strong>
+                                        </span>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(ver.Notes))
+                                    {
+                                        <MudText Typo="Typo.body2" Class="pa-2 rounded" Style="background: var(--background); border-left: 3px solid var(--mud-palette-primary);">
+                                            @ver.Notes
+                                        </MudText>
+                                    }
+                                </MudCard>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="pa-6 text-center">
+                            <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Medium" Color="Color.Secondary" Class="mb-2" />
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-medium">No human verification events recorded yet</MudText>
+                            <MudText Typo="Typo.body2" Class="text-secondary mb-3">
+                                Under merSETA Dual Authorisation Control, an independent reviewer must verify this concept to elevate its status to Tier 2: Human-Reviewed.
+                            </MudText>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FactCheck" OnClick="OpenVerificationDialogAsync">
+                                Conduct first review
+                            </MudButton>
+                        </div>
+                    }
+                </MudCard>
+            </MudTabPanel>
+
+            <!-- Tab 5: Audited Execution Log (Historical Timeline) -->
+            <MudTabPanel Text="Historical Execution Log" Icon="@Icons.Material.Filled.History">
+                <MudCard Elevation="0" Class="border rounded-lg pa-4" Style="border-color: var(--border); background: var(--surface);">
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <div>
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                                Historical Version Timeline &amp; Audited Runs
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Every parameterised execution generates an immutable cryptographic receipt.
+                            </MudText>
+                        </div>
+                        @if (_concept.Computation != null)
+                        {
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.PlayArrow"
+                                       OnClick="@(() => Navigation.NavigateTo($"/admin/knowledge-catalog/{_concept.Id}/simulate"))">
+                                Run new execution
+                            </MudButton>
+                        }
+                    </div>
+
+                    @if (_concept.Computation?.RecentExecutions != null && _concept.Computation.RecentExecutions.Any())
+                    {
+                        <MudTable Items="@_concept.Computation.RecentExecutions.OrderByDescending(e => e.ExecutedAt)" Dense="true" Hover="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Timestamp (UTC)</MudTh>
+                                <MudTh>Executed By</MudTh>
+                                <MudTh>Duration</MudTh>
+                                <MudTh>Verdict</MudTh>
+                                <MudTh>Digital Security Seal</MudTh>
+                            </HeaderContent>
+                            <RowTemplate Context="audit">
+                                <MudTd><span class="font-mono">@audit.ExecutedAt.ToString("yyyy-MM-dd HH:mm:ss")</span></MudTd>
+                                <MudTd>@audit.InvokedByActor</MudTd>
+                                <MudTd><span class="font-mono">@audit.ExecutionDurationMs ms</span></MudTd>
+                                <MudTd>
+                                    @if (audit.AttestationVerdict == "Pass")
+                                    {
+                                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Check">Passed</MudChip>
+                                    }
+                                    else
+                                    {
+                                        <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Error">Failed</MudChip>
+                                    }
+                                </MudTd>
+                                <MudTd>
+                                    <span class="font-mono text-secondary" style="font-size: 0.75rem;">
+                                        @(audit.VerificationReference.Length > 16 ? audit.VerificationReference.Substring(0, 16) + "..." : audit.VerificationReference)
+                                    </span>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                    else
+                    {
+                        <div class="pa-6 text-center">
+                            <MudText Typo="Typo.body2" Class="text-secondary">
+                                No execution audit history recorded yet. Run a simulation to generate verified receipts.
+                            </MudText>
+                        </div>
+                    }
+                </MudCard>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private ConceptDetailDto? _concept;
+    private bool _isLoading = true;
+    private bool _showRawMarkdown = false;
+    private string _renderedHtml = string.Empty;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("System Administration", href: "/admin"),
+        new BreadcrumbItem("Knowledge Catalog", href: "/admin/knowledge-catalog"),
+        new BreadcrumbItem("Concept Details", href: null, disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadConceptDetailsAsync();
+    }
+
+    private async Task LoadConceptDetailsAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _concept = await CatalogService.GetConceptByIdAsync(Id);
+            if (_concept != null)
+            {
+                _renderedHtml = !string.IsNullOrWhiteSpace(_concept.RenderedHtmlBody) 
+                    ? _concept.RenderedHtmlBody 
+                    : FrontmatterParser.RenderToHtml(_concept.BodyMarkdown ?? "");
+                _breadcrumbs = new List<BreadcrumbItem>
+                {
+                    new BreadcrumbItem("Home", href: "/"),
+                    new BreadcrumbItem("System Administration", href: "/admin"),
+                    new BreadcrumbItem("Knowledge Catalog", href: "/admin/knowledge-catalog"),
+                    new BreadcrumbItem(_concept.Title, href: null, disabled: true)
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading concept: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OpenVerificationDialogAsync()
+    {
+        if (_concept == null) return;
+
+        var parameters = new DialogParameters<ConceptVerificationDialog>
+        {
+            { x => x.ConceptId, _concept.Id },
+            { x => x.ConceptTitle, _concept.Title },
+            { x => x.CreatedBy, _concept.CreatedBy ?? "" },
+            { x => x.CurrentUsername, "ComplianceOfficer" }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConceptVerificationDialog>("Record Verification Review", parameters);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled)
+        {
+            await LoadConceptDetailsAsync();
+        }
+    }
+
+    private async Task DeleteConceptAsync()
+    {
+        if (_concept == null) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Delete OKF Concept" },
+            { x => x.Consequence, $"Are you sure you want to delete concept '{_concept.Title}' ({_concept.ConceptId})? This will archive all associated parameters and historical verifications." },
+            { x => x.ConfirmLabel, "Delete concept" },
+            { x => x.IsDestructive, true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Concept", parameters);
+        var result = await dialog.Result;
+        if (result == null || result.Canceled) return;
+
+        try
+        {
+            var success = await CatalogService.DeleteConceptAsync(_concept.Id, "AdminUser");
+            if (success)
+            {
+                Snackbar.Add($"Concept '{_concept.Title}' deleted successfully.", Severity.Success);
+                Navigation.NavigateTo("/admin/knowledge-catalog");
+            }
+            else
+            {
+                Snackbar.Add("Could not delete concept.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Delete error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Active" => Color.Success,
+            "Draft" => Color.Warning,
+            "Deprecated" => Color.Error,
+            "Archived" => Color.Default,
+            _ => Color.Default
+        };
+    }
+}

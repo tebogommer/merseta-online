@@ -4,6 +4,7 @@
 @inject IEnterpriseDocumentTemplateService TemplateService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@rendermode InteractiveServer
 
 <PageTitle>Enterprise Document Template Studio | merSETA NSDMS</PageTitle>
 
@@ -13,10 +14,10 @@
         <div>
             <div class="d-flex align-center gap-2">
                 <MudText Typo="Typo.h5" Class="font-weight-bold">Enterprise Document Template Studio</MudText>
-                <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">Option A Engine</MudChip>
+                <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">QuestPDF Studio</MudChip>
             </div>
             <MudText Typo="Typo.body2" Color="Color.Secondary">
-                Manage statutory letter templates, trade test certificates, outcome notices, and clause compositions across all financial years.
+                Manage statutory letter templates, trade test certificates, outcome notices, and version lifecycles with single-active governance.
             </MudText>
         </div>
 
@@ -39,7 +40,7 @@
     <!-- Filters & Search -->
     <MudPaper Elevation="1" Class="pa-4 mb-4 rounded-lg">
         <MudGrid>
-            <MudItem xs="12" md="4">
+            <MudItem xs="12" md="3">
                 <MudTextField @bind-Value="_searchString"
                               Placeholder="Search by template code, title, or type..."
                               Adornment="Adornment.Start"
@@ -57,7 +58,15 @@
                     <MudSelectItem Value="@("General")">General</MudSelectItem>
                 </MudSelect>
             </MudItem>
-            <MudItem xs="12" md="3">
+            <MudItem xs="12" md="2">
+                <MudSelect T="string" Label="Filter Status" @bind-Value="_selectedStatus" Clearable="true">
+                    <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
+                    <MudSelectItem Value="@("Active")">Active for Issuance</MudSelectItem>
+                    <MudSelectItem Value="@("Draft")">Draft Versions</MudSelectItem>
+                    <MudSelectItem Value="@("Superseded")">Superseded Versions</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="2">
                 <MudSelect T="int?" Label="Financial Year" @bind-Value="_selectedYear" Clearable="true">
                     <MudSelectItem T="int?" Value="@((int?)null)">All Years</MudSelectItem>
                     <MudSelectItem T="int?" Value="@(2027)">2027</MudSelectItem>
@@ -91,8 +100,8 @@
             <MudTh>Type Code</MudTh>
             <MudTh>Fin Year</MudTh>
             <MudTh>Version</MudTh>
-            <MudTh>Sections</MudTh>
-            <MudTh>Status</MudTh>
+            <MudTh>Authoring Format</MudTh>
+            <MudTh>Governance Status</MudTh>
             <MudTh>Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
@@ -100,9 +109,24 @@
                 <MudLink Href="@($"/admin/document-templates/{context.Id}")" Typo="Typo.body2" Class="font-weight-bold">
                     @context.TemplateCode
                 </MudLink>
+                @if (context.ParentTemplateId.HasValue)
+                {
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            <MudIcon Icon="@Icons.Material.Filled.ForkRight" Size="Size.Small" Class="mr-1" />
+                            Branch of #@context.ParentTemplateId
+                        </MudText>
+                    </div>
+                }
             </MudTd>
             <MudTd DataLabel="Title">
-                <MudText Typo="Typo.body2">@context.TemplateTitle</MudText>
+                <MudText Typo="Typo.body2" Class="font-weight-medium">@context.TemplateTitle</MudText>
+                @if (!string.IsNullOrWhiteSpace(context.VersionNotes))
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Style="display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">
+                        @context.VersionNotes
+                    </MudText>
+                }
             </MudTd>
             <MudTd DataLabel="Category">
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">
@@ -114,20 +138,55 @@
             </MudTd>
             <MudTd DataLabel="Fin Year">@context.FinancialYear</MudTd>
             <MudTd DataLabel="Version">
-                <MudBadge Content="@($"v{context.VersionNumber}")" Color="Color.Info" Overlap="false" Class="mr-2" />
-            </MudTd>
-            <MudTd DataLabel="Sections">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default">
-                    @context.Sections.Count sections
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">
+                    v@(context.VersionNumber)
                 </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Authoring Format">
+                @if (!string.IsNullOrWhiteSpace(context.TemplateBodyHtml))
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Code">
+                        Rich HTML Body
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">
+                        @(context.Sections.Count) Clauses
+                    </MudChip>
+                }
             </MudTd>
             <MudTd DataLabel="Status">
-                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.ApprovalStatus)" Variant="Variant.Filled">
-                    @context.ApprovalStatus
-                </MudChip>
+                @if (context.IsActive && context.ApprovalStatus == "Approved")
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">
+                        Active
+                    </MudChip>
+                }
+                else if (context.ApprovalStatus == "Draft")
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Edit">
+                        Draft
+                    </MudChip>
+                }
+                else if (context.ApprovalStatus == "Superseded")
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
+                        Superseded
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
+                        @context.ApprovalStatus
+                    </MudChip>
+                }
             </MudTd>
             <MudTd DataLabel="Actions">
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" OnClick="@(() => NavigateToDetail(context.Id))" Title="Edit Template" />
+                <div class="d-flex align-center gap-1">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" OnClick="@(() => NavigateToDetail(context.Id))" Title="Edit Template & View Studio" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" Color="Color.Secondary" OnClick="@(() => OpenCloneDialog(context))" Title="Branch New Revision" />
+                </div>
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
@@ -143,7 +202,7 @@
     </TitleContent>
     <DialogContent>
         <MudForm @ref="_form" @bind-IsValid="_formValid">
-            <MudTextField @bind-Value="_newTemplate.TemplateCode" Label="Template Code (e.g. WSP-APPROVAL-2027)" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+            <MudTextField @bind-Value="_newTemplate.TemplateCode" Label="Template Code (e.g. WSP-APPROVAL-STD)" Required="true" Variant="Variant.Outlined" Class="mb-3" />
             <MudTextField @bind-Value="_newTemplate.TemplateTitle" Label="Template Title" Required="true" Variant="Variant.Outlined" Class="mb-3" />
             <MudGrid Class="mb-3">
                 <MudItem xs="6">
@@ -151,6 +210,7 @@
                         <MudSelectItem Value="@("MandatoryGrant")">Mandatory Grant (WSP)</MudSelectItem>
                         <MudSelectItem Value="@("TradeTest")">Trade Test &amp; ARPL</MudSelectItem>
                         <MudSelectItem Value="@("EtqaAccreditation")">ETQA Accreditation</MudSelectItem>
+                        <MudSelectItem Value="@("DiscretionaryGrant")">Discretionary Grant (DG)</MudSelectItem>
                         <MudSelectItem Value="@("FinanceAudit")">Finance &amp; Audits</MudSelectItem>
                         <MudSelectItem Value="@("General")">General</MudSelectItem>
                     </MudSelect>
@@ -164,9 +224,10 @@
                     <MudNumericField @bind-Value="_newTemplate.FinancialYear" Label="Financial Year" Min="2020" Max="2035" Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudTextField @bind-Value="_newTemplate.VersionNumber" Label="Version Number (e.g. 1.0.0)" Variant="Variant.Outlined" />
+                    <MudTextField @bind-Value="_newTemplate.VersionNumber" Label="Initial Version (e.g. 1.0.0)" Required="true" Variant="Variant.Outlined" />
                 </MudItem>
             </MudGrid>
+            <MudTextField @bind-Value="_newTemplate.VersionNotes" Label="Version Description / Change Summary" Variant="Variant.Outlined" Class="mb-3" />
             <MudTextField @bind-Value="_newTemplate.FooterDisclaimerText" Label="Footer Disclaimer Text" Variant="Variant.Outlined" Lines="2" />
         </MudForm>
     </DialogContent>
@@ -176,17 +237,48 @@
     </DialogActions>
 </MudDialog>
 
+<!-- Branch / Clone Revision Dialog -->
+<MudDialog @bind-Visible="_cloneDialogOpen" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.ForkRight" Class="mr-2" /> Branch New Template Revision</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_targetForClone != null)
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-3">
+                Branching from <strong>@_targetForClone.TemplateCode</strong> (current: v@_targetForClone.VersionNumber).
+                The new version will be created as a <strong>Draft</strong>. The current active version will remain active until the new revision is formally approved.
+            </MudAlert>
+            <MudTextField @bind-Value="_newRevisionNumber" Label="New Version Number (e.g. 1.1.0, 2.0.0)" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+            <MudTextField @bind-Value="_cloneVersionNotes" Label="Reason for Revision / Change Description" Required="true" Lines="3" Variant="Variant.Outlined" Class="mb-3" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _cloneDialogOpen = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateRevisionAsync" Disabled="@(string.IsNullOrWhiteSpace(_newRevisionNumber))">
+            Create Draft Revision
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     private List<DocumentTemplate> _templates = new();
     private bool _loading = true;
     private string _searchString = string.Empty;
     private string _selectedCategory = "All";
+    private string _selectedStatus = "All";
     private int? _selectedYear;
 
     private bool _createDialogOpen = false;
     private bool _formValid = false;
     private MudForm? _form;
     private DocumentTemplate _newTemplate = new() { FinancialYear = 2026, DocumentCategory = "MandatoryGrant", DocumentTypeCode = "WspApprovalLetter", VersionNumber = "1.0.0" };
+
+    private bool _cloneDialogOpen = false;
+    private DocumentTemplate? _targetForClone;
+    private string _newRevisionNumber = "1.1.0";
+    private string _cloneVersionNotes = string.Empty;
+
     private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
 
     protected override async Task OnInitializedAsync()
@@ -213,10 +305,19 @@
 
     private IEnumerable<DocumentTemplate> FilteredTemplates => _templates.Where(t =>
     {
-        if (string.IsNullOrWhiteSpace(_searchString)) return true;
-        return t.TemplateCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
-            || t.TemplateTitle.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
-            || t.DocumentTypeCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(_searchString) &&
+            !t.TemplateCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase) &&
+            !t.TemplateTitle.Contains(_searchString, StringComparison.OrdinalIgnoreCase) &&
+            !t.DocumentTypeCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (_selectedStatus == "Active" && !(t.IsActive && t.ApprovalStatus == "Approved")) return false;
+        if (_selectedStatus == "Draft" && t.ApprovalStatus != "Draft") return false;
+        if (_selectedStatus == "Superseded" && t.ApprovalStatus != "Superseded") return false;
+
+        return true;
     });
 
     private void OpenCreateTemplateDialog()
@@ -228,9 +329,26 @@
             DocumentTypeCode = "WspApprovalLetter",
             VersionNumber = "1.0.0",
             ApprovalStatus = "Draft",
-            IsActive = true
+            IsActive = false
         };
         _createDialogOpen = true;
+    }
+
+    private void OpenCloneDialog(DocumentTemplate template)
+    {
+        _targetForClone = template;
+        // Suggest next minor revision e.g. 1.0.0 -> 1.1.0
+        var parts = template.VersionNumber.Split('.');
+        if (parts.Length == 3 && int.TryParse(parts[1], out int minor))
+        {
+            _newRevisionNumber = $"{parts[0]}.{minor + 1}.0";
+        }
+        else
+        {
+            _newRevisionNumber = template.VersionNumber + ".1";
+        }
+        _cloneVersionNotes = $"Revision derived from {template.VersionNumber}";
+        _cloneDialogOpen = true;
     }
 
     private async Task CreateTemplateAsync()
@@ -248,17 +366,24 @@
         }
     }
 
+    private async Task CreateRevisionAsync()
+    {
+        if (_targetForClone == null) return;
+        try
+        {
+            var revision = await TemplateService.CreateNewVersionAsync(_targetForClone.Id, _newRevisionNumber, _cloneVersionNotes, "Admin");
+            Snackbar.Add($"Draft revision v{revision.VersionNumber} created successfully.", Severity.Success);
+            _cloneDialogOpen = false;
+            Navigation.NavigateTo($"/admin/document-templates/{revision.Id}");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error branching revision: {ex.Message}", Severity.Error);
+        }
+    }
+
     private void NavigateToDetail(int id)
     {
         if (id > 0) Navigation.NavigateTo($"/admin/document-templates/{id}");
     }
-
-    private static Color GetStatusColor(string? status) => status switch
-    {
-        "Approved" => Color.Success,
-        "Draft" => Color.Warning,
-        "UnderReview" => Color.Info,
-        "Sunset" or "Archived" => Color.Default,
-        _ => Color.Default
-    };
 }

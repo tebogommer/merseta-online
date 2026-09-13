@@ -310,6 +310,24 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<BusinessRuleWorkflow> BusinessRuleWorkflows { get; }
     DbSet<BusinessRule> BusinessRules { get; }
 
+    // Module 17: Open Knowledge Format (OKF v0.2) Living Knowledge & Attestation Engine
+    DbSet<KnowledgeBundle> KnowledgeBundles { get; }
+    DbSet<ConceptDocument> ConceptDocuments { get; }
+    DbSet<ConceptTag> ConceptTags { get; }
+    DbSet<ConceptSource> ConceptSources { get; }
+    DbSet<ConceptVerificationEvent> ConceptVerificationEvents { get; }
+    DbSet<AttestedComputation> AttestedComputations { get; }
+    DbSet<ComputationParameter> ComputationParameters { get; }
+    DbSet<ComputationExecutionAudit> ComputationExecutionAudits { get; }
+    DbSet<ConceptCrossLink> ConceptCrossLinks { get; }
+
+    // Module 18: Interest & Conflict of Interest Management (PFMA Section 50/51 & King IV)
+    DbSet<OrganisationGovernanceMember> OrganisationGovernanceMembers { get; }
+    DbSet<InstitutionalAffiliation> InstitutionalAffiliations { get; }
+    DbSet<InterestDeclaration> InterestDeclarations { get; }
+    DbSet<InterestDeclarationItem> InterestDeclarationItems { get; }
+    DbSet<ConflictFlag> ConflictFlags { get; }
+
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
     ValueTask<object?> FindAsync(Type entityType, params object?[]? keyValues);
     Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry Add(object entity);

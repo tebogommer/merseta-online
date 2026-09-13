@@ -1,0 +1,308 @@
+@page "/governance/declarations/submit"
+@namespace Nsdms.Web.Components.Pages.Governance
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Common.Interfaces
+@attribute [Authorize(Roles = "SuperAdmin,Admin,Executive,Compliance,InternalAudit,RiskManager,ReviewCommittee")]
+@inject IConflictManagementService ConflictService
+@inject IPersonService PersonService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<main id="main-content" style="max-width: 1200px; margin: 0 auto; width: 100%;">
+    <EntityHeader Title="File Declaration of Interest (e-DOI)"
+                  Subtitle="Statutory compliance declaration under Section 50/51 of the PFMA Act 1 of 1999 and King IV Principles"
+                  BreadcrumbItems="_breadcrumbs">
+        <Actions>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Href="/governance/declarations">
+                Cancel
+            </MudButton>
+        </Actions>
+    </EntityHeader>
+
+    <MudCard Outlined="true" Class="pa-6 mb-6">
+        <MudText Typo="Typo.h6" Class="mb-4">1. Declarant &amp; Period of Disclosure</MudText>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int"
+                           Label="Select declaring individual"
+                           @bind-Value="_declaration.PersonId"
+                           Required="true"
+                           Variant="Variant.Outlined"
+                           HelperText="Employee, Board Member, or Director">
+                    @foreach (var p in _people)
+                    {
+                        <MudSelectItem Value="@p.Id">@p.FullName (@(p.RsaIdNumber ?? p.PassportNumber ?? "No ID"))</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Compliance scheme / financial year"
+                              @bind-Value="_declaration.DeclarationPeriodYear"
+                              Required="true"
+                              Variant="Variant.Outlined" />
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudSelect T="string"
+                           Label="Declaration context"
+                           @bind-Value="_declaration.DeclarationTypeCode"
+                           Required="true"
+                           Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("ANNUAL_COMPLIANCE")">Annual Fiduciary Compliance Declaration</MudSelectItem>
+                    <MudSelectItem Value="@("MEETING_RECUSAL")">Committee Adjudication / Meeting Recusal</MudSelectItem>
+                    <MudSelectItem Value="@("TENDER_EVALUATION")">Procurement / Tender Non-Conflict Attestation</MudSelectItem>
+                    <MudSelectItem Value="@("GRANT_ADJUDICATION")">Grant Adjudication Attestation</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Meeting / Project / Tender reference"
+                              @bind-Value="_declaration.MeetingOrProjectRef"
+                              Variant="Variant.Outlined"
+                              Placeholder="e.g. DG Adjudication Committee 2026/04 sitting" />
+            </MudItem>
+        </MudGrid>
+    </MudCard>
+
+    <MudCard Outlined="true" Class="pa-6 mb-6">
+        <div class="d-flex justify-space-between align-center mb-4">
+            <div>
+                <MudText Typo="Typo.h6">2. External Business Interests &amp; Directorships</MudText>
+                <MudText Typo="Typo.body2" Class="text-secondary">
+                    Declare all private companies, close corporations, partnerships, trusts, or consulting activities.
+                </MudText>
+            </div>
+            <MudCheckBox T="bool"
+                         Label="I have commercial interests / directorships to declare"
+                         @bind-Value="_declaration.HasConflictsToDeclare"
+                         Color="Color.Primary" />
+        </div>
+
+        @if (_declaration.HasConflictsToDeclare)
+        {
+            <div class="mb-4">
+                @for (int i = 0; i < _items.Count; i++)
+                {
+                    var index = i;
+                    var item = _items[index];
+                    <MudCard Outlined="true" Class="pa-4 mb-3" Style="background-color: var(--mud-palette-surface);">
+                        <div class="d-flex justify-space-between align-center mb-2">
+                            <span class="font-weight-bold" style="font-size: 0.875rem;">Disclosed Entity #@(index + 1)</span>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Size="Size.Small"
+                                           Color="Color.Error"
+                                           OnClick="@(() => RemoveItem(index))"
+                                           aria-label="Remove entity item" />
+                        </div>
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudTextField T="string"
+                                              Label="Corporate organisation name"
+                                              @bind-Value="item.OrganisationName"
+                                              Required="true"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudTextField T="string"
+                                              Label="CIPC Reg / SARS SDL number"
+                                              @bind-Value="item.RegistrationOrSdlNumber"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="Nature of relationship"
+                                           @bind-Value="item.NatureOfRelationship"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense">
+                                    <MudSelectItem Value="@("DIRECTOR")">Director / Board Member</MudSelectItem>
+                                    <MudSelectItem Value="@("SHAREHOLDER")">Shareholder (Beneficial Owner)</MudSelectItem>
+                                    <MudSelectItem Value="@("PARTNER")">Partner / Member (CC)</MudSelectItem>
+                                    <MudSelectItem Value="@("CONSULTANT")">External Consultant</MudSelectItem>
+                                    <MudSelectItem Value="@("FAMILY_MEMBER")">Immediate Family Member Interest</MudSelectItem>
+                                    <MudSelectItem Value="@("OTHER_FINANCIAL_INTEREST")">Other Financial Interest</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudNumericField T="decimal?"
+                                                 Label="Equity shareholding (%)"
+                                                 @bind-Value="item.InterestPercentage"
+                                                 Format="F2"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudNumericField T="decimal?"
+                                                 Label="Estimated annual benefit (ZAR)"
+                                                 @bind-Value="item.AnnualRemunerationOrBenefit"
+                                                 Format="N0"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCheckBox T="bool"
+                                             Label="Approved remunerative work outside public service (RWOPS)"
+                                             @bind-Value="item.IsApprovedExternalWork"
+                                             Color="Color.Info" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudTextField T="string"
+                                              Label="Approval reference number"
+                                              @bind-Value="item.ApprovalReference"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Disabled="@(!item.IsApprovedExternalWork)" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudCard>
+                }
+
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="AddItem">
+                    Add another business interest
+                </MudButton>
+            </div>
+        }
+        else
+        {
+            <div class="pa-4 border rounded text-center">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Color="Color.Success" />
+                <MudText Typo="Typo.body2" Class="mt-1">
+                    You are certifying nil outside commercial interests, shareholdings, or private directorships.
+                </MudText>
+            </div>
+        }
+
+        <MudTextField T="string"
+                      Label="General explanatory notes (optional)"
+                      @bind-Value="_declaration.GeneralDeclarationNotes"
+                      Lines="2"
+                      Variant="Variant.Outlined"
+                      Class="mt-4" />
+    </MudCard>
+
+    <MudCard Outlined="true" Class="pa-6 mb-6">
+        <MudText Typo="Typo.h6" Class="mb-2">3. Statutory Attestation &amp; Digital Seal</MudText>
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4">
+            <strong>Fiduciary Declaration:</strong> I hereby declare that the information provided herein is true, complete, and correct to the best of my knowledge. 
+            I undertake to immediately update this declaration should any alteration occur in my financial, directorship, or beneficial ownership status, 
+            and to recuse myself from any discussion, evaluation, or adjudication concerning any entity in which I hold a personal interest.
+        </MudAlert>
+
+        <div class="d-flex justify-end gap-3 mt-4">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       Href="/governance/declarations"
+                       StartIcon="@Icons.Material.Filled.Close">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Disabled="@_isSubmitting"
+                       OnClick="SubmitDeclarationAsync"
+                       StartIcon="@Icons.Material.Filled.Send">
+                @if (_isSubmitting)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <span>Submitting declaration...</span>
+                }
+                else
+                {
+                    <span>Attest &amp; submit declaration</span>
+                }
+            </MudButton>
+        </div>
+    </MudCard>
+</main>
+
+@code {
+    private bool _isSubmitting = false;
+    private List<Person> _people = new();
+    private InterestDeclaration _declaration = new()
+    {
+        DeclarationPeriodYear = "2026",
+        DeclarationTypeCode = "ANNUAL_COMPLIANCE"
+    };
+    private List<InterestDeclarationItem> _items = new();
+
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Governance", href: "/governance/dashboard"),
+        new BreadcrumbItem("Declarations", href: "/governance/declarations"),
+        new BreadcrumbItem("File declaration", href: null, disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _people = await PersonService.GetAllAsync();
+        if (_people.Count > 0)
+        {
+            _declaration.PersonId = _people.First().Id;
+        }
+    }
+
+    private void AddItem()
+    {
+        _items.Add(new InterestDeclarationItem
+        {
+            NatureOfRelationship = "DIRECTOR"
+        });
+    }
+
+    private void RemoveItem(int index)
+    {
+        if (index >= 0 && index < _items.Count)
+        {
+            _items.RemoveAt(index);
+        }
+    }
+
+    private async Task SubmitDeclarationAsync()
+    {
+        if (_declaration.PersonId == 0)
+        {
+            Snackbar.Add("Please select a declaring individual.", Severity.Warning);
+            return;
+        }
+
+        if (_declaration.HasConflictsToDeclare && _items.Count == 0)
+        {
+            Snackbar.Add("Please add at least one disclosed entity item.", Severity.Warning);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            await ConflictService.SubmitDeclarationAsync(_declaration, _items, "DeclarationsPortal");
+            Snackbar.Add("Declaration of Interest submitted and digitally sealed.", Severity.Success);
+            Nav.NavigateTo("/governance/declarations");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error submitting declaration: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

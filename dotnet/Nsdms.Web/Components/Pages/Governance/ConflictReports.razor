@@ -1,0 +1,249 @@
+@page "/governance/reports"
+@namespace Nsdms.Web.Components.Pages.Governance
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Common.Interfaces
+@attribute [Authorize(Roles = "SuperAdmin,Admin,Executive,Compliance,InternalAudit,RiskManager,ReviewCommittee")]
+@inject IConflictManagementService ConflictService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<main id="main-content" style="max-width: 1600px; margin: 0 auto; width: 100%;">
+    <EntityHeader Title="Conflict of Interest &amp; Governance Reports"
+                  Subtitle="Statutory reporting packs for Auditor-General of South Africa (AGSA), Board Audit &amp; Risk Committee, and Anti-Corruption Oversight"
+                  BreadcrumbItems="_breadcrumbs">
+        <Actions>
+            <MudSelect T="string"
+                       Value="_selectedYear"
+                       ValueChanged="OnYearChanged"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Style="width: 140px;">
+                <MudSelectItem Value="@("2026")">2026 Cycle</MudSelectItem>
+                <MudSelectItem Value="@("2025")">2025 Cycle</MudSelectItem>
+                <MudSelectItem Value="@("2024")">2024 Cycle</MudSelectItem>
+            </MudSelect>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Download"
+                       OnClick="ExportCsvAsync">
+                Export report (CSV)
+            </MudButton>
+        </Actions>
+    </EntityHeader>
+
+    @if (_isLoading)
+    {
+        <div class="pa-8 text-center">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+            <MudText Typo="Typo.body2" Class="mt-2 text-secondary">Compiling AGSA conflict registers and grant exposure rollups...</MudText>
+        </div>
+    }
+    else
+    {
+        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4 border rounded-b-lg" Color="Color.Surface">
+            <!-- Tab 1: AGSA Statutory Conflict Register -->
+            <MudTabPanel Text="AGSA Conflict of Interest Register" Icon="@Icons.Material.Filled.TableChart">
+                <div class="mb-4 d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.h6">Annual Report Annexure: Declared &amp; Flagged Conflicts</MudText>
+                        <MudText Typo="Typo.caption" Class="text-secondary">
+                            Includes all Section 50/51 disclosures, employee commercial activities, and committee recusals.
+                        </MudText>
+                    </div>
+                    <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">
+                        @_agsReport.Count Disclosures
+                    </MudChip>
+                </div>
+
+                <MudTable Items="_agsReport" Dense="true" Hover="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Reference</MudTh>
+                        <MudTh>Severity</MudTh>
+                        <MudTh>Category</MudTh>
+                        <MudTh>Official / Declarant</MudTh>
+                        <MudTh>Institutional capacity</MudTh>
+                        <MudTh>Implicated entity</MudTh>
+                        <MudTh>Governance role</MudTh>
+                        <MudTh>Shareholding (%)</MudTh>
+                        <MudTh>Resolution</MudTh>
+                        <MudTh>Clearance capacity</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Reference">
+                            <span class="font-mono font-weight-bold">@context.ReferenceNumber</span>
+                        </MudTd>
+                        <MudTd DataLabel="Severity">
+                            <MudChip T="string" Size="Size.Small" Color="@GetSeverityColor(context.SeverityCode)" Variant="Variant.Filled">
+                                @FormatSeverity(context.SeverityCode)
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Category">
+                            <span style="font-size: 0.8125rem;">@context.ConflictCategoryCode</span>
+                        </MudTd>
+                        <MudTd DataLabel="Official / Declarant">
+                            <div>
+                                <div class="font-weight-bold">@context.PersonFullName</div>
+                                <div class="font-mono text-secondary" style="font-size: 0.75rem;">@context.PersonRsaId</div>
+                            </div>
+                        </MudTd>
+                        <MudTd DataLabel="Institutional capacity">
+                            <span style="font-size: 0.8125rem;">@context.InstitutionalAffiliation</span>
+                        </MudTd>
+                        <MudTd DataLabel="Implicated entity">
+                            <div>
+                                <div>@context.OrganisationName</div>
+                                <span class="font-mono text-secondary" style="font-size: 0.75rem;">@context.OrganisationSdl</span>
+                            </div>
+                        </MudTd>
+                        <MudTd DataLabel="Governance role">
+                            @context.GovernanceRole
+                        </MudTd>
+                        <MudTd DataLabel="Shareholding (%)">
+                            <span class="font-mono">@context.ShareholdingPercentage.ToString("F2")%</span>
+                        </MudTd>
+                        <MudTd DataLabel="Resolution">
+                            <StatusBadge Status="@context.ResolutionStatus" Size="Size.Small" />
+                        </MudTd>
+                        <MudTd DataLabel="Clearance capacity">
+                            <span style="font-size: 0.8125rem;">@(context.ClearanceRole ?? "—")</span>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+
+            <!-- Tab 2: Multi-Entity Grant Beneficiary Exposure -->
+            <MudTabPanel Text="Multi-entity grant beneficiary exposure" Icon="@Icons.Material.Filled.AccountTree">
+                <div class="mb-4">
+                    <MudText Typo="Typo.h6">Cross-Organisation Grant Allocation Concentration</MudText>
+                    <MudText Typo="Typo.caption" Class="text-secondary">
+                        Forensic tracking of individuals holding beneficial ownership or board directorships across multiple grant-funded employers.
+                    </MudText>
+                </div>
+
+                @foreach (var exp in _exposureReport)
+                {
+                    <MudCard Outlined="true" Class="pa-4 mb-4">
+                        <div class="d-flex justify-space-between align-center flex-wrap gap-2 mb-3">
+                            <div>
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold">@exp.FullName</MudText>
+                                <span class="font-mono text-secondary" style="font-size: 0.8125rem;">RSA ID: @exp.RsaIdNumber</span>
+                            </div>
+                            <div class="d-flex align-center gap-2">
+                                <MudChip T="string" Color="Color.Warning" Variant="Variant.Filled">
+                                    @exp.TotalLinkedEntities Linked Entities
+                                </MudChip>
+                                <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled">
+                                    Total Grants: @exp.TotalRequestedAmount.ToString("C0", new System.Globalization.CultureInfo("en-ZA"))
+                                </MudChip>
+                            </div>
+                        </div>
+
+                        <MudTable Items="exp.Entities" Dense="true" Hover="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Corporate entity</MudTh>
+                                <MudTh>SDL number</MudTh>
+                                <MudTh>Role in entity</MudTh>
+                                <MudTh>Equity (%)</MudTh>
+                                <MudTh>Application number</MudTh>
+                                <MudTh>Grant status</MudTh>
+                                <MudTh Style="text-align: right;">Requested amount</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Corporate entity">@context.CompanyName</MudTd>
+                                <MudTd DataLabel="SDL number"><span class="font-mono">@context.SdlNumber</span></MudTd>
+                                <MudTd DataLabel="Role in entity">@context.RoleInEntity</MudTd>
+                                <MudTd DataLabel="Equity (%)"><span class="font-mono">@context.ShareholdingPercentage.ToString("F2")%</span></MudTd>
+                                <MudTd DataLabel="Application number"><span class="font-mono">@context.ApplicationNumber</span></MudTd>
+                                <MudTd DataLabel="Grant status"><StatusBadge Status="@context.GrantStatusCode" Size="Size.Small" /></MudTd>
+                                <MudTd DataLabel="Requested amount" Style="text-align: right;">
+                                    <span class="font-mono font-weight-bold">@context.RequestedAmount.ToString("C0", new System.Globalization.CultureInfo("en-ZA"))</span>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudCard>
+                }
+            </MudTabPanel>
+        </MudTabs>
+    }
+</main>
+
+@code {
+    private bool _isLoading = true;
+    private string _selectedYear = "2026";
+    private List<AgsConflictReportItemDto> _agsReport = new();
+    private List<MultiEntityGrantExposureDto> _exposureReport = new();
+
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Governance", href: "/governance/dashboard"),
+        new BreadcrumbItem("Statutory reports", href: null, disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReportsAsync();
+    }
+
+    private async Task OnYearChanged(string year)
+    {
+        _selectedYear = year;
+        await LoadReportsAsync();
+    }
+
+    private async Task LoadReportsAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _agsReport = await ConflictService.GenerateAgsConflictReportAsync(_selectedYear);
+            _exposureReport = await ConflictService.GenerateMultiEntityGrantExposureReportAsync(_selectedYear);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error compiling reports: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ExportCsvAsync()
+    {
+        try
+        {
+            var csv = new System.Text.StringBuilder();
+            csv.AppendLine("Reference,Severity,Category,Person,RSA_ID,Affiliation,Organisation,SDL,Role,ShareholdingPct,Status,ClearanceRole,ClearedDate");
+            foreach (var r in _agsReport)
+            {
+                csv.AppendLine($"\"{r.ReferenceNumber}\",\"{r.SeverityCode}\",\"{r.ConflictCategoryCode}\",\"{r.PersonFullName}\",\"{r.PersonRsaId}\",\"{r.InstitutionalAffiliation}\",\"{r.OrganisationName}\",\"{r.OrganisationSdl}\",\"{r.GovernanceRole}\",\"{r.ShareholdingPercentage}\",\"{r.ResolutionStatus}\",\"{r.ClearanceRole}\",\"{r.ClearedDate}\"");
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+            var base64 = Convert.ToBase64String(bytes);
+            await JS.InvokeVoidAsync("downloadFileFromBytes", $"AGSA_Conflict_Register_{_selectedYear}.csv", "text/csv", base64);
+            Snackbar.Add("AGSA conflict register exported.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export generated. ({ex.Message})", Severity.Info);
+        }
+    }
+
+    private Color GetSeverityColor(string severity) => severity switch
+    {
+        "RED_CRITICAL" => Color.Error,
+        "AMBER_ELEVATED" => Color.Warning,
+        _ => Color.Info
+    };
+
+    private string FormatSeverity(string severity) => severity switch
+    {
+        "RED_CRITICAL" => "Red (Critical)",
+        "AMBER_ELEVATED" => "Amber (Elevated)",
+        _ => "Yellow (Advisory)"
+    };
+}

@@ -1,0 +1,222 @@
+@page "/admin/governance/insiders"
+@namespace Nsdms.Web.Components.Pages.Governance
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Common.Interfaces
+@attribute [Authorize(Roles = "SuperAdmin,Admin,Executive,Compliance,InternalAudit,RiskManager,ReviewCommittee")]
+@inject IConflictManagementService ConflictService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<main id="main-content" style="max-width: 1600px; margin: 0 auto; width: 100%;">
+    <EntityHeader Title="Institutional Insiders &amp; Accounting Authority"
+                  Subtitle="Directory of merSETA Employees, Board Members, and Independent Committee Specialists subject to PFMA disclosure"
+                  BreadcrumbItems="_breadcrumbs">
+        <Actions>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.PersonAdd"
+                       OnClick="OpenAddInsiderDialogAsync">
+                Register insider
+            </MudButton>
+        </Actions>
+    </EntityHeader>
+
+    <DataGridShell TItem="InstitutionalAffiliation"
+                   Items="_affiliations"
+                   IsLoading="_isLoading"
+                   SearchPlaceholder="Search by name, designation, or committee..."
+                   QuickFilter="FilterInsider">
+        <ChildContent>
+            <MudTable Items="_affiliations" Hover="true" Dense="true" Elevation="0" Breakpoint="Breakpoint.Sm" Class="border-default">
+                <HeaderContent>
+                    <MudTh>Official / Member Name</MudTh>
+                    <MudTh>Affiliation Category</MudTh>
+                    <MudTh>Department / Committee</MudTh>
+                    <MudTh>Official Designation</MudTh>
+                    <MudTh>Staff Reference</MudTh>
+                    <MudTh>Independent</MudTh>
+                    <MudTh>Term Conclusion</MudTh>
+                    <MudTh>Standing</MudTh>
+                    <MudTh Style="text-align:right">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Official / Member Name">
+                        <div>
+                            <div class="font-weight-bold">@(context.Person?.FullName ?? "N/A")</div>
+                            <div class="font-mono text-secondary" style="font-size: 0.75rem;">
+                                @(context.Person?.RsaIdNumber ?? context.Person?.PassportNumber ?? "")
+                            </div>
+                        </div>
+                    </MudTd>
+                    <MudTd DataLabel="Affiliation Category">
+                        <MudChip T="string" Size="Size.Small" Color="@GetAffiliationColor(context.AffiliationTypeCode)" Variant="Variant.Filled">
+                            @FormatAffiliation(context.AffiliationTypeCode)
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Department / Committee">
+                        <span class="font-weight-medium">@context.DepartmentOrCommittee</span>
+                    </MudTd>
+                    <MudTd DataLabel="Official Designation">
+                        <span>@context.Designation</span>
+                    </MudTd>
+                    <MudTd DataLabel="Staff Reference">
+                        <span class="font-mono">@(context.EmployeeNumber ?? "—")</span>
+                    </MudTd>
+                    <MudTd DataLabel="Independent">
+                        @if (context.IsIndependentMember)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">Independent Specialist</MudChip>
+                        }
+                        else
+                        {
+                            <span class="text-secondary">—</span>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Term Conclusion">
+                        <span class="font-mono" style="font-size: 0.8125rem;">
+                            @(context.TermEndDate.HasValue ? context.TermEndDate.Value.ToString("yyyy-MM-dd") : "Permanent / Ongoing")
+                        </span>
+                    </MudTd>
+                    <MudTd DataLabel="Standing">
+                        <StatusBadge Status="@(context.IsActive ? "ACTIVE" : "INACTIVE")" Size="Size.Small" />
+                    </MudTd>
+                    <MudTd Style="text-align:right" DataLabel="Actions">
+                        <div class="d-flex justify-end gap-1">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Size="Size.Small"
+                                           Color="Color.Primary"
+                                           OnClick="@(() => OpenEditInsiderDialogAsync(context))"
+                                           aria-label="Edit insider affiliation" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Block"
+                                           Size="Size.Small"
+                                           Color="Color.Error"
+                                           Disabled="@(!context.IsActive)"
+                                           OnClick="@(() => DeactivateInsiderAsync(context))"
+                                           aria-label="Deactivate insider" />
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
+                </PagerContent>
+            </MudTable>
+        </ChildContent>
+    </DataGridShell>
+</main>
+
+@code {
+    private bool _isLoading = true;
+    private List<InstitutionalAffiliation> _affiliations = new();
+
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Governance", href: "/governance/dashboard"),
+        new BreadcrumbItem("Institutional insiders", href: null, disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInsidersAsync();
+    }
+
+    private async Task LoadInsidersAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _affiliations = await ConflictService.GetInstitutionalAffiliationsAsync(activeOnly: false);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading institutional insiders: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private bool FilterInsider(InstitutionalAffiliation item, string search)
+    {
+        if (string.IsNullOrWhiteSpace(search)) return true;
+        return (item.Person?.FirstName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (item.Person?.LastName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (item.DepartmentOrCommittee?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (item.Designation?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (item.EmployeeNumber?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+
+    private async Task OpenAddInsiderDialogAsync()
+    {
+        var parameters = new DialogParameters<AddInstitutionalInsiderDialog>
+        {
+            { x => x.Affiliation, new InstitutionalAffiliation() },
+            { x => x.CurrentUsername, "GovernanceOfficer" }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<AddInstitutionalInsiderDialog>("Register Institutional Insider", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadInsidersAsync();
+        }
+    }
+
+    private async Task OpenEditInsiderDialogAsync(InstitutionalAffiliation item)
+    {
+        var parameters = new DialogParameters<AddInstitutionalInsiderDialog>
+        {
+            { x => x.Affiliation, item },
+            { x => x.CurrentUsername, "GovernanceOfficer" }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<AddInstitutionalInsiderDialog>("Edit Institutional Insider", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadInsidersAsync();
+        }
+    }
+
+    private async Task DeactivateInsiderAsync(InstitutionalAffiliation item)
+    {
+        var confirm = await DialogService.ShowMessageBoxAsync(
+            "Confirm Deactivation",
+            $"Are you sure you want to deactivate the institutional appointment for {item.Person?.FullName} ({item.Designation})?",
+            yesText: "Deactivate", cancelText: "Cancel");
+
+        if (confirm == true)
+        {
+            await ConflictService.DeactivateInstitutionalAffiliationAsync(item.Id, "GovernanceOfficer");
+            Snackbar.Add("Institutional affiliation deactivated.", Severity.Info);
+            await LoadInsidersAsync();
+        }
+    }
+
+    private Color GetAffiliationColor(string code) => code switch
+    {
+        "ACCOUNTING_AUTHORITY_MEMBER" => Color.Primary,
+        "INDEPENDENT_COMMITTEE_MEMBER" => Color.Info,
+        "EXECUTIVE_MANAGEMENT" => Color.Secondary,
+        "PERMANENT_EMPLOYEE" => Color.Default,
+        _ => Color.Default
+    };
+
+    private string FormatAffiliation(string code) => code switch
+    {
+        "ACCOUNTING_AUTHORITY_MEMBER" => "Board Member",
+        "INDEPENDENT_COMMITTEE_MEMBER" => "Independent Member",
+        "EXECUTIVE_MANAGEMENT" => "Executive",
+        "PERMANENT_EMPLOYEE" => "Staff Employee",
+        "ADJUDICATION_OFFICER" => "Adjudication Officer",
+        "CONTRACTOR" => "Contractor",
+        _ => code
+    };
+}

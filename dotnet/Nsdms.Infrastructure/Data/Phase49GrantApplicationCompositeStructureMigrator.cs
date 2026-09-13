@@ -109,7 +109,7 @@ public static class Phase49GrantApplicationCompositeStructureMigrator
                 END;
             ";
 
-            await context.Database.ExecuteSqlRawAsync(ddlSql);
+            await SqlBatchRunner.ExecuteBatchesAsync(context, ddlSql, logger);
             logger?.LogInformation("Phase49: Successfully executed GrantApplication composite structure and intervention line item migrations.");
         }
     }

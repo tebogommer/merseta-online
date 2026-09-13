@@ -1,0 +1,182 @@
+@namespace Nsdms.Web.Components.Pages.Governance
+@using MudBlazor
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Common.Interfaces
+@inject IConflictManagementService ConflictService
+@inject IPersonService PersonService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Badge" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">@(Affiliation.Id > 0 ? "Edit institutional insider" : "Register institutional insider")</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="pa-2">
+            <MudGrid>
+                @if (Affiliation.Id == 0)
+                {
+                    <MudItem xs="12">
+                        <MudSelect T="int"
+                                   Label="Select person profile"
+                                   @bind-Value="Affiliation.PersonId"
+                                   Required="true"
+                                   Variant="Variant.Outlined"
+                                   HelperText="Person demographic record in merSETA directory">
+                            @foreach (var p in _people)
+                            {
+                                <MudSelectItem Value="@p.Id">@p.FullName (@(p.RsaIdNumber ?? p.PassportNumber ?? "No ID"))</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.body2" Class="text-secondary">Person: <strong>@(Affiliation.Person?.FullName ?? "N/A")</strong></MudText>
+                    </MudItem>
+                }
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               Label="Affiliation category"
+                               @bind-Value="Affiliation.AffiliationTypeCode"
+                               Required="true"
+                               Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("ACCOUNTING_AUTHORITY_MEMBER")">Accounting Authority (Board Member)</MudSelectItem>
+                        <MudSelectItem Value="@("INDEPENDENT_COMMITTEE_MEMBER")">Independent Committee Member</MudSelectItem>
+                        <MudSelectItem Value="@("EXECUTIVE_MANAGEMENT")">Executive Management</MudSelectItem>
+                        <MudSelectItem Value="@("PERMANENT_EMPLOYEE")">Permanent Staff Employee</MudSelectItem>
+                        <MudSelectItem Value="@("ADJUDICATION_OFFICER")">Grant / Tender Adjudication Officer</MudSelectItem>
+                        <MudSelectItem Value="@("CONTRACTOR")">Contractor / Specialist Advisor</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Department / Committee"
+                                  @bind-Value="Affiliation.DepartmentOrCommittee"
+                                  Required="true"
+                                  Variant="Variant.Outlined"
+                                  Placeholder="e.g. Audit &amp; Risk Committee, Grants &amp; Operations" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Designation / Official title"
+                                  @bind-Value="Affiliation.Designation"
+                                  Required="true"
+                                  Variant="Variant.Outlined"
+                                  Placeholder="e.g. Board Chairperson, Senior Evaluator" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Employee / Staff number"
+                                  @bind-Value="Affiliation.EmployeeNumber"
+                                  Variant="Variant.Outlined"
+                                  Placeholder="Optional internal payroll ID" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudDatePicker Label="Term start date"
+                                   @bind-Date="_termStartDate"
+                                   Variant="Variant.Outlined" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudDatePicker Label="Term conclusion date"
+                                   @bind-Date="_termEndDate"
+                                   Variant="Variant.Outlined" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudCheckBox T="bool"
+                                 Label="Independent specialist member"
+                                 @bind-Value="Affiliation.IsIndependentMember"
+                                 Color="Color.Primary" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudCheckBox T="bool"
+                                 Label="Active appointment standing"
+                                 @bind-Value="Affiliation.IsActive"
+                                 Color="Color.Success" />
+                </MudItem>
+            </MudGrid>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Close">
+            Cancel
+        </MudButton>
+        <MudButton OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@_isSubmitting" StartIcon="@Icons.Material.Filled.Save">
+            Save affiliation
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public InstitutionalAffiliation Affiliation { get; set; } = new();
+    [Parameter] public string CurrentUsername { get; set; } = "SYSTEM";
+
+    private List<Person> _people = new();
+    private DateTime? _termStartDate;
+    private DateTime? _termEndDate;
+    private bool _isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _people = await PersonService.GetAllAsync();
+        _termStartDate = Affiliation.TermStartDate;
+        _termEndDate = Affiliation.TermEndDate;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        if (Affiliation.PersonId == 0)
+        {
+            Snackbar.Add("Please select a person record.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Affiliation.DepartmentOrCommittee) || string.IsNullOrWhiteSpace(Affiliation.Designation))
+        {
+            Snackbar.Add("Department/Committee and Designation are mandatory.", Severity.Warning);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            Affiliation.TermStartDate = _termStartDate;
+            Affiliation.TermEndDate = _termEndDate;
+
+            if (Affiliation.Id > 0)
+            {
+                await ConflictService.UpdateInstitutionalAffiliationAsync(Affiliation, CurrentUsername);
+                Snackbar.Add("Institutional affiliation updated successfully.", Severity.Success);
+            }
+            else
+            {
+                await ConflictService.AddInstitutionalAffiliationAsync(Affiliation, CurrentUsername);
+                Snackbar.Add("Institutional affiliation registered successfully.", Severity.Success);
+            }
+
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving affiliation: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

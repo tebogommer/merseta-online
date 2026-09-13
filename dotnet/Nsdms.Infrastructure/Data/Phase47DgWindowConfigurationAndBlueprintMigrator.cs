@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -58,10 +58,21 @@ public static class Phase47DgWindowConfigurationAndBlueprintMigrator
                 WHEN NOT MATCHED THEN
                     INSERT ([Code], [Name], [Description], [Active], [CreatedAt], [CreatedBy])
                     VALUES (source.[Code], source.[Name], source.[Description], 1, SYSUTCDATETIME(), 'SYSTEM');
+                GO
 
                 -- 2. Expand lookup.InterventionType
                 IF EXISTS (SELECT * FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = 'lookup' AND t.name = 'InterventionType')
                 BEGIN
+                    IF EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'lookup' AND TABLE_NAME = 'InterventionType' AND COLUMN_NAME = 'Code' AND CHARACTER_MAXIMUM_LENGTH < 50)
+                    BEGIN
+                        DECLARE @pkName NVARCHAR(128);
+                        SELECT @pkName = kc.name FROM sys.key_constraints kc WHERE kc.parent_object_id = OBJECT_ID('lookup.InterventionType') AND kc.type = 'PK';
+                        IF @pkName IS NOT NULL
+                            EXEC('ALTER TABLE [lookup].[InterventionType] DROP CONSTRAINT [' + @pkName + '];');
+                        ALTER TABLE [lookup].[InterventionType] ALTER COLUMN [Code] NVARCHAR(50) NOT NULL;
+                        ALTER TABLE [lookup].[InterventionType] ADD CONSTRAINT [PK_InterventionType] PRIMARY KEY ([Code]);
+                    END;
+
                     IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('lookup.InterventionType') AND name = 'IsPivotal')
                         ALTER TABLE [lookup].[InterventionType] ADD [IsPivotal] BIT NOT NULL CONSTRAINT DF_InterventionType_IsPivotal DEFAULT 1;
 
@@ -71,6 +82,7 @@ public static class Phase47DgWindowConfigurationAndBlueprintMigrator
                     IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('lookup.InterventionType') AND name = 'DefaultUnitCost')
                         ALTER TABLE [lookup].[InterventionType] ADD [DefaultUnitCost] DECIMAL(18,2) NOT NULL CONSTRAINT DF_InterventionType_Cost DEFAULT 0.00;
                 END;
+                GO
 
                 -- Seed PIVOTAL and Non-PIVOTAL interventions
                 MERGE INTO [lookup].[InterventionType] AS target
@@ -288,7 +300,7 @@ public static class Phase47DgWindowConfigurationAndBlueprintMigrator
                 END;
             ";
 
-            await context.Database.ExecuteSqlRawAsync(ddlSql);
+            await SqlBatchRunner.ExecuteBatchesAsync(context, ddlSql, logger);
             logger?.LogInformation("Phase 47 Schema Migration: StakeholderEligibilityType, InterventionType catalog, GrantWindowEligibility, GrantWindowIntervention, and GrantWindowTemplate blueprints verified.");
         }
     }

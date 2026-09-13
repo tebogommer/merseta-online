@@ -475,6 +475,11 @@ public class GrantApplication : BaseEntity
     /// Structured interventions and training plan line items attached to this grant application.
     /// </summary>
     public ICollection<GrantApplicationIntervention> Interventions { get; set; } = new List<GrantApplicationIntervention>();
+
+    /// <summary>
+    /// Conflict of interest flags raised against this grant application.
+    /// </summary>
+    public ICollection<ConflictFlag> ConflictFlags { get; set; } = new List<ConflictFlag>();
 }
 
 /// <summary>

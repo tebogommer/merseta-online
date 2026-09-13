@@ -709,4 +709,67 @@ public class PersonServiceTests
     }
 
     #endregion
+
+    #region Lookup Autocomplete Performance Tests
+
+    [Fact]
+    public async Task SearchLookupAsync_LimitsResultsAndMatchesNameOrId()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        for (int i = 1; i <= 30; i++)
+        {
+            db.People.Add(new Person
+            {
+                FirstName = $"Candidate{i}",
+                LastName = "AutocompleteTest",
+                RsaIdNumber = $"900101500{i:D4}",
+                Email = $"candidate{i}@test.org.za"
+            });
+        }
+        await db.SaveChangesAsync();
+
+        // Act - search with match
+        var results = await service.SearchLookupAsync("Candidate", limit: 10);
+
+        // Assert - bounded to 10
+        Assert.NotNull(results);
+        Assert.Equal(10, results.Count);
+        Assert.All(results, r => Assert.Contains("Candidate", r.FullName));
+
+        // Act - search with specific RSA ID
+        var single = await service.SearchLookupAsync("9001015000005", limit: 10);
+        Assert.Single(single);
+        Assert.Equal("Candidate5 AutocompleteTest", single[0].FullName);
+    }
+
+    [Fact]
+    public async Task GetLookupByIdAsync_ReturnsCorrectDto()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        var person = new Person
+        {
+            FirstName = "Lookup",
+            LastName = "Target",
+            RsaIdNumber = "8502025009081",
+            Email = "lookup.target@test.org.za",
+            PhoneNumber = "0115559876"
+        };
+        db.People.Add(person);
+        await db.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetLookupByIdAsync(person.Id);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(person.Id, result.Id);
+        Assert.Equal("Lookup Target", result.FullName);
+        Assert.Equal("8502025009081", result.RsaIdNumber);
+        Assert.Equal("Lookup Target (ID: 8502025009081)", result.DisplayText);
+    }
+
+    #endregion
 }
+

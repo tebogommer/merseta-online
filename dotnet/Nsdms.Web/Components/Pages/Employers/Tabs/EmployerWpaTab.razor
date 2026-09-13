@@ -1,0 +1,92 @@
+@namespace Nsdms.Web.Components.Pages.Employers.Tabs
+@using Nsdms.Application.Services
+@using Nsdms.Application.Common.Models
+@inject IOrganisationService OrgService
+
+<div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
+    <div>
+        <MudText Typo="Typo.h6">Workplace Site Approvals (WPA)</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">Host workplace site inspections, approved trades, qualified artisan mentors, and tooling</MudText>
+    </div>
+    <div class="d-flex gap-2">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="@($"/workplace-approvals/create?organisationId={OrganisationId}")" aria-label="Apply for Workplace Approval">
+            Apply for Workplace Approval
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Engineering" Href="/workplace-approvals" aria-label="Open Workplace Approval Hub">
+            WPA Hub
+        </MudButton>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else
+{
+    <MudTable Items="_wpas" Hover="true" Dense="true" Striped="true" Elevation="1">
+        <HeaderContent>
+            <MudTh>Approval Number</MudTh>
+            <MudTh>Facility / Site</MudTh>
+            <MudTh>Approved Trade / Qualification</MudTh>
+            <MudTh>Mentors</MudTh>
+            <MudTh>Tool Items</MudTh>
+            <MudTh>Inspection Date</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh Style="text-align:right">Action</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Approval No"><strong>@context.ApprovalNumber</strong></MudTd>
+            <MudTd DataLabel="Site">@context.SiteName</MudTd>
+            <MudTd DataLabel="Qualification">@context.QualificationTitle</MudTd>
+            <MudTd DataLabel="Mentors">
+                <MudChip T="string" Color="Color.Info" Size="Size.Small">@context.MentorsCount Mentors</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Tools">
+                <MudChip T="string" Color="Color.Secondary" Size="Size.Small">@context.ToolItemsCount Verified</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Inspection Date">@(context.InspectionDate.HasValue ? context.InspectionDate.Value.ToString("yyyy-MM-dd") : "-")</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Color="@(context.ApprovalStatusCode == "Approved" ? Color.Success : Color.Warning)" Size="Size.Small">
+                    @context.ApprovalStatusCode
+                </MudChip>
+            </MudTd>
+            <MudTd Style="text-align:right" DataLabel="Action">
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FactCheck" Href="@($"/workplace-approvals/{context.WorkplaceApprovalId}")" aria-label="View Workplace Approval">
+                    View WPA
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <div class="pa-4 text-center">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">No workplace approvals registered for this employer yet.</MudText>
+            </div>
+        </NoRecordsContent>
+    </MudTable>
+}
+
+@code {
+    [Parameter] public int OrganisationId { get; set; }
+
+    private bool _loading = true;
+    private List<OrganisationWpaDto> _wpas = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadWpasAsync();
+    }
+
+    private async Task LoadWpasAsync()
+    {
+        if (OrganisationId <= 0) return;
+        _loading = true;
+        try
+        {
+            _wpas = await OrgService.GetWorkplaceApprovalsAsync(OrganisationId);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

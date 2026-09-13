@@ -1,0 +1,437 @@
+@namespace Nsdms.Web.Components.Pages.Employers.Tabs
+@using MudBlazor
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Services
+@using Nsdms.Application.Common.Interfaces
+@inject IConflictManagementService ConflictService
+@inject IPersonService PersonService
+@inject IOrganisationService OrganisationService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@(IsDirector ? Icons.Material.Filled.Badge : Icons.Material.Filled.PieChart)" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">
+                @(Member.Id > 0 
+                    ? (IsDirector ? "Edit Director Record" : "Edit Shareholder Record")
+                    : (IsDirector ? "Capture Board Director" : "Capture Beneficial Shareholder"))
+            </MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="pa-2">
+            @if (IsDirector)
+            {
+                <!-- ================= DIRECTOR CAPTURE ================= -->
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-1">
+                            Directors must be verified natural persons holding fiduciary responsibility in terms of the Companies Act and PFMA.
+                        </MudText>
+                    </MudItem>
+
+                    <!-- Director Classification -->
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="string"
+                                   Label="Director classification"
+                                   @bind-Value="_directorCategory"
+                                   Required="true"
+                                   Variant="Variant.Outlined"
+                                   HelperText="Executive (daily management) or Non-Executive (board oversight)">
+                            <MudSelectItem Value="@("EXECUTIVE")">Executive Director</MudSelectItem>
+                            <MudSelectItem Value="@("NON_EXECUTIVE")">Non-Executive Director</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+
+                    <!-- Governance Role / Office -->
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="string"
+                                   Label="Designated governance office"
+                                   @bind-Value="Member.GovernanceRoleCode"
+                                   Required="true"
+                                   Variant="Variant.Outlined">
+                            @if (_directorCategory == "EXECUTIVE")
+                            {
+                                <MudSelectItem Value="@("MANAGING_DIRECTOR")">Managing Director / CEO</MudSelectItem>
+                                <MudSelectItem Value="@("DIRECTOR_EXECUTIVE")">Executive Director</MudSelectItem>
+                                <MudSelectItem Value="@("DIRECTOR_FINANCIAL")">Financial Director / CFO</MudSelectItem>
+                                <MudSelectItem Value="@("DIRECTOR_OPERATIONS")">Operations Director / COO</MudSelectItem>
+                                <MudSelectItem Value="@("DIRECTOR")">General Director</MudSelectItem>
+                            }
+                            else
+                            {
+                                <MudSelectItem Value="@("BOARD_CHAIR")">Board Chairperson</MudSelectItem>
+                                <MudSelectItem Value="@("INDEPENDENT_DIRECTOR")">Independent Non-Executive Director</MudSelectItem>
+                                <MudSelectItem Value="@("DIRECTOR_NON_EXECUTIVE")">Non-Executive Director</MudSelectItem>
+                                <MudSelectItem Value="@("BOARD_MEMBER")">Board Member</MudSelectItem>
+                                <MudSelectItem Value="@("TRUSTEE")">Trustee</MudSelectItem>
+                                <MudSelectItem Value="@("PARTNER")">Partner (CC Member)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    <!-- Person Autocomplete (Natural Person) -->
+                    <MudItem xs="12">
+                        @if (Member.Id == 0)
+                        {
+                            <MudAutocomplete T="PersonLookupDto"
+                                             Label="Select director (Natural person)"
+                                             Value="_selectedPerson"
+                                             ValueChanged="OnPersonSelected"
+                                             SearchFunc="SearchPeopleAsync"
+                                             ToStringFunc="@(p => p != null ? $"{p.FullName} (RSA ID: {p.RsaIdNumber ?? "N/A"})" : string.Empty)"
+                                             ResetValueOnEmptyText="true"
+                                             CoerceText="true"
+                                             Variant="Variant.Outlined"
+                                             Required="true"
+                                             AdornmentIcon="@Icons.Material.Filled.Search"
+                                             AdornmentColor="Color.Primary"
+                                             HelperText="Search by name, surname, or 13-digit RSA National ID" />
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Class="text-secondary">
+                                Director identity: <strong>@(Member.Person?.FullName ?? Member.DisplayName)</strong>
+                                <span class="font-mono ml-2">(@Member.DisplayIdentifier)</span>
+                            </MudText>
+                        }
+                    </MudItem>
+
+                    <!-- Dates -->
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker Label="Official appointment date"
+                                       @bind-Date="_appointmentDate"
+                                       Variant="Variant.Outlined"
+                                       HelperText="Per CIPC registration or board resolution" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker Label="Resignation / Cessation date"
+                                       @bind-Date="_resignationDate"
+                                       Variant="Variant.Outlined"
+                                       HelperText="Leave blank if currently serving" />
+                    </MudItem>
+
+                    <!-- Checkboxes -->
+                    <MudItem xs="12" md="4">
+                        <MudCheckBox T="bool"
+                                     Label="Verified on CIPC register"
+                                     @bind-Value="Member.CipcRegistered"
+                                     Color="Color.Info" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="4">
+                        <MudCheckBox T="bool"
+                                     Label="Identity verified (RSA ID)"
+                                     @bind-Value="Member.IdVerified"
+                                     Color="Color.Primary" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="4">
+                        <MudCheckBox T="bool"
+                                     Label="Active standing"
+                                     @bind-Value="Member.IsActive"
+                                     Color="Color.Success" />
+                    </MudItem>
+                </MudGrid>
+            }
+            else
+            {
+                <!-- ================= SHAREHOLDER CAPTURE ================= -->
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-1">
+                            Shareholders and beneficial owners may be registered Natural Persons or Corporate Institutional Entities (Holding Companies, Investment Trusts, Consortiums).
+                        </MudText>
+                    </MudItem>
+
+                    <!-- Natural Person vs Corporate Entity Toggle -->
+                    <MudItem xs="12">
+                        <MudRadioGroup T="string" @bind-Value="_memberType" Class="d-flex gap-4">
+                            <MudRadio Value="@("NATURAL_PERSON")" Color="Color.Primary">
+                                <strong>Natural Person</strong> (Individual citizen / resident)
+                            </MudRadio>
+                            <MudRadio Value="@("CORPORATE_ENTITY")" Color="Color.Secondary">
+                                <strong>Corporate Institutional Entity</strong> (Holding Co / Trust / SPV)
+                            </MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
+                    @if (_memberType == "NATURAL_PERSON")
+                    {
+                        <!-- Natural Person Autocomplete -->
+                        <MudItem xs="12">
+                            @if (Member.Id == 0)
+                            {
+                                <MudAutocomplete T="PersonLookupDto"
+                                                 Label="Select individual shareholder"
+                                                 Value="_selectedPerson"
+                                                 ValueChanged="OnPersonSelected"
+                                                 SearchFunc="SearchPeopleAsync"
+                                                 ToStringFunc="@(p => p != null ? $"{p.FullName} (RSA ID: {p.RsaIdNumber ?? "N/A"})" : string.Empty)"
+                                                 ResetValueOnEmptyText="true"
+                                                 CoerceText="true"
+                                                 Variant="Variant.Outlined"
+                                                 Required="true"
+                                                 AdornmentIcon="@Icons.Material.Filled.Search"
+                                                 AdornmentColor="Color.Primary"
+                                                 HelperText="Search directory by name, surname, or ID number" />
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Class="text-secondary">
+                                    Shareholder: <strong>@(Member.Person?.FullName ?? Member.DisplayName)</strong>
+                                    <span class="font-mono ml-2">(@Member.DisplayIdentifier)</span>
+                                </MudText>
+                            }
+                        </MudItem>
+                    }
+                    else
+                    {
+                        <!-- Corporate Entity Autocomplete or Manual Input -->
+                        <MudItem xs="12" md="7">
+                            <MudAutocomplete T="OrganisationLookupDto"
+                                             Label="Search registered organisation (Optional)"
+                                             Value="_selectedOrg"
+                                             ValueChanged="OnOrganisationSelected"
+                                             SearchFunc="SearchOrganisationsAsync"
+                                             ToStringFunc="@(o => o != null ? o.DisplayText : string.Empty)"
+                                             ResetValueOnEmptyText="true"
+                                             CoerceText="true"
+                                             Variant="Variant.Outlined"
+                                             AdornmentIcon="@Icons.Material.Filled.Business"
+                                             AdornmentColor="Color.Secondary"
+                                             HelperText="Select if shareholder is registered in NSDMS" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="5">
+                            <MudTextField T="string"
+                                          Label="Corporate entity name"
+                                          @bind-Value="_corporateEntityName"
+                                          Required="true"
+                                          Variant="Variant.Outlined"
+                                          HelperText="e.g. Apex Holdings (Pty) Ltd" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string"
+                                          Label="CIPC registration number / Trust ref"
+                                          @bind-Value="_corporateRegistrationNumber"
+                                          Variant="Variant.Outlined"
+                                          HelperText="e.g. 2018/123456/07 or IT 1234/2015" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="string"
+                                       Label="Corporate entity structure"
+                                       @bind-Value="Member.GovernanceRoleCode"
+                                       Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("SHAREHOLDER")">Private Company (Pty) Ltd</MudSelectItem>
+                                <MudSelectItem Value="@("TRUSTEE")">Family or Employee Share Trust</MudSelectItem>
+                                <MudSelectItem Value="@("PARTNER")">Close Corporation / Partnership</MudSelectItem>
+                                <MudSelectItem Value="@("PUBLIC_ENTITY")">Public / State Entity</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                    }
+
+                    <!-- Equity Shareholding -->
+                    <MudItem xs="12" md="6">
+                        <MudNumericField T="decimal"
+                                         Label="Beneficial equity shareholding (%)"
+                                         @bind-Value="Member.ShareholdingPercentage"
+                                         Min="0.01m"
+                                         Max="100.00m"
+                                         Format="F2"
+                                         Required="true"
+                                         Variant="Variant.Outlined"
+                                         HelperText="Percentage of total issued equity (e.g. 25.50%)" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker Label="Acquisition / Appointment date"
+                                       @bind-Date="_appointmentDate"
+                                       Variant="Variant.Outlined" />
+                    </MudItem>
+
+                    <!-- Checkboxes -->
+                    <MudItem xs="12" md="4">
+                        <MudCheckBox T="bool"
+                                     Label="Corporate voting rights"
+                                     @bind-Value="Member.HasVotingRights"
+                                     Color="Color.Primary" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="4">
+                        <MudCheckBox T="bool"
+                                     Label="Verified on CIPC beneficial register"
+                                     @bind-Value="Member.CipcRegistered"
+                                     Color="Color.Info" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="4">
+                        <MudCheckBox T="bool"
+                                     Label="Active standing"
+                                     @bind-Value="Member.IsActive"
+                                     Color="Color.Success" />
+                    </MudItem>
+                </MudGrid>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Close">
+            Cancel
+        </MudButton>
+        <MudButton OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@_isSubmitting" StartIcon="@Icons.Material.Filled.Save">
+            Save Record
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public OrganisationGovernanceMember Member { get; set; } = new();
+    [Parameter] public bool IsDirector { get; set; } = true;
+    [Parameter] public string CurrentUsername { get; set; } = "Admin";
+
+    private PersonLookupDto? _selectedPerson;
+    private OrganisationLookupDto? _selectedOrg;
+    private string _directorCategory = "EXECUTIVE";
+    private string _memberType = "NATURAL_PERSON";
+    private string? _corporateEntityName;
+    private string? _corporateRegistrationNumber;
+    private DateTime? _appointmentDate;
+    private DateTime? _resignationDate;
+    private bool _isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _appointmentDate = Member.AppointmentDate;
+        _resignationDate = Member.ResignationDate;
+        _directorCategory = Member.DirectorCategory ?? (Member.GovernanceRoleCode == "MANAGING_DIRECTOR" ? "EXECUTIVE" : "EXECUTIVE");
+        _memberType = Member.MemberType ?? "NATURAL_PERSON";
+        _corporateEntityName = Member.CorporateEntityName;
+        _corporateRegistrationNumber = Member.CorporateRegistrationNumber;
+
+        if (Member.PersonId.HasValue && Member.PersonId > 0)
+        {
+            _selectedPerson = await PersonService.GetLookupByIdAsync(Member.PersonId.Value);
+        }
+
+        if (Member.ShareholderOrganisationId.HasValue && Member.ShareholderOrganisationId > 0)
+        {
+            _selectedOrg = await OrganisationService.GetLookupByIdAsync(Member.ShareholderOrganisationId.Value);
+        }
+    }
+
+    private async Task<IEnumerable<PersonLookupDto>> SearchPeopleAsync(string search, CancellationToken ct)
+    {
+        return await PersonService.SearchLookupAsync(search, limit: 20, cancellationToken: ct);
+    }
+
+    private async Task<IEnumerable<OrganisationLookupDto>> SearchOrganisationsAsync(string search, CancellationToken ct)
+    {
+        return await OrganisationService.SearchLookupAsync(search, limit: 20, cancellationToken: ct);
+    }
+
+    private void OnPersonSelected(PersonLookupDto? person)
+    {
+        _selectedPerson = person;
+        Member.PersonId = person?.Id;
+    }
+
+    private void OnOrganisationSelected(OrganisationLookupDto? org)
+    {
+        _selectedOrg = org;
+        Member.ShareholderOrganisationId = org?.Id;
+        if (org != null)
+        {
+            _corporateEntityName = org.CompanyName;
+            _corporateRegistrationNumber = org.RegistrationNumber ?? org.SdlNumber;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        if (IsDirector)
+        {
+            if (!Member.PersonId.HasValue || Member.PersonId.Value == 0)
+            {
+                Snackbar.Add("Please select a valid verified individual person for the director appointment.", Severity.Warning);
+                return;
+            }
+
+            Member.MemberType = "NATURAL_PERSON";
+            Member.DirectorCategory = _directorCategory;
+            if (string.IsNullOrWhiteSpace(Member.GovernanceRoleCode))
+            {
+                Member.GovernanceRoleCode = _directorCategory == "EXECUTIVE" ? "DIRECTOR_EXECUTIVE" : "DIRECTOR_NON_EXECUTIVE";
+            }
+        }
+        else
+        {
+            Member.MemberType = _memberType;
+            Member.GovernanceRoleCode = string.IsNullOrWhiteSpace(Member.GovernanceRoleCode) ? "SHAREHOLDER" : Member.GovernanceRoleCode;
+
+            if (_memberType == "NATURAL_PERSON")
+            {
+                if (!Member.PersonId.HasValue || Member.PersonId.Value == 0)
+                {
+                    Snackbar.Add("Please select a verified individual person as shareholder.", Severity.Warning);
+                    return;
+                }
+                Member.ShareholderOrganisationId = null;
+                Member.CorporateEntityName = null;
+                Member.CorporateRegistrationNumber = null;
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(_corporateEntityName))
+                {
+                    Snackbar.Add("Please enter the registered corporate institutional entity name.", Severity.Warning);
+                    return;
+                }
+                Member.PersonId = null;
+                Member.CorporateEntityName = _corporateEntityName;
+                Member.CorporateRegistrationNumber = _corporateRegistrationNumber;
+            }
+
+            if (Member.ShareholdingPercentage <= 0)
+            {
+                Snackbar.Add("Please specify an equity shareholding percentage greater than 0.00%.", Severity.Warning);
+                return;
+            }
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            Member.AppointmentDate = _appointmentDate;
+            Member.ResignationDate = _resignationDate;
+
+            if (Member.Id > 0)
+            {
+                await ConflictService.UpdateGovernanceMemberAsync(Member, CurrentUsername);
+                Snackbar.Add("Governance record updated successfully.", Severity.Success);
+            }
+            else
+            {
+                await ConflictService.AddGovernanceMemberAsync(Member, CurrentUsername);
+                Snackbar.Add("Governance record captured successfully.", Severity.Success);
+            }
+
+            MudDialog.Close(DialogResult.Ok(Member));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving governance record: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

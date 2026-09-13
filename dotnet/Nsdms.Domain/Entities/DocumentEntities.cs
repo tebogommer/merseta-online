@@ -83,6 +83,32 @@ public class DocumentTemplate : BaseEntity
     public DateTime? ApprovedAt { get; set; }
 
     /// <summary>
+    /// Complete editable rich HTML / text document body with dynamic placeholders (e.g. {{Employer.Name}}, {{Wsp.RebateAmount}}).
+    /// When specified, provides a unified letter or certificate document template.
+    /// </summary>
+    public string TemplateBodyHtml { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional foreign key to predecessor template version from which this revision was cloned.
+    /// </summary>
+    public int? ParentTemplateId { get; set; }
+
+    /// <summary>
+    /// Predecessor template navigation reference.
+    /// </summary>
+    public DocumentTemplate? ParentTemplate { get; set; }
+
+    /// <summary>
+    /// Child versions / revisions derived from this template.
+    /// </summary>
+    public ICollection<DocumentTemplate> ChildVersions { get; set; } = new List<DocumentTemplate>();
+
+    /// <summary>
+    /// Changelog notes or description of changes in this version.
+    /// </summary>
+    public string? VersionNotes { get; set; }
+
+    /// <summary>
     /// Ordered sections composing this document template.
     /// </summary>
     public ICollection<DocumentTemplateSection> Sections { get; set; } = new List<DocumentTemplateSection>();

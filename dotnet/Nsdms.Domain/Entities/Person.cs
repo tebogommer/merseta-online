@@ -275,5 +275,25 @@ public class Person : BaseEntity
     /// Legal parent or guardian records linked to this individual when registering as a minor.
     /// </summary>
     public ICollection<PersonGuardian> Guardians { get; set; } = new List<PersonGuardian>();
+
+    /// <summary>
+    /// Directorships, partnerships, or shareholdings held by this individual across organisations.
+    /// </summary>
+    public ICollection<OrganisationGovernanceMember> GovernanceMemberships { get; set; } = new List<OrganisationGovernanceMember>();
+
+    /// <summary>
+    /// Institutional appointments linking this individual to merSETA as an employee, board member, or committee specialist.
+    /// </summary>
+    public ICollection<InstitutionalAffiliation> InstitutionalAffiliations { get; set; } = new List<InstitutionalAffiliation>();
+
+    /// <summary>
+    /// Statutory annual and transactional Declarations of Interest (e-DOI) submitted by this individual.
+    /// </summary>
+    public ICollection<InterestDeclaration> InterestDeclarations { get; set; } = new List<InterestDeclaration>();
+
+    /// <summary>
+    /// Conflict of interest flags involving this individual.
+    /// </summary>
+    public ICollection<ConflictFlag> ConflictFlags { get; set; } = new List<ConflictFlag>();
     #endregion
 }

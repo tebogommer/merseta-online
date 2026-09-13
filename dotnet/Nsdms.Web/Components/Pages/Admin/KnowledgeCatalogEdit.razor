@@ -1,0 +1,493 @@
+@page "/admin/knowledge-catalog/create"
+@page "/admin/knowledge-catalog/{id:int}/edit"
+@namespace Nsdms.Web.Components.Pages.Admin
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Interfaces
+@using Nsdms.Application.DTOs
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@attribute [Authorize(Roles = "SuperAdmin,Admin,Compliance,Finance,Legal")]
+@inject IKnowledgeCatalogService CatalogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A4 (Form / Edit Shell with Sticky Action Footer)
+  Open Knowledge Format (OKF v0.2) Living Knowledge Catalog Concept Editor
+*@
+
+<PageTitle>@(_isEditMode ? $"Edit Concept: {_title}" : "Register OKF Concept") | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <EntityHeader Title="@(_isEditMode ? $"Edit Concept: {_title}" : "Register OKF Concept")"
+                  Subtitle="@(_isEditMode ? $"Amend statutory frontmatter, Markdown, and T-SQL computations for {_conceptId}." : "Capture a new statutory concept adhering to Open Knowledge Format (OKF v0.2) standards.")"
+                  ReferenceKey="@(_isEditMode ? _conceptId : "NEW-CONCEPT")"
+                  Status="@_status"
+                  BreadcrumbItems="@_breadcrumbs" />
+
+    <FormShell Mode="@(_isEditMode ? FormShell.PageMode.Edit : FormShell.PageMode.Create)"
+               IsDirty="@_isDirty"
+               IsSubmitting="@_isSubmitting"
+               SaveLabel="@(_isEditMode ? "Save changes" : "Create concept")"
+               CancelLabel="Cancel"
+               OnSave="HandleSaveAsync"
+               OnCancel="HandleCancel">
+
+        <MudForm @ref="_form" @bind-IsValid="_isValid" Class="mb-10">
+            <!-- Section 1: Concept Identity & Frontmatter -->
+            <MudCard Elevation="0" Class="border rounded-lg pa-4 mb-4" Style="border-color: var(--border); background: var(--surface);">
+                <div class="d-flex align-center gap-2 mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Badge" Color="Color.Primary" Size="Size.Small" />
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                        1. Concept Identity &amp; Frontmatter
+                    </MudText>
+                </div>
+
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_conceptId"
+                                      Label="Concept Slug / Identifier"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Concept slug is required"
+                                      Disabled="@_isEditMode"
+                                      HelperText="Canonical hierarchical identifier e.g. 'grants/mandatory-grant-rebate' or 'artisans/mentor-ratio'"
+                                      Class="font-mono"
+                                      @oninput="@(() => MarkDirty())" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_title"
+                                      Label="Statutory Title"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Title is required"
+                                      HelperText="Official title of the statutory concept or business rule"
+                                      @oninput="@(() => MarkDirty())" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudSelect T="string" Label="Concept Type" @bind-Value="_type" Variant="Variant.Outlined" Required="true" SelectedValuesChanged="@(() => MarkDirty())">
+                            <MudSelectItem Value="@("StatutoryRule")">Statutory Rule</MudSelectItem>
+                            <MudSelectItem Value="@("MetricComputation")">Metric Computation</MudSelectItem>
+                            <MudSelectItem Value="@("SchemaSpec")">Schema Specification</MudSelectItem>
+                            <MudSelectItem Value="@("Guideline")">Guideline</MudSelectItem>
+                            <MudSelectItem Value="@("PolicyReference")">Policy Reference</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudSelect T="string" Label="Lifecycle Status" @bind-Value="_status" Variant="Variant.Outlined" Required="true" SelectedValuesChanged="@(() => MarkDirty())">
+                            <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+                            <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
+                            <MudSelectItem Value="@("Deprecated")">Deprecated</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudDatePicker Label="Freshness Boundary (Stale After)"
+                                       @bind-Date="_staleAfter"
+                                       Variant="Variant.Outlined"
+                                       HelperText="Scheduled boundary when concept becomes stale"
+                                       Editable="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_resourceUri"
+                                      Label="Resource URI (Optional)"
+                                      Variant="Variant.Outlined"
+                                      HelperText="URN or URL link e.g. 'urn:merseta:grants:mandatory-rebate'"
+                                      Class="font-mono"
+                                      @oninput="@(() => MarkDirty())" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_tagsRaw"
+                                      Label="Tags (Comma Separated)"
+                                      Variant="Variant.Outlined"
+                                      HelperText="e.g. 'grants, mandatory, wsp, rebate, regulation-4'"
+                                      @oninput="@(() => MarkDirty())" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_description"
+                                      Label="Summary Description"
+                                      Variant="Variant.Outlined"
+                                      Lines="2"
+                                      HelperText="Brief non-technical explanation of this statutory rule"
+                                      @oninput="@(() => MarkDirty())" />
+                    </MudItem>
+                </MudGrid>
+            </MudCard>
+
+            <!-- Section 2: Markdown Content & Citations -->
+            <MudCard Elevation="0" Class="border rounded-lg pa-4 mb-4" Style="border-color: var(--border); background: var(--surface);">
+                <div class="d-flex justify-space-between align-center mb-3">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Article" Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                            2. Markdown Content &amp; Statutory Footnotes
+                        </MudText>
+                    </div>
+                </div>
+
+                <MudTextField @bind-Value="_bodyMarkdown"
+                              Label="Markdown Body"
+                              Variant="Variant.Outlined"
+                              Lines="10"
+                              Class="font-mono"
+                              Required="true"
+                              RequiredError="Markdown body is required"
+                              HelperText="Statutory text formatted in Markdown. Support for footnotes: e.g. '[^1]' and '[^1]: Government Gazette No. 35940'."
+                              @oninput="@(() => MarkDirty())" />
+            </MudCard>
+
+            <!-- Section 3: Attested T-SQL Computation (Optional) -->
+            <MudCard Elevation="0" Class="border rounded-lg pa-4 mb-4" Style="border-color: var(--border); background: var(--surface);">
+                <div class="d-flex justify-space-between align-center mb-3">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Code" Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                            3. Attested T-SQL Computation Template
+                        </MudText>
+                    </div>
+                    <MudCheckBox Value="_hasComputation"
+                                 T="bool"
+                                 Label="Attach Attested Computation"
+                                 Color="Color.Primary"
+                                 ValueChanged="@((bool val) => { _hasComputation = val; MarkDirty(); })" />
+                </div>
+
+                @if (_hasComputation)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3 d-block">
+                        Attach a parameterized, deterministic T-SQL query that produces signed attestation receipts.
+                        Use <code>@@ParameterName</code> syntax for declared runtime holes.
+                    </MudText>
+
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="_computationExecutor"
+                                          Label="Executor Runtime"
+                                          Variant="Variant.Outlined"
+                                          Disabled="true"
+                                          HelperText="Standard runtime engine (tsql)" />
+                        </MudItem>
+                        <MudItem xs="12" md="8">
+                            <MudTextField @bind-Value="_receiptSchema"
+                                          Label="Receipt Schema"
+                                          Variant="Variant.Outlined"
+                                          Disabled="true"
+                                          HelperText="Standard output schema (application/json)" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_queryText"
+                                          Label="T-SQL Query Template"
+                                          Variant="Variant.Outlined"
+                                          Lines="7"
+                                          Class="font-mono"
+                                          Required="@_hasComputation"
+                                          RequiredError="T-SQL query text is required when computation is attached"
+                                          HelperText="Executable SQL Server query. Must only contain SELECT statements."
+                                          @oninput="@(() => MarkDirty())" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <!-- Parameters Editor -->
+                    <div class="mt-4 pt-3 border-t" style="border-color: var(--border);">
+                        <div class="d-flex justify-space-between align-center mb-2">
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold">
+                                Declared Typed Parameter Holes
+                            </MudText>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="AddParameter">
+                                Add Parameter
+                            </MudButton>
+                        </div>
+
+                        @if (_parameters.Any())
+                        {
+                            <MudTable Items="@_parameters" Dense="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>Parameter Name</MudTh>
+                                    <MudTh>Data Type</MudTh>
+                                    <MudTh>Required</MudTh>
+                                    <MudTh>Description</MudTh>
+                                    <MudTh>Default Value</MudTh>
+                                    <MudTh Style="width: 50px;"></MudTh>
+                                </HeaderContent>
+                                <RowTemplate Context="p">
+                                    <MudTd>
+                                        <MudTextField @bind-Value="p.ParameterName" Variant="Variant.Outlined" Margin="Margin.Dense" Class="font-mono" />
+                                    </MudTd>
+                                    <MudTd>
+                                        <MudSelect T="string" @bind-Value="p.ParameterType" Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
+                                            <MudSelectItem Value="@("INT")">INT</MudSelectItem>
+                                            <MudSelectItem Value="@("BIGINT")">BIGINT</MudSelectItem>
+                                            <MudSelectItem Value="@("VARCHAR")">VARCHAR</MudSelectItem>
+                                            <MudSelectItem Value="@("DECIMAL")">DECIMAL</MudSelectItem>
+                                            <MudSelectItem Value="@("DATE")">DATE</MudSelectItem>
+                                            <MudSelectItem Value="@("BIT")">BIT</MudSelectItem>
+                                        </MudSelect>
+                                    </MudTd>
+                                    <MudTd>
+                                        <MudCheckBox @bind-Value="p.IsRequired" Color="Color.Primary" />
+                                    </MudTd>
+                                    <MudTd>
+                                        <MudTextField @bind-Value="p.Description" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                    </MudTd>
+                                    <MudTd>
+                                        <MudTextField @bind-Value="p.DefaultValue" Variant="Variant.Outlined" Margin="Margin.Dense" Class="font-mono" />
+                                    </MudTd>
+                                    <MudTd>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Size="Size.Small"
+                                                       Color="Color.Error"
+                                                       OnClick="@(() => RemoveParameter(p))" />
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                No parameters declared. Click 'Add Parameter' if your T-SQL query has <code>@@Param</code> holes.
+                            </MudText>
+                        }
+                    </div>
+                }
+            </MudCard>
+        </MudForm>
+    </FormShell>
+</MudContainer>
+
+@code {
+    public class EditableParameterModel
+    {
+        public int Id { get; set; }
+        public string ParameterName { get; set; } = string.Empty;
+        public string ParameterType { get; set; } = "INT";
+        public bool IsRequired { get; set; } = true;
+        public string? Description { get; set; }
+        public string? DefaultValue { get; set; }
+    }
+
+    [Parameter] public int? Id { get; set; }
+
+    private bool _isEditMode => Id.HasValue && Id.Value > 0;
+    private MudForm _form = default!;
+    private bool _isValid = false;
+    private bool _isDirty = false;
+    private bool _isSubmitting = false;
+
+    // Form fields
+    private string _conceptId = string.Empty;
+    private string _title = string.Empty;
+    private string _type = "StatutoryRule";
+    private string _status = "Active";
+    private string? _resourceUri;
+    private DateTime? _staleAfter;
+    private string _tagsRaw = string.Empty;
+    private string? _description;
+    private string _bodyMarkdown = string.Empty;
+
+    // Computation
+    private bool _hasComputation = false;
+    private string _computationExecutor = "tsql";
+    private string _receiptSchema = "application/json";
+    private string _queryText = string.Empty;
+    private List<EditableParameterModel> _parameters = new();
+
+    private List<BreadcrumbItem> _breadcrumbs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        BuildBreadcrumbs();
+
+        if (_isEditMode)
+        {
+            await LoadExistingConceptAsync();
+        }
+        else
+        {
+            _staleAfter = DateTime.UtcNow.AddYears(1);
+            _bodyMarkdown = "# Concept Title\n\nProvide the statutory rationale and policy background here.\n\n[^1]: Reference statutory gazette or policy document.";
+        }
+    }
+
+    private void BuildBreadcrumbs()
+    {
+        _breadcrumbs = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("System Administration", href: "/admin"),
+            new BreadcrumbItem("Knowledge Catalog", href: "/admin/knowledge-catalog"),
+            new BreadcrumbItem(_isEditMode ? "Edit Concept" : "Register Concept", href: null, disabled: true)
+        };
+    }
+
+    private async Task LoadExistingConceptAsync()
+    {
+        try
+        {
+            var concept = await CatalogService.GetConceptByIdAsync(Id!.Value);
+            if (concept != null)
+            {
+                _conceptId = concept.ConceptId;
+                _title = concept.Title;
+                _type = concept.ConceptType;
+                _status = concept.LifecycleStatus.ToString();
+                _resourceUri = concept.ResourceUri;
+                _staleAfter = concept.StaleAfter;
+                _tagsRaw = concept.Tags != null ? string.Join(", ", concept.Tags) : string.Empty;
+                _description = concept.SummaryDescription;
+                _bodyMarkdown = concept.BodyMarkdown ?? string.Empty;
+
+                if (concept.Computation != null)
+                {
+                    _hasComputation = true;
+                    _computationExecutor = concept.Computation.Runtime;
+                    _receiptSchema = concept.Computation.ReceiptSchemaJson;
+                    _queryText = concept.Computation.ComputationSql ?? string.Empty;
+                    _parameters = concept.Computation.Parameters?.Select(p => new EditableParameterModel
+                    {
+                        Id = p.Id,
+                        ParameterName = p.ParameterName,
+                        ParameterType = p.ParameterType,
+                        IsRequired = p.IsRequired,
+                        Description = p.Description,
+                        DefaultValue = p.DefaultValue
+                    }).ToList() ?? new List<EditableParameterModel>();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading concept: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void MarkDirty()
+    {
+        _isDirty = true;
+    }
+
+    private void AddParameter()
+    {
+        _parameters.Add(new EditableParameterModel
+        {
+            ParameterName = "@Param",
+            ParameterType = "INT",
+            IsRequired = true,
+            Description = "Filter parameter"
+        });
+        MarkDirty();
+    }
+
+    private void RemoveParameter(EditableParameterModel param)
+    {
+        _parameters.Remove(param);
+        MarkDirty();
+    }
+
+    private async Task HandleSaveAsync()
+    {
+        await _form.Validate();
+        if (!_isValid)
+        {
+            Snackbar.Add("Please complete all required fields correctly.", Severity.Warning);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var tags = _tagsRaw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+            if (!Enum.TryParse<ConceptLifecycleStatus>(_status, true, out var lifecycleStatus))
+            {
+                lifecycleStatus = ConceptLifecycleStatus.Draft;
+            }
+
+            CreateComputationItem? computationItem = null;
+            if (_hasComputation)
+            {
+                computationItem = new CreateComputationItem
+                {
+                    Runtime = _computationExecutor,
+                    ComputationSql = _queryText,
+                    ReceiptSchemaJson = _receiptSchema,
+                    Parameters = _parameters.Select(p => new CreateParameterItem
+                    {
+                        ParameterName = p.ParameterName,
+                        ParameterType = p.ParameterType,
+                        IsRequired = p.IsRequired,
+                        Description = p.Description,
+                        DefaultValue = p.DefaultValue
+                    }).ToList()
+                };
+            }
+
+            if (_isEditMode)
+            {
+                var command = new UpdateConceptCommand
+                {
+                    Id = Id!.Value,
+                    Title = _title,
+                    SummaryDescription = _description,
+                    ResourceUri = _resourceUri,
+                    BodyMarkdown = _bodyMarkdown,
+                    LifecycleStatus = lifecycleStatus,
+                    StaleAfter = _staleAfter,
+                    Tags = tags,
+                    Computation = computationItem
+                };
+
+                var updated = await CatalogService.UpdateConceptAsync(command, "AdminUser");
+                _isDirty = false;
+                Snackbar.Add($"Concept '{_title}' saved successfully.", Severity.Success);
+                Navigation.NavigateTo($"/admin/knowledge-catalog/{updated.Id}");
+            }
+            else
+            {
+                var bundles = await CatalogService.GetBundlesAsync();
+                var bundleId = bundles.FirstOrDefault()?.Id ?? 1;
+
+                var command = new CreateConceptCommand
+                {
+                    BundleId = bundleId,
+                    ConceptId = _conceptId.Trim(),
+                    ConceptType = _type,
+                    Title = _title.Trim(),
+                    SummaryDescription = _description,
+                    ResourceUri = _resourceUri,
+                    BodyMarkdown = _bodyMarkdown,
+                    LifecycleStatus = lifecycleStatus,
+                    StaleAfter = _staleAfter,
+                    Tags = tags,
+                    GeneratedByActor = "AdminUser",
+                    Computation = computationItem
+                };
+
+                var created = await CatalogService.CreateConceptAsync(command, "AdminUser");
+                _isDirty = false;
+                Snackbar.Add($"Concept '{_title}' created successfully.", Severity.Success);
+                Navigation.NavigateTo($"/admin/knowledge-catalog/{created.Id}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Save error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private void HandleCancel()
+    {
+        if (_isEditMode)
+            Navigation.NavigateTo($"/admin/knowledge-catalog/{Id}");
+        else
+            Navigation.NavigateTo("/admin/knowledge-catalog");
+    }
+}

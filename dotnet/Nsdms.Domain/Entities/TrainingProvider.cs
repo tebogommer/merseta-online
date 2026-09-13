@@ -291,4 +291,9 @@ public class TrainingProvider : BaseEntity
     /// Multi-cycle 5-year re-accreditation historical application records.
     /// </summary>
     public ICollection<SdpReAccreditationApplication> ReAccreditationApplications { get; set; } = new List<SdpReAccreditationApplication>();
+
+    /// <summary>
+    /// Conflict of interest or governance compliance flags raised against this training provider.
+    /// </summary>
+    public ICollection<ConflictFlag> ConflictFlags { get; set; } = new List<ConflictFlag>();
 }

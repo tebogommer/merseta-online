@@ -455,6 +455,36 @@ public class RolePermissionService : IRolePermissionService
                 AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionView),
                 AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionApprove),
                 AppPermissions.Create(AppPermissions.ModuleLearners, AppPermissions.ActionReject),
+                AppPermissions.Create(AppPermissions.ModuleCompliance, AppPermissions.ActionView),
+                AppPermissions.Create(AppPermissions.ModuleGovernance, AppPermissions.ActionView),
+                AppPermissions.Create(AppPermissions.ModuleGovernance, AppPermissions.ActionApprove)
+            });
+
+        // 7b. Compliance & Risk Management (Conflict of Interest & PFMA Governance)
+        await EnsureRoleWithPermissionsAsync(db, "Compliance", "Statutory Compliance & Ethics Auditor enforcing PFMA disclosures, conflict investigation, and SETMIS compliance.",
+            new List<string>
+            {
+                AppPermissions.Create(AppPermissions.ModuleCompliance, AppPermissions.ActionView),
+                AppPermissions.Create(AppPermissions.ModuleCompliance, AppPermissions.ActionVerify),
+                AppPermissions.Create(AppPermissions.ModuleCompliance, AppPermissions.ActionManage),
+                AppPermissions.Create(AppPermissions.ModuleGovernance, AppPermissions.ActionView),
+                AppPermissions.Create(AppPermissions.ModuleGovernance, AppPermissions.ActionCreate),
+                AppPermissions.Create(AppPermissions.ModuleGovernance, AppPermissions.ActionEdit),
+                AppPermissions.Create(AppPermissions.ModuleGovernance, AppPermissions.ActionVerify),
+                AppPermissions.Create(AppPermissions.ModuleGovernance, AppPermissions.ActionManage),
+                AppPermissions.Create(AppPermissions.ModuleOrganisations, AppPermissions.ActionView),
+                AppPermissions.Create(AppPermissions.ModuleGrants, AppPermissions.ActionView)
+            });
+
+        // 7c. Executive Directorate & Accounting Authority
+        await EnsureRoleWithPermissionsAsync(db, "Executive", "Executive Directorate, Board Members, and Accounting Authority members with governance oversight.",
+            new List<string>
+            {
+                AppPermissions.Create(AppPermissions.ModuleGovernance, AppPermissions.ActionView),
+                AppPermissions.Create(AppPermissions.ModuleGovernance, AppPermissions.ActionApprove),
+                AppPermissions.Create(AppPermissions.ModuleGovernance, AppPermissions.ActionManage),
+                AppPermissions.Create(AppPermissions.ModuleGrants, AppPermissions.ActionView),
+                AppPermissions.Create(AppPermissions.ModuleFinance, AppPermissions.ActionView),
                 AppPermissions.Create(AppPermissions.ModuleCompliance, AppPermissions.ActionView)
             });
 

@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-12 15:48:12 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 239
+> **Generated:** 2026-09-13 14:46:11 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 253
 
 ---
 
@@ -38,6 +38,7 @@
 | `dbo` | [`AssessorRegistrationApplication`](#assessorregistrationapplication) | `AssessorRegistrationApplication` | 49 | `Id` | Represents a statutory initial registration application for ETQA Assessors and Moderators per specification MerSeta\NSDMS\LMS\LR\01. |
 | `dbo` | [`AssessorReRegistrationApplication`](#assessorreregistrationapplication) | `AssessorReRegistrationApplication` | 19 | `Id` | Represents a statutory 3-year re-registration or scope extension application for ETQA registered Assessors and Moderators. |
 | `dbo` | [`AssessorUnitStandardScope`](#assessorunitstandardscope) | `AssessorUnitStandardScope` | 11 | `Id` | Registered unit standard constituent scope approved on an active EtqaAssessor profile. |
+| `dbo` | [`AttestedComputation`](#attestedcomputation) | `AttestedComputation` | 13 | `Id` | A concept carrying a sanctioned way to compute a value per OKF v0.2 Section 10, so a consumer can confirm the value was produced by executing blessed code rather than improvising. |
 | `dbo` | [`AuditLog`](#auditlog) | `AuditLog` | 11 | `Id` | Immutable operational audit trail recording entity mutations, actor identity, timestamps, and JSON snapshots. |
 | `dbo` | [`BankingDetails`](#bankingdetails) | `BankingDetails` | 34 | `Id` | System entity for BankingDetails data governance. |
 | `dbo` | [`BankingDetailsAudit`](#bankingdetailsaudit) | `BankingDetailsAudit` | 8 | `Id` | System entity for BankingDetailsAudit data governance. |
@@ -51,6 +52,14 @@
 | `dbo` | [`CompanyLearnerLostTime`](#companylearnerlosttime) | `CompanyLearnerLostTime` | 16 | `Id` | Tracks suspended or lost training time and recalculates revised contract end dates. |
 | `dbo` | [`CompanyLearnerTermination`](#companylearnertermination) | `CompanyLearnerTermination` | 35 | `Id` | Manages formal bilateral or unilateral cancellation of learner contracts per signed specification Sections 4.4, 4.5, 4.6. |
 | `dbo` | [`CompanyLearnerTransfer`](#companylearnertransfer) | `CompanyLearnerTransfer` | 31 | `Id` | Tracks transfer of an active learner contract from one employer to another, or from one accredited SDP to another, per signed specification Section 4.7. |
+| `dbo` | [`ComputationExecutionAudit`](#computationexecutionaudit) | `ComputationExecutionAudit` | 15 | `Id` | High-volume append-only audit trail of computation runs, returned receipts, deterministic attestation verdicts, and cryptographic Digital Security Seals. Inherits BaseLongEntity for BIGINT primary key scalability. |
+| `dbo` | [`ComputationParameter`](#computationparameter) | `ComputationParameter` | 11 | `Id` | Declares a typed, named parameter that an invoking agent or consumer may fill. Agents can only supply parameter values; they cannot alter the computation template itself. |
+| `dbo` | [`ConceptCrossLink`](#conceptcrosslink) | `ConceptCrossLink` | 9 | `Id` | Directed graph edge between concepts parsed from internal Markdown links (/path/to/concept.md). Allows visualization of concept dependency graphs and lineage networks. |
+| `dbo` | [`ConceptDocument`](#conceptdocument) | `ConceptDocument` | 18 | `Id` | Represents a single unit of knowledge within a bundle, mapped from an OKF Markdown file with YAML frontmatter. Backed by SQL Server system-versioned temporal tables for historical version timelines. |
+| `dbo` | [`ConceptSource`](#conceptsource) | `ConceptSource` | 14 | `Id` | Records an authoritative source or external material a concept derives from, along with objective credibility signals per OKF v0.2 Section 5.1. |
+| `dbo` | [`ConceptTag`](#concepttag) | `ConceptTag` | 7 | `Id` | Cross-cutting categorization tag associated with a concept document. |
+| `dbo` | [`ConceptVerificationEvent`](#conceptverificationevent) | `ConceptVerificationEvent` | 10 | `Id` | Records a formal verification event against a concept document. Multiple events capture independent sign-offs (e.g. human approval plus nightly reconciliation process). |
+| `dbo` | [`ConflictFlag`](#conflictflag) | `ConflictFlag` | 19 | `Id` | Automated conflict of interest detection flag raised by the rules engine during grant allocation, committee adjudication, accreditation intake, or annual audit. |
 | `dbo` | [`ContractAddenda`](#contractaddenda) | `ContractAddenda` | 19 | `Id` | System entity for ContractAddenda data governance. |
 | `dbo` | [`ContractExtensionRequest`](#contractextensionrequest) | `ContractExtensionRequest` | 16 | `Id` | System entity for ContractExtensionRequest data governance. |
 | `dbo` | [`ContractTerminationRequest`](#contractterminationrequest) | `ContractTerminationRequest` | 15 | `Id` | System entity for ContractTerminationRequest data governance. |
@@ -61,7 +70,7 @@
 | `dbo` | [`DocumentMetadata`](#documentmetadata) | `DocumentMetadata` | 19 | `Id` | SHA-256 integrity-verified digital document evidence stored in the Document Vault. |
 | `dbo` | [`DocumentRequirementRule`](#documentrequirementrule) | `DocumentRequirementRule` | 11 | `Id` | Governance rule defining mandatory document evidence required before workflow gate advancement. |
 | `dbo` | [`DocumentSnapshot`](#documentsnapshot) | `DocumentSnapshot` | 27 | `Id` | Immutable cryptographically frozen snapshot of any issued statutory document, certificate, or letter. |
-| `dbo` | [`DocumentTemplate`](#documenttemplate) | `DocumentTemplate` | 20 | `Id` | Universal enterprise document template for statutory letters, certificates, agreements, and notices. |
+| `dbo` | [`DocumentTemplate`](#documenttemplate) | `DocumentTemplate` | 23 | `Id` | Universal enterprise document template for statutory letters, certificates, agreements, and notices. |
 | `dbo` | [`DocumentTemplateSection`](#documenttemplatesection) | `DocumentTemplateSection` | 12 | `Id` | Ordered section mapping a reusable clause to a document template. |
 | `dbo` | [`EisaAssessmentEntry`](#eisaassessmententry) | `EisaAssessmentEntry` | 15 | `Id` | External Integrated Summative Assessment (EISA) exam entry for QCTO occupational qualifications. |
 | `dbo` | [`ErpOutboxMessage`](#erpoutboxmessage) | `ErpOutboxMessage` | 22 | `Id` | Transactional Outbox message entity for Microsoft Dynamics GP and ERP Web Services integration. Ensures resilient, decoupled asynchronous execution with automatic pause on GP outage and resumption upon recovery. |
@@ -86,7 +95,11 @@
 | `dbo` | [`GrantWindowTemplate`](#grantwindowtemplate) | `GrantWindowTemplate` | 13 | `Id` | Reusable Blueprint Template for rapid 1-click Discretionary Grant funding window creation. Bundles default stakeholder eligibilities and whitelisted interventions. |
 | `dbo` | [`GrantWindowTemplateEligibility`](#grantwindowtemplateeligibility) | `GrantWindowTemplateEligibility` | 7 | `Id` | Default stakeholder eligibility presets attached to a funding window template. |
 | `dbo` | [`GrantWindowTemplateIntervention`](#grantwindowtemplateintervention) | `GrantWindowTemplateIntervention` | 7 | `Id` | Default whitelisted interventions attached to a funding window template. |
+| `dbo` | [`InstitutionalAffiliation`](#institutionalaffiliation) | `InstitutionalAffiliation` | 14 | `Id` | Internal institutional appointment linking a Person to merSETA as an employee, executive, Accounting Authority (Board) member, or independent committee specialist. |
+| `dbo` | [`InterestDeclaration`](#interestdeclaration) | `InterestDeclaration` | 16 | `Id` | Official statutory Declaration of Interest (e-DOI) filed by an insider, committee member, or applicant director in terms of Section 50/51 of the Public Finance Management Act (PFMA) and King IV. |
+| `dbo` | [`InterestDeclarationItem`](#interestdeclarationitem) | `InterestDeclarationItem` | 13 | `Id` | Individual commercial interest, directorship, shareholding, or partnership item declared within an official statutory Declaration of Interest. |
 | `dbo` | [`InterSetaTransfer`](#intersetatransfer) | `InterSetaTransfer` | 16 | `Id` | Inter-SETA Transfer of employer registration and levy funds between SETAs. |
+| `dbo` | [`KnowledgeBundle`](#knowledgebundle) | `KnowledgeBundle` | 12 | `Id` | Top-level Knowledge Bundle container representing a self-contained, hierarchical collection of knowledge documents, synchronized with Git repositories per the OKF v0.2 specification. |
 | `dbo` | [`LearnerAssessment`](#learnerassessment) | `LearnerAssessment` | 30 | `Id` | Formative and summative learning programme unit standard assessment evaluations, capturing all statutory fields required for SETMIS File 503 (Unit Standard Enrolment) reporting. |
 | `dbo` | [`LearnerBulkBatch`](#learnerbulkbatch) | `LearnerBulkBatch` | 14 | `Id` | Represents a bulk intake batch for high-speed learner registrations submitted by an Employer or SDP. Implements the automated bulk fast-track channel of the Dual-Channel Learner Registration Architecture. |
 | `dbo` | [`LearnerBulkBatchRow`](#learnerbulkbatchrow) | `LearnerBulkBatchRow` | 29 | `Id` | Individual candidate learner row staged within a LearnerBulkBatch. Allows fractional processing and inline error correction. |
@@ -112,6 +125,7 @@
 | `dbo` | [`NonWorkingDay`](#nonworkingday) | `NonWorkingDay` | 17 | `Id` | Master definition for national statutory public holidays, merSETA annual year-end shutdowns, and ad-hoc institutional closures. Governs universal workflow SLA business day calculations. |
 | `dbo` | [`Organisation`](#organisation) | `Organisation` | 49 | `Id` | Registered employer, host workplace, or skills development entity under MerSETA jurisdiction, fully normalized with statutory columns required for SETMIS File 100 and File 200 reporting. |
 | `dbo` | [`OrganisationContact`](#organisationcontact) | `OrganisationContact` | 12 | `Id` | Liaison contact person link associating an individual Person with an Employer Organisation. |
+| `dbo` | [`OrganisationGovernanceMember`](#organisationgovernancemember) | `OrganisationGovernanceMember` | 20 | `Id` | Natural person serving as a legal director, partner, trustee, board member, or shareholder within a participating employer, training provider, or grant applicant organisation. |
 | `dbo` | [`OrganisationPortfolio`](#organisationportfolio) | `OrganisationPortfolio` | 17 | `Id` | Dynamic Account Management Portfolio allocating an Employer Organisation to a dedicated Relationship Officer. Natively supports cross-regional appointments (e.g. national key accounts, specialized industry groups). |
 | `dbo` | [`OrganisationSite`](#organisationsite) | `OrganisationSite` | 25 | `Id` | Operational branch facility, plant, or training site belonging to an Employer Organisation, supporting multi-site mapping and GPS geolocation for SETMIS File 200 reporting. |
 | `dbo` | [`Person`](#person) | `Person` | 47 | `Id` | Core demographic profile storing individual identity, SA ID/Passport, Washington Group functioning, POPIA compliance, educational background, and contact details for SETMIS statutory reporting. |
@@ -1413,6 +1427,44 @@
 
 ---
 
+### <a id="attestedcomputation"></a> `dbo.AttestedComputation`
+
+**Description:** A concept carrying a sanctioned way to compute a value per OKF v0.2 Section 10, so a consumer can confirm the value was produced by executing blessed code rather than improvising.  
+**CLR Model:** `Nsdms.Domain.Entities.AttestedComputation`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AttesterResource` | `nvarchar(255)` | **NOT NULL** |  | Resource URI for deterministic attester code (e.g., 'references/attesters/tsql-equality.cs'). |
+| `ComputationSql` | `nvarchar(max)` | NULL |  | Sanctioned inline T-SQL query template with parameterized holes (@ParamName). |
+| `ConceptId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ExecutorResource` | `nvarchar(255)` | **NOT NULL** |  | Resource URI for run instructions or execution skill (e.g., 'references/skills/run-tsql.md'). |
+| `ExternalScriptPath` | `nvarchar(255)` | NULL |  | Optional external script path under references/ when computation is kept as an external file. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the computation is currently active. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `ReceiptSchemaJson` | `nvarchar(1000)` | **NOT NULL** |  | JSON array declaring the receipt fields a run must return (e.g. ["execution_id", "executed_sql", "rows_affected", "result_digest"]). |
+| `Runtime` | `nvarchar(50)` | **NOT NULL** |  | Runtime identifier (e.g. 'tsql', 'postgres', 'bigquery', 'dbt', 'python'). Defaults to 'tsql'. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_AttestedComputation_ConceptDocument_ConceptId` | `ConceptId` | `dbo.ConceptDocument` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AttestedComputation_ConceptId` | `ConceptId` | ✅ Yes |
+
+---
+
 ### <a id="auditlog"></a> `dbo.AuditLog`
 
 **Description:** Immutable operational audit trail recording entity mutations, actor identity, timestamps, and JSON snapshots.  
@@ -2064,6 +2116,331 @@
 
 ---
 
+### <a id="computationexecutionaudit"></a> `dbo.ComputationExecutionAudit`
+
+**Description:** High-volume append-only audit trail of computation runs, returned receipts, deterministic attestation verdicts, and cryptographic Digital Security Seals. Inherits BaseLongEntity for BIGINT primary key scalability.  
+**CLR Model:** `Nsdms.Domain.Entities.ComputationExecutionAudit`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `bigint` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AttestationFailureReason` | `nvarchar(500)` | NULL |  | Diagnostic explanation if attestation failed. |
+| `AttestationVerdict` | `nvarchar(20)` | **NOT NULL** |  | Attestation verdict ('Pass', 'Fail', 'Warning'). |
+| `BoundParametersJson` | `nvarchar(max)` | **NOT NULL** |  | JSON serialization of bound parameter dictionary. |
+| `ComputationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ExecutedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp of execution. |
+| `ExecutedSqlDigest` | `nvarchar(64)` | **NOT NULL** |  | SHA-256 cryptographic digest of the actual query string that executed in SQL Server. |
+| `ExecutionDurationMs` | `int` | **NOT NULL** |  | Query execution duration in milliseconds. |
+| `InvokedByActor` | `nvarchar(150)` | **NOT NULL** |  | Actor string identifying who invoked computation (e.g. 'agent/gemini-2.5-pro', 'human:officer_01'). |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `ReceiptPayloadJson` | `nvarchar(max)` | **NOT NULL** |  | Complete JSON receipt payload returned by the execution runner. |
+| `VerificationReference` | `nvarchar(64)` | **NOT NULL** |  | 64-character SHA-256 Digital Security Seal generated upon successful attestation. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_ComputationExecutionAudit_AttestedComputation_ComputationId` | `ComputationId` | `dbo.AttestedComputation` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ComputationExecutionAudit_AttestationVerdict` | `AttestationVerdict` | No |
+| `IX_ComputationExecutionAudit_VerificationReference` | `VerificationReference` | No |
+| `IX_ComputationExecutionAudit_ComputationId_ExecutedAt` | `ComputationId, ExecutedAt` | No |
+
+---
+
+### <a id="computationparameter"></a> `dbo.ComputationParameter`
+
+**Description:** Declares a typed, named parameter that an invoking agent or consumer may fill. Agents can only supply parameter values; they cannot alter the computation template itself.  
+**CLR Model:** `Nsdms.Domain.Entities.ComputationParameter`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ComputationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DefaultValue` | `nvarchar(100)` | NULL |  | Optional default parameter value. |
+| `Description` | `nvarchar(250)` | NULL |  | Parameter description and binding instructions. |
+| `IsRequired` | `bit` | **NOT NULL** |  | Indicates whether the parameter is strictly required for execution. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `ParameterName` | `nvarchar(50)` | **NOT NULL** |  | Name of the SQL parameter (e.g., '@FinancialYearId', '@OrganisationId'). |
+| `ParameterType` | `nvarchar(30)` | **NOT NULL** |  | Type descriptor (e.g. 'int', 'nvarchar', 'decimal', 'date', 'bit'). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_ComputationParameter_AttestedComputation_ComputationId` | `ComputationId` | `dbo.AttestedComputation` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ComputationParameter_ComputationId` | `ComputationId` | No |
+| `IX_ComputationParameter_ComputationId_ParameterName` | `ComputationId, ParameterName` | ✅ Yes |
+
+---
+
+### <a id="conceptcrosslink"></a> `dbo.ConceptCrossLink`
+
+**Description:** Directed graph edge between concepts parsed from internal Markdown links (/path/to/concept.md). Allows visualization of concept dependency graphs and lineage networks.  
+**CLR Model:** `Nsdms.Domain.Entities.ConceptCrossLink`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `LinkText` | `nvarchar(200)` | NULL |  | Anchor link text in the markdown. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `ResolvedTargetId` | `int` | NULL | 🔗 **FK** | Resolved target concept ID in the database, or null if target does not yet exist. Consumers must tolerate broken links per OKF §6.1. |
+| `SourceConceptId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `TargetConceptPath` | `nvarchar(255)` | **NOT NULL** |  | Declared target path in the Markdown link (e.g. '/grants/mandatory-grant-rebate.md'). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_ConceptCrossLink_ConceptDocument_ResolvedTargetId` | `ResolvedTargetId` | `dbo.ConceptDocument` | `NoAction` |
+| `FK_ConceptCrossLink_ConceptDocument_SourceConceptId` | `SourceConceptId` | `dbo.ConceptDocument` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ConceptCrossLink_ResolvedTargetId` | `ResolvedTargetId` | No |
+| `IX_ConceptCrossLink_SourceConceptId` | `SourceConceptId` | No |
+
+---
+
+### <a id="conceptdocument"></a> `dbo.ConceptDocument`
+
+**Description:** Represents a single unit of knowledge within a bundle, mapped from an OKF Markdown file with YAML frontmatter. Backed by SQL Server system-versioned temporal tables for historical version timelines.  
+**CLR Model:** `Nsdms.Domain.Entities.ConceptDocument`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `BodyMarkdown` | `nvarchar(max)` | **NOT NULL** |  | Free-form Markdown body following the YAML frontmatter. |
+| `BundleId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent knowledge bundle. |
+| `ConceptId` | `nvarchar(150)` | **NOT NULL** |  | Relative path within the bundle with '.md' suffix removed (e.g. 'grants/mandatory-grant-rebate'). |
+| `ConceptType` | `nvarchar(80)` | **NOT NULL** |  | REQUIRED per OKF §4.1: Short string identifying the kind of concept (e.g. 'Metric', 'BigQuery Table', 'Attested Computation'). |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DerivedTrustTier` | `nvarchar(max)` | **NOT NULL** |  | Derived trust tier (0 = Unverified, 1 = Machine-Confirmed, 2 = Human-Reviewed) per OKF §5.3. |
+| `GeneratedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when current content was generated. |
+| `GeneratedByActor` | `nvarchar(150)` | **NOT NULL** |  | Actor string identifying who or what produced content (e.g., 'agent/gemini-2.5-pro', 'human:clo_042'). |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active. |
+| `LifecycleStatus` | `nvarchar(max)` | **NOT NULL** |  | Lifecycle status per OKF §5.4 (Draft, Stable, Deprecated). |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `ResourceUri` | `nvarchar(500)` | NULL |  | Canonical URI uniquely identifying the underlying physical or statutory asset. |
+| `StaleAfter` | `datetime2` | NULL |  | Absolute UTC instant when content becomes stale per OKF §5.5. |
+| `SummaryDescription` | `nvarchar(500)` | NULL |  | Single sentence summarizing the concept. |
+| `Title` | `nvarchar(200)` | **NOT NULL** |  | Human-readable display title. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_ConceptDocument_KnowledgeBundle_BundleId` | `BundleId` | `dbo.KnowledgeBundle` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ConceptDocument_BundleId` | `BundleId` | No |
+| `IX_ConceptDocument_ConceptId` | `ConceptId` | ✅ Yes |
+| `IX_ConceptDocument_ConceptType` | `ConceptType` | No |
+| `IX_ConceptDocument_DerivedTrustTier` | `DerivedTrustTier` | No |
+| `IX_ConceptDocument_StaleAfter` | `StaleAfter` | No |
+
+---
+
+### <a id="conceptsource"></a> `dbo.ConceptSource`
+
+**Description:** Records an authoritative source or external material a concept derives from, along with objective credibility signals per OKF v0.2 Section 5.1.  
+**CLR Model:** `Nsdms.Domain.Entities.ConceptSource`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AuthorActor` | `nvarchar(150)` | NULL |  | Who or what produced the source in actor convention (e.g., 'government:dhet', 'team:finance'). |
+| `ConceptId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `LastModifiedAt` | `datetime2` | NULL |  | When the source itself was last modified (recency signal). |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `ResourceUri` | `nvarchar(500)` | **NOT NULL** |  | Concrete artifact URI or population/scope descriptor (e.g. 'https://www.gov.za/...'). |
+| `SourceIdAlias` | `nvarchar(80)` | **NOT NULL** |  | Stable key used to attribute claims in Markdown footnotes: [^source_id_alias]. |
+| `Title` | `nvarchar(200)` | NULL |  | Human-readable label for the source. |
+| `UsageCount` | `bigint` | NULL |  | How often the resource was exercised over the usage window. Coarse adoption/liveness signal. |
+| `UsageWindowEnd` | `datetime2` | NULL |  | End of the usage window period framing usage count. |
+| `UsageWindowStart` | `datetime2` | NULL |  | Beginning of the usage window period framing usage count. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_ConceptSource_ConceptDocument_ConceptId` | `ConceptId` | `dbo.ConceptDocument` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ConceptSource_ConceptId` | `ConceptId` | No |
+| `IX_ConceptSource_ConceptId_SourceIdAlias` | `ConceptId, SourceIdAlias` | ✅ Yes |
+
+---
+
+### <a id="concepttag"></a> `dbo.ConceptTag`
+
+**Description:** Cross-cutting categorization tag associated with a concept document.  
+**CLR Model:** `Nsdms.Domain.Entities.ConceptTag`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ConceptId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `TagName` | `nvarchar(50)` | **NOT NULL** |  | Domain property for TagName. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_ConceptTag_ConceptDocument_ConceptId` | `ConceptId` | `dbo.ConceptDocument` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ConceptTag_TagName` | `TagName` | No |
+| `IX_ConceptTag_ConceptId_TagName` | `ConceptId, TagName` | ✅ Yes |
+
+---
+
+### <a id="conceptverificationevent"></a> `dbo.ConceptVerificationEvent`
+
+**Description:** Records a formal verification event against a concept document. Multiple events capture independent sign-offs (e.g. human approval plus nightly reconciliation process).  
+**CLR Model:** `Nsdms.Domain.Entities.ConceptVerificationEvent`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ActorType` | `nvarchar(30)` | **NOT NULL** |  | Classification of the verifying actor ('human', 'process', 'agent'). |
+| `ConceptId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `Notes` | `nvarchar(500)` | NULL |  | Governance notes, resolution numbers, or verification remarks. |
+| `VerifiedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when verification occurred. |
+| `VerifiedByActor` | `nvarchar(150)` | **NOT NULL** |  | Actor string identifying the verifying party (e.g. 'human:clo_042', 'process:nightly-recon'). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_ConceptVerificationEvent_ConceptDocument_ConceptId` | `ConceptId` | `dbo.ConceptDocument` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ConceptVerificationEvent_ActorType` | `ActorType` | No |
+| `IX_ConceptVerificationEvent_ConceptId` | `ConceptId` | No |
+
+---
+
+### <a id="conflictflag"></a> `dbo.ConflictFlag`
+
+**Description:** Automated conflict of interest detection flag raised by the rules engine during grant allocation, committee adjudication, accreditation intake, or annual audit.  
+**CLR Model:** `Nsdms.Domain.Entities.ConflictFlag`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ClearanceAuthorityRole` | `nvarchar(100)` | NULL |  | Statutory authority role under which clearance was executed (e.g. RiskAndComplianceManager, InternalAudit, Ceo, AccountingAuthority). |
+| `ClearedAt` | `datetime2` | NULL |  | Date and time of clearance or final adjudication. |
+| `ClearedByUserId` | `nvarchar(150)` | NULL |  | Username / Actor who cleared or adjudicated the conflict flag. |
+| `ConflictCategoryCode` | `nvarchar(50)` | **NOT NULL** |  | Conflict category code: INSIDER_AFFILIATION, MULTI_ORGANISATION_GRANT_SYNDICATE, ACCREDITATION_GOVERNANCE_BREACH, COMMITTEE_RECUSAL_REQUIRED, OVERDUE_DECLARATION. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `Description` | `nvarchar(2000)` | **NOT NULL** |  | Detailed factual narrative and forensic rationale for the conflict flag. |
+| `DetectedAt` | `datetime2` | **NOT NULL** |  | Date and time when the conflict was detected by the rules engine. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the natural Person whose dual affiliations create the conflict. |
+| `ResolutionNotes` | `nvarchar(2000)` | NULL |  | Detailed justification notes recorded upon resolution or clearance. |
+| `ResolutionStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Current investigation and resolution status: OPEN, UNDER_INVESTIGATION, CLEARED_WITH_JUSTIFICATION, UPHELD_DISQUALIFIED. |
+| `SeverityCode` | `nvarchar(50)` | **NOT NULL** |  | Severity classification code: RED_CRITICAL (Hard statutory block: insider affiliation, direct benefit, PFMA Section 50 breach), AMBER_ELEVATED (Multi-organisation grant access, committee recusal required, unverified beneficial owner), YELLOW_ADVISORY (Overdue annual declaration, expired information). |
+| `TargetGrantApplicationId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the specific Grant Application implicated. |
+| `TargetOrganisationId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the implicated legal Organisation. |
+| `TargetTrainingProviderId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the Skills Development Provider implicated if in accreditation context. |
+| `Title` | `nvarchar(250)` | **NOT NULL** |  | Short descriptive title of the conflict incident. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_ConflictFlag_Person_PersonId` | `PersonId` | `dbo.Person` | `Restrict` |
+| `FK_ConflictFlag_GrantApplication_TargetGrantApplicationId` | `TargetGrantApplicationId` | `dbo.GrantApplication` | `SetNull` |
+| `FK_ConflictFlag_Organisation_TargetOrganisationId` | `TargetOrganisationId` | `dbo.Organisation` | `SetNull` |
+| `FK_ConflictFlag_TrainingProvider_TargetTrainingProviderId` | `TargetTrainingProviderId` | `dbo.TrainingProvider` | `SetNull` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ConflictFlag_ConflictCategoryCode` | `ConflictCategoryCode` | No |
+| `IX_ConflictFlag_DetectedAt` | `DetectedAt` | No |
+| `IX_ConflictFlag_PersonId` | `PersonId` | No |
+| `IX_ConflictFlag_ResolutionStatusCode` | `ResolutionStatusCode` | No |
+| `IX_ConflictFlag_SeverityCode` | `SeverityCode` | No |
+| `IX_ConflictFlag_TargetGrantApplicationId` | `TargetGrantApplicationId` | No |
+| `IX_ConflictFlag_TargetOrganisationId` | `TargetOrganisationId` | No |
+| `IX_ConflictFlag_TargetTrainingProviderId` | `TargetTrainingProviderId` | No |
+
+---
+
 ### <a id="contractaddenda"></a> `dbo.ContractAddenda`
 
 **Description:** System entity for ContractAddenda data governance.  
@@ -2503,17 +2880,27 @@
 | `IsActive` | `bit` | **NOT NULL** |  | Whether this template is active for new document generation. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `ParentTemplateId` | `int` | NULL | 🔗 **FK** | Optional foreign key to predecessor template version from which this revision was cloned. |
 | `TargetEntityType` | `nvarchar(50)` | **NOT NULL** |  | Target entity legal classification filter (e.g. All, Employer, Provider, Learner, Assessor). |
+| `TemplateBodyHtml` | `nvarchar(max)` | **NOT NULL** |  | Complete editable rich HTML / text document body with dynamic placeholders (e.g. {{Employer.Name}}, {{Wsp.RebateAmount}}). When specified, provides a unified letter or certificate document template. |
 | `TemplateCode` | `nvarchar(50)` | **NOT NULL** |  | Unique template identifier code (e.g. WSP-APPROVAL-STD, TRADE-CERT-STD, ETQA-ACCRED-STD). |
 | `TemplateTitle` | `nvarchar(200)` | **NOT NULL** |  | Human-readable title of the document template. |
+| `VersionNotes` | `nvarchar(1000)` | NULL |  | Changelog notes or description of changes in this version. |
 | `VersionNumber` | `nvarchar(20)` | **NOT NULL** |  | Semantic policy version number (e.g. 1.0.0, 2.1.0). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_DocumentTemplate_DocumentTemplate_ParentTemplateId` | `ParentTemplateId` | `dbo.DocumentTemplate` | `Restrict` |
 
 #### Performance Indexes
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
 | `IX_DocumentTemplate_ApprovalStatus` | `ApprovalStatus` | No |
-| `IX_DocumentTemplate_TemplateCode` | `TemplateCode` | ✅ Yes |
+| `IX_DocumentTemplate_ParentTemplateId` | `ParentTemplateId` | No |
+| `IX_DocumentTemplate_TemplateCode_VersionNumber` | `TemplateCode, VersionNumber` | ✅ Yes |
 | `IX_DocumentTemplate_DocumentCategory_DocumentTypeCode_FinancialYear_IsActive` | `DocumentCategory, DocumentTypeCode, FinancialYear, IsActive` | No |
 
 ---
@@ -3554,6 +3941,131 @@
 
 ---
 
+### <a id="institutionalaffiliation"></a> `dbo.InstitutionalAffiliation`
+
+**Description:** Internal institutional appointment linking a Person to merSETA as an employee, executive, Accounting Authority (Board) member, or independent committee specialist.  
+**CLR Model:** `Nsdms.Domain.Entities.InstitutionalAffiliation`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AffiliationTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Official institutional affiliation type code: ACCOUNTING_AUTHORITY_MEMBER, INDEPENDENT_COMMITTEE_MEMBER, EXECUTIVE_MANAGEMENT, PERMANENT_EMPLOYEE, ADJUDICATION_OFFICER, CONTRACTOR. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DepartmentOrCommittee` | `nvarchar(150)` | **NOT NULL** |  | Specific statutory committee or business department: e.g. Accounting Authority Board, Audit & Risk Committee, Finance MANCO, DG Adjudication Committee, Grants & Operations, Quality Assurance & ETQA. |
+| `Designation` | `nvarchar(150)` | **NOT NULL** |  | Official job title or committee appointment designation: e.g. Board Chairperson, Independent Specialist Member, Senior Grant Evaluator, Chief Financial Officer. |
+| `EmployeeNumber` | `nvarchar(50)` | NULL |  | Internal merSETA payroll / staff employee reference number if applicable. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the affiliation is currently active. |
+| `IsIndependentMember` | `bit` | **NOT NULL** |  | Indicates whether the member is an independent specialist (e.g. Independent Audit & Risk Committee Member). |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the natural Person. |
+| `TermEndDate` | `datetime2` | NULL |  | Expiry or conclusion date of the term of office. |
+| `TermStartDate` | `datetime2` | NULL |  | Official gazetted / contractual term commencement date. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_InstitutionalAffiliation_Person_PersonId` | `PersonId` | `dbo.Person` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_InstitutionalAffiliation_AffiliationTypeCode` | `AffiliationTypeCode` | No |
+| `IX_InstitutionalAffiliation_IsActive` | `IsActive` | No |
+| `IX_InstitutionalAffiliation_PersonId` | `PersonId` | No |
+
+---
+
+### <a id="interestdeclaration"></a> `dbo.InterestDeclaration`
+
+**Description:** Official statutory Declaration of Interest (e-DOI) filed by an insider, committee member, or applicant director in terms of Section 50/51 of the Public Finance Management Act (PFMA) and King IV.  
+**CLR Model:** `Nsdms.Domain.Entities.InterestDeclaration`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CertifiedAt` | `datetime2` | NULL |  | Timestamp when the electronic declaration was formally certified. |
+| `CertifiedByUserId` | `nvarchar(150)` | NULL |  | Username / Actor who certified or witnessed the declaration. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DeclarationPeriodYear` | `nvarchar(10)` | **NOT NULL** |  | Scheme or financial calendar year of compliance (e.g. 2026). |
+| `DeclarationTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Statutory declaration type code: ANNUAL_COMPLIANCE, MEETING_RECUSAL, TENDER_EVALUATION, GRANT_ADJUDICATION. |
+| `DigitalSignatureSeal` | `nvarchar(100)` | NULL |  | Truncated cryptographic SHA-256 digital security seal prefix computed over the attestation payload. |
+| `FinancialYearId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the applicable Financial / Scheme Year. |
+| `GeneralDeclarationNotes` | `nvarchar(2000)` | NULL |  | Narrative disclosure notes or explanatory statement. |
+| `HasConflictsToDeclare` | `bit` | **NOT NULL** |  | Indicates whether the individual has private commercial interests, shareholdings, or directorships to declare. |
+| `MeetingOrProjectRef` | `nvarchar(150)` | NULL |  | Optional contextual reference (e.g. Review Committee Meeting Agenda number or Tender reference). |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the declaring Person. |
+| `StatusCode` | `nvarchar(50)` | **NOT NULL** |  | Declaration status code: DRAFT, SUBMITTED, CERTIFIED, FLAGGED_CONFLICT, UNDER_REVIEW. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_InterestDeclaration_FinancialYear_FinancialYearId` | `FinancialYearId` | `dbo.FinancialYear` | `SetNull` |
+| `FK_InterestDeclaration_Person_PersonId` | `PersonId` | `dbo.Person` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_InterestDeclaration_DeclarationPeriodYear` | `DeclarationPeriodYear` | No |
+| `IX_InterestDeclaration_DeclarationTypeCode` | `DeclarationTypeCode` | No |
+| `IX_InterestDeclaration_FinancialYearId` | `FinancialYearId` | No |
+| `IX_InterestDeclaration_PersonId` | `PersonId` | No |
+| `IX_InterestDeclaration_StatusCode` | `StatusCode` | No |
+
+---
+
+### <a id="interestdeclarationitem"></a> `dbo.InterestDeclarationItem`
+
+**Description:** Individual commercial interest, directorship, shareholding, or partnership item declared within an official statutory Declaration of Interest.  
+**CLR Model:** `Nsdms.Domain.Entities.InterestDeclarationItem`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AnnualRemunerationOrBenefit` | `decimal(18,2)` | NULL |  | Estimated annual remuneration, dividend, or financial benefit derived. |
+| `ApprovalReference` | `nvarchar(100)` | NULL |  | Executive or CEO approval reference number for external remunerative work. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `InterestDeclarationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent InterestDeclaration. |
+| `InterestPercentage` | `decimal(18,2)` | NULL |  | Ownership or beneficial equity shareholding percentage if applicable. |
+| `IsApprovedExternalWork` | `bit` | **NOT NULL** |  | Indicates whether formal approval for Remunerative Work Outside the Public Service (RWOPS) has been granted. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `NatureOfRelationship` | `nvarchar(50)` | **NOT NULL** |  | Nature of relationship or interest: DIRECTOR, SHAREHOLDER, PARTNER, CONSULTANT, FAMILY_MEMBER, OTHER_FINANCIAL_INTEREST. |
+| `OrganisationName` | `nvarchar(250)` | **NOT NULL** |  | Legal registered name of the external corporate entity or business enterprise. |
+| `RegistrationOrSdlNumber` | `nvarchar(50)` | NULL |  | Enterprise CIPC registration number or SARS SDL number if known. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_InterestDeclarationItem_InterestDeclaration_InterestDeclarationId` | `InterestDeclarationId` | `dbo.InterestDeclaration` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_InterestDeclarationItem_InterestDeclarationId` | `InterestDeclarationId` | No |
+
+---
+
 ### <a id="intersetatransfer"></a> `dbo.InterSetaTransfer`
 
 **Description:** Inter-SETA Transfer of employer registration and levy funds between SETAs.  
@@ -3594,6 +4106,37 @@
 | `IX_InterSetaTransfer_OrganisationId` | `OrganisationId` | No |
 | `IX_InterSetaTransfer_OtherSetaCode` | `OtherSetaCode` | No |
 | `IX_InterSetaTransfer_TransferStatusCode` | `TransferStatusCode` | No |
+
+---
+
+### <a id="knowledgebundle"></a> `dbo.KnowledgeBundle`
+
+**Description:** Top-level Knowledge Bundle container representing a self-contained, hierarchical collection of knowledge documents, synchronized with Git repositories per the OKF v0.2 specification.  
+**CLR Model:** `Nsdms.Domain.Entities.KnowledgeBundle`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `BundleCode` | `nvarchar(50)` | **NOT NULL** |  | Unique alphanumeric identifier for the bundle (e.g., 'merseta-statutory-grants'). |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `Description` | `nvarchar(500)` | NULL |  | Summary description of the bundle scope and contents. |
+| `DisplayName` | `nvarchar(150)` | **NOT NULL** |  | Human-readable display title. |
+| `FileSystemPath` | `nvarchar(255)` | **NOT NULL** |  | Local or relative filesystem path holding the Markdown file hierarchy. |
+| `GitRepositoryUrl` | `nvarchar(255)` | NULL |  | Remote Git repository URL when synced via GitOps. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the knowledge bundle is currently active. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `OkfVersion` | `nvarchar(20)` | **NOT NULL** |  | Target Open Knowledge Format specification version (defaults to '0.2'). |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_KnowledgeBundle_BundleCode` | `BundleCode` | ✅ Yes |
 
 ---
 
@@ -4800,6 +5343,59 @@
 | `IX_OrganisationContact_IsActive` | `IsActive` | No |
 | `IX_OrganisationContact_OrganisationId` | `OrganisationId` | No |
 | `IX_OrganisationContact_PersonId` | `PersonId` | No |
+
+---
+
+### <a id="organisationgovernancemember"></a> `dbo.OrganisationGovernanceMember`
+
+**Description:** Natural person serving as a legal director, partner, trustee, board member, or shareholder within a participating employer, training provider, or grant applicant organisation.  
+**CLR Model:** `Nsdms.Domain.Entities.OrganisationGovernanceMember`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AppointmentDate` | `datetime2` | NULL |  | Official date of appointment according to CIPC / constitution. |
+| `CipcRegistered` | `bit` | **NOT NULL** |  | Indicates whether this directorship or shareholding is verified against CIPC Beneficial Ownership records. |
+| `CorporateEntityName` | `nvarchar(200)` | NULL |  | Registered legal name if corporate institutional shareholder (e.g. ABC Holdings (Pty) Ltd). |
+| `CorporateRegistrationNumber` | `nvarchar(50)` | NULL |  | CIPC registration number if corporate institutional shareholder. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DirectorCategory` | `nvarchar(30)` | NULL |  | Director classification: EXECUTIVE or NON_EXECUTIVE. |
+| `GovernanceRoleCode` | `nvarchar(50)` | **NOT NULL** |  | Legal governance capacity code (e.g. DIRECTOR, MANAGING_DIRECTOR, PARTNER, TRUSTEE, SHAREHOLDER, BOARD_MEMBER, ACCOUNTING_OFFICER). |
+| `HasVotingRights` | `bit` | **NOT NULL** |  | Indicates whether this member exercises corporate voting rights. |
+| `IdVerified` | `bit` | **NOT NULL** |  | Indicates whether identity verification (RSA ID / Passport) has passed. |
+| `IsActive` | `bit` | **NOT NULL** |  | Operational active flag. |
+| `MemberType` | `nvarchar(30)` | **NOT NULL** |  | Member type classification: NATURAL_PERSON or CORPORATE_ENTITY. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent legal Organisation. |
+| `PersonId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the natural Person (nullable if corporate entity shareholder). |
+| `ResignationDate` | `datetime2` | NULL |  | Date of formal resignation or cessation of interest if no longer active. |
+| `ShareholderOrganisationId` | `int` | NULL | 🔗 **FK** | Foreign key referencing a corporate institutional entity shareholder (if registered in merSETA system). |
+| `ShareholdingPercentage` | `decimal(18,2)` | **NOT NULL** |  | Equity / beneficial shareholding percentage (0.00% to 100.00%). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_OrganisationGovernanceMember_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `Cascade` |
+| `FK_OrganisationGovernanceMember_Person_PersonId` | `PersonId` | `dbo.Person` | `Restrict` |
+| `FK_OrganisationGovernanceMember_Organisation_ShareholderOrganisationId` | `ShareholderOrganisationId` | `dbo.Organisation` | `Restrict` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_OrganisationGovernanceMember_DirectorCategory` | `DirectorCategory` | No |
+| `IX_OrganisationGovernanceMember_GovernanceRoleCode` | `GovernanceRoleCode` | No |
+| `IX_OrganisationGovernanceMember_MemberType` | `MemberType` | No |
+| `IX_OrganisationGovernanceMember_OrganisationId` | `OrganisationId` | No |
+| `IX_OrganisationGovernanceMember_PersonId` | `PersonId` | No |
+| `IX_OrganisationGovernanceMember_ShareholderOrganisationId` | `ShareholderOrganisationId` | No |
+| `IX_OrganisationGovernanceMember_OrganisationId_PersonId_GovernanceRoleCode` | `OrganisationId, PersonId, GovernanceRoleCode` | No |
 
 ---
 

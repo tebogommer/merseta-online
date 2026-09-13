@@ -1,5 +1,6 @@
 @page "/dg-grants"
 @page "/grants"
+@using Nsdms.Application.Common.Models
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
@@ -74,13 +75,13 @@
     <ActiveFilterChips>
         @if (!string.IsNullOrWhiteSpace(_searchString))
         {
-            <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; HandleFilterChanged(); })">
+            <MudChip T="string" Size="Size.Small" OnClose="@(async () => { _searchString = string.Empty; await HandleFilterChanged(); })">
                 Keyword: @_searchString
             </MudChip>
         }
         @if (_statusFilter != "All")
         {
-            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(async () => { _statusFilter = "All"; await HandleFilterChanged(); })">
                 Status: @_statusFilter
             </MudChip>
         }
@@ -90,9 +91,9 @@
 <!-- Data Grid Shell (Clause 11.9) -->
 <DataGridShell TItem="GrantApplication"
                GridKey="GrantsRegistryGrid"
-               Items="@FilteredGrants"
-               IsLoading="@_loading"
-               TotalItemsCount="@FilteredGrants.Count"
+               Items="@_currentPagedItems"
+               IsLoading="false"
+               TotalItemsCount="@_totalCount"
                SelectedItems="@_selectedGrants"
                SelectedItemsChanged="OnSelectedGrantsChanged"
                ExportCallback="ExportSelected"
@@ -113,7 +114,9 @@
         </MudButton>
     </BulkActionBarContent>
     <ChildContent>
-        <MudTable Items="@FilteredGrants"
+        <MudTable @ref="_table"
+                  T="GrantApplication"
+                  ServerData="ServerReload"
                   Hover="true"
                   Dense="true"
                   Elevation="0"
@@ -213,24 +216,25 @@
             <NoRecordsContent>
                 <EmptyState Icon="@Icons.Material.Filled.Description"
                             Message="No Discretionary Grant Applications Found"
-                            Description="@(_grants.Count == 0 ? "No Discretionary Grant applications currently registered in the database. Submit a new application to initiate the approval cycle." : "No grant applications match your active search or filter criteria. Try clearing your filters.")"
-                            ActionLabel="@(_grants.Count == 0 ? "Apply for Discretionary Grant" : "Clear Filters")"
-                            ActionHref="@(_grants.Count == 0 ? "/dg-grants/create" : null)"
+                            Description="@(_totalCount == 0 ? "No Discretionary Grant applications currently registered in the database. Submit a new application to initiate the approval cycle." : "No grant applications match your active search or filter criteria. Try clearing your filters.")"
+                            ActionLabel="@(_totalCount == 0 ? "Apply for Discretionary Grant" : "Clear Filters")"
+                            ActionHref="@(_totalCount == 0 ? "/dg-grants/create" : null)"
                             OnAction="HandleFilterCleared" />
             </NoRecordsContent>
             <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100 }" />
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
             </PagerContent>
         </MudTable>
     </ChildContent>
 </DataGridShell>
 
 @code {
-    private List<GrantApplication> _grants = new();
+    private MudTable<GrantApplication>? _table;
+    private IReadOnlyList<GrantApplication> _currentPagedItems = Array.Empty<GrantApplication>();
+    private int _totalCount;
     private HashSet<GrantApplication> _selectedGrants = new();
     private string _searchString = string.Empty;
     private string _statusFilter = "All";
-    private bool _loading = true;
 
     private List<BreadcrumbItem> _breadcrumbs = new()
     {
@@ -239,45 +243,34 @@
         new BreadcrumbItem("Discretionary Grants (DG)", href: "/dg-grants")
     };
 
-    protected override async Task OnInitializedAsync()
+    private async Task<TableData<GrantApplication>> ServerReload(TableState state, CancellationToken ct)
     {
-        await LoadData();
-    }
-
-    private async Task LoadData()
-    {
-        _loading = true;
-        _grants = await GrantService.GetAllAsync();
-        _loading = false;
-    }
-
-    private List<GrantApplication> FilteredGrants
-    {
-        get
+        var query = new PaginationQuery
         {
-            var query = _grants.AsEnumerable();
+            PageIndex = state.Page,
+            PageSize = state.PageSize,
+            SearchText = _searchString,
+            SortBy = state.SortLabel,
+            SortDescending = state.SortDirection == SortDirection.Descending
+        };
 
-            if (_statusFilter != "All")
-            {
-                query = query.Where(x => x.StatusCode != null && x.StatusCode.Equals(_statusFilter, StringComparison.OrdinalIgnoreCase));
-            }
-
-            if (!string.IsNullOrWhiteSpace(_searchString))
-            {
-                var s = _searchString.Trim();
-                query = query.Where(x =>
-                    (x.ApplicationNumber != null && x.ApplicationNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (x.ProjectTitle != null && x.ProjectTitle.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (x.GrantTypeCode != null && x.GrantTypeCode.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (x.Organisation != null && x.Organisation.CompanyName != null && x.Organisation.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (x.Organisation != null && x.Organisation.SdlNumber != null && x.Organisation.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
-            }
-
-            return query.ToList();
+        if (!string.IsNullOrWhiteSpace(_statusFilter) && _statusFilter != "All")
+        {
+            query.FilterParams["status"] = _statusFilter;
         }
+
+        var result = await GrantService.GetPagedApplicationsAsync(query, ct);
+        _currentPagedItems = result.Items;
+        _totalCount = result.TotalCount;
+
+        return new TableData<GrantApplication>
+        {
+            TotalItems = result.TotalCount,
+            Items = result.Items
+        };
     }
 
-    private Color GetStatusColor(string status) => status switch
+    private Color GetStatusColor(string? status) => status switch
     {
         "APPROVED" => Color.Success,
         "SUBMITTED" => Color.Info,
@@ -285,22 +278,28 @@
         _ => Color.Default
     };
 
-    private void HandleStatusToggleChanged(string? val)
+    private async Task HandleStatusToggleChanged(string? val)
     {
         _statusFilter = string.IsNullOrEmpty(val) ? "All" : val;
-        HandleFilterChanged();
+        await HandleFilterChanged();
     }
 
-    private void HandleFilterChanged()
+    private async Task HandleFilterChanged()
     {
-        StateHasChanged();
+        if (_table != null)
+        {
+            await _table.ReloadServerData();
+        }
     }
 
-    private void HandleFilterCleared()
+    private async Task HandleFilterCleared()
     {
         _searchString = string.Empty;
         _statusFilter = "All";
-        StateHasChanged();
+        if (_table != null)
+        {
+            await _table.ReloadServerData();
+        }
     }
 
     private void OnSelectedGrantsChanged(HashSet<GrantApplication> selected)
@@ -325,7 +324,7 @@
 
     private async Task ExportSelected()
     {
-        var targetList = _selectedGrants.Count > 0 ? _selectedGrants.ToList() : FilteredGrants.ToList();
+        var targetList = _selectedGrants.Count > 0 ? _selectedGrants.ToList() : _currentPagedItems.ToList();
         if (targetList.Count == 0)
         {
             Snackbar.Add("No grant applications available to export.", Severity.Warning);
@@ -362,7 +361,10 @@
             if (deleted)
             {
                 Snackbar.Add($"Grant application '{appNo}' deleted successfully with audit confirmation.", Severity.Success);
-                await LoadData();
+                if (_table != null)
+                {
+                    await _table.ReloadServerData();
+                }
             }
             else
             {

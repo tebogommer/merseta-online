@@ -57,6 +57,11 @@ When user's prompt is NOT in English:
    - Create an accompanying C# `Phase*Migrator` in `Nsdms.Infrastructure/Data/` with robust multi-directory path resolution and register it in `Program.cs` via `RunMigrator(...)`.
    - Add corresponding table creation and `ALTER TABLE ... ADD [ColumnName] ...` clauses to the master DDL script (`V2026_08_Complete_Nsdms_Enterprise_DDL.sql`).
    - Verify table and column presence against `INFORMATION_SCHEMA.TABLES` and `INFORMATION_SCHEMA.COLUMNS` before testing UI routes. Never leave entities in `DbContext` without active migrations.
+2. **Batch Compilation & DDL-DML Decoupling**:
+   - In SQL Server, DDL alterations (`ALTER TABLE ... ADD ...`) and subsequent DML statements referencing those new columns/tables (`MERGE`, `INSERT`, `UPDATE`) must NEVER be concatenated into a single execution batch without batch boundaries. Doing so triggers compile-time parser errors (`Invalid column name`) that abort the entire batch before any `ALTER TABLE` statement executes.
+   - All multi-statement migrator scripts MUST use `SqlBatchRunner.ExecuteBatchesAsync` with explicit `GO` delimiters between DDL changes and DML/seed operations.
+3. **Foreign Key Type and Length Invariant (Msg 1753)**:
+   - Referencing foreign key columns (e.g. `InterventionTypeCode NVARCHAR(50)`) and referenced primary key columns (e.g. `lookup.InterventionType.Code`) MUST have identical data types and maximum lengths. Always verify lookup key lengths before creating foreign keys.
 
 ---
 
@@ -183,4 +188,31 @@ When user's prompt is NOT in English:
    - All external/public URLs must be constructed from configurable base URLs resolved from `ISystemConfigurationService` or `IConfiguration`.
 4. **Zero Inline Timeouts & File Caps**:
    - File upload limits (`maxAllowedSize`), cache TTLs (`MemoryCacheEntryOptions`), and HTTP client timeouts must reference centralized system configuration keys with statutory constants strictly as fallback defaults.
+
+---
+
+### 🛡️ Enterprise Document Template Studio & Single-Active Version Governance Standard
+1. **Single Active Version Invariant**:
+   - For any statutory document template family (`TemplateCode`), exactly one version can have `IsActive = true` and `ApprovalStatus = "Approved"`.
+   - Activating a new revision (e.g. v1.1.0) must atomically transition the prior active version (v1.0.0) to `Superseded` and `IsActive = false` within an audited transaction.
+   - Enforced at the database tier via filtered unique index:
+     `CREATE UNIQUE INDEX [IX_DocumentTemplate_ActiveFamily] ON [dbo].[DocumentTemplate] ([TemplateCode]) WHERE [IsActive] = 1 AND [ApprovalStatus] = 'Approved';`
+2. **Point-in-Time Issuance Traceability**:
+   - Official document issuances (`DocumentSnapshot`) must permanently store `DocumentTemplateId`, `TemplateVersionNumber`, and the immutable rendered content hash (`RenderedContentHash`).
+   - Historical documents must remain locked and reproducible against their original template version snapshot.
+3. **Structured Placeholder Palette & QuestPDF Translation**:
+   - Document templates must resolve placeholders through `IDocumentPlaceholderRegistry` with real-time syntax linting before saving.
+   - Rich HTML document bodies (`TemplateBodyHtml`) must be rendered using `HtmlToQuestPdfRenderer` to maintain pixel-accurate typography, tables, and 2D barcode verification seals.
+
+---
+
+### 🛡️ Corporate Governance & Institutional Shareholder Standard
+1. **Dual Entity Beneficiary Model**:
+   - Fiduciary directorships must always link to a verified natural person (`PersonId != null`).
+   - Beneficial shareholders may be either a registered natural person (`MemberType == "NATURAL_PERSON"`) or a corporate institutional entity (`MemberType == "CORPORATE_ENTITY"` with `ShareholderOrganisationId` or manual legal registration).
+   - Services performing conflict of interest scans must always guard against nullable `PersonId` before evaluating person-specific conflict flags or syndicate links.
+2. **MudChip OnClose Event Handlers**:
+   - In MudBlazor 8, avoid binding inline `async () => { await ... }` expressions directly to `MudChip.OnClose`. Always bind to a dedicated parameterless asynchronous method (e.g., `OnClose="@ClearKeywordFilter"`).
+
+
 

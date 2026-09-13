@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
 using Nsdms.Application.Common.Interfaces;
+using Nsdms.Application.Common.Models;
 using Nsdms.Domain.Entities;
 using Nsdms.Domain.Lookups;
 
@@ -8,6 +9,7 @@ namespace Nsdms.Application.Services;
 
 public interface IGrantService
 {
+    Task<PagedResult<GrantApplication>> GetPagedApplicationsAsync(PaginationQuery query, CancellationToken cancellationToken = default);
     Task<GrantFundingWindow> CreateFundingWindowAsync(GrantFundingWindow window, string currentUsername = "SYSTEM");
     Task<GrantFundingWindow> UpdateFundingWindowAsync(GrantFundingWindow window, string currentUsername = "SYSTEM");
     Task<GrantFundingWindow> SaveFundingWindowAsync(GrantFundingWindow window, string currentUsername = "SYSTEM");
@@ -1095,14 +1097,57 @@ public class GrantService : IGrantService
         return await GetAllApplicationsAsync(null, search, grantType, status);
     }
 
+    public async Task<PagedResult<GrantApplication>> GetPagedApplicationsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        var baseQuery = db.GrantApplications
+            .Include(g => g.Organisation)
+            .AsNoTracking();
+
+        if (query.FilterParams.TryGetValue("fundingWindowId", out var windowIdStr) && int.TryParse(windowIdStr, out var windowId))
+        {
+            baseQuery = baseQuery.Where(g => g.FundingWindowId == windowId);
+        }
+
+        if (query.FilterParams.TryGetValue("grantType", out var grantType) && !string.IsNullOrWhiteSpace(grantType) && !grantType.Equals("All", StringComparison.OrdinalIgnoreCase))
+        {
+            baseQuery = baseQuery.Where(g => g.GrantTypeCode == grantType);
+        }
+
+        if (query.FilterParams.TryGetValue("status", out var status) && !string.IsNullOrWhiteSpace(status) && !status.Equals("All", StringComparison.OrdinalIgnoreCase))
+        {
+            baseQuery = baseQuery.Where(g => g.ApplicationStatusCode == status);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.SearchText))
+        {
+            var s = query.SearchText.Trim();
+            baseQuery = baseQuery.Where(g =>
+                (g.ApplicationNumber != null && g.ApplicationNumber.Contains(s)) ||
+                (g.ProjectTitle != null && g.ProjectTitle.Contains(s)) ||
+                (g.Organisation != null && g.Organisation.CompanyName != null && g.Organisation.CompanyName.Contains(s)) ||
+                (g.Organisation != null && g.Organisation.SdlNumber != null && g.Organisation.SdlNumber.Contains(s)));
+        }
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+
+        var pagedQuery = baseQuery.OrderByDescending(g => g.Id);
+
+        var items = await pagedQuery
+            .Skip(query.PageIndex * query.PageSize)
+            .Take(query.PageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<GrantApplication>(items, totalCount, query.PageIndex, query.PageSize);
+    }
+
     public async Task<List<GrantApplication>> GetAllApplicationsAsync(int? fundingWindowId = null, string? search = null, string? grantType = null, string? status = null)
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var query = db.GrantApplications
             .Include(g => g.Organisation)
             .Include(g => g.FundingWindow)
-            .Include(g => g.ProjectBudgets)
-            .AsQueryable();
+            .AsNoTracking();
 
         if (fundingWindowId.HasValue)
         {

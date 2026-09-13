@@ -542,6 +542,22 @@ The agent may only declare testing phase complete when:
 
 ---
 
+### 🛡️ Enterprise Server-Side Pagination & Eager-Loading Elimination Standard (Option B)
+1. **True Server-Side Pagination Invariant**:
+   - Master list views (e.g. `/wsp`, `/dg-grants`, `/learners`, `/organisations`) must NEVER materialize unpaged collections via `.ToListAsync()` or bind in-memory filtered collections (`Items="@FilteredSubmissions"`).
+   - Lists MUST implement true server-side pagination using `PagedResult<T>` and `PaginationQuery` with MudBlazor's `MudTable ServerData="ServerReload"`.
+   - MudBlazor's 0-indexed page state must be translated cleanly via `.Skip(query.PageIndex * query.PageSize).Take(query.PageSize)` with covering index support.
+2. **Eager-Loading Elimination on List Endpoints (Option A Prerequisite)**:
+   - Primary master list queries MUST NEVER eagerly load child collection hierarchies (e.g. `TrainingPlans`, `EmploymentSummaries`, `ProjectBudgets`) that are not rendered in table rows.
+   - Child collections are reserved strictly for detail views (`/{entity}/{id}`) or dedicated child tabs.
+   - All read-only list queries MUST explicitly append `.AsNoTracking()` to eliminate EF Core change tracking state management and prevent memory bloat under high concurrency.
+3. **Covering Non-Clustered Indexes**:
+   - Status, financial year, and foreign key columns used in master query filters must have covering non-clustered indexes (e.g., `IX_WspSubmission_StatusCode` INCLUDE (`FinYear`, `ReferenceNumber`, `OrganisationId`)) to ensure sub-10ms index seek execution plans on high-volume tables.
+4. **DataGridShell & MudTable Coordinated Lifecycle**:
+   - When `MudTable` manages its own `ServerData`, `DataGridShell` must receive `IsLoading="false"` to prevent card unmounting/skeleton thrashing, while synchronizing `TotalItemsCount="@_totalCount"` and `Items="@_currentPagedItems"`.
+
+---
+
 ### 🛡️ Discretionary Grant (DG) Funding Window & Template Blueprint Standard (Option B)
 1. **Dynamic Gazette Window Timeframe & Decoupled Workflow**:
    - Discretionary Grant (DG) windows operate on dynamically gazetted timeframes (`OpeningDate` and `ClosingDate`), strictly decoupled from the statutory Mandatory Grant (MG / WSP) deadline of 30 April.
@@ -833,7 +849,63 @@ Cite the clause identifier. If the standard does not cover what is needed, stop 
 
 ---
 
+### 🛡️ Enterprise Document Template Studio & Single-Active Version Governance Standard
+1. **Single Active Version Invariant**:
+   - For any statutory document template family (`TemplateCode`), exactly one version can have `IsActive = true` and `ApprovalStatus = "Approved"`.
+   - Activating a new revision (e.g. v1.1.0) must atomically transition the prior active version (v1.0.0) to `Superseded` and `IsActive = false` within an audited transaction.
+   - Enforced at the database tier via filtered unique index:
+     `CREATE UNIQUE INDEX [IX_DocumentTemplate_ActiveFamily] ON [dbo].[DocumentTemplate] ([TemplateCode]) WHERE [IsActive] = 1 AND [ApprovalStatus] = 'Approved';`
+2. **Point-in-Time Issuance Traceability**:
+   - Official document issuances (`DocumentSnapshot`) must permanently store `DocumentTemplateId`, `TemplateVersionNumber`, and the immutable rendered content hash (`RenderedContentHash`).
+   - Historical documents must remain locked and reproducible against their original template version snapshot.
+3. **Structured Placeholder Palette & QuestPDF Translation**:
+   - Document templates must resolve placeholders through `IDocumentPlaceholderRegistry` with real-time syntax linting before saving.
+   - Rich HTML document bodies (`TemplateBodyHtml`) must be rendered using `HtmlToQuestPdfRenderer` to maintain pixel-accurate typography, tables, and 2D barcode verification seals.
+
+---
+
+### 🛡️ Schema-Domain & Database Migration Synchronization Standard
+1. **Synchronization Invariant**: Whenever new Entity classes or persistent properties are added to `Nsdms.Domain/Entities/` or `NsdmsDbContext`:
+   - Ensure the SQL migration script exists under `dotnet/Nsdms.Infrastructure/Data/SqlScripts/` and that `Nsdms.Infrastructure.csproj` copies `.sql` files (`<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>`).
+   - Create an accompanying C# `Phase*Migrator` in `Nsdms.Infrastructure/Data/` with robust multi-directory path resolution and register it in `Program.cs` via `RunMigrator(...)`.
+   - Add corresponding table creation and `ALTER TABLE ... ADD [ColumnName] ...` clauses to the master DDL script (`V2026_08_Complete_Nsdms_Enterprise_DDL.sql`).
+   - Verify table and column presence against `INFORMATION_SCHEMA.TABLES` and `INFORMATION_SCHEMA.COLUMNS` before testing UI routes. Never leave entities in `DbContext` without active migrations.
+2. **Batch Compilation & DDL-DML Decoupling**:
+   - In SQL Server, DDL alterations (`ALTER TABLE ... ADD ...`) and subsequent DML statements referencing those new columns/tables (`MERGE`, `INSERT`, `UPDATE`) must NEVER be concatenated into a single execution batch without batch boundaries. Doing so triggers compile-time parser errors (`Invalid column name`) that abort the entire batch before any `ALTER TABLE` statement executes.
+   - All multi-statement migrator scripts MUST use `SqlBatchRunner.ExecuteBatchesAsync` with explicit `GO` delimiters between DDL changes and DML/seed operations.
+3. **Foreign Key Type and Length Invariant (Msg 1753)**:
+   - Referencing foreign key columns (e.g. `InterventionTypeCode NVARCHAR(50)`) and referenced primary key columns (e.g. `lookup.InterventionType.Code`) MUST have identical data types and maximum lengths. Always verify lookup key lengths before creating foreign keys.
+
+---
+
+### 🛡️ Enterprise Entity Detail Hub Decomposition & Typeahead Lookup Standard (Option B)
+1. **Unbounded Entity Select Elimination Invariant**:
+   - UI forms and dialogs MUST NEVER bind high-volume database tables (e.g. `Person`, `Organisation`, `Qualification`, `OfoCode`) directly to monolithic `<MudSelect>` collections.
+   - For all entity lookups exceeding 50 records, components MUST utilize server-side typeahead searching via `<MudAutocomplete<TLookupDto>>` backed by `SearchLookupAsync(string? search, int limit = 20, CancellationToken ct)` and `GetLookupByIdAsync(int id, CancellationToken ct)`.
+   - General retrieval methods (`GetAllAsync()`) must enforce strict server-side `.Take(50)` bounds to prevent accidental memory exhaustion.
+2. **Master Shell & Tab Decomposition Protocol**:
+   - Complex enterprise entity detail views (`/{entity}/{id}`) must NEVER exceed 500 lines of Razor code in a single file.
+   - All multi-tab master views must follow the Structured Component Decomposition pattern:
+     - The parent view (`/{entity}/[Entity]Detail.razor`) acts strictly as a Master Shell, responsible for primary header, sticky action zone, breadcrumbs, and tab hosting.
+     - Each tab panel must be isolated into a dedicated child component under `Components/Pages/[Entity]/Tabs/` (e.g. `[Entity]GeneralTab.razor`, `[Entity]ContactsTab.razor`, etc.).
+3. **Coordinated Tab Data Loading & N+1 Query Elimination**:
+   - Master data loading must fetch only root entity identification attributes and direct foreign keys. Child collections must be loaded lazily or passed down through parent DTOs.
+   - Child aggregations (such as financial disbursements, grant allocations, or claim summaries) must be pre-computed via SQL Server grouping/projection (`.GroupBy(...)`) to eliminate N+1 subqueries.
+
+---
+
+### 🛡️ Corporate Governance & Institutional Shareholder Standard
+1. **Dual Entity Beneficiary Model**:
+   - Fiduciary directorships must always link to a verified natural person (`PersonId != null`).
+   - Beneficial shareholders may be either a registered natural person (`MemberType == "NATURAL_PERSON"`) or a corporate institutional entity (`MemberType == "CORPORATE_ENTITY"` with `ShareholderOrganisationId` or manual legal registration).
+   - Services performing conflict of interest scans must always guard against nullable `PersonId` before evaluating person-specific conflict flags or syndicate links.
+2. **MudChip OnClose Event Handlers**:
+   - In MudBlazor 8, avoid binding inline `async () => { await ... }` expressions directly to `MudChip.OnClose`. Always bind to a dedicated parameterless asynchronous method (e.g., `OnClose="@ClearKeywordFilter"`).
+
+---
+
 # END OF POLICY — NON-NEGOTIABLE
+
 
 
 

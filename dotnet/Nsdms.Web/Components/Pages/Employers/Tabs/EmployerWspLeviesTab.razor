@@ -1,0 +1,124 @@
+@namespace Nsdms.Web.Components.Pages.Employers.Tabs
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Services
+@using Nsdms.Application.Common.Models
+@inject IOrganisationService OrgService
+
+<MudGrid Spacing="3">
+    <!-- WSP Submissions -->
+    <MudItem xs="12" lg="6">
+        <MudCard Elevation="2" Class="h-100">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.Assignment" />
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">WSP &amp; Mandatory Grant Submissions</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Annual Workplace Skills Plans and Training Reports</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.PostAdd"
+                               Href="@($"/wsp/create?organisationId={OrganisationId}")"
+                               aria-label="Submit New WSP / ATR">
+                        Submit WSP
+                    </MudButton>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTable Items="WspSubmissions" Hover="true" Dense="true">
+                    <HeaderContent>
+                        <MudTh>Fin Year</MudTh>
+                        <MudTh>Reference</MudTh>
+                        <MudTh>Employees</MudTh>
+                        <MudTh>Training Budget</MudTh>
+                        <MudTh>Status</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.FinYear</MudTd>
+                        <MudTd>@context.ReferenceNumber</MudTd>
+                        <MudTd>@context.EmployeeCount</MudTd>
+                        <MudTd>@context.PlannedTrainingBudget.ToString("C")</MudTd>
+                        <MudTd><MudChip T="string" Color="Color.Success" Size="Size.Small">Approved</MudChip></MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-3 text-center text-muted">No WSP submissions recorded.</div>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <!-- SARS Monthly Levy & Rebate Reconciliations -->
+    <MudItem xs="12" lg="6">
+        <MudCard Elevation="2" Class="h-100">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Success" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" />
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">SARS SDL Monthly Levies & Rebates</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Monthly 1% skills levy received and 20% Mandatory Grant rebates</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_loadingRecons)
+                {
+                    <MudProgressLinear Color="Color.Success" Indeterminate="true" Class="my-2" />
+                }
+                else
+                {
+                    <MudTable Items="_levyRecons" Hover="true" Dense="true">
+                        <HeaderContent>
+                            <MudTh>Year</MudTh>
+                            <MudTh>Gross Levy</MudTh>
+                            <MudTh>20% MG Rebate</MudTh>
+                            <MudTh>49.5% DG Pool</MudTh>
+                            <MudTh>Status</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.FinYear</MudTd>
+                            <MudTd>@context.GrossLevyReceived.ToString("C")</MudTd>
+                            <MudTd>@context.MandatoryGrantLevyCalculated.ToString("C")</MudTd>
+                            <MudTd>@context.DiscretionaryGrantLevyCalculated.ToString("C")</MudTd>
+                            <MudTd><MudChip T="string" Color="Color.Primary" Size="Size.Small">@context.ReconStatus</MudChip></MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-3 text-center text-muted">No SARS levy reconciliation entries found.</div>
+                        </NoRecordsContent>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter] public int OrganisationId { get; set; }
+    [Parameter] public IEnumerable<WspSubmission>? WspSubmissions { get; set; }
+
+    private bool _loadingRecons = true;
+    private List<OrganisationLevyReconDto> _levyRecons = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (OrganisationId > 0)
+        {
+            _loadingRecons = true;
+            try
+            {
+                _levyRecons = await OrgService.GetLevyReconHistoryAsync(OrganisationId);
+            }
+            finally
+            {
+                _loadingRecons = false;
+            }
+        }
+    }
+}

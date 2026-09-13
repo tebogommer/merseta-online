@@ -1,5 +1,6 @@
 @page "/employers"
 @using Nsdms.Application.Common
+@using Nsdms.Application.Common.Models
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
@@ -35,9 +36,9 @@
 <!-- Data Grid Shell (Clause 11.9) with integrated filters and search -->
 <DataGridShell TItem="Organisation"
                GridKey="EmployerRegistryGrid"
-               Items="@FilteredEmployers"
-               IsLoading="@_loading"
-               TotalItemsCount="@FilteredEmployers.Count"
+               Items="@_currentPagedItems"
+               IsLoading="false"
+               TotalItemsCount="@_totalCount"
                SelectedItems="@_selectedEmployers"
                SelectedItemsChanged="OnSelectedEmployersChanged"
                @bind-SearchString="_searchString"
@@ -70,13 +71,13 @@
     <ActiveFilterChips>
         @if (!string.IsNullOrWhiteSpace(_searchString))
         {
-            <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; HandleFilterChanged(); })">
+            <MudChip T="string" Size="Size.Small" OnClose="@ClearKeywordFilter">
                 Keyword: @_searchString
             </MudChip>
         }
         @if (_statusFilter != "All")
         {
-            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@ClearStatusFilter">
                 Status: @_statusFilter
             </MudChip>
         }
@@ -94,7 +95,9 @@
         </MudButton>
     </BulkActionBarContent>
     <ChildContent>
-        <MudTable Items="@FilteredEmployers"
+        <MudTable @ref="_table"
+                  T="Organisation"
+                  ServerData="ServerReload"
                   Hover="true"
                   Dense="true"
                   Elevation="0"
@@ -192,9 +195,9 @@
             <NoRecordsContent>
                 <EmptyState Icon="@Icons.Material.Filled.Business"
                             Message="No Organisations Found"
-                            Description="@(_employers.Count == 0 ? "No registered employers in the database. Register a new employer to populate the master registry." : "No registered employers match your active search and filter criteria. Try clearing your search or status filter.")"
-                            ActionLabel="@(_employers.Count == 0 ? "Register New Organisation" : "Clear Filters")"
-                            ActionHref="@(_employers.Count == 0 ? "/employers/create" : null)"
+                            Description="@(_totalCount == 0 ? "No registered employers in the database. Register a new employer to populate the master registry." : "No registered employers match your active search and filter criteria. Try clearing your search or status filter.")"
+                            ActionLabel="@(_totalCount == 0 ? "Register New Organisation" : "Clear Filters")"
+                            ActionHref="@(_totalCount == 0 ? "/employers/create" : null)"
                             OnAction="HandleFilterCleared" />
             </NoRecordsContent>
             <PagerContent>
@@ -206,11 +209,12 @@
 </DataGridShell>
 
 @code {
-    private List<Organisation> _employers = new();
+    private MudTable<Organisation>? _table;
+    private List<Organisation> _currentPagedItems = new();
+    private int _totalCount = 0;
     private HashSet<Organisation> _selectedEmployers = new();
     private string _searchString = string.Empty;
     private string _statusFilter = "All";
-    private bool _loading = true;
 
     private List<BreadcrumbItem> _breadcrumbs = new()
     {
@@ -219,74 +223,84 @@
         new BreadcrumbItem("Employers", href: "/employers")
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         TenantProvider.OnTenantChanged += HandleTenantChanged;
-        await LoadData();
     }
 
     private async void HandleTenantChanged()
     {
         await InvokeAsync(async () =>
         {
-            await LoadData();
+            if (_table != null)
+            {
+                await _table.ReloadServerData();
+            }
             StateHasChanged();
         });
     }
 
-    private async Task LoadData()
+    private async Task<TableData<Organisation>> ServerReload(TableState state, CancellationToken ct)
     {
-        _loading = true;
-        _employers = await OrgService.GetAllAsync();
-        _loading = false;
+        var query = new PaginationQuery
+        {
+            PageIndex = state.Page,
+            PageSize = state.PageSize,
+            SearchText = _searchString,
+            SortBy = state.SortLabel,
+            SortDescending = state.SortDirection == SortDirection.Descending
+        };
+
+        if (!string.IsNullOrWhiteSpace(_statusFilter) && _statusFilter != "All")
+        {
+            query.FilterParams["status"] = _statusFilter;
+        }
+
+        var result = await OrgService.GetPagedOrganisationsAsync(query, ct);
+        _currentPagedItems = result.Items;
+        _totalCount = result.TotalCount;
+
+        return new TableData<Organisation>
+        {
+            TotalItems = result.TotalCount,
+            Items = result.Items
+        };
     }
 
-    private List<Organisation> FilteredEmployers
+    private async Task HandleStatusToggleChanged(string? val)
     {
-        get
+        _statusFilter = string.IsNullOrEmpty(val) ? "All" : val;
+        await HandleFilterChanged();
+    }
+
+    private async Task ClearKeywordFilter()
+    {
+        _searchString = string.Empty;
+        await HandleFilterChanged();
+    }
+
+    private async Task ClearStatusFilter()
+    {
+        _statusFilter = "All";
+        await HandleFilterChanged();
+    }
+
+    private async Task HandleFilterChanged()
+    {
+        if (_table != null)
         {
-            var query = _employers.AsEnumerable();
-
-            if (_statusFilter == "Active")
-            {
-                query = query.Where(x => x.IsActive);
-            }
-            else if (_statusFilter == "Inactive")
-            {
-                query = query.Where(x => !x.IsActive);
-            }
-
-            if (!string.IsNullOrWhiteSpace(_searchString))
-            {
-                var s = _searchString.Trim();
-                query = query.Where(x =>
-                    (x.CompanyName != null && x.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (x.TradingName != null && x.TradingName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (x.SdlNumber != null && x.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (x.RegistrationNumber != null && x.RegistrationNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (x.TaxNumber != null && x.TaxNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
-            }
-
-            return query.ToList();
+            await _table.ReloadServerData();
         }
     }
 
-    private void HandleStatusToggleChanged(string? val)
-    {
-        _statusFilter = string.IsNullOrEmpty(val) ? "All" : val;
-        HandleFilterChanged();
-    }
-
-    private void HandleFilterChanged()
-    {
-        StateHasChanged();
-    }
-
-    private void HandleFilterCleared()
+    private async Task HandleFilterCleared()
     {
         _searchString = string.Empty;
         _statusFilter = "All";
-        StateHasChanged();
+        if (_table != null)
+        {
+            await _table.ReloadServerData();
+        }
     }
 
     private void OnSelectedEmployersChanged(HashSet<Organisation> selected)
@@ -311,7 +325,7 @@
 
     private async Task ExportSelected()
     {
-        var targetList = _selectedEmployers.Count > 0 ? _selectedEmployers.ToList() : FilteredEmployers.ToList();
+        var targetList = _selectedEmployers.Count > 0 ? _selectedEmployers.ToList() : _currentPagedItems;
         if (targetList.Count == 0)
         {
             Snackbar.Add("No organisation records available to export.", Severity.Warning);
@@ -348,7 +362,10 @@
             if (deleted)
             {
                 Snackbar.Add($"Employer '{companyName}' deleted successfully with audit confirmation.", Severity.Success);
-                await LoadData();
+                if (_table != null)
+                {
+                    await _table.ReloadServerData();
+                }
             }
             else
             {

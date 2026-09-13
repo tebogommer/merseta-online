@@ -583,8 +583,32 @@ public class NavigationMenuService : INavigationMenuService
 
         // 1. Search in master navigation items
         var navItems = BuildMasterNavigationCatalog();
+        bool isSuperAdmin = roles.Any(r => r.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase) || 
+                                           r.Equals("Admin", StringComparison.OrdinalIgnoreCase) || 
+                                           username.Equals("Admin", StringComparison.OrdinalIgnoreCase));
+
         foreach (var item in navItems)
         {
+            // Enforce RBAC permission checks in Omnisearch
+            if (!isSuperAdmin)
+            {
+                bool hasRole = item.RequiredRoles.Any() && item.RequiredRoles.Any(r => roles.Any(ur => ur.Equals(r, StringComparison.OrdinalIgnoreCase)));
+                bool hasPerm = false;
+                if (!string.IsNullOrEmpty(item.RequiredModule))
+                {
+                    var action = item.RequiredAction ?? AppPermissions.ActionView;
+                    var claim = AppPermissions.Create(item.RequiredModule, action);
+                    var manageClaim = AppPermissions.Create(item.RequiredModule, AppPermissions.ActionManage);
+                    hasPerm = permissions.Contains(claim) || permissions.Contains(manageClaim);
+                }
+
+                bool isPublic = item.RequiredRoles.Count == 0 && string.IsNullOrEmpty(item.RequiredModule);
+                if (!hasRole && !hasPerm && !isPublic)
+                {
+                    continue;
+                }
+            }
+
             int score = 0;
             if (string.IsNullOrWhiteSpace(cleanQuery))
             {
@@ -786,7 +810,8 @@ public class NavigationMenuService : INavigationMenuService
             new() { Id = "act-banking-details", Title = "Submit / Verify Banking Details", Href = "finance/banking-details", Icon = "AccountBalance", Category = "Quick Actions", Description = "Upload verified bank confirmation letter for GP vendor sync", ItemType = "QuickAction" },
             new() { Id = "act-verify-doc", Title = "Verify Document Authenticity", Href = "verify", Icon = "VerifiedUser", Category = "Quick Actions", Description = "Verify cryptographic certificate or MoA digital security seal", ItemType = "QuickAction" },
             new() { Id = "act-field-dispatch", Title = "Dispatch Field Verification (CLC)", Href = "coordination/dispatch", Icon = "AltRoute", Category = "Quick Actions", Description = "Schedule and dispatch certified officer for workplace or monitoring audit", ItemType = "QuickAction" },
-            new() { Id = "act-portfolio-handoff", Title = "Initiate Portfolio Handoff", Href = "coordination/portfolios", Icon = "FolderShared", Category = "Quick Actions", Description = "Reassign organisation portfolio accounts and open tasks to successor officer", ItemType = "QuickAction" }
+            new() { Id = "act-portfolio-handoff", Title = "Initiate Portfolio Handoff", Href = "coordination/portfolios", Icon = "FolderShared", Category = "Quick Actions", Description = "Reassign organisation portfolio accounts and open tasks to successor officer", ItemType = "QuickAction" },
+            new() { Id = "act-knowledge-catalog", Title = "Open Knowledge Catalog (OKF)", Href = "admin/knowledge-catalog", Icon = "MenuBook", Category = "Quick Actions", Description = "Explore statutory business rules, living concepts, and attested computations", ItemType = "QuickAction" }
         };
     }
 
@@ -872,6 +897,77 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "Admin", "CLO", "Executive", "All" },
                 DisplayOrder = 4,
                 Keywords = new() { "dispatch", "clc", "coordinator", "field visit", "scheduling", "workload", "capability", "officer" }
+            },
+            // Module 18: Interest & Conflict Governance
+            new()
+            {
+                Id = "nav-governance-dashboard",
+                Title = "Conflict dashboard",
+                Href = "governance/dashboard",
+                ExactMatch = true,
+                Icon = "Shield",
+                Category = "Governance & ethics",
+                Description = "PFMA Section 50/51 fiduciary compliance and conflict of interest monitoring",
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Executive", "Compliance", "InternalAudit" },
+                PersonaTags = new() { "Admin", "Executive", "All" },
+                DisplayOrder = 1,
+                Keywords = new() { "conflict", "interest", "pfma", "governance", "dashboard", "ethics" }
+            },
+            new()
+            {
+                Id = "nav-conflict-queue",
+                Title = "Conflict work queue",
+                Href = "admin/governance/conflicts",
+                ExactMatch = true,
+                Icon = "FactCheck",
+                Category = "Governance & ethics",
+                Description = "Review, investigate, and adjudicate flagged conflicts of interest and syndicates",
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Compliance", "InternalAudit" },
+                PersonaTags = new() { "Admin", "All" },
+                DisplayOrder = 2,
+                Keywords = new() { "conflict", "queue", "investigate", "clearance", "syndicate" }
+            },
+            new()
+            {
+                Id = "nav-governance-insiders",
+                Title = "Institutional insiders",
+                Href = "admin/governance/insiders",
+                ExactMatch = true,
+                Icon = "Badge",
+                Category = "Governance & ethics",
+                Description = "Directory of merSETA Employees, Accounting Authority Members, and Specialists",
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Executive" },
+                PersonaTags = new() { "Admin", "All" },
+                DisplayOrder = 3,
+                Keywords = new() { "insiders", "board", "accounting authority", "employees", "specialists" }
+            },
+            new()
+            {
+                Id = "nav-declarations-register",
+                Title = "Declarations of interest",
+                Href = "governance/declarations",
+                ExactMatch = true,
+                Icon = "AssignmentLate",
+                Category = "Governance & ethics",
+                Description = "Annual and transactional e-DOI statutory disclosures register",
+                RequiredRoles = new() { "SuperAdmin", "Admin", "User", "Executive", "Compliance" },
+                PersonaTags = new() { "User", "All" },
+                DisplayOrder = 4,
+                Keywords = new() { "declarations", "doi", "disclosure", "interests", "rwops" }
+            },
+            new()
+            {
+                Id = "nav-governance-reports",
+                Title = "Statutory conflict reports",
+                Href = "governance/reports",
+                ExactMatch = true,
+                Icon = "Assessment",
+                Category = "Governance & ethics",
+                Description = "AGSA conflict registers and multi-entity grant exposure export packs",
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Executive", "Compliance", "InternalAudit" },
+                PersonaTags = new() { "Admin", "Executive", "All" },
+                DisplayOrder = 5,
+                Keywords = new() { "reports", "agsa", "audit", "syndicate", "exposure", "register" }
             },
 
             // 2. Registries & stakeholders
@@ -1800,6 +1896,81 @@ public class NavigationMenuService : INavigationMenuService
                 DisplayOrder = 7,
                 Keywords = new() { "statutory", "setmis submissions", "nlrd", "agsa", "audits", "dhet" }
             },
+            new()
+            {
+                Id = "nav-governance-dashboard",
+                Title = "Conflict of interest dashboard",
+                Href = "governance/dashboard",
+                Icon = "Security",
+                Category = "Legal, compliance & BI",
+                Description = "PFMA Section 50/51 Fiduciary Compliance, Insider Recusal & Anti-Syndication Monitoring",
+                RequiredModule = AppPermissions.ModuleGovernance,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Executive", "Compliance", "ReviewCommittee" },
+                PersonaTags = new() { "Admin", "Executive", "Compliance" },
+                DisplayOrder = 8,
+                Keywords = new() { "governance", "conflict of interest", "coi", "insiders", "pfma", "dashboard" }
+            },
+            new()
+            {
+                Id = "nav-governance-conflicts",
+                Title = "Conflict adjudication queue",
+                Href = "admin/governance/conflicts",
+                Icon = "FactCheck",
+                Category = "Legal, compliance & BI",
+                Description = "Statutory compliance adjudication, insider recusal verification, and multi-entity grant screening",
+                RequiredModule = AppPermissions.ModuleGovernance,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Executive", "Compliance", "ReviewCommittee" },
+                PersonaTags = new() { "Admin", "Executive", "Compliance" },
+                DisplayOrder = 9,
+                Keywords = new() { "conflicts", "investigation", "syndicate", "recusal", "adjudication" }
+            },
+            new()
+            {
+                Id = "nav-governance-insiders",
+                Title = "Institutional insiders directory",
+                Href = "admin/governance/insiders",
+                Icon = "SupervisorAccount",
+                Category = "Legal, compliance & BI",
+                Description = "Directory of merSETA Employees, Board Members, and Accounting Authority specialists",
+                RequiredModule = AppPermissions.ModuleGovernance,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Executive", "Compliance" },
+                PersonaTags = new() { "Admin", "Executive", "Compliance" },
+                DisplayOrder = 10,
+                Keywords = new() { "insiders", "accounting authority", "board of directors", "employees", "members" }
+            },
+            new()
+            {
+                Id = "nav-governance-declarations",
+                Title = "Declarations of interest (e-DOI)",
+                Href = "governance/declarations",
+                Icon = "AssignmentTurnedIn",
+                Category = "Legal, compliance & BI",
+                Description = "Statutory register of annual and transactional conflict disclosures under PFMA & King IV",
+                RequiredModule = AppPermissions.ModuleGovernance,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Executive", "Compliance", "ReviewCommittee" },
+                PersonaTags = new() { "Admin", "Executive", "Compliance" },
+                DisplayOrder = 11,
+                Keywords = new() { "declarations", "doi", "e-doi", "disclosures", "annual declaration" }
+            },
+            new()
+            {
+                Id = "nav-governance-reports",
+                Title = "Governance & AGSA reports",
+                Href = "governance/reports",
+                Icon = "Assessment",
+                Category = "Legal, compliance & BI",
+                Description = "Statutory reporting packs for Auditor-General of South Africa (AGSA) and Board Audit & Risk Committee",
+                RequiredModule = AppPermissions.ModuleGovernance,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Executive", "Compliance" },
+                PersonaTags = new() { "Admin", "Executive", "Compliance" },
+                DisplayOrder = 12,
+                Keywords = new() { "governance reports", "agsa", "audit pack", "board reports", "risk reports" }
+            },
 
             // 7. System administration
             new()
@@ -1877,6 +2048,21 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "Admin", "CLO", "Compliance" },
                 DisplayOrder = 5,
                 Keywords = new() { "rejection reasons", "document verification", "evidence check", "statutory documents", "compliance reasons" }
+            },
+            new()
+            {
+                Id = "nav-admin-knowledge-catalog",
+                Title = "Open knowledge catalog (OKF)",
+                Href = "admin/knowledge-catalog",
+                Icon = "MenuBook",
+                Category = "System administration",
+                Description = "Open Knowledge Format (OKF v0.2) living concepts, statutory citations, and attested T-SQL computations",
+                RequiredModule = AppPermissions.ModuleSystem,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "Compliance", "Finance", "Legal" },
+                PersonaTags = new() { "Admin", "Compliance", "Finance", "Legal" },
+                DisplayOrder = 6,
+                Keywords = new() { "knowledge catalog", "okf", "open knowledge format", "attestation", "concepts", "tsql computation", "statutory citations", "living knowledge" }
             },
             new()
             {

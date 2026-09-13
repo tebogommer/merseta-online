@@ -108,10 +108,13 @@ END";
                 if (!allCategories.TryGetValue(categoryKey, out var items) || items.Count == 0)
                     continue;
 
-                // Check existing count in table
-                var countSql = $"SELECT COUNT(1) FROM [lookup].[{tableName}]";
-                // If table already has same or more items, skip batch insert
-                // Otherwise do idempotent batch insert
+                // Check existing count in table: if already populated, skip re-insertion for instant startup
+                var existingCount = await db.Database.SqlQueryRaw<int>($"SELECT COUNT(1) AS Value FROM [lookup].[{tableName}]").FirstOrDefaultAsync();
+                if (existingCount >= items.Count)
+                {
+                    totalInserted += existingCount;
+                    continue;
+                }
                 var batchSize = 250;
                 for (int i = 0; i < items.Count; i += batchSize)
                 {

@@ -1,0 +1,492 @@
+@page "/admin/knowledge-catalog"
+@namespace Nsdms.Web.Components.Pages.Admin
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Interfaces
+@using Nsdms.Application.DTOs
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@attribute [Authorize(Roles = "SuperAdmin,Admin,Compliance,Finance,Legal")]
+@inject IKnowledgeCatalogService CatalogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: A1 (Statutory Registry / Master List)
+  Open Knowledge Format (OKF v0.2) Living Knowledge Catalog
+*@
+
+<PageTitle>Open Knowledge Catalog (OKF) | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <EntityHeader Title="Open Knowledge Catalog (OKF)"
+                  Subtitle="Open Knowledge Format (OKF v0.2) living concepts, statutory citations, and attested T-SQL computations."
+                  ReferenceKey="OKF-CATALOG"
+                  Status="Active"
+                  BreadcrumbItems="@_breadcrumbs">
+        <ActionZone>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.FileDownload"
+                       OnClick="ExportCatalogZipAsync"
+                       Disabled="@_isExporting"
+                       Size="Size.Medium">
+                @if (_isExporting)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <span>Exporting...</span>
+                }
+                else
+                {
+                    <span>Export bundle (.zip)</span>
+                }
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => Navigation.NavigateTo("/admin/knowledge-catalog/create"))"
+                       Size="Size.Medium">
+                Register concept
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+
+    <!-- Filters Bar -->
+    <MudPaper Elevation="1" Class="pa-4 mb-4 rounded-lg border-default" Style="border: 1px solid var(--mud-palette-lines-default); background: var(--surface);">
+        <MudGrid Spacing="2" Class="align-center">
+            <MudItem xs="12" md="4">
+                <MudTextField @bind-Value="_searchQuery"
+                              Placeholder="Search concept slug, title, or tags (e.g. 'grants', 'rebate', 'ratio')..."
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate="true"
+                              Clearable="true"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              OnClearButtonClick="ApplyFilter"
+                              OnKeyUp="@(async e => { if (e.Key == "Enter") await ApplyFilter(); })" />
+            </MudItem>
+            <MudItem xs="6" sm="3" md="2">
+                <MudSelect T="string" Label="Trust tier" @bind-Value="_selectedTrustTier" Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
+                    <MudSelectItem Value="@("All")">All Tiers</MudSelectItem>
+                    <MudSelectItem Value="@("Tier 0")">Tier 0: Unverified</MudSelectItem>
+                    <MudSelectItem Value="@("Tier 1")">Tier 1: Machine-Confirmed</MudSelectItem>
+                    <MudSelectItem Value="@("Tier 2")">Tier 2: Human-Reviewed</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" sm="3" md="2">
+                <MudSelect T="string" Label="Freshness" @bind-Value="_selectedFreshness" Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
+                    <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
+                    <MudSelectItem Value="@("Fresh")">Fresh / Current</MudSelectItem>
+                    <MudSelectItem Value="@("Stale")">Stale (Overdue)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" sm="3" md="2">
+                <MudSelect T="string" Label="Concept type" @bind-Value="_selectedType" Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
+                    <MudSelectItem Value="@("All")">All Types</MudSelectItem>
+                    <MudSelectItem Value="@("StatutoryRule")">Statutory Rule</MudSelectItem>
+                    <MudSelectItem Value="@("MetricComputation")">Metric Computation</MudSelectItem>
+                    <MudSelectItem Value="@("SchemaSpec")">Schema Specification</MudSelectItem>
+                    <MudSelectItem Value="@("Guideline")">Guideline</MudSelectItem>
+                    <MudSelectItem Value="@("PolicyReference")">Policy Reference</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" sm="3" md="2" Class="d-flex gap-2">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.FilterAlt"
+                           OnClick="ApplyFilter"
+                           FullWidth="true"
+                           Size="Size.Medium">
+                    Filter
+                </MudButton>
+                @if (HasActiveFilters)
+                {
+                    <MudTooltip Text="Clear filters">
+                        <MudIconButton Icon="@Icons.Material.Filled.ClearAll"
+                                       Color="Color.Secondary"
+                                       Variant="Variant.Outlined"
+                                       OnClick="ClearFilters" />
+                    </MudTooltip>
+                }
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Data Table -->
+    <MudCard Elevation="0" Class="border rounded-lg overflow-hidden" Style="border: 1px solid var(--border); background: var(--surface);">
+        @if (_isLoading)
+        {
+            <div class="pa-6">
+                @for (int i = 0; i < 5; i++)
+                {
+                    <div class="d-flex gap-4 py-3 border-b" style="border-color: var(--border);">
+                        <MudSkeleton Width="20%" Height="24px" Animation="Animation.Wave" />
+                        <MudSkeleton Width="40%" Height="24px" Animation="Animation.Wave" />
+                        <MudSkeleton Width="20%" Height="24px" Animation="Animation.Wave" />
+                        <MudSkeleton Width="20%" Height="24px" Animation="Animation.Wave" />
+                    </div>
+                }
+            </div>
+        }
+        else if (_isError)
+        {
+            <div class="pa-10 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Color="Color.Error" Size="Size.Large" Class="mb-3" />
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-danger">Failed to load knowledge catalog</MudText>
+                <MudText Typo="Typo.body2" Class="text-secondary mb-4">
+                    @(_errorMessage ?? "A database error occurred while querying the knowledge catalog.")
+                </MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadConceptsAsync">
+                    Retry query
+                </MudButton>
+            </div>
+        }
+        else if (_concepts == null || !_concepts.Any())
+        {
+            <div class="pa-8 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.MenuBook" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+                <MudText Typo="Typo.h6" Class="font-weight-bold">No concepts registered</MudText>
+                <MudText Typo="Typo.body2" Class="text-secondary mb-4">
+                    The knowledge catalog is currently empty. Register a statutory concept or seed standard catalog items.
+                </MudText>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@(() => Navigation.NavigateTo("/admin/knowledge-catalog/create"))">
+                    Register first concept
+                </MudButton>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive" style="width: 100%; max-width: 100%; overflow-x: auto;">
+                <MudTable Items="@_concepts"
+                          Hover="true"
+                          Striped="true"
+                          Dense="true"
+                          Elevation="0"
+                          T="ConceptSummaryDto">
+                    <HeaderContent>
+                        <MudTh>Concept Slug</MudTh>
+                        <MudTh>Title &amp; Summary</MudTh>
+                        <MudTh>Type</MudTh>
+                        <MudTh>Trust Tier</MudTh>
+                        <MudTh>Freshness</MudTh>
+                        <MudTh>Attestation</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh Style="text-align: right;">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="row">
+                        <MudTd>
+                            <MudLink Href="@($"/admin/knowledge-catalog/{row.Id}")" Class="font-mono font-weight-bold" Typo="Typo.body2" Underline="Underline.Hover">
+                                @row.ConceptId
+                            </MudLink>
+                        </MudTd>
+                        <MudTd>
+                            <div class="d-flex flex-column">
+                                <span class="font-weight-bold text-truncate" style="max-width: 320px;">@row.Title</span>
+                                @if (!string.IsNullOrWhiteSpace(row.SummaryDescription))
+                                {
+                                    <span class="text-secondary" style="font-size: 0.8125rem; max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        @row.SummaryDescription
+                                    </span>
+                                }
+                            </div>
+                        </MudTd>
+                        <MudTd>
+                            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small" Color="Color.Default">
+                                @FormatType(row.ConceptType)
+                            </MudChip>
+                        </MudTd>
+                        <MudTd>
+                            @if (row.DerivedTrustTier == TrustTier.HumanReviewed)
+                            {
+                                <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.VerifiedUser">
+                                    Tier 2: Human-Reviewed
+                                </MudChip>
+                            }
+                            else if (row.DerivedTrustTier == TrustTier.MachineConfirmed)
+                            {
+                                <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">
+                                    Tier 1: Machine-Confirmed
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.HelpOutline">
+                                    Tier 0: Unverified
+                                </MudChip>
+                            }
+                        </MudTd>
+                        <MudTd>
+                            @if (row.IsStale)
+                            {
+                                <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Schedule">
+                                    Stale
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Check">
+                                    Fresh
+                                </MudChip>
+                            }
+                        </MudTd>
+                        <MudTd>
+                            @if (row.HasComputation)
+                            {
+                                <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Code">
+                                    T-SQL
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">—</span>
+                            }
+                        </MudTd>
+                        <MudTd>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@GetStatusColor(row.LifecycleStatus.ToString())">
+                                @row.LifecycleStatus.ToString()
+                            </MudChip>
+                        </MudTd>
+                        <MudTd Style="text-align: right;">
+                            <div class="d-flex justify-end align-center gap-1">
+                                <MudTooltip Text="View concept details">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                   Size="Size.Small"
+                                                   Color="Color.Default"
+                                                   OnClick="@(() => Navigation.NavigateTo($"/admin/knowledge-catalog/{row.Id}"))"
+                                                   aria-label="@($"View {row.Title}")" />
+                                </MudTooltip>
+                                @if (row.HasComputation)
+                                {
+                                    <MudTooltip Text="Run attestation simulator">
+                                        <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
+                                                       Size="Size.Small"
+                                                       Color="Color.Primary"
+                                                       OnClick="@(() => Navigation.NavigateTo($"/admin/knowledge-catalog/{row.Id}/simulate"))"
+                                                       aria-label="@($"Simulate {row.Title}")" />
+                                    </MudTooltip>
+                                }
+                                <MudTooltip Text="Edit concept">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Size="Size.Small"
+                                                   Color="Color.Default"
+                                                   OnClick="@(() => Navigation.NavigateTo($"/admin/knowledge-catalog/{row.Id}/edit"))"
+                                                   aria-label="@($"Edit {row.Title}")" />
+                                </MudTooltip>
+                                <MudTooltip Text="Delete concept">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Size="Size.Small"
+                                                   Color="Color.Error"
+                                                   OnClick="@(() => DeleteConceptAsync(row))"
+                                                   aria-label="@($"Delete {row.Title}")" />
+                                </MudTooltip>
+                            </div>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </div>
+            <div class="d-flex flex-wrap justify-space-between align-center pa-3 border-t" style="border-color: var(--border);">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Total Concepts: <strong class="font-mono">@_totalCount</strong>
+                </MudText>
+                <div class="d-flex align-center gap-2">
+                    <MudPagination Count="@_totalPages" Selected="_currentPage" SelectedChanged="OnPageChanged" Size="Size.Small" Color="Color.Primary" />
+                </div>
+            </div>
+        }
+    </MudCard>
+</MudContainer>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("System Administration", href: "/admin"),
+        new BreadcrumbItem("Knowledge Catalog", href: null, disabled: true)
+    };
+
+    private List<ConceptSummaryDto> _concepts = new();
+    private bool _isLoading = true;
+    private bool _isError = false;
+    private string? _errorMessage;
+    private bool _isExporting = false;
+
+    // Filters
+    private string _searchQuery = string.Empty;
+    private string _selectedTrustTier = "All";
+    private string _selectedFreshness = "All";
+    private string _selectedType = "All";
+
+    private int _currentPage = 1;
+    private int _pageSize = 20;
+    private int _totalCount = 0;
+    private int _totalPages = 1;
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(_searchQuery) ||
+        _selectedTrustTier != "All" ||
+        _selectedFreshness != "All" ||
+        _selectedType != "All";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadConceptsAsync();
+    }
+
+    private async Task LoadConceptsAsync()
+    {
+        _isLoading = true;
+        _isError = false;
+        _errorMessage = null;
+
+        try
+        {
+            TrustTier? tierFilter = null;
+            if (_selectedTrustTier == "Tier 0") tierFilter = TrustTier.Unverified;
+            else if (_selectedTrustTier == "Tier 1") tierFilter = TrustTier.MachineConfirmed;
+            else if (_selectedTrustTier == "Tier 2") tierFilter = TrustTier.HumanReviewed;
+
+            bool? staleFilter = null;
+            if (_selectedFreshness == "Stale") staleFilter = true;
+            else if (_selectedFreshness == "Fresh") staleFilter = false;
+
+            string? typeFilter = _selectedType == "All" ? null : _selectedType;
+
+            var filter = new ConceptFilterDto
+            {
+                PageNumber = _currentPage,
+                PageSize = _pageSize,
+                SearchTerm = string.IsNullOrWhiteSpace(_searchQuery) ? null : _searchQuery.Trim(),
+                TrustTier = tierFilter,
+                ConceptType = typeFilter,
+                IsStale = staleFilter
+            };
+
+            var result = await CatalogService.GetConceptsAsync(filter);
+
+            _concepts = result.Items.ToList();
+            _totalCount = result.TotalCount;
+            _totalPages = Math.Max(1, (int)Math.Ceiling((double)_totalCount / _pageSize));
+        }
+        catch (Exception ex)
+        {
+            _isError = true;
+            _errorMessage = ex.Message;
+            Snackbar.Add($"Error loading catalog: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ApplyFilter()
+    {
+        _currentPage = 1;
+        await LoadConceptsAsync();
+    }
+
+    private async Task ClearFilters()
+    {
+        _searchQuery = string.Empty;
+        _selectedTrustTier = "All";
+        _selectedFreshness = "All";
+        _selectedType = "All";
+        _currentPage = 1;
+        await LoadConceptsAsync();
+    }
+
+    private async Task OnPageChanged(int newPage)
+    {
+        _currentPage = newPage;
+        await LoadConceptsAsync();
+    }
+
+    private async Task ExportCatalogZipAsync()
+    {
+        _isExporting = true;
+        try
+        {
+            var bundles = await CatalogService.GetBundlesAsync();
+            var bundleId = bundles.FirstOrDefault()?.Id ?? 1;
+            var zipBytes = await CatalogService.ExportBundleArchiveAsync(bundleId);
+            var fileName = $"OKF_Knowledge_Catalog_{DateTime.UtcNow:yyyyMMdd_HHmmss}.zip";
+            var base64 = Convert.ToBase64String(zipBytes);
+            await JS.InvokeVoidAsync("downloadFileFromBytes", fileName, "application/zip", base64);
+            Snackbar.Add("Knowledge Catalog bundle (.zip) downloaded successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isExporting = false;
+        }
+    }
+
+    private async Task DeleteConceptAsync(ConceptSummaryDto item)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Delete OKF Concept" },
+            { x => x.Consequence, $"Are you sure you want to permanently delete concept '{item.Title}' ({item.ConceptId})? All associated attested computations, citations, and verifications will be archived." },
+            { x => x.ConfirmLabel, "Delete concept" },
+            { x => x.IsDestructive, true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Concept", parameters);
+        var result = await dialog.Result;
+        if (result == null || result.Canceled) return;
+
+        try
+        {
+            var success = await CatalogService.DeleteConceptAsync(item.Id, "AdminUser");
+            if (success)
+            {
+                Snackbar.Add($"Concept '{item.Title}' deleted successfully.", Severity.Success);
+                await LoadConceptsAsync();
+            }
+            else
+            {
+                Snackbar.Add("Could not delete concept. Record not found.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Delete failed: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Active" => Color.Success,
+            "Draft" => Color.Warning,
+            "Deprecated" => Color.Error,
+            "Archived" => Color.Default,
+            _ => Color.Default
+        };
+    }
+
+    private string FormatType(string type)
+    {
+        return type switch
+        {
+            "StatutoryRule" => "Statutory Rule",
+            "MetricComputation" => "Metric Computation",
+            "SchemaSpec" => "Schema Specification",
+            "Guideline" => "Guideline",
+            "PolicyReference" => "Policy Reference",
+            _ => type
+        };
+    }
+}

@@ -1,0 +1,701 @@
+@namespace Nsdms.Web.Components.Pages.Employers.Tabs
+@using MudBlazor
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Services
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Web.Components.Shared
+@inject IConflictManagementService ConflictService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<div class="pa-2">
+    <!-- Header & Action Zone -->
+    <div class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center gap-4 mb-4">
+        <div>
+            <div class="d-flex align-center gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Primary" Size="Size.Medium" />
+                <MudText Typo="Typo.h6" Class="fw-bold">Corporate Governance, Directors &amp; Beneficial Ownership</MudText>
+            </div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                Statutory disclosures in terms of Companies Act 71 of 2008, PFMA Sections 50/51, and automated Conflict of Interest (COI) governance.
+            </MudText>
+        </div>
+
+        <div class="d-flex flex-wrap align-center gap-2">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.PersonAdd"
+                       OnClick="@(() => OpenCaptureDialogAsync(isDirector: true))"
+                       Size="Size.Small"
+                       Style="text-transform: none; font-weight: 600;">
+                Capture Director
+            </MudButton>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.PieChart"
+                       OnClick="@(() => OpenCaptureDialogAsync(isDirector: false))"
+                       Size="Size.Small"
+                       Style="text-transform: none; font-weight: 600;">
+                Capture Shareholder
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Warning"
+                       StartIcon="@Icons.Material.Filled.Shield"
+                       OnClick="RunCoiScanAsync"
+                       Disabled="_isScanning"
+                       Size="Size.Small"
+                       Style="text-transform: none; font-weight: 600;">
+                @if (_isScanning)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-1" />
+                    <span>Evaluating...</span>
+                }
+                else
+                {
+                    <span>Run Statutory COI Scan</span>
+                }
+            </MudButton>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+    }
+    else
+    {
+        <!-- KPI Summary Cards -->
+        <MudGrid Class="mb-4">
+            <!-- Executive Directors -->
+            <MudItem xs="12" sm="6" md="2">
+                <MudCard Elevation="1" Class="rounded-lg pa-3 bg-surface border">
+                    <div class="d-flex align-center justify-space-between mb-1">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Executive Directors</MudText>
+                        <MudIcon Icon="@Icons.Material.Filled.Badge" Color="Color.Primary" Size="Size.Small" />
+                    </div>
+                    <MudText Typo="Typo.h5" Class="fw-bold font-mono">@(_compliance?.ActiveExecutiveDirectorCount ?? 0)</MudText>
+                    <MudText Typo="Typo.caption" Class="text-secondary" Style="font-size: 0.72rem;">Managing / Operational</MudText>
+                </MudCard>
+            </MudItem>
+
+            <!-- Non-Executive Directors -->
+            <MudItem xs="12" sm="6" md="2">
+                <MudCard Elevation="1" Class="rounded-lg pa-3 bg-surface border">
+                    <div class="d-flex align-center justify-space-between mb-1">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Non-Executive</MudText>
+                        <MudIcon Icon="@Icons.Material.Filled.Groups" Color="Color.Info" Size="Size.Small" />
+                    </div>
+                    <MudText Typo="Typo.h5" Class="fw-bold font-mono">@(_compliance?.ActiveNonExecutiveDirectorCount ?? 0)</MudText>
+                    <MudText Typo="Typo.caption" Class="text-secondary" Style="font-size: 0.72rem;">Independent Board</MudText>
+                </MudCard>
+            </MudItem>
+
+            <!-- Beneficial Shareholders -->
+            <MudItem xs="12" sm="6" md="2">
+                <MudCard Elevation="1" Class="rounded-lg pa-3 bg-surface border">
+                    <div class="d-flex align-center justify-space-between mb-1">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Shareholders</MudText>
+                        <MudIcon Icon="@Icons.Material.Filled.CorporateFare" Color="Color.Secondary" Size="Size.Small" />
+                    </div>
+                    <MudText Typo="Typo.h5" Class="fw-bold font-mono">@(_compliance?.ActiveShareholderCount ?? 0)</MudText>
+                    <MudText Typo="Typo.caption" Class="text-secondary" Style="font-size: 0.72rem;">
+                        @(_compliance?.CorporateShareholderCount ?? 0) Corporate / @((_compliance?.ActiveShareholderCount ?? 0) - (_compliance?.CorporateShareholderCount ?? 0)) Individual
+                    </MudText>
+                </MudCard>
+            </MudItem>
+
+            <!-- Declared Equity Reconciliation Meter -->
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="1" Class="rounded-lg pa-3 bg-surface border">
+                    <div class="d-flex align-center justify-space-between mb-1">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Declared Equity</MudText>
+                        <MudText Typo="Typo.caption" Class="font-mono fw-bold">@((_compliance?.TotalShareholdingPercentageDeclared ?? 0).ToString("F2"))% / 100%</MudText>
+                    </div>
+                    <MudProgressLinear Value="@((double)(_compliance?.TotalShareholdingPercentageDeclared ?? 0))"
+                                       Max="100"
+                                       Color="@((_compliance?.TotalShareholdingPercentageDeclared ?? 0) == 100.00m ? Color.Success : Color.Warning)"
+                                       Rounded="true"
+                                       Class="my-2" />
+                    <MudText Typo="Typo.caption" Style="font-size: 0.72rem;" Color="@((_compliance?.TotalShareholdingPercentageDeclared ?? 0) == 100.00m ? Color.Success : Color.Warning)">
+                        @if ((_compliance?.TotalShareholdingPercentageDeclared ?? 0) == 100.00m)
+                        {
+                            <span>✓ 100.00% Fully Reconciled</span>
+                        }
+                        else
+                        {
+                            <span>⚠ Shortfall: @((100.00m - (_compliance?.TotalShareholdingPercentageDeclared ?? 0)).ToString("F2"))% undeclared</span>
+                        }
+                    </MudText>
+                </MudCard>
+            </MudItem>
+
+            <!-- Statutory COI Standing -->
+            <MudItem xs="12" sm="12" md="3">
+                <MudCard Elevation="1" Class="rounded-lg pa-3 bg-surface border">
+                    <div class="d-flex align-center justify-space-between mb-1">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Statutory COI Risk</MudText>
+                        <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Color="@GetCoiStatusColor()" />
+                    </div>
+                    <div class="mt-1">
+                        @if (_flags.Count == 0)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">
+                                CLEAR (Zero Conflicts)
+                            </MudChip>
+                        }
+                        else if (_flags.Any(f => f.SeverityCode == "RED_CRITICAL"))
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled">
+                                ALERT: PFMA Insider Match
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled">
+                                ALERT: @_flags.Count Syndicate Flags
+                            </MudChip>
+                        }
+                    </div>
+                    <MudText Typo="Typo.caption" Class="text-secondary mt-1 d-block" Style="font-size: 0.72rem;">
+                        @_flags.Count(f => f.ResolutionStatusCode == "OPEN" || f.ResolutionStatusCode == "UNDER_INVESTIGATION") active investigations
+                    </MudText>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+
+        <!-- Compliance Violations Alert (if any) -->
+        @if (_compliance != null && !_compliance.IsCompliant)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="mb-4 rounded-lg">
+                <strong>Governance Non-Compliance Detected:</strong>
+                <ul class="mt-1 pl-4" style="margin-bottom: 0;">
+                    @foreach (var violation in _compliance.Violations)
+                    {
+                        <li>@violation</li>
+                    }
+                </ul>
+            </MudAlert>
+        }
+
+        <!-- SECTION 1: BOARD OF DIRECTORS -->
+        <MudCard Elevation="2" Class="rounded-lg mb-4 bg-surface border">
+            <MudCardHeader Class="pb-2">
+                <CardHeaderContent>
+                    <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Filled.Badge" Color="Color.Primary" Size="Size.Small" />
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold">Board of Directors (Executive &amp; Non-Executive)</MudText>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                                @_filteredDirectors.Count Total
+                            </MudChip>
+                        </div>
+                        
+                        <div class="d-flex align-center gap-2">
+                            <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">
+                                <MudButton Variant="@(_directorFilter == "ALL" ? Variant.Filled : Variant.Outlined)"
+                                           Color="Color.Primary"
+                                           OnClick="@(() => _directorFilter = "ALL")">
+                                    All Directors
+                                </MudButton>
+                                <MudButton Variant="@(_directorFilter == "EXECUTIVE" ? Variant.Filled : Variant.Outlined)"
+                                           Color="Color.Primary"
+                                           OnClick="@(() => _directorFilter = "EXECUTIVE")">
+                                    Executive Only
+                                </MudButton>
+                                <MudButton Variant="@(_directorFilter == "NON_EXECUTIVE" ? Variant.Filled : Variant.Outlined)"
+                                           Color="Color.Primary"
+                                           OnClick="@(() => _directorFilter = "NON_EXECUTIVE")">
+                                    Non-Executive Only
+                                </MudButton>
+                            </MudButtonGroup>
+                        </div>
+                    </div>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent Class="pt-0">
+                @if (_filteredDirectors.Count == 0)
+                {
+                    <div class="text-center pa-6">
+                        <MudIcon Icon="@Icons.Material.Filled.PersonOff" Color="Color.Secondary" Size="Size.Large" Class="mb-2" />
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            No directors found for the selected filter. Click "Capture Director" above to register legal board appointments.
+                        </MudText>
+                    </div>
+                }
+                else
+                {
+                    <MudTable Items="_filteredDirectors" Dense="true" Hover="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Director Name</MudTh>
+                            <MudTh>RSA ID / Passport</MudTh>
+                            <MudTh>Classification</MudTh>
+                            <MudTh>Designated Role</MudTh>
+                            <MudTh>CIPC Status</MudTh>
+                            <MudTh>Appointment Date</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh Style="text-align: right;">Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Director Name">
+                                <div class="d-flex align-center gap-2">
+                                    <MudAvatar Size="Size.Small" Color="@(IsExecutive(context) ? Color.Primary : Color.Info)" Class="font-mono">
+                                        @(GetInitials(context.DisplayName))
+                                    </MudAvatar>
+                                    <div>
+                                        <MudText Typo="Typo.body2" Class="fw-bold">@context.DisplayName</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@(context.Person?.Email ?? "No email on record")</MudText>
+                                    </div>
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="RSA ID / Passport">
+                                <span class="font-mono" style="font-size: 0.8125rem;">@context.DisplayIdentifier</span>
+                            </MudTd>
+                            <MudTd DataLabel="Classification">
+                                @if (IsExecutive(context))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">Executive</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">Non-Executive</MudChip>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="Designated Role">
+                                <span style="font-size: 0.85rem;">@FormatRole(context.GovernanceRoleCode)</span>
+                            </MudTd>
+                            <MudTd DataLabel="CIPC Status">
+                                @if (context.CipcRegistered)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">CIPC Verified</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Unverified</MudChip>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="Appointment Date">
+                                <span class="font-mono" style="font-size: 0.8125rem;">
+                                    @(context.AppointmentDate?.ToString("yyyy-MM-dd") ?? "—")
+                                </span>
+                            </MudTd>
+                            <MudTd DataLabel="Status">
+                                <StatusBadge Status="@(context.IsActive ? "ACTIVE" : "INACTIVE")" Size="Size.Small" />
+                            </MudTd>
+                            <MudTd DataLabel="Actions" Style="text-align: right;">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Size="Size.Small"
+                                               Color="Color.Primary"
+                                               OnClick="@(() => OpenEditDialogAsync(context, isDirector: true))"
+                                               aria-label="Edit director" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Size="Size.Small"
+                                               Color="Color.Error"
+                                               OnClick="@(() => DeleteMemberAsync(context))"
+                                               aria-label="Delete director" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+
+        <!-- SECTION 2: BENEFICIAL SHAREHOLDERS & EQUITY REGISTER -->
+        <MudCard Elevation="2" Class="rounded-lg mb-4 bg-surface border">
+            <MudCardHeader Class="pb-2">
+                <CardHeaderContent>
+                    <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Filled.PieChart" Color="Color.Secondary" Size="Size.Small" />
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold">Beneficial Shareholders &amp; Equity Register</MudText>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">
+                                @_shareholders.Count Shareholders
+                            </MudChip>
+                        </div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Total Equity Declared: <strong>@((_compliance?.TotalShareholdingPercentageDeclared ?? 0).ToString("F2"))%</strong>
+                        </MudText>
+                    </div>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent Class="pt-0">
+                @if (_shareholders.Count == 0)
+                {
+                    <div class="text-center pa-6">
+                        <MudIcon Icon="@Icons.Material.Filled.CorporateFare" Color="Color.Secondary" Size="Size.Large" Class="mb-2" />
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            No shareholders recorded. Beneficial shareholding disclosure (>= 5.0%) is mandatory under merSETA Module 18 governance.
+                        </MudText>
+                    </div>
+                }
+                else
+                {
+                    <MudTable Items="_shareholders" Dense="true" Hover="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Shareholder / Legal Entity</MudTh>
+                            <MudTh>Entity Type</MudTh>
+                            <MudTh>Registration / ID</MudTh>
+                            <MudTh>Equity Holding (%)</MudTh>
+                            <MudTh>Voting Rights</MudTh>
+                            <MudTh>CIPC Status</MudTh>
+                            <MudTh>Acquisition Date</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh Style="text-align: right;">Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Shareholder">
+                                <div class="d-flex align-center gap-2">
+                                    <MudIcon Icon="@(context.MemberType == "CORPORATE_ENTITY" ? Icons.Material.Filled.Business : Icons.Material.Filled.Person)"
+                                             Color="@(context.MemberType == "CORPORATE_ENTITY" ? Color.Secondary : Color.Primary)"
+                                             Size="Size.Small" />
+                                    <div>
+                                        <MudText Typo="Typo.body2" Class="fw-bold">@context.DisplayName</MudText>
+                                        @if (context.ShareholderOrganisation != null)
+                                        {
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">NSDMS Linked: @context.ShareholderOrganisation.SdlNumber</MudText>
+                                        }
+                                    </div>
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="Entity Type">
+                                @if (context.MemberType == "CORPORATE_ENTITY")
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Filled">Corporate Entity</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">Natural Person</MudChip>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="Registration / ID">
+                                <span class="font-mono" style="font-size: 0.8125rem;">@context.DisplayIdentifier</span>
+                            </MudTd>
+                            <MudTd DataLabel="Equity Holding (%)">
+                                <span class="font-mono fw-bold" style="font-size: 0.9rem; color: var(--mud-palette-primary);">
+                                    @context.ShareholdingPercentage.ToString("F2")%
+                                </span>
+                            </MudTd>
+                            <MudTd DataLabel="Voting Rights">
+                                @(context.HasVotingRights ? "Yes" : "No")
+                            </MudTd>
+                            <MudTd DataLabel="CIPC Status">
+                                @if (context.CipcRegistered)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">CIPC Registered</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Unverified</MudChip>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="Acquisition Date">
+                                <span class="font-mono" style="font-size: 0.8125rem;">
+                                    @(context.AppointmentDate?.ToString("yyyy-MM-dd") ?? "—")
+                                </span>
+                            </MudTd>
+                            <MudTd DataLabel="Status">
+                                <StatusBadge Status="@(context.IsActive ? "ACTIVE" : "INACTIVE")" Size="Size.Small" />
+                            </MudTd>
+                            <MudTd DataLabel="Actions" Style="text-align: right;">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Size="Size.Small"
+                                               Color="Color.Primary"
+                                               OnClick="@(() => OpenEditDialogAsync(context, isDirector: false))"
+                                               aria-label="Edit shareholder" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Size="Size.Small"
+                                               Color="Color.Error"
+                                               OnClick="@(() => DeleteMemberAsync(context))"
+                                               aria-label="Delete shareholder" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+
+        <!-- SECTION 3: CONFLICT OF INTEREST & SYNDICATE FLAGS -->
+        <MudCard Elevation="2" Class="rounded-lg bg-surface border">
+            <MudCardHeader Class="pb-2">
+                <CardHeaderContent>
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Flag" Color="@GetCoiStatusColor()" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle1" Class="fw-bold">Active Conflict of Interest (COI) &amp; Syndicate Flags</MudText>
+                        <MudChip T="string" Size="Size.Small" Color="@GetCoiStatusColor()" Variant="Variant.Filled">
+                            @_flags.Count Flagged
+                        </MudChip>
+                    </div>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent Class="pt-0">
+                @if (_flags.Count == 0)
+                {
+                    <div class="d-flex align-center gap-3 pa-4 rounded-lg" style="background-color: var(--mud-palette-success-hover);">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Medium" />
+                        <div>
+                            <MudText Typo="Typo.body2" Class="fw-bold" Color="Color.Success">
+                                Clean Statutory Standing — Zero Active Conflict Flags
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Automatic checks confirmed no merSETA internal staff/board members hold directorships or equity in this employer, and no multi-entity grant syndicates were identified.
+                            </MudText>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <MudTable Items="_flags" Dense="true" Hover="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Reference</MudTh>
+                            <MudTh>Severity</MudTh>
+                            <MudTh>Category</MudTh>
+                            <MudTh>Conflict Title</MudTh>
+                            <MudTh>Implicated Party</MudTh>
+                            <MudTh>Detected</MudTh>
+                            <MudTh>Resolution Status</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Reference">
+                                <span class="font-mono fw-bold">FLG-@context.Id.ToString("D5")</span>
+                            </MudTd>
+                            <MudTd DataLabel="Severity">
+                                <MudChip T="string" Size="Size.Small" Color="@GetSeverityColor(context.SeverityCode)" Variant="Variant.Filled">
+                                    @context.SeverityCode
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Category">
+                                <span style="font-size: 0.8125rem;">@context.ConflictCategoryCode</span>
+                            </MudTd>
+                            <MudTd DataLabel="Conflict Title">
+                                <MudText Typo="Typo.body2" Class="fw-bold">@context.Title</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Description</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Implicated Party">
+                                <strong>@(context.Person?.FullName ?? "Directorship Link")</strong>
+                            </MudTd>
+                            <MudTd DataLabel="Detected">
+                                <span class="font-mono" style="font-size: 0.8125rem;">@context.DetectedAt.ToString("yyyy-MM-dd")</span>
+                            </MudTd>
+                            <MudTd DataLabel="Resolution Status">
+                                <StatusBadge Status="@context.ResolutionStatusCode" Size="Size.Small" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+    }
+</div>
+
+@code {
+    [Parameter] public int OrganisationId { get; set; }
+    [Parameter] public string OrganisationName { get; set; } = string.Empty;
+
+    private List<OrganisationGovernanceMember> _allMembers = new();
+    private List<OrganisationGovernanceMember> _directors = new();
+    private List<OrganisationGovernanceMember> _shareholders = new();
+    private List<ConflictFlag> _flags = new();
+    private GovernanceValidationResult? _compliance;
+    private string _directorFilter = "ALL";
+    private bool _loading = true;
+    private bool _isScanning = false;
+
+    private List<OrganisationGovernanceMember> _filteredDirectors => _directorFilter switch
+    {
+        "EXECUTIVE" => _directors.Where(IsExecutive).ToList(),
+        "NON_EXECUTIVE" => _directors.Where(d => !IsExecutive(d)).ToList(),
+        _ => _directors
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGovernanceDataAsync();
+    }
+
+    private async Task LoadGovernanceDataAsync()
+    {
+        _loading = true;
+        try
+        {
+            _allMembers = await ConflictService.GetGovernanceMembersAsync(OrganisationId);
+            _directors = _allMembers.Where(IsDirectorMember).ToList();
+            _shareholders = _allMembers.Where(m => m.GovernanceRoleCode == "SHAREHOLDER" || m.ShareholdingPercentage > 0).ToList();
+            _flags = await ConflictService.GetConflictFlagsAsync(organisationId: OrganisationId);
+            _compliance = await ConflictService.ValidateOrganisationGovernanceComplianceAsync(OrganisationId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load corporate governance data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private bool IsDirectorMember(OrganisationGovernanceMember m)
+    {
+        return m.GovernanceRoleCode == "DIRECTOR" ||
+               m.GovernanceRoleCode == "MANAGING_DIRECTOR" ||
+               m.GovernanceRoleCode == "DIRECTOR_EXECUTIVE" ||
+               m.GovernanceRoleCode == "DIRECTOR_NON_EXECUTIVE" ||
+               m.GovernanceRoleCode == "DIRECTOR_FINANCIAL" ||
+               m.GovernanceRoleCode == "DIRECTOR_OPERATIONS" ||
+               m.GovernanceRoleCode == "INDEPENDENT_DIRECTOR" ||
+               m.GovernanceRoleCode == "BOARD_CHAIR" ||
+               m.GovernanceRoleCode == "BOARD_MEMBER" ||
+               m.GovernanceRoleCode == "TRUSTEE" ||
+               m.GovernanceRoleCode == "PARTNER";
+    }
+
+    private bool IsExecutive(OrganisationGovernanceMember d)
+    {
+        if (d.DirectorCategory == "EXECUTIVE") return true;
+        if (d.DirectorCategory == "NON_EXECUTIVE") return false;
+        return d.GovernanceRoleCode == "MANAGING_DIRECTOR" ||
+               d.GovernanceRoleCode == "DIRECTOR_EXECUTIVE" ||
+               d.GovernanceRoleCode == "DIRECTOR_FINANCIAL" ||
+               d.GovernanceRoleCode == "DIRECTOR_OPERATIONS";
+    }
+
+    private string FormatRole(string code) => code switch
+    {
+        "MANAGING_DIRECTOR" => "Managing Director / CEO",
+        "DIRECTOR_EXECUTIVE" => "Executive Director",
+        "DIRECTOR_NON_EXECUTIVE" => "Non-Executive Director",
+        "DIRECTOR_FINANCIAL" => "Financial Director / CFO",
+        "DIRECTOR_OPERATIONS" => "Operations Director / COO",
+        "INDEPENDENT_DIRECTOR" => "Independent Non-Executive Director",
+        "BOARD_CHAIR" => "Board Chairperson",
+        "BOARD_MEMBER" => "Board Member",
+        "TRUSTEE" => "Trustee",
+        "PARTNER" => "Partner / CC Member",
+        "SHAREHOLDER" => "Beneficial Shareholder",
+        _ => code
+    };
+
+    private string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "??";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0].Substring(0, Math.Min(2, parts[0].Length)).ToUpperInvariant();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+
+    private Color GetCoiStatusColor()
+    {
+        if (_flags.Count == 0) return Color.Success;
+        if (_flags.Any(f => f.SeverityCode == "RED_CRITICAL")) return Color.Error;
+        return Color.Warning;
+    }
+
+    private Color GetSeverityColor(string severity) => severity switch
+    {
+        "RED_CRITICAL" => Color.Error,
+        "AMBER_ELEVATED" => Color.Warning,
+        "YELLOW_ADVISORY" => Color.Info,
+        _ => Color.Default
+    };
+
+    private async Task OpenCaptureDialogAsync(bool isDirector)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Member", new OrganisationGovernanceMember { OrganisationId = OrganisationId } },
+            { "IsDirector", isDirector },
+            { "CurrentUsername", "Admin" }
+        };
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<CaptureGovernanceMemberDialog>(
+            isDirector ? "Capture Board Director" : "Capture Beneficial Shareholder",
+            parameters,
+            options);
+
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadGovernanceDataAsync();
+        }
+    }
+
+    private async Task OpenEditDialogAsync(OrganisationGovernanceMember member, bool isDirector)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Member", member },
+            { "IsDirector", isDirector },
+            { "CurrentUsername", "Admin" }
+        };
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<CaptureGovernanceMemberDialog>(
+            isDirector ? "Edit Board Director" : "Edit Beneficial Shareholder",
+            parameters,
+            options);
+
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadGovernanceDataAsync();
+        }
+    }
+
+    private async Task DeleteMemberAsync(OrganisationGovernanceMember member)
+    {
+        var confirm = await DialogService.ShowAsync<ConfirmDialog>(
+            "Delete Governance Record",
+            new DialogParameters
+            {
+                { "ContentText", $"Are you sure you want to remove '{member.DisplayName}' from this organisation's corporate governance register? This change is audited." },
+                { "ButtonText", "Delete Record" },
+                { "Color", Color.Error }
+            });
+
+        var res = await confirm.Result;
+        if (!res.Canceled)
+        {
+            try
+            {
+                var success = await ConflictService.DeleteGovernanceMemberAsync(member.Id, "Admin");
+                if (success)
+                {
+                    Snackbar.Add("Governance record deleted successfully.", Severity.Success);
+                    await LoadGovernanceDataAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting governance record: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task RunCoiScanAsync()
+    {
+        _isScanning = true;
+        try
+        {
+            var flagsRaised = await ConflictService.EvaluateOrganisationConflictsAsync(OrganisationId, "Admin");
+            await LoadGovernanceDataAsync();
+
+            if (flagsRaised.Count > 0)
+            {
+                Snackbar.Add($"COI Scan Complete: Flagged {flagsRaised.Count} potential statutory conflicts for review.", Severity.Warning);
+            }
+            else
+            {
+                Snackbar.Add("COI Scan Complete: Zero insider conflicts or multi-entity grant syndicates detected.", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error executing COI scan: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isScanning = false;
+        }
+    }
+}

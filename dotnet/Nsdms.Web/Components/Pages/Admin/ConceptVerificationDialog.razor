@@ -1,0 +1,172 @@
+@namespace Nsdms.Web.Components.Pages.Admin
+@using MudBlazor
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Interfaces
+@using Nsdms.Application.DTOs
+@inject IKnowledgeCatalogService CatalogService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.FactCheck" Color="Color.Primary" Size="Size.Small" />
+            <MudText Typo="Typo.h6" Class="font-weight-bold">
+                Record Verification Review
+            </MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="text-secondary mb-3">
+            Record a statutory human review or formal verification event for <strong>@ConceptTitle</strong>.
+            This action elevates the concept's Trust Tier under Dual Authorisation Control governance.
+        </MudText>
+
+        @if (IsSegregationOfDutiesConflict)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-3">
+                <strong>Segregation of Duties Conflict:</strong> You are recorded as the creator/proposer (<code>@CreatedBy</code>) of this concept.
+                Under merSETA Dual Authorisation Control governance, an independent reviewing authority must verify and sign off this record.
+            </MudAlert>
+        }
+
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_reviewerName"
+                                  Label="Reviewer Name"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Reviewer name is required"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_reviewerRole"
+                                  Label="Statutory Designation / Role"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Designation is required"
+                                  HelperText="e.g. Chief Financial Officer, Compliance Specialist"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSelect T="string" Label="Verification Process / Category" @bind-Value="_verificationProcess" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        <MudSelectItem Value="@("Statutory Executive Review")">Statutory Executive Review</MudSelectItem>
+                        <MudSelectItem Value="@("Financial Grant Committee Sign-Off")">Financial Grant Committee Sign-Off</MudSelectItem>
+                        <MudSelectItem Value="@("ETQA Quality Assessment")">ETQA Quality Assessment</MudSelectItem>
+                        <MudSelectItem Value="@("Legal & Policy Compliance Audit")">Legal &amp; Policy Compliance Audit</MudSelectItem>
+                        <MudSelectItem Value="@("Independent Peer Evaluation")">Independent Peer Evaluation</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudCheckBox @bind-Value="_passed"
+                                 Label="Verification Passed (Criterion Met)"
+                                 Color="Color.Success" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_notes"
+                                  Label="Verification Comments & Justification"
+                                  Variant="Variant.Outlined"
+                                  Lines="3"
+                                  Required="true"
+                                  RequiredError="Verification notes are required"
+                                  HelperText="Detail the evidentiary checks performed against statutory gazettes or policy instruments." />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Close"
+                   OnClick="Cancel"
+                   Size="Size.Medium">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Check"
+                   Disabled="@(!_isValid || IsSegregationOfDutiesConflict || _isSubmitting)"
+                   OnClick="SubmitVerificationAsync"
+                   Size="Size.Medium">
+            @if (_isSubmitting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Recording...</span>
+            }
+            else
+            {
+                <span>Confirm Review</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public int ConceptId { get; set; }
+    [Parameter] public string ConceptTitle { get; set; } = string.Empty;
+    [Parameter] public string CurrentUsername { get; set; } = string.Empty;
+    [Parameter] public string CreatedBy { get; set; } = string.Empty;
+
+    private MudForm _form = default!;
+    private bool _isValid = false;
+    private bool _isSubmitting = false;
+
+    private string _reviewerName = string.Empty;
+    private string _reviewerRole = "Compliance Reviewer";
+    private string _verificationProcess = "Statutory Executive Review";
+    private bool _passed = true;
+    private string _notes = string.Empty;
+
+    private bool IsSegregationOfDutiesConflict =>
+        !string.IsNullOrWhiteSpace(CreatedBy) &&
+        !string.IsNullOrWhiteSpace(CurrentUsername) &&
+        string.Equals(CreatedBy.Trim(), CurrentUsername.Trim(), StringComparison.OrdinalIgnoreCase);
+
+    protected override void OnInitialized()
+    {
+        _reviewerName = !string.IsNullOrWhiteSpace(CurrentUsername) ? CurrentUsername : "Officer";
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitVerificationAsync()
+    {
+        await _form.Validate();
+        if (!_isValid || IsSegregationOfDutiesConflict) return;
+
+        _isSubmitting = true;
+        try
+        {
+            var command = new RecordVerificationCommand
+            {
+                ConceptId = ConceptId,
+                ReviewerName = _reviewerName,
+                ReviewerRole = _reviewerRole,
+                VerificationProcess = _verificationProcess,
+                Passed = _passed,
+                Notes = _notes,
+                Actor = CurrentUsername
+            };
+
+            var success = await CatalogService.RecordVerificationAsync(ConceptId, command, CurrentUsername);
+            if (success)
+            {
+                Snackbar.Add("Verification review recorded successfully under Dual Authorisation Control.", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snackbar.Add("Could not record verification. Please verify permissions.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Verification error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

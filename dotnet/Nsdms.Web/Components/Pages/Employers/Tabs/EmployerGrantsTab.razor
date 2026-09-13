@@ -1,0 +1,98 @@
+@namespace Nsdms.Web.Components.Pages.Employers.Tabs
+@using Nsdms.Application.Services
+@using Nsdms.Application.Common.Models
+@inject IOrganisationService OrgService
+
+<div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
+    <div>
+        <MudText Typo="Typo.h6">Discretionary Grants (DG) &amp; Memoranda of Agreement (MoA)</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">Project funding applications, approved bilateral MoAs, tranches, and claims</MudText>
+    </div>
+    <div class="d-flex gap-2">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PostAdd" Href="@($"/grants/create?organisationId={OrganisationId}")" aria-label="Apply for Discretionary Grant">
+            Apply for DG Window
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AccountBalanceWallet" Href="/finance/grant-moas" aria-label="Open Grant MOA Hub">
+            Finance MOA Hub
+        </MudButton>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else
+{
+    <MudTable Items="_grantSummaries" Hover="true" Dense="true" Striped="true" Elevation="1">
+        <HeaderContent>
+            <MudTh>MoA / App Number</MudTh>
+            <MudTh>Project Title</MudTh>
+            <MudTh>Funding Window</MudTh>
+            <MudTh>Intervention</MudTh>
+            <MudTh>Approved Value</MudTh>
+            <MudTh>Total Disbursed</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh Style="text-align:right">Action</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="MoA / App No">
+                <strong>@context.ApplicationOrMoaNumber</strong>
+            </MudTd>
+            <MudTd DataLabel="Project Title">@context.ProjectTitle</MudTd>
+            <MudTd DataLabel="Funding Window">@(context.FundingWindowName ?? "Discretionary Window")</MudTd>
+            <MudTd DataLabel="Intervention">@(context.InterventionType ?? "Skills Grant")</MudTd>
+            <MudTd DataLabel="Approved Value">@context.ApprovedAmount.ToString("C")</MudTd>
+            <MudTd DataLabel="Disbursed">@context.TotalDisbursed.ToString("C")</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Color="@GetGrantStatusColor(context.StatusCode)" Size="Size.Small">
+                    @context.StatusCode
+                </MudChip>
+            </MudTd>
+            <MudTd Style="text-align:right" DataLabel="Action">
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Description" Href="@($"/finance/grant-moas/{context.GrantMoaId ?? context.GrantApplicationId}")" aria-label="View MoA Details">
+                    View MoA
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <div class="pa-4 text-center">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">No Discretionary Grant applications or MoAs recorded.</MudText>
+            </div>
+        </NoRecordsContent>
+    </MudTable>
+}
+
+@code {
+    [Parameter] public int OrganisationId { get; set; }
+
+    private bool _loading = true;
+    private List<OrganisationGrantSummaryDto> _grantSummaries = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGrantsAsync();
+    }
+
+    private async Task LoadGrantsAsync()
+    {
+        if (OrganisationId <= 0) return;
+        _loading = true;
+        try
+        {
+            _grantSummaries = await OrgService.GetGrantMoasAndApplicationsAsync(OrganisationId);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static Color GetGrantStatusColor(string? status) => status switch
+    {
+        "Active" or "Approved" or "Completed" => Color.Success,
+        "Pending" or "Draft" or "Submitted" => Color.Warning,
+        "Terminated" or "Rejected" => Color.Error,
+        _ => Color.Info
+    };
+}

@@ -10,6 +10,7 @@ public interface IOrganisationService
     // Organisation CRUD
     Task<List<Organisation>> GetAllAsync(string? search = null);
     Task<PagedResult<OrganisationListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default);
+    Task<PagedResult<Organisation>> GetPagedOrganisationsAsync(PaginationQuery query, CancellationToken cancellationToken = default);
     Task<Organisation?> GetByIdAsync(int id);
     Task<Organisation> CreateAsync(Organisation org, string currentUsername = "Admin");
     Task<Organisation> UpdateAsync(Organisation org, string currentUsername = "Admin");
@@ -42,6 +43,8 @@ public interface IOrganisationService
     Task<string> GenerateNonLevyNumberAsync(CancellationToken cancellationToken = default);
     Task<ChamberDerivationResult> DeriveChamberAndVendorClassAsync(string? sicCode, string? organisationTypeCode = null, string? manualChamber = null, bool isManual = false);
     Task<ChamberValidationResult> ValidateChamberGovernanceAsync(int organisationId);
+    Task<List<OrganisationLookupDto>> SearchLookupAsync(string? search, int limit = 20, CancellationToken cancellationToken = default);
+    Task<OrganisationLookupDto?> GetLookupByIdAsync(int id, CancellationToken cancellationToken = default);
 }
 
 public class OrganisationService : IOrganisationService
@@ -121,9 +124,10 @@ public class OrganisationService : IOrganisationService
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);
 
+        int skip = query.PageIndex * query.PageSize;
         var rawItems = await baseQuery
             .OrderByDescending(o => o.Id)
-            .Skip((query.PageIndex - 1) * query.PageSize)
+            .Skip(skip)
             .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
@@ -142,6 +146,57 @@ public class OrganisationService : IOrganisationService
         )).ToList();
 
         return new PagedResult<OrganisationListDto>(items, totalCount, query.PageIndex, query.PageSize);
+    }
+
+    public async Task<PagedResult<Organisation>> GetPagedOrganisationsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        var baseQuery = db.Organisations
+            .Include(o => o.PrimaryContactPerson)
+            .AsNoTracking();
+
+        if (_tenantProvider != null && !_tenantProvider.IsAdmin)
+        {
+            if (_tenantProvider.CurrentOrganisationId != null)
+            {
+                baseQuery = baseQuery.Where(o => o.Id == _tenantProvider.CurrentOrganisationId.Value);
+            }
+            else
+            {
+                baseQuery = baseQuery.Where(o => false);
+            }
+        }
+
+        if (query.FilterParams.TryGetValue("status", out var statusVal) && !string.IsNullOrWhiteSpace(statusVal) && statusVal != "All")
+        {
+            if (statusVal.Equals("Active", StringComparison.OrdinalIgnoreCase))
+                baseQuery = baseQuery.Where(o => o.IsActive);
+            else if (statusVal.Equals("Inactive", StringComparison.OrdinalIgnoreCase))
+                baseQuery = baseQuery.Where(o => !o.IsActive);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.SearchText))
+        {
+            var s = query.SearchText.Trim();
+            baseQuery = baseQuery.Where(o =>
+                o.CompanyName.Contains(s) ||
+                (o.TradingName != null && o.TradingName.Contains(s)) ||
+                o.SdlNumber.Contains(s) ||
+                (o.MainSdlNumber != null && o.MainSdlNumber.Contains(s)) ||
+                (o.RegistrationNumber != null && o.RegistrationNumber.Contains(s)) ||
+                (o.TaxNumber != null && o.TaxNumber.Contains(s)));
+        }
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+
+        int skip = query.PageIndex * query.PageSize;
+        var items = await baseQuery
+            .OrderByDescending(o => o.Id)
+            .Skip(skip)
+            .Take(query.PageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<Organisation>(items, totalCount, query.PageIndex, query.PageSize);
     }
 
     public async Task<List<Organisation>> GetAllAsync(string? search = null)
@@ -195,14 +250,11 @@ public class OrganisationService : IOrganisationService
         return await db.Organisations
             .AsNoTracking()
             .Include(o => o.PrimaryContactPerson)
-            .Include(o => o.Contacts)
-                .ThenInclude(c => c.Person)
-            .Include(o => o.Sites)
-                .ThenInclude(s => s.PrimaryContactPerson)
             .Include(o => o.Visits)
-                .ThenInclude(v => v.ContactPerson)
             .Include(o => o.WspSubmissions)
             .Include(o => o.GrantApplications)
+            .Include(o => o.Contacts)
+            .Include(o => o.Sites)
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
@@ -824,25 +876,37 @@ public class OrganisationService : IOrganisationService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var apps = await db.GrantApplications
+            .AsNoTracking()
             .Include(g => g.FundingWindow)
             .Where(g => g.OrganisationId == organisationId)
             .OrderByDescending(g => g.Id)
             .ToListAsync();
 
+        if (apps.Count == 0)
+        {
+            return new List<OrganisationGrantSummaryDto>();
+        }
+
         var appIds = apps.Select(a => a.Id).ToList();
         var moas = await db.GrantMoas
+            .AsNoTracking()
             .Include(m => m.Milestones)
             .Where(m => appIds.Contains(m.GrantApplicationId))
             .ToListAsync();
+
+        var disbursementSums = await db.GrantTranchePayments
+            .AsNoTracking()
+            .Where(t => appIds.Contains(t.GrantApplicationId) && t.PaymentStatusCode == "Paid")
+            .GroupBy(t => t.GrantApplicationId)
+            .Select(g => new { AppId = g.Key, Total = g.Sum(t => t.ApprovedPaymentAmount) })
+            .ToDictionaryAsync(x => x.AppId, x => x.Total);
 
         var results = new List<OrganisationGrantSummaryDto>();
 
         foreach (var app in apps)
         {
             var linkedMoa = moas.FirstOrDefault(m => m.GrantApplicationId == app.Id);
-            var totalDisbursed = await db.GrantTranchePayments
-                .Where(t => t.GrantApplicationId == app.Id && t.PaymentStatusCode == "Paid")
-                .SumAsync(t => (decimal?)t.ApprovedPaymentAmount) ?? 0m;
+            var totalDisbursed = disbursementSums.TryGetValue(app.Id, out var disbursed) ? disbursed : 0m;
 
             results.Add(new OrganisationGrantSummaryDto(
                 app.Id,
@@ -1002,4 +1066,51 @@ public class OrganisationService : IOrganisationService
             r.ReconciliationDate
         )).ToList();
     }
+
+    public async Task<List<OrganisationLookupDto>> SearchLookupAsync(string? search, int limit = 20, CancellationToken cancellationToken = default)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var query = db.Organisations.AsNoTracking().Where(o => o.IsActive);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(o =>
+                o.CompanyName.Contains(term) ||
+                (o.TradingName != null && o.TradingName.Contains(term)) ||
+                (o.SdlNumber != null && o.SdlNumber.Contains(term)) ||
+                (o.RegistrationNumber != null && o.RegistrationNumber.Contains(term)));
+        }
+
+        return await query
+            .OrderBy(o => o.CompanyName)
+            .Take(limit)
+            .Select(o => new OrganisationLookupDto(
+                o.Id,
+                o.CompanyName,
+                o.SdlNumber,
+                o.RegistrationNumber))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<OrganisationLookupDto?> GetLookupByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.Organisations
+            .AsNoTracking()
+            .Where(o => o.Id == id)
+            .Select(o => new OrganisationLookupDto(
+                o.Id,
+                o.CompanyName,
+                o.SdlNumber,
+                o.RegistrationNumber))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+}
+
+public record OrganisationLookupDto(int Id, string CompanyName, string? SdlNumber, string? RegistrationNumber)
+{
+    public string DisplayText => string.IsNullOrWhiteSpace(SdlNumber)
+        ? $"{CompanyName} ({RegistrationNumber ?? "No Reg"})"
+        : $"{CompanyName} ({SdlNumber})";
 }

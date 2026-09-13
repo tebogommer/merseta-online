@@ -897,6 +897,8 @@ BEGIN
         CREATE NONCLUSTERED INDEX IX_GrantApplication_WspSubmission ON dbo.GrantApplication (WspSubmissionId);
     IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GrantApplication_Org_FundingWindow_Unique' AND object_id = OBJECT_ID('GrantApplication'))
         CREATE UNIQUE NONCLUSTERED INDEX IX_GrantApplication_Org_FundingWindow_Unique ON dbo.GrantApplication (OrganisationId, FundingWindowId) WHERE FundingWindowId IS NOT NULL;
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GrantApplication_StatusCode' AND object_id = OBJECT_ID('GrantApplication'))
+        CREATE NONCLUSTERED INDEX [IX_GrantApplication_StatusCode] ON [dbo].[GrantApplication] ([ApplicationStatusCode]) INCLUDE ([GrantTypeCode], [ApplicationNumber], [OrganisationId], [ApplicationDate], [RequestedAmount]);
 END
 
 IF EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantFundingWindow')

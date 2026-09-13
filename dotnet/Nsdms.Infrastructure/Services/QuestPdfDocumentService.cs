@@ -949,46 +949,63 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
                         });
                     });
 
-                    // Sections & Clauses
-                    foreach (var sec in template.Sections.OrderBy(s => s.SequenceOrder))
+                    // Rich HTML Template Body or Section Clauses
+                    if (!string.IsNullOrWhiteSpace(template.TemplateBodyHtml))
                     {
-                        var clause = sec.DocumentClause;
-                        if (clause == null || !clause.IsActive) continue;
-
-                        col.Item().PaddingTop(4).Column(secCol =>
+                        string html = template.TemplateBodyHtml;
+                        foreach (var kvp in tokens)
                         {
-                            secCol.Spacing(4);
+                            html = html.Replace($"{{{{{kvp.Key}}}}}", kvp.Value ?? string.Empty);
+                        }
 
-                            if (!string.IsNullOrWhiteSpace(sec.SectionNumber) || !string.IsNullOrWhiteSpace(sec.SectionTitle))
-                            {
-                                secCol.Item().Text($"{sec.SectionNumber} {sec.SectionTitle}".Trim()).Bold().FontSize(11).FontColor("#1b5e20");
-                            }
-
-                            string text = clause.ClauseContent;
-                            foreach (var kvp in tokens)
-                            {
-                                text = text.Replace($"{{{{{kvp.Key}}}}}", kvp.Value);
-                            }
-
-                            var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-                            foreach (var line in lines)
-                            {
-                                if (string.IsNullOrWhiteSpace(line)) continue;
-
-                                if (line.TrimStart().StartsWith("•") || line.TrimStart().StartsWith("-") || line.TrimStart().StartsWith("*"))
-                                {
-                                    secCol.Item().PaddingLeft(12).Row(bulletRow =>
-                                    {
-                                        bulletRow.ConstantItem(12).Text("•").Bold().FontColor("#0d47a1");
-                                        bulletRow.RelativeItem().Text(line.TrimStart('•', '-', '*', ' ')).FontSize(9.5f);
-                                    });
-                                }
-                                else
-                                {
-                                    secCol.Item().Text(line).FontSize(9.5f).LineHeight(1.3f);
-                                }
-                            }
+                        col.Item().PaddingTop(4).Column(htmlCol =>
+                        {
+                            HtmlToQuestPdfRenderer.RenderHtmlToColumn(htmlCol, html);
                         });
+                    }
+                    else
+                    {
+                        // Fallback to modular Sections & Clauses
+                        foreach (var sec in template.Sections.OrderBy(s => s.SequenceOrder))
+                        {
+                            var clause = sec.DocumentClause;
+                            if (clause == null || !clause.IsActive) continue;
+
+                            col.Item().PaddingTop(4).Column(secCol =>
+                            {
+                                secCol.Spacing(4);
+
+                                if (!string.IsNullOrWhiteSpace(sec.SectionNumber) || !string.IsNullOrWhiteSpace(sec.SectionTitle))
+                                {
+                                    secCol.Item().Text($"{sec.SectionNumber} {sec.SectionTitle}".Trim()).Bold().FontSize(11).FontColor("#1b5e20");
+                                }
+
+                                string text = clause.ClauseContent;
+                                foreach (var kvp in tokens)
+                                {
+                                    text = text.Replace($"{{{{{kvp.Key}}}}}", kvp.Value);
+                                }
+
+                                var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                                foreach (var line in lines)
+                                {
+                                    if (string.IsNullOrWhiteSpace(line)) continue;
+
+                                    if (line.TrimStart().StartsWith("•") || line.TrimStart().StartsWith("-") || line.TrimStart().StartsWith("*"))
+                                    {
+                                        secCol.Item().PaddingLeft(12).Row(bulletRow =>
+                                        {
+                                            bulletRow.ConstantItem(12).Text("•").Bold().FontColor("#0d47a1");
+                                            bulletRow.RelativeItem().Text(line.TrimStart('•', '-', '*', ' ')).FontSize(9.5f);
+                                        });
+                                    }
+                                    else
+                                    {
+                                        secCol.Item().Text(line).FontSize(9.5f).LineHeight(1.3f);
+                                    }
+                                }
+                            });
+                        }
                     }
 
                     // Signatures Block

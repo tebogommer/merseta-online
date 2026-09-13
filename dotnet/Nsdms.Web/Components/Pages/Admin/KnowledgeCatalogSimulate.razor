@@ -1,0 +1,402 @@
+@page "/admin/knowledge-catalog/{id:int}/simulate"
+@namespace Nsdms.Web.Components.Pages.Admin
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Interfaces
+@using Nsdms.Application.DTOs
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using System.Text.Json
+@attribute [Authorize(Roles = "SuperAdmin,Admin,Compliance,Finance,Legal")]
+@inject IKnowledgeCatalogService CatalogService
+@inject ITsqlAttestationEngine AttestationEngine
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: Interactive Attestation Simulator
+  Open Knowledge Format (OKF v0.2) T-SQL Attestation Engine Simulator
+*@
+
+<PageTitle>Attestation Simulator | @(_concept?.Title ?? "OKF Concept") | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <EntityHeader Title="@($"Attestation Simulator: {(_concept?.Title ?? "Loading...")}")"
+                  Subtitle="Execute sanctioned T-SQL computations, assert parameter completeness, and generate signed cryptographic receipts."
+                  ReferenceKey="@(_concept?.ConceptId ?? "SIMULATOR")"
+                  Status="Active"
+                  BreadcrumbItems="@_breadcrumbs">
+        <ActionZone>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="@(() => Navigation.NavigateTo($"/admin/knowledge-catalog/{Id}"))"
+                       Size="Size.Medium">
+                Back to concept
+            </MudButton>
+        </ActionZone>
+    </EntityHeader>
+
+    @if (_isLoading)
+    {
+        <div class="pa-8 text-center">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" Class="mb-3" />
+            <MudText Typo="Typo.body1" Color="Color.Secondary">Loading computation specification...</MudText>
+        </div>
+    }
+    else if (_concept == null || _concept.Computation == null)
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-4">
+            No attested computation found for this concept. Attach a T-SQL computation template first.
+            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo($"/admin/knowledge-catalog/{Id}/edit"))" Class="ml-2">
+                Edit concept
+            </MudButton>
+        </MudAlert>
+    }
+    else
+    {
+        <MudGrid Spacing="3">
+            <!-- Left: T-SQL Template & Parameter Form -->
+            <MudItem xs="12" md="6">
+                <!-- Sanctioned Query Card -->
+                <MudCard Elevation="0" Class="border rounded-lg pa-4 mb-4" Style="border-color: var(--border); background: var(--surface);">
+                    <div class="d-flex justify-space-between align-center mb-2">
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Filled.Code" Color="Color.Primary" Size="Size.Small" />
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                                Sanctioned T-SQL Query Template
+                            </MudText>
+                        </div>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text">
+                            @_concept.Computation.Runtime
+                        </MudChip>
+                    </div>
+
+                    <pre class="pa-3 rounded font-mono" style="background: #1e1e1e; color: #d4d4d4; font-size: 0.8125rem; max-height: 240px; overflow-y: auto; border: 1px solid var(--border);">
+@_concept.Computation.ComputationSql
+                    </pre>
+                </MudCard>
+
+                <!-- Parameter Form Card -->
+                <MudCard Elevation="0" Class="border rounded-lg pa-4 mb-4" Style="border-color: var(--border); background: var(--surface);">
+                    <div class="d-flex align-center gap-2 mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.Tune" Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                            Declared Parameters
+                        </MudText>
+                    </div>
+
+                    @if (_concept.Computation.Parameters != null && _concept.Computation.Parameters.Any())
+                    {
+                        <MudForm @ref="_form">
+                            <MudGrid Spacing="2">
+                                @foreach (var param in _concept.Computation.Parameters)
+                                {
+                                    <MudItem xs="12" sm="6">
+                                        <MudTextField @bind-Value="_parameterInputs[param.ParameterName]"
+                                                      Label="@($"{param.ParameterName} ({param.ParameterType})")"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Required="@param.IsRequired"
+                                                      RequiredError="@($"{param.ParameterName} is required")"
+                                                      HelperText="@param.Description"
+                                                      Class="font-mono" />
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        </MudForm>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="text-secondary mb-3">
+                            This is a zero-parameter computation. It executes without runtime inputs.
+                        </MudText>
+                    }
+
+                    <div class="d-flex justify-end mt-4">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.PlayArrow"
+                                   OnClick="ExecuteComputationAsync"
+                                   Disabled="@_isExecuting"
+                                   Size="Size.Large">
+                            @if (_isExecuting)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                <span>Executing &amp; Attesting...</span>
+                            }
+                            else
+                            {
+                                <span>Execute &amp; Attest</span>
+                            }
+                        </MudButton>
+                    </div>
+                </MudCard>
+            </MudItem>
+
+            <!-- Right: Execution HUD & Attestation Receipt -->
+            <MudItem xs="12" md="6">
+                @if (_executionResult != null)
+                {
+                    <!-- Telemetry HUD Card -->
+                    <MudCard Elevation="0" Class="border rounded-lg pa-4 mb-4" Style="border-color: var(--border); background: var(--surface);">
+                        <div class="d-flex justify-space-between align-center mb-3">
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                                Attestation Telemetry HUD
+                            </MudText>
+                            @if (_executionResult.Success)
+                            {
+                                <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">
+                                    Attestation Verified
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Cancel">
+                                    Execution Error
+                                </MudChip>
+                            }
+                        </div>
+
+                        <MudGrid Spacing="2">
+                            <MudItem xs="6" sm="3">
+                                <ReadOnlyField Label="Duration" Value="@($"{_executionResult.ExecutionDurationMs} ms")" IsMonospace="true" />
+                            </MudItem>
+                            <MudItem xs="6" sm="3">
+                                <ReadOnlyField Label="Rows Affected" Value="@(_executionResult.RowsAffected.ToString())" IsMonospace="true" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <ReadOnlyField Label="Verdict" Value="@(_executionResult.Verdict)" IsMonospace="true" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <div class="d-flex flex-column">
+                                    <span class="text-secondary font-weight-bold text-uppercase" style="font-size: 0.6875rem;">
+                                        Digital Security Seal (Cryptographic Signature)
+                                    </span>
+                                    <div class="d-flex align-center gap-2 mt-1">
+                                        <span class="font-mono text-success font-weight-bold px-2 py-1 rounded" style="background: var(--background); border: 1px solid var(--border); font-size: 0.8125rem; word-break: break-all;">
+                                            @_executionResult.VerificationReference
+                                        </span>
+                                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                                       Size="Size.Small"
+                                                       OnClick="CopySecuritySeal"
+                                                       Title="Copy full digital security seal" />
+                                    </div>
+                                </div>
+                            </MudItem>
+                        </MudGrid>
+
+                        @if (!_executionResult.Success && !string.IsNullOrWhiteSpace(_executionResult.FailureReason))
+                        {
+                            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mt-3">
+                                <strong>Execution Error:</strong> @_executionResult.FailureReason
+                            </MudAlert>
+                        }
+                    </MudCard>
+
+                    <!-- Interactive Data Results Table -->
+                    @if (_parsedRows != null && _parsedRows.Any())
+                    {
+                        <MudCard Elevation="0" Class="border rounded-lg pa-4 mb-4" Style="border-color: var(--border); background: var(--surface);">
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary mb-2">
+                                Result Set (@_parsedRows.Count @(_parsedRows.Count == 1 ? "row" : "rows"))
+                            </MudText>
+                            <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                                <MudTable Items="@_parsedRows" Dense="true" Hover="true" Striped="true" Elevation="0">
+                                    <HeaderContent>
+                                        @foreach (var col in _resultColumns)
+                                        {
+                                            <MudTh><span class="font-mono">@col</span></MudTh>
+                                        }
+                                    </HeaderContent>
+                                    <RowTemplate Context="row">
+                                        @foreach (var col in _resultColumns)
+                                        {
+                                            <MudTd>
+                                                <span class="font-mono" style="font-size: 0.8125rem;">
+                                                    @(row.ContainsKey(col) ? (row[col]?.ToString() ?? "NULL") : "—")
+                                                </span>
+                                            </MudTd>
+                                        }
+                                    </RowTemplate>
+                                </MudTable>
+                            </div>
+                        </MudCard>
+                    }
+
+                    <!-- Signed Receipt JSON Viewer -->
+                    <MudCard Elevation="0" Class="border rounded-lg pa-4" Style="border-color: var(--border); background: var(--surface);">
+                        <div class="d-flex justify-space-between align-center mb-2">
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-primary">
+                                Signed Attestation Receipt (JSON)
+                            </MudText>
+                            <MudButton Variant="Variant.Text"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.ContentCopy"
+                                       OnClick="CopyReceiptJson">
+                                Copy Receipt
+                            </MudButton>
+                        </div>
+                        <pre class="pa-3 rounded font-mono" style="background: #1e1e1e; color: #a9b7c6; font-size: 0.75rem; max-height: 220px; overflow-y: auto; border: 1px solid var(--border);">
+@_executionResult.ReceiptPayloadJson
+                        </pre>
+                    </MudCard>
+                }
+                else
+                {
+                    <div class="pa-10 text-center rounded border" style="background: var(--surface); border-color: var(--border);">
+                        <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Large" Color="Color.Secondary" Class="mb-3" />
+                        <MudText Typo="Typo.h6" Class="font-weight-bold">Awaiting Execution</MudText>
+                        <MudText Typo="Typo.body2" Class="text-secondary mb-4">
+                            Configure parameters on the left and click <strong>Execute &amp; Attest</strong> to run the sanctioned T-SQL query and inspect the cryptographic attestation receipt.
+                        </MudText>
+                    </div>
+                }
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private ConceptDetailDto? _concept;
+    private bool _isLoading = true;
+    private bool _isExecuting = false;
+    private MudForm _form = default!;
+
+    private Dictionary<string, string> _parameterInputs = new(StringComparer.OrdinalIgnoreCase);
+    private AttestationExecutionResultDto? _executionResult;
+    private List<Dictionary<string, object?>> _parsedRows = new();
+    private List<string> _resultColumns = new();
+
+    private List<BreadcrumbItem> _breadcrumbs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _breadcrumbs = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("System Administration", href: "/admin"),
+            new BreadcrumbItem("Knowledge Catalog", href: "/admin/knowledge-catalog"),
+            new BreadcrumbItem("Attestation Simulator", href: null, disabled: true)
+        };
+
+        await LoadConceptAsync();
+    }
+
+    private async Task LoadConceptAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _concept = await CatalogService.GetConceptByIdAsync(Id);
+            if (_concept?.Computation?.Parameters != null)
+            {
+                foreach (var p in _concept.Computation.Parameters)
+                {
+                    _parameterInputs[p.ParameterName] = p.DefaultValue ?? "";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading concept: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ExecuteComputationAsync()
+    {
+        if (_concept?.Computation == null) return;
+
+        _isExecuting = true;
+        _executionResult = null;
+        _parsedRows.Clear();
+        _resultColumns.Clear();
+
+        try
+        {
+            // Convert string inputs to typed dictionary
+            var typedParams = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            foreach (var p in _concept.Computation.Parameters ?? new List<ComputationParameterDto>())
+            {
+                if (_parameterInputs.TryGetValue(p.ParameterName, out var rawVal) && !string.IsNullOrWhiteSpace(rawVal))
+                {
+                    typedParams[p.ParameterName] = ConvertParamValue(rawVal, p.ParameterType);
+                }
+                else
+                {
+                    typedParams[p.ParameterName] = null;
+                }
+            }
+
+            _executionResult = await AttestationEngine.ExecuteAndAttestAsync(
+                _concept.Computation.Id,
+                typedParams,
+                actor: "ComplianceSimulator");
+
+            if (_executionResult.Success)
+            {
+                Snackbar.Add("T-SQL computation attested successfully. Digital Security Seal generated.", Severity.Success);
+
+                if (_executionResult.Results != null && _executionResult.Results.Any())
+                {
+                    _parsedRows = _executionResult.Results;
+                    _resultColumns = _parsedRows.First().Keys.ToList();
+                }
+            }
+            else
+            {
+                Snackbar.Add($"Attestation failed: {_executionResult.FailureReason}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Execution exception: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isExecuting = false;
+        }
+    }
+
+    private object? ConvertParamValue(string raw, string dataType)
+    {
+        var clean = raw.Trim();
+        return dataType.ToUpperInvariant() switch
+        {
+            "INT" => int.TryParse(clean, out var i) ? i : clean,
+            "BIGINT" => long.TryParse(clean, out var l) ? l : clean,
+            "DECIMAL" => decimal.TryParse(clean, out var d) ? d : clean,
+            "BIT" => bool.TryParse(clean, out var b) ? b : (clean == "1"),
+            "DATE" => DateTime.TryParse(clean, out var dt) ? dt : clean,
+            _ => clean
+        };
+    }
+
+    private async Task CopySecuritySeal()
+    {
+        if (!string.IsNullOrWhiteSpace(_executionResult?.VerificationReference))
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _executionResult.VerificationReference);
+            Snackbar.Add("Digital Security Seal copied to clipboard", Severity.Info);
+        }
+    }
+
+    private async Task CopyReceiptJson()
+    {
+        if (!string.IsNullOrWhiteSpace(_executionResult?.ReceiptPayloadJson))
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _executionResult.ReceiptPayloadJson);
+            Snackbar.Add("Signed Attestation Receipt JSON copied to clipboard", Severity.Info);
+        }
+    }
+}

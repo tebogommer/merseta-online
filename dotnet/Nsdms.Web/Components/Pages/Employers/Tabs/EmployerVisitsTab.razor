@@ -1,0 +1,216 @@
+@namespace Nsdms.Web.Components.Pages.Employers.Tabs
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Services
+@using Nsdms.Application.Common.Models
+@inject IVisitService VisitService
+@inject IPersonService PersonService
+@inject ILookupService LookupService
+@inject ISnackbar Snackbar
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h6">Scheduled Site Visits &amp; Monitoring Inspections</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">Compliance monitoring, workplace inspections, and employer liaison visits</MudText>
+    </div>
+    @if (OrganisationId > 0)
+    {
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.EventAvailable" OnClick="OpenScheduleVisitForm" aria-label="Schedule New Employer Site Visit">
+            Schedule Site Visit
+        </MudButton>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Dense="true">Save the organisation first to schedule visits.</MudAlert>
+    }
+</div>
+
+@if (_showScheduleVisitForm)
+{
+    <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
+        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Schedule Employer Site Visit</MudText>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string" Label="Visit Title / Subject" @bind-Value="_newVisit.Title" Required="true" Variant="Variant.Outlined" Placeholder="e.g. Annual Workplace Skills Verification" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudDatePicker Label="Scheduled Visit Date" @bind-Date="_visitDate" Variant="Variant.Outlined" Required="true" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" Label="Visit Purpose / Type" @bind-Value="_newVisit.VisitTypeCode" Variant="Variant.Outlined">
+                    @foreach (var vt in _visitTypes)
+                    {
+                        <MudSelectItem Value="@vt.Code">@vt.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudAutocomplete T="PersonLookupDto"
+                                 Label="Mandatory Designated Contact Person Met"
+                                 Value="_visitContactPersonDto"
+                                 ValueChanged="OnVisitContactPersonChanged"
+                                 SearchFunc="SearchPeopleAsync"
+                                 ToStringFunc="@(p => p != null ? p.DisplayText : string.Empty)"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Clearable="true"
+                                 DebounceInterval="300"
+                                 MinCharacters="2"
+                                 MaxItems="20"
+                                 Dense="true"
+                                 Placeholder="Search registry by name, RSA ID, or email..."
+                                 HelperText="Selection of a specific contact person is mandatory per statutory rules" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string" Label="Physical Site Location" @bind-Value="_newVisit.Location" Variant="Variant.Outlined" Placeholder="e.g. Main Factory Plant" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Preliminary Notes / Focus Areas" @bind-Value="_newVisit.OutcomeNotes" Variant="Variant.Outlined" Lines="2" />
+            </MudItem>
+            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="CancelScheduleVisitForm">Cancel</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Event" OnClick="SaveScheduledVisit">Confirm Visit Schedule</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudCard>
+}
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else
+{
+    <MudTable Items="_visits" Hover="true" Dense="true" Striped="true">
+        <HeaderContent>
+            <MudTh>Visit Date</MudTh>
+            <MudTh>Subject</MudTh>
+            <MudTh>Type</MudTh>
+            <MudTh>Location</MudTh>
+            <MudTh>Designated Contact Met</MudTh>
+            <MudTh>Outcome</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Date">
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Color="Color.Primary" Size="Size.Small" />
+                    <strong>@context.VisitDate.ToString("yyyy-MM-dd")</strong>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Title">@context.Title</MudTd>
+            <MudTd DataLabel="Type">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@(context.VisitTypeCode ?? "MONITORING")</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Location">@(context.Location ?? "Head Office")</MudTd>
+            <MudTd DataLabel="Contact Met">
+                @(context.ContactPerson != null ? $"{context.ContactPerson.FirstName} {context.ContactPerson.LastName}" : "Designated Contact Person")
+            </MudTd>
+            <MudTd DataLabel="Outcome">@(!string.IsNullOrWhiteSpace(context.OutcomeNotes) ? context.OutcomeNotes : "Pending completion")</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <div class="pa-4 text-center">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">No site visits scheduled or executed.</MudText>
+            </div>
+        </NoRecordsContent>
+    </MudTable>
+}
+
+@code {
+    [Parameter] public int OrganisationId { get; set; }
+    [Parameter] public int? PrimaryContactPersonId { get; set; }
+
+    private bool _loading = true;
+    private List<Visit> _visits = new();
+    private List<LookupItemDto> _visitTypes = new();
+
+    private bool _showScheduleVisitForm = false;
+    private Visit _newVisit = new();
+    private DateTime? _visitDate = DateTime.Today;
+    private PersonLookupDto? _visitContactPersonDto;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _visitTypes = await LookupService.GetLookupItemsAsync("VisitTypeType");
+        await LoadVisitsAsync();
+    }
+
+    private async Task LoadVisitsAsync()
+    {
+        if (OrganisationId <= 0) return;
+        _loading = true;
+        try
+        {
+            _visits = await VisitService.GetVisitsForOrganisationAsync(OrganisationId);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task<IEnumerable<PersonLookupDto>> SearchPeopleAsync(string search, CancellationToken ct)
+    {
+        return await PersonService.SearchLookupAsync(search, limit: 20, cancellationToken: ct);
+    }
+
+    private async Task OpenScheduleVisitForm()
+    {
+        _visitContactPersonDto = null;
+        if (PrimaryContactPersonId.HasValue && PrimaryContactPersonId.Value > 0)
+        {
+            _visitContactPersonDto = await PersonService.GetLookupByIdAsync(PrimaryContactPersonId.Value);
+        }
+
+        _newVisit = new Visit
+        {
+            OrganisationId = OrganisationId,
+            ContactPersonId = _visitContactPersonDto?.Id ?? 0,
+            Title = "Workplace Monitoring Visit",
+            Location = "Head Office",
+            VisitTypeCode = "MONITORING"
+        };
+        _visitDate = DateTime.Today;
+        _showScheduleVisitForm = true;
+    }
+
+    private void CancelScheduleVisitForm()
+    {
+        _showScheduleVisitForm = false;
+    }
+
+    private void OnVisitContactPersonChanged(PersonLookupDto? selected)
+    {
+        _visitContactPersonDto = selected;
+        _newVisit.ContactPersonId = selected?.Id ?? 0;
+    }
+
+    private async Task SaveScheduledVisit()
+    {
+        if (string.IsNullOrWhiteSpace(_newVisit.Title))
+        {
+            Snackbar.Add("Visit Title is required.", Severity.Warning);
+            return;
+        }
+
+        if (_visitContactPersonDto == null || _visitContactPersonDto.Id <= 0)
+        {
+            Snackbar.Add("A mandatory Contact Person must be selected from the registry for the visit activity.", Severity.Warning);
+            return;
+        }
+
+        _newVisit.ContactPersonId = _visitContactPersonDto.Id;
+        _newVisit.VisitDate = _visitDate ?? DateTime.Today;
+        _newVisit.OrganisationId = OrganisationId;
+
+        try
+        {
+            await VisitService.ScheduleVisitAsync(_newVisit, "Admin");
+            Snackbar.Add("Monitoring visit scheduled successfully with audit trail.", Severity.Success);
+            _showScheduleVisitForm = false;
+            await LoadVisitsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+}

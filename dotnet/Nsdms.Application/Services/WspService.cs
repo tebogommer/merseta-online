@@ -1,12 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
 using Nsdms.Application.Common.Interfaces;
+using Nsdms.Application.Common.Models;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
 
 public interface IWspService
 {
+    Task<PagedResult<WspSubmission>> GetPagedSubmissionsAsync(PaginationQuery query, CancellationToken cancellationToken = default);
     Task<List<WspSubmission>> GetAllAsync(int? finYear = null, string? search = null, int? organisationId = null);
     Task<List<WspSubmission>> GetAllSubmissionsAsync(int? organisationId = null, int? finYear = null);
     Task<WspSubmission?> GetByIdAsync(int id);
@@ -61,14 +63,56 @@ public class WspService : IWspService
         _configService = configService;
     }
 
+    public async Task<PagedResult<WspSubmission>> GetPagedSubmissionsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        var baseQuery = db.WspSubmissions
+            .Include(w => w.Organisation)
+            .AsNoTracking();
+
+        if (query.FilterParams.TryGetValue("finYear", out var finYearStr) && int.TryParse(finYearStr, out var finYear))
+        {
+            baseQuery = baseQuery.Where(w => w.FinYear == finYear);
+        }
+
+        if (query.FilterParams.TryGetValue("organisationId", out var orgIdStr) && int.TryParse(orgIdStr, out var orgId))
+        {
+            baseQuery = baseQuery.Where(w => w.OrganisationId == orgId);
+        }
+
+        if (query.FilterParams.TryGetValue("status", out var statusVal) && !string.IsNullOrWhiteSpace(statusVal) && !statusVal.Equals("All", StringComparison.OrdinalIgnoreCase))
+        {
+            baseQuery = baseQuery.Where(w => w.WspApprovalStatusCode != null && w.WspApprovalStatusCode == statusVal);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.SearchText))
+        {
+            var s = query.SearchText.Trim();
+            baseQuery = baseQuery.Where(w =>
+                (w.ReferenceNumber != null && w.ReferenceNumber.Contains(s)) ||
+                w.FinYear.ToString().Contains(s) ||
+                (w.Organisation != null && w.Organisation.CompanyName != null && w.Organisation.CompanyName.Contains(s)) ||
+                (w.Organisation != null && w.Organisation.SdlNumber != null && w.Organisation.SdlNumber.Contains(s)));
+        }
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+
+        var pagedQuery = baseQuery.OrderByDescending(w => w.FinYear).ThenByDescending(w => w.Id);
+
+        var items = await pagedQuery
+            .Skip(query.PageIndex * query.PageSize)
+            .Take(query.PageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<WspSubmission>(items, totalCount, query.PageIndex, query.PageSize);
+    }
+
     public async Task<List<WspSubmission>> GetAllAsync(int? finYear = null, string? search = null, int? organisationId = null)
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var query = db.WspSubmissions
             .Include(w => w.Organisation)
-            .Include(w => w.EmploymentSummaries)
-            .Include(w => w.TrainingPlans)
-            .AsQueryable();
+            .AsNoTracking();
 
         if (finYear.HasValue)
         {

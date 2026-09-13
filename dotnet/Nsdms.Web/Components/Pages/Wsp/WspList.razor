@@ -1,4 +1,5 @@
 @page "/wsp"
+@using Nsdms.Application.Common.Models
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
@@ -86,13 +87,13 @@
     <ActiveFilterChips>
         @if (!string.IsNullOrWhiteSpace(_searchString))
         {
-            <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; HandleFilterChanged(); })">
+            <MudChip T="string" Size="Size.Small" OnClose="@(async () => { _searchString = string.Empty; await HandleFilterChanged(); })">
                 Keyword: @_searchString
             </MudChip>
         }
         @if (_statusFilter != "All")
         {
-            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(async () => { _statusFilter = "All"; await HandleFilterChanged(); })">
                 Status: @_statusFilter
             </MudChip>
         }
@@ -102,9 +103,9 @@
 <!-- Data Grid Shell (Clause 11.9) -->
 <DataGridShell TItem="WspSubmission"
                GridKey="WspSubmissionsGrid"
-               Items="@FilteredSubmissions"
-               IsLoading="@_loading"
-               TotalItemsCount="@FilteredSubmissions.Count"
+               Items="@_currentPagedItems"
+               IsLoading="false"
+               TotalItemsCount="@_totalCount"
                SelectedItems="@_selectedSubmissions"
                SelectedItemsChanged="OnSelectedSubmissionsChanged"
                EmptyTitle="No WSP Submissions Found"
@@ -124,7 +125,9 @@
         </MudButton>
     </BulkActionBarContent>
     <ChildContent>
-        <MudTable Items="@FilteredSubmissions"
+        <MudTable @ref="_table"
+                  T="WspSubmission"
+                  ServerData="ServerReload"
                   Hover="true"
                   Dense="true"
                   Elevation="0"
@@ -205,11 +208,12 @@
 </DataGridShell>
 
 @code {
-    private List<WspSubmission> _submissions = new();
+    private MudTable<WspSubmission>? _table;
+    private IReadOnlyCollection<WspSubmission> _currentPagedItems = Array.Empty<WspSubmission>();
+    private int _totalCount = 0;
     private HashSet<WspSubmission> _selectedSubmissions = new();
     private string _searchString = string.Empty;
     private string _statusFilter = "All";
-    private bool _loading = true;
 
     private List<BreadcrumbItem> _breadcrumbs = new()
     {
@@ -218,59 +222,55 @@
         new BreadcrumbItem("WSP Submissions", href: "/wsp")
     };
 
-    protected override async Task OnInitializedAsync()
+    private async Task<TableData<WspSubmission>> ServerReload(TableState state, CancellationToken ct)
     {
-        await LoadData();
-    }
-
-    private async Task LoadData()
-    {
-        _loading = true;
-        _submissions = await WspService.GetAllAsync();
-        _loading = false;
-    }
-
-    private List<WspSubmission> FilteredSubmissions
-    {
-        get
+        var query = new PaginationQuery
         {
-            var query = _submissions.AsEnumerable();
+            PageIndex = state.Page,
+            PageSize = state.PageSize,
+            SearchText = _searchString,
+            SortBy = state.SortLabel,
+            SortDescending = state.SortDirection == SortDirection.Descending
+        };
 
-            if (_statusFilter != "All")
-            {
-                query = query.Where(x => x.StatusCode != null && x.StatusCode.Equals(_statusFilter, StringComparison.OrdinalIgnoreCase));
-            }
+        if (!string.IsNullOrWhiteSpace(_statusFilter) && _statusFilter != "All")
+        {
+            query.FilterParams["status"] = _statusFilter;
+        }
 
-            if (!string.IsNullOrWhiteSpace(_searchString))
-            {
-                var s = _searchString.Trim();
-                query = query.Where(x =>
-                    (x.ReferenceNumber != null && x.ReferenceNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    x.FinYear.ToString().Contains(s, StringComparison.OrdinalIgnoreCase) ||
-                    (x.Organisation != null && x.Organisation.CompanyName != null && x.Organisation.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (x.Organisation != null && x.Organisation.SdlNumber != null && x.Organisation.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
-            }
+        var result = await WspService.GetPagedSubmissionsAsync(query, ct);
+        _currentPagedItems = result.Items;
+        _totalCount = result.TotalCount;
 
-            return query.ToList();
+        return new TableData<WspSubmission>
+        {
+            TotalItems = result.TotalCount,
+            Items = result.Items
+        };
+    }
+
+    private async Task HandleStatusToggleChanged(string? val)
+    {
+        _statusFilter = string.IsNullOrEmpty(val) ? "All" : val;
+        await HandleFilterChanged();
+    }
+
+    private async Task HandleFilterChanged()
+    {
+        if (_table != null)
+        {
+            await _table.ReloadServerData();
         }
     }
 
-    private void HandleStatusToggleChanged(string? val)
-    {
-        _statusFilter = string.IsNullOrEmpty(val) ? "All" : val;
-        HandleFilterChanged();
-    }
-
-    private void HandleFilterChanged()
-    {
-        StateHasChanged();
-    }
-
-    private void HandleFilterCleared()
+    private async Task HandleFilterCleared()
     {
         _searchString = string.Empty;
         _statusFilter = "All";
-        StateHasChanged();
+        if (_table != null)
+        {
+            await _table.ReloadServerData();
+        }
     }
 
     private void OnSelectedSubmissionsChanged(HashSet<WspSubmission> selected)
@@ -313,7 +313,10 @@
             if (deleted)
             {
                 Snackbar.Add($"WSP submission '{refNo}' deleted successfully with audit confirmation.", Severity.Success);
-                await LoadData();
+                if (_table != null)
+                {
+                    await _table.ReloadServerData();
+                }
             }
             else
             {
@@ -327,9 +330,9 @@
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
         var dialog = await DialogService.ShowAsync<ConfigureMgWindowDialog>("Mandatory Grant (MG) Window Schedule", options);
         var result = await dialog.Result;
-        if (!result.Canceled)
+        if (!result.Canceled && _table != null)
         {
-            await LoadData();
+            await _table.ReloadServerData();
         }
     }
 }

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Nsdms.Application.Common.Models;
 using Nsdms.Application.Services;
 using Nsdms.Domain.Entities;
 using Nsdms.Infrastructure.Data;
@@ -197,6 +198,90 @@ public class LearnerServiceTests
         Assert.Single(result);
         Assert.Equal("119472", result[0].UnitStandardCode);
         Assert.Equal("Competent", result[0].ResultStatusCode);
+    }
+
+    [Fact]
+    public async Task GetPagedLearnersAsync_ReturnsCorrectServerSidePageAndTotalCount()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var person = new Person { FirstName = "Mandla", LastName = "Nkosi", RsaIdNumber = "9901015009087" };
+        var org = new Organisation { CompanyName = "Ford Motor Company", SdlNumber = "L123456789" };
+        db.People.Add(person);
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        for (int i = 1; i <= 30; i++)
+        {
+            db.CompanyLearners.Add(new CompanyLearner
+            {
+                PersonId = person.Id,
+                OrganisationId = org.Id,
+                LearnerContractNumber = $"LRN-2026-{i:D5}",
+                QualificationTitle = $"Automotive Apprentice Level {i}",
+                EnrolmentStatusCode = i % 2 == 0 ? "Registered" : "InProgress",
+                LearningProgrammeTypeCode = "Apprenticeship"
+            });
+        }
+        await db.SaveChangesAsync();
+
+        var query = new PaginationQuery
+        {
+            PageIndex = 1,
+            PageSize = 10
+        };
+
+        // Act
+        var result = await service.GetPagedLearnersAsync(query);
+
+        // Assert
+        Assert.Equal(30, result.TotalCount);
+        Assert.Equal(10, result.Items.Count);
+        Assert.Equal(1, result.PageIndex);
+        Assert.Equal(10, result.PageSize);
+        // Verify 1:1 references are present
+        Assert.All(result.Items, l =>
+        {
+            Assert.NotNull(l.Person);
+            Assert.NotNull(l.Organisation);
+        });
+    }
+
+    [Fact]
+    public async Task GetPagedLearnersAsync_WithFilter_ReturnsFilteredResults()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var person = new Person { FirstName = "Zanele", LastName = "Khumalo", RsaIdNumber = "0101015009087" };
+        db.People.Add(person);
+        await db.SaveChangesAsync();
+
+        db.CompanyLearners.AddRange(
+            new CompanyLearner { PersonId = person.Id, QualificationTitle = "Welding", EnrolmentStatusCode = "Registered", LearningProgrammeTypeCode = "Learnership" },
+            new CompanyLearner { PersonId = person.Id, QualificationTitle = "Boilermaking", EnrolmentStatusCode = "Completed", LearningProgrammeTypeCode = "Apprenticeship" },
+            new CompanyLearner { PersonId = person.Id, QualificationTitle = "Fitting", EnrolmentStatusCode = "Registered", LearningProgrammeTypeCode = "Apprenticeship" }
+        );
+        await db.SaveChangesAsync();
+
+        var query = new PaginationQuery
+        {
+            PageIndex = 0,
+            PageSize = 10,
+            FilterParams = new Dictionary<string, string>
+            {
+                ["status"] = "Registered",
+                ["programmeType"] = "Apprenticeship"
+            }
+        };
+
+        // Act
+        var result = await service.GetPagedLearnersAsync(query);
+
+        // Assert
+        Assert.Single(result.Items);
+        Assert.Equal("Fitting", result.Items[0].QualificationTitle);
     }
 
     #endregion

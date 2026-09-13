@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Nsdms.Application.Common.Models;
 using Nsdms.Application.Services;
 using Nsdms.Domain.Entities;
 using Nsdms.Infrastructure.Data;
@@ -422,5 +423,96 @@ public class WspServiceTests
         // Assert
         Assert.Equal("Submitted", updated.WspApprovalStatusCode);
         Assert.NotNull(updated.SubmissionDate);
+    }
+
+    [Fact]
+    public async Task GetPagedSubmissionsAsync_ReturnsCorrectServerSidePageAndTotalCount()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        var org = new Organisation { CompanyName = "Precision Dynamics", SdlNumber = "L100200300" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        for (int i = 1; i <= 25; i++)
+        {
+            db.WspSubmissions.Add(new WspSubmission
+            {
+                OrganisationId = org.Id,
+                FinYear = 2026,
+                ReferenceNumber = $"WSP-2026-{i:D4}",
+                StatusCode = i <= 10 ? "APPROVED" : "DRAFT",
+                PlannedTrainingBudget = i * 1000m
+            });
+        }
+        await db.SaveChangesAsync();
+
+        // Act - Page 0, PageSize 10
+        var queryPage0 = new PaginationQuery { PageIndex = 0, PageSize = 10 };
+        var page0Result = await service.GetPagedSubmissionsAsync(queryPage0);
+
+        // Act - Page 1, PageSize 10
+        var queryPage1 = new PaginationQuery { PageIndex = 1, PageSize = 10 };
+        var page1Result = await service.GetPagedSubmissionsAsync(queryPage1);
+
+        // Act - Status filter "APPROVED"
+        var queryApproved = new PaginationQuery { PageIndex = 0, PageSize = 20 };
+        queryApproved.FilterParams["status"] = "APPROVED";
+        var approvedResult = await service.GetPagedSubmissionsAsync(queryApproved);
+
+        // Assert
+        Assert.Equal(25, page0Result.TotalCount);
+        Assert.Equal(10, page0Result.Items.Count);
+        Assert.Equal(25, page1Result.TotalCount);
+        Assert.Equal(10, page1Result.Items.Count);
+        Assert.NotEqual(page0Result.Items[0].Id, page1Result.Items[0].Id);
+
+        Assert.Equal(10, approvedResult.TotalCount);
+        Assert.Equal(10, approvedResult.Items.Count);
+        Assert.All(approvedResult.Items, x => Assert.Equal("APPROVED", x.StatusCode));
+    }
+
+    [Fact]
+    public async Task GetAllAsync_DoesNotEagerLoadChildCollections_ToPreventMemoryBloat()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+        var org = new Organisation { CompanyName = "Starlight Engineering", SdlNumber = "L888777666" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var wsp = new WspSubmission
+        {
+            OrganisationId = org.Id,
+            FinYear = 2026,
+            ReferenceNumber = "WSP-2026-9999",
+            PlannedTrainingBudget = 50000m
+        };
+        db.WspSubmissions.Add(wsp);
+        await db.SaveChangesAsync();
+
+        db.WspEmploymentSummaries.Add(new WspEmploymentSummary
+        {
+            WspSubmissionId = wsp.Id,
+            OfoCode = "651202",
+            MaleAfrican = 10
+        });
+        db.WspTrainingPlans.Add(new WspTrainingPlan
+        {
+            WspSubmissionId = wsp.Id,
+            ProgrammeTypeCode = "Learnership",
+            EstimatedCost = 50000m
+        });
+        await db.SaveChangesAsync();
+
+        // Act
+        var submissions = await service.GetAllAsync(finYear: 2026);
+        var found = submissions.FirstOrDefault(w => w.Id == wsp.Id);
+
+        // Assert: Children must not be eagerly materialized in master list query
+        Assert.NotNull(found);
+        Assert.NotNull(found.Organisation);
+        Assert.Empty(found.EmploymentSummaries);
+        Assert.Empty(found.TrainingPlans);
     }
 }

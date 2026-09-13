@@ -1,4 +1,5 @@
 @page "/learners"
+@using Nsdms.Application.Common.Models
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
@@ -50,7 +51,7 @@
 <!-- Filter Bar (Clause 11.4) -->
 <FilterBar SearchPlaceholder="Search contract number, learner name, RSA ID..."
            @bind-SearchText="_searchString"
-           OnSearch="LoadData"
+           OnSearch="ReloadData"
            OnClear="ClearFilters">
     <FilterContent>
         <MudSelect T="string" 
@@ -58,7 +59,7 @@
                    Value="_selectedStatus" 
                    ValueChanged="OnStatusFilterChanged"
                    Variant="Variant.Outlined" 
-                   Margin="Margin.Dense"
+                   Margin="Margin.Dense" 
                    Dense="true">
             <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
             <MudSelectItem Value="@("Registered")">Registered</MudSelectItem>
@@ -72,7 +73,7 @@
                    Value="_selectedProgramme" 
                    ValueChanged="OnProgrammeFilterChanged"
                    Variant="Variant.Outlined" 
-                   Margin="Margin.Dense"
+                   Margin="Margin.Dense" 
                    Dense="true">
             <MudSelectItem Value="@("All")">All Programmes</MudSelectItem>
             <MudSelectItem Value="@("Apprenticeship")">Apprenticeship</MudSelectItem>
@@ -85,19 +86,19 @@
     <ActiveFilterChips>
         @if (!string.IsNullOrWhiteSpace(_searchString))
         {
-            <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; LoadData(); })">
+            <MudChip T="string" Size="Size.Small" OnClose="@(async () => { _searchString = string.Empty; await ReloadData(); })">
                 Keyword: @_searchString
             </MudChip>
         }
         @if (_selectedStatus != "All" && !string.IsNullOrWhiteSpace(_selectedStatus))
         {
-            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _selectedStatus = "All"; LoadData(); })">
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(async () => { _selectedStatus = "All"; await ReloadData(); })">
                 Status: @_selectedStatus
             </MudChip>
         }
         @if (_selectedProgramme != "All" && !string.IsNullOrWhiteSpace(_selectedProgramme))
         {
-            <MudChip T="string" Size="Size.Small" Color="Color.Info" OnClose="@(() => { _selectedProgramme = "All"; LoadData(); })">
+            <MudChip T="string" Size="Size.Small" Color="Color.Info" OnClose="@(async () => { _selectedProgramme = "All"; await ReloadData(); })">
                 Programme: @_selectedProgramme
             </MudChip>
         }
@@ -107,9 +108,9 @@
 <!-- Data Grid Shell (Clause 11.9) -->
 <DataGridShell TItem="CompanyLearner"
                GridKey="LearnerRegistryGrid"
-               Items="@_learners"
-               IsLoading="@_loading"
-               TotalItemsCount="@_learners.Count"
+               Items="@_currentPagedItems"
+               IsLoading="false"
+               TotalItemsCount="@_totalCount"
                SelectedItems="@_selectedLearners"
                SelectedItemsChanged="OnSelectedLearnersChanged"
                EmptyTitle="No Learners Found"
@@ -123,14 +124,15 @@
         <MudButton Variant="Variant.Filled" 
                    Color="Color.Surface" 
                    Size="Size.Small" 
-                   StartIcon="@Icons.Material.Filled.FileDownload"
+                   StartIcon="@Icons.Material.Filled.FileDownload" 
                    OnClick="ExportSelected">
             Export Selected
         </MudButton>
     </BulkActionBarContent>
     <ChildContent>
-        <MudTable T="CompanyLearner" 
-                  Items="_learners" 
+        <MudTable @ref="_table"
+                  T="CompanyLearner" 
+                  ServerData="ServerReload" 
                   Hover="true" 
                   Dense="true" 
                   Elevation="0" 
@@ -227,9 +229,10 @@
 </DataGridShell>
 
 @code {
-    private List<CompanyLearner> _learners = new();
+    private MudTable<CompanyLearner>? _table;
+    private List<CompanyLearner> _currentPagedItems = new();
+    private int _totalCount = 0;
     private HashSet<CompanyLearner> _selectedLearners = new();
-    private bool _loading = true;
     private string _searchString = string.Empty;
     private string _selectedStatus = "All";
     private string _selectedProgramme = "All";
@@ -241,36 +244,48 @@
         new BreadcrumbItem("Learners", href: "/learners")
     };
 
-    protected override async Task OnInitializedAsync()
+    private async Task<TableData<CompanyLearner>> ServerReload(TableState state, CancellationToken ct)
     {
-        await LoadData();
-    }
+        var query = new PaginationQuery
+        {
+            PageIndex = state.Page,
+            PageSize = state.PageSize,
+            SearchText = _searchString,
+            SortBy = state.SortLabel,
+            SortDescending = state.SortDirection == SortDirection.Descending
+        };
 
-    private async Task LoadData()
-    {
-        _loading = true;
-        try
+        if (!string.IsNullOrWhiteSpace(_selectedStatus) && _selectedStatus != "All")
         {
-            var statusArg = _selectedStatus == "All" ? null : _selectedStatus;
-            var progArg = _selectedProgramme == "All" ? null : _selectedProgramme;
-            _learners = await LearnerService.GetAllLearnersAsync(_searchString, statusArg, null, progArg);
+            query.FilterParams["status"] = _selectedStatus;
         }
-        finally
+
+        if (!string.IsNullOrWhiteSpace(_selectedProgramme) && _selectedProgramme != "All")
         {
-            _loading = false;
+            query.FilterParams["programmeType"] = _selectedProgramme;
         }
+
+        var result = await LearnerService.GetPagedLearnersAsync(query, ct);
+        _currentPagedItems = result.Items;
+        _totalCount = result.TotalCount;
+
+        return new TableData<CompanyLearner>
+        {
+            TotalItems = result.TotalCount,
+            Items = result.Items
+        };
     }
 
     private async Task OnStatusFilterChanged(string val)
     {
         _selectedStatus = val;
-        await LoadData();
+        await ReloadData();
     }
 
     private async Task OnProgrammeFilterChanged(string val)
     {
         _selectedProgramme = val;
-        await LoadData();
+        await ReloadData();
     }
 
     private async Task ClearFilters()
@@ -278,7 +293,15 @@
         _searchString = string.Empty;
         _selectedStatus = "All";
         _selectedProgramme = "All";
-        await LoadData();
+        await ReloadData();
+    }
+
+    private async Task ReloadData()
+    {
+        if (_table != null)
+        {
+            await _table.ReloadServerData();
+        }
     }
 
     private void OnSelectedLearnersChanged(HashSet<CompanyLearner> selected)
@@ -288,6 +311,7 @@
 
     private void ExportSelected()
     {
-        Snackbar.Add($"Exporting {_selectedLearners.Count} learner agreements to CSV...", Severity.Info);
+        var count = _selectedLearners.Count > 0 ? _selectedLearners.Count : _totalCount;
+        Snackbar.Add($"Exporting {count} learner agreements to CSV...", Severity.Info);
     }
 }

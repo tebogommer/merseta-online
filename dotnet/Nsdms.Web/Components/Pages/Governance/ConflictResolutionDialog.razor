@@ -1,0 +1,148 @@
+@namespace Nsdms.Web.Components.Pages.Governance
+@using MudBlazor
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Common.Interfaces
+@inject IConflictManagementService ConflictService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Gavel" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">Adjudicate conflict of interest</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="pa-2">
+            <MudAlert Severity="@GetAlertSeverity(Flag.SeverityCode)" Variant="Variant.Outlined" Class="mb-4">
+                <strong>@Flag.Title</strong>
+                <div class="mt-1" style="font-size: 0.85rem;">@Flag.Description</div>
+            </MudAlert>
+
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               Label="Clearance authority capacity"
+                               @bind-Value="_selectedClearanceRole"
+                               Required="true"
+                               Variant="Variant.Outlined"
+                               HelperText="Configured statutory authority under PFMA & King IV">
+                        @foreach (var role in _authorizedRoles)
+                        {
+                            <MudSelectItem Value="@role">@FormatRoleName(role)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               Label="Resolution outcome"
+                               @bind-Value="_selectedStatus"
+                               Required="true"
+                               Variant="Variant.Outlined"
+                               HelperText="Official adjudication verdict">
+                        <MudSelectItem Value="@("CLEARED_WITH_JUSTIFICATION")">Cleared with justification</MudSelectItem>
+                        <MudSelectItem Value="@("UPHELD_DISQUALIFIED")">Upheld — Disqualified / Action required</MudSelectItem>
+                        <MudSelectItem Value="@("UNDER_INVESTIGATION")">Mark under investigation</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string"
+                                  Label="Statutory justification / Resolution notes"
+                                  @bind-Value="_resolutionNotes"
+                                  Lines="4"
+                                  Required="true"
+                                  Variant="Variant.Outlined"
+                                  Placeholder="Detail the audit findings, executive recusal, legal advice, or disqualification rationale recorded in the governance register..."
+                                  HelperText="Mandatory for audited change log and Auditor-General inspection" />
+                </MudItem>
+            </MudGrid>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Close">
+            Cancel
+        </MudButton>
+        <MudButton OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@_isSubmitting" StartIcon="@Icons.Material.Filled.Check">
+            @if (_isSubmitting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Recording...</span>
+            }
+            else
+            {
+                <span>Record adjudication</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public ConflictFlag Flag { get; set; } = null!;
+    [Parameter] public string CurrentUsername { get; set; } = "RiskComplianceOfficer";
+
+    private List<string> _authorizedRoles = new();
+    private string _selectedClearanceRole = string.Empty;
+    private string _selectedStatus = "CLEARED_WITH_JUSTIFICATION";
+    private string _resolutionNotes = string.Empty;
+    private bool _isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _authorizedRoles = await ConflictService.GetAuthorizedClearanceRolesAsync();
+        _selectedClearanceRole = _authorizedRoles.FirstOrDefault() ?? "RiskAndComplianceManager";
+        if (Flag.ResolutionStatusCode == "UNDER_INVESTIGATION")
+        {
+            _selectedStatus = "CLEARED_WITH_JUSTIFICATION";
+        }
+    }
+
+    private Severity GetAlertSeverity(string code) => code switch
+    {
+        "RED_CRITICAL" => Severity.Error,
+        "AMBER_ELEVATED" => Severity.Warning,
+        _ => Severity.Info
+    };
+
+    private string FormatRoleName(string role) => role switch
+    {
+        "RiskAndComplianceManager" => "Risk & Compliance Manager",
+        "InternalAudit" => "Internal Audit Director / Senior Manager",
+        "Ceo" => "Chief Executive Officer (CEO)",
+        "AccountingAuthority" => "Accounting Authority (Board Chairperson / Committee)",
+        _ => role
+    };
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        if (string.IsNullOrWhiteSpace(_resolutionNotes))
+        {
+            Snackbar.Add("Resolution justification notes are mandatory.", Severity.Warning);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            await ConflictService.ResolveConflictFlagAsync(
+                Flag.Id,
+                _selectedStatus,
+                _resolutionNotes,
+                _selectedClearanceRole,
+                CurrentUsername);
+
+            Snackbar.Add($"Conflict flag {Flag.Id} successfully updated to {_selectedStatus}.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error resolving conflict: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

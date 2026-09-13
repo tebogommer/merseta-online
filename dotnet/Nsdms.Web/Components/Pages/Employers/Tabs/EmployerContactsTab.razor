@@ -1,0 +1,394 @@
+@namespace Nsdms.Web.Components.Pages.Employers.Tabs
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Services
+@using Nsdms.Application.Common.Models
+@using Nsdms.Web.Components.Shared
+@inject IOrganisationService OrgService
+@inject IPersonService PersonService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<!-- Section 1: Contacts & SDFs -->
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h6">Designated Contacts & Skills Development Facilitators (SDFs)</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">Link certified persons from the central People registry to roles within this organisation</MudText>
+    </div>
+    @if (OrganisationId > 0)
+    {
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="OpenAddContactForm" aria-label="Add Contact or Appoint SDF">
+            Add Contact / SDF
+        </MudButton>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Dense="true">Save the organisation first to link contacts.</MudAlert>
+    }
+</div>
+
+@if (_showAddContactForm)
+{
+    <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
+        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Link Contact Person</MudText>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudAutocomplete T="PersonLookupDto"
+                                 Label="Search Person from Registry"
+                                 Value="_newContactPersonDto"
+                                 ValueChanged="OnNewContactPersonChanged"
+                                 SearchFunc="SearchPeopleAsync"
+                                 ToStringFunc="@(p => p != null ? p.DisplayText : string.Empty)"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Clearable="true"
+                                 DebounceInterval="300"
+                                 MinCharacters="2"
+                                 MaxItems="20"
+                                 Placeholder="Type name, RSA ID, or email..."
+                                 HelperText="Search central registry for person to appoint" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" Label="Contact Type" @bind-Value="_newContactType" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("Primary SDF")">Primary SDF</MudSelectItem>
+                    <MudSelectItem Value="@("Secondary SDF")">Secondary SDF</MudSelectItem>
+                    <MudSelectItem Value="@("CEO / MD")">CEO / Managing Director</MudSelectItem>
+                    <MudSelectItem Value="@("HR Manager")">HR Manager</MudSelectItem>
+                    <MudSelectItem Value="@("Finance Manager")">Finance Manager</MudSelectItem>
+                    <MudSelectItem Value="@("General")">General Contact</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField T="string" Label="Designation / Job Title" @bind-Value="_newContactDesignation" Variant="Variant.Outlined" Placeholder="e.g. Skills Development Lead" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSwitch T="bool" @bind-Value="_newContactIsPrimary" Color="Color.Success" Label="Set as Primary Organisation Contact" />
+            </MudItem>
+            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="CancelAddContactForm">Cancel</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Check" OnClick="SaveNewContact">Confirm & Link Contact</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudCard>
+}
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else
+{
+    <MudTable Items="_contacts" Hover="true" Dense="true" Striped="true" Class="mb-6">
+        <HeaderContent>
+            <MudTh>Full Name</MudTh>
+            <MudTh>Contact Type</MudTh>
+            <MudTh>Designation</MudTh>
+            <MudTh>Email Address</MudTh>
+            <MudTh>Phone / Mobile</MudTh>
+            <MudTh>Primary</MudTh>
+            <MudTh Style="text-align:right">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Full Name">
+                @if (context.Person != null)
+                {
+                    <div class="d-flex align-center gap-2">
+                        <MudAvatar Color="Color.Primary" Size="Size.Small">
+                            @((context.Person.FirstName.Length > 0 ? context.Person.FirstName[0].ToString() : "") + (context.Person.LastName.Length > 0 ? context.Person.LastName[0].ToString() : ""))
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.body2" Class="fw-bold">@context.Person.FirstName @context.Person.LastName</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">RSA ID: @(!string.IsNullOrWhiteSpace(context.Person.RsaIdNumber) ? context.Person.RsaIdNumber : "N/A")</MudText>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <span>Designated Contact</span>
+                }
+            </MudTd>
+            <MudTd DataLabel="Contact Type">
+                <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">
+                    @context.ContactTypeCode
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Designation">@(!string.IsNullOrWhiteSpace(context.Designation) ? context.Designation : "-")</MudTd>
+            <MudTd DataLabel="Email">@(context.Person?.Email ?? "-")</MudTd>
+            <MudTd DataLabel="Phone">@(context.Person?.CellNumber ?? context.Person?.PhoneNumber ?? "-")</MudTd>
+            <MudTd DataLabel="Primary">
+                @if (context.IsPrimary)
+                {
+                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Primary</MudChip>
+                }
+            </MudTd>
+            <MudTd Style="text-align:right" DataLabel="Actions">
+                <MudTooltip Text="Remove Contact Linkage">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => ConfirmRemoveContact(context.Id, $"{context.Person?.FirstName} {context.Person?.LastName}"))" aria-label="Remove Contact" />
+                </MudTooltip>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <div class="pa-4 text-center">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">No contacts or SDFs linked to this organisation yet.</MudText>
+            </div>
+        </NoRecordsContent>
+    </MudTable>
+
+    <!-- Section 2: Workplace Training Committee -->
+    <div class="d-flex justify-space-between align-center mb-4 mt-6">
+        <div>
+            <MudText Typo="Typo.h6">Workplace Training Committee Members</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Statutory employer and union representatives for skills planning and WSP signoff</MudText>
+        </div>
+        @if (OrganisationId > 0)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.GroupAdd" OnClick="@(() => _showAddCommitteeForm = true)" aria-label="Add Training Committee Member">
+                Add Committee Member
+            </MudButton>
+        }
+    </div>
+
+    @if (_showAddCommitteeForm)
+    {
+        <MudCard Class="pa-4 mb-4 border-secondary" Elevation="3">
+            <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Appoint Committee Member</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="5">
+                    <MudAutocomplete T="PersonLookupDto"
+                                     Label="Search Person from Registry"
+                                     Value="_newCommitteePersonDto"
+                                     ValueChanged="OnNewCommitteePersonChanged"
+                                     SearchFunc="SearchPeopleAsync"
+                                     ToStringFunc="@(p => p != null ? p.DisplayText : string.Empty)"
+                                     Variant="Variant.Outlined"
+                                     Required="true"
+                                     Clearable="true"
+                                     DebounceInterval="300"
+                                     MinCharacters="2"
+                                     MaxItems="20"
+                                     Placeholder="Type name, RSA ID, or email..."
+                                     HelperText="Search central registry for person to appoint" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="string" Label="Member Role" @bind-Value="_newCommitteeRole" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("UnionRepresentative")">Union Representative</MudSelectItem>
+                        <MudSelectItem Value="@("EmployerRepresentative")">Employer Representative</MudSelectItem>
+                        <MudSelectItem Value="@("Chairperson")">Committee Chairperson</MudSelectItem>
+                        <MudSelectItem Value="@("SdfSecretary")">SDF Secretary</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField T="string" Label="Constituency / Union" @bind-Value="_newCommitteeConstituency" Variant="Variant.Outlined" Placeholder="e.g. NUMSA, Solidarity, Management" />
+                </MudItem>
+                <MudItem xs="12" Class="d-flex justify-end gap-2">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="@(() => _showAddCommitteeForm = false)">Cancel</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Check" OnClick="SaveNewCommitteeMember">Appoint Member</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudCard>
+    }
+
+    <MudTable Items="_committeeMembers" Hover="true" Dense="true" Striped="true">
+        <HeaderContent>
+            <MudTh>Member Name</MudTh>
+            <MudTh>RSA ID</MudTh>
+            <MudTh>Role</MudTh>
+            <MudTh>Constituency</MudTh>
+            <MudTh>Contact Email</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh Style="text-align:right">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Member Name"><strong>@context.PersonFullName</strong></MudTd>
+            <MudTd DataLabel="RSA ID">@(context.RsaIdNumber ?? "-")</MudTd>
+            <MudTd DataLabel="Role"><MudChip T="string" Color="Color.Info" Size="Size.Small">@context.MemberRoleCode</MudChip></MudTd>
+            <MudTd DataLabel="Constituency">@context.Constituency</MudTd>
+            <MudTd DataLabel="Email">@(context.EmailAddress ?? "-")</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Default)" Size="Size.Small">
+                    @(context.IsActive ? "Active" : "Inactive")
+                </MudChip>
+            </MudTd>
+            <MudTd Style="text-align:right" DataLabel="Actions">
+                <MudTooltip Text="Remove Committee Member">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => ConfirmRemoveCommitteeMember(context.MemberId, context.PersonFullName))" aria-label="Remove Committee Member" />
+                </MudTooltip>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <div class="pa-4 text-center">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">No training committee members appointed yet.</MudText>
+            </div>
+        </NoRecordsContent>
+    </MudTable>
+}
+
+@code {
+    [Parameter] public int OrganisationId { get; set; }
+    [Parameter] public EventCallback OnContactUpdated { get; set; }
+
+    private bool _loading = true;
+    private List<OrganisationContact> _contacts = new();
+    private List<OrganisationCommitteeMemberDto> _committeeMembers = new();
+
+    // Contact Form State
+    private bool _showAddContactForm = false;
+    private PersonLookupDto? _newContactPersonDto;
+    private string _newContactType = "Primary SDF";
+    private string? _newContactDesignation;
+    private bool _newContactIsPrimary = false;
+
+    // Committee Form State
+    private bool _showAddCommitteeForm = false;
+    private PersonLookupDto? _newCommitteePersonDto;
+    private string _newCommitteeRole = "UnionRepresentative";
+    private string _newCommitteeConstituency = "NUMSA";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        if (OrganisationId <= 0) return;
+        _loading = true;
+        try
+        {
+            _contacts = await OrgService.GetContactsAsync(OrganisationId);
+            _committeeMembers = await OrgService.GetTrainingCommitteeMembersAsync(OrganisationId);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task<IEnumerable<PersonLookupDto>> SearchPeopleAsync(string search, CancellationToken ct)
+    {
+        return await PersonService.SearchLookupAsync(search, limit: 20, cancellationToken: ct);
+    }
+
+    private void OpenAddContactForm()
+    {
+        _newContactPersonDto = null;
+        _newContactType = "Primary SDF";
+        _newContactDesignation = string.Empty;
+        _newContactIsPrimary = false;
+        _showAddContactForm = true;
+    }
+
+    private void CancelAddContactForm()
+    {
+        _showAddContactForm = false;
+    }
+
+    private void OnNewContactPersonChanged(PersonLookupDto? selected)
+    {
+        _newContactPersonDto = selected;
+    }
+
+    private void OnNewCommitteePersonChanged(PersonLookupDto? selected)
+    {
+        _newCommitteePersonDto = selected;
+    }
+
+    private async Task SaveNewContact()
+    {
+        if (_newContactPersonDto == null || _newContactPersonDto.Id <= 0)
+        {
+            Snackbar.Add("Please search and select a valid person from the central registry.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await OrgService.AddContactAsync(OrganisationId, _newContactPersonDto.Id, _newContactType, _newContactIsPrimary, "Admin", _newContactDesignation);
+            Snackbar.Add("Contact linkage registered successfully with audit log.", Severity.Success);
+            _showAddContactForm = false;
+            _contacts = await OrgService.GetContactsAsync(OrganisationId);
+            await OnContactUpdated.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error linking contact: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ConfirmRemoveContact(int contactId, string name)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Remove Contact Linkage" },
+            { x => x.Consequence, $"Are you sure you want to remove the contact linkage for '{name}'? The person's central registry record will not be deleted." },
+            { x => x.ConfirmLabel, "Remove Linkage" },
+            { x => x.IsDestructive, true }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Remove Contact", parameters);
+        var result = await dialog.Result;
+        if (result == null || result.Canceled) return;
+
+        try
+        {
+            var removed = await OrgService.RemoveContactAsync(OrganisationId, contactId, "Admin");
+            if (removed)
+            {
+                Snackbar.Add("Contact linkage removed successfully with audit log.", Severity.Success);
+                _contacts = await OrgService.GetContactsAsync(OrganisationId);
+                await OnContactUpdated.InvokeAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing contact: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SaveNewCommitteeMember()
+    {
+        if (_newCommitteePersonDto == null || _newCommitteePersonDto.Id <= 0)
+        {
+            Snackbar.Add("Please search and select a valid person from the registry.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await OrgService.AddTrainingCommitteeMemberAsync(OrganisationId, _newCommitteePersonDto.Id, _newCommitteeRole, _newCommitteeConstituency, "Admin");
+            Snackbar.Add("Training committee member appointed successfully with audit log.", Severity.Success);
+            _showAddCommitteeForm = false;
+            _committeeMembers = await OrgService.GetTrainingCommitteeMembersAsync(OrganisationId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error appointing committee member: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ConfirmRemoveCommitteeMember(int memberId, string name)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Remove Committee Member" },
+            { x => x.Consequence, $"Are you sure you want to remove '{name}' from the workplace training committee?" },
+            { x => x.ConfirmLabel, "Remove Member" },
+            { x => x.IsDestructive, true }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Remove Committee Member", parameters);
+        var result = await dialog.Result;
+        if (result == null || result.Canceled) return;
+
+        try
+        {
+            var removed = await OrgService.RemoveTrainingCommitteeMemberAsync(memberId, "Admin");
+            if (removed)
+            {
+                Snackbar.Add("Training committee member removed successfully with audit log.", Severity.Success);
+                _committeeMembers = await OrgService.GetTrainingCommitteeMembersAsync(OrganisationId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing committee member: {ex.Message}", Severity.Error);
+        }
+    }
+}

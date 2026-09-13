@@ -1,0 +1,170 @@
+@namespace Nsdms.Web.Components.Pages.Governance
+@using MudBlazor
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Common.Interfaces
+@inject IConflictManagementService ConflictService
+@inject IPersonService PersonService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">@(Member.Id > 0 ? "Edit governance member / shareholder" : "Capture director / shareholder")</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="pa-2">
+            <MudGrid>
+                @if (Member.Id == 0)
+                {
+                    <MudItem xs="12">
+                        <MudSelect T="int?"
+                                   Label="Select person profile"
+                                   @bind-Value="Member.PersonId"
+                                   Required="true"
+                                   Variant="Variant.Outlined"
+                                   HelperText="Natural person identity in directory">
+                            @foreach (var p in _people)
+                            {
+                                <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.FullName (@(p.RsaIdNumber ?? p.PassportNumber ?? "No ID"))</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.body2" Class="text-secondary">Director/Shareholder: <strong>@(Member.Person?.FullName ?? "N/A")</strong></MudText>
+                    </MudItem>
+                }
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               Label="Corporate governance capacity"
+                               @bind-Value="Member.GovernanceRoleCode"
+                               Required="true"
+                               Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("DIRECTOR")">Director</MudSelectItem>
+                        <MudSelectItem Value="@("MANAGING_DIRECTOR")">Managing Director / CEO</MudSelectItem>
+                        <MudSelectItem Value="@("PARTNER")">Partner / Member (CC)</MudSelectItem>
+                        <MudSelectItem Value="@("TRUSTEE")">Trustee</MudSelectItem>
+                        <MudSelectItem Value="@("SHAREHOLDER")">Shareholder (Beneficial Owner)</MudSelectItem>
+                        <MudSelectItem Value="@("BOARD_MEMBER")">Board Member</MudSelectItem>
+                        <MudSelectItem Value="@("ACCOUNTING_OFFICER")">Accounting Officer</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudNumericField T="decimal"
+                                     Label="Beneficial equity shareholding (%)"
+                                     @bind-Value="Member.ShareholdingPercentage"
+                                     Min="0.00m"
+                                     Max="100.00m"
+                                     Format="F2"
+                                     Variant="Variant.Outlined"
+                                     HelperText="0.00% if non-shareholding director" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudDatePicker Label="Official appointment date"
+                                   @bind-Date="_appointmentDate"
+                                   Variant="Variant.Outlined" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudDatePicker Label="Resignation / Cessation date"
+                                   @bind-Date="_resignationDate"
+                                   Variant="Variant.Outlined"
+                                   HelperText="Leave empty if actively serving" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudCheckBox T="bool"
+                                 Label="Corporate voting rights"
+                                 @bind-Value="Member.HasVotingRights"
+                                 Color="Color.Primary" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudCheckBox T="bool"
+                                 Label="Verified on CIPC register"
+                                 @bind-Value="Member.CipcRegistered"
+                                 Color="Color.Info" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudCheckBox T="bool"
+                                 Label="Active standing"
+                                 @bind-Value="Member.IsActive"
+                                 Color="Color.Success" />
+                </MudItem>
+            </MudGrid>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Close">
+            Cancel
+        </MudButton>
+        <MudButton OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@_isSubmitting" StartIcon="@Icons.Material.Filled.Save">
+            Save member
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public OrganisationGovernanceMember Member { get; set; } = new();
+    [Parameter] public string CurrentUsername { get; set; } = "SYSTEM";
+
+    private List<Person> _people = new();
+    private DateTime? _appointmentDate;
+    private DateTime? _resignationDate;
+    private bool _isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _people = await PersonService.GetAllAsync();
+        _appointmentDate = Member.AppointmentDate;
+        _resignationDate = Member.ResignationDate;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        if (!Member.PersonId.HasValue || Member.PersonId.Value == 0)
+        {
+            Snackbar.Add("Please select a person record.", Severity.Warning);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            Member.AppointmentDate = _appointmentDate;
+            Member.ResignationDate = _resignationDate;
+
+            if (Member.Id > 0)
+            {
+                await ConflictService.UpdateGovernanceMemberAsync(Member, CurrentUsername);
+                Snackbar.Add("Governance member updated successfully.", Severity.Success);
+            }
+            else
+            {
+                await ConflictService.AddGovernanceMemberAsync(Member, CurrentUsername);
+                Snackbar.Add("Governance member registered successfully.", Severity.Success);
+            }
+
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving governance member: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

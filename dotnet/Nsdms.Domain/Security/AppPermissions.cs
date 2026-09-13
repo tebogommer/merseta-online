@@ -16,6 +16,7 @@ public static class AppPermissions
     public const string ModuleOrganisations = "Organisations";
     public const string ModulePeople = "People";
     public const string ModuleSystem = "System";
+    public const string ModuleGovernance = "Governance";
 
     // Standard & Domain-Specific Actions
     public const string ActionView = "View";
@@ -52,7 +53,8 @@ public static class AppPermissions
         { ModuleEtqa, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionQuery, ActionRemediate, ActionVerify, ActionModerate, ActionApprove, ActionReject, ActionManage } },
         { ModuleWorkplace, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionVerify, ActionApprove, ActionReject, ActionManage } },
         { ModuleCompliance, new() { ActionView, ActionCreate, ActionEdit, ActionSubmit, ActionVerify, ActionManage } },
-        { ModuleSystem, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionDelegate, ActionManage } }
+        { ModuleSystem, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionDelegate, ActionManage } },
+        { ModuleGovernance, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionVerify, ActionApprove, ActionManage } }
     };
 
     public static string Create(string module, string action) => $"{module}:{action}";

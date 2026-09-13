@@ -1,0 +1,437 @@
+@namespace Nsdms.Web.Components.Pages.Employers.Tabs
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Services
+@using Nsdms.Application.Common.Models
+@using Nsdms.Web.Components.Shared.Forms
+@inject IOrganisationService OrgService
+@inject IPersonService PersonService
+@inject ILookupService LookupService
+@inject ISnackbar Snackbar
+
+<MudForm @ref="_form" @bind-IsValid="_isValid" ReadOnly="@(!IsEditMode)">
+    <MudGrid Spacing="3">
+        <!-- Organisation Core Info Card -->
+        <MudItem xs="12" lg="8">
+            <MudCard Elevation="2" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                            <MudIcon Icon="@Icons.Material.Filled.Domain" />
+                        </MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Organisation Identification</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Legal entity names and SARS levy credentials</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string"
+                                          Label="Legal Organisation Name"
+                                          Required="true"
+                                          RequiredError="Legal Organisation Name is mandatory"
+                                          @bind-Value="Organisation.CompanyName"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string"
+                                          Label="Trading Name"
+                                          @bind-Value="Organisation.TradingName"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField T="string"
+                                          Label="SARS SDL Number"
+                                          Required="true"
+                                          RequiredError="SDL Levy Number is mandatory"
+                                          @bind-Value="Organisation.SdlNumber"
+                                          Variant="Variant.Outlined"
+                                          Placeholder="e.g. L123456789 or N000100001" />
+                            @if (string.IsNullOrWhiteSpace(Organisation.SdlNumber) || Organisation.SdlNumber.StartsWith("N", StringComparison.OrdinalIgnoreCase) || Organisation.CategoryCode == "NON_LEVY_PAYING")
+                            {
+                                <MudButton Variant="Variant.Text"
+                                           Color="Color.Secondary"
+                                           Size="Size.Small"
+                                           Class="mt-1"
+                                           StartIcon="@Icons.Material.Filled.Autorenew"
+                                           OnClick="GenerateNonLevyNumberAsync">
+                                    Generate Statutory N-Number
+                                </MudButton>
+                            }
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField T="string"
+                                          Label="CIPC / Enterprise Registration No"
+                                          @bind-Value="Organisation.RegistrationNumber"
+                                          Variant="Variant.Outlined"
+                                          Placeholder="e.g. 2018/123456/07" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField T="string"
+                                          Label="SARS Income Tax Number"
+                                          @bind-Value="Organisation.TaxNumber"
+                                          Variant="Variant.Outlined"
+                                          Placeholder="e.g. 9876543210" />
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+
+            <!-- Sector, Chamber, SIC Code & Classification -->
+            <MudCard Elevation="2" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Color="Color.Info" Variant="Variant.Filled">
+                            <MudIcon Icon="@Icons.Material.Filled.Category" />
+                        </MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Sector Classification & Scope</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">SETA Chamber, SIC codes, and Dynamics GP vendor classification</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid>
+                        @if (Organisation.HasMissingChamberMapping || string.IsNullOrWhiteSpace(Organisation.ChamberCode))
+                        {
+                            <MudItem xs="12">
+                                <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Dense="true" Class="mb-2">
+                                    <strong>Action Required: Chamber / Dynamics GP Vendor Class Unmapped</strong><br />
+                                    This organisation has no valid merSETA Chamber or GP Vendor Class mapping. Grant applications, WSP submissions, MoAs, and payment runs are currently <strong>blocked</strong> until a valid 5-digit SIC code or manual Chamber override is assigned.
+                                </MudAlert>
+                            </MudItem>
+                        }
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="string" Label="SETA Industry Sector" @bind-Value="Organisation.SectorCode" Variant="Variant.Outlined">
+                                @foreach (var s in _sectors)
+                                {
+                                    <MudSelectItem Value="@s.Code">@s.Name (@s.Code)</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <SearchableLookup T="string"
+                                              Label="SIC Code (Stats SA 5-Digit)"
+                                              Value="Organisation.SicCode"
+                                              ValueChanged="OnSicCodeChangedAsync"
+                                              SearchFunc="SearchSicCodesAsync"
+                                              ToStringFunc="FormatSicCode"
+                                              HelperText="Determines statutory Chamber jurisdiction"
+                                              Dense="true" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="string" Label="merSETA Chamber" @bind-Value="Organisation.ChamberCode" Variant="Variant.Outlined" ReadOnly="@(!Organisation.IsManualChamberOverride)" HelperText="@(Organisation.IsManualChamberOverride ? "Manual Chamber Override Active" : "Auto-determined from SIC Code")" Dense="true">
+                                @foreach (var ch in _chambers)
+                                {
+                                    <MudSelectItem Value="@ch.Code">@ch.Name (@ch.Code)</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField T="string"
+                                          Label="Dynamics GP Vendor Class"
+                                          Value="@(Organisation.GpVendorClass ?? (Organisation.HasMissingChamberMapping ? "UNMAPPED (BLOCKED)" : "Not Assigned"))"
+                                          ReadOnly="true"
+                                          Variant="Variant.Outlined"
+                                          HelperText="Synchronized with GP Accounts Payable"
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.AccountBalance"
+                                          Dense="true" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudSwitch T="bool" @bind-Value="Organisation.IsManualChamberOverride" Color="Color.Warning" Label="Manual Chamber Override" />
+                        </MudItem>
+                        @if (Organisation.IsManualChamberOverride)
+                        {
+                            <MudItem xs="12">
+                                <MudTextField T="string" Label="Chamber Override Justification / Board Resolution Reference" @bind-Value="Organisation.ChamberOverrideReason" Variant="Variant.Outlined" HelperText="Statutory rationale required for non-standard chamber allocation" Required="true" />
+                            </MudItem>
+                        }
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="string" Label="Organisation Category" @bind-Value="Organisation.CategoryCode" Variant="Variant.Outlined">
+                                @foreach (var cat in _categories)
+                                {
+                                    <MudSelectItem Value="@cat.Code">@cat.Name (@cat.Code)</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="string" Label="Organisation Size" @bind-Value="Organisation.CompanySizeCode" Variant="Variant.Outlined">
+                                @foreach (var cs in _companySizes)
+                                {
+                                    <MudSelectItem Value="@cs.Code">@cs.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="string" Label="Organisation Structure" @bind-Value="Organisation.OrganisationTypeCode" Variant="Variant.Outlined">
+                                @foreach (var ot in _organisationTypes)
+                                {
+                                    <MudSelectItem Value="@ot.Code">@ot.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+
+            <!-- Physical & Postal Address Card -->
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Color="Color.Success" Variant="Variant.Filled">
+                            <MudIcon Icon="@Icons.Material.Filled.Place" />
+                        </MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Physical & Postal Location</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Registered Head Office and postal details</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string" Label="Physical Address Line 1" @bind-Value="Organisation.PhysicalAddress" Variant="Variant.Outlined" Lines="2" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string" Label="Postal Address" @bind-Value="Organisation.PostalAddress" Variant="Variant.Outlined" Lines="2" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField T="string" Label="Physical Postal Code" @bind-Value="Organisation.PhysicalAddressPostalCode" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="string" Label="Province" @bind-Value="Organisation.ProvinceCode" Variant="Variant.Outlined">
+                                @foreach (var p in _provinces)
+                                {
+                                    <MudSelectItem Value="@p.Code">@p.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField T="string" Label="Postal Delivery Code" @bind-Value="Organisation.PostalAddressPostalCode" Variant="Variant.Outlined" />
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+
+            <!-- Workplace Accreditation & Mentor Ratio Policy Override Card -->
+            <MudCard Elevation="2" Class="mt-4">
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Color="Color.Warning" Variant="Variant.Filled">
+                            <MudIcon Icon="@Icons.Material.Filled.Engineering" />
+                        </MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Workplace Mentor Ratio Policy</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Employer-level statutory ratio enforcement overrides and custom capacities</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="bool?" Label="Mentor Ratio Enforcement Policy" @bind-Value="Organisation.IsMentorRatioEnforced" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@((bool?)null)">Default (Inherit Global System Setting)</MudSelectItem>
+                                <MudSelectItem Value="@((bool?)true)">Strictly Enforce Ratios</MudSelectItem>
+                                <MudSelectItem Value="@((bool?)false)">Exempt Employer from Ratio Checking</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudNumericField T="int?" Label="Custom Organisation Ratio Cap" @bind-Value="Organisation.CustomMentorRatioCap" Variant="Variant.Outlined" Min="1" Max="20" Placeholder="Leave empty to use Trade Standard" HelperText="Overrides trade ratio for all sites of this employer" />
+                        </MudItem>
+                        @if (Organisation.IsMentorRatioEnforced == false)
+                        {
+                            <MudItem xs="12">
+                                <MudTextField T="string" Label="Organisation Ratio Exemption Reason / Gazette Dispensation" @bind-Value="Organisation.MentorRatioExemptionReason" Variant="Variant.Outlined" Required="true" Placeholder="e.g. NAMB section 28 approved accelerated apprenticeship programme dispensation" Lines="2" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Right Summary & Operational Status Sidebar -->
+        <MudItem xs="12" lg="4">
+            <MudCard Elevation="2" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Status & Compliance</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <div class="d-flex flex-column gap-3">
+                        <ReadOnlyField Label="Registration Status">
+                            <StatusBadge Status="@Organisation.StatusCode" />
+                        </ReadOnlyField>
+                        <MudSelect T="string" Label="SARS Levy Category" @bind-Value="Organisation.LevyCategoryCode" Variant="Variant.Outlined">
+                            <MudSelectItem Value="@("LEVY_PAYING")">Levy Paying Entity</MudSelectItem>
+                            <MudSelectItem Value="@("NON_LEVY_PAYING")">Non-Levy Paying</MudSelectItem>
+                            <MudSelectItem Value="@("EXEMPT")">Statutory Exempt</MudSelectItem>
+                        </MudSelect>
+                        <MudTextField T="string" Label="Telephone Switchboard" @bind-Value="Organisation.PhoneNumber" Variant="Variant.Outlined" Placeholder="e.g. 011-555-0100" />
+                        <MudTextField T="string" Label="Corporate Website" @bind-Value="Organisation.WebsiteUrl" Variant="Variant.Outlined" Placeholder="e.g. https://www.organisation.co.za" />
+                        <MudSwitch T="bool" @bind-Value="Organisation.IsActive" Color="Color.Primary" Label="Organisation is Active" />
+                        <MudSwitch T="bool" @bind-Value="Organisation.BankingDetailsVerified" Color="Color.Success" Label="Banking Details Verified" />
+                    </div>
+                </MudCardContent>
+            </MudCard>
+
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Primary Contact Person</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudAutocomplete T="PersonLookupDto"
+                                     Label="Assigned Primary Contact"
+                                     Value="_primaryContactDto"
+                                     ValueChanged="OnPrimaryContactChanged"
+                                     SearchFunc="SearchPeopleAsync"
+                                     ToStringFunc="@(p => p != null ? p.DisplayText : string.Empty)"
+                                     Variant="Variant.Outlined"
+                                     Clearable="true"
+                                     DebounceInterval="300"
+                                     MinCharacters="2"
+                                     MaxItems="20"
+                                     Dense="true"
+                                     Placeholder="Search registry by name, RSA ID, or email..."
+                                     HelperText="Type at least 2 characters to search the central registry" />
+                    <div class="mt-3">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Tel: @(Organisation.PrimaryContactPerson?.PhoneNumber ?? Organisation.PrimaryContactPerson?.CellNumber ?? _primaryContactDto?.PhoneNumber ?? "N/A")</MudText><br />
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Email: @(Organisation.PrimaryContactPerson?.Email ?? _primaryContactDto?.Email ?? "N/A")</MudText>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudForm>
+
+@code {
+    [Parameter] public Organisation Organisation { get; set; } = new();
+    [Parameter] public bool IsEditMode { get; set; }
+
+    private MudForm? _form;
+    private bool _isValid;
+    private PersonLookupDto? _primaryContactDto;
+
+    private List<LookupItemDto> _sectors = new();
+    private List<LookupItemDto> _chambers = new();
+    private List<LookupItemDto> _sicCodes = new();
+    private List<LookupItemDto> _categories = new();
+    private List<LookupItemDto> _companySizes = new();
+    private List<LookupItemDto> _organisationTypes = new();
+    private List<LookupItemDto> _provinces = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sectors = await LookupService.GetLookupItemsAsync("SectorType");
+        _chambers = await LookupService.GetLookupItemsAsync("ChamberType");
+        _sicCodes = await LookupService.GetLookupItemsAsync("SicCodeType", take: 200);
+        _categories = await LookupService.GetLookupItemsAsync("CategoryType");
+        _companySizes = await LookupService.GetLookupItemsAsync("CompanySizeType");
+        _organisationTypes = await LookupService.GetLookupItemsAsync("OrganisationType");
+        _provinces = await LookupService.GetLookupItemsAsync("ProvinceType");
+
+        if (Organisation.PrimaryContactPersonId.HasValue)
+        {
+            _primaryContactDto = await PersonService.GetLookupByIdAsync(Organisation.PrimaryContactPersonId.Value);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Organisation.PrimaryContactPersonId.HasValue && (_primaryContactDto == null || _primaryContactDto.Id != Organisation.PrimaryContactPersonId.Value))
+        {
+            _primaryContactDto = await PersonService.GetLookupByIdAsync(Organisation.PrimaryContactPersonId.Value);
+        }
+        else if (!Organisation.PrimaryContactPersonId.HasValue)
+        {
+            _primaryContactDto = null;
+        }
+    }
+
+    private void OnPrimaryContactChanged(PersonLookupDto? selected)
+    {
+        _primaryContactDto = selected;
+        Organisation.PrimaryContactPersonId = selected?.Id;
+    }
+
+    private async Task<IEnumerable<PersonLookupDto>> SearchPeopleAsync(string search, CancellationToken ct)
+    {
+        return await PersonService.SearchLookupAsync(search, limit: 20, cancellationToken: ct);
+    }
+
+    private Task<IEnumerable<string>> SearchSicCodesAsync(string value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return Task.FromResult<IEnumerable<string>>(_sicCodes.Take(50).Select(s => s.Code));
+        }
+
+        var lower = value.Trim().ToLowerInvariant();
+        var results = _sicCodes
+            .Where(s => s.Code.ToLowerInvariant().Contains(lower) || s.Name.ToLowerInvariant().Contains(lower))
+            .Take(50)
+            .Select(s => s.Code);
+
+        return Task.FromResult(results);
+    }
+
+    private string FormatSicCode(string? code)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return string.Empty;
+        var item = _sicCodes.FirstOrDefault(s => s.Code == code);
+        return item != null ? $"{item.Code} - {item.Name}" : code;
+    }
+
+    private async Task OnSicCodeChangedAsync(string? newSic)
+    {
+        Organisation.SicCode = newSic ?? string.Empty;
+        if (!Organisation.IsManualChamberOverride)
+        {
+            if (!string.IsNullOrWhiteSpace(newSic))
+            {
+                var derivation = await OrgService.DeriveChamberAndVendorClassAsync(newSic, Organisation.OrganisationTypeCode);
+                if (derivation.IsSuccess)
+                {
+                    Organisation.ChamberCode = derivation.ChamberCode;
+                    Organisation.GpVendorClass = derivation.GpVendorClass;
+                    Organisation.HasMissingChamberMapping = false;
+                    var chamberName = derivation.ChamberName ?? derivation.ChamberCode;
+                    Snackbar.Add($"Chamber auto-determined as '{chamberName}' (Dynamics GP Vendor Class: {derivation.GpVendorClass}).", Severity.Info);
+                }
+                else
+                {
+                    Organisation.ChamberCode = null;
+                    Organisation.GpVendorClass = null;
+                    Organisation.HasMissingChamberMapping = true;
+                    Snackbar.Add("Warning: SIC code did not resolve to a valid merSETA Chamber. Organisation flagged as unmapped.", Severity.Warning);
+                }
+            }
+            else
+            {
+                Organisation.ChamberCode = null;
+                Organisation.GpVendorClass = null;
+                Organisation.HasMissingChamberMapping = true;
+            }
+        }
+    }
+
+    private async Task GenerateNonLevyNumberAsync()
+    {
+        try
+        {
+            var nextN = await OrgService.GenerateNonLevyNumberAsync();
+            Organisation.SdlNumber = nextN;
+            Organisation.CategoryCode = "NON_LEVY_PAYING";
+            Organisation.LevyCategoryCode = "NON_LEVY_PAYING";
+            Snackbar.Add($"Assigned unique statutory N-Number: {nextN}", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to generate statutory N-Number: {ex.Message}", Severity.Error);
+        }
+    }
+}

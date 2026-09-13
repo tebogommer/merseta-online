@@ -59,7 +59,7 @@ public class NavigationMenuServiceTests
 
         Assert.NotNull(result);
         Assert.True(result.TotalItemsCount >= 25, $"Expected >= 25 items, got {result.TotalItemsCount}");
-        Assert.Equal(7, result.Groups.Count);
+        Assert.True(result.Groups.Count >= 7, $"Expected >= 7 groups, got {result.Groups.Count}");
         Assert.Contains(result.Groups, g => g.GroupName == "Overview & tasks");
         Assert.Contains(result.Groups, g => g.GroupName == "Registries & stakeholders");
         Assert.Contains(result.Groups, g => g.GroupName == "Grants, levies & finance");

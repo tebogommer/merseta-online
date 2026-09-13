@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Nsdms.Application.Common.Models;
 using Nsdms.Application.Services;
 using Nsdms.Domain.Entities;
 using Nsdms.Infrastructure.Data;
@@ -629,6 +630,67 @@ public class OrganisationServiceTests
 
         var listAfter = await service.GetTrainingCommitteeMembersAsync(org.Id);
         Assert.Empty(listAfter);
+    }
+
+    [Fact]
+    public async Task GetPagedOrganisationsAsync_ReturnsCorrectServerSidePageAndTotalCount()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        for (int i = 1; i <= 25; i++)
+        {
+            db.Organisations.Add(new Organisation
+            {
+                CompanyName = $"Enterprise Corp {i:D2}",
+                SdlNumber = $"L{i:D9}",
+                IsActive = i % 2 == 0
+            });
+        }
+        await db.SaveChangesAsync();
+
+        var query = new PaginationQuery
+        {
+            PageIndex = 1,
+            PageSize = 10
+        };
+
+        // Act
+        var paged = await service.GetPagedOrganisationsAsync(query);
+
+        // Assert
+        Assert.Equal(25, paged.TotalCount);
+        Assert.Equal(10, paged.Items.Count);
+        Assert.Equal(1, paged.PageIndex);
+        Assert.Equal(10, paged.PageSize);
+    }
+
+    [Fact]
+    public async Task GetPagedOrganisationsAsync_WithStatusFilter_ReturnsFilteredResults()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        db.Organisations.AddRange(
+            new Organisation { CompanyName = "Active Corp 1", SdlNumber = "L100000001", IsActive = true },
+            new Organisation { CompanyName = "Active Corp 2", SdlNumber = "L100000002", IsActive = true },
+            new Organisation { CompanyName = "Inactive Corp 1", SdlNumber = "L100000003", IsActive = false }
+        );
+        await db.SaveChangesAsync();
+
+        var query = new PaginationQuery
+        {
+            PageIndex = 0,
+            PageSize = 10,
+            FilterParams = new Dictionary<string, string> { ["status"] = "Active" }
+        };
+
+        // Act
+        var result = await service.GetPagedOrganisationsAsync(query);
+
+        // Assert
+        Assert.Equal(2, result.TotalCount);
+        Assert.All(result.Items, o => Assert.True(o.IsActive));
     }
 
     #endregion

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Nsdms.Application.Common.Models;
 using Nsdms.Application.Services;
 using Nsdms.Domain.Entities;
 using Nsdms.Domain.Lookups;
@@ -1287,6 +1288,114 @@ public class GrantServiceTests
         Assert.True(refreshedApp.HasPivotalInterventions);
         Assert.False(refreshedApp.HasNonPivotalInterventions);
         Assert.Equal(500000m, refreshedApp.RequestedAmount);
+    }
+
+    [Fact]
+    public async Task GetPagedApplicationsAsync_ReturnsCorrectServerSidePageAndTotalCount()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Enterprise Auto Group", SdlNumber = "L999888777" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        for (int i = 1; i <= 15; i++)
+        {
+            db.GrantApplications.Add(new GrantApplication
+            {
+                OrganisationId = org.Id,
+                ApplicationNumber = $"DG-2026-TEST-{i:D3}",
+                ProjectTitle = $"Skills Project #{i}",
+                GrantTypeCode = i % 2 == 0 ? "PIVOTAL" : "NON_PIVOTAL",
+                ApplicationStatusCode = i <= 5 ? "APPROVED" : (i <= 10 ? "SUBMITTED" : "DRAFT"),
+                RequestedAmount = 100000m * i,
+                ApplicationDate = DateTime.UtcNow.AddDays(-i)
+            });
+        }
+        await db.SaveChangesAsync();
+
+        // Act - Page 1 (0-indexed in query, size 5)
+        var query = new PaginationQuery
+        {
+            PageIndex = 1, // Second page
+            PageSize = 5
+        };
+        var pagedResult = await service.GetPagedApplicationsAsync(query);
+
+        // Assert
+        Assert.NotNull(pagedResult);
+        Assert.Equal(15, pagedResult.TotalCount);
+        Assert.Equal(5, pagedResult.Items.Count);
+        Assert.Equal(3, pagedResult.TotalPages);
+        Assert.True(pagedResult.HasPreviousPage);
+        Assert.True(pagedResult.HasNextPage);
+
+        // Act - Status filter
+        var statusQuery = new PaginationQuery
+        {
+            PageIndex = 0,
+            PageSize = 10
+        };
+        statusQuery.FilterParams["status"] = "APPROVED";
+        var approvedResult = await service.GetPagedApplicationsAsync(statusQuery);
+
+        Assert.Equal(5, approvedResult.TotalCount);
+        Assert.All(approvedResult.Items, a => Assert.Equal("APPROVED", a.ApplicationStatusCode));
+
+        // Act - Search filter
+        var searchQuery = new PaginationQuery
+        {
+            PageIndex = 0,
+            PageSize = 10,
+            SearchText = "TEST-007"
+        };
+        var searchResult = await service.GetPagedApplicationsAsync(searchQuery);
+
+        Assert.Equal(1, searchResult.TotalCount);
+        Assert.Equal("DG-2026-TEST-007", searchResult.Items[0].ApplicationNumber);
+    }
+
+    [Fact]
+    public async Task GetPagedApplicationsAsync_DoesNotEagerLoadChildCollections_ToPreventMemoryBloat()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Lightweight Test Works", SdlNumber = "L111222333" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var app = new GrantApplication
+        {
+            OrganisationId = org.Id,
+            ApplicationNumber = "DG-2026-EAGER-01",
+            ProjectTitle = "High-Volume Lightweight Test",
+            GrantTypeCode = "PIVOTAL",
+            ApplicationStatusCode = "SUBMITTED",
+            RequestedAmount = 500000m,
+            ApplicationDate = DateTime.UtcNow
+        };
+        db.GrantApplications.Add(app);
+        await db.SaveChangesAsync();
+
+        db.GrantProjectBudgets.Add(new GrantProjectBudget
+        {
+            GrantApplicationId = app.Id,
+            Description = "Heavy Line Item",
+            TotalCost = 250000m
+        });
+        await db.SaveChangesAsync();
+
+        // Act
+        var query = new PaginationQuery { PageIndex = 0, PageSize = 10 };
+        var result = await service.GetPagedApplicationsAsync(query);
+
+        // Assert
+        Assert.Single(result.Items);
+        var item = result.Items[0];
+        Assert.NotNull(item.Organisation); // Essential navigation property loaded
+        Assert.Empty(item.ProjectBudgets);  // Heavy unrendered child collection NOT eagerly loaded
     }
 }
 

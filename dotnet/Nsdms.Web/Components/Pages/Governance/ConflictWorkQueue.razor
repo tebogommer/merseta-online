@@ -1,0 +1,291 @@
+@page "/admin/governance/conflicts"
+@namespace Nsdms.Web.Components.Pages.Governance
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Domain.Entities
+@using Nsdms.Application.Common.Interfaces
+@attribute [Authorize(Roles = "SuperAdmin,Admin,Executive,Compliance,InternalAudit,RiskManager,ReviewCommittee")]
+@inject IConflictManagementService ConflictService
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<main id="main-content" style="max-width: 1600px; margin: 0 auto; width: 100%;">
+    <EntityHeader Title="Conflict of Interest Work Queue"
+                  Subtitle="Statutory compliance adjudication, insider recusal verification, and multi-entity grant syndicate screening"
+                  BreadcrumbItems="_breadcrumbs">
+        <Actions>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Dashboard"
+                       Href="/governance/dashboard">
+                Executive dashboard
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="LoadFlagsAsync">
+                Refresh queue
+            </MudButton>
+        </Actions>
+    </EntityHeader>
+
+    <!-- Filter Bar -->
+    <MudPaper Elevation="0" Class="pa-4 mb-4 border rounded-lg" Style="background-color: var(--mud-palette-surface);">
+        <div class="d-flex flex-wrap align-center justify-space-between gap-4">
+            <div class="d-flex align-center flex-wrap gap-2">
+                <MudText Typo="Typo.body2" Class="font-weight-bold mr-2 text-secondary">Severity:</MudText>
+                <MudChip T="string"
+                         Color="@(_selectedSeverity == null ? Color.Primary : Color.Default)"
+                         Variant="@(_selectedSeverity == null ? Variant.Filled : Variant.Outlined)"
+                         OnClick="@(() => SetSeverityFilter(null))">
+                    All Severities
+                </MudChip>
+                <MudChip T="string"
+                         Color="Color.Error"
+                         Variant="@(_selectedSeverity == "RED_CRITICAL" ? Variant.Filled : Variant.Outlined)"
+                         OnClick="@(() => SetSeverityFilter("RED_CRITICAL"))">
+                    Red (Critical)
+                </MudChip>
+                <MudChip T="string"
+                         Color="Color.Warning"
+                         Variant="@(_selectedSeverity == "AMBER_ELEVATED" ? Variant.Filled : Variant.Outlined)"
+                         OnClick="@(() => SetSeverityFilter("AMBER_ELEVATED"))">
+                    Amber (Elevated)
+                </MudChip>
+                <MudChip T="string"
+                         Color="Color.Info"
+                         Variant="@(_selectedSeverity == "YELLOW_ADVISORY" ? Variant.Filled : Variant.Outlined)"
+                         OnClick="@(() => SetSeverityFilter("YELLOW_ADVISORY"))">
+                    Yellow (Advisory)
+                </MudChip>
+            </div>
+
+            <div class="d-flex align-center gap-2">
+                <MudText Typo="Typo.body2" Class="font-weight-bold mr-2 text-secondary">Status:</MudText>
+                <MudSelect T="string"
+                           Value="_selectedStatus"
+                           ValueChanged="OnStatusChanged"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Style="min-width: 180px;">
+                    <MudSelectItem Value="@("ALL")">All Statuses</MudSelectItem>
+                    <MudSelectItem Value="@("OPEN")">Open</MudSelectItem>
+                    <MudSelectItem Value="@("UNDER_INVESTIGATION")">Under Investigation</MudSelectItem>
+                    <MudSelectItem Value="@("CLEARED_WITH_JUSTIFICATION")">Cleared with Justification</MudSelectItem>
+                    <MudSelectItem Value="@("UPHELD_DISQUALIFIED")">Upheld / Disqualified</MudSelectItem>
+                </MudSelect>
+            </div>
+        </div>
+    </MudPaper>
+
+    <!-- DataGrid -->
+    <DataGridShell TItem="ConflictFlag"
+                   Items="_filteredFlags"
+                   IsLoading="_isLoading"
+                   SearchPlaceholder="Search by reference, person, organisation, or description..."
+                   QuickFilter="FilterConflict">
+        <ChildContent>
+            <MudTable Items="_filteredFlags" Hover="true" Dense="true" Elevation="0" Breakpoint="Breakpoint.Sm" Class="border-default">
+                <HeaderContent>
+                    <MudTh>Reference</MudTh>
+                    <MudTh>Severity</MudTh>
+                    <MudTh>Conflict Category</MudTh>
+                    <MudTh>Incident Title</MudTh>
+                    <MudTh>Implicated Person</MudTh>
+                    <MudTh>Implicated Organisation</MudTh>
+                    <MudTh>Detected Date</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh Style="text-align:right">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Reference">
+                        <MudLink Href="@($"/admin/governance/conflicts/{context.Id}")" Underline="Underline.Hover">
+                            <span class="font-mono font-weight-bold" style="color: var(--mud-palette-primary);">
+                                FLG-@context.Id.ToString("D5")
+                            </span>
+                        </MudLink>
+                    </MudTd>
+                    <MudTd DataLabel="Severity">
+                        <MudChip T="string" Size="Size.Small" Color="@GetSeverityColor(context.SeverityCode)" Variant="Variant.Filled">
+                            @FormatSeverity(context.SeverityCode)
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Conflict Category">
+                        <span style="font-size: 0.8125rem;">@FormatCategory(context.ConflictCategoryCode)</span>
+                    </MudTd>
+                    <MudTd DataLabel="Incident Title">
+                        <span class="font-weight-medium">@context.Title</span>
+                    </MudTd>
+                    <MudTd DataLabel="Implicated Person">
+                        <div>
+                            <div class="font-weight-bold">@(context.Person?.FullName ?? "N/A")</div>
+                            <div class="font-mono text-secondary" style="font-size: 0.75rem;">
+                                @(context.Person?.RsaIdNumber ?? context.Person?.PassportNumber ?? "")
+                            </div>
+                        </div>
+                    </MudTd>
+                    <MudTd DataLabel="Implicated Organisation">
+                        <div>
+                            <div class="font-weight-bold">@(context.TargetOrganisation?.CompanyName ?? "N/A")</div>
+                            <div class="font-mono text-secondary" style="font-size: 0.75rem;">
+                                @(context.TargetOrganisation?.SdlNumber ?? "")
+                            </div>
+                        </div>
+                    </MudTd>
+                    <MudTd DataLabel="Detected Date">
+                        <span class="font-mono" style="font-size: 0.8125rem;">
+                            @context.DetectedAt.ToString("yyyy-MM-dd HH:mm")
+                        </span>
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        <StatusBadge Status="@context.ResolutionStatusCode" Size="Size.Small" />
+                    </MudTd>
+                    <MudTd Style="text-align:right" DataLabel="Actions">
+                        <div class="d-flex justify-end gap-1">
+                            @if (context.ResolutionStatusCode == "OPEN" || context.ResolutionStatusCode == "UNDER_INVESTIGATION" || context.ResolutionStatusCode == "PENDING_REVIEW")
+                            {
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.Gavel"
+                                           OnClick="@(() => OpenAdjudicationDialogAsync(context))">
+                                    Adjudicate
+                                </MudButton>
+                            }
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Size="Size.Small"
+                                           Color="Color.Default"
+                                           Href="@($"/admin/governance/conflicts/{context.Id}")"
+                                           aria-label="View conflict detail" />
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
+                </PagerContent>
+            </MudTable>
+        </ChildContent>
+    </DataGridShell>
+</main>
+
+@code {
+    private bool _isLoading = true;
+    private List<ConflictFlag> _flags = new();
+    private List<ConflictFlag> _filteredFlags = new();
+    private string? _selectedSeverity = null;
+    private string _selectedStatus = "OPEN";
+
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Governance", href: "/governance/dashboard"),
+        new BreadcrumbItem("Conflict work queue", href: null, disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFlagsAsync();
+    }
+
+    private async Task LoadFlagsAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _flags = await ConflictService.GetConflictFlagsAsync();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading conflict work queue: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void SetSeverityFilter(string? severity)
+    {
+        _selectedSeverity = severity;
+        ApplyFilters();
+    }
+
+    private void OnStatusChanged(string status)
+    {
+        _selectedStatus = status;
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        var result = _flags.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_selectedSeverity))
+        {
+            result = result.Where(f => f.SeverityCode == _selectedSeverity);
+        }
+
+        if (_selectedStatus != "ALL")
+        {
+            result = result.Where(f => f.ResolutionStatusCode == _selectedStatus);
+        }
+
+        _filteredFlags = result.ToList();
+    }
+
+    private bool FilterConflict(ConflictFlag flag, string search)
+    {
+        if (string.IsNullOrWhiteSpace(search)) return true;
+        return (flag.Title?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (flag.Description?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (flag.ConflictCategoryCode?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (flag.TargetOrganisation?.LegalName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (flag.Person?.FirstName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (flag.Person?.LastName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+
+    private async Task OpenAdjudicationDialogAsync(ConflictFlag flag)
+    {
+        var parameters = new DialogParameters<ConflictResolutionDialog>
+        {
+            { x => x.Flag, flag },
+            { x => x.CurrentUsername, "RiskAndComplianceManager" }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ConflictResolutionDialog>("Adjudicate Conflict", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadFlagsAsync();
+        }
+    }
+
+    private Color GetSeverityColor(string severity) => severity switch
+    {
+        "RED_CRITICAL" => Color.Error,
+        "AMBER_ELEVATED" => Color.Warning,
+        _ => Color.Info
+    };
+
+    private string FormatSeverity(string severity) => severity switch
+    {
+        "RED_CRITICAL" => "Red (Critical)",
+        "AMBER_ELEVATED" => "Amber (Elevated)",
+        "YELLOW_ADVISORY" => "Yellow (Advisory)",
+        _ => severity
+    };
+
+    private string FormatCategory(string cat) => cat switch
+    {
+        "INSIDER_AFFILIATION" => "Insider Affiliation (PFMA)",
+        "MULTI_ORGANISATION_GRANT_SYNDICATE" => "Multi-Organisation Grant Syndicate",
+        "ACCREDITATION_GOVERNANCE_BREACH" => "Accreditation Governance Breach",
+        "COMMITTEE_RECUSAL_REQUIRED" => "Committee Recusal Required",
+        "OVERDUE_DECLARATION" => "Overdue Annual Declaration",
+        _ => cat
+    };
+}
