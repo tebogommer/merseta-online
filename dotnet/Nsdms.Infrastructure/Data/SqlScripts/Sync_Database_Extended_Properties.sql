@@ -1,6 +1,6 @@
 -- ===========================================================================
 -- MerSETA NSDMS — SQL Server MS_Description Extended Properties Synchronizer
--- Generated: 2026-09-13 18:18:38 UTC
+-- Generated: 2026-09-18 11:48:04 UTC
 -- Target Engine: Microsoft SQL Server Express (localhost / NSDMS-NET)
 -- ===========================================================================
 
@@ -29384,6 +29384,20 @@ BEGIN
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Indicates whether this organisation lacks a valid merSETA Chamber or GP Vendor Class mapping, blocking downstream Discretionary Grant submissions, WSP submissions, MoAs, and ERP payment batches.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'HasMissingChamberMapping';
 END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'Organisation' AND c.name = N'HoldingRelationshipType')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'Organisation' AND c.name = N'HoldingRelationshipType'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Corporate group relationship classification: HOLDING_COMPANY, WHOLLY_OWNED_SUBSIDIARY, MAJORITY_SUBSIDIARY, ASSOCIATE_COMPANY, JOINT_VENTURE, DIVISION_BRANCH.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'HoldingRelationshipType';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Corporate group relationship classification: HOLDING_COMPANY, WHOLLY_OWNED_SUBSIDIARY, MAJORITY_SUBSIDIARY, ASSOCIATE_COMPANY, JOINT_VENTURE, DIVISION_BRANCH.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'HoldingRelationshipType';
+END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'Organisation' AND c.name = N'IsActive')
 BEGIN
     IF NOT EXISTS (
@@ -29565,6 +29579,34 @@ BEGIN
         EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Legal organisation constitution type code (references lookup.OrganisationType: PTY_LTD, CC, PUBLIC_ENTITY, NGO_NPO).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'OrganisationTypeCode';
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Legal organisation constitution type code (references lookup.OrganisationType: PTY_LTD, CC, PUBLIC_ENTITY, NGO_NPO).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'OrganisationTypeCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'Organisation' AND c.name = N'OwnershipPercentage')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'Organisation' AND c.name = N'OwnershipPercentage'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Beneficial equity ownership percentage held by the parent entity (0.00% to 100.00%).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'OwnershipPercentage';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Beneficial equity ownership percentage held by the parent entity (0.00% to 100.00%).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'OwnershipPercentage';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'Organisation' AND c.name = N'ParentOrganisationId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'Organisation' AND c.name = N'ParentOrganisationId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent holding company or controlling entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'ParentOrganisationId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent holding company or controlling entity.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Organisation', @level2type=N'COLUMN', @level2name=N'ParentOrganisationId';
 END
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'Organisation' AND c.name = N'PhoneNumber')
 BEGIN
@@ -48312,6 +48354,932 @@ BEGIN
         EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Current lifecycle state code in the workflow engine.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringSiteVisit', @level2type=N'COLUMN', @level2name=N'StatusCode';
     ELSE
         EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Current lifecycle state code in the workflow engine.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WorkplaceMonitoringSiteVisit', @level2type=N'COLUMN', @level2name=N'StatusCode';
+END
+
+-- Table: dbo.WspBulkImportBatch
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Master batch record tracking bulk spreadsheet ingestion runs (Excel and CSV) for WSP / ATR submissions.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Master batch record tracking bulk spreadsheet ingestion runs (Excel and CSV) for WSP / ATR submissions.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'Id')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'Id'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'Id';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'Id';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'AllowPartialCommit')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'AllowPartialCommit'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Whether user selected permissive partial staging (commit valid, queue errors).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'AllowPartialCommit';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Whether user selected permissive partial staging (commit valid, queue errors).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'AllowPartialCommit';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'BatchGuid')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'BatchGuid'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Unique cryptographic GUID identifier for external client and SignalR telemetry tracking.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'BatchGuid';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Unique cryptographic GUID identifier for external client and SignalR telemetry tracking.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'BatchGuid';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'BatchReference')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'BatchReference'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Human-readable statutory batch reference (e.g. BATCH-WSP-2026-00042).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'BatchReference';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Human-readable statutory batch reference (e.g. BATCH-WSP-2026-00042).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'BatchReference';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'BatchStatus')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'BatchStatus'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Processing lifecycle status: ''Queued'', ''Staging'', ''Validating'', ''Validated'', ''ValidationFailed'', ''PartiallyCommitted'', ''Committed'', ''RolledBack''', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'BatchStatus';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Processing lifecycle status: ''Queued'', ''Staging'', ''Validating'', ''Validated'', ''ValidationFailed'', ''PartiallyCommitted'', ''Committed'', ''RolledBack''', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'BatchStatus';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'CommittedRowCount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'CommittedRowCount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Count of verified records materialized into core domain tables.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'CommittedRowCount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Count of verified records materialized into core domain tables.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'CommittedRowCount';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ContentHashSha256')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ContentHashSha256'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Cryptographic SHA-256 digital security seal calculated over raw input stream.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ContentHashSha256';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Cryptographic SHA-256 digital security seal calculated over raw input stream.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ContentHashSha256';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'CreatedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'CreatedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'CreatedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'CreatedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ErrorRowCount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ErrorRowCount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Count of records failing validation (exceptions).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ErrorRowCount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Count of records failing validation (exceptions).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ErrorRowCount';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ErrorSummaryJson')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ErrorSummaryJson'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Diagnostic summary JSON storing categorized error tallies.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ErrorSummaryJson';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Diagnostic summary JSON storing categorized error tallies.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ErrorSummaryJson';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'FileSizeBytes')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'FileSizeBytes'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'File size in bytes.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'FileSizeBytes';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'File size in bytes.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'FileSizeBytes';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ModifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ModifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ModifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ModifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'OrganisationId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'OrganisationId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the submitting organisation.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'OrganisationId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the submitting organisation.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'OrganisationId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'OriginalFileName')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'OriginalFileName'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Original file name uploaded by user.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'OriginalFileName';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Original file name uploaded by user.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'OriginalFileName';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ProcessingDurationMs')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ProcessingDurationMs'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Processing duration in milliseconds.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ProcessingDurationMs';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Processing duration in milliseconds.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ProcessingDurationMs';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ReportType')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ReportType'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Ingestion section target: WSP (Planned) or ATR (Actuals).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ReportType';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Ingestion section target: WSP (Planned) or ATR (Actuals).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ReportType';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'SchemeYear')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'SchemeYear'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Statutory scheme financial year (e.g. 2026).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'SchemeYear';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Statutory scheme financial year (e.g. 2026).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'SchemeYear';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'TotalBeneficiariesRollup')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'TotalBeneficiariesRollup'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Total beneficiary headcount parsed across all valid rows.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'TotalBeneficiariesRollup';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Total beneficiary headcount parsed across all valid rows.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'TotalBeneficiariesRollup';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'TotalEstimatedCostRollup')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'TotalEstimatedCostRollup'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Total monetary investment cost parsed across all valid rows in ZAR.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'TotalEstimatedCostRollup';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Total monetary investment cost parsed across all valid rows in ZAR.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'TotalEstimatedCostRollup';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'TotalRowCount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'TotalRowCount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Total data rows identified in the source file.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'TotalRowCount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Total data rows identified in the source file.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'TotalRowCount';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ValidRowCount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'ValidRowCount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Count of records passing all statutory and taxonomy validations.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ValidRowCount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Count of records passing all statutory and taxonomy validations.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'ValidRowCount';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'WspSubmissionId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportBatch' AND c.name = N'WspSubmissionId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent WspSubmission.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'WspSubmissionId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent WspSubmission.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportBatch', @level2type=N'COLUMN', @level2name=N'WspSubmissionId';
+END
+
+-- Table: dbo.WspBulkImportStaging
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Individual candidate line staged within a WspBulkImportBatch before core commitment.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Individual candidate line staged within a WspBulkImportBatch before core commitment.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'Id')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'Id'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'Id';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Auto-generated integer primary key identifier.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'Id';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'BatchId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'BatchId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent WspBulkImportBatch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'BatchId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Foreign key referencing the parent WspBulkImportBatch.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'BatchId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'CreatedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'CreatedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was initially created.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'CreatedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'CreatedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'CreatedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that created the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'CreatedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'IsCommitted')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'IsCommitted'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Whether this row has already been committed to WspTrainingPlan or WspEmploymentSummary.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'IsCommitted';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Whether this row has already been committed to WspTrainingPlan or WspEmploymentSummary.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'IsCommitted';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'IsValid')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'IsValid'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Whether this specific row is 100% valid and ready for core table commitment.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'IsValid';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Whether this specific row is 100% valid and ready for core table commitment.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'IsValid';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ModifiedAt')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ModifiedAt'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'UTC timestamp when the record was last updated.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ModifiedAt';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ModifiedBy')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ModifiedBy'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'User identifier or system process that last updated the record.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ModifiedBy';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ParsedBeneficiaryCount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ParsedBeneficiaryCount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ParsedBeneficiaryCount.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ParsedBeneficiaryCount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ParsedBeneficiaryCount.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ParsedBeneficiaryCount';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ParsedEndDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ParsedEndDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ParsedEndDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ParsedEndDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ParsedEndDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ParsedEndDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ParsedEstimatedCost')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ParsedEstimatedCost'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ParsedEstimatedCost.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ParsedEstimatedCost';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ParsedEstimatedCost.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ParsedEstimatedCost';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ParsedStartDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ParsedStartDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ParsedStartDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ParsedStartDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ParsedStartDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ParsedStartDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawBeneficiaryCount')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawBeneficiaryCount'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawBeneficiaryCount.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawBeneficiaryCount';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawBeneficiaryCount.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawBeneficiaryCount';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawEmploymentTypeCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawEmploymentTypeCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawEmploymentTypeCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawEmploymentTypeCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawEmploymentTypeCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawEmploymentTypeCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawEndDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawEndDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawEndDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawEndDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawEndDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawEndDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawEquityCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawEquityCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawEquityCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawEquityCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawEquityCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawEquityCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawEstimatedCost')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawEstimatedCost'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawEstimatedCost.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawEstimatedCost';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawEstimatedCost.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawEstimatedCost';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawFirstName')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawFirstName'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawFirstName.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawFirstName';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawFirstName.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawFirstName';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawGenderCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawGenderCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawGenderCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawGenderCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawGenderCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawGenderCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawIdNumber')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawIdNumber'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawIdNumber.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawIdNumber';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawIdNumber.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawIdNumber';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawIdType')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawIdType'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawIdType.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawIdType';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawIdType.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawIdType';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawInterventionTypeCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawInterventionTypeCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawInterventionTypeCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawInterventionTypeCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawInterventionTypeCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawInterventionTypeCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawLastName')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawLastName'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawLastName.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawLastName';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawLastName.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawLastName';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawMunicipalityCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawMunicipalityCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawMunicipalityCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawMunicipalityCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawMunicipalityCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawMunicipalityCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawNationalityCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawNationalityCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawNationalityCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawNationalityCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawNationalityCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawNationalityCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawOfoCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawOfoCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawOfoCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawOfoCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawOfoCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawOfoCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawProviderTypeCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawProviderTypeCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawProviderTypeCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawProviderTypeCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawProviderTypeCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawProviderTypeCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawQualificationCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawQualificationCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawQualificationCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawQualificationCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawQualificationCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawQualificationCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawSkillsProgramCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawSkillsProgramCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawSkillsProgramCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawSkillsProgramCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawSkillsProgramCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawSkillsProgramCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawSkillsSetCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawSkillsSetCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawSkillsSetCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawSkillsSetCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawSkillsSetCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawSkillsSetCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawSpecialisationCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawSpecialisationCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawSpecialisationCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawSpecialisationCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawSpecialisationCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawSpecialisationCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawStartDate')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawStartDate'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawStartDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawStartDate';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawStartDate.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawStartDate';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawTrainingDeliveryMethodCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RawTrainingDeliveryMethodCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for RawTrainingDeliveryMethodCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawTrainingDeliveryMethodCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for RawTrainingDeliveryMethodCode.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RawTrainingDeliveryMethodCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ResolvedInterventionTypeId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ResolvedInterventionTypeId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ResolvedInterventionTypeId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ResolvedInterventionTypeId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ResolvedInterventionTypeId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ResolvedInterventionTypeId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ResolvedNqfLevel')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ResolvedNqfLevel'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ResolvedNqfLevel.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ResolvedNqfLevel';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ResolvedNqfLevel.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ResolvedNqfLevel';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ResolvedOfoCodeId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ResolvedOfoCodeId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ResolvedOfoCodeId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ResolvedOfoCodeId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ResolvedOfoCodeId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ResolvedOfoCodeId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ResolvedQualificationId')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ResolvedQualificationId'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Domain property for ResolvedQualificationId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ResolvedQualificationId';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Domain property for ResolvedQualificationId.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ResolvedQualificationId';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RowIndex')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'RowIndex'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'1-based original line index in uploaded spreadsheet.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RowIndex';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'1-based original line index in uploaded spreadsheet.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'RowIndex';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ValidationErrorCode')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ValidationErrorCode'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Standard error taxonomy code (e.g. INVALID_OFO, INVALID_RSA_ID, DUPLICATE_KEY).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ValidationErrorCode';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Standard error taxonomy code (e.g. INVALID_OFO, INVALID_RSA_ID, DUPLICATE_KEY).', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ValidationErrorCode';
+END
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ValidationErrorDetails')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'dbo' AND t.name = N'WspBulkImportStaging' AND c.name = N'ValidationErrorDetails'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Explicit human-readable diagnostic error text detailing why validation failed.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ValidationErrorDetails';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'Explicit human-readable diagnostic error text detailing why validation failed.', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'WspBulkImportStaging', @level2type=N'COLUMN', @level2name=N'ValidationErrorDetails';
 END
 
 -- Table: dbo.WspDispute

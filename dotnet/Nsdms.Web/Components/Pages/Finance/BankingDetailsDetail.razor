@@ -1,5 +1,6 @@
 @page "/finance/banking-details/{Id:int}"
 @page "/finance/banking-details/{Id:int}/edit"
+@attribute [Authorize(Roles = "SuperAdmin,Admin,FinanceManager")]
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
@@ -36,7 +37,7 @@ else
                 </MudAvatar>
                 <div>
                     <div class="d-flex align-center gap-2">
-                        <MudText Typo="Typo.h5" Class="fw-bold">@_record.BankName — @_record.AccountNumber</MudText>
+                        <MudText Typo="Typo.h5" Class="fw-bold">@_record.BankName — @FormatAccountNumber(_record.AccountNumber)</MudText>
                         <MudChip T="string" Color="@GetStatusColor(_record.ApprovalStatusCode)" Size="Size.Small" Variant="Variant.Filled">
                             @_record.ApprovalStatusCode
                         </MudChip>
@@ -74,13 +75,13 @@ else
         <!-- Workflow State Tracker & Action Bridge -->
         <WorkflowProgressBar ProcessCode="BANKING" 
                              EntityId="@Id" 
-                             EntityTitle="@($"{_record.BankName} - {_record.AccountNumber}")" 
-                             EntityRef="@_record.AccountNumber" />
+                             EntityTitle="@($"{_record.BankName} - {FormatAccountNumber(_record.AccountNumber)}")" 
+                             EntityRef="@FormatAccountNumber(_record.AccountNumber)" />
 
         <WorkflowActionBridge ProcessCode="BANKING" 
                               EntityId="@Id" 
-                              EntityTitle="@($"{_record.BankName} - {_record.AccountNumber}")" 
-                              EntityRef="@_record.AccountNumber" 
+                              EntityTitle="@($"{_record.BankName} - {FormatAccountNumber(_record.AccountNumber)}")" 
+                              EntityRef="@FormatAccountNumber(_record.AccountNumber)" 
                               OnStatusChanged="OnWorkflowStatusChanged" />
 
         <!-- Main Structure Tabs -->
@@ -96,7 +97,18 @@ else
                                     <tr><td><strong>Bank Name:</strong></td><td>@_record.BankName</td></tr>
                                     <tr><td><strong>Branch Code:</strong></td><td>@_record.BranchCode</td></tr>
                                     <tr><td><strong>Branch Name:</strong></td><td>@(_record.BranchName ?? "National Clearing Branch")</td></tr>
-                                    <tr><td><strong>Account Number:</strong></td><td class="font-monospace fw-bold">@_record.AccountNumber</td></tr>
+                                    <tr>
+                                        <td><strong>Account Number:</strong></td>
+                                        <td class="font-monospace fw-bold">
+                                            <span>@FormatAccountNumber(_record.AccountNumber)</span>
+                                            <MudIconButton Icon="@(_showAccountNumber ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                                           Size="Size.Small"
+                                                           Color="Color.Default"
+                                                           Class="ml-2"
+                                                           OnClick="@(() => _showAccountNumber = !_showAccountNumber)"
+                                                           Title="@(_showAccountNumber ? "Mask Account Number" : "Reveal Account Number")" />
+                                        </td>
+                                    </tr>
                                     <tr><td><strong>Account Holder Name:</strong></td><td>@_record.AccountHolderName</td></tr>
                                     <tr><td><strong>Account Type:</strong></td><td>@_record.AccountTypeCode</td></tr>
                                     <tr><td><strong>Bank Letter Confirmation Date:</strong></td><td>@_record.BankConfirmationDate?.ToString("dd MMMM yyyy")</td></tr>
@@ -198,6 +210,15 @@ else
 @code {
     [Parameter] public int Id { get; set; }
     private BankingDetails? _record;
+    private bool _showAccountNumber = false;
+
+    private string FormatAccountNumber(string? accountNumber)
+    {
+        if (string.IsNullOrWhiteSpace(accountNumber)) return "—";
+        if (_showAccountNumber) return accountNumber;
+        var trimmed = accountNumber.Trim();
+        return trimmed.Length <= 4 ? "******" + trimmed : "******" + trimmed[^4..];
+    }
 
     protected override async Task OnInitializedAsync()
     {

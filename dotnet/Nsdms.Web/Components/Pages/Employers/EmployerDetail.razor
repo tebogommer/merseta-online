@@ -118,6 +118,11 @@ else
     }
     else
     {
+        @if (!_isEditMode && Id > 0)
+        {
+            <EmployerComplianceRadarWidget OrganisationId="Id" OnNavigateToTab="NavigateToTab" />
+        }
+
         <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" @bind-ActivePanelIndex="_activeTabIndex">
             
             <!-- TAB 1: General Master Details -->
@@ -135,6 +140,16 @@ else
             {
                 <MudTabPanel Text="Governance & Ownership" Icon="@Icons.Material.Filled.AccountBalance">
                     <EmployerGovernanceTab OrganisationId="Id" OrganisationName="@_organisation.CompanyName" />
+                </MudTabPanel>
+
+                <!-- TAB: Corporate Hierarchy & Subsidiaries (SETMIS File 200) -->
+                <MudTabPanel Text="Corporate Hierarchy" Icon="@Icons.Material.Filled.AccountTree">
+                    <EmployerHierarchyTab OrganisationId="Id" />
+                </MudTabPanel>
+
+                <!-- TAB: Living Employee Roster & Workforce -->
+                <MudTabPanel Text="Workforce &amp; Employees" Icon="@Icons.Material.Filled.Badge">
+                    <EmployerEmployeesTab OrganisationId="Id" OrganisationName="@_organisation.CompanyName" />
                 </MudTabPanel>
             }
 
@@ -413,6 +428,12 @@ else
         {
             Snackbar.Add($"Error deleting record: {ex.Message}", Severity.Error);
         }
+    }
+
+    private void NavigateToTab(int tabIndex)
+    {
+        _activeTabIndex = tabIndex;
+        StateHasChanged();
     }
 
     private void BackToList()

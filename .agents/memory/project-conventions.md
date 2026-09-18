@@ -1,7 +1,7 @@
 ---
 type: project
 created: 2026-05-25
-updated: 2026-09-08
+updated: 2026-09-13
 ---
 
 # Project Conventions
@@ -82,6 +82,34 @@ updated: 2026-09-08
 3. **Skills Development Providers (SDP)**: Refer to accredited training institutions as **Skills Development Providers (SDPs)** per QCTO statutory guidelines.
 4. **Artisan Mentorship Ratios**: Enforce NAMB / QCTO artisan mentor-to-apprentice ratios via `IMentorRatioPolicyEngine`, respecting trade-specific caps.
 5. **Governance & PFMA Controls**: Adhere to financial approval delegation, Segregation of Duties (Maker-Checker), and non-repudiation audit logging for all approval gates.
+
+## Playwright Test Harness Visual, Console & Interactivity Standard
+- **Invariant**: Only true, visually styled, fully interactive pages must pass the automated test suite. A test passing solely on HTTP 200 or non-empty body text is strictly prohibited.
+- **Mandatory Console & Exception Assertions**:
+  - Test suites must register error listeners via `page.on("console")` and `page.on("pageerror")` using `ConsoleErrorTracker`.
+  - Zero tolerance for uncaught JavaScript exceptions, runtime unhandled promise rejections, network script 4xx/5xx failures, or console error messages (`type == "error"`). Any console error triggers immediate test failure.
+  - Zero tolerance for Blazor Server circuit failures: `.blazor-error-boundary` must not be visible; body must not contain unhandled exception strings (`"An unhandled exception occurred"`, `"SqlException"`, `"NullReferenceException"`).
+- **Mandatory Visual Styling Assertions**:
+  - Verify that CSS stylesheets are attached and actively loaded (`document.styleSheets.length > 0` with populated rules).
+  - Verify that MudBlazor theme variables and design tokens are defined and resolved on the document (`--mud-palette-primary`, `--mud-palette-background`).
+  - Verify that structural layout containers (`.mud-layout`, `main#main-content`, `.mud-main-content`, or `.mud-container`) are visible and possess positive, non-zero bounding box dimensions (`width >= 200px`, `height >= 100px`).
+  - Verify computed body styles to confirm the page is not an unstyled white canvas or transparent (`display !== 'none'`, `visibility !== 'hidden'`, `opacity > 0`, DOM element count >= 10).
+- **Mandatory Full Interactivity Assertions**:
+  - Verify Blazor Server interactive circuit connectivity: `#components-reconnect-modal` must not be in a visible reconnecting or circuit-failed state (`components-reconnect-show`, `components-reconnect-failed`).
+  - Verify active interactive controls: The page must contain at least one visible, enabled interactive element (`button`, `a[href]`, `input`, `select`, `textarea`, `.mud-button-root`, `.mud-link`, `.mud-tab`) with positive bounding box and `pointer-events !== 'none'`.
+  - Verify that no lingering crash modals, unhandled loading veils, or backdrop overlays prevent user interaction.
+
+## End-to-End Automated Dynamic CRUD & Intake Testing Governance Standard
+- **Dynamic RSA ID Generation with Ephemeral Gender Sequence**:
+  - Automated end-to-end tests performing person intake (`/people/create`) must NEVER use static or hardcoded 13-digit RSA National ID numbers (e.g. `8001015009087`).
+  - Because `PersonService.CreateAsync` strictly validates database uniqueness on `RsaIdNumber`, hardcoded IDs cause subsequent regression runs to fail with duplicate key exceptions.
+  - Test suites must dynamically compute mathematically valid RSA IDs using the Luhn algorithm with an ephemeral gender sequence counter (e.g. `(int(time.time()) % 4000) + 5500` for males) to guarantee validity and uniqueness across continuous test runs.
+- **DG Funding Window Template Blueprint Pre-Configuration**:
+  - In automated intake of Discretionary Grant funding windows (`/dg-funding-windows/create`), statutory governance requires at least one eligible stakeholder classification and at least one allowed intervention.
+  - Tests should trigger the 1-Click Template Blueprint Specification Engine (`.cursor-pointer:has-text('PIVOTAL')`) to pre-populate compliant statutory combinations prior to form submission.
+- **Multi-Step Modal Dialog Deletion Verification**:
+  - Destructive entity deletion tests must not stop at clicking the page-level "Delete" button; tests must explicitly assert the presence of `<ConfirmDialog>` (`.mud-dialog`), capture dialog state, and dispatch the affirmative action (`.mud-dialog button:has-text('Delete ...')`) to verify true database cascading removal and list route redirection.
+
 
 
 

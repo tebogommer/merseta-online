@@ -1,0 +1,449 @@
+@namespace Nsdms.Web.Components.Pages.Employers.Tabs
+@using Nsdms.Application.Common.Interfaces
+@inject IOrganisationHierarchyService HierarchyService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<div class="d-flex justify-space-between align-center mb-4 flex-wrap gap-2">
+    <div>
+        <MudText Typo="Typo.h6">Corporate Hierarchy &amp; Subsidiary Visualizer</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            SETMIS File 200 Enterprise Group Demarcation, Multi-Tier Beneficial Ownership Tree &amp; Consolidated Group Compliance
+        </MudText>
+    </div>
+    <div class="d-flex gap-2">
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AccountTree" OnClick="OpenLinkParentDialog" aria-label="Link to Holding Parent Company">
+            @(_tree?.ParentOrganisationId != null ? "Change Holding Parent" : "Link to Holding Parent")
+        </MudButton>
+        @if (_tree?.ParentOrganisationId != null)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.LinkOff" OnClick="ConfirmUnlinkParent" aria-label="Unlink from Parent Company">
+                Unlink Parent
+            </MudButton>
+        }
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddBusiness" OnClick="NavigateToRegisterSubsidiary" aria-label="Register Subsidiary Entity">
+            Register Subsidiary
+        </MudButton>
+        <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" Size="Size.Small" OnClick="LoadDataAsync" aria-label="Refresh corporate tree" />
+    </div>
+</div>
+
+@if (_showLinkDialog)
+{
+    <MudCard Elevation="3" Class="pa-4 mb-4 border-primary">
+        <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">Link Entity to Holding Company</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-3">
+            Establishes corporate group ownership, SETMIS File 200 Main SDL linkage, and consolidated group rollup reporting.
+        </MudText>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudAutocomplete T="OrganisationLookupDto"
+                                 Label="Search Holding Company / Parent Entity"
+                                 Value="_selectedParentDto"
+                                 ValueChanged="OnParentSelected"
+                                 SearchFunc="SearchParentOrganisationsAsync"
+                                 ToStringFunc="@(o => o != null ? o.DisplayText : string.Empty)"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Clearable="true"
+                                 DebounceInterval="300"
+                                 MinCharacters="2"
+                                 Placeholder="Type corporate name or SDL number..."
+                                 HelperText="Select the registered parent holding company" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" Label="Holding Relationship Type" @bind-Value="_linkRelationshipType" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("WHOLLY_OWNED_SUBSIDIARY")">Wholly Owned Subsidiary (100%)</MudSelectItem>
+                    <MudSelectItem Value="@("MAJORITY_SUBSIDIARY")">Majority Owned Subsidiary (&gt;50%)</MudSelectItem>
+                    <MudSelectItem Value="@("ASSOCIATE_COMPANY")">Associate Company (20% - 50%)</MudSelectItem>
+                    <MudSelectItem Value="@("JOINT_VENTURE")">Joint Venture Partnership</MudSelectItem>
+                    <MudSelectItem Value="@("DIVISION_BRANCH")">Operational Division / Branch</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudNumericField T="decimal?" Label="Parent Equity Ownership %" @bind-Value="_linkOwnershipPct" Variant="Variant.Outlined" Min="0m" Max="100m" Step="5m" HelperText="Beneficial shareholding %" />
+            </MudItem>
+            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="@(() => _showLinkDialog = false)">Cancel</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Check" OnClick="SaveParentLinkAsync" Disabled="_selectedParentDto == null">Confirm Linkage</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudCard>
+}
+
+@if (_loading)
+{
+    <div class="py-6 text-center">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium" />
+        <MudText Typo="Typo.caption" Class="d-block mt-2" Color="Color.Secondary">Traversing corporate group hierarchy and consolidating compliance rollups...</MudText>
+    </div>
+}
+else if (_tree != null)
+{
+    <!-- Group Rollup KPI Banner -->
+    <MudCard Elevation="2" Class="pa-4 mb-4 border" Style="background-color: var(--mud-palette-surface);">
+        <div class="d-flex justify-space-between align-center mb-3 flex-wrap gap-2">
+            <div class="d-flex align-center gap-2">
+                <MudAvatar Color="Color.Primary" Size="Size.Small">
+                    <MudIcon Icon="@Icons.Material.Filled.Domain" Size="Size.Small" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.subtitle2" Class="fw-bold">
+                        @(_rollup.RootCompanyName) Group Consolidation
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Ultimate Holding Parent SDL: <span class="font-mono fw-bold">@(_rollup.RootSdlNumber)</span> | Total Entities: @_rollup.TotalEntitiesCount
+                    </MudText>
+                </div>
+            </div>
+            <MudChip T="string" Color="@GetBadgeColor(_rollup.GroupComplianceBadgeColor)" Variant="Variant.Filled" Size="Size.Small">
+                Group Health: @_rollup.AverageComplianceScore.ToString("F1")% — @_rollup.GroupComplianceGrade
+            </MudChip>
+        </div>
+
+        <MudGrid Spacing="2">
+            <MudItem xs="6" sm="3">
+                <div class="pa-3 rounded border text-center" style="background-color: var(--mud-palette-background-grey);">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Group Entities</MudText>
+                    <MudText Typo="Typo.h5" Class="fw-bold" Color="Color.Primary">@_rollup.TotalEntitiesCount</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Holding &amp; Subsidiaries</MudText>
+                </div>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <div class="pa-3 rounded border text-center" style="background-color: var(--mud-palette-background-grey);">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Consolidated Health</MudText>
+                    <MudText Typo="Typo.h5" Class="fw-bold" Color="@GetBadgeColor(_rollup.GroupComplianceBadgeColor)">
+                        @_rollup.AverageComplianceScore.ToString("F1")%
+                    </MudText>
+                    <MudProgressLinear Value="(double)_rollup.AverageComplianceScore" Color="@GetBadgeColor(_rollup.GroupComplianceBadgeColor)" Rounded="true" Class="mt-1" Style="height: 4px;" />
+                </div>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <div class="pa-3 rounded border text-center" style="background-color: var(--mud-palette-background-grey);">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Active Learners</MudText>
+                    <MudText Typo="Typo.h5" Class="fw-bold" Color="Color.Success">@_rollup.TotalActiveLearnersCount</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Success">Across all workshops</MudText>
+                </div>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <div class="pa-3 rounded border text-center" style="background-color: var(--mud-palette-background-grey);">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Reconciled Levies</MudText>
+                    <MudText Typo="Typo.h5" Class="fw-bold font-mono" Color="Color.Info">
+                        @_rollup.TotalReconciledLevyAmount.ToString("C0")
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">SARS SDL contributions</MudText>
+                </div>
+            </MudItem>
+        </MudGrid>
+    </MudCard>
+
+    <!-- Visual Corporate Tree -->
+    <MudCard Elevation="2" Class="pa-4 mb-4 border">
+        <div class="d-flex align-center gap-2 mb-3">
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
+            <MudText Typo="Typo.subtitle1" Class="fw-bold">Corporate Family Tree Architecture</MudText>
+        </div>
+
+        <div class="p-3">
+            @RenderHierarchyNode(_tree, 0)
+        </div>
+    </MudCard>
+
+    <!-- Multi-Tier Beneficial Ownership Table -->
+    <MudCard Elevation="2" Class="pa-4 border">
+        <div class="d-flex align-center gap-2 mb-3">
+            <MudIcon Icon="@Icons.Material.Filled.TableChart" Color="Color.Primary" />
+            <MudText Typo="Typo.subtitle1" Class="fw-bold">Multi-Tier Beneficial Ownership &amp; Consolidated Compliance Breakdown</MudText>
+        </div>
+
+        <MudTable Items="@_rollup.FlattenedEntities" Dense="true" Hover="true" Striped="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>Entity / Company</MudTh>
+                <MudTh>SDL Number</MudTh>
+                <MudTh>Group Role</MudTh>
+                <MudTh>Equity %</MudTh>
+                <MudTh>Province</MudTh>
+                <MudTh>Size</MudTh>
+                <MudTh>Statutory Health</MudTh>
+                <MudTh Class="text-right">Action</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Entity">
+                    <div class="d-flex align-center gap-2">
+                        <MudText Typo="Typo.body2" Class="@(context.IsCurrentOrganisation ? "fw-bold text-primary" : "fw-bold")">
+                            @context.CompanyName
+                        </MudText>
+                        @if (context.IsCurrentOrganisation)
+                        {
+                            <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">Current</MudChip>
+                        }
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="SDL Number" Class="font-mono">@context.SdlNumber</MudTd>
+                <MudTd DataLabel="Group Role">
+                    <MudChip T="string" Color="@(context.ParentOrganisationId == null ? Color.Dark : Color.Info)" Size="Size.Small" Variant="Variant.Outlined">
+                        @FormatRelationship(context.HoldingRelationshipType, context.OwnershipPercentage)
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Equity %">@(context.OwnershipPercentage?.ToString("F1") ?? "100.0")%</MudTd>
+                <MudTd DataLabel="Province">@(context.ProvinceCode ?? "National")</MudTd>
+                <MudTd DataLabel="Size">@(context.CompanySizeCode ?? "Standard")</MudTd>
+                <MudTd DataLabel="Statutory Health">
+                    <MudChip T="string" Color="@GetBadgeColor(context.ComplianceBadgeColor)" Size="Size.Small" Variant="Variant.Filled">
+                        @context.ComplianceScore.ToString("F0")% — @context.ComplianceGrade
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Action" Class="text-right">
+                    @if (!context.IsCurrentOrganisation)
+                    {
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" EndIcon="@Icons.Material.Filled.Launch" OnClick="@(() => NavManager.NavigateTo($"/employers/{context.OrganisationId}"))">
+                            View
+                        </MudButton>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudCard>
+}
+else
+{
+    <MudAlert Severity="Severity.Info">No corporate hierarchy data found for this organisation.</MudAlert>
+}
+
+@code {
+    [Parameter] public int OrganisationId { get; set; }
+
+    private bool _loading = true;
+    private CorporateHierarchyNodeDto? _tree;
+    private CorporateGroupRollupSummaryDto _rollup = new();
+
+    // Link Parent Modal State
+    private bool _showLinkDialog = false;
+    private OrganisationLookupDto? _selectedParentDto;
+    private string _linkRelationshipType = "WHOLLY_OWNED_SUBSIDIARY";
+    private decimal? _linkOwnershipPct = 100.00m;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (OrganisationId > 0)
+        {
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        if (OrganisationId <= 0) return;
+        _loading = true;
+        try
+        {
+            _tree = await HierarchyService.GetCorporateTreeAsync(OrganisationId);
+            _rollup = await HierarchyService.GetCorporateGroupRollupAsync(OrganisationId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading corporate hierarchy: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task<IEnumerable<OrganisationLookupDto>> SearchParentOrganisationsAsync(string search, CancellationToken ct)
+    {
+        return await HierarchyService.GetPotentialParentOrganisationsAsync(OrganisationId, search, ct);
+    }
+
+    private void OnParentSelected(OrganisationLookupDto? selected)
+    {
+        _selectedParentDto = selected;
+    }
+
+    private void OpenLinkParentDialog()
+    {
+        _selectedParentDto = null;
+        _linkRelationshipType = "WHOLLY_OWNED_SUBSIDIARY";
+        _linkOwnershipPct = 100.00m;
+        _showLinkDialog = true;
+    }
+
+    private async Task SaveParentLinkAsync()
+    {
+        if (_selectedParentDto == null) return;
+        try
+        {
+            var success = await HierarchyService.LinkParentOrganisationAsync(
+                OrganisationId,
+                _selectedParentDto.Id,
+                _linkRelationshipType,
+                _linkOwnershipPct,
+                "Admin"
+            );
+
+            if (success)
+            {
+                Snackbar.Add($"Successfully linked to parent '{_selectedParentDto.CompanyName}'. SETMIS Main SDL updated.", Severity.Success);
+                _showLinkDialog = false;
+                await LoadDataAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task ConfirmUnlinkParent()
+    {
+        try
+        {
+            var success = await HierarchyService.UnlinkParentOrganisationAsync(OrganisationId, "Admin");
+            if (success)
+            {
+                Snackbar.Add("Successfully unlinked from holding parent company.", Severity.Success);
+                await LoadDataAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error unlinking: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void NavigateToRegisterSubsidiary()
+    {
+        NavManager.NavigateTo($"/employers/create?parentOrgId={OrganisationId}");
+    }
+
+    private Color GetBadgeColor(string colorName)
+    {
+        return colorName switch
+        {
+            "Success" => Color.Success,
+            "Info" => Color.Info,
+            "Warning" => Color.Warning,
+            "Error" => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    private RenderFragment RenderHierarchyNode(CorporateHierarchyNodeDto node, int depth) => builder =>
+    {
+        var indentStyle = depth > 0 ? $"margin-left: {depth * 32}px; border-left: 2px dashed var(--mud-palette-lines-default); padding-left: 16px;" : "";
+        var borderStyle = node.IsCurrentOrganisation 
+            ? "border: 2px solid var(--mud-palette-primary) !important; background-color: var(--mud-palette-action-default-hover);"
+            : "border: 1px solid var(--mud-palette-lines-default);";
+
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "style", indentStyle);
+        builder.AddAttribute(2, "class", "mb-3 position-relative");
+
+        builder.OpenElement(3, "div");
+        builder.AddAttribute(4, "class", "pa-3 rounded d-flex justify-space-between align-center flex-wrap gap-2 shadow-sm");
+        builder.AddAttribute(5, "style", borderStyle);
+
+        // Left section: icon, company details, relationship
+        builder.OpenElement(6, "div");
+        builder.AddAttribute(7, "class", "d-flex align-center gap-3");
+
+        builder.OpenComponent<MudAvatar>(8);
+        builder.AddAttribute(9, "Color", depth == 0 ? Color.Primary : Color.Secondary);
+        builder.AddAttribute(10, "Size", Size.Small);
+        builder.AddAttribute(11, "ChildContent", (RenderFragment)(b =>
+        {
+            b.OpenComponent<MudIcon>(12);
+            b.AddAttribute(13, "Icon", depth == 0 ? Icons.Material.Filled.AccountBalance : Icons.Material.Filled.Business);
+            b.AddAttribute(14, "Size", Size.Small);
+            b.CloseComponent();
+        }));
+        builder.CloseComponent();
+
+        builder.OpenElement(15, "div");
+        builder.OpenElement(16, "div");
+        builder.AddAttribute(17, "class", "d-flex align-center gap-2 flex-wrap");
+        
+        builder.OpenComponent<MudText>(18);
+        builder.AddAttribute(19, "Typo", Typo.subtitle2);
+        builder.AddAttribute(20, "Class", "fw-bold");
+        builder.AddAttribute(21, "ChildContent", (RenderFragment)(b => b.AddContent(22, node.CompanyName)));
+        builder.CloseComponent();
+
+        if (node.IsCurrentOrganisation)
+        {
+            builder.OpenComponent<MudChip<string>>(23);
+            builder.AddAttribute(24, "Color", Color.Primary);
+            builder.AddAttribute(25, "Size", Size.Small);
+            builder.AddAttribute(26, "Variant", Variant.Filled);
+            builder.AddAttribute(27, "Text", "Currently Viewing");
+            builder.CloseComponent();
+        }
+
+        builder.OpenComponent<MudChip<string>>(28);
+        builder.AddAttribute(29, "Color", depth == 0 ? Color.Dark : Color.Info);
+        builder.AddAttribute(30, "Size", Size.Small);
+        builder.AddAttribute(31, "Variant", Variant.Outlined);
+        builder.AddAttribute(32, "Text", FormatRelationship(node.HoldingRelationshipType, node.OwnershipPercentage));
+        builder.CloseComponent();
+
+        builder.CloseElement(); // end header flex
+
+        builder.OpenComponent<MudText>(33);
+        builder.AddAttribute(34, "Typo", Typo.caption);
+        builder.AddAttribute(35, "Color", Color.Secondary);
+        builder.AddAttribute(36, "ChildContent", (RenderFragment)(b => b.AddContent(37, $"SDL: {node.SdlNumber} | Size: {node.CompanySizeCode ?? "Standard"} | Province: {node.ProvinceCode ?? "National"} | Direct Subsidiaries: {node.DirectSubsidiariesCount}")));
+        builder.CloseComponent();
+
+        builder.CloseElement(); // end text container
+        builder.CloseElement(); // end left section
+
+        // Right section: compliance score and view button
+        builder.OpenElement(38, "div");
+        builder.AddAttribute(39, "class", "d-flex align-center gap-2");
+
+        builder.OpenComponent<MudChip<string>>(40);
+        builder.AddAttribute(41, "Color", GetBadgeColor(node.ComplianceBadgeColor));
+        builder.AddAttribute(42, "Size", Size.Small);
+        builder.AddAttribute(43, "Variant", Variant.Filled);
+        builder.AddAttribute(44, "Text", $"{node.ComplianceScore:F0}% Health");
+        builder.CloseComponent();
+
+        if (!node.IsCurrentOrganisation)
+        {
+            builder.OpenComponent<MudButton>(45);
+            builder.AddAttribute(46, "Variant", Variant.Text);
+            builder.AddAttribute(47, "Color", Color.Primary);
+            builder.AddAttribute(48, "Size", Size.Small);
+            builder.AddAttribute(49, "EndIcon", Icons.Material.Filled.Launch);
+            builder.AddAttribute(50, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, (e) => NavManager.NavigateTo($"/employers/{node.OrganisationId}")));
+            builder.AddAttribute(51, "ChildContent", (RenderFragment)(b => b.AddContent(52, "View Entity")));
+            builder.CloseComponent();
+        }
+
+        builder.CloseElement(); // end right section
+        builder.CloseElement(); // end card container
+
+        // Recursively render children
+        foreach (var child in node.Children)
+        {
+            builder.AddContent(53, RenderHierarchyNode(child, depth + 1));
+        }
+
+        builder.CloseElement(); // end outer div
+    };
+
+    private static string FormatRelationship(string relationship, decimal? ownership)
+    {
+        return relationship switch
+        {
+            "HOLDING_COMPANY" => "Ultimate Holding Parent",
+            "WHOLLY_OWNED_SUBSIDIARY" => $"Wholly Owned ({ownership ?? 100m:F0}%)",
+            "MAJORITY_SUBSIDIARY" => $"Majority Subsidiary ({ownership ?? 51m:F0}%)",
+            "ASSOCIATE_COMPANY" => $"Associate ({ownership ?? 25m:F0}%)",
+            "JOINT_VENTURE" => "Joint Venture",
+            "DIVISION_BRANCH" => "Division / Branch",
+            _ => relationship
+        };
+    }
+}

@@ -1,4 +1,5 @@
-﻿@page "/finance/banking-details"
+@page "/finance/banking-details"
+@attribute [Authorize(Roles = "SuperAdmin,Admin,FinanceManager")]
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
 @inject IBankingDetailsService BankingService
@@ -55,7 +56,7 @@
                     <MudTd DataLabel="Entity / Payee">@(context.Organisation?.CompanyName ?? context.TrainingProvider?.ProviderName ?? "Registered Entity")</MudTd>
                     <MudTd DataLabel="Bank Name" Class="fw-bold">@context.BankName</MudTd>
                     <MudTd DataLabel="Branch Code" Class="font-monospace">@context.BranchCode</MudTd>
-                    <MudTd DataLabel="Account Number" Class="font-monospace">@context.AccountNumber</MudTd>
+                    <MudTd DataLabel="Account Number" Class="font-monospace">@MaskAccountNumber(context.AccountNumber)</MudTd>
                     <MudTd DataLabel="Account Holder">@context.AccountHolderName</MudTd>
                     <MudTd DataLabel="Type">@context.AccountTypeCode</MudTd>
                     <MudTd DataLabel="Approval Status">
@@ -127,6 +128,13 @@
         return b.BankName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
                b.AccountNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
                b.AccountHolderName.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string MaskAccountNumber(string? accountNumber)
+    {
+        if (string.IsNullOrWhiteSpace(accountNumber)) return "—";
+        var trimmed = accountNumber.Trim();
+        return trimmed.Length <= 4 ? "******" + trimmed : "******" + trimmed[^4..];
     }
 
     private Color GetStatusColor(string status) => status switch

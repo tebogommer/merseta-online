@@ -230,6 +230,46 @@ When user's prompt is NOT in English:
 
 ---
 
+### 🛡️ Mandatory Grant (WSP / ATR) Data & Intake Governance Standard
+1. **Quorum Gating & Submission Status Invariant**:
+   - A WSP/ATR submission MUST NOT transition to status `"Submitted"` upon initial wizard completion. It must enter `"PendingSignoff"`.
+   - Mandatory Grant eligibility (`ValidateMandatoryGrantEligibility`) and disbursement calculations MUST strictly require `IsSignoffQuorumMet == true` in addition to status `"Submitted"` or `"Approved"`.
+2. **Reconciled SARS Levy Pre-Population Invariant**:
+   - The WSP intake wizard must auto-populate verified annual levy contributions by querying `LevyFileLine` for the organisation's `SdlNumber`.
+   - Both user-declared payroll (`DeclaredPayrollAnnualTotal`) and reconciled SARS levy actuals (`ActualSarsLevyReceived`) must be permanently stored on `WspSubmission`.
+3. **Granular Training Plan & OFO Taxonomy Integrity**:
+   - `WspTrainingPlan` must capture granular PIVOTAL records (`SaqaQualificationId`, `OfoCode`, `NqfLevel`, `LearnerCountEmployed`, `LearnerCountUnemployed`, `UnitCost`).
+   - Every OFO code must have a physical foreign key constraint to `lookup.OfoCodeType` and pass active validation via `IOfoTaxonomyService`.
+4. **Mandatory Binary Document Sealing for Proof of Consultation**:
+   - Training committee minutes and union consultation records must be captured as real binary document uploads with SHA-256 digital security seals. String placeholder file names are strictly prohibited.
+5. **Transactional Atomicity & Concurrency Standard**:
+   - All parent and child mutations in `WspService` must be enclosed within an explicit database transaction (`BeginTransactionAsync`).
+   - `WspSubmission` must implement an optimistic concurrency token (`RowVersion`) to eliminate Last-Write-Wins hazards during 30 April peak surges.
+6. **Statutory Weekend & Holiday Rollover Invariant**:
+   - The 30 April statutory deadline must evaluate `IWorkingDayCalculationEngine`. If 30 April falls on a weekend or gazetted holiday, the submission window must roll over to the next business day per Section 4 of the Interpretation Act 33 of 1957.
+
+---
+
+### 🛡️ Mandatory Grant (WSP / ATR) Universal Bulk Ingestion Engine Standard (Option C — The Modern Hybrid)
+1. **Universal Delimiter & Encoding Sniffing Invariant**:
+   - Files uploaded via bulk ingestion (`.xlsx`, `.csv`, `.tsv`, `.txt`) MUST evaluate `FileFormatSniffer.SniffFilePropertiesAsync`.
+   - Delimiters (`,`, `;`, `\t`, `|`) and character encodings (UTF-8 with/without BOM, UTF-16, Windows-1252) must be auto-detected with zero manual user configuration.
+2. **Two-Tier Staging & Pre-Flight Validation Invariant**:
+   - Bulk uploads MUST stage raw strings into `WspBulkImportStaging` without immediately mutating production training plans (`WspTrainingPlan`).
+   - Set-based relational validation evaluates active OFO codes against `lookup.OfoCodeType`, 13-digit RSA National ID checksum algorithms, cost bounds, and duplicate entries.
+   - Real-time pre-flight health dashboards display Total, Valid, Exception, and Committed row counts alongside spend and beneficiary rollups.
+3. **Inline Quick-Fix Drawer & ClosedXML Delta Workbooks**:
+   - Users must be able to inspect and correct staging errors directly in the browser via an inline Quick-Fix Drawer with cell-level re-validation.
+   - For offline correction of high-volume batches, the system must provide a 1-click "Download Delta Fix-It (.xlsx)" using ClosedXML containing only exception rows highlighted in soft red, with embedded reference catalogs (`OFO Reference Catalog`).
+   - Re-uploading corrected delta workbooks via the secondary dropzone merges fixes back into the staging batch automatically based on line indices.
+4. **Emergency Cutoff & Partial Commitment Policy**:
+   - For impending statutory submission deadlines (30 April), employers must have the option to commit valid rows immediately while holding or pruning unresolvable exceptions via affirmative confirmation dialog (`IDialogService.ShowAsync<ConfirmDialog>()`).
+5. **Audited Double-Write & POPIA Masking**:
+   - All batch creations, inline row corrections, delta merges, and commits MUST record double-writes in `audit_logs` with before and after snapshots.
+   - RSA National ID numbers in staging diagnostics and audit log JSON metadata must be masked (e.g. `9504******082`) in compliance with the Protection of Personal Information Act (POPIA).
+
+---
+
 ### 🛡️ Universal Segregation of Duties (Dual Authorisation Control)
 - Dual Authorisation Control is strictly enforced across all statutory workflows:
   - WSP extension requests: `ReviewedByUserId != ApproverUserId` and `CreatedBy != ApproverUserId`.
@@ -251,3 +291,48 @@ When user's prompt is NOT in English:
 ### 🛡️ POPIA Full-Spectrum 13-Digit RSA ID Masking
 - Confidential 13-digit RSA National ID numbers must be masked (e.g. `9504******082`) using `PopiaMaskingUtility.MaskRsaId` across all UI screens, queues, grids, tables, and public verification portals.
 - When rendering unstructured text, markdown snapshots, or document previews containing embedded IDs, `PopiaMaskingUtility.MaskRsaIdsInText` must be applied.
+
+---
+
+### 🛡️ Playwright Test Harness Visual, Console & Interactivity Standard
+1. **Zero Console & Runtime Errors**:
+   - Automated tests must register console and pageerror listeners via `ConsoleErrorTracker` (`playwright_assertions.py`).
+   - Any runtime unhandled JavaScript error, failed promise rejection, script loading error, or console error (`type == "error"`) triggers test failure.
+   - Zero tolerance for Blazor circuit crashes or `.blazor-error-boundary` visibility.
+2. **True Visual Styling Verification**:
+   - Verify that CSS stylesheets are attached and actively loaded (`document.styleSheets.length > 0` with populated rules).
+   - Verify that MudBlazor theme variables and design tokens are defined and resolved on the document (`--mud-palette-primary`, `--mud-palette-background`).
+   - Verify that structural layout containers (`.mud-layout`, `main#main-content`, `.mud-main-content`, or `.mud-container`) are visible and possess positive, non-zero bounding box dimensions (`width >= 200px`, `height >= 100px`).
+   - Verify computed body styles confirm the page is not an unstyled white canvas or transparent (`display !== 'none'`, `visibility !== 'hidden'`, `opacity > 0`, DOM element count >= 10).
+3. **Full Interactivity Verification**:
+   - Verify Blazor Server interactive circuit connectivity: `#components-reconnect-modal` must not be in a visible reconnecting or circuit-failed state (`components-reconnect-show`, `components-reconnect-failed`).
+   - Verify active interactive controls: The page must contain at least one visible, enabled interactive element (`button`, `a[href]`, `input`, `select`, `textarea`, `.mud-button-root`, `.mud-link`, `.mud-tab`) with positive bounding box and `pointer-events !== 'none'`.
+   - Verify that no lingering crash modals, unhandled loading veils, or backdrop overlays prevent user interaction.
+
+---
+
+### 🛡️ End-to-End Automated UI Testing & Static Web Assets Governance Standard
+1. **Static Web Assets in Direct DLL Execution**:
+   - When launching compiled ASP.NET Core Blazor Server binaries directly via `dotnet bin/Debug/net10.0/Nsdms.Web.dll` (rather than `dotnet run`), `Program.cs` MUST invoke `builder.WebHost.UseStaticWebAssets()` and the server must launch with `--environment Development` to ensure embedded NuGet package static assets (`_content/MudBlazor/MudBlazor.min.css`, `_framework/blazor.web.js`, `Nsdms.Web.styles.css`) resolve correctly instead of throwing `FileNotFoundException` (which leads to unstyled FOUC HTML and giant unconstrained SVGs).
+   - `App.razor` must enforce defensive CSS boundaries (`svg.mud-icon-root { max-width: 48px; max-height: 48px; }`) to prevent any unstyled layout blowouts during initial hydration.
+2. **Playwright Blazor Form Navigation Decoupling (`no_wait_after=True`)**:
+   - In Blazor Server interactive circuits or cookie authentication endpoints that issue redirects, clicking form submission buttons via Playwright (`page.click("button[type='submit']")`) must specify `no_wait_after=True` to prevent Playwright from stalling on scheduled MPA navigations that do not occur in Single-Page Blazor apps.
+3. **Chromium Resource Management for Continuous Video Captures**:
+   - When recording long-running end-to-end video sessions across multiple functional suites in Playwright on Windows, pass `args=["--disable-dev-shm-usage", "--no-sandbox"]` to `p.chromium.launch()` to eliminate shared memory saturation and ephemeral socket exhaustion (`net::ERR_INSUFFICIENT_RESOURCES`).
+4. **Cold JIT Compilation Headroom for Deep Composite Wizards**:
+   - First-visit rendering of multi-step Razor wizards with extensive DI dependencies requires generous selector wait timeouts (>= 45s) to absorb initial assembly JIT compilation on warm-up.
+
+---
+
+### 🛡️ End-to-End Automated Dynamic CRUD & Intake Testing Governance Standard
+1. **Dynamic RSA ID Generation with Ephemeral Gender Sequence**:
+   - Automated end-to-end tests performing person intake (`/people/create`) must NEVER use static or hardcoded 13-digit RSA National ID numbers (e.g. `8001015009087`).
+   - Because `PersonService.CreateAsync` strictly validates database uniqueness on `RsaIdNumber`, hardcoded IDs cause subsequent regression runs to fail with duplicate key exceptions.
+   - Test suites must dynamically compute mathematically valid RSA IDs using the Luhn algorithm with an ephemeral gender sequence counter (e.g. `(int(time.time()) % 4000) + 5500` for males) to guarantee validity and uniqueness across continuous test runs.
+2. **DG Funding Window Template Blueprint Pre-Configuration**:
+   - In automated intake of Discretionary Grant funding windows (`/dg-funding-windows/create`), statutory governance requires at least one eligible stakeholder classification and at least one allowed intervention.
+   - Tests should trigger the 1-Click Template Blueprint Specification Engine (`.cursor-pointer:has-text('PIVOTAL')`) to pre-populate compliant statutory combinations prior to form submission.
+3. **Multi-Step Modal Dialog Deletion Verification**:
+   - Destructive entity deletion tests must not stop at clicking the page-level "Delete" button; tests must explicitly assert the presence of `<ConfirmDialog>` (`.mud-dialog`), capture dialog state, and dispatch the affirmative action (`.mud-dialog button:has-text('Delete ...')`) to verify true database cascading removal and list route redirection.
+
+

@@ -15,6 +15,9 @@
 - [project] CI Quality Gate: All changes must pass python scripts/ci_ux_quality_gate.py with 0 errors and >=90% clean pass → project-conventions.md
 - [project] Systemic Bug Remediation: Fix bugs across entire app and enforce regression tests to prevent recurrence → project-conventions.md
 - [project] When pushing to git, generate and commit DDL SQL script with lookup tables and seed values aligned with code → project-conventions.md
+- [testing] Playwright visual & console assertions: enforce zero console errors, loaded stylesheets, MudBlazor CSS variables, non-zero bounding box layout, and active interactive controls → project-conventions.md
 - [project] Component metadata uses SemVer while toolkit releases use CalVer → tech-decisions.md
+## Preferences
+- [preference] Test suite verification: add visual/console assertions to Playwright harness so only true, visually styled, fully interactive pages pass → user-preferences.md
 ## Feedback
 - [feedback] Human test cases must use UI menu names and button labels, never raw URLs → feedback-history.md

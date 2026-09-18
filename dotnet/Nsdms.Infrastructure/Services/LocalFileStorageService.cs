@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
 using Nsdms.Application.Common.Interfaces;
@@ -31,6 +32,36 @@ public class LocalFileStorageService : IFileStorageService
         string? categoryCode = null,
         string currentUsername = "SYSTEM")
     {
+        if (string.IsNullOrWhiteSpace(targetEntityName) ||
+            targetEntityName.Contains("..") ||
+            targetEntityName.Contains('/') ||
+            targetEntityName.Contains('\\') ||
+            !Regex.IsMatch(targetEntityName, @"^[a-zA-Z0-9_]+$"))
+        {
+            throw new ArgumentException("Invalid target entity name.");
+        }
+
+        var allowedExtensionsSetting = await _configService.GetValueAsync("Storage:AllowedExtensions");
+        if (string.IsNullOrWhiteSpace(allowedExtensionsSetting))
+        {
+            allowedExtensionsSetting = await _configService.GetValueAsync("Storage.AllowedExtensions");
+        }
+        if (string.IsNullOrWhiteSpace(allowedExtensionsSetting))
+        {
+            allowedExtensionsSetting = ".pdf,.png,.jpg,.jpeg,.xlsx,.docx,.csv";
+        }
+
+        var allowedExtensions = allowedExtensionsSetting
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(ext => ext.StartsWith('.') ? ext : "." + ext)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var fileExtension = Path.GetExtension(fileName);
+        if (string.IsNullOrEmpty(fileExtension) || !allowedExtensions.Contains(fileExtension))
+        {
+            throw new InvalidOperationException("File extension is not allowed.");
+        }
+
         var baseDir = await _configService.GetValueAsync("Storage:LocalRootPath")
                       ?? await _configService.GetValueAsync("Storage.UploadDirectory", "uploads");
         var targetDir = Path.IsPathRooted(baseDir)

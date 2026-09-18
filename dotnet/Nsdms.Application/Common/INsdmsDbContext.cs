@@ -66,6 +66,9 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<LearnerRegisteredUnitStandard> LearnerRegisteredUnitStandards { get; }
     DbSet<LearnerBulkBatch> LearnerBulkBatches { get; }
     DbSet<LearnerBulkBatchRow> LearnerBulkBatchRows { get; }
+    DbSet<WspBulkImportBatch> WspBulkImportBatches { get; }
+    DbSet<WspBulkImportStaging> WspBulkImportStagings { get; }
+    DbSet<OrganisationEmployee> OrganisationEmployees { get; }
     DbSet<AuditLog> AuditLogs { get; }
 
     // Workflow Engine & Task Matrix

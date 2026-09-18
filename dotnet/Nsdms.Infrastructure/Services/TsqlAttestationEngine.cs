@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -102,6 +103,9 @@ public class TsqlAttestationEngine : ITsqlAttestationEngine
             };
         }
 
+        // Security Validation: Attested Computation SQL must be a single read-only SELECT statement
+        ValidateReadOnlyQuery(sqlText);
+
         var sqlParameters = new List<SqlParameter>();
         foreach (var p in computation.Parameters)
         {
@@ -167,6 +171,7 @@ public class TsqlAttestationEngine : ITsqlAttestationEngine
                 }
 
                 using var cmd = connection.CreateCommand();
+                ValidateReadOnlyQuery(sqlText);
                 cmd.CommandText = sqlText;
                 cmd.CommandType = CommandType.Text;
                 cmd.CommandTimeout = 60;
@@ -191,6 +196,10 @@ public class TsqlAttestationEngine : ITsqlAttestationEngine
                 }
                 stopwatch.Stop();
             }
+        }
+        catch (InvalidOperationException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -344,6 +353,37 @@ public class TsqlAttestationEngine : ITsqlAttestationEngine
 
         db.ComputationExecutionAudits.Add(audit);
         await db.SaveChangesAsync(ct);
+    }
+
+    private static void ValidateReadOnlyQuery(string sqlText)
+    {
+        if (string.IsNullOrWhiteSpace(sqlText))
+        {
+            throw new InvalidOperationException("Security Violation: Attested Computation SQL must be a single read-only SELECT statement.");
+        }
+
+        var trimmed = sqlText.Trim();
+
+        // 1. Must start with SELECT or WITH
+        if (!Regex.IsMatch(trimmed, @"^(SELECT|WITH)\b", RegexOptions.IgnoreCase))
+        {
+            throw new InvalidOperationException("Security Violation: Attested Computation SQL must be a single read-only SELECT statement.");
+        }
+
+        // 2. Must not contain destructive keywords
+        const string destructiveKeywordsPattern = @"\b(DROP|ALTER|CREATE|DELETE|UPDATE|INSERT|TRUNCATE|EXEC|EXECUTE|MERGE|GRANT|REVOKE)\b";
+        if (Regex.IsMatch(trimmed, destructiveKeywordsPattern, RegexOptions.IgnoreCase))
+        {
+            throw new InvalidOperationException("Security Violation: Attested Computation SQL must be a single read-only SELECT statement.");
+        }
+
+        // 3. Must not have multiple SQL statement delimiters like ';'
+        // A single trailing semicolon is allowed, but multiple semicolons or statement delimiters inside the query are forbidden.
+        var semicolonCount = trimmed.Count(c => c == ';');
+        if (semicolonCount > 1 || trimmed.TrimEnd(';', ' ', '\t', '\r', '\n').Contains(';'))
+        {
+            throw new InvalidOperationException("Security Violation: Attested Computation SQL must be a single read-only SELECT statement.");
+        }
     }
 
     private static string ComputeSha256(string raw)

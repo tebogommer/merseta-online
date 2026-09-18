@@ -4,6 +4,8 @@
 @using Nsdms.Application.Common.Models
 @using Nsdms.Application.Common.Utilities
 @using Nsdms.Web.Components.Shared
+@using Nsdms.Application.Common.Interfaces
+@inject IOrganisationComplianceEngine ComplianceEngine
 @inject IOrganisationService OrgService
 @inject IPersonService PersonService
 @inject ISnackbar Snackbar
@@ -148,6 +150,74 @@ else
         }
     </div>
 
+    @if (_parityReport != null)
+    {
+        <MudCard Elevation="2" Class="pa-4 mb-4 border" Style="background-color: var(--mud-palette-surface);">
+            <div class="d-flex justify-space-between align-center flex-wrap gap-2 mb-3">
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Balance" Color="@GetParityColor(_parityReport.StatusSeverity)" />
+                    <div>
+                        <MudText Typo="Typo.subtitle2" Class="fw-bold">Statutory Training Committee 50/50 Parity Meter</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Skills Development Act Section 10(2) &amp; Regulation 4: Equal joint representation between Employer/Management and Worker/Union members
+                        </MudText>
+                    </div>
+                </div>
+                <MudChip T="string" Color="@GetParityColor(_parityReport.StatusSeverity)" Variant="Variant.Filled" Size="Size.Small">
+                    @_parityReport.StatusText
+                </MudChip>
+            </div>
+
+            <MudGrid Spacing="2" Class="align-center mb-2">
+                <MudItem xs="12" md="4">
+                    <div class="d-flex justify-space-between align-center">
+                        <MudText Typo="Typo.caption" Class="fw-bold">Management: @_parityReport.ManagementMembersCount seats (@_parityReport.ManagementPercentage%)</MudText>
+                        <MudText Typo="Typo.caption" Class="fw-bold">Labour/Union: @_parityReport.LabourMembersCount seats (@_parityReport.LabourPercentage%)</MudText>
+                    </div>
+                    <div class="d-flex rounded overflow-hidden mt-1" style="height: 12px; background-color: var(--mud-palette-action-disabled-background);">
+                        @if (_parityReport.TotalMembers > 0)
+                        {
+                            <div style="width: @($"{_parityReport.ManagementPercentage}%"); background-color: var(--mud-palette-primary);" title="Management representation" />
+                            <div style="width: @($"{_parityReport.LabourPercentage}%"); background-color: var(--mud-palette-secondary);" title="Labour representation" />
+                        }
+                    </div>
+                </MudItem>
+                <MudItem xs="6" md="2">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">Total Appointed</MudText>
+                    <MudText Typo="Typo.body2" Class="fw-bold">@_parityReport.TotalMembers Members</MudText>
+                </MudItem>
+                <MudItem xs="6" md="2">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">Parity Ratio</MudText>
+                    <MudText Typo="Typo.body2" Class="fw-bold" Color="@GetParityColor(_parityReport.StatusSeverity)">
+                        @(_parityReport.ParityRatio.ToString("P0"))
+                    </MudText>
+                </MudItem>
+                <MudItem xs="6" md="2">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">Constitutional Quorum</MudText>
+                    <MudText Typo="Typo.body2" Class="fw-bold" Color="@(_parityReport.IsQuorumMet ? Color.Success : Color.Warning)">
+                        @(_parityReport.IsQuorumMet ? "Satisfied" : "Review Quorum")
+                    </MudText>
+                </MudItem>
+                <MudItem xs="6" md="2">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">Mandatory Status</MudText>
+                    <MudText Typo="Typo.body2" Class="fw-bold">
+                        @(_parityReport.IsMandatory ? "Required (50+ staff)" : "Voluntary (<50 SMME)")
+                    </MudText>
+                </MudItem>
+            </MudGrid>
+
+            @if (!string.IsNullOrWhiteSpace(_parityReport.Recommendation))
+            {
+                <div class="d-flex align-center gap-1 mt-1">
+                    <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Color="Color.Info" />
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        <strong>Recommendation:</strong> @_parityReport.Recommendation
+                    </MudText>
+                </div>
+            }
+        </MudCard>
+    }
+
     @if (_showAddCommitteeForm)
     {
         <MudCard Class="pa-4 mb-4 border-secondary" Elevation="3">
@@ -230,6 +300,7 @@ else
     private bool _loading = true;
     private List<OrganisationContact> _contacts = new();
     private List<OrganisationCommitteeMemberDto> _committeeMembers = new();
+    private TrainingCommitteeParityReport? _parityReport;
 
     // Contact Form State
     private bool _showAddContactForm = false;
@@ -257,11 +328,24 @@ else
         {
             _contacts = await OrgService.GetContactsAsync(OrganisationId);
             _committeeMembers = await OrgService.GetTrainingCommitteeMembersAsync(OrganisationId);
+            _parityReport = await ComplianceEngine.EvaluateTrainingCommitteeParityAsync(OrganisationId);
         }
         finally
         {
             _loading = false;
         }
+    }
+
+    private Color GetParityColor(string severity)
+    {
+        return severity switch
+        {
+            "Success" => Color.Success,
+            "Info" => Color.Info,
+            "Warning" => Color.Warning,
+            "Error" => Color.Error,
+            _ => Color.Default
+        };
     }
 
     private async Task<IEnumerable<PersonLookupDto>> SearchPeopleAsync(string search, CancellationToken ct)

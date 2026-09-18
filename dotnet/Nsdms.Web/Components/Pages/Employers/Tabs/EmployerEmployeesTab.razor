@@ -1,0 +1,363 @@
+@namespace Nsdms.Web.Components.Pages.Employers.Tabs
+@using Nsdms.Application.Common.Models
+@using Nsdms.Application.Services
+@using Nsdms.Web.Components.Pages.Employers
+@inject IOrganisationEmployeeService EmployeeService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h6">Living Employer Employee Roster</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            Active workforce demographics, OFO occupational classifications, and POPIA-compliant employee records for @OrganisationName
+        </MudText>
+    </div>
+    <div class="d-flex gap-2">
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Download"
+                   OnClick="ExportRosterAsync"
+                   Disabled="_loading || _totalEmployees == 0">
+            Export Roster (.xlsx)
+        </MudButton>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   StartIcon="@Icons.Material.Filled.UploadFile"
+                   OnClick="OpenBulkImportDialogAsync">
+            Bulk Import Roster
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.PersonAdd"
+                   OnClick="OpenAddEmployeeDialogAsync">
+            + Add Employee
+        </MudButton>
+    </div>
+</div>
+
+<!-- Filters Bar -->
+<MudCard Class="pa-3 mb-4" Elevation="1">
+    <MudGrid Spacing="2" AlignItems="Center">
+        <MudItem xs="12" sm="4">
+            <MudTextField T="string"
+                          Placeholder="Search by name, clock ID, job title, ID..."
+                          Value="_searchTerm"
+                          ValueChanged="OnSearchChanged"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Clearable="true" />
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudSelect T="string"
+                       Label="Occupational Category"
+                       Value="_selectedCategory"
+                       ValueChanged="OnCategoryChanged"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Clearable="true">
+                <MudSelectItem Value="@("")">All Categories</MudSelectItem>
+                <MudSelectItem Value="@("MANAGERS")">1 - Managers</MudSelectItem>
+                <MudSelectItem Value="@("PROFESSIONALS")">2 - Professionals</MudSelectItem>
+                <MudSelectItem Value="@("TECHNICIANS")">3 - Technicians &amp; Associate Professionals</MudSelectItem>
+                <MudSelectItem Value="@("CLERICAL")">4 - Clerical Support Workers</MudSelectItem>
+                <MudSelectItem Value="@("SERVICE_SALES")">5 - Service &amp; Sales Workers</MudSelectItem>
+                <MudSelectItem Value="@("SKILLED_CRAFT")">6 - Skilled Agricultural &amp; Craft Trades</MudSelectItem>
+                <MudSelectItem Value="@("PLANT_OPERATORS")">7 - Plant &amp; Machine Operators</MudSelectItem>
+                <MudSelectItem Value="@("ELEMENTARY")">8 - Elementary Occupations</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudCheckBox T="bool"
+                         Value="_activeOnly"
+                         ValueChanged="OnActiveOnlyChanged"
+                         Label="Active Employees Only"
+                         Color="Color.Primary"
+                         Dense="true" />
+        </MudItem>
+    </MudGrid>
+</MudCard>
+
+<!-- Employee Table -->
+<MudTable Items="_employees"
+          Hover="true"
+          Dense="true"
+          Striped="true"
+          Loading="_loading"
+          LoadingProgressColor="Color.Primary"
+          Elevation="2">
+    <HeaderContent>
+        <MudTh>Employee #</MudTh>
+        <MudTh>Full Legal Name</MudTh>
+        <MudTh>Masked RSA ID / Passport</MudTh>
+        <MudTh>Job Title &amp; OFO</MudTh>
+        <MudTh>Category</MudTh>
+        <MudTh>Site / Branch</MudTh>
+        <MudTh>Equity &amp; Gender</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh Style="text-align:right">Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Employee #">
+            <span class="font-monospace fw-bold">@(context.EmployeeNumber ?? "-")</span>
+        </MudTd>
+        <MudTd DataLabel="Full Name">
+            <div>
+                <MudText Typo="Typo.body2" Class="fw-bold">@context.FullName</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    @context.EmploymentTypeCode
+                </MudText>
+            </div>
+        </MudTd>
+        <MudTd DataLabel="ID Number">
+            <span class="font-monospace">
+                @(!string.IsNullOrWhiteSpace(context.RsaIdMasked) && context.RsaIdMasked != "N/A" ? context.RsaIdMasked : context.PassportNumberMasked ?? "-")
+            </span>
+        </MudTd>
+        <MudTd DataLabel="Job Title">
+            <div>
+                <MudText Typo="Typo.body2">@context.JobTitle</MudText>
+                @if (!string.IsNullOrWhiteSpace(context.OfoCodeId))
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Primary">
+                        OFO: @context.OfoCodeId @(context.OfoDescription != null ? $"- {context.OfoDescription}" : "")
+                    </MudText>
+                }
+            </div>
+        </MudTd>
+        <MudTd DataLabel="Category">
+            <MudChip T="string" Size="Size.Small" Color="GetCategoryColor(context.OccupationalCategoryCode)" Variant="Variant.Outlined">
+                @FormatCategory(context.OccupationalCategoryCode)
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Site">
+            <MudText Typo="Typo.caption">@(context.SiteName ?? "Head Office")</MudText>
+        </MudTd>
+        <MudTd DataLabel="Equity">
+            <div class="d-flex align-center gap-1">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@context.GenderCode</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@context.EquityCode</MudChip>
+                @if (context.HasDisability)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled">PWD</MudChip>
+                }
+            </div>
+        </MudTd>
+        <MudTd DataLabel="Status">
+            @if (context.IsActive)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Active</MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">Terminated</MudChip>
+            }
+        </MudTd>
+        <MudTd Style="text-align:right" DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                           Size="Size.Small"
+                           Color="Color.Primary"
+                           OnClick="@(() => OpenEditEmployeeDialogAsync(context))"
+                           Title="Edit Employee" />
+            @if (context.IsActive)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.PersonOff"
+                               Size="Size.Small"
+                               Color="Color.Error"
+                               OnClick="@(() => TerminateEmployeeAsync(context))"
+                               Title="Terminate Employment" />
+            }
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <div class="pa-6 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.Badge" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+            <MudText Typo="Typo.body1">No employee records found in the living roster.</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Add staff members or import an Excel spreadsheet (.xlsx) to populate the workforce profile.</MudText>
+        </div>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    [Parameter]
+    public int OrganisationId { get; set; }
+
+    [Parameter]
+    public string OrganisationName { get; set; } = "Organisation";
+
+    private List<OrganisationEmployeeDto> _employees = new();
+    private bool _loading = true;
+    private int _totalEmployees;
+    private string? _searchTerm;
+    private string? _selectedCategory;
+    private bool _activeOnly = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadEmployeesAsync();
+    }
+
+    private async Task LoadEmployeesAsync()
+    {
+        if (OrganisationId <= 0) return;
+        _loading = true;
+        try
+        {
+            var query = new EmployeeFilterQuery
+            {
+                PageIndex = 0,
+                PageSize = 250,
+                SearchTerm = _searchTerm,
+                OccupationalCategory = _selectedCategory,
+                IsActiveOnly = _activeOnly
+            };
+
+            var paged = await EmployeeService.GetPagedEmployeesAsync(OrganisationId, query);
+            _employees = paged.Items;
+            _totalEmployees = paged.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading employees: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnSearchChanged(string val)
+    {
+        _searchTerm = val;
+        await LoadEmployeesAsync();
+    }
+
+    private async Task OnCategoryChanged(string val)
+    {
+        _selectedCategory = val;
+        await LoadEmployeesAsync();
+    }
+
+    private async Task OnActiveOnlyChanged(bool val)
+    {
+        _activeOnly = val;
+        await LoadEmployeesAsync();
+    }
+
+    private async Task OpenAddEmployeeDialogAsync()
+    {
+        var parameters = new DialogParameters<CaptureEmployeeDialog>
+        {
+            { x => x.OrganisationId, OrganisationId }
+        };
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<CaptureEmployeeDialog>("Add Employee", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadEmployeesAsync();
+        }
+    }
+
+    private async Task OpenEditEmployeeDialogAsync(OrganisationEmployeeDto employee)
+    {
+        var parameters = new DialogParameters<CaptureEmployeeDialog>
+        {
+            { x => x.OrganisationId, OrganisationId },
+            { x => x.EmployeeToEdit, employee }
+        };
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<CaptureEmployeeDialog>("Edit Employee", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadEmployeesAsync();
+        }
+    }
+
+    private async Task OpenBulkImportDialogAsync()
+    {
+        var parameters = new DialogParameters<BulkImportEmployeesDialog>
+        {
+            { x => x.OrganisationId, OrganisationId }
+        };
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<BulkImportEmployeesDialog>("Bulk Import Roster", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadEmployeesAsync();
+        }
+    }
+
+    private async Task TerminateEmployeeAsync(OrganisationEmployeeDto emp)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Confirm Employee Termination",
+            $"Are you sure you want to mark employee '{emp.FullName}' ({emp.EmployeeNumber}) as terminated in the living roster?",
+            yesText: "Confirm Termination", cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            var success = await EmployeeService.TerminateEmployeeAsync(emp.Id, DateTime.UtcNow.Date, "Administrative Update", "Admin");
+            if (success)
+            {
+                Snackbar.Add($"Employee {emp.FullName} marked as terminated.", Severity.Warning);
+                await LoadEmployeesAsync();
+            }
+        }
+    }
+
+    private async Task ExportRosterAsync()
+    {
+        try
+        {
+            var bytes = await EmployeeService.ExportEmployeesAsync(OrganisationId);
+            var base64 = Convert.ToBase64String(bytes);
+            var fileName = $"Employee_Roster_Org{OrganisationId}_{DateTime.UtcNow:yyyyMMdd}.xlsx";
+            await JS.InvokeVoidAsync("downloadFileFromBase64", fileName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", base64);
+            Snackbar.Add("Active employee roster exported successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private static Color GetCategoryColor(string? cat) => cat?.ToUpperInvariant() switch
+    {
+        "MANAGERS" => Color.Primary,
+        "PROFESSIONALS" => Color.Info,
+        "TECHNICIANS" => Color.Success,
+        "CLERICAL" => Color.Secondary,
+        "SERVICE_SALES" => Color.Tertiary,
+        "SKILLED_CRAFT" => Color.Warning,
+        "PLANT_OPERATORS" => Color.Dark,
+        _ => Color.Default
+    };
+
+    private static string FormatCategory(string? cat) => cat?.ToUpperInvariant() switch
+    {
+        "MANAGERS" => "Managers",
+        "PROFESSIONALS" => "Professionals",
+        "TECHNICIANS" => "Technicians",
+        "CLERICAL" => "Clerical",
+        "SERVICE_SALES" => "Service & Sales",
+        "SKILLED_CRAFT" => "Skilled Craft",
+        "PLANT_OPERATORS" => "Plant Operators",
+        "ELEMENTARY" => "Elementary",
+        _ => cat ?? "General"
+    };
+}

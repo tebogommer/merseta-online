@@ -1,0 +1,289 @@
+@namespace Nsdms.Web.Components.Pages.Employers
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject IOrganisationEmployeeService EmployeeService
+@inject IOrganisationService OrgService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">@(EmployeeToEdit == null ? "Add Employee to Living Roster" : "Edit Employee Details")</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true" Class="mt-2">
+                <!-- Step 1: Personal & Demographics -->
+                <MudTabPanel Text="Demographics & Identity" Icon="@Icons.Material.Filled.Badge">
+                    <MudGrid Class="mt-2">
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string" Label="First Given Name(s)" Required="true" @bind-Value="_command.FirstName" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string" Label="Family Surname" Required="true" @bind-Value="_command.LastName" Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string"
+                                          Label="13-Digit RSA National ID Number"
+                                          @bind-Value="_command.RsaIdNumber"
+                                          Variant="Variant.Outlined"
+                                          MaxLength="13"
+                                          HelperText="Auto-derives Date of Birth & Gender"
+                                          OnBlur="DeriveFromRsaId" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string" Label="Foreign Passport Number (if non-SA)" @bind-Value="_command.PassportNumber" Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="string" Label="Gender" @bind-Value="_command.GenderCode" Variant="Variant.Outlined" Required="true">
+                                <MudSelectItem Value="@("M")">Male</MudSelectItem>
+                                <MudSelectItem Value="@("F")">Female</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="string" Label="Equity (BBBEE / SETMIS)" @bind-Value="_command.EquityCode" Variant="Variant.Outlined" Required="true">
+                                <MudSelectItem Value="@("BA")">African (Black)</MudSelectItem>
+                                <MudSelectItem Value="@("BC")">Coloured</MudSelectItem>
+                                <MudSelectItem Value="@("BI")">Indian</MudSelectItem>
+                                <MudSelectItem Value="@("WH")">White</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudDatePicker Label="Date of Birth" @bind-Date="_dateOfBirth" Variant="Variant.Outlined" MaxDate="DateTime.Today.AddYears(-15)" />
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudCheckBox T="bool" @bind-Value="_hasDisability" Label="Employee has a declared disability (SETMIS Washington Group)" Color="Color.Primary" />
+                        </MudItem>
+                    </MudGrid>
+                </MudTabPanel>
+
+                <!-- Step 2: Employment & Position -->
+                <MudTabPanel Text="Job & OFO Classification" Icon="@Icons.Material.Filled.Work">
+                    <MudGrid Class="mt-2">
+                        <MudItem xs="12" md="4">
+                            <MudTextField T="string" Label="Employee Number / Clock ID" @bind-Value="_command.EmployeeNumber" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="8">
+                            <MudTextField T="string" Label="Job Title / Position" Required="true" @bind-Value="_command.JobTitle" Variant="Variant.Outlined" Placeholder="e.g. Senior Mechanical Maintenance Specialist" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudTextField T="string" Label="OFO 6-Digit Code" @bind-Value="_command.OfoCodeId" Variant="Variant.Outlined" Placeholder="e.g. 671201" HelperText="6-digit Organising Framework for Occupations" OnBlur="OnOfoChanged" />
+                        </MudItem>
+                        <MudItem xs="12" md="8">
+                            <MudSelect T="string" Label="Occupational Category (SETMIS Form 500)" @bind-Value="_command.OccupationalCategoryCode" Variant="Variant.Outlined" Required="true">
+                                <MudSelectItem Value="@("MANAGERS")">1 - Managers</MudSelectItem>
+                                <MudSelectItem Value="@("PROFESSIONALS")">2 - Professionals</MudSelectItem>
+                                <MudSelectItem Value="@("TECHNICIANS")">3 - Technicians and Associate Professionals</MudSelectItem>
+                                <MudSelectItem Value="@("CLERICAL")">4 - Clerical Support Workers</MudSelectItem>
+                                <MudSelectItem Value="@("SERVICE_SALES")">5 - Service and Sales Workers</MudSelectItem>
+                                <MudSelectItem Value="@("SKILLED_CRAFT")">6 - Skilled Agricultural, Craft & Related Trades</MudSelectItem>
+                                <MudSelectItem Value="@("PLANT_OPERATORS")">7 - Plant & Machine Operators & Assemblers</MudSelectItem>
+                                <MudSelectItem Value="@("ELEMENTARY")">8 - Elementary Occupations</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="string" Label="Employment Type" @bind-Value="_command.EmploymentTypeCode" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("PERMANENT")">Permanent Full-Time</MudSelectItem>
+                                <MudSelectItem Value="@("CONTRACT")">Fixed-Term Contract</MudSelectItem>
+                                <MudSelectItem Value="@("TEMPORARY")">Temporary / Seasonal</MudSelectItem>
+                                <MudSelectItem Value="@("APPRENTICE")">Apprentice / Intern</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int?" Label="Assigned Site / Plant" @bind-Value="_command.OrganisationSiteId" Variant="Variant.Outlined" Clearable="true">
+                                <MudSelectItem T="int?" Value="@((int?)null)">-- Head Office / Unassigned --</MudSelectItem>
+                                @foreach (var s in _sites)
+                                {
+                                    <MudSelectItem T="int?" Value="@((int?)s.Id)">@s.SiteName</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker Label="Employment Start Date" @bind-Date="_startDate" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker Label="Employment End Date (if fixed-term)" @bind-Date="_endDate" Variant="Variant.Outlined" Clearable="true" />
+                        </MudItem>
+                    </MudGrid>
+                </MudTabPanel>
+            </MudTabs>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="!_isValid || _isSaving" OnClick="SaveEmployeeAsync">
+            @(_isSaving ? "Saving..." : "Save Employee")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public int OrganisationId { get; set; }
+
+    [Parameter]
+    public OrganisationEmployeeDto? EmployeeToEdit { get; set; }
+
+    private MudForm _form = default!;
+    private bool _isValid;
+    private bool _isSaving;
+    private bool _hasDisability;
+    private DateTime? _dateOfBirth;
+    private DateTime? _startDate = DateTime.Today;
+    private DateTime? _endDate;
+
+    private CreateOrganisationEmployeeCommand _command = new();
+    private List<OrganisationSite> _sites = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _sites = await OrgService.GetSitesAsync(OrganisationId);
+        }
+        catch
+        {
+            _sites = new();
+        }
+
+        if (EmployeeToEdit != null)
+        {
+            _command.OrganisationId = OrganisationId;
+            _command.ExistingPersonId = EmployeeToEdit.PersonId;
+            _command.FirstName = EmployeeToEdit.FirstName;
+            _command.LastName = EmployeeToEdit.LastName;
+            _command.EmployeeNumber = EmployeeToEdit.EmployeeNumber;
+            _command.JobTitle = EmployeeToEdit.JobTitle;
+            _command.OfoCodeId = EmployeeToEdit.OfoCodeId;
+            _command.OccupationalCategoryCode = EmployeeToEdit.OccupationalCategoryCode ?? "MANAGERS";
+            _command.EmploymentTypeCode = EmployeeToEdit.EmploymentTypeCode ?? "PERMANENT";
+            _command.EmploymentStatusCode = EmployeeToEdit.EmploymentStatusCode ?? "ACTIVE";
+            _command.OrganisationSiteId = EmployeeToEdit.OrganisationSiteId;
+            _command.GenderCode = EmployeeToEdit.GenderCode ?? "M";
+            _command.EquityCode = EmployeeToEdit.EquityCode ?? "BA";
+            _hasDisability = EmployeeToEdit.HasDisability;
+            _dateOfBirth = EmployeeToEdit.DateOfBirth;
+            _startDate = EmployeeToEdit.StartDate;
+            _endDate = EmployeeToEdit.EndDate;
+        }
+        else
+        {
+            _command.OrganisationId = OrganisationId;
+            _command.OccupationalCategoryCode = "MANAGERS";
+            _command.EmploymentTypeCode = "PERMANENT";
+            _command.EmploymentStatusCode = "ACTIVE";
+            _command.GenderCode = "M";
+            _command.EquityCode = "BA";
+        }
+    }
+
+    private void DeriveFromRsaId()
+    {
+        if (string.IsNullOrWhiteSpace(_command.RsaIdNumber) || _command.RsaIdNumber.Length < 10) return;
+
+        var clean = _command.RsaIdNumber.Trim();
+        try
+        {
+            var yy = int.Parse(clean.Substring(0, 2));
+            var mm = int.Parse(clean.Substring(2, 2));
+            var dd = int.Parse(clean.Substring(4, 2));
+
+            int currentYear = DateTime.UtcNow.Year % 100;
+            int fullYear = yy > currentYear ? 1900 + yy : 2000 + yy;
+
+            if (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31)
+            {
+                _dateOfBirth = new DateTime(fullYear, mm, dd);
+            }
+
+            var genderDigit = int.Parse(clean.Substring(6, 1));
+            _command.GenderCode = genderDigit < 5 ? "F" : "M";
+            StateHasChanged();
+        }
+        catch
+        {
+            // Ignore format exceptions
+        }
+    }
+
+    private void OnOfoChanged()
+    {
+        if (string.IsNullOrWhiteSpace(_command.OfoCodeId)) return;
+        var prefix = _command.OfoCodeId.Trim();
+        if (prefix.Length > 0 && char.IsDigit(prefix[0]))
+        {
+            _command.OccupationalCategoryCode = prefix[0] switch
+            {
+                '1' => "MANAGERS",
+                '2' => "PROFESSIONALS",
+                '3' => "TECHNICIANS",
+                '4' => "CLERICAL",
+                '5' => "SERVICE_SALES",
+                '6' => "SKILLED_CRAFT",
+                '7' => "PLANT_OPERATORS",
+                '8' => "ELEMENTARY",
+                _ => _command.OccupationalCategoryCode
+            };
+        }
+    }
+
+    private async Task SaveEmployeeAsync()
+    {
+        _isSaving = true;
+        try
+        {
+            _command.DateOfBirth = _dateOfBirth;
+            _command.StartDate = _startDate;
+            _command.EndDate = _endDate;
+            _command.DisabilityCode = _hasDisability ? "01" : null;
+
+            if (EmployeeToEdit != null)
+            {
+                var updateCmd = new UpdateOrganisationEmployeeCommand
+                {
+                    Id = EmployeeToEdit.Id,
+                    JobTitle = _command.JobTitle,
+                    OfoCodeId = _command.OfoCodeId,
+                    OrganisationSiteId = _command.OrganisationSiteId,
+                    EmploymentTypeCode = _command.EmploymentTypeCode,
+                    EmploymentStatusCode = _command.EmploymentStatusCode,
+                    OccupationalCategoryCode = _command.OccupationalCategoryCode,
+                    StartDate = _startDate,
+                    EndDate = _endDate,
+                    IsActive = true
+                };
+                await EmployeeService.UpdateEmployeeAsync(updateCmd, "Admin");
+                Snackbar.Add("Employee record updated successfully.", Severity.Success);
+            }
+            else
+            {
+                await EmployeeService.CreateEmployeeAsync(_command, "Admin");
+                Snackbar.Add("Employee added to living roster.", Severity.Success);
+            }
+
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to save employee: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

@@ -76,6 +76,9 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<LearnerRegisteredUnitStandard> LearnerRegisteredUnitStandards => Set<LearnerRegisteredUnitStandard>();
     public DbSet<LearnerBulkBatch> LearnerBulkBatches => Set<LearnerBulkBatch>();
     public DbSet<LearnerBulkBatchRow> LearnerBulkBatchRows => Set<LearnerBulkBatchRow>();
+    public DbSet<WspBulkImportBatch> WspBulkImportBatches => Set<WspBulkImportBatch>();
+    public DbSet<WspBulkImportStaging> WspBulkImportStagings => Set<WspBulkImportStaging>();
+    public DbSet<OrganisationEmployee> OrganisationEmployees => Set<OrganisationEmployee>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     // Workflow Engine & Task Matrix
@@ -568,6 +571,14 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                   .HasForeignKey(o => o.PrimaryContactPersonId)
                   .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne(o => o.ParentOrganisation)
+                  .WithMany(o => o.Subsidiaries)
+                  .HasForeignKey(o => o.ParentOrganisationId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(o => o.ParentOrganisationId)
+                  .HasDatabaseName("IX_Organisation_ParentOrganisationId");
+
             entity.HasIndex(o => o.SdlNumber).IsUnique();
             entity.HasIndex(o => o.MainSdlNumber);
             entity.HasIndex(o => o.SetaId);
@@ -649,6 +660,50 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(s => s.ProvinceCode);
             entity.HasIndex(s => s.IsActive);
             entity.HasQueryFilter(s => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || s.OrganisationId == _tenantProvider.CurrentOrganisationId);
+        });
+
+        // OrganisationEmployee table & indexes (Option B: Living Employer Roster)
+        modelBuilder.Entity<OrganisationEmployee>(entity =>
+        {
+            entity.ToTable("OrganisationEmployee");
+            entity.Property(e => e.EmployeeNumber).HasMaxLength(50);
+            entity.Property(e => e.JobTitle).HasMaxLength(150);
+            entity.Property(e => e.OfoCodeId).HasMaxLength(50);
+            entity.Property(e => e.EmploymentTypeCode).HasMaxLength(50);
+            entity.Property(e => e.EmploymentStatusCode).HasMaxLength(50);
+            entity.Property(e => e.OccupationalCategoryCode).HasMaxLength(50);
+
+            entity.HasOne(e => e.Organisation)
+                  .WithMany(o => o.Employees)
+                  .HasForeignKey(e => e.OrganisationId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Person)
+                  .WithMany()
+                  .HasForeignKey(e => e.PersonId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.OrganisationSite)
+                  .WithMany()
+                  .HasForeignKey(e => e.OrganisationSiteId)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.OfoCode)
+                  .WithMany()
+                  .HasForeignKey(e => e.OfoCodeId)
+                  .HasPrincipalKey(o => o.Code)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.OrganisationId).HasDatabaseName("IX_OrganisationEmployee_OrganisationId");
+            entity.HasIndex(e => e.PersonId).HasDatabaseName("IX_OrganisationEmployee_PersonId");
+            entity.HasIndex(e => e.OrganisationSiteId).HasDatabaseName("IX_OrganisationEmployee_OrganisationSiteId");
+            entity.HasIndex(e => e.OfoCodeId).HasDatabaseName("IX_OrganisationEmployee_OfoCodeId");
+            entity.HasIndex(e => e.IsActive).HasDatabaseName("IX_OrganisationEmployee_IsActive");
+            entity.HasIndex(e => new { e.OrganisationId, e.IsActive }).HasDatabaseName("IX_OrganisationEmployee_Org_Active");
+
+            entity.HasQueryFilter(e => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || e.OrganisationId == _tenantProvider.CurrentOrganisationId);
         });
 
         // Visit relationship & mandatory contact person constraint
@@ -1773,6 +1828,74 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(r => r.RsaIdNumber);
             entity.HasIndex(r => r.Status);
             entity.HasIndex(r => r.CompanyLearnerId);
+        });
+
+        // WspBulkImportBatch
+        modelBuilder.Entity<WspBulkImportBatch>(entity =>
+        {
+            entity.ToTable("WspBulkImportBatch");
+            entity.Property(b => b.BatchReference).HasMaxLength(50).IsRequired();
+            entity.Property(b => b.OriginalFileName).HasMaxLength(250).IsRequired();
+            entity.Property(b => b.BatchStatus).HasMaxLength(50).IsRequired();
+            entity.Property(b => b.ReportType).HasMaxLength(10).IsRequired();
+            entity.Property(b => b.ContentHashSha256).HasMaxLength(64).IsRequired();
+            entity.Property(b => b.TotalEstimatedCostRollup).HasPrecision(18, 2);
+
+            entity.HasOne(b => b.WspSubmission)
+                  .WithMany()
+                  .HasForeignKey(b => b.WspSubmissionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(b => b.Organisation)
+                  .WithMany()
+                  .HasForeignKey(b => b.OrganisationId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(b => b.StagedRows)
+                  .WithOne(r => r.Batch)
+                  .HasForeignKey(r => r.BatchId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(b => b.BatchGuid).IsUnique();
+            entity.HasIndex(b => b.BatchReference);
+            entity.HasIndex(b => b.WspSubmissionId);
+            entity.HasIndex(b => b.OrganisationId);
+            entity.HasIndex(b => b.BatchStatus);
+            entity.HasIndex(b => b.SchemeYear);
+        });
+
+        // WspBulkImportStaging
+        modelBuilder.Entity<WspBulkImportStaging>(entity =>
+        {
+            entity.ToTable("WspBulkImportStaging");
+            entity.Property(r => r.RawIdType).HasMaxLength(50);
+            entity.Property(r => r.RawIdNumber).HasMaxLength(50);
+            entity.Property(r => r.RawFirstName).HasMaxLength(100);
+            entity.Property(r => r.RawLastName).HasMaxLength(100);
+            entity.Property(r => r.RawGenderCode).HasMaxLength(50);
+            entity.Property(r => r.RawEquityCode).HasMaxLength(50);
+            entity.Property(r => r.RawNationalityCode).HasMaxLength(50);
+            entity.Property(r => r.RawOfoCode).HasMaxLength(50);
+            entity.Property(r => r.RawSpecialisationCode).HasMaxLength(50);
+            entity.Property(r => r.RawInterventionTypeCode).HasMaxLength(50);
+            entity.Property(r => r.RawQualificationCode).HasMaxLength(50);
+            entity.Property(r => r.RawSkillsProgramCode).HasMaxLength(50);
+            entity.Property(r => r.RawSkillsSetCode).HasMaxLength(50);
+            entity.Property(r => r.RawEmploymentTypeCode).HasMaxLength(50);
+            entity.Property(r => r.RawProviderTypeCode).HasMaxLength(50);
+            entity.Property(r => r.RawTrainingDeliveryMethodCode).HasMaxLength(50);
+            entity.Property(r => r.RawMunicipalityCode).HasMaxLength(50);
+            entity.Property(r => r.RawStartDate).HasMaxLength(50);
+            entity.Property(r => r.RawEndDate).HasMaxLength(50);
+            entity.Property(r => r.RawEstimatedCost).HasMaxLength(50);
+            entity.Property(r => r.RawBeneficiaryCount).HasMaxLength(50);
+            entity.Property(r => r.ParsedEstimatedCost).HasPrecision(18, 2);
+            entity.Property(r => r.ValidationErrorCode).HasMaxLength(100);
+
+            entity.HasIndex(r => r.BatchId);
+            entity.HasIndex(r => r.RowIndex);
+            entity.HasIndex(r => r.IsValid);
+            entity.HasIndex(r => r.IsCommitted);
         });
 
         // PersonGuardian

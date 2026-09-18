@@ -1,7 +1,10 @@
 @page "/wsp/{id:int}"
 @page "/wsp/{id:int}/edit"
 @using Nsdms.Web.Components.Shared
+@using Nsdms.Web.Components.Shared.Wsp
+@using Nsdms.Application.Services
 @inject IWspService WspService
+@inject IOrganisationEmployeeService EmployeeService
 @inject IWspSurveyService WspSurveyService
 @inject IOrganisationService OrgService
 @inject ILookupService LookupService
@@ -223,9 +226,22 @@ else
                     </div>
                     @if (Id > 0)
                     {
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="OpenAddSummaryForm">
-                            Add OFO Category
-                        </MudButton>
+                        <div class="d-flex gap-2">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Success"
+                                       StartIcon="@Icons.Material.Filled.Autorenew"
+                                       OnClick="AutoHarvestFromRosterAsync"
+                                       Disabled="_isHarvesting"
+                                       aria-label="1-Click Auto-Harvest from Living Employee Roster">
+                                @(_isHarvesting ? "Harvesting..." : "1-Click Auto-Harvest from Roster")
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.PersonAdd"
+                                       OnClick="OpenAddSummaryForm">
+                                Add OFO Category
+                            </MudButton>
+                        </div>
                     }
                     else
                     {
@@ -416,7 +432,14 @@ else
                 </MudTable>
             </MudTabPanel>
 
-            <!-- TAB 4: Mandatory Claim -->
+            <!-- TAB 4: Bulk Ingestion & Audit -->
+            <MudTabPanel Text="Bulk Ingestion &amp; Audit" Icon="@Icons.Material.Filled.CloudUpload">
+                <div class="pa-2">
+                    <WspBulkIngestionPanel WspSubmissionId="@Id" SchemeYear="@_wsp.FinYear" OnIngestionCommitted="RefreshTrainingPlansFromBulkAsync" />
+                </div>
+            </MudTabPanel>
+
+            <!-- TAB 5: Mandatory Claim -->
             <MudTabPanel Text="Mandatory Claim" Icon="@Icons.Material.Filled.Payments">
                 <MudGrid Spacing="3">
                     <!-- Claim Calculation Breakdown -->
@@ -1045,7 +1068,45 @@ else
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error removing entry: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error removing summary: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private bool _isHarvesting = false;
+
+    private async Task AutoHarvestFromRosterAsync()
+    {
+        if (Id <= 0 || _wsp.OrganisationId <= 0) return;
+
+        bool? confirm = await DialogService.ShowMessageBoxAsync(
+            "1-Click WSP Auto-Harvest from Living Roster",
+            "This action will read your organisation's verified living employee roster, aggregate active staff across all 8 OFO major occupational categories, and synchronize demographic breakdowns (Form 500) into this WSP submission. Proceed?",
+            yesText: "Harvest Roster", cancelText: "Cancel");
+
+        if (confirm != true) return;
+
+        _isHarvesting = true;
+        try
+        {
+            var result = await EmployeeService.HarvestWspTablesAsync(_wsp.OrganisationId, Id, "Admin");
+            if (result.Success)
+            {
+                Snackbar.Add(result.Message, Severity.Success);
+                _summaries = await WspService.GetEmploymentSummariesAsync(Id);
+                _wsp = await WspService.GetByIdAsync(Id) ?? _wsp;
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Harvest failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isHarvesting = false;
         }
     }
 
@@ -1263,6 +1324,20 @@ else
         catch (Exception ex)
         {
             Snackbar.Add($"Error deleting priority: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RefreshTrainingPlansFromBulkAsync()
+    {
+        try
+        {
+            _plans = await WspService.GetTrainingPlansAsync(Id);
+            _wsp.PlannedTrainingBudget = await WspService.RecalculateTrainingPlanBudgetAsync(Id);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error refreshing training plans: {ex.Message}", Severity.Error);
         }
     }
 }

@@ -20,6 +20,28 @@ public class Organisation : BaseEntity
     public string? MainSdlNumber { get; set; }
 
     /// <summary>
+    /// Foreign key referencing the parent holding company or controlling entity.
+    /// </summary>
+    public int? ParentOrganisationId { get; set; }
+
+    /// <summary>
+    /// Navigational reference to the parent holding company.
+    /// </summary>
+    public Organisation? ParentOrganisation { get; set; }
+
+    /// <summary>
+    /// Corporate group relationship classification:
+    /// HOLDING_COMPANY, WHOLLY_OWNED_SUBSIDIARY, MAJORITY_SUBSIDIARY, ASSOCIATE_COMPANY, JOINT_VENTURE, DIVISION_BRANCH.
+    /// </summary>
+    public string? HoldingRelationshipType { get; set; }
+
+    /// <summary>
+    /// Beneficial equity ownership percentage held by the parent entity (0.00% to 100.00%).
+    /// </summary>
+    [Column(TypeName = "decimal(5, 2)")]
+    public decimal? OwnershipPercentage { get; set; }
+
+    /// <summary>
     /// Originating SETA classification code (references lookup.SetaType, default 17 for merSETA).
     /// </summary>
     public string SetaId { get; set; } = "17";
@@ -293,4 +315,14 @@ public class Organisation : BaseEntity
     /// Conflict of interest flags raised against this organisation.
     /// </summary>
     public ICollection<ConflictFlag> ConflictFlags { get; set; } = new List<ConflictFlag>();
+
+    /// <summary>
+    /// Direct subsidiary entities controlled by this holding or parent organisation.
+    /// </summary>
+    public ICollection<Organisation> Subsidiaries { get; set; } = new List<Organisation>();
+
+    /// <summary>
+    /// Active and historical workforce employees associated with this organisation (Option B: Living Employer Roster).
+    /// </summary>
+    public ICollection<OrganisationEmployee> Employees { get; set; } = new List<OrganisationEmployee>();
 }

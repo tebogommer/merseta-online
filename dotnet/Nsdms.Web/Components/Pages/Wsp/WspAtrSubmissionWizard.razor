@@ -3,6 +3,7 @@
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
+@using Nsdms.Web.Components.Shared.Wsp
 @using Nsdms.Web.Components.Shared.Forms
 @using Nsdms.Web.Components.Shared.Wizard
 @using MudBlazor
@@ -154,6 +155,33 @@ else
                                     WspTargetNqfLevelChanged="@((val) => { _wspTargetNqfLevel = val; UpdateReviewGroups(); })"
                                     WspPivotalRatio="@_wspPivotalRatio"
                                     WspPivotalRatioChanged="@((val) => { _wspPivotalRatio = val; UpdateReviewGroups(); })" />
+
+            <MudDivider Class="my-6" />
+            <div class="mb-3">
+                <MudText Typo="Typo.subtitle1" Class="fw-bold">Bulk spreadsheet ingestion (Excel / CSV)</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Optionally ingest your entire planned training matrix via Excel (.xlsx) or CSV. The modern hybrid engine executes pre-flight OFO taxonomy checks, Luhn/RSA ID validation, inline quick-fixing, and 1-click Delta workbook generation.
+                </MudText>
+            </div>
+            @if (_bulkSubmissionId > 0)
+            {
+                <WspBulkIngestionPanel WspSubmissionId="@_bulkSubmissionId"
+                                       SchemeYear="@_finYear"
+                                       OnIngestionCommitted="OnBulkInterventionsCommittedAsync" />
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-2 rounded-lg">
+                    <div class="d-flex justify-space-between align-center">
+                        <div>
+                            <span>Initialize draft submission workspace to activate live spreadsheet ingestion with pre-flight validation.</span>
+                        </div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="EnsureBulkSubmissionWorkspaceAsync">
+                            Initialize spreadsheet intake
+                        </MudButton>
+                    </div>
+                </MudAlert>
+            }
         </WizardStep>
 
         <!-- STEP 4: Training Committee Consultation -->
@@ -215,6 +243,7 @@ else
     private bool _isProcessing = false;
     private bool _isSuccess = false;
     private int _createdSubmissionId = 0;
+    private int _bulkSubmissionId = 0;
     private string _submittedAppNumber = string.Empty;
 
     // Data collections
@@ -720,7 +749,34 @@ else
                 DisputeLogged = false
             };
 
-            var created = await WspService.CreateSubmissionAsync(submission, "SDF");
+            WspSubmission created;
+            if (_bulkSubmissionId > 0)
+            {
+                var existing = await WspService.GetByIdAsync(_bulkSubmissionId);
+                if (existing != null)
+                {
+                    existing.FinYear = _finYear;
+                    existing.OrganisationId = _organisationId ?? 1;
+                    existing.WspApprovalStatusCode = "Submitted";
+                    existing.SubmissionDate = DateTime.UtcNow;
+                    existing.PlannedTrainingBudget = _plannedTrainingBudget;
+                    existing.EmployeeCount = _employeeCount;
+                    existing.RequiredSignoffCount = _employeeCount < 50 ? 2 : 3;
+                    existing.CompletedSignoffCount = 1;
+                    existing.IsSignoffQuorumMet = false;
+                    existing.SignoffDigitalSecuritySeal = BitConverter.ToString(SHA256.HashData(Encoding.UTF8.GetBytes($"{existing.ReferenceNumber}:{DateTime.UtcNow:O}:SDF"))).Replace("-", "").ToLowerInvariant();
+                    existing.DisputeLogged = false;
+                    created = await WspService.UpdateAsync(existing, "SDF");
+                }
+                else
+                {
+                    created = await WspService.CreateSubmissionAsync(submission, "SDF");
+                }
+            }
+            else
+            {
+                created = await WspService.CreateSubmissionAsync(submission, "SDF");
+            }
 
             // Seed initial employment summary (Form 500)
             await WspService.AddEmploymentSummaryAsync(created.Id, new WspEmploymentSummary
@@ -738,15 +794,18 @@ else
                 FemaleWhite = 0
             }, "SDF");
 
-            // Seed initial planned training intervention
-            await WspService.AddTrainingPlanAsync(created.Id, new WspTrainingPlan
+            // Only seed placeholder training plan if bulk ingestion was NOT used
+            if (_bulkSubmissionId == 0)
             {
-                WspSubmissionId = created.Id,
-                ProgrammeTypeCode = _wspPrimaryProgrammeType,
-                NqfLevel = _wspTargetNqfLevel,
-                BeneficiaryCount = _wspPlannedBeneficiaries,
-                EstimatedCost = _plannedTrainingBudget
-            }, "SDF");
+                await WspService.AddTrainingPlanAsync(created.Id, new WspTrainingPlan
+                {
+                    WspSubmissionId = created.Id,
+                    ProgrammeTypeCode = _wspPrimaryProgrammeType,
+                    NqfLevel = _wspTargetNqfLevel,
+                    BeneficiaryCount = _wspPlannedBeneficiaries,
+                    EstimatedCost = _plannedTrainingBudget
+                }, "SDF");
+            }
 
             _createdSubmissionId = created.Id;
             _submittedAppNumber = created.ReferenceNumber;
@@ -767,6 +826,63 @@ else
         finally
         {
             _isProcessing = false;
+        }
+    }
+
+    private async Task EnsureBulkSubmissionWorkspaceAsync()
+    {
+        if (!_organisationId.HasValue || _organisationId.Value <= 0)
+        {
+            Snackbar.Add("Please select an organisation in Step 1 first.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            var existingSubmissions = await WspService.GetAllAsync(finYear: _finYear, organisationId: _organisationId.Value);
+            var draft = existingSubmissions.FirstOrDefault(w => w.StatusCode == "Draft" || w.StatusCode == "New");
+            if (draft != null)
+            {
+                _bulkSubmissionId = draft.Id;
+            }
+            else
+            {
+                var newSub = new WspSubmission
+                {
+                    OrganisationId = _organisationId.Value,
+                    FinYear = _finYear,
+                    ReferenceNumber = $"WSP-{_finYear}-{DateTime.UtcNow.Ticks % 100000:D5}",
+                    WspApprovalStatusCode = "Draft",
+                    PlannedTrainingBudget = _plannedTrainingBudget,
+                    EmployeeCount = _employeeCount,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "SDF"
+                };
+                var created = await WspService.CreateSubmissionAsync(newSub, "SDF");
+                _bulkSubmissionId = created.Id;
+            }
+            Snackbar.Add("Bulk spreadsheet ingestion workspace initialized.", Severity.Success);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error initializing bulk ingestion workspace: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OnBulkInterventionsCommittedAsync()
+    {
+        if (_bulkSubmissionId > 0)
+        {
+            var plans = await WspService.GetTrainingPlansAsync(_bulkSubmissionId);
+            if (plans.Count > 0)
+            {
+                _plannedTrainingBudget = await WspService.RecalculateTrainingPlanBudgetAsync(_bulkSubmissionId);
+                _wspPlannedBeneficiaries = plans.Sum(p => p.BeneficiaryCount);
+                UpdateReviewGroups();
+                Snackbar.Add($"Training plan synchronized: {plans.Count} bulk interventions loaded.", Severity.Info);
+                StateHasChanged();
+            }
         }
     }
 

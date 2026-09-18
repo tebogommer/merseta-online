@@ -1,0 +1,220 @@
+@namespace Nsdms.Web.Components.Pages.Employers.Tabs
+@using Nsdms.Application.Common.Interfaces
+@inject IOrganisationComplianceEngine ComplianceEngine
+@inject ISnackbar Snackbar
+
+<MudCard Elevation="3" Class="mb-6 border-primary overflow-hidden">
+    <MudCardHeader Class="py-3 px-4" Style="background-color: var(--mud-palette-background-grey);">
+        <CardHeaderAvatar>
+            <MudAvatar Color="@GetScoreColor(_report?.OverallScore ?? 0)" Size="Size.Medium" Variant="Variant.Filled">
+                <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" />
+            </MudAvatar>
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+            <div class="d-flex align-center gap-2 flex-wrap">
+                <MudText Typo="Typo.subtitle1" Class="fw-bold">360° Statutory Compliance Health Radar</MudText>
+                @if (_report != null)
+                {
+                    <MudChip T="string" Color="@GetScoreColor(_report.OverallScore)" Size="Size.Small" Variant="Variant.Filled">
+                        @(_report.OverallScore.ToString("F1"))% — @_report.OverallGrade
+                    </MudChip>
+                }
+            </div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                Comprehensive multi-pillar evaluation across Mandatory Grants (WSP), SARS Levies, Committee Parity, Governance, Workplace Approvals, and Banking Security.
+            </MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudTooltip Text="Re-evaluate 360° statutory compliance now">
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" Size="Size.Small" OnClick="LoadReportAsync" Disabled="_loading" aria-label="Refresh compliance radar" />
+            </MudTooltip>
+        </CardHeaderActions>
+    </MudCardHeader>
+
+    <MudCardContent Class="pa-4">
+        @if (_loading)
+        {
+            <div class="py-4 text-center">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium" />
+                <MudText Typo="Typo.caption" Class="d-block mt-2" Color="Color.Secondary">Evaluating statutory data sources & compliance records...</MudText>
+            </div>
+        }
+        else if (_report != null)
+        {
+            <!-- Executive KPI Ribbon -->
+            <MudGrid Class="mb-4" Spacing="2">
+                <MudItem xs="6" sm="3">
+                    <div class="pa-3 rounded border d-flex flex-column align-center text-center" style="background-color: var(--mud-palette-surface);">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Overall Health Score</MudText>
+                        <MudText Typo="Typo.h5" Class="font-weight-bold" Color="@GetScoreColor(_report.OverallScore)">
+                            @_report.OverallScore.ToString("F1")%
+                        </MudText>
+                        <MudProgressLinear Value="(double)_report.OverallScore" Color="@GetScoreColor(_report.OverallScore)" Rounded="true" Class="mt-1" Style="height: 6px; width: 80%;" />
+                    </div>
+                </MudItem>
+                <MudItem xs="6" sm="3">
+                    <div class="pa-3 rounded border d-flex flex-column align-center text-center" style="background-color: var(--mud-palette-surface);">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Compliant Pillars</MudText>
+                        <MudText Typo="Typo.h5" Class="font-weight-bold" Color="Color.Success">
+                            @_report.CompliantPillarsCount / @_report.Pillars.Count
+                        </MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Success">Statutory benchmarks met</MudText>
+                    </div>
+                </MudItem>
+                <MudItem xs="6" sm="3">
+                    <div class="pa-3 rounded border d-flex flex-column align-center text-center" style="background-color: var(--mud-palette-surface);">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Discretionary Grants</MudText>
+                        <div class="d-flex align-center gap-1 mt-1">
+                            <MudIcon Icon="@(_report.IsEligibleForDgGrants ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                     Color="@(_report.IsEligibleForDgGrants ? Color.Success : Color.Error)" Size="Size.Small" />
+                            <MudText Typo="Typo.body2" Class="fw-bold" Color="@(_report.IsEligibleForDgGrants ? Color.Success : Color.Error)">
+                                @(_report.IsEligibleForDgGrants ? "Eligible" : "Restricted")
+                            </MudText>
+                        </div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">MoA funding requirement</MudText>
+                    </div>
+                </MudItem>
+                <MudItem xs="6" sm="3">
+                    <div class="pa-3 rounded border d-flex flex-column align-center text-center" style="background-color: var(--mud-palette-surface);">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Learner Registrations</MudText>
+                        <div class="d-flex align-center gap-1 mt-1">
+                            <MudIcon Icon="@(_report.IsEligibleForLearnerRegistrations ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Warning)"
+                                     Color="@(_report.IsEligibleForLearnerRegistrations ? Color.Success : Color.Warning)" Size="Size.Small" />
+                            <MudText Typo="Typo.body2" Class="fw-bold" Color="@(_report.IsEligibleForLearnerRegistrations ? Color.Success : Color.Warning)">
+                                @(_report.IsEligibleForLearnerRegistrations ? "Cleared" : "Action Required")
+                            </MudText>
+                        </div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Apprentice hosting capacity</MudText>
+                    </div>
+                </MudItem>
+            </MudGrid>
+
+            <!-- 7 Statutory Pillars Interactive Cards -->
+            <MudGrid Spacing="2">
+                @foreach (var pillar in _report.Pillars)
+                {
+                    <MudItem xs="12" sm="6" md="4" lg="3">
+                        <MudCard Elevation="1" Class="h-100 d-flex flex-column justify-space-between border" Style="border-left: 4px solid var(--mud-palette-primary) !important;">
+                            <div class="pa-3">
+                                <div class="d-flex justify-space-between align-start mb-2">
+                                    <div>
+                                        <MudText Typo="Typo.caption" Class="text-uppercase font-weight-bold" Color="Color.Secondary">@pillar.StatutoryCode</MudText>
+                                        <MudText Typo="Typo.body2" Class="font-weight-bold">@pillar.PillarName</MudText>
+                                    </div>
+                                    <MudChip T="string" Color="@GetPillarStatusColor(pillar.Status)" Size="Size.Small" Variant="Variant.Outlined">
+                                        @pillar.Score.ToString("F0")%
+                                    </MudChip>
+                                </div>
+
+                                <MudProgressLinear Value="(double)pillar.Score" Color="@GetPillarStatusColor(pillar.Status)" Rounded="true" Class="mb-2" Style="height: 5px;" />
+
+                                <MudText Typo="Typo.caption" Class="d-block mb-1 font-weight-medium">
+                                    @pillar.Summary
+                                </MudText>
+
+                                @if (!string.IsNullOrWhiteSpace(pillar.ActionRequired))
+                                {
+                                    <div class="pa-2 rounded mt-2" style="background-color: var(--mud-palette-warning-hover);">
+                                        <div class="d-flex align-start gap-1">
+                                            <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small" Class="mt-1" />
+                                            <MudText Typo="Typo.caption" Color="Color.Warning" Class="font-weight-bold">
+                                                @pillar.ActionRequired
+                                            </MudText>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="px-3 pb-2 pt-0 d-flex justify-space-between align-center border-top mt-2 pt-2">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    Weight: @pillar.Weight% (@pillar.WeightedScore pts)
+                                </MudText>
+                                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="@(() => DrillDownToTab(pillar.TargetTabIndex))" aria-label="@($"Go to {pillar.PillarName} tab")">
+                                    Manage
+                                </MudButton>
+                            </div>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+
+            @if (_report.CriticalActionItems.Count > 0)
+            {
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-4">
+                    <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+                        <div>
+                            <strong>Action Required (@_report.CriticalActionItems.Count items):</strong>
+                            <ul class="mb-0 pl-4 mt-1">
+                                @foreach (var item in _report.CriticalActionItems)
+                                {
+                                    <li><MudText Typo="Typo.caption">@item</MudText></li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </MudAlert>
+            }
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter] public int OrganisationId { get; set; }
+    [Parameter] public EventCallback<int> OnNavigateToTab { get; set; }
+
+    private bool _loading = true;
+    private OrganisationComplianceRadarReport? _report;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (OrganisationId > 0 && (_report == null || _report.OrganisationId != OrganisationId))
+        {
+            await LoadReportAsync();
+        }
+    }
+
+    private async Task LoadReportAsync()
+    {
+        if (OrganisationId <= 0) return;
+        _loading = true;
+        try
+        {
+            _report = await ComplianceEngine.EvaluateOrganisationComplianceAsync(OrganisationId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unable to compute compliance radar: {ex.Message}", Severity.Warning);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task DrillDownToTab(int targetTabIndex)
+    {
+        if (OnNavigateToTab.HasDelegate)
+        {
+            await OnNavigateToTab.InvokeAsync(targetTabIndex);
+        }
+    }
+
+    private Color GetScoreColor(decimal score)
+    {
+        if (score >= 85m) return Color.Success;
+        if (score >= 65m) return Color.Info;
+        if (score >= 50m) return Color.Warning;
+        return Color.Error;
+    }
+
+    private Color GetPillarStatusColor(CompliancePillarStatus status)
+    {
+        return status switch
+        {
+            CompliancePillarStatus.Compliant => Color.Success,
+            CompliancePillarStatus.NotApplicable => Color.Info,
+            CompliancePillarStatus.PartiallyCompliant => Color.Warning,
+            _ => Color.Error
+        };
+    }
+}

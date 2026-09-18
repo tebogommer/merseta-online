@@ -11,9 +11,15 @@ using Nsdms.Infrastructure.Interceptors;
 using Nsdms.Infrastructure.Services;
 using Nsdms.Web.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Ensure static web assets development manifest is loaded even when running compiled DLL directly
+builder.WebHost.UseStaticWebAssets();
 
 // Add MudBlazor services
 builder.Services.AddMudServices();
@@ -41,6 +47,7 @@ builder.Services.AddAuthentication(options =>
     options.Cookie.Name = "NSDMS_AUTH_TICKET";
     options.Cookie.HttpOnly = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.LoginPath = "/login";
     options.LogoutPath = "/api/auth/logout";
     options.AccessDeniedPath = "/login";
@@ -48,6 +55,22 @@ builder.Services.AddAuthentication(options =>
     options.SlidingExpiration = true;
 });
 builder.Services.AddAuthorization();
+
+// Rate Limiting Services
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth-limiter", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+});
 
 // Add Razor components with Interactive Server mode and tuned circuit resilience
 builder.Services.AddRazorComponents()
@@ -76,7 +99,12 @@ builder.Services.AddScoped<ITenantProvider>(sp =>
     var user = httpContext?.User;
     bool isAdmin = user?.Identity?.IsAuthenticated == true &&
                    (user.IsInRole("Admin") || user.IsInRole("SuperAdmin") || user.IsInRole("SUPERADMIN") || user.HasClaim("Permission", "System.Admin"));
-    return new DefaultTenantProvider(null, isAdmin);
+    int? orgId = null;
+    if (int.TryParse(user?.FindFirst("OrganisationId")?.Value, out int parsedOrgId) && parsedOrgId > 0)
+    {
+        orgId = parsedOrgId;
+    }
+    return new DefaultTenantProvider(orgId, isAdmin);
 });
 builder.Services.AddScoped<DefaultTenantProvider>(sp => (DefaultTenantProvider)sp.GetRequiredService<ITenantProvider>());
 
@@ -122,6 +150,12 @@ builder.Services.AddScoped<PersonService>();
 builder.Services.AddScoped<IPersonService>(sp => sp.GetRequiredService<PersonService>());
 builder.Services.AddScoped<OrganisationService>();
 builder.Services.AddScoped<IOrganisationService>(sp => sp.GetRequiredService<OrganisationService>());
+builder.Services.AddScoped<OrganisationEmployeeService>();
+builder.Services.AddScoped<IOrganisationEmployeeService>(sp => sp.GetRequiredService<OrganisationEmployeeService>());
+builder.Services.AddScoped<OrganisationComplianceEngine>();
+builder.Services.AddScoped<IOrganisationComplianceEngine>(sp => sp.GetRequiredService<OrganisationComplianceEngine>());
+builder.Services.AddScoped<OrganisationHierarchyService>();
+builder.Services.AddScoped<IOrganisationHierarchyService>(sp => sp.GetRequiredService<OrganisationHierarchyService>());
 builder.Services.AddScoped<OrganisationContextService>();
 builder.Services.AddScoped<IOrganisationContextService>(sp => sp.GetRequiredService<OrganisationContextService>());
 builder.Services.AddScoped<IdentityService>();
@@ -161,6 +195,7 @@ builder.Services.AddScoped<ILearnerService>(sp => sp.GetRequiredService<LearnerS
 builder.Services.AddScoped<IBusinessRuleEngineService, BusinessRuleEngineService>();
 builder.Services.AddScoped<ILearnerStpRiskEngine, LearnerStpRiskEngine>();
 builder.Services.AddScoped<ILearnerBulkIngestionService, LearnerBulkIngestionService>();
+builder.Services.AddScoped<IWspBulkIngestionService, WspBulkIngestionService>();
 
 // Workflow Engine & Storage Services
 builder.Services.AddScoped<IWorkflowEngineService, WorkflowEngineService>();
@@ -359,6 +394,17 @@ if (!app.Environment.IsDevelopment())
 
 app.UseResponseCompression();
 app.UseHttpsRedirection();
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Append("X-Frame-Options", "SAMEORIGIN");
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+    await next();
+});
+
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
@@ -583,7 +629,7 @@ app.MapPost("/api/auth/login", async (
     var returnUrl = form["returnUrl"].ToString();
     var rememberMe = form["rememberMe"].ToString() == "true" || form["rememberMe"].ToString() == "on";
 
-    if (string.IsNullOrWhiteSpace(returnUrl) || !returnUrl.StartsWith('/'))
+    if (string.IsNullOrWhiteSpace(returnUrl) || !returnUrl.StartsWith('/') || returnUrl.StartsWith("//") || returnUrl.StartsWith("/\\"))
     {
         returnUrl = "/";
     }
@@ -652,7 +698,7 @@ app.MapPost("/api/auth/login", async (
     );
 
     return Results.Redirect(returnUrl);
-}).DisableAntiforgery();
+}).RequireRateLimiting("auth-limiter");
 
 app.MapGet("/api/auth/logout", async (HttpContext context) =>
 {
@@ -671,7 +717,7 @@ app.MapGet("/metrics", async (IMetricsScraperService metricsService, Cancellatio
 {
     var text = await metricsService.GetPrometheusMetricsTextAsync(ct);
     return Results.Content(text, "text/plain; version=0.0.4; charset=utf-8");
-});
+}).RequireAuthorization();
 
 app.MapGet("/api/jobs/{id:guid}/status", (Guid id, IBackgroundJobQueue jobQueue) =>
 {
@@ -690,7 +736,7 @@ app.MapGet("/api/jobs/{id:guid}/status", (Guid id, IBackgroundJobQueue jobQueue)
         job.ResultDownloadUrl,
         job.ErrorMessage
     }) : Results.NotFound(new { message = $"Job #{id} not found." });
-});
+}).RequireAuthorization();
 
 app.MapGet("/api/jobs/{id:guid}/download", (Guid id, IBackgroundJobQueue jobQueue) =>
 {
@@ -700,7 +746,7 @@ app.MapGet("/api/jobs/{id:guid}/download", (Guid id, IBackgroundJobQueue jobQueu
         return Results.BadRequest(new { message = $"Job #{id} is not completed or has no binary data." });
 
     return Results.File(job.ResultData, job.ResultContentType ?? "application/pdf", job.ResultFileName ?? $"JobResult_{id}.pdf");
-});
+}).RequireAuthorization();
 
 app.MapPost("/api/documents/async-generate", async (AsyncDocumentRequest req, IBackgroundJobQueue jobQueue, HttpContext httpContext) =>
 {
@@ -801,6 +847,9 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase51OpenKnowledgeFormat", () => Phase51OpenKnowledgeFormatMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase52InterestAndConflictManagement", () => Phase52InterestAndConflictManagementMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase53BroadcastMessagingAndEmailThrottling", () => Phase53BroadcastMessagingAndEmailThrottlingMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase54HoldingHierarchy", () => Phase54HoldingHierarchyMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase55WspBulkIngestion", () => Phase55WspBulkIngestionMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase53OrganisationEmployeeRosterMigrator", () => new Phase53OrganisationEmployeeRosterMigrator(app.Services).MigrateAsync().GetAwaiter().GetResult());
     RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
     RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
     RunMigrator("SystemConfigs", () => scope.ServiceProvider.GetRequiredService<ISystemConfigurationService>().SeedDefaultConfigsAsync().GetAwaiter().GetResult());

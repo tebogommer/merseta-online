@@ -122,21 +122,20 @@ def run_suite():
     failed_count = 0
     passed_count = 0
 
+    from playwright_assertions import ConsoleErrorTracker, assert_page_visual_interactive_integrity
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(viewport={"width": 1440, "height": 900})
         page = context.new_page()
+        error_tracker = ConsoleErrorTracker(page)
 
         for idx, page_info in enumerate(PAGES_TO_TEST, 1):
             name = page_info["name"]
             rel_url = page_info["url"]
             full_url = f"{BASE_URL}{rel_url}"
 
-            console_errors = []
-            page_errors = []
-            page.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
-            page.on("pageerror", lambda err: page_errors.append(str(err)))
-
+            error_tracker.clear()
             start_time = time.time()
             try:
                 response = page.goto(full_url, wait_until="networkidle", timeout=15000)
@@ -144,21 +143,16 @@ def run_suite():
                 title = page.title()
                 elapsed_ms = round((time.time() - start_time) * 1000)
 
-                # Check for critical errors or blazor crashes
-                has_blazor_error = page.locator(".blazor-error-boundary").is_visible()
-                body_text = page.locator("body").inner_text()
-                has_unhandled_exception = "An unhandled exception occurred" in body_text
-
-                # Check basic page structure
-                has_content = len(body_text.strip()) > 20
-
-                is_pass = (
-                    status_code < 400
-                    and not page_errors
-                    and not has_blazor_error
-                    and not has_unhandled_exception
-                    and has_content
+                # Comprehensive visual, console, and interactivity assertion
+                is_valid, validation_errors, details = assert_page_visual_interactive_integrity(
+                    page,
+                    error_tracker=error_tracker,
+                    timeout_ms=5000,
+                    check_theme=True,
+                    check_interactivity=True
                 )
+
+                is_pass = (status_code < 400 and is_valid)
 
                 if is_pass:
                     passed_count += 1
@@ -168,14 +162,8 @@ def run_suite():
                     failed_count += 1
                     status_str = "FAIL"
                     print(f"[{idx:02d}/{len(PAGES_TO_TEST)}] [FAIL] {status_code} | {elapsed_ms}ms | {name} ({rel_url})")
-                    if page_errors:
-                        print(f"     Page Errors: {page_errors}")
-                    if console_errors:
-                        print(f"     Console Errors: {console_errors[:3]}")
-                    if has_blazor_error:
-                        print(f"     Blazor Error Boundary triggered")
-                    if has_unhandled_exception:
-                        print(f"     Unhandled Exception text found in body")
+                    for verr in validation_errors:
+                        print(f"     -> {verr}")
 
                 results.append({
                     "name": name,
@@ -183,7 +171,8 @@ def run_suite():
                     "status_code": status_code,
                     "elapsed_ms": elapsed_ms,
                     "passed": is_pass,
-                    "errors": page_errors + console_errors
+                    "errors": validation_errors,
+                    "details": details
                 })
 
             except Exception as ex:

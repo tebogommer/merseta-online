@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-13 18:18:38 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 256
+> **Generated:** 2026-09-18 11:48:03 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 258
 
 ---
 
@@ -126,7 +126,7 @@
 | `dbo` | [`NonSetaCompany`](#nonsetacompany) | `NonSetaCompany` | 13 | `Id` | Non-SETA External Employer / Organisation registered with other Quality Councils / SETAs. |
 | `dbo` | [`NonSetaQualificationsCompletion`](#nonsetaqualificationscompletion) | `NonSetaQualificationsCompletion` | 19 | `Id` | Cross-SETA Qualification & TVET College Achievement Verification for merSETA articulation. |
 | `dbo` | [`NonWorkingDay`](#nonworkingday) | `NonWorkingDay` | 17 | `Id` | Master definition for national statutory public holidays, merSETA annual year-end shutdowns, and ad-hoc institutional closures. Governs universal workflow SLA business day calculations. |
-| `dbo` | [`Organisation`](#organisation) | `Organisation` | 49 | `Id` | Registered employer, host workplace, or skills development entity under MerSETA jurisdiction, fully normalized with statutory columns required for SETMIS File 100 and File 200 reporting. |
+| `dbo` | [`Organisation`](#organisation) | `Organisation` | 52 | `Id` | Registered employer, host workplace, or skills development entity under MerSETA jurisdiction, fully normalized with statutory columns required for SETMIS File 100 and File 200 reporting. |
 | `dbo` | [`OrganisationContact`](#organisationcontact) | `OrganisationContact` | 12 | `Id` | Liaison contact person link associating an individual Person with an Employer Organisation. |
 | `dbo` | [`OrganisationGovernanceMember`](#organisationgovernancemember) | `OrganisationGovernanceMember` | 20 | `Id` | Natural person serving as a legal director, partner, trustee, board member, or shareholder within a participating employer, training provider, or grant applicant organisation. |
 | `dbo` | [`OrganisationPortfolio`](#organisationportfolio) | `OrganisationPortfolio` | 17 | `Id` | Dynamic Account Management Portfolio allocating an Employer Organisation to a dedicated Relationship Officer. Natively supports cross-regional appointments (e.g. national key accounts, specialized industry groups). |
@@ -198,6 +198,8 @@
 | `dbo` | [`WorkplaceMonitoringLearnerSurvey`](#workplacemonitoringlearnersurvey) | `WorkplaceMonitoringLearnerSurvey` | 15 | `Id` | Confidential Learner Interview Log conducted on-site. |
 | `dbo` | [`WorkplaceMonitoringMitigationPlan`](#workplacemonitoringmitigationplan) | `WorkplaceMonitoringMitigationPlan` | 12 | `Id` | Specific risk mitigation plan for high-risk non-compliance findings. |
 | `dbo` | [`WorkplaceMonitoringSiteVisit`](#workplacemonitoringsitevisit) | `WorkplaceMonitoringSiteVisit` | 21 | `Id` | Comprehensive Workplace Monitoring and Quality Assurance Site Visit. |
+| `dbo` | [`WspBulkImportBatch`](#wspbulkimportbatch) | `WspBulkImportBatch` | 24 | `Id` | Master batch record tracking bulk spreadsheet ingestion runs (Excel and CSV) for WSP / ATR submissions. |
+| `dbo` | [`WspBulkImportStaging`](#wspbulkimportstaging) | `WspBulkImportStaging` | 40 | `Id` | Individual candidate line staged within a WspBulkImportBatch before core commitment. |
 | `dbo` | [`WspDispute`](#wspdispute) | `WspDispute` | 13 | `Id` | Dispute logged regarding Workplace Skills Plan (WSP) approval or committee sign-off. |
 | `dbo` | [`WspEmploymentSummary`](#wspemploymentsummary) | `WspEmploymentSummary` | 18 | `Id` | Employment profile demographic breakdown by occupational category (SETMIS Form 500). |
 | `dbo` | [`WspExtensionRequest`](#wspextensionrequest) | `WspExtensionRequest` | 26 | `Id` | System entity for WspExtensionRequest data governance. |
@@ -5366,6 +5368,7 @@
 | `FaxNumber` | `nvarchar(50)` | NULL |  | Facsimile transmission number. |
 | `GpVendorClass` | `nvarchar(50)` | NULL |  | Resolved Microsoft Dynamics GP Vendor Class code (AUTO, METAL, MOTOR, NEW TYRE, PLASTICS, SETA). |
 | `HasMissingChamberMapping` | `bit` | **NOT NULL** |  | Indicates whether this organisation lacks a valid merSETA Chamber or GP Vendor Class mapping, blocking downstream Discretionary Grant submissions, WSP submissions, MoAs, and ERP payment batches. |
+| `HoldingRelationshipType` | `nvarchar(max)` | NULL |  | Corporate group relationship classification: HOLDING_COMPANY, WHOLLY_OWNED_SUBSIDIARY, MAJORITY_SUBSIDIARY, ASSOCIATE_COMPANY, JOINT_VENTURE, DIVISION_BRANCH. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the organisation is currently active. |
 | `IsManualChamberOverride` | `bit` | **NOT NULL** |  | Indicates whether the organisation's chamber assignment was manually overridden instead of auto-derived from the SIC code. |
 | `IsMentorRatioEnforced` | `bit` | NULL |  | Explicit mentor ratio enforcement override for this organisation (null = inherit Global, true = enforce, false = exempt). |
@@ -5379,6 +5382,8 @@
 | `NonEmployerEntityType` | `nvarchar(max)` | NULL |  | Non-employer delivery partner classification (e.g. TVET, CET, HEI, NGO, NPO, CBO, PublicEntity, GovtDept, EmployerAssoc, OrganisedLabour). |
 | `OrganisationStatusCode` | `nvarchar(15)` | NULL |  | Current operational registration status code (references lookup.StatusType: ACTIVE, INACTIVE, SUSPENDED). |
 | `OrganisationTypeCode` | `nvarchar(15)` | NULL |  | Legal organisation constitution type code (references lookup.OrganisationType: PTY_LTD, CC, PUBLIC_ENTITY, NGO_NPO). |
+| `OwnershipPercentage` | `decimal(18,2)` | NULL |  | Beneficial equity ownership percentage held by the parent entity (0.00% to 100.00%). |
+| `ParentOrganisationId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the parent holding company or controlling entity. |
 | `PhoneNumber` | `nvarchar(50)` | NULL |  | Primary telephone switchboard number. |
 | `PhysicalAddress` | `nvarchar(500)` | NULL |  | Primary physical street address line 1. |
 | `PhysicalAddressPostalCode` | `nvarchar(max)` | NULL |  | Physical address postal delivery code. |
@@ -5399,6 +5404,7 @@
 
 | Constraint Name | Foreign Columns | Principal Table | Delete Rule |
 | :--- | :--- | :--- | :--- |
+| `FK_Organisation_Organisation_ParentOrganisationId` | `ParentOrganisationId` | `dbo.Organisation` | `Restrict` |
 | `FK_Organisation_Person_PrimaryContactPersonId` | `PrimaryContactPersonId` | `dbo.Person` | `Restrict` |
 
 #### Performance Indexes
@@ -5416,6 +5422,7 @@
 | `IX_Organisation_LevyCategoryCode` | `LevyCategoryCode` | No |
 | `IX_Organisation_MainSdlNumber` | `MainSdlNumber` | No |
 | `IX_Organisation_OrganisationStatusCode` | `OrganisationStatusCode` | No |
+| `IX_Organisation_ParentOrganisationId` | `ParentOrganisationId` | No |
 | `IX_Organisation_ProvinceCode` | `ProvinceCode` | No |
 | `IX_Organisation_SdlNumber` | `SdlNumber` | ✅ Yes |
 | `IX_Organisation_SectorCode` | `SectorCode` | No |
@@ -8554,6 +8561,129 @@
 | `IX_WorkplaceMonitoringSiteVisit_MonitoringStatusCode` | `MonitoringStatusCode` | No |
 | `IX_WorkplaceMonitoringSiteVisit_NonCompliancesIdentified` | `NonCompliancesIdentified` | No |
 | `IX_WorkplaceMonitoringSiteVisit_OrganisationId` | `OrganisationId` | No |
+
+---
+
+### <a id="wspbulkimportbatch"></a> `dbo.WspBulkImportBatch`
+
+**Description:** Master batch record tracking bulk spreadsheet ingestion runs (Excel and CSV) for WSP / ATR submissions.  
+**CLR Model:** `Nsdms.Domain.Entities.WspBulkImportBatch`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AllowPartialCommit` | `bit` | **NOT NULL** |  | Whether user selected permissive partial staging (commit valid, queue errors). |
+| `BatchGuid` | `uniqueidentifier` | **NOT NULL** |  | Unique cryptographic GUID identifier for external client and SignalR telemetry tracking. |
+| `BatchReference` | `nvarchar(50)` | **NOT NULL** |  | Human-readable statutory batch reference (e.g. BATCH-WSP-2026-00042). |
+| `BatchStatus` | `nvarchar(50)` | **NOT NULL** |  | Processing lifecycle status: 'Queued', 'Staging', 'Validating', 'Validated', 'ValidationFailed', 'PartiallyCommitted', 'Committed', 'RolledBack' |
+| `CommittedRowCount` | `int` | **NOT NULL** |  | Count of verified records materialized into core domain tables. |
+| `ContentHashSha256` | `nvarchar(64)` | **NOT NULL** |  | Cryptographic SHA-256 digital security seal calculated over raw input stream. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ErrorRowCount` | `int` | **NOT NULL** |  | Count of records failing validation (exceptions). |
+| `ErrorSummaryJson` | `nvarchar(max)` | NULL |  | Diagnostic summary JSON storing categorized error tallies. |
+| `FileSizeBytes` | `bigint` | **NOT NULL** |  | File size in bytes. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the submitting organisation. |
+| `OriginalFileName` | `nvarchar(250)` | **NOT NULL** |  | Original file name uploaded by user. |
+| `ProcessingDurationMs` | `int` | NULL |  | Processing duration in milliseconds. |
+| `ReportType` | `nvarchar(10)` | **NOT NULL** |  | Ingestion section target: WSP (Planned) or ATR (Actuals). |
+| `SchemeYear` | `int` | **NOT NULL** |  | Statutory scheme financial year (e.g. 2026). |
+| `TotalBeneficiariesRollup` | `int` | **NOT NULL** |  | Total beneficiary headcount parsed across all valid rows. |
+| `TotalEstimatedCostRollup` | `decimal(18,2)` | **NOT NULL** |  | Total monetary investment cost parsed across all valid rows in ZAR. |
+| `TotalRowCount` | `int` | **NOT NULL** |  | Total data rows identified in the source file. |
+| `ValidRowCount` | `int` | **NOT NULL** |  | Count of records passing all statutory and taxonomy validations. |
+| `WspSubmissionId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent WspSubmission. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_WspBulkImportBatch_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `Restrict` |
+| `FK_WspBulkImportBatch_WspSubmission_WspSubmissionId` | `WspSubmissionId` | `dbo.WspSubmission` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_WspBulkImportBatch_BatchGuid` | `BatchGuid` | ✅ Yes |
+| `IX_WspBulkImportBatch_BatchReference` | `BatchReference` | No |
+| `IX_WspBulkImportBatch_BatchStatus` | `BatchStatus` | No |
+| `IX_WspBulkImportBatch_OrganisationId` | `OrganisationId` | No |
+| `IX_WspBulkImportBatch_SchemeYear` | `SchemeYear` | No |
+| `IX_WspBulkImportBatch_WspSubmissionId` | `WspSubmissionId` | No |
+
+---
+
+### <a id="wspbulkimportstaging"></a> `dbo.WspBulkImportStaging`
+
+**Description:** Individual candidate line staged within a WspBulkImportBatch before core commitment.  
+**CLR Model:** `Nsdms.Domain.Entities.WspBulkImportStaging`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `bigint` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `BatchId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent WspBulkImportBatch. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `IsCommitted` | `bit` | **NOT NULL** |  | Whether this row has already been committed to WspTrainingPlan or WspEmploymentSummary. |
+| `IsValid` | `bit` | **NOT NULL** |  | Whether this specific row is 100% valid and ready for core table commitment. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `ParsedBeneficiaryCount` | `int` | NULL |  | Domain property for ParsedBeneficiaryCount. |
+| `ParsedEndDate` | `datetime2` | NULL |  | Domain property for ParsedEndDate. |
+| `ParsedEstimatedCost` | `decimal(18,2)` | NULL |  | Domain property for ParsedEstimatedCost. |
+| `ParsedStartDate` | `datetime2` | NULL |  | Domain property for ParsedStartDate. |
+| `RawBeneficiaryCount` | `nvarchar(50)` | NULL |  | Domain property for RawBeneficiaryCount. |
+| `RawEmploymentTypeCode` | `nvarchar(50)` | NULL |  | Domain property for RawEmploymentTypeCode. |
+| `RawEndDate` | `nvarchar(50)` | NULL |  | Domain property for RawEndDate. |
+| `RawEquityCode` | `nvarchar(50)` | NULL |  | Domain property for RawEquityCode. |
+| `RawEstimatedCost` | `nvarchar(50)` | NULL |  | Domain property for RawEstimatedCost. |
+| `RawFirstName` | `nvarchar(100)` | NULL |  | Domain property for RawFirstName. |
+| `RawGenderCode` | `nvarchar(50)` | NULL |  | Domain property for RawGenderCode. |
+| `RawIdNumber` | `nvarchar(50)` | NULL |  | Domain property for RawIdNumber. |
+| `RawIdType` | `nvarchar(50)` | NULL |  | Domain property for RawIdType. |
+| `RawInterventionTypeCode` | `nvarchar(50)` | NULL |  | Domain property for RawInterventionTypeCode. |
+| `RawLastName` | `nvarchar(100)` | NULL |  | Domain property for RawLastName. |
+| `RawMunicipalityCode` | `nvarchar(50)` | NULL |  | Domain property for RawMunicipalityCode. |
+| `RawNationalityCode` | `nvarchar(50)` | NULL |  | Domain property for RawNationalityCode. |
+| `RawOfoCode` | `nvarchar(50)` | NULL |  | Domain property for RawOfoCode. |
+| `RawProviderTypeCode` | `nvarchar(50)` | NULL |  | Domain property for RawProviderTypeCode. |
+| `RawQualificationCode` | `nvarchar(50)` | NULL |  | Domain property for RawQualificationCode. |
+| `RawSkillsProgramCode` | `nvarchar(50)` | NULL |  | Domain property for RawSkillsProgramCode. |
+| `RawSkillsSetCode` | `nvarchar(50)` | NULL |  | Domain property for RawSkillsSetCode. |
+| `RawSpecialisationCode` | `nvarchar(50)` | NULL |  | Domain property for RawSpecialisationCode. |
+| `RawStartDate` | `nvarchar(50)` | NULL |  | Domain property for RawStartDate. |
+| `RawTrainingDeliveryMethodCode` | `nvarchar(50)` | NULL |  | Domain property for RawTrainingDeliveryMethodCode. |
+| `ResolvedInterventionTypeId` | `int` | NULL |  | Domain property for ResolvedInterventionTypeId. |
+| `ResolvedNqfLevel` | `int` | NULL |  | Domain property for ResolvedNqfLevel. |
+| `ResolvedOfoCodeId` | `int` | NULL |  | Domain property for ResolvedOfoCodeId. |
+| `ResolvedQualificationId` | `int` | NULL |  | Domain property for ResolvedQualificationId. |
+| `RowIndex` | `int` | **NOT NULL** |  | 1-based original line index in uploaded spreadsheet. |
+| `ValidationErrorCode` | `nvarchar(100)` | NULL |  | Standard error taxonomy code (e.g. INVALID_OFO, INVALID_RSA_ID, DUPLICATE_KEY). |
+| `ValidationErrorDetails` | `nvarchar(max)` | NULL |  | Explicit human-readable diagnostic error text detailing why validation failed. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_WspBulkImportStaging_WspBulkImportBatch_BatchId` | `BatchId` | `dbo.WspBulkImportBatch` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_WspBulkImportStaging_BatchId` | `BatchId` | No |
+| `IX_WspBulkImportStaging_IsCommitted` | `IsCommitted` | No |
+| `IX_WspBulkImportStaging_IsValid` | `IsValid` | No |
+| `IX_WspBulkImportStaging_RowIndex` | `RowIndex` | No |
 
 ---
 

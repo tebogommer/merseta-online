@@ -1,0 +1,716 @@
+@using Nsdms.Application.Common.Utilities
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Forms
+@using Nsdms.Web.Components.Shared
+@inject IWspBulkIngestionService BulkService
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="wsp-bulk-ingestion-container my-3">
+    <!-- Header & Download Official Template -->
+    <MudCard Elevation="1" Class="mb-4 rounded-lg border border-solid mud-border-lines-default">
+        <MudCardHeader>
+            <CardHeaderAvatar>
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                    <MudIcon Icon="@Icons.Material.Filled.UploadFile" />
+                </MudAvatar>
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Bulk spreadsheet ingestion engine</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Upload planned training interventions via Excel (.xlsx, .xls) or delimited text (.csv). Delimiters (comma, semicolon, tab) and UTF encodings are auto-detected.
+                </MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Download"
+                           OnClick="DownloadOfficialTemplateAsync"
+                           Disabled="_isDownloadingTemplate">
+                    @(_isDownloadingTemplate ? "Generating..." : "Download 2026 template (.xlsx)")
+                </MudButton>
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent Class="pt-0">
+            <!-- Dropzone Area -->
+            <MudFileUpload T="IBrowserFile"
+                           FilesChanged="OnSpreadsheetUploadedAsync"
+                           Accept=".xlsx, .xls, .csv"
+                           MaximumFileCount="1"
+                           Disabled="_isProcessing">
+                <ActivatorContent>
+                    <div class="d-flex flex-column align-center justify-center pa-6 rounded-lg cursor-pointer mud-theme-primary-hover"
+                         style="border: 2px dashed var(--mud-palette-lines-default); background: var(--mud-palette-background-grey); transition: all 0.2s ease;">
+                        @if (_isProcessing)
+                        {
+                            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium" Class="mb-2" />
+                            <MudText Typo="Typo.body2" Class="fw-semibold">@_processingStatusText</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Executing pre-flight set-based validation...</MudText>
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
+                            <MudText Typo="Typo.body1" Class="fw-semibold">Drag and drop spreadsheet here, or click to browse</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Accepts Microsoft Excel (.xlsx) and CSV files up to 25 MB with automatic delimiter sniffing
+                            </MudText>
+                        }
+                    </div>
+                </ActivatorContent>
+            </MudFileUpload>
+        </MudCardContent>
+    </MudCard>
+
+    <!-- Active Batch Pre-Flight Dashboard -->
+    @if (_activeBatch != null)
+    {
+        <MudCard Elevation="2" Class="mb-4 rounded-lg border-l-4" Style="@GetBatchCardBorderStyle()">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="@GetStatusAvatarColor()" Variant="Variant.Filled">
+                        <MudIcon Icon="@GetStatusIcon()" />
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <div class="d-flex align-center gap-2">
+                        <MudText Typo="Typo.h6">@_activeBatch.BatchReference</MudText>
+                        <MudChip T="string" Color="@GetStatusChipColor()" Size="Size.Small" Variant="Variant.Filled">
+                            @_activeBatch.BatchStatus
+                        </MudChip>
+                    </div>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        File: <strong>@_activeBatch.OriginalFileName</strong> (@FormatBytes(_activeBatch.FileSizeBytes)) |
+                        Security seal: <span class="font-mono">@TruncateHash(_activeBatch.ContentHashSha256)</span>
+                    </MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                   Color="Color.Default"
+                                   OnClick="RevalidateActiveBatchAsync"
+                                   Disabled="_isProcessing" />
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent Class="pt-0">
+                <!-- KPI Stat Row -->
+                <MudGrid Spacing="2" Class="mb-3">
+                    <MudItem xs="6" sm="4" md="2">
+                        <MudPaper Elevation="0" Class="pa-3 rounded-lg text-center" Style="background: var(--mud-palette-background-grey);">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Total rows</MudText>
+                            <MudText Typo="Typo.h6" Class="fw-bold">@_activeBatch.TotalRowCount</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6" sm="4" md="2">
+                        <MudPaper Elevation="0" Class="pa-3 rounded-lg text-center" Style="background: var(--mud-palette-background-grey);">
+                            <MudText Typo="Typo.caption" Color="Color.Success">Valid rows</MudText>
+                            <MudText Typo="Typo.h6" Color="Color.Success" Class="fw-bold">@_activeBatch.ValidRowCount</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6" sm="4" md="2">
+                        <MudPaper Elevation="0" Class="pa-3 rounded-lg text-center" Style="background: var(--mud-palette-background-grey);">
+                            <MudText Typo="Typo.caption" Color="@(_activeBatch.ErrorRowCount > 0 ? Color.Error : Color.Secondary)">Exceptions</MudText>
+                            <MudText Typo="Typo.h6" Color="@(_activeBatch.ErrorRowCount > 0 ? Color.Error : Color.Secondary)" Class="fw-bold">@_activeBatch.ErrorRowCount</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6" sm="4" md="2">
+                        <MudPaper Elevation="0" Class="pa-3 rounded-lg text-center" Style="background: var(--mud-palette-background-grey);">
+                            <MudText Typo="Typo.caption" Color="Color.Primary">Committed</MudText>
+                            <MudText Typo="Typo.h6" Color="Color.Primary" Class="fw-bold">@_activeBatch.CommittedRowCount</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6" sm="4" md="2">
+                        <MudPaper Elevation="0" Class="pa-3 rounded-lg text-center" Style="background: var(--mud-palette-background-grey);">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Beneficiaries</MudText>
+                            <MudText Typo="Typo.h6" Class="fw-bold">@_activeBatch.TotalBeneficiariesRollup</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6" sm="4" md="2">
+                        <MudPaper Elevation="0" Class="pa-3 rounded-lg text-center" Style="background: var(--mud-palette-background-grey);">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Total spend</MudText>
+                            <MudText Typo="Typo.h6" Class="fw-bold">@_activeBatch.TotalEstimatedCostRollup.ToString("C0")</MudText>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+
+                <!-- Status Guidance Alert -->
+                @if (_activeBatch.ErrorRowCount > 0)
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Text" Class="mb-3">
+                        <div class="d-flex flex-column flex-md-row justify-space-between align-md-center gap-2">
+                            <div>
+                                <strong class="fw-bold">@_activeBatch.ErrorRowCount exceptions detected</strong>.
+                                You can fix them inline via the Quick-Fix Drawer, download an Excel Delta Fix-It sheet, or commit the @_activeBatch.ValidRowCount clean rows now.
+                            </div>
+                            <div class="d-flex gap-2">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Warning"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.Build"
+                                           OnClick="OpenExceptionDrawerAsync">
+                                    Quick-fix drawer
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Warning"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.FileDownload"
+                                           OnClick="DownloadDeltaCorrectionExcelAsync">
+                                    Download fix-it (.xlsx)
+                                </MudButton>
+                            </div>
+                        </div>
+                    </MudAlert>
+                }
+                else if (_activeBatch.BatchStatus == "Validated")
+                {
+                    <MudAlert Severity="Severity.Success" Variant="Variant.Text" Class="mb-3">
+                        All @_activeBatch.TotalRowCount rows passed validation and are ready to be committed to the Workplace Skills Plan.
+                    </MudAlert>
+                }
+                else if (_activeBatch.BatchStatus == "Committed")
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Text" Class="mb-3">
+                        Batch fully committed into training plan records.
+                    </MudAlert>
+                }
+
+                <!-- Commitment Action Buttons -->
+                <div class="d-flex flex-wrap align-center justify-space-between gap-3 pt-2">
+                    <div class="d-flex align-center gap-2">
+                        @if (_activeBatch.ErrorRowCount > 0)
+                        {
+                            <!-- Secondary Delta Merge Dropzone -->
+                            <MudFileUpload T="IBrowserFile"
+                                           FilesChanged="OnDeltaMergedAsync"
+                                           Accept=".xlsx"
+                                           MaximumFileCount="1"
+                                           Disabled="_isProcessing">
+                                <ActivatorContent>
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Secondary"
+                                               StartIcon="@Icons.Material.Filled.MergeType">
+                                        Upload corrected delta
+                                    </MudButton>
+                                </ActivatorContent>
+                            </MudFileUpload>
+
+                            <!-- Emergency Prune Discard Option -->
+                            <MudButton Variant="Variant.Text"
+                                       Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.DeleteSweep"
+                                       OnClick="ConfirmDiscardExceptionsAsync">
+                                Prune exceptions
+                            </MudButton>
+                        }
+                    </div>
+
+                    <div class="d-flex align-center gap-2">
+                        @if (_activeBatch.ValidRowCount > 0 && _activeBatch.CommittedRowCount < _activeBatch.ValidRowCount)
+                        {
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Success"
+                                       StartIcon="@Icons.Material.Filled.CheckCircle"
+                                       OnClick="CommitBatchAsync"
+                                       Disabled="_isProcessing">
+                                @if (_activeBatch.ErrorRowCount > 0)
+                                {
+                                    <span>Commit valid rows (@_activeBatch.ValidRowCount)</span>
+                                }
+                                else
+                                {
+                                    <span>Commit all rows (@_activeBatch.TotalRowCount) to training plan</span>
+                                }
+                            </MudButton>
+                        }
+                    </div>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    }
+
+    <!-- Quick-Fix Drawer for Exceptions -->
+    <MudDrawer @bind-Open="_drawerOpen"
+               Anchor="Anchor.End"
+               Elevation="4"
+               Variant="DrawerVariant.Temporary"
+               Width="720px">
+        <MudDrawerHeader Class="d-flex align-center justify-space-between pb-2">
+            <div>
+                <MudText Typo="Typo.h6">Exception Quick-Fix Drawer</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Correct errors inline and revalidate without re-uploading the file
+                </MudText>
+            </div>
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Default" OnClick="@(() => _drawerOpen = false)" />
+        </MudDrawerHeader>
+        <div class="pa-4" style="max-height: calc(100vh - 120px); overflow-y: auto;">
+            @if (_exceptionRows.Count == 0)
+            {
+                <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="rounded-lg">
+                    No exceptions detected in this batch.
+                </MudAlert>
+            }
+            else
+            {
+                <div class="d-flex justify-space-between align-center mb-3">
+                    <MudText Typo="Typo.subtitle2">@_exceptionRows.Count exception rows requiring correction</MudText>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.AutoFixHigh"
+                               OnClick="RevalidateActiveBatchAsync">
+                        Revalidate all
+                    </MudButton>
+                </div>
+
+                @foreach (var row in _exceptionRows)
+                {
+                    <MudCard Elevation="1" Class="mb-3 rounded-lg border border-solid mud-border-lines-default">
+                        <MudCardContent Class="pa-3">
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <span class="fw-bold text-primary font-mono">Row #@row.RowIndex</span>
+                                <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Outlined">
+                                    @(row.ValidationErrorCode ?? "ERROR")
+                                </MudChip>
+                            </div>
+                            <MudAlert Severity="Severity.Error" Variant="Variant.Text" Class="pa-1 mb-2">
+                                <MudText Typo="Typo.caption">@row.ValidationErrorDetails</MudText>
+                            </MudAlert>
+
+                            <MudGrid Spacing="2">
+                                <MudItem xs="6">
+                                    <MudTextField T="string"
+                                                  Label="OFO Code"
+                                                  @bind-Value="row.RawOfoCode"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  HelperText="6-digit code (e.g. 653301)" />
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudTextField T="string"
+                                                  Label="RSA ID Number"
+                                                  @bind-Value="row.RawIdNumber"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  HelperText="13 numeric digits" />
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudTextField T="string"
+                                                  Label="Programme Type"
+                                                  @bind-Value="row.RawInterventionTypeCode"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense" />
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudTextField T="string"
+                                                  Label="Estimated Cost (ZAR)"
+                                                  @bind-Value="row.RawEstimatedCost"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense" />
+                                </MudItem>
+                            </MudGrid>
+                            <div class="d-flex justify-end mt-2">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.Save"
+                                           OnClick="@(() => SaveRowFixAsync(row))">
+                                    Save fix
+                                </MudButton>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                }
+            }
+        </div>
+    </MudDrawer>
+
+    <!-- Historical Batches Register (Collapsible) -->
+    @if (_historicalBatches.Count > 0)
+    {
+        <MudExpansionPanels Elevation="1" Class="rounded-lg">
+            <MudExpansionPanel Text="@($"Batch Ingestion History ({_historicalBatches.Count} runs)")"
+                               Icon="@Icons.Material.Filled.History">
+                <MudTable Items="_historicalBatches" Dense="true" Hover="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Reference</MudTh>
+                        <MudTh>Uploaded</MudTh>
+                        <MudTh>File</MudTh>
+                        <MudTh>Total</MudTh>
+                        <MudTh>Valid</MudTh>
+                        <MudTh>Exceptions</MudTh>
+                        <MudTh>Committed</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd><span class="font-mono">@context.BatchReference</span></MudTd>
+                        <MudTd>@context.CreatedAt.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                        <MudTd>@context.OriginalFileName</MudTd>
+                        <MudTd>@context.TotalRowCount</MudTd>
+                        <MudTd><span class="text-success fw-bold">@context.ValidRowCount</span></MudTd>
+                        <MudTd>
+                            @if (context.ErrorRowCount > 0)
+                            {
+                                <span class="text-error fw-bold">@context.ErrorRowCount</span>
+                            }
+                            else
+                            {
+                                <span>0</span>
+                            }
+                        </MudTd>
+                        <MudTd>@context.CommittedRowCount</MudTd>
+                        <MudTd>
+                            <MudChip T="string" Size="Size.Small" Color="@GetChipColor(context.BatchStatus)">
+                                @context.BatchStatus
+                            </MudChip>
+                        </MudTd>
+                        <MudTd>
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Size="Size.Small"
+                                           Color="Color.Primary"
+                                           OnClick="@(() => SelectHistoricalBatch(context))" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    }
+</div>
+
+@code {
+    [Parameter] public int WspSubmissionId { get; set; }
+    [Parameter] public int SchemeYear { get; set; } = 2026;
+    [Parameter] public EventCallback OnIngestionCommitted { get; set; }
+
+    private WspBulkImportBatch? _activeBatch;
+    private List<WspBulkImportBatch> _historicalBatches = new();
+    private List<WspBulkImportStaging> _exceptionRows = new();
+
+    private bool _isProcessing = false;
+    private bool _isDownloadingTemplate = false;
+    private bool _drawerOpen = false;
+    private string _processingStatusText = "Uploading spreadsheet...";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (WspSubmissionId > 0)
+        {
+            await LoadBatchesAsync();
+        }
+    }
+
+    private async Task LoadBatchesAsync()
+    {
+        try
+        {
+            _historicalBatches = await BulkService.GetBatchesBySubmissionAsync(WspSubmissionId);
+            if (_activeBatch == null && _historicalBatches.Count > 0)
+            {
+                _activeBatch = _historicalBatches.First();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading bulk ingestion history: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DownloadOfficialTemplateAsync()
+    {
+        _isDownloadingTemplate = true;
+        try
+        {
+            var bytes = await BulkService.GenerateOfficialTemplateExcelAsync(SchemeYear);
+            var base64 = Convert.ToBase64String(bytes);
+            var fileName = $"merSETA_WSP_ATR_Bulk_Template_{SchemeYear}.xlsx";
+            await JS.InvokeVoidAsync("downloadFileFromBase64", fileName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", base64);
+            Snackbar.Add("Official template generated and downloaded successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to generate template: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isDownloadingTemplate = false;
+        }
+    }
+
+    private async Task OnSpreadsheetUploadedAsync(IBrowserFile file)
+    {
+        if (file == null) return;
+
+        _isProcessing = true;
+        _processingStatusText = "Ingesting spreadsheet and executing pre-flight validation...";
+        StateHasChanged();
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var username = authState.User.Identity?.Name ?? "SYSTEM";
+
+            // Allow up to 25 MB stream
+            using var stream = file.OpenReadStream(25 * 1024 * 1024);
+            _activeBatch = await BulkService.StageAndValidateBatchAsync(WspSubmissionId, file.Name, stream, username, allowPartial: true);
+            Snackbar.Add($"Spreadsheet uploaded: {_activeBatch.TotalRowCount} rows parsed ({_activeBatch.ValidRowCount} valid, {_activeBatch.ErrorRowCount} exceptions).", 
+                _activeBatch.ErrorRowCount == 0 ? Severity.Success : Severity.Warning);
+
+            await LoadBatchesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Spreadsheet ingestion failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RevalidateActiveBatchAsync()
+    {
+        if (_activeBatch == null) return;
+        _isProcessing = true;
+        _processingStatusText = "Re-evaluating validation rules...";
+        StateHasChanged();
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var username = authState.User.Identity?.Name ?? "SYSTEM";
+            _activeBatch = await BulkService.RevalidateBatchAsync(_activeBatch.Id, username);
+
+            if (_drawerOpen)
+            {
+                _exceptionRows = await BulkService.GetBatchExceptionsAsync(_activeBatch.Id);
+            }
+
+            Snackbar.Add($"Batch revalidated: {_activeBatch.ValidRowCount} valid, {_activeBatch.ErrorRowCount} exceptions.", Severity.Info);
+            await LoadBatchesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Revalidation error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenExceptionDrawerAsync()
+    {
+        if (_activeBatch == null) return;
+        try
+        {
+            _exceptionRows = await BulkService.GetBatchExceptionsAsync(_activeBatch.Id);
+            _drawerOpen = true;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading exceptions: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SaveRowFixAsync(WspBulkImportStaging row)
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var username = authState.User.Identity?.Name ?? "SYSTEM";
+
+            decimal.TryParse(row.RawEstimatedCost?.Replace(" ", "").Replace("R", "").Replace(",", "."), out var cost);
+            await BulkService.UpdateStagedRowAsync(row.Id, row.RawOfoCode, row.RawIdNumber, row.RawInterventionTypeCode, cost, username);
+
+            Snackbar.Add($"Row #{row.RowIndex} updated.", Severity.Success);
+            await RevalidateActiveBatchAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving row: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DownloadDeltaCorrectionExcelAsync()
+    {
+        if (_activeBatch == null) return;
+        try
+        {
+            var bytes = await BulkService.GenerateDeltaCorrectionExcelAsync(_activeBatch.Id);
+            var base64 = Convert.ToBase64String(bytes);
+            var fileName = $"Delta_FixIt_{_activeBatch.BatchReference}.xlsx";
+            await JS.InvokeVoidAsync("downloadFileFromBase64", fileName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", base64);
+            Snackbar.Add("Delta fix-it workbook generated and downloaded.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating delta workbook: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OnDeltaMergedAsync(IBrowserFile file)
+    {
+        if (file == null || _activeBatch == null) return;
+
+        _isProcessing = true;
+        _processingStatusText = "Merging delta corrections into staged batch...";
+        StateHasChanged();
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var username = authState.User.Identity?.Name ?? "SYSTEM";
+
+            using var stream = file.OpenReadStream(15 * 1024 * 1024);
+            _activeBatch = await BulkService.MergeDeltaWorkbookAsync(_activeBatch.Id, stream, username);
+            Snackbar.Add($"Delta workbook merged. Updated batch status: {_activeBatch.ValidRowCount} valid, {_activeBatch.ErrorRowCount} exceptions.", Severity.Success);
+            await LoadBatchesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Delta merge failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CommitBatchAsync()
+    {
+        if (_activeBatch == null) return;
+        _isProcessing = true;
+        _processingStatusText = "Committing valid interventions to training plan...";
+        StateHasChanged();
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var username = authState.User.Identity?.Name ?? "SYSTEM";
+
+            _activeBatch = await BulkService.CommitBatchAsync(_activeBatch.Id, username, discardExceptions: false);
+            Snackbar.Add($"Successfully committed {_activeBatch.CommittedRowCount} interventions into WSP Training Plan.", Severity.Success);
+
+            await LoadBatchesAsync();
+            if (OnIngestionCommitted.HasDelegate)
+            {
+                await OnIngestionCommitted.InvokeAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Commit failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ConfirmDiscardExceptionsAsync()
+    {
+        if (_activeBatch == null) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Discard Unresolved Exceptions?" },
+            { x => x.Consequence, $"Are you sure you want to prune and discard {_activeBatch.ErrorRowCount} exception rows? This will permanently remove corrupt rows and finalize the remaining {_activeBatch.ValidRowCount} valid rows." },
+            { x => x.ConfirmLabel, "Discard and Finalize" },
+            { x => x.IsDestructive, true }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Discard Exceptions", parameters);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled)
+        {
+            _isProcessing = true;
+            StateHasChanged();
+            try
+            {
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                var username = authState.User.Identity?.Name ?? "SYSTEM";
+
+                _activeBatch = await BulkService.CommitBatchAsync(_activeBatch.Id, username, discardExceptions: true);
+                Snackbar.Add("Exceptions pruned. Batch successfully committed.", Severity.Success);
+                await LoadBatchesAsync();
+                if (OnIngestionCommitted.HasDelegate)
+                {
+                    await OnIngestionCommitted.InvokeAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Prune failed: {ex.Message}", Severity.Error);
+            }
+            finally
+            {
+                _isProcessing = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void SelectHistoricalBatch(WspBulkImportBatch batch)
+    {
+        _activeBatch = batch;
+    }
+
+    private string GetBatchCardBorderStyle()
+    {
+        if (_activeBatch == null) return "";
+        if (_activeBatch.ErrorRowCount > 0) return "border-left-color: var(--mud-palette-warning);";
+        if (_activeBatch.BatchStatus == "Committed") return "border-left-color: var(--mud-palette-primary);";
+        return "border-left-color: var(--mud-palette-success);";
+    }
+
+    private Color GetStatusAvatarColor()
+    {
+        if (_activeBatch == null) return Color.Default;
+        if (_activeBatch.ErrorRowCount > 0) return Color.Warning;
+        if (_activeBatch.BatchStatus == "Committed") return Color.Primary;
+        return Color.Success;
+    }
+
+    private string GetStatusIcon()
+    {
+        if (_activeBatch == null) return Icons.Material.Filled.Info;
+        if (_activeBatch.ErrorRowCount > 0) return Icons.Material.Filled.Warning;
+        if (_activeBatch.BatchStatus == "Committed") return Icons.Material.Filled.FactCheck;
+        return Icons.Material.Filled.CheckCircle;
+    }
+
+    private Color GetStatusChipColor()
+    {
+        if (_activeBatch == null) return Color.Default;
+        return GetChipColor(_activeBatch.BatchStatus);
+    }
+
+    private static Color GetChipColor(string status) => status switch
+    {
+        "Validated" => Color.Success,
+        "Committed" => Color.Primary,
+        "PartiallyCommitted" => Color.Info,
+        "ValidationFailed" => Color.Warning,
+        "RolledBack" => Color.Error,
+        _ => Color.Default
+    };
+
+    private static string TruncateHash(string hash)
+    {
+        if (string.IsNullOrEmpty(hash) || hash.Length <= 16) return hash;
+        return $"{hash[..8]}...{hash[^8..]}";
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / (1024.0 * 1024.0):F2} MB";
+    }
+}

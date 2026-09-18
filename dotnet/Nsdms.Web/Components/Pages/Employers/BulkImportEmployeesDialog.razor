@@ -1,0 +1,156 @@
+@namespace Nsdms.Web.Components.Pages.Employers
+@using Nsdms.Application.Services
+@inject IOrganisationEmployeeService EmployeeService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.UploadFile" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">Bulk Import Living Employee Roster</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Upload an Excel spreadsheet (<code>.xlsx</code>) containing employee records.
+            The system will match RSA IDs, automatically calculate age/gender demographics, and map OFO occupational categories.
+        </MudText>
+
+        <div class="d-flex justify-space-between align-center mb-4">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.Download"
+                       OnClick="DownloadTemplateAsync"
+                       Size="Size.Small">
+                Download Official .xlsx Template
+            </MudButton>
+        </div>
+
+        <MudFileUpload T="IBrowserFile" FilesChanged="OnFileSelected" Accept=".xlsx,.csv">
+            <ActivatorContent>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.CloudUpload">
+                    @(_selectedFile == null ? "Select Spreadsheet (.xlsx)" : $"Selected: {_selectedFile.Name}")
+                </MudButton>
+            </ActivatorContent>
+        </MudFileUpload>
+
+        @if (_selectedFile != null)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3">
+                Ready to import: <strong>@_selectedFile.Name</strong> (@((_selectedFile.Size / 1024.0).ToString("F1")) KB)
+            </MudAlert>
+        }
+
+        @if (_isProcessing)
+        {
+            <div class="mt-4">
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-2" />
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Parsing employee roster, validating RSA IDs and OFO classifications...</MudText>
+            </div>
+        }
+
+        @if (_importResult != null)
+        {
+            <MudAlert Severity="@(_importResult.Success ? Severity.Success : Severity.Error)" Class="mt-4">
+                @_importResult.Message
+            </MudAlert>
+
+            @if (_importResult.Errors.Any())
+            {
+                <MudExpansionPanels Dense="true" Class="mt-2">
+                    <MudExpansionPanel Text="@($"View Validation Exceptions ({_importResult.Errors.Count})")">
+                        <MudList T="string" Dense="true">
+                            @foreach (var err in _importResult.Errors)
+                            {
+                                <MudListItem Icon="@Icons.Material.Filled.Warning" IconColor="Color.Warning">
+                                    <MudText Typo="Typo.caption" Color="Color.Error">@err</MudText>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Close">Close</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Success"
+                   StartIcon="@Icons.Material.Filled.PlayArrow"
+                   Disabled="_selectedFile == null || _isProcessing"
+                   OnClick="ProcessImportAsync">
+            @(_isProcessing ? "Processing..." : "Import & Upsert Roster")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public int OrganisationId { get; set; }
+
+    private IBrowserFile? _selectedFile;
+    private bool _isProcessing;
+    private BulkEmployeeImportResultDto? _importResult;
+
+    private void OnFileSelected(IBrowserFile file)
+    {
+        _selectedFile = file;
+        _importResult = null;
+    }
+
+    private async Task DownloadTemplateAsync()
+    {
+        try
+        {
+            var bytes = await EmployeeService.ExportEmployeesTemplateAsync();
+            var base64 = Convert.ToBase64String(bytes);
+            await JS.InvokeVoidAsync("downloadFileFromBase64", "Employee_Roster_Template.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", base64);
+            Snackbar.Add("Template downloaded successfully.", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Template download failed: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ProcessImportAsync()
+    {
+        if (_selectedFile == null) return;
+
+        _isProcessing = true;
+        _importResult = null;
+        try
+        {
+            using var stream = _selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            _importResult = await EmployeeService.ImportEmployeesAsync(OrganisationId, stream, _selectedFile.Name, "Admin");
+
+            if (_importResult.Success)
+            {
+                Snackbar.Add(_importResult.Message, Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(_importResult.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Import exception: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void Close()
+    {
+        MudDialog.Close(DialogResult.Ok(_importResult?.Success == true));
+    }
+}

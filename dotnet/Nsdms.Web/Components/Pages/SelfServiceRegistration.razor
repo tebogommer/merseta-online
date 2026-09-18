@@ -43,14 +43,9 @@
                 </MudAlert>
 
                 <div class="d-flex flex-column gap-3">
-                    <MudButton Variant="Variant.Filled" 
-                               Color="Color.Primary" 
-                               FullWidth="true" 
-                               Href="@($"/confirm-email?userId={_registeredUserId}&token={Uri.EscapeDataString(_confirmationToken)}")"
-                               StartIcon="@Icons.Material.Filled.MarkEmailRead"
-                               Style="text-transform: none; font-weight: 600; height: 44px;">
-                        Confirm &amp; Activate Account Now
-                    </MudButton>
+                    <MudText Typo="Typo.body1" Class="mb-2">
+                        A digital confirmation link has been sent to your registered email address (@_email). Please check your email inbox and click the link to activate your account.
+                    </MudText>
 
                     <MudButton Variant="Variant.Outlined" 
                                Color="Color.Secondary" 
@@ -463,7 +458,14 @@
             Person person;
             if (_idType == "RSA_ID")
             {
-                person = await PersonService.GetByRsaIdAsync(_rsaIdNumber.Trim()) ?? new Person();
+                var existingPerson = await PersonService.GetByRsaIdAsync(_rsaIdNumber.Trim());
+                if (existingPerson != null)
+                {
+                    _idErrorMessage = "A stakeholder profile with this National ID number is already registered in the system. To access your profile, please sign in or contact the helpdesk.";
+                    Snackbar.Add(_idErrorMessage, Severity.Error);
+                    return;
+                }
+                person = new Person();
             }
             else
             {
