@@ -52,7 +52,14 @@ public class ThrottledEmailOutboxWorker : BackgroundService
             }
 
             // Polling interval between checks
-            await Task.Delay(2000, stoppingToken);
+            try
+            {
+                await Task.Delay(2000, stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
         }
 
         _logger.LogInformation("ThrottledEmailOutboxWorker stopped.");

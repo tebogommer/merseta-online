@@ -49,9 +49,9 @@ public class LearnerTradeTest : BaseEntity
     public string? TradeCode { get; set; }
 
     /// <summary>
-    /// SAQA Qualification ID or OFO Trade Code corresponding to the trade test (SETMIS File 505).
+    /// SAQA Qualification ID or trade qualification reference (SETMIS File 505).
     /// </summary>
-    public string? QualificationId { get; set; } = string.Empty;
+    public int? QualificationId { get; set; }
 
     /// <summary>
     /// Trade test examination attempt index number (e.g. 1, 2, 3) for SETMIS File 505.

@@ -70,6 +70,8 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<WspBulkImportStaging> WspBulkImportStagings { get; }
     DbSet<OrganisationEmployee> OrganisationEmployees { get; }
     DbSet<AuditLog> AuditLogs { get; }
+    DbSet<BackgroundJobJournal> BackgroundJobJournals { get; }
+    DbSet<OutboxMessage> OutboxMessages { get; }
 
     // Workflow Engine & Task Matrix
     DbSet<WorkflowDefinition> WorkflowDefinitions { get; }
@@ -334,10 +336,17 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<InterestDeclarationItem> InterestDeclarationItems { get; }
     DbSet<ConflictFlag> ConflictFlags { get; }
 
+    // Phase 59: B2B API Architecture & Webhook Event Engine
+    DbSet<ApiClient> ApiClients { get; }
+    DbSet<ApiWebhookSubscription> ApiWebhookSubscriptions { get; }
+    DbSet<ApiWebhookDeliveryLog> ApiWebhookDeliveryLogs { get; }
+    DbSet<ApiIdempotencyRecord> ApiIdempotencyRecords { get; }
+
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
     ValueTask<object?> FindAsync(Type entityType, params object?[]? keyValues);
     Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry Add(object entity);
     Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<TEntity> Add<TEntity>(TEntity entity) where TEntity : class;
+    Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<TEntity> Entry<TEntity>(TEntity entity) where TEntity : class;
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

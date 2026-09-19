@@ -1,4 +1,4 @@
-﻿-- =========================================================================================
+-- =========================================================================================
 -- NSDMS Migration: V2026_11_Add_Physical_Foreign_Key_Constraints.sql
 -- Description: Applies physical FOREIGN KEY constraints across core enterprise tables
 --              to guarantee referential data integrity during bulk batch ETL and ERP sync.
@@ -167,7 +167,7 @@ BEGIN
     BEGIN
         ALTER TABLE [dbo].[CompanyLearner] WITH NOCHECK
         ADD CONSTRAINT [FK_CompanyLearner_Organisation]
-        FOREIGN KEY ([EmployerId]) REFERENCES [dbo].[Organisation] ([Id]);
+        FOREIGN KEY ([OrganisationId]) REFERENCES [dbo].[Organisation] ([Id]);
 
         ALTER TABLE [dbo].[CompanyLearner] CHECK CONSTRAINT [FK_CompanyLearner_Organisation];
         PRINT 'Added constraint [FK_CompanyLearner_Organisation].';

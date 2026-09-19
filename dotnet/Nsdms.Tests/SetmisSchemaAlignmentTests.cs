@@ -194,7 +194,7 @@ public class SetmisSchemaAlignmentTests
             TradeTestCentreCode = "TTC-JHB-01",
             TradeTestCentreEtqaId = "17",
             TradeCode = "651202",
-            QualificationId = "94100",
+            QualificationId = 94100,
             TradeTestNumber = 1,
             TradeTestResultId = "01",
             TradeTestResultReasonId = "01",

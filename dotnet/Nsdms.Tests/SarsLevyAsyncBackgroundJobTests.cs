@@ -57,8 +57,8 @@ public class SarsLevyAsyncBackgroundJobTests
         Assert.Equal("SARS_SCHEDULE_2026.dat", ticket.ResultFileName);
         Assert.Equal(bytes.Length, ticket.ResultData?.Length);
 
-        // Read from channel
-        var readSuccess = queue.Reader.TryRead(out var readTicket);
+        // Read from channel (supports dual-channel queue routing)
+        var readSuccess = queue.Reader.TryRead(out var readTicket) || queue.BatchReader.TryRead(out readTicket);
         Assert.True(readSuccess);
         Assert.Equal(ticket.JobId, readTicket?.JobId);
     }

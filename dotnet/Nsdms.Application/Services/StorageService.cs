@@ -51,19 +51,44 @@ public class StorageService : IStorageService
             IsVerified = false
         };
 
-        context.DocumentMetadatas.Add(doc);
-
-        context.AuditLogs.Add(new AuditLog
+        var strategy = context.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
-            EntityName = "DocumentMetadata",
-            RecordId = doc.Id,
-            ActionName = "UPLOAD_DOCUMENT",
-            Actor = userId,
-            Timestamp = DateTime.UtcNow,
-            MetadataJson = $"{{\"fileName\":\"{fileName}\",\"docType\":\"{docTypeCode}\",\"targetEntity\":\"{entityName}\",\"targetId\":{entityId}}}"
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
+            if (context.Database.IsRelational())
+            {
+                tx = await context.Database.BeginTransactionAsync();
+            }
+
+            try
+            {
+                context.DocumentMetadatas.Add(doc);
+                await context.SaveChangesAsync();
+
+                context.AuditLogs.Add(new AuditLog
+                {
+                    EntityName = "DocumentMetadata",
+                    RecordId = doc.Id,
+                    ActionName = "UPLOAD_DOCUMENT",
+                    Actor = userId,
+                    Timestamp = DateTime.UtcNow,
+                    MetadataJson = $"{{\"fileName\":\"{fileName}\",\"docType\":\"{docTypeCode}\",\"targetEntity\":\"{entityName}\",\"targetId\":{entityId}}}"
+                });
+
+                await context.SaveChangesAsync();
+                if (tx != null) await tx.CommitAsync();
+            }
+            catch
+            {
+                if (tx != null) await tx.RollbackAsync();
+                throw;
+            }
+            finally
+            {
+                tx?.Dispose();
+            }
         });
 
-        await context.SaveChangesAsync();
         return doc;
     }
 

@@ -170,6 +170,7 @@ public class WorkflowEngineService : IWorkflowEngineService
                 TaskStatus = "Open",
                 Priority = "Normal",
                 DueDate = _workingDayEngine != null ? await _workingDayEngine.AddBusinessDaysAsync(DateTime.UtcNow, 7) : DateTime.UtcNow.AddDays(7),
+                CreatedBy = initiatorUserId,
                 TargetRoute = GetTargetRoute(def.TargetEntityName, entityId)
             };
             context.WorkflowTasks.Add(initialTask);
@@ -239,6 +240,18 @@ public class WorkflowEngineService : IWorkflowEngineService
             return new WorkflowActionResult(false, "Comments/rationale are mandatory for this action.");
         }
 
+        // Segregation of Duties (Maker-Checker) invariant: Initiator cannot approve or adjudicate their own submission
+        bool isApprovalAction = transition.ActionName.Contains("Approve", StringComparison.OrdinalIgnoreCase)
+            || transition.ActionName.Contains("Adjudicate", StringComparison.OrdinalIgnoreCase)
+            || transition.ActionName.Contains("Sign", StringComparison.OrdinalIgnoreCase)
+            || (transition.ToState != null && (transition.ToState.StateName.Contains("Approved", StringComparison.OrdinalIgnoreCase) || transition.ToState.IsTerminal));
+
+        if (isApprovalAction && !string.IsNullOrWhiteSpace(instance.InitiatorUserId) &&
+            string.Equals(instance.InitiatorUserId.Trim(), actorUserId.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            return new WorkflowActionResult(false, "Dual Authorisation Governance breach: Workflow initiator cannot approve or adjudicate their own submission.");
+        }
+
         var fromStateId = instance.CurrentWorkflowStateId;
         var toState = transition.ToState!;
 
@@ -290,6 +303,7 @@ public class WorkflowEngineService : IWorkflowEngineService
                 TaskStatus = "Open",
                 Priority = "Normal",
                 DueDate = _workingDayEngine != null ? await _workingDayEngine.AddBusinessDaysAsync(DateTime.UtcNow, 5) : DateTime.UtcNow.AddDays(5),
+                CreatedBy = actorUserId,
                 TargetRoute = GetTargetRoute(instance.WorkflowDefinition.TargetEntityName, instance.EntityId)
             };
             context.WorkflowTasks.Add(nextTask);

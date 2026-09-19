@@ -80,19 +80,44 @@ public class FinanceService : IFinanceService
             };
         }
 
-        context.GrantMoas.Add(moa);
-
-        context.AuditLogs.Add(new AuditLog
+        var strategy = context.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
-            EntityName = "GrantMoa",
-            RecordId = moa.Id,
-            ActionName = "CREATE_GRANT_MOA",
-            Actor = userId,
-            Timestamp = DateTime.UtcNow,
-            MetadataJson = $"{{\"moaNumber\":\"{moa.MoaNumber}\",\"value\":{moa.TotalContractValue}}}"
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
+            if (context.Database.IsRelational())
+            {
+                tx = await context.Database.BeginTransactionAsync();
+            }
+
+            try
+            {
+                context.GrantMoas.Add(moa);
+                await context.SaveChangesAsync();
+
+                context.AuditLogs.Add(new AuditLog
+                {
+                    EntityName = "GrantMoa",
+                    RecordId = moa.Id,
+                    ActionName = "CREATE_GRANT_MOA",
+                    Actor = userId,
+                    Timestamp = DateTime.UtcNow,
+                    MetadataJson = $"{{\"moaNumber\":\"{moa.MoaNumber}\",\"value\":{moa.TotalContractValue}}}"
+                });
+
+                await context.SaveChangesAsync();
+                if (tx != null) await tx.CommitAsync();
+            }
+            catch
+            {
+                if (tx != null) await tx.RollbackAsync();
+                throw;
+            }
+            finally
+            {
+                tx?.Dispose();
+            }
         });
 
-        await context.SaveChangesAsync();
         return moa;
     }
 

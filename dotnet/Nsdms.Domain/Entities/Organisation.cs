@@ -325,4 +325,10 @@ public class Organisation : BaseEntity
     /// Active and historical workforce employees associated with this organisation (Option B: Living Employer Roster).
     /// </summary>
     public ICollection<OrganisationEmployee> Employees { get; set; } = new List<OrganisationEmployee>();
+
+    /// <summary>
+    /// Optimistic concurrency token (ROWVERSION).
+    /// </summary>
+    [System.ComponentModel.DataAnnotations.Timestamp]
+    public byte[] RowVersion { get; set; } = [];
 }

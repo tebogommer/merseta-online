@@ -1,7 +1,7 @@
 ---
 type: project
 created: 2026-05-25
-updated: 2026-09-13
+updated: 2026-09-19
 ---
 
 # Project Conventions
@@ -110,6 +110,17 @@ updated: 2026-09-13
 - **Multi-Step Modal Dialog Deletion Verification**:
   - Destructive entity deletion tests must not stop at clicking the page-level "Delete" button; tests must explicitly assert the presence of `<ConfirmDialog>` (`.mud-dialog`), capture dialog state, and dispatch the affirmative action (`.mud-dialog button:has-text('Delete ...')`) to verify true database cascading removal and list route redirection.
 
-
-
-
+## Core Infrastructure & Architecture Invariants (Post-Remediation)
+- **Guidance Invariant**: Always add the Core Infrastructure & Architecture Invariants guidance block to `GEMINI.md` whenever generating or updating system guidelines.
+- **Schema Migration Journaling**: Never invoke raw DDL scripts on startup without wrapping them in `SchemaMigrationJournal.ExecuteIfNotAppliedAsync(...)`. Journal table `dbo.__CustomSchemaJournal` ensures that executed migrations are bypassed in <5ms, protecting cold start times.
+- **Interactive Circuit Multi-Tenancy**: Never resolve `ITenantProvider` solely from `IHttpContextAccessor.HttpContext` (null on subsequent WebSocket packets); always verify claims via `AuthenticationStateProvider` fallback to enforce fail-closed tenant scoping on `OrganisationId`.
+- **Event Subscription Lifecycle**: Never declare `public static event Action<...>` in singleton notification services; use instance events and enforce `IDisposable` with event unsubscription (`service.NotificationReceived -= Handler`) in Blazor components to prevent garbage collection retention of disconnected circuits.
+- **Segregation of Duties (Maker-Checker)**: In all financial activations (Banking Details, Discretionary Grant Claims, Mandatory Grant Disbursements), enforce `CreatedBy != currentUserId` and `FirstSignoffUserId != currentUserId` before committing status changes.
+## Transaction Management & Database Atomicity Governance Standard
+- **Execution Strategy with Transactions**: Whenever `EnableRetryOnFailure` is configured, user-initiated transactions MUST be enclosed within `db.Database.CreateExecutionStrategy().ExecuteAsync(...)`. Directly invoking `db.Database.BeginTransactionAsync()` outside an execution strategy triggers runtime `InvalidOperationException` on SQL Server.
+- **Atomic Double-Write Invariant**: All business mutations and their corresponding `audit_logs` entries must be committed within the same database transaction. Never rely on two uncoordinated `SaveChangesAsync()` calls where the second failure drops the audit record.
+- **Non-Zero Identity Evaluation**: When saving a newly created entity and logging its creation, ensure the entity's auto-generated `Id` is evaluated after the insert and before the transaction commits so `AuditLog.RecordId` is never committed as `0`.
+- **Financial Headroom & TOCTOU Protection**: In financial claim submissions (e.g. Discretionary Grant claims against Project Implementation Plan budgets), enforce atomic headroom checks within transactions (or serializable isolation) to eliminate multi-user over-allocation race conditions.
+- **Client Concurrency Token Hydration**: In disconnected edit operations with optimistic concurrency (`RowVersion`), assign the client-provided token to `db.Entry(existing).Property(e => e.RowVersion).OriginalValue` so EF Core correctly detects Last-Write-Wins collisions.
+- **Queue Row-Locking Concurrency**: High-throughput message queues (`ErpOutboxMessage`, `OutboxMessage`) must use atomic row-level reservation (`WITH (UPDLOCK, READPAST)`) to prevent multiple workers from leasing and dispatching duplicate transactions.
+- **Database Engine Concurrency Baseline**: Ensure database options `AUTO_CLOSE OFF`, `READ_COMMITTED_SNAPSHOT ON`, and `ALLOW_SNAPSHOT_ISOLATION ON` are permanently configured to eliminate reader/writer deadlock cascades (SQL Error 1205).

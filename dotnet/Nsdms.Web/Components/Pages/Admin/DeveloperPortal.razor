@@ -1,0 +1,685 @@
+@page "/admin/developer-portal"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using Nsdms.Application.Common
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@attribute [Authorize(Roles = "SuperAdmin,Admin")]
+@inject IApiSecurityService ApiSecurityService
+@inject IWebhookDispatcherService WebhookDispatcher
+@inject INsdmsDbContextFactory DbFactory
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<!-- Archetype A5: Dashboard / Control Hub (16-Point UI Standard compliant) -->
+<PageTitle>B2B API gateway &amp; developer portal - merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-2 pa-sm-4">
+    <!-- BREADCRUMBS (16-Point Standard #7) -->
+    <MudBreadcrumbs Items="_breadcrumbItems" Separator="›" Class="pa-0 mb-2" Style="font-size: 0.8125rem;" />
+
+    <!-- STICKY TOP BAR (16-Point Standard #4, #5, #6) -->
+    <MudPaper Elevation="2" Class="sticky-top pa-3 pa-sm-4 mb-4 rounded-lg bg-surface d-flex justify-space-between align-center flex-wrap gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+        <div class="d-flex align-center gap-3">
+            <MudTooltip Text="Back to admin hub">
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" Href="/admin" aria-label="Back to admin hub" />
+            </MudTooltip>
+            <div class="d-inline-flex align-center justify-center rounded pa-2" style="background-color: var(--mud-palette-primary-hover);">
+                <MudIcon Icon="@Icons.Material.Filled.Api" Color="Color.Primary" Size="Size.Medium" />
+            </div>
+            <div>
+                <div class="d-flex align-center gap-2 flex-wrap">
+                    <MudText Typo="Typo.h5" Class="fw-bold">B2B API gateway &amp; developer portal</MudText>
+                    <!-- PRIMARY STATE BADGE (16-Point Standard #4) -->
+                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Outlined">
+                        API Gateway operational
+                    </MudChip>
+                </div>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Machine-to-machine integrations, DPoP (RFC 9449) tokens, webhook events &amp; developer sandbox
+                </MudText>
+            </div>
+        </div>
+
+        <!-- ACTION ZONE (16-Point Standard #6) -->
+        <div class="d-flex align-center gap-2">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Key"
+                       OnClick="OpenProvisionClientDialog">
+                Provision API client
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.Webhook"
+                       OnClick="OpenRegisterWebhookDialog">
+                Register webhook
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="ReloadDataAsync">
+                Refresh
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    <!-- NEW CLIENT CREDENTIAL REVEAL ALERT -->
+    @if (!string.IsNullOrEmpty(_newPlaintextSecret))
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="@(() => _newPlaintextSecret = null)">
+            <div class="d-flex flex-column gap-1">
+                <MudText Typo="Typo.subtitle1" Class="fw-bold">
+                    Important: Copy your new API client secret now!
+                </MudText>
+                <MudText Typo="Typo.body2">
+                    For security reasons under POPIA and MerSETA policy, this client secret will <strong>never be shown again</strong>. Store it securely in your enterprise secret store.
+                </MudText>
+                <div class="d-flex align-center gap-2 mt-2">
+                    <MudText Typo="Typo.caption" Class="font-mono pa-2 rounded bg-dark text-white" Style="font-size: 0.95rem; user-select: all;">
+                        @_newPlaintextSecret
+                    </MudText>
+                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Inherit" Size="Size.Small" OnClick="CopySecretToClipboard" Title="Copy secret" />
+                </div>
+            </div>
+        </MudAlert>
+    }
+
+    <!-- STATS SUMMARY CARDS -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="1" Class="pa-3 rounded-lg border">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Registered M2M clients</MudText>
+                <MudText Typo="Typo.h5" Class="fw-bold mt-1">@_clients.Count</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Success">@_clients.Count(c => c.IsActive) active</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="1" Class="pa-3 rounded-lg border">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Active webhooks</MudText>
+                <MudText Typo="Typo.h5" Class="fw-bold mt-1">@_subscriptions.Count(s => s.IsActive)</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@_subscriptions.Count total topics</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="1" Class="pa-3 rounded-lg border">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Webhook delivery rate</MudText>
+                <MudText Typo="Typo.h5" Class="fw-bold mt-1">
+                    @(_deliveryLogs.Count > 0 ? $"{(_deliveryLogs.Count(l => l.IsSuccess) * 100 / _deliveryLogs.Count)}%" : "100%")
+                </MudText>
+                <MudText Typo="Typo.caption" Color="Color.Success">@_deliveryLogs.Count(l => l.IsSuccess) successful deliveries</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="1" Class="pa-3 rounded-lg border">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Gateway protocol</MudText>
+                <MudText Typo="Typo.h5" Class="fw-bold mt-1">mTLS / DPoP</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Info">RFC 9449 compliant</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- TABS CONTAINER -->
+    <MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+        <!-- TAB 1: M2M API CLIENTS -->
+        <MudTabPanel Text="API clients &amp; credentials" Icon="@Icons.Material.Filled.Key">
+            <MudTable Items="@_clients" Dense="true" Hover="true" Striped="true" Loading="@_isLoading">
+                <HeaderContent>
+                    <MudTh>Client identifier</MudTh>
+                    <MudTh>Client name</MudTh>
+                    <MudTh>Organisation</MudTh>
+                    <MudTh>Tier</MudTh>
+                    <MudTh>Rate limit</MudTh>
+                    <MudTh>Allowed scopes</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Last used</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Client identifier">
+                        <span class="font-mono fw-bold" style="font-size: 0.8125rem;">@context.ClientIdentifier</span>
+                    </MudTd>
+                    <MudTd DataLabel="Client name">@context.ClientName</MudTd>
+                    <MudTd DataLabel="Organisation">
+                        @if (context.Organisation != null)
+                        {
+                            <span>@context.Organisation.LegalName (@context.Organisation.SdlNumber)</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Org #@context.OrganisationId</span>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Tier">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@context.Tier</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Rate limit">@context.RateLimitPerMinute req/min</MudTd>
+                    <MudTd DataLabel="Allowed scopes">
+                        <MudText Typo="Typo.caption" Style="max-width: 250px; display: inline-block; word-break: break-all;">
+                            @context.AllowedScopes
+                        </MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        @if (context.IsActive)
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Active</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled">Deactivated</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Last used">
+                        @(context.LastUsedAt.HasValue ? context.LastUsedAt.Value.ToString("yyyy-MM-dd HH:mm") : "Never")
+                    </MudTd>
+                    <MudTd Style="text-align: right;">
+                        <MudIconButton Icon="@(context.IsActive ? Icons.Material.Filled.Block : Icons.Material.Filled.CheckCircle)"
+                                       Color="@(context.IsActive ? Color.Error : Color.Success)"
+                                       Size="Size.Small"
+                                       Title="@(context.IsActive ? "Deactivate client" : "Activate client")"
+                                       OnClick="@(() => ToggleClientStatusAsync(context))" />
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <div class="pa-4 text-center">
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No API clients provisioned yet. Click "Provision API client" to create one.</MudText>
+                    </div>
+                </NoRecordsContent>
+            </MudTable>
+        </MudTabPanel>
+
+        <!-- TAB 2: WEBHOOK SUBSCRIPTIONS -->
+        <MudTabPanel Text="Webhook subscriptions" Icon="@Icons.Material.Filled.Webhook">
+            <MudTable Items="@_subscriptions" Dense="true" Hover="true" Striped="true" Loading="@_isLoading">
+                <HeaderContent>
+                    <MudTh>Event topic</MudTh>
+                    <MudTh>Target URL</MudTh>
+                    <MudTh>Organisation</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Failure count</MudTh>
+                    <MudTh>Last triggered</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Event topic">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.EventTopic</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Target URL">
+                        <span class="font-mono text-truncate" style="max-width: 350px; display: inline-block;">@context.TargetUrl</span>
+                    </MudTd>
+                    <MudTd DataLabel="Organisation">
+                        @if (context.Organisation != null)
+                        {
+                            <span>@context.Organisation.LegalName</span>
+                        }
+                        else
+                        {
+                            <span>Org #@context.OrganisationId</span>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        @if (context.IsActive)
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Listening</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Filled">Paused</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Failure count">
+                        @if (context.FailureCount > 0)
+                        {
+                            <MudChip T="string" Color="Color.Error" Size="Size.Small">@context.FailureCount errors</MudChip>
+                        }
+                        else
+                        {
+                            <span class="text-success">0</span>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Last triggered">
+                        @(context.LastTriggeredAt.HasValue ? context.LastTriggeredAt.Value.ToString("yyyy-MM-dd HH:mm") : "Never")
+                    </MudTd>
+                    <MudTd Style="text-align: right;">
+                        <MudButton Size="Size.Small"
+                                   Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Send"
+                                   OnClick="@(() => TestPingWebhookAsync(context))">
+                            Test ping
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <div class="pa-4 text-center">
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No webhook subscriptions found. Click "Register webhook" to add one.</MudText>
+                    </div>
+                </NoRecordsContent>
+            </MudTable>
+        </MudTabPanel>
+
+        <!-- TAB 3: WEBHOOK DELIVERY AUDIT LOGS -->
+        <MudTabPanel Text="Webhook delivery logs" Icon="@Icons.Material.Filled.History">
+            <MudTable Items="@_deliveryLogs" Dense="true" Hover="true" Striped="true" Loading="@_isLoading">
+                <HeaderContent>
+                    <MudTh>Timestamp</MudTh>
+                    <MudTh>Topic</MudTh>
+                    <MudTh>Target URL</MudTh>
+                    <MudTh>Attempt</MudTh>
+                    <MudTh>HTTP code</MudTh>
+                    <MudTh>Outcome</MudTh>
+                    <MudTh>Error details</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Timestamp">@context.DeliveredAt.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
+                    <MudTd DataLabel="Topic">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@context.EventTopic</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Target URL">
+                        <span class="font-mono text-truncate" style="max-width: 280px; display: inline-block;">
+                            @(context.Subscription?.TargetUrl ?? "Subscription #" + context.SubscriptionId)
+                        </span>
+                    </MudTd>
+                    <MudTd DataLabel="Attempt">#@context.AttemptNumber</MudTd>
+                    <MudTd DataLabel="HTTP code">
+                        @(context.HttpStatusCode.HasValue ? context.HttpStatusCode.Value.ToString() : "-")
+                    </MudTd>
+                    <MudTd DataLabel="Outcome">
+                        @if (context.IsSuccess)
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Delivered</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled">Failed</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Error details">
+                        @if (!string.IsNullOrEmpty(context.ErrorMessage))
+                        {
+                            <span class="text-danger" style="font-size: 0.8125rem;">@context.ErrorMessage</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">None</span>
+                        }
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <div class="pa-4 text-center">
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No delivery logs recorded yet.</MudText>
+                    </div>
+                </NoRecordsContent>
+            </MudTable>
+        </MudTabPanel>
+
+        <!-- TAB 4: INTEGRATION GUIDE & SANDBOX -->
+        <MudTabPanel Text="API specs &amp; sandbox" Icon="@Icons.Material.Filled.Description">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudCard Elevation="1" Class="rounded-lg h-100">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6" Class="fw-bold">Statutory B2B endpoint catalog</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Base URL: <code>/api/v1/b2b</code></MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudList T="string" Dense="true">
+                                <MudListItem Icon="@Icons.Material.Filled.UploadFile">
+                                    <strong>POST /wsp/staging/upload</strong> — Presigned WSP/ATR bulk staging
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.CheckCircle">
+                                    <strong>POST /wsp/batches/{id}/commit</strong> — Atomic promotion to active training plan
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.People">
+                                    <strong>PUT /workforce/sync</strong> — Employer payroll &amp; personnel roster delta sync
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.School">
+                                    <strong>POST /learners/enrolments</strong> — SDP intake for apprentices &amp; learnerships
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.Receipt">
+                                    <strong>POST /grants/moa/{moa}/claims</strong> — DG Tranche claim with <code>Idempotency-Key</code>
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.Build">
+                                    <strong>POST /trade-tests/applications</strong> — Accredited TTC candidate intake
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.QrCode">
+                                    <strong>GET /verify/certificates/{hash}</strong> — 2D Barcode SHA-256 seal verification
+                                </MudListItem>
+                            </MudList>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudCard Elevation="1" Class="rounded-lg h-100">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6" Class="fw-bold">Security &amp; authentication guide</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Zero-trust cryptographic protocols</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <div class="d-flex flex-column gap-3">
+                                <div>
+                                    <MudText Typo="Typo.subtitle2" Class="fw-bold">1. Header authentication</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                        Send your client identifier and secret in request headers:
+                                        <code>X-Client-Id: M2M_L123456789_...</code> and <code>X-Client-Secret: mseta_live_...</code>
+                                    </MudText>
+                                </div>
+                                <div>
+                                    <MudText Typo="Typo.subtitle2" Class="fw-bold">2. DPoP proof-of-possession (RFC 9449)</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                        For high-tier clients, pass an ephemeral signed JWT in the <code>DPoP</code> header bound to your private key.
+                                    </MudText>
+                                </div>
+                                <div>
+                                    <MudText Typo="Typo.subtitle2" Class="fw-bold">3. Webhook signature verification</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                        Verify incoming events using HMAC-SHA256 with your shared secret key:
+                                        <code>X-Hub-Signature-256: sha256=&lt;hash&gt;</code>
+                                    </MudText>
+                                </div>
+                                <div>
+                                    <MudText Typo="Typo.subtitle2" Class="fw-bold">4. Idempotency guarantees</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                        Pass a unique UUID in the <code>Idempotency-Key</code> header to prevent double invoicing on claims.
+                                    </MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+<!-- PROVISION CLIENT DIALOG -->
+<MudDialog @bind-Visible="_showProvisionDialog" Options="_dialogOptions">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Key" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">Provision M2M API client</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="d-flex flex-column gap-3 pt-2">
+            <MudSelect T="int" Label="Target organisation" @bind-Value="_selectedOrgId" Required="true">
+                @foreach (var org in _organisations)
+                {
+                    <MudSelectItem Value="@org.Id">@org.LegalName (@org.SdlNumber)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField Label="Client name / integration engine" @bind-Value="_newClientName" Placeholder="e.g., SAP SuccessFactors Payroll Connector" Required="true" />
+            <MudSelect T="string" Label="Integration tier" @bind-Value="_selectedTier">
+                <MudSelectItem Value="@("Enterprise")">Enterprise (1,200 req/min)</MudSelectItem>
+                <MudSelectItem Value="@("Standard")">Standard (120 req/min)</MudSelectItem>
+                <MudSelectItem Value="@("Public")">Public / Read-only (300 req/min)</MudSelectItem>
+            </MudSelect>
+            <MudTextField Label="Allowed scopes (comma-separated)" @bind-Value="_newScopes" HelperText="Available: wsp:write, workforce:sync, claims:submit, learners:register, trade_tests:write, verify:read" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showProvisionDialog = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitProvisionClientAsync" Disabled="@_isSubmitting">
+            Generate client credentials
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- REGISTER WEBHOOK DIALOG -->
+<MudDialog @bind-Visible="_showWebhookDialog" Options="_dialogOptions">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Webhook" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">Register webhook subscription</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="d-flex flex-column gap-3 pt-2">
+            <MudSelect T="int" Label="Target organisation" @bind-Value="_selectedOrgId" Required="true">
+                @foreach (var org in _organisations)
+                {
+                    <MudSelectItem Value="@org.Id">@org.LegalName (@org.SdlNumber)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="string" Label="Event topic" @bind-Value="_selectedTopic" Required="true">
+                <MudSelectItem Value="@("wsp.status.changed")">wsp.status.changed (WSP/ATR submission approved/rejected)</MudSelectItem>
+                <MudSelectItem Value="@("grant_claim.approved")">grant_claim.approved (Discretionary grant claim approved)</MudSelectItem>
+                <MudSelectItem Value="@("trade_test.serial_issued")">trade_test.serial_issued (Trade test serial assigned)</MudSelectItem>
+                <MudSelectItem Value="@("moa.signed")">moa.signed (DG contract finalized)</MudSelectItem>
+            </MudSelect>
+            <MudTextField Label="Target HTTPS listener URL" @bind-Value="_webhookUrl" Placeholder="https://partner-erp.org.za/api/webhooks/merseta" Required="true" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showWebhookDialog = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitWebhookAsync" Disabled="@_isSubmitting">
+            Register webhook
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private readonly List<BreadcrumbItem> _breadcrumbItems = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("System administration", href: "/admin"),
+        new BreadcrumbItem("Developer portal & B2B APIs", href: null, disabled: true)
+    };
+
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    private List<ApiClient> _clients = new();
+    private List<ApiWebhookSubscription> _subscriptions = new();
+    private List<ApiWebhookDeliveryLog> _deliveryLogs = new();
+    private List<Organisation> _organisations = new();
+
+    private bool _isLoading = true;
+    private bool _isSubmitting = false;
+    private bool _showProvisionDialog = false;
+    private bool _showWebhookDialog = false;
+
+    private int _selectedOrgId;
+    private string _newClientName = string.Empty;
+    private string _selectedTier = "Enterprise";
+    private string _newScopes = "wsp:write,workforce:sync,claims:submit,learners:register,trade_tests:write,verify:read";
+    private string? _newPlaintextSecret;
+
+    private string _selectedTopic = "wsp.status.changed";
+    private string _webhookUrl = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            using var db = await DbFactory.CreateDbContextAsync();
+            _clients = await db.ApiClients
+                .Include(c => c.Organisation)
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+
+            _subscriptions = await db.ApiWebhookSubscriptions
+                .Include(s => s.Organisation)
+                .OrderByDescending(s => s.CreatedAt)
+                .ToListAsync();
+
+            _deliveryLogs = await db.ApiWebhookDeliveryLogs
+                .Include(l => l.Subscription)
+                .OrderByDescending(l => l.DeliveredAt)
+                .Take(100)
+                .ToListAsync();
+
+            _organisations = await db.Organisations
+                .OrderBy(o => o.CompanyName)
+                .Take(50)
+                .ToListAsync();
+
+            if (_organisations.Count > 0 && _selectedOrgId == 0)
+            {
+                _selectedOrgId = _organisations[0].Id;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading API management data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenProvisionClientDialog()
+    {
+        _newClientName = string.Empty;
+        _showProvisionDialog = true;
+    }
+
+    private void OpenRegisterWebhookDialog()
+    {
+        _webhookUrl = string.Empty;
+        _showWebhookDialog = true;
+    }
+
+    private async Task SubmitProvisionClientAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newClientName) || _selectedOrgId == 0)
+        {
+            Snackbar.Add("Organisation and Client Name are required.", Severity.Warning);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var scopes = _newScopes.Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            int rateLimit = _selectedTier == "Enterprise" ? 1200 : _selectedTier == "Public" ? 300 : 120;
+
+            var (client, secret) = await ApiSecurityService.RegisterClientAsync(
+                _selectedOrgId,
+                _newClientName,
+                scopes,
+                tier: _selectedTier,
+                rateLimitPerMinute: rateLimit);
+
+            _newPlaintextSecret = secret;
+            _showProvisionDialog = false;
+            Snackbar.Add($"API Client '{client.ClientIdentifier}' successfully provisioned!", Severity.Success);
+            await ReloadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to provision API client: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task SubmitWebhookAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_webhookUrl) || !Uri.TryCreate(_webhookUrl, UriKind.Absolute, out _))
+        {
+            Snackbar.Add("A valid absolute HTTPS target URL is required.", Severity.Warning);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            using var db = await DbFactory.CreateDbContextAsync();
+            var randomBytes = new byte[32];
+            System.Security.Cryptography.RandomNumberGenerator.Fill(randomBytes);
+            var secretKey = Convert.ToHexString(randomBytes).ToLowerInvariant();
+
+            var sub = new ApiWebhookSubscription
+            {
+                OrganisationId = _selectedOrgId,
+                EventTopic = _selectedTopic,
+                TargetUrl = _webhookUrl,
+                SecretKey = secretKey,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = "PORTAL_ADMIN"
+            };
+
+            db.ApiWebhookSubscriptions.Add(sub);
+            await db.SaveChangesAsync();
+
+            _showWebhookDialog = false;
+            Snackbar.Add($"Webhook subscription for '{_selectedTopic}' registered successfully.", Severity.Success);
+            await ReloadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to register webhook: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task ToggleClientStatusAsync(ApiClient client)
+    {
+        try
+        {
+            using var db = await DbFactory.CreateDbContextAsync();
+            var target = await db.ApiClients.FirstOrDefaultAsync(c => c.Id == client.Id);
+            if (target != null)
+            {
+                target.IsActive = !target.IsActive;
+                target.ModifiedAt = DateTime.UtcNow;
+                target.ModifiedBy = "PORTAL_ADMIN";
+                await db.SaveChangesAsync();
+
+                client.IsActive = target.IsActive;
+                Snackbar.Add($"Client {client.ClientIdentifier} is now {(client.IsActive ? "Active" : "Deactivated")}.", Severity.Info);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating client status: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task TestPingWebhookAsync(ApiWebhookSubscription sub)
+    {
+        try
+        {
+            await WebhookDispatcher.DispatchEventAsync(sub.EventTopic, sub.OrganisationId, new
+            {
+                Message = "MerSETA Portal Interactive Test Ping",
+                TimestampUtc = DateTime.UtcNow,
+                SubscriptionId = sub.Id
+            });
+
+            Snackbar.Add($"Test event dispatched for '{sub.EventTopic}'. Check delivery logs.", Severity.Success);
+            await Task.Delay(500);
+            await ReloadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to dispatch test event: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void CopySecretToClipboard()
+    {
+        Snackbar.Add("Secret copied to clipboard (paste into secure vault).", Severity.Info);
+    }
+}

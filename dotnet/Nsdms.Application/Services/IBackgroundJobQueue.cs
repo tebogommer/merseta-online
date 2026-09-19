@@ -31,11 +31,14 @@ public class BackgroundJobTicket
     public string? ResultFileName { get; set; }
     public string? ResultContentType { get; set; }
     public byte[]? ResultData { get; set; }
+    public string? ResultStoragePath { get; set; }
+    public string? StorageUri { get; set; }
 }
 
 public interface IBackgroundJobQueue
 {
     ChannelReader<BackgroundJobTicket> Reader { get; }
+    ChannelReader<BackgroundJobTicket> BatchReader { get; }
 
     ValueTask<BackgroundJobTicket> EnqueueAsync(BackgroundJobTicket ticket, CancellationToken cancellationToken = default);
     
@@ -60,7 +63,7 @@ public interface IBackgroundJobQueue
     
     void UpdateProgress(Guid jobId, int progressPercentage, string? currentStep = null);
     
-    void MarkCompleted(Guid jobId, byte[]? resultData, string? contentType, string? fileName, string? downloadUrl = null);
+    void MarkCompleted(Guid jobId, byte[]? resultData, string? contentType, string? fileName, string? downloadUrl = null, string? storagePath = null);
     
     void MarkFailed(Guid jobId, string errorMessage);
 }

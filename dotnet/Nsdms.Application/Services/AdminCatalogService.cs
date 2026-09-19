@@ -428,8 +428,25 @@ public class AdminCatalogService : IAdminCatalogService
             ValueType = "Badge",
             IsEditableInline = false,
             Tags = new List<string> { "people", "users", "accounts", "identity", "rsa id", "demographics" },
-            StatusBadgeColor = "Primary",
+            StatusBadgeColor = "Info",
             DisplayOrder = 2
+        });
+
+        items.Add(new AdminSearchItemDto
+        {
+            Key = "MOD-ENTRA-RESILIENCE",
+            Title = "Microsoft Entra ID Resilience Hub",
+            Category = AdminCategoryConstants.SecurityAndAccess,
+            Description = "Automated cloud outage circuit-breaker, directory delta caching, and disaster recovery backup password governance.",
+            Icon = "Icons.Material.Filled.CloudSync",
+            RouteUrl = "/admin/entra-resilience",
+            ItemType = "Module",
+            CurrentValue = "Outage Resilience",
+            ValueType = "Badge",
+            IsEditableInline = false,
+            Tags = new List<string> { "entra", "azuread", "sso", "backup password", "disaster recovery", "outage", "resilience" },
+            StatusBadgeColor = "Warning",
+            DisplayOrder = 3
         });
 
         items.Add(new AdminSearchItemDto
@@ -736,6 +753,23 @@ public class AdminCatalogService : IAdminCatalogService
             Tags = new List<string> { "okf", "knowledge", "catalog", "attestation", "concepts", "tsql", "citations", "statutory" },
             StatusBadgeColor = "Primary",
             DisplayOrder = 19
+        });
+
+        items.Add(new AdminSearchItemDto
+        {
+            Key = "MOD-B2B-DEVELOPER-PORTAL",
+            Title = "B2B API Gateway & Developer Portal",
+            Category = AdminCategoryConstants.DiagnosticsAndDeveloper,
+            Description = "Machine-to-machine integrations, DPoP (RFC 9449) tokens, Webhook subscriptions, and Sandbox testing.",
+            Icon = "Icons.Material.Filled.Api",
+            RouteUrl = "/admin/developer-portal",
+            ItemType = "Module",
+            CurrentValue = "B2B Gateway",
+            ValueType = "Badge",
+            IsEditableInline = false,
+            Tags = new List<string> { "api", "b2b", "developer", "gateway", "webhooks", "dpop", "m2m", "tokens", "sandbox" },
+            StatusBadgeColor = "Success",
+            DisplayOrder = 20
         });
         return items;
     }

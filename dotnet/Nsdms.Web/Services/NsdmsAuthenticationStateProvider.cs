@@ -26,6 +26,12 @@ public class NsdmsAuthenticationStateProvider : AuthenticationStateProvider
 
     public override Task<AuthenticationState> GetAuthenticationStateAsync()
     {
+        var httpUser = _httpContextAccessor?.HttpContext?.User;
+        if (httpUser?.Identity?.IsAuthenticated == true)
+        {
+            _currentUser = httpUser;
+        }
+
         return Task.FromResult(new AuthenticationState(_currentUser));
     }
 
@@ -61,14 +67,14 @@ public class NsdmsAuthenticationStateProvider : AuthenticationStateProvider
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
     }
 
-    public static ClaimsPrincipal CreatePrincipal(string email, string displayName, IEnumerable<string> roles)
+    public static ClaimsPrincipal CreatePrincipal(string email, string displayName, IEnumerable<string> roles, string userId = "1")
     {
         var claims = new List<Claim>
         {
             new(ClaimTypes.Name, email),
             new(ClaimTypes.Email, email),
             new(ClaimTypes.GivenName, displayName),
-            new(ClaimTypes.NameIdentifier, "1")
+            new(ClaimTypes.NameIdentifier, userId)
         };
 
         foreach (var role in roles)

@@ -261,6 +261,12 @@
                                 <MudMenuItem Icon="@Icons.Material.Filled.Business" Href="/employers">Organisations</MudMenuItem>
                                 <MudMenuItem Icon="@Icons.Material.Filled.School" Href="/learners">Learners</MudMenuItem>
                             }
+                            @if (_currentUserEmail?.EndsWith("@merseta.org.za", StringComparison.OrdinalIgnoreCase) == true || _isInternalAdmin)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.Security" IconColor="Color.Primary" OnClick="@OpenBackupPasswordDialog">
+                                    Emergency backup password
+                                </MudMenuItem>
+                            }
                             <MudDivider Class="my-2" />
                             <MudMenuItem Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" OnClick="@HandleSignOut">
                                 Sign out
@@ -760,6 +766,12 @@
 
         TenantProvider.ResetToGlobalAdmin();
         Nav.NavigateTo("/api/auth/logout", forceLoad: true);
+    }
+
+    private async Task OpenBackupPasswordDialog()
+    {
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
+        await DialogService.ShowAsync<BackupPasswordDialog>("Disaster Recovery Backup Password", options);
     }
 }
 

@@ -1058,10 +1058,85 @@ Cite the clause identifier. If the standard does not cover what is needed, stop 
 
 ---
 
+### 🛡️ Core Infrastructure & Architecture Invariants (Post-Remediation)
+1. **Schema Migration Journaling**:
+   - Never invoke raw DDL scripts on startup without wrapping them in `SchemaMigrationJournal.ExecuteIfNotAppliedAsync(...)`.
+   - The journal table `dbo.__CustomSchemaJournal` ensures that previously executed migrations are bypassed in <5ms, protecting cold start times.
+2. **Interactive Circuit Multi-Tenancy**:
+   - Never resolve `ITenantProvider` solely from `IHttpContextAccessor.HttpContext`. In Blazor Server interactive WebSocket circuits, `HttpContext` is null on subsequent socket packets.
+   - Always verify claims via `AuthenticationStateProvider` fallback to enforce fail-closed tenant scoping on `OrganisationId`.
+3. **Event Subscription Lifecycle**:
+   - Never declare `public static event Action<...>` in singleton notification services.
+   - Use instance events and enforce `IDisposable` with event unsubscription (`service.NotificationReceived -= Handler`) in Blazor components to prevent garbage collection retention of disconnected circuits.
+4. **Segregation of Duties (Maker-Checker)**:
+   - In all financial activations (e.g., Banking Details, Discretionary Grant Claims, Mandatory Grant Disbursements), enforce `CreatedBy != currentUserId` and `FirstSignoffUserId != currentUserId` before committing status changes.
+5. **High-Volume Indexing Standards**:
+   - Ingested files exceeding $10^5$ rows (e.g., `LevyFileLine`, `AuditLog`, `WspTrainingPlan`) must maintain composite index coverage (`SdlNumber`, `SchemeYear`) and filtered indexes (`HasFilter("[Flag] = 1")`) to prevent table scan lock escalation under RCSI.
+
+---
+
+### 🛡️ Post-Remediation 100% Architecture & Governance Standards
+1. **High-Volume Streaming Ingestion (SqlBulkCopy Invariant)**:
+   - For file ingestion exceeding 1,000 rows (`WspBulkImportStaging`, `SarsLevyStaging`), NEVER iterate with `db.Set<T>().AddRange()` and `SaveChangesAsync()`.
+   - Always use `SqlBulkCopy` with explicit `ColumnMappings` and `SqlBulkCopyOptions.CheckConstraints | FireTriggers`, enclosed within an automatic fallback block for in-memory unit tests.
+2. **Durable Job State Invariant**:
+   - All asynchronous document generation, batch extractions, and statutory reconciliations dispatched via `IBackgroundJobQueue` must be recorded in `BackgroundJobJournal`.
+   - Never rely exclusively on volatile memory for background job tickets.
+3. **Cryptographic Executive Approvals**:
+   - All financial approval transitions exceeding statutory delegation of authority thresholds (Discretionary Grant tranche claims, Mandatory Grant disbursements, MoA approvals) must generate and anchor an HMAC-SHA256 digital security seal via `IDigitalSignatureSealService`.
+4. **Functional Control Flow**:
+   - Application service methods performing business validations should return `Result<T>` or `Result` rather than throwing expensive CLR exceptions for expected business rule rejections (e.g., `Result.Failure(Error.ConditionNotMet)`).
+5. **Decoupled Entity Configurations**:
+   - When adding new domain entities, place their EF Core mappings in a dedicated `IEntityTypeConfiguration<T>` class under `dotnet/Nsdms.Infrastructure/Data/Configurations/`. `NsdmsDbContext` will automatically discover and register them via `ApplyConfigurationsFromAssembly`.
+
+---
+
+### 🛡️ Round 2 Enterprise Architecture & Governance Standards
+1. **Endpoint Authorization & Anti-IDOR Invariant**:
+   - All file and document streaming endpoints (`/api/documents/*`) MUST register `TenantOwnershipEndpointFilter`.
+   - Never stream or return documents without validating that the authenticated tenant owns the record or holds administrative privileges.
+2. **Dual-Channel Background Job Execution**:
+   - `IBackgroundJobQueue` routes jobs across dual bounded channels (`_highPriorityChannel` with 8 parallel workers for interactive documents/certificates, and `_batchChannel` with 4 parallel workers for statutory extractions and SARS reconciliations).
+   - Generated document binaries must NEVER be cached in LOH runtime memory. Always write artifacts to disk cache and stream via `Results.File(..., enableRangeProcessing: true)`.
+3. **Optimistic Concurrency & Aggregate Touch Bubbling**:
+   - Aggregates (`WspSubmission`, `GrantApplication`, `Organisation`, `CompanyLearner`) MUST declare `[Timestamp] public byte[] RowVersion { get; set; } = [];`.
+   - `AuditableEntityInterceptor` automatically touches parent `ModifiedAt` whenever child collection items are inserted, updated, or deleted. Never bypass interceptors when mutating child records.
+4. **Universal Workflow Maker-Checker Guard**:
+   - In `WorkflowEngineService.AdvanceWorkflowAsync`, the workflow initiator (`instance.InitiatorUserId`) is strictly prohibited from executing approval, adjudication, or signing transitions on their own submission.
+5. **Transactional Outbox for Domain Events**:
+   - All domain side-effects must publish domain events extending `BaseDomainEvent` via `entity.AddDomainEvent(...)`.
+   - `NsdmsDbContext.SaveChangesAsync()` automatically stages events into `OutboxMessage` within the same transaction, dispatched asynchronously by `OutboxProcessorWorker`.
+6. **Strategy Pattern for Document Generation**:
+   - Complex document generation must implement `IDocumentCompiler<TModel>` rather than monolithic services.
+   - Compilers must be registered in DI as scoped services under their respective interfaces.
+
+---
+
+### 🛡️ Microsoft Entra ID Outage Resilience & Self-Service Disaster Recovery Backup Password Standard
+1. **Entra Account Enabled Invariant (Zero-Trust Quorum)**:
+   - During Microsoft Entra ID outages or disaster recovery contingency operations, internal merSETA employees are permitted emergency backup password authentication IF AND ONLY IF their account was NOT disabled in Microsoft Entra ID prior to or during the outage (`EntraAccountEnabled != false`).
+   - If an account was disabled in Entra, emergency backup authentication is strictly denied with high-priority security audit logging (`DeniedEmergencyLogin_EntraAccountDisabled`), even if the entered password matches the backup hash.
+2. **Statutory Offline Grace Period Window**:
+   - In terms of cloud directory resilience, backup password authentication strictly requires `DateTime.UtcNow - LastEntraSyncUtc <= Auth:EntraOfflineGracePeriodDays` (default 14 days).
+   - Accounts exceeding the offline grace window are blocked (`IsGracePeriodExceeded = true`) to prevent stale deactivated accounts from authenticating during prolonged disaster scenarios without SecOps verification.
+3. **Persistent Cookie Key Durability & Immediate Invalidation**:
+   - ASP.NET Core DataProtection encryption keys must persist to durable disk storage (`App_Data/DataProtectionKeys`) so persistent cookie decryption keys survive process recycles and server reboots.
+   - `CookieAuthenticationOptions.Events.OnValidatePrincipal` intercepts every incoming HTTP request to verify `user.IsActive` and `user.EntraAccountEnabled != false`. If an employee is disabled locally or in Entra, active persistent cookies are immediately revoked and signed out.
+4. **Anti-Timing Attack & Username Enumeration Neutralization**:
+   - `EntraResilienceService.ValidateBackupCredentialsAsync` and `IdentityService.ValidateCredentialsExtendedAsync` execute pre-computed PBKDF2 dummy hash verification whenever a requested user account is not found or has not configured an emergency password. This ensures constant-time execution (~100ms) and neutralizes side-channel username enumeration attacks.
+5. **Decoupled Automated Circuit-Breaker Health Probes**:
+   - Automated health probes querying Microsoft Entra discovery endpoints must enforce timeouts via `CancellationTokenSource` instead of modifying `HttpClient.Timeout` on shared or factory-managed HTTP client instances.
+6. **Audited Double-Write & Brute-Force Lockout Standard**:
+   - All emergency backup credential rotations, failed password attempts, lockout events, and emergency interactive logins must perform double-writes into `audit_logs`.
+   - Accounts lock out automatically for 15 minutes after 5 consecutive failed emergency password attempts (`BackupPasswordLockoutEnd`), with SecOps administrative reset capability.
+
+---
+
+### 🛡️ ASP.NET Core Cookie & Blazor Identity Scheme Synchronization Standard
+1. **Cookie Scheme Lock Invariant**: When combining ASP.NET Core Identity with Cookie Authentication in .NET 10, ALWAYS lock `AuthenticationOptions` via `builder.Services.PostConfigure<AuthenticationOptions>(...)` to guarantee `DefaultAuthenticateScheme`, `DefaultSignInScheme`, and `DefaultChallengeScheme` remain bound to `CookieAuthenticationDefaults.AuthenticationScheme`. Never permit Identity's default `IdentityConstants.ApplicationScheme` to override the application cookie ticket.
+2. **Dynamic HttpContext Resolution in AuthenticationStateProvider**: In Blazor Server interactive circuits, `AuthenticationStateProvider.GetAuthenticationStateAsync()` must dynamically inspect `IHttpContextAccessor.HttpContext?.User` rather than caching constructor state to ensure post-middleware authenticated claims are reflected immediately upon navigation.
+3. **Zero-Trust Diagnostic Endpoint Protection**: All user profile, diagnostic, or session state endpoints (e.g. `/api/auth/me`) MUST declare `.RequireAuthorization()` to enforce Zero Trust access control and prevent anonymous information disclosure.
+
+---
+
 # END OF POLICY — NON-NEGOTIABLE
-
-
-
-
-
-

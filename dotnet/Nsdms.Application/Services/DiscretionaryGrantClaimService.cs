@@ -127,61 +127,87 @@ public class DiscretionaryGrantClaimService : IDiscretionaryGrantClaimService
     public async Task<GrantPaymentClaim> SubmitTrancheClaimAsync(SubmitDgClaimRequest request, string currentUsername = "SYSTEM")
     {
         using var db = await _contextFactory.CreateDbContextAsync();
-        var pip = await db.ProjectImplementationPlans
-            .Include(p => p.Claims)
-            .Include(p => p.GrantMoa)
-            .Include(p => p.GrantApplication)
-            .FirstOrDefaultAsync(p => p.Id == request.ProjectImplementationPlanId);
+        var strategy = db.Database.CreateExecutionStrategy();
 
-        if (pip == null)
-            throw new KeyNotFoundException($"ProjectImplementationPlan with ID {request.ProjectImplementationPlanId} not found.");
-
-        decimal totalBudget = pip.GrantMoa?.TotalContractValue ?? pip.TotalAwardedAmount;
-        if (totalBudget <= 0)
-            throw new InvalidOperationException("Cannot submit claim: Project Implementation Plan has no valid awarded budget envelope.");
-
-        // Validate budget headroom
-        decimal alreadyClaimed = pip.Claims.Sum(c => c.ClaimAmount);
-        decimal availableBudget = totalBudget - alreadyClaimed;
-
-        if (request.ClaimAmount > availableBudget)
+        return await strategy.ExecuteAsync(async () =>
         {
-            throw new InvalidOperationException($"Claim amount R {request.ClaimAmount:N2} exceeds available budget envelope of R {availableBudget:N2} (Total Allocation: R {totalBudget:N2}, Previously Claimed: R {alreadyClaimed:N2}).");
-        }
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
+            if (db.Database.IsRelational())
+            {
+                tx = await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
+            }
 
-        decimal cfoThreshold = _systemConfig != null
-            ? await _systemConfig.GetValueAsync("FinancialRules.DualApprovalCfoThreshold", CfoDualSignoffThreshold)
-            : CfoDualSignoffThreshold;
+            try
+            {
+                var pip = await db.ProjectImplementationPlans
+                    .Include(p => p.Claims)
+                    .Include(p => p.GrantMoa)
+                    .Include(p => p.GrantApplication)
+                    .FirstOrDefaultAsync(p => p.Id == request.ProjectImplementationPlanId);
 
-        bool requiresCfo = request.ClaimAmount >= cfoThreshold;
-        string claimRef = $"CLM-DG-PIP{pip.Id}-T{request.TrancheNumber}-{DateTime.UtcNow:MMdd}";
+                if (pip == null)
+                    throw new KeyNotFoundException($"ProjectImplementationPlan with ID {request.ProjectImplementationPlanId} not found.");
 
-        var claim = new GrantPaymentClaim
-        {
-            ProjectImplementationPlanId = pip.Id,
-            GrantMoaMilestoneId = request.GrantMoaMilestoneId,
-            ClaimNumber = claimRef,
-            TrancheNumber = request.TrancheNumber,
-            ClaimAmount = request.ClaimAmount,
-            DeliverableDescription = request.DeliverableDescription,
-            StatusCode = "PendingSubmission",
-            RequiresCfoApproval = requiresCfo,
-            CreatedBy = currentUsername
-        };
+                decimal totalBudget = pip.GrantMoa?.TotalContractValue ?? pip.TotalAwardedAmount;
+                if (totalBudget <= 0)
+                    throw new InvalidOperationException("Cannot submit claim: Project Implementation Plan has no valid awarded budget envelope.");
 
-        db.GrantPaymentClaims.Add(claim);
-        await db.SaveChangesAsync();
+                // Validate budget headroom atomically within transaction
+                decimal alreadyClaimed = pip.Claims.Sum(c => c.ClaimAmount);
+                decimal availableBudget = totalBudget - alreadyClaimed;
 
-        await _audit.LogAsync("GrantPaymentClaim", claim.Id, "SubmitTrancheClaim", currentUsername, new
-        {
-            ClaimNumber = claimRef,
-            Tranche = request.TrancheNumber,
-            Amount = request.ClaimAmount,
-            RequiresCfo = requiresCfo,
-            RemainingBudget = availableBudget - request.ClaimAmount
+                if (request.ClaimAmount > availableBudget)
+                {
+                    throw new InvalidOperationException($"Claim amount R {request.ClaimAmount:N2} exceeds available budget envelope of R {availableBudget:N2} (Total Allocation: R {totalBudget:N2}, Previously Claimed: R {alreadyClaimed:N2}).");
+                }
+
+                decimal cfoThreshold = _systemConfig != null
+                    ? await _systemConfig.GetValueAsync("FinancialRules.DualApprovalCfoThreshold", CfoDualSignoffThreshold)
+                    : CfoDualSignoffThreshold;
+
+                bool requiresCfo = request.ClaimAmount >= cfoThreshold;
+                string claimRef = $"CLM-DG-PIP{pip.Id}-T{request.TrancheNumber}-{DateTime.UtcNow:MMdd}";
+
+                var claim = new GrantPaymentClaim
+                {
+                    ProjectImplementationPlanId = pip.Id,
+                    GrantMoaMilestoneId = request.GrantMoaMilestoneId,
+                    ClaimNumber = claimRef,
+                    TrancheNumber = request.TrancheNumber,
+                    ClaimAmount = request.ClaimAmount,
+                    DeliverableDescription = request.DeliverableDescription,
+                    StatusCode = "PendingSubmission",
+                    RequiresCfoApproval = requiresCfo,
+                    CreatedBy = currentUsername
+                };
+
+                db.GrantPaymentClaims.Add(claim);
+                await db.SaveChangesAsync();
+
+                _audit.LogAction(db, "GrantPaymentClaim", claim.Id, "SubmitTrancheClaim", currentUsername, null, new
+                {
+                    ClaimNumber = claimRef,
+                    Tranche = request.TrancheNumber,
+                    Amount = request.ClaimAmount,
+                    RequiresCfo = requiresCfo,
+                    RemainingBudget = availableBudget - request.ClaimAmount
+                });
+                await db.SaveChangesAsync();
+
+                if (tx != null) await tx.CommitAsync();
+
+                return claim;
+            }
+            catch
+            {
+                if (tx != null) await tx.RollbackAsync();
+                throw;
+            }
+            finally
+            {
+                tx?.Dispose();
+            }
         });
-
-        return claim;
     }
 
     public async Task<GrantPaymentClaim> ProcessClaimApprovalAsync(ApproveDgClaimRequest request, string currentUsername = "SYSTEM")

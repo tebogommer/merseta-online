@@ -100,13 +100,17 @@ public class WorkflowGovernanceService : IWorkflowGovernanceService
             };
         }
 
-        // Check if actor is the same as the creator
+        // Check if actor is the same as the creator or workflow instance initiator
         bool isSelfAction = false;
         if (int.TryParse(task.CreatedBy, out int creatorId) && creatorId == actorUserId)
         {
             isSelfAction = true;
         }
         else if (string.Equals(task.CreatedBy, actorUserId.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            isSelfAction = true;
+        }
+        else if (task.WorkflowInstance != null && (string.Equals(task.WorkflowInstance.InitiatorUserId, actorUserId.ToString(), StringComparison.OrdinalIgnoreCase) || (int.TryParse(task.WorkflowInstance.InitiatorUserId, out int initId) && initId == actorUserId)))
         {
             isSelfAction = true;
         }

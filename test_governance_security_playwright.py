@@ -1,8 +1,11 @@
+import os
 import sys
 import time
 from playwright.sync_api import sync_playwright
 
-BASE_URL = "http://localhost:5121"
+BASE_URL = os.environ.get("NSDMS_BASE_URL", "http://localhost:5121")
+TEST_USER = os.environ.get("NSDMS_TEST_USER", "sysadmin@merseta.org.za")
+TEST_PASSWORD = os.environ.get("NSDMS_TEST_PASSWORD", "MerSETA@2026!")
 
 def test_governance_suite():
     print("==================================================")
@@ -17,9 +20,10 @@ def test_governance_suite():
         # Authenticate as SuperAdmin
         print("[AUTH] Logging in as SuperAdmin...")
         page.goto(f"{BASE_URL}/login", wait_until="networkidle")
-        page.fill("input#username", "sysadmin@merseta.org.za")
-        page.fill("input#password", "MerSETA@2026!")
-        page.click("button[type='submit']")
+        page.fill("input#username", TEST_USER)
+        page.fill("input#password", TEST_PASSWORD)
+        page.click("button[type='submit']", no_wait_after=True)
+        page.wait_for_selector("text=Operations Portal", timeout=35000)
         page.wait_for_load_state("networkidle")
         print("[AUTH] Successfully authenticated!")
 

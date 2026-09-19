@@ -427,4 +427,10 @@ public class CompanyLearner : BaseEntity
     /// Cancellation and termination requests linked to this agreement.
     /// </summary>
     public ICollection<CompanyLearnerTermination> Terminations { get; set; } = new List<CompanyLearnerTermination>();
+
+    /// <summary>
+    /// Optimistic concurrency token (ROWVERSION).
+    /// </summary>
+    [System.ComponentModel.DataAnnotations.Timestamp]
+    public byte[] RowVersion { get; set; } = [];
 }

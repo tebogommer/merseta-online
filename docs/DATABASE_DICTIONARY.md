@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-18 11:48:03 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 258
+> **Generated:** 2026-09-19 18:55:25 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 261
 
 ---
 
@@ -10,7 +10,7 @@
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `dbo` | [`AppRole`](#approle) | `ApplicationRole` | 6 | `Id` | Application security role for CASL/RBAC authorization. |
 | `dbo` | [`AppRoleClaim`](#approleclaim) | `IdentityRoleClaim`1` | 4 | `Id` | System entity for IdentityRoleClaim`1 data governance. |
-| `dbo` | [`AppUser`](#appuser) | `ApplicationUser` | 22 | `Id` | Application authentication user account integrated with ASP.NET Core Identity. |
+| `dbo` | [`AppUser`](#appuser) | `ApplicationUser` | 33 | `Id` | Application authentication user account integrated with ASP.NET Core Identity. |
 | `dbo` | [`AppUserClaim`](#appuserclaim) | `IdentityUserClaim`1` | 4 | `Id` | System entity for IdentityUserClaim`1 data governance. |
 | `dbo` | [`AppUserLogin`](#appuserlogin) | `IdentityUserLogin`1` | 4 | `LoginProvider, ProviderKey` | System entity for IdentityUserLogin`1 data governance. |
 | `dbo` | [`AppUserRole`](#appuserrole) | `IdentityUserRole`1` | 2 | `UserId, RoleId` | System entity for IdentityUserRole`1 data governance. |
@@ -40,6 +40,7 @@
 | `dbo` | [`AssessorUnitStandardScope`](#assessorunitstandardscope) | `AssessorUnitStandardScope` | 11 | `Id` | Registered unit standard constituent scope approved on an active EtqaAssessor profile. |
 | `dbo` | [`AttestedComputation`](#attestedcomputation) | `AttestedComputation` | 13 | `Id` | A concept carrying a sanctioned way to compute a value per OKF v0.2 Section 10, so a consumer can confirm the value was produced by executing blessed code rather than improvising. |
 | `dbo` | [`AuditLog`](#auditlog) | `AuditLog` | 11 | `Id` | Immutable operational audit trail recording entity mutations, actor identity, timestamps, and JSON snapshots. |
+| `dbo` | [`BackgroundJobJournal`](#backgroundjobjournal) | `BackgroundJobJournal` | 18 | `Id` | System entity for BackgroundJobJournal data governance. |
 | `dbo` | [`BankingDetails`](#bankingdetails) | `BankingDetails` | 34 | `Id` | System entity for BankingDetails data governance. |
 | `dbo` | [`BankingDetailsAudit`](#bankingdetailsaudit) | `BankingDetailsAudit` | 8 | `Id` | System entity for BankingDetailsAudit data governance. |
 | `dbo` | [`BroadcastMessage`](#broadcastmessage) | `BroadcastMessage` | 19 | `Id` | Persistent broadcast campaign representing an official circular, executive communication, or mass notification. |
@@ -47,7 +48,7 @@
 | `dbo` | [`BusinessRuleWorkflow`](#businessruleworkflow) | `BusinessRuleWorkflow` | 10 | `Id` | Represents a cohesive grouping of statutory or operational business rules evaluated as a unified decision pipeline (e.g. LearnerStpEvaluation, FinancialClaimApproval). |
 | `dbo` | [`CertificateDistributionEvent`](#certificatedistributionevent) | `CertificateDistributionEvent` | 14 | `Id` | Certificate Distribution Event tracking for National Red Seal certificates (Section 4.2.6). |
 | `dbo` | [`CertificatePrintingBatch`](#certificateprintingbatch) | `CertificatePrintingBatch` | 11 | `Id` | Batch of qualification certificates sent to printer with consolidated release/distribution letters. |
-| `dbo` | [`CompanyLearner`](#companylearner) | `CompanyLearner` | 69 | `Id` | Represents a learner registration agreement linked to an employer organisation, training provider, and MerSETA learning programme, capturing all statutory fields for SETMIS Files 500, 501, 502, and 506. |
+| `dbo` | [`CompanyLearner`](#companylearner) | `CompanyLearner` | 70 | `Id` | Represents a learner registration agreement linked to an employer organisation, training provider, and MerSETA learning programme, capturing all statutory fields for SETMIS Files 500, 501, 502, and 506. |
 | `dbo` | [`CompanyLearnerChangeRequest`](#companylearnerchangerequest) | `CompanyLearnerChangeRequest` | 16 | `Id` | Formal change request for amending an active registered CompanyLearner contract or demographic details. |
 | `dbo` | [`CompanyLearnerExtension`](#companylearnerextension) | `CompanyLearnerExtension` | 17 | `Id` | Represents a statutory request for extension of an unregistered learner application or an active learner contract per signed specification Section 4.1. |
 | `dbo` | [`CompanyLearnerLostTime`](#companylearnerlosttime) | `CompanyLearnerLostTime` | 16 | `Id` | Tracks suspended or lost training time and recalculates revised contract end dates. |
@@ -85,7 +86,7 @@
 | `dbo` | [`FinancialQuarter`](#financialquarter) | `FinancialQuarter` | 13 | `Id` | Constituent statutory quarter belonging to a specific FinancialYear. Supports arbitrary, customizable date boundaries. |
 | `dbo` | [`FinancialYear`](#financialyear) | `FinancialYear` | 22 | `Id` | Master statutory financial scheme year definition (e.g. 2026/2027). Supports customizable start and end dates with dynamic quarterly projections. |
 | `dbo` | [`FundingWindowPriority`](#fundingwindowpriority) | `FundingWindowPriority` | 12 | `Id` | Gazetted Strategic Priority sub-budget envelope and beneficiary quota allocated to a Discretionary Grant Funding Window. |
-| `dbo` | [`GrantApplication`](#grantapplication) | `GrantApplication` | 31 | `Id` | Discretionary Grant funding applications submitted by employers for skills development projects. |
+| `dbo` | [`GrantApplication`](#grantapplication) | `GrantApplication` | 32 | `Id` | Discretionary Grant funding applications submitted by employers for skills development projects. |
 | `dbo` | [`GrantApplicationIntervention`](#grantapplicationintervention) | `GrantApplicationIntervention` | 24 | `Id` | Structured intervention line item attached to a Discretionary Grant Application. Supports both PIVOTAL structured training plans (accredited qualifications/unit standards) and Non-PIVOTAL project implementation deliverables (milestones/equipment/bursaries). |
 | `dbo` | [`GrantFundingWindow`](#grantfundingwindow) | `GrantFundingWindow` | 23 | `Id` | Gazette-announced Discretionary Grant funding window opening and allocation cycle. |
 | `dbo` | [`GrantMoa`](#grantmoa) | `GrantMoa` | 16 | `Id` | Memorandum of Agreement (MOA) for approved Discretionary Grants. |
@@ -126,11 +127,13 @@
 | `dbo` | [`NonSetaCompany`](#nonsetacompany) | `NonSetaCompany` | 13 | `Id` | Non-SETA External Employer / Organisation registered with other Quality Councils / SETAs. |
 | `dbo` | [`NonSetaQualificationsCompletion`](#nonsetaqualificationscompletion) | `NonSetaQualificationsCompletion` | 19 | `Id` | Cross-SETA Qualification & TVET College Achievement Verification for merSETA articulation. |
 | `dbo` | [`NonWorkingDay`](#nonworkingday) | `NonWorkingDay` | 17 | `Id` | Master definition for national statutory public holidays, merSETA annual year-end shutdowns, and ad-hoc institutional closures. Governs universal workflow SLA business day calculations. |
-| `dbo` | [`Organisation`](#organisation) | `Organisation` | 52 | `Id` | Registered employer, host workplace, or skills development entity under MerSETA jurisdiction, fully normalized with statutory columns required for SETMIS File 100 and File 200 reporting. |
+| `dbo` | [`Organisation`](#organisation) | `Organisation` | 53 | `Id` | Registered employer, host workplace, or skills development entity under MerSETA jurisdiction, fully normalized with statutory columns required for SETMIS File 100 and File 200 reporting. |
 | `dbo` | [`OrganisationContact`](#organisationcontact) | `OrganisationContact` | 12 | `Id` | Liaison contact person link associating an individual Person with an Employer Organisation. |
+| `dbo` | [`OrganisationEmployee`](#organisationemployee) | `OrganisationEmployee` | 17 | `Id` | Represents an active or historical employee record within an employer organisation's roster (Option B: The Living Employer Roster). Enables 1-Click WSP/ATR statutory report auto-harvesting with full demographics, occupational categorisation, and OFO alignment. |
 | `dbo` | [`OrganisationGovernanceMember`](#organisationgovernancemember) | `OrganisationGovernanceMember` | 20 | `Id` | Natural person serving as a legal director, partner, trustee, board member, or shareholder within a participating employer, training provider, or grant applicant organisation. |
 | `dbo` | [`OrganisationPortfolio`](#organisationportfolio) | `OrganisationPortfolio` | 17 | `Id` | Dynamic Account Management Portfolio allocating an Employer Organisation to a dedicated Relationship Officer. Natively supports cross-regional appointments (e.g. national key accounts, specialized industry groups). |
 | `dbo` | [`OrganisationSite`](#organisationsite) | `OrganisationSite` | 25 | `Id` | Operational branch facility, plant, or training site belonging to an Employer Organisation, supporting multi-site mapping and GPS geolocation for SETMIS File 200 reporting. |
+| `dbo` | [`OutboxMessage`](#outboxmessage) | `OutboxMessage` | 10 | `Id` | Transactional outbox entity recording domain events within the same database transaction. Dispatched reliably by hosted workers to guarantee at-least-once message delivery. |
 | `dbo` | [`Person`](#person) | `Person` | 47 | `Id` | Core demographic profile storing individual identity, SA ID/Passport, Washington Group functioning, POPIA compliance, educational background, and contact details for SETMIS statutory reporting. |
 | `dbo` | [`PersonContact`](#personcontact) | `PersonContact` | 25 | `Id` | Vertically partitioned satellite entity storing residential, postal, and telecommunications contact data for an individual. |
 | `dbo` | [`PersonDemographics`](#persondemographics) | `PersonDemographics` | 15 | `Id` | Vertically partitioned satellite entity storing demographic, language, equity, and statutory POPIA consent metadata. |
@@ -207,7 +210,7 @@
 | `dbo` | [`WspSkillsGap`](#wspskillsgap) | `WspSkillsGap` | 11 | `Id` | Critical and Scarce Skills Gap identified during WSP compilation. |
 | `dbo` | [`WspStrategicPriority`](#wspstrategicpriority) | `WspStrategicPriority` | 11 | `Id` | Strategic priorities and alignment with National Skills Development Plan (NSDP) goals in WSP submissions. |
 | `dbo` | [`WspStrategicSkillsGap`](#wspstrategicskillsgap) | `WspStrategicSkillsGap` | 15 | `Id` | Captures identified organizational skills gaps, root causes, and targeted interventions for WSP/ATR submissions. |
-| `dbo` | [`WspSubmission`](#wspsubmission) | `WspSubmission` | 17 | `Id` | Mandatory Grant Workplace Skills Plan (WSP) and Annual Training Report (ATR) submissions. |
+| `dbo` | [`WspSubmission`](#wspsubmission) | `WspSubmission` | 18 | `Id` | Mandatory Grant Workplace Skills Plan (WSP) and Annual Training Report (ATR) submissions. |
 | `dbo` | [`WspTrainingImpactSurvey`](#wsptrainingimpactsurvey) | `WspTrainingImpactSurvey` | 11 | `Id` | Qualitative training impact questionnaire evaluating the business effectiveness of previous year training. |
 | `dbo` | [`WspTrainingPlan`](#wsptrainingplan) | `WspTrainingPlan` | 10 | `Id` | Planned learning and development interventions submitted in the annual Workplace Skills Plan. |
 | `lookup` | [`AbetBandType`](#abetbandtype) | `AbetBandType` | 8 | `Code` | NLRD Adult Basic Education and Training Band classifications (Field: ABET_BAND_ID - 1 to 5). |
@@ -331,13 +334,24 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `AccessFailedCount` | `int` | **NOT NULL** |  | Domain property for AccessFailedCount. |
+| `BackupPasswordFailedAttempts` | `int` | **NOT NULL** |  | Consecutive failed login attempts specifically against the emergency backup password. |
+| `BackupPasswordHash` | `nvarchar(max)` | NULL |  | Securely hashed disaster recovery / emergency fallback password for Entra outage contingency. |
+| `BackupPasswordLockoutEnd` | `nvarchar(max)` | NULL |  | Temporary lockout timestamp specifically for emergency backup password attempts. |
+| `BackupPasswordMustChange` | `bit` | **NOT NULL** |  | Indicates whether the user is required to rotate or configure their emergency backup password. |
+| `BackupPasswordSetAt` | `datetime2` | NULL |  | UTC timestamp when the disaster recovery backup password was established or last rotated. |
 | `ConcurrencyStamp` | `nvarchar(max)` | NULL |  | Domain property for ConcurrencyStamp. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the user account was created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or service that created the account. |
 | `DefaultOrganisationId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the primary employer organisation context for external users. |
 | `Email` | `nvarchar(150)` | NULL |  | Primary email address. |
 | `EmailConfirmed` | `bit` | **NOT NULL** |  | Domain property for EmailConfirmed. |
+| `EntraAccountEnabled` | `bit` | NULL |  | Cached account status from Microsoft Entra (true = enabled in cloud directory, false = disabled/revoked). |
+| `EntraObjectId` | `nvarchar(100)` | NULL |  | Microsoft Entra Object ID (GUID format) identifying the account in the cloud directory. |
+| `EntraUserPrincipalName` | `nvarchar(150)` | NULL |  | User Principal Name (UPN) in Microsoft Entra (e.g. employee@merseta.org.za). |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the login account is enabled and active. |
+| `IsEntraUser` | `bit` | **NOT NULL** |  | Indicates whether this user account is federated / mapped to Microsoft Entra ID (primarily merSETA internal staff). |
+| `LastBackupPasswordLoginUtc` | `datetime2` | NULL |  | UTC timestamp when the user last authenticated using their emergency backup password. |
+| `LastEntraSyncUtc` | `datetime2` | NULL |  | UTC timestamp when accountEnabled status and directory claims were last confirmed with Entra. |
 | `LockoutEnabled` | `bit` | **NOT NULL** |  | Domain property for LockoutEnabled. |
 | `LockoutEnd` | `nvarchar(max)` | NULL |  | Domain property for LockoutEnd. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the user account was last modified. |
@@ -364,6 +378,8 @@
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
 | `IX_AppUser_DefaultOrganisationId` | `DefaultOrganisationId` | No |
+| `IX_AppUser_EntraObjectId` | `EntraObjectId` | No |
+| `IX_AppUser_EntraUserPrincipalName` | `EntraUserPrincipalName` | No |
 | `EmailIndex` | `NormalizedEmail` | No |
 | `UserNameIndex` | `NormalizedUserName` | ✅ Yes |
 | `IX_AppUser_PersonId` | `PersonId` | ✅ Yes |
@@ -1501,6 +1517,44 @@
 
 ---
 
+### <a id="backgroundjobjournal"></a> `dbo.BackgroundJobJournal`
+
+**Description:** System entity for BackgroundJobJournal data governance.  
+**CLR Model:** `Nsdms.Domain.Entities.BackgroundJobJournal`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CompletedAt` | `datetime2` | NULL |  | Domain property for CompletedAt. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `CurrentStep` | `nvarchar(250)` | NULL |  | Domain property for CurrentStep. |
+| `Description` | `nvarchar(500)` | **NOT NULL** |  | Detailed description and contextual notes. |
+| `ErrorMessage` | `nvarchar(max)` | NULL |  | Domain property for ErrorMessage. |
+| `JobGuid` | `uniqueidentifier` | **NOT NULL** |  | Domain property for JobGuid. |
+| `JobType` | `nvarchar(100)` | **NOT NULL** |  | Domain property for JobType. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PayloadJson` | `nvarchar(max)` | NULL |  | Domain property for PayloadJson. |
+| `ProgressPercentage` | `int` | **NOT NULL** |  | Domain property for ProgressPercentage. |
+| `RequestedBy` | `nvarchar(100)` | **NOT NULL** |  | Domain property for RequestedBy. |
+| `ResultContentType` | `nvarchar(100)` | NULL |  | Domain property for ResultContentType. |
+| `ResultFileName` | `nvarchar(250)` | NULL |  | Domain property for ResultFileName. |
+| `StartedAt` | `datetime2` | NULL |  | Domain property for StartedAt. |
+| `Status` | `nvarchar(50)` | **NOT NULL** |  | Current lifecycle state code in the workflow engine. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_BackgroundJobJournal_JobGuid` | `JobGuid` | No |
+| `IX_BackgroundJobJournal_Status_CreatedAt` | `Status, CreatedAt` | No |
+
+---
+
 ### <a id="bankingdetails"></a> `dbo.BankingDetails`
 
 **Description:** System entity for BankingDetails data governance.  
@@ -1849,6 +1903,7 @@
 | `QualificationTitle` | `nvarchar(250)` | NULL |  | Title of the registered SAQA / QCTO qualification or learning programme. |
 | `RegistrationChannel` | `nvarchar(max)` | **NOT NULL** |  | Registration intake channel: "ManualWizard" (Manual Single Registration) or "AutomatedBulk" (Automated Bulk Fast-Track). |
 | `RegistrationDate` | `datetime2` | **NOT NULL** |  | Official date when the learner contract was officially registered with MerSETA. |
+| `RowVersion` | `nvarchar(max)` | **NOT NULL** |  | Optimistic concurrency token (ROWVERSION). |
 | `SaqaQualificationId` | `int` | NULL |  | SAQA Registered Qualification ID code (SETMIS File 501, 505, 506). |
 | `SetaRegion` | `nvarchar(max)` | NULL |  | MerSETA regional office responsible for managing this learner agreement. |
 | `SignatoryPersonId` | `int` | NULL |  | Optional foreign key referencing the Person who signed off the application. |
@@ -3529,6 +3584,7 @@
 | `Purpose` | `nvarchar(max)` | NULL |  | Narrative project purpose answering "What do you want to do?". |
 | `RequestedAmount` | `decimal(18,2)` | **NOT NULL** |  | Total grant funding amount requested by the applicant in ZAR. |
 | `RequireProjectAdministrationCosts` | `bit` | **NOT NULL** |  | Indicates whether a Project Administration fee is requested for this project. |
+| `RowVersion` | `nvarchar(max)` | **NOT NULL** |  | Optimistic concurrency token (ROWVERSION). |
 | `StrategicPriorityId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the primary StrategicPriority theme addressed by this application. |
 | `TargetProvinces` | `nvarchar(max)` | NULL |  | Targeted provinces and project location footprint (e.g. "Gauteng, KwaZulu-Natal" or "National"). |
 | `WspExemptionReason` | `nvarchar(500)` | NULL |  | Statutory justification or rationale for WSP submission exemption. |
@@ -4542,7 +4598,7 @@
 | `ModeratorRegistrationNumber` | `nvarchar(50)` | NULL |  | Registered ETQA Moderator / NAMB Verifier registration number (SETMIS File 505). |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
-| `QualificationId` | `nvarchar(50)` | NULL |  | SAQA Qualification ID or OFO Trade Code corresponding to the trade test (SETMIS File 505). |
+| `QualificationId` | `int` | NULL |  | SAQA Qualification ID or trade qualification reference (SETMIS File 505). |
 | `Remarks` | `nvarchar(max)` | NULL |  | Assessment feedback and examiner moderation remarks. |
 | `ResultStatusCode` | `nvarchar(50)` | NULL |  | Legacy assessment outcome status code (e.g. Scheduled, Competent, NotYetCompetent, Absent). |
 | `SerialCertificateNumber` | `nvarchar(50)` | NULL |  | National Red Seal Artisan Trade Certificate serial number issued upon competency. |
@@ -4820,6 +4876,7 @@
 | `IX_LevyFileLine_SdlNumber` | `SdlNumber` | No |
 | `IX_LevyFileLine_SetaCode` | `SetaCode` | No |
 | `IX_LevyFileLine_SicCode` | `SicCode` | No |
+| `IX_LevyFileLine_SdlNumber_SchemeYear` | `SdlNumber, SchemeYear` | No |
 
 ---
 
@@ -5392,6 +5449,7 @@
 | `PrimaryContactPersonId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the primary contact person. |
 | `ProvinceCode` | `nvarchar(15)` | NULL |  | Head office geographic province lookup code (references lookup.ProvinceType: GP, KZN, WC, EC, FS, MP, NW, NC, LP). |
 | `RegistrationNumber` | `nvarchar(50)` | NULL |  | CIPC Company or Close Corporation registration number (e.g. 2015/123456/07). |
+| `RowVersion` | `nvarchar(max)` | **NOT NULL** |  | Optimistic concurrency token (ROWVERSION). |
 | `SdlNumber` | `nvarchar(20)` | **NOT NULL** |  | SARS Skills Development Levy registration number (e.g. L123456789). |
 | `SectorCode` | `nvarchar(15)` | NULL |  | SETA industrial sector classification code (references lookup.SectorType). |
 | `SetaId` | `nvarchar(10)` | **NOT NULL** |  | Originating SETA classification code (references lookup.SetaType, default 17 for merSETA). |
@@ -5469,6 +5527,56 @@
 | `IX_OrganisationContact_IsActive` | `IsActive` | No |
 | `IX_OrganisationContact_OrganisationId` | `OrganisationId` | No |
 | `IX_OrganisationContact_PersonId` | `PersonId` | No |
+
+---
+
+### <a id="organisationemployee"></a> `dbo.OrganisationEmployee`
+
+**Description:** Represents an active or historical employee record within an employer organisation's roster (Option B: The Living Employer Roster). Enables 1-Click WSP/ATR statutory report auto-harvesting with full demographics, occupational categorisation, and OFO alignment.  
+**CLR Model:** `Nsdms.Domain.Entities.OrganisationEmployee`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `EmployeeNumber` | `nvarchar(50)` | NULL |  | Internal employer payroll / employee staff identification number. |
+| `EmploymentStatusCode` | `nvarchar(50)` | NULL |  | Employment status standing (e.g. ACTIVE, RESIGNED, RETIRED, TERMINATED, DECEASED). |
+| `EmploymentTypeCode` | `nvarchar(50)` | NULL |  | Employment contract type (e.g. PERMANENT, CONTRACT, TEMPORARY, SEASONAL). |
+| `EndDate` | `datetime2` | NULL |  | Date when employment terminated or concluded (if applicable). |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the employee is currently active and included in live headcount rosters. |
+| `JobTitle` | `nvarchar(150)` | NULL |  | Occupational job title or position description within the organisation. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `OccupationalCategoryCode` | `nvarchar(50)` | NULL |  | Statutory Employment Equity / WSP occupational category code (e.g. MANAGERS, PROFESSIONALS, TECHNICIANS, CLERICAL, SERVICE_SALES, SKILLED_CRAFT, PLANT_OPERATORS, ELEMENTARY). |
+| `OfoCodeId` | `nvarchar(50)` | NULL | 🔗 **FK** | Statutory Organising Framework for Occupations (OFO) code (references lookup.OfoCodeType.Code, e.g. 653101, 121901). |
+| `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key identifier referencing the employing Organisation. |
+| `OrganisationSiteId` | `int` | NULL | 🔗 **FK** | Optional foreign key identifier referencing the specific employer branch or operational site. |
+| `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key identifier referencing the natural Person (contains RSA ID, First Name, Last Name, Gender, Equity, Disability). |
+| `StartDate` | `datetime2` | NULL |  | Date when employment commenced with the organisation. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_OrganisationEmployee_OfoCodeType_OfoCodeId` | `OfoCodeId` | `lookup.OfoCodeType` | `Restrict` |
+| `FK_OrganisationEmployee_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `Cascade` |
+| `FK_OrganisationEmployee_OrganisationSite_OrganisationSiteId` | `OrganisationSiteId` | `dbo.OrganisationSite` | `SetNull` |
+| `FK_OrganisationEmployee_Person_PersonId` | `PersonId` | `dbo.Person` | `Restrict` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_OrganisationEmployee_IsActive` | `IsActive` | No |
+| `IX_OrganisationEmployee_OfoCodeId` | `OfoCodeId` | No |
+| `IX_OrganisationEmployee_OrganisationId` | `OrganisationId` | No |
+| `IX_OrganisationEmployee_OrganisationSiteId` | `OrganisationSiteId` | No |
+| `IX_OrganisationEmployee_PersonId` | `PersonId` | No |
+| `IX_OrganisationEmployee_Org_Active` | `OrganisationId, IsActive` | No |
 
 ---
 
@@ -5624,6 +5732,35 @@
 | `IX_OrganisationSite_ProvinceCode` | `ProvinceCode` | No |
 | `IX_OrganisationSite_SiteNumber` | `SiteNumber` | No |
 | `IX_OrganisationSite_StatssaAreaCode` | `StatssaAreaCode` | No |
+
+---
+
+### <a id="outboxmessage"></a> `dbo.OutboxMessage`
+
+**Description:** Transactional outbox entity recording domain events within the same database transaction. Dispatched reliably by hosted workers to guarantee at-least-once message delivery.  
+**CLR Model:** `Nsdms.Domain.Entities.OutboxMessage`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ErrorMessage` | `nvarchar(max)` | NULL |  | Error message captured if dispatch failed during worker execution. |
+| `EventType` | `nvarchar(200)` | **NOT NULL** |  | Fully qualified or simple event type name (e.g. WspApprovedEvent). |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PayloadJson` | `nvarchar(max)` | **NOT NULL** |  | Serialized JSON payload of the domain event. |
+| `ProcessedAt` | `datetime2` | NULL |  | Timestamp when this outbox message was successfully dispatched to subscribers. |
+| `RetryCount` | `int` | **NOT NULL** |  | Number of delivery retry attempts. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_OutboxMessage_ProcessedAt` | `ProcessedAt` | No |
 
 ---
 
@@ -9016,6 +9153,7 @@
 | `PlannedTrainingBudget` | `decimal(18,2)` | **NOT NULL** |  | Total aggregate training budget planned for the upcoming financial year in ZAR. |
 | `ReferenceNumber` | `nvarchar(50)` | **NOT NULL** |  | Unique statutory WSP submission reference tracking number. |
 | `RequiredSignoffCount` | `int` | **NOT NULL** |  | Minimum required distinct signatory roles needed to meet statutory quorum (2 for < 50 staff, 3 for >= 50 staff). |
+| `RowVersion` | `nvarchar(max)` | **NOT NULL** |  | Optimistic concurrency token (ROWVERSION). |
 | `SignoffDigitalSecuritySeal` | `nvarchar(max)` | NULL |  | SHA-256 digital security seal certifying completion of all requisite multi-party attestations. |
 | `SubmissionDate` | `datetime2` | NULL |  | Official date and time when the submission was locked and signed off. |
 | `WspApprovalStatusCode` | `nvarchar(15)` | NULL |  | Current workflow review and approval status code (e.g. Draft, Submitted, Approved, Rejected). |

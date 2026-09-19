@@ -12,34 +12,10 @@ public class RealtimeNotificationService : IRealtimeNotificationService, ISignal
     private readonly IHubContext<NsdmsNotificationHub, INsdmsNotificationClient> _hubContext;
     private readonly ILogger<RealtimeNotificationService> _logger;
 
-    public static event Action<string, string, string, string>? GlobalTaskAssigned;
-    public static event Action<string, int, string, string, string>? GlobalWorkflowTransition;
-    public static event Action<SystemNotificationDto>? GlobalUserNotification;
-    public static event Action<string, int>? GlobalSlaWarning;
-
-    public event Action<string, string, string, string>? TaskAssignedReceived
-    {
-        add => GlobalTaskAssigned += value;
-        remove => GlobalTaskAssigned -= value;
-    }
-
-    public event Action<string, int, string, string, string>? WorkflowTransitionReceived
-    {
-        add => GlobalWorkflowTransition += value;
-        remove => GlobalWorkflowTransition -= value;
-    }
-
-    public event Action<SystemNotificationDto>? UserNotificationReceived
-    {
-        add => GlobalUserNotification += value;
-        remove => GlobalUserNotification -= value;
-    }
-
-    public event Action<string, int>? SlaWarningReceived
-    {
-        add => GlobalSlaWarning += value;
-        remove => GlobalSlaWarning -= value;
-    }
+    public event Action<string, string, string, string>? TaskAssignedReceived;
+    public event Action<string, int, string, string, string>? WorkflowTransitionReceived;
+    public event Action<SystemNotificationDto>? UserNotificationReceived;
+    public event Action<string, int>? SlaWarningReceived;
 
     public RealtimeNotificationService(
         IHubContext<NsdmsNotificationHub, INsdmsNotificationClient> hubContext,
@@ -53,7 +29,7 @@ public class RealtimeNotificationService : IRealtimeNotificationService, ISignal
     {
         try
         {
-            GlobalUserNotification?.Invoke(notification);
+            UserNotificationReceived?.Invoke(notification);
 
             if (!string.IsNullOrWhiteSpace(notification.RecipientUsername))
             {
@@ -92,7 +68,7 @@ public class RealtimeNotificationService : IRealtimeNotificationService, ISignal
     {
         try
         {
-            GlobalTaskAssigned?.Invoke(taskId, taskTitle, assignedRole, priority);
+            TaskAssignedReceived?.Invoke(taskId, taskTitle, assignedRole, priority);
 
             if (!string.IsNullOrEmpty(assignedRole))
             {
@@ -114,7 +90,7 @@ public class RealtimeNotificationService : IRealtimeNotificationService, ISignal
     {
         try
         {
-            GlobalWorkflowTransition?.Invoke(entityType, entityId, fromState, toState, actor);
+            WorkflowTransitionReceived?.Invoke(entityType, entityId, fromState, toState, actor);
 
             await _hubContext.Clients.All.ReceiveWorkflowTransition(entityType, entityId, fromState, toState, actor);
             _logger.LogInformation("SignalR: Dispatched workflow transition notification for {EntityType} #{EntityId} ({From} -> {To})", entityType, entityId, fromState, toState);
@@ -129,7 +105,7 @@ public class RealtimeNotificationService : IRealtimeNotificationService, ISignal
     {
         try
         {
-            GlobalSlaWarning?.Invoke(taskTitle, hoursRemaining);
+            SlaWarningReceived?.Invoke(taskTitle, hoursRemaining);
 
             await _hubContext.Clients.All.ReceiveSlaWarning(taskTitle, hoursRemaining);
             _logger.LogWarning("SignalR: Dispatched SLA warning alert for '{Title}' ({Hours}h remaining)", taskTitle, hoursRemaining);

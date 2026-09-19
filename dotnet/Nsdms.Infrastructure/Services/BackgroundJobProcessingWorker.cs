@@ -26,26 +26,14 @@ public class BackgroundJobProcessingWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Background Job Processing Worker started. Ready to process decoupled CPU tasks.");
+        _logger.LogInformation("Background Job Processing Worker started with dual priority channels and Parallel.ForEachAsync concurrency.");
 
         try
         {
-            await foreach (var ticket in _jobQueue.Reader.ReadAllAsync(stoppingToken))
-            {
-                try
-                {
-                    await ProcessJobAsync(ticket, stoppingToken);
-                }
-                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Unhandled error processing background job #{JobId} [{JobType}]", ticket.JobId, ticket.JobType);
-                    _jobQueue.MarkFailed(ticket.JobId, ex.Message);
-                }
-            }
+            var highPriorityTask = ProcessChannelAsync(_jobQueue.Reader, maxParallelism: 8, "HighPriority", stoppingToken);
+            var batchTask = ProcessChannelAsync(_jobQueue.BatchReader, maxParallelism: 4, "Batch", stoppingToken);
+
+            await Task.WhenAll(highPriorityTask, batchTask);
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
@@ -53,6 +41,43 @@ public class BackgroundJobProcessingWorker : BackgroundService
         }
 
         _logger.LogInformation("Background Job Processing Worker shutting down.");
+    }
+
+    private async Task ProcessChannelAsync(
+        System.Threading.Channels.ChannelReader<BackgroundJobTicket> reader, 
+        int maxParallelism, 
+        string channelName, 
+        CancellationToken stoppingToken)
+    {
+        var parallelOptions = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = maxParallelism,
+            CancellationToken = stoppingToken
+        };
+
+        try
+        {
+            await Parallel.ForEachAsync(reader.ReadAllAsync(stoppingToken), parallelOptions, async (ticket, ct) =>
+            {
+                try
+                {
+                    await ProcessJobAsync(ticket, ct);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    // Cancelled
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unhandled error processing [{Channel}] background job #{JobId} [{JobType}]", channelName, ticket.JobId, ticket.JobType);
+                    _jobQueue.MarkFailed(ticket.JobId, ex.Message);
+                }
+            });
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            // Graceful shutdown
+        }
     }
 
     private async Task ProcessJobAsync(BackgroundJobTicket ticket, CancellationToken ct)
@@ -237,7 +262,12 @@ public class BackgroundJobProcessingWorker : BackgroundService
                 throw new NotSupportedException($"Document type '{docType}' is not supported for background compilation.");
         }
 
-        _jobQueue.UpdateProgress(ticket.JobId, 90, "Finalizing binary streaming buffer...");
-        _jobQueue.MarkCompleted(ticket.JobId, pdfBytes, "application/pdf", fileName, $"/api/jobs/{ticket.JobId}/download");
+        _jobQueue.UpdateProgress(ticket.JobId, 90, "Streaming document bytes to disk storage...");
+        string artifactsDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "nsdms_job_artifacts");
+        System.IO.Directory.CreateDirectory(artifactsDir);
+        string storagePath = System.IO.Path.Combine(artifactsDir, $"{ticket.JobId}_{fileName}");
+        await System.IO.File.WriteAllBytesAsync(storagePath, pdfBytes, ct);
+
+        _jobQueue.MarkCompleted(ticket.JobId, null, "application/pdf", fileName, $"/api/jobs/{ticket.JobId}/download", storagePath);
     }
 }

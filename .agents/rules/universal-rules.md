@@ -335,4 +335,26 @@ When user's prompt is NOT in English:
 3. **Multi-Step Modal Dialog Deletion Verification**:
    - Destructive entity deletion tests must not stop at clicking the page-level "Delete" button; tests must explicitly assert the presence of `<ConfirmDialog>` (`.mud-dialog`), capture dialog state, and dispatch the affirmative action (`.mud-dialog button:has-text('Delete ...')`) to verify true database cascading removal and list route redirection.
 
+---
 
+### 🛡️ Core Infrastructure & Architecture Invariants (Post-Remediation)
+1. **Schema Migration Journaling**:
+   - Never invoke raw DDL scripts on startup without wrapping them in `SchemaMigrationJournal.ExecuteIfNotAppliedAsync(...)`.
+   - The journal table `dbo.__CustomSchemaJournal` ensures that previously executed migrations are bypassed in <5ms, protecting cold start times.
+2. **Interactive Circuit Multi-Tenancy**:
+   - Never resolve `ITenantProvider` solely from `IHttpContextAccessor.HttpContext`. In Blazor Server interactive WebSocket circuits, `HttpContext` is null on subsequent socket packets.
+   - Always verify claims via `AuthenticationStateProvider` fallback to enforce fail-closed tenant scoping on `OrganisationId`.
+3. **Event Subscription Lifecycle**:
+   - Never declare `public static event Action<...>` in singleton notification services.
+   - Use instance events and enforce `IDisposable` with event unsubscription (`service.NotificationReceived -= Handler`) in Blazor components to prevent garbage collection retention of disconnected circuits.
+4. **Segregation of Duties (Maker-Checker)**:
+   - In all financial activations (e.g., Banking Details, Discretionary Grant Claims, Mandatory Grant Disbursements), enforce `CreatedBy != currentUserId` and `FirstSignoffUserId != currentUserId` before committing status changes.
+5. **High-Volume Indexing Standards**:
+   - Ingested files exceeding $10^5$ rows (e.g., `LevyFileLine`, `AuditLog`, `WspTrainingPlan`) must maintain composite index coverage (`SdlNumber`, `SchemeYear`) and filtered indexes (`HasFilter("[Flag] = 1")`) to prevent table scan lock escalation under RCSI.
+
+---
+
+### 🛡️ ASP.NET Core Cookie & Blazor Identity Scheme Synchronization Standard
+1. **Cookie Scheme Lock Invariant**: When combining ASP.NET Core Identity with Cookie Authentication in .NET 10, ALWAYS lock `AuthenticationOptions` via `builder.Services.PostConfigure<AuthenticationOptions>(...)` to guarantee `DefaultAuthenticateScheme`, `DefaultSignInScheme`, and `DefaultChallengeScheme` remain bound to `CookieAuthenticationDefaults.AuthenticationScheme`. Never permit Identity's default `IdentityConstants.ApplicationScheme` to override the application cookie ticket.
+2. **Dynamic HttpContext Resolution in AuthenticationStateProvider**: In Blazor Server interactive circuits, `AuthenticationStateProvider.GetAuthenticationStateAsync()` must dynamically inspect `IHttpContextAccessor.HttpContext?.User` rather than caching constructor state to ensure post-middleware authenticated claims are reflected immediately upon navigation.
+3. **Zero-Trust Diagnostic Endpoint Protection**: All user profile, diagnostic, or session state endpoints (e.g. `/api/auth/me`) MUST declare `.RequireAuthorization()` to enforce Zero Trust access control and prevent anonymous information disclosure.

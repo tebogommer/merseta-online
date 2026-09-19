@@ -92,6 +92,12 @@ public class WspSubmission : BaseEntity
     /// </summary>
     public ICollection<WspSignoffAttestation> SignoffAttestations { get; set; } = new List<WspSignoffAttestation>();
 
+    /// <summary>
+    /// Optimistic concurrency token (ROWVERSION).
+    /// </summary>
+    [System.ComponentModel.DataAnnotations.Timestamp]
+    public byte[] RowVersion { get; set; } = [];
+
     #endregion
 }
 
@@ -480,6 +486,12 @@ public class GrantApplication : BaseEntity
     /// Conflict of interest flags raised against this grant application.
     /// </summary>
     public ICollection<ConflictFlag> ConflictFlags { get; set; } = new List<ConflictFlag>();
+
+    /// <summary>
+    /// Optimistic concurrency token (ROWVERSION).
+    /// </summary>
+    [System.ComponentModel.DataAnnotations.Timestamp]
+    public byte[] RowVersion { get; set; } = [];
 }
 
 /// <summary>

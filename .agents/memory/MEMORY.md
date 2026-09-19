@@ -17,6 +17,8 @@
 - [project] When pushing to git, generate and commit DDL SQL script with lookup tables and seed values aligned with code → project-conventions.md
 - [testing] Playwright visual & console assertions: enforce zero console errors, loaded stylesheets, MudBlazor CSS variables, non-zero bounding box layout, and active interactive controls → project-conventions.md
 - [project] Component metadata uses SemVer while toolkit releases use CalVer → tech-decisions.md
+- [project] Always add Core Infrastructure & Architecture Invariants block to GEMINI.md when generated → project-conventions.md
+- [project] Ensure transactions are managed properly for data integrity (atomic double-writes, CreateExecutionStrategy, RCSI) → project-conventions.md
 ## Preferences
 - [preference] Test suite verification: add visual/console assertions to Playwright harness so only true, visually styled, fully interactive pages pass → user-preferences.md
 ## Feedback

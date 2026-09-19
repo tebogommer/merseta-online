@@ -186,14 +186,39 @@ public class WspService : IWspService
         }
 
         using var db = await _contextFactory.CreateDbContextAsync();
-        submission.CreatedAt = DateTime.UtcNow;
-        submission.CreatedBy = currentUsername;
+        var strategy = db.Database.CreateExecutionStrategy();
 
-        db.WspSubmissions.Add(submission);
-        await db.SaveChangesAsync();
+        await strategy.ExecuteAsync(async () =>
+        {
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
+            if (db.Database.IsRelational())
+            {
+                tx = await db.Database.BeginTransactionAsync();
+            }
 
-        _audit.LogAction(db, "WspSubmission", submission.Id, "Create", currentUsername, null, submission);
-        await db.SaveChangesAsync();
+            try
+            {
+                submission.CreatedAt = DateTime.UtcNow;
+                submission.CreatedBy = currentUsername;
+
+                db.WspSubmissions.Add(submission);
+                await db.SaveChangesAsync();
+
+                _audit.LogAction(db, "WspSubmission", submission.Id, "Create", currentUsername, null, submission);
+                await db.SaveChangesAsync();
+
+                if (tx != null) await tx.CommitAsync();
+            }
+            catch
+            {
+                if (tx != null) await tx.RollbackAsync();
+                throw;
+            }
+            finally
+            {
+                tx?.Dispose();
+            }
+        });
 
         return submission;
     }
@@ -210,6 +235,12 @@ public class WspService : IWspService
         if (existing == null)
         {
             throw new KeyNotFoundException($"WspSubmission with ID {submission.Id} was not found.");
+        }
+
+        // Hydrate client RowVersion concurrency token so EF Core actively checks for concurrency conflicts
+        if (submission.RowVersion != null && submission.RowVersion.Length > 0)
+        {
+            db.Entry(existing).Property(e => e.RowVersion).OriginalValue = submission.RowVersion;
         }
 
         var beforeState = new
@@ -431,27 +462,52 @@ public class WspService : IWspService
         }
 
         using var db = await _contextFactory.CreateDbContextAsync();
-        plan.CreatedAt = DateTime.UtcNow;
-        plan.CreatedBy = currentUsername;
+        var strategy = db.Database.CreateExecutionStrategy();
 
-        db.WspTrainingPlans.Add(plan);
-        await db.SaveChangesAsync();
-
-        var plans = await db.WspTrainingPlans
-            .Where(p => p.WspSubmissionId == plan.WspSubmissionId)
-            .ToListAsync();
-        var totalBudget = plans.Sum(p => p.EstimatedCost);
-        var sub = await db.WspSubmissions.FindAsync(plan.WspSubmissionId);
-        if (sub != null)
+        return await strategy.ExecuteAsync(async () =>
         {
-            sub.PlannedTrainingBudget = totalBudget;
-            sub.ModifiedAt = DateTime.UtcNow;
-        }
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
+            if (db.Database.IsRelational())
+            {
+                tx = await db.Database.BeginTransactionAsync();
+            }
 
-        _audit.LogAction(db, "WspTrainingPlan", plan.Id, "AddTrainingPlan", currentUsername, null, plan);
-        await db.SaveChangesAsync();
+            try
+            {
+                plan.CreatedAt = DateTime.UtcNow;
+                plan.CreatedBy = currentUsername;
 
-        return plan;
+                db.WspTrainingPlans.Add(plan);
+                await db.SaveChangesAsync();
+
+                var plans = await db.WspTrainingPlans
+                    .Where(p => p.WspSubmissionId == plan.WspSubmissionId)
+                    .ToListAsync();
+                var totalBudget = plans.Sum(p => p.EstimatedCost);
+                var sub = await db.WspSubmissions.FindAsync(plan.WspSubmissionId);
+                if (sub != null)
+                {
+                    sub.PlannedTrainingBudget = totalBudget;
+                    sub.ModifiedAt = DateTime.UtcNow;
+                }
+
+                _audit.LogAction(db, "WspTrainingPlan", plan.Id, "AddTrainingPlan", currentUsername, null, plan);
+                await db.SaveChangesAsync();
+
+                if (tx != null) await tx.CommitAsync();
+
+                return plan;
+            }
+            catch
+            {
+                if (tx != null) await tx.RollbackAsync();
+                throw;
+            }
+            finally
+            {
+                tx?.Dispose();
+            }
+        });
     }
 
     public async Task<WspTrainingPlan> AddTrainingPlanAsync(int submissionId, WspTrainingPlan plan, string currentUsername = "SYSTEM")

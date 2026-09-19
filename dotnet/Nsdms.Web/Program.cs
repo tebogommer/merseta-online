@@ -1,20 +1,28 @@
+using System.Diagnostics;
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
+using Nsdms.Application;
 using Nsdms.Application.Common;
 using Nsdms.Application.Common.Interfaces;
 using Nsdms.Application.Services;
 using Nsdms.Domain.Entities;
+using Nsdms.Infrastructure;
 using Nsdms.Infrastructure.Data;
-using Nsdms.Infrastructure.Interceptors;
 using Nsdms.Infrastructure.Services;
 using Nsdms.Web.Components;
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.RateLimiting;
-using System.Security.Claims;
-using System.Threading.RateLimiting;
+using Nsdms.Web.Endpoints;
+using Nsdms.Web.Hubs;
+using Nsdms.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,29 +38,94 @@ builder.Services.AddResponseCompression(options =>
     options.EnableForHttps = true;
 });
 
-// Password Hasher & HttpContext Accessor
+// Reverse Proxy & Forwarded Headers Configuration (Eliminates global rate-limiter proxy lockouts)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
+// Resilient Host Options - Prevent transient background service errors from terminating the web host
+builder.Services.Configure<HostOptions>(options =>
+{
+    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+});
+
+// Password Hasher, HttpClient & HttpContext Accessor
 builder.Services.AddScoped<PasswordHasher<ApplicationUser>>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient();
+
+// Microsoft Entra ID Resilience & Backup Password Service
+builder.Services.AddScoped<IEntraResilienceService, EntraResilienceService>();
+
+// Data Protection with persistent key storage (ensures persistent auth cookies survive server & dev process recycles)
+var keysFolder = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DataProtectionKeys");
+Directory.CreateDirectory(keysFolder);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
+    .SetApplicationName("merSETA-NSDMS");
 
 // Authentication & Authorization Services
 builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddScoped<AuthenticationStateProvider, Nsdms.Web.Services.NsdmsAuthenticationStateProvider>();
-builder.Services.AddScoped<Nsdms.Web.Services.NsdmsAuthenticationStateProvider>(sp => (Nsdms.Web.Services.NsdmsAuthenticationStateProvider)sp.GetRequiredService<AuthenticationStateProvider>());
+builder.Services.AddScoped<AuthenticationStateProvider, NsdmsAuthenticationStateProvider>();
+builder.Services.AddScoped<NsdmsAuthenticationStateProvider>(sp => (NsdmsAuthenticationStateProvider)sp.GetRequiredService<AuthenticationStateProvider>());
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultScheme = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 })
-.AddCookie(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme, options =>
+.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
 {
     options.Cookie.Name = "NSDMS_AUTH_TICKET";
     options.Cookie.HttpOnly = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
     options.LoginPath = "/login";
     options.LogoutPath = "/api/auth/logout";
     options.AccessDeniedPath = "/login";
-    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    options.ExpireTimeSpan = TimeSpan.FromDays(14); // 14-day persistent session window
     options.SlidingExpiration = true;
+
+    // Validate account active status, real-time Entra directory revocation, and offline grace limits on persistent cookies
+    options.Events = new CookieAuthenticationEvents
+    {
+        OnValidatePrincipal = async context =>
+        {
+            var userIdClaim = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdClaim, out var userId))
+            {
+                var identityService = context.HttpContext.RequestServices.GetRequiredService<IIdentityService>();
+                var user = await identityService.GetUserByIdAsync(userId);
+                if (user == null || !user.IsActive || (user.IsEntraUser && user.EntraAccountEnabled == false))
+                {
+                    var logger = context.HttpContext.RequestServices.GetService<ILoggerFactory>()?.CreateLogger("AuthCookieValidation");
+                    logger?.LogWarning("Security Alert: Session revoked via OnValidatePrincipal for user {UserId} ({Email}). IsActive={IsActive}, EntraAccountEnabled={EntraEnabled}",
+                        userId, user?.Email ?? "Unknown", user?.IsActive, user?.EntraAccountEnabled);
+
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                }
+                else if (user.IsEntraUser && context.Principal?.FindFirst("AuthMethod")?.Value == "EmergencyBackupPassword" && user.LastEntraSyncUtc.HasValue)
+                {
+                    var config = context.HttpContext.RequestServices.GetService<ISystemConfigurationService>();
+                    var gracePeriodDays = config != null ? await config.GetValueAsync<int>("Auth:EntraOfflineGracePeriodDays", 14) : 14;
+                    if ((DateTime.UtcNow - user.LastEntraSyncUtc.Value) > TimeSpan.FromDays(gracePeriodDays))
+                    {
+                        var logger = context.HttpContext.RequestServices.GetService<ILoggerFactory>()?.CreateLogger("AuthCookieValidation");
+                        logger?.LogWarning("Security Alert: Emergency offline grace period ({Days}d) exceeded for user {UserId} ({Email}). Revoking session.",
+                            gracePeriodDays, userId, user.Email);
+
+                        context.RejectPrincipal();
+                        await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                    }
+                }
+            }
+        }
+    };
 });
 builder.Services.AddAuthorization();
 
@@ -65,7 +138,7 @@ builder.Services.AddRateLimiter(options =>
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 10,
+                PermitLimit = 60,
                 Window = TimeSpan.FromMinutes(1),
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 0
@@ -81,22 +154,30 @@ builder.Services.AddRazorComponents()
         options.DetailedErrors = builder.Environment.IsDevelopment();
     });
 
-// Database & Interceptors
-builder.Services.AddSingleton<AuditableEntityInterceptor>();
-builder.Services.AddDbContextFactory<NsdmsDbContext>((sp, options) =>
-{
-    var interceptor = sp.GetRequiredService<AuditableEntityInterceptor>();
-    var conn = builder.Configuration.GetConnectionString("DefaultConnection") 
-               ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found in configuration.");
-    options.UseSqlServer(conn)
-           .AddInterceptors(interceptor);
-});
-// Multi-Tenancy Provider
-builder.Services.AddHttpContextAccessor();
+// Multi-Tenancy Provider with Blazor Server Interactive Circuit Fallback
 builder.Services.AddScoped<ITenantProvider>(sp =>
 {
     var httpContext = sp.GetService<IHttpContextAccessor>()?.HttpContext;
     var user = httpContext?.User;
+
+    // In Blazor Server interactive circuits, HttpContext is null; resolve user from AuthenticationStateProvider
+    if (user?.Identity?.IsAuthenticated != true)
+    {
+        var authProvider = sp.GetService<AuthenticationStateProvider>();
+        if (authProvider != null)
+        {
+            var authStateTask = authProvider.GetAuthenticationStateAsync();
+            if (authStateTask.IsCompletedSuccessfully)
+            {
+                user = authStateTask.Result.User;
+            }
+            else
+            {
+                user = authStateTask.GetAwaiter().GetResult().User;
+            }
+        }
+    }
+
     bool isAdmin = user?.Identity?.IsAuthenticated == true &&
                    (user.IsInRole("Admin") || user.IsInRole("SuperAdmin") || user.IsInRole("SUPERADMIN") || user.HasClaim("Permission", "System.Admin"));
     int? orgId = null;
@@ -111,10 +192,6 @@ builder.Services.AddScoped<DefaultTenantProvider>(sp => (DefaultTenantProvider)s
 builder.Services.AddScoped<NsdmsDbContext>(sp => new NsdmsDbContext(
     sp.GetRequiredService<DbContextOptions<NsdmsDbContext>>(),
     sp.GetRequiredService<ITenantProvider>()));
-
-// Interface registration
-builder.Services.AddScoped<INsdmsDbContext>(sp => sp.GetRequiredService<NsdmsDbContext>());
-builder.Services.AddScoped<INsdmsDbContextFactory, NsdmsDbContextFactory>();
 
 // ASP.NET Core Identity Core registration with standard policies
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
@@ -143,245 +220,25 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 .AddEntityFrameworkStores<NsdmsDbContext>()
 .AddDefaultTokenProviders();
 
-// Application Services
-builder.Services.AddScoped<AuditService>();
-builder.Services.AddScoped<IAuditService>(sp => sp.GetRequiredService<AuditService>());
-builder.Services.AddScoped<PersonService>();
-builder.Services.AddScoped<IPersonService>(sp => sp.GetRequiredService<PersonService>());
-builder.Services.AddScoped<OrganisationService>();
-builder.Services.AddScoped<IOrganisationService>(sp => sp.GetRequiredService<OrganisationService>());
-builder.Services.AddScoped<OrganisationEmployeeService>();
-builder.Services.AddScoped<IOrganisationEmployeeService>(sp => sp.GetRequiredService<OrganisationEmployeeService>());
-builder.Services.AddScoped<OrganisationComplianceEngine>();
-builder.Services.AddScoped<IOrganisationComplianceEngine>(sp => sp.GetRequiredService<OrganisationComplianceEngine>());
-builder.Services.AddScoped<OrganisationHierarchyService>();
-builder.Services.AddScoped<IOrganisationHierarchyService>(sp => sp.GetRequiredService<OrganisationHierarchyService>());
-builder.Services.AddScoped<OrganisationContextService>();
-builder.Services.AddScoped<IOrganisationContextService>(sp => sp.GetRequiredService<OrganisationContextService>());
-builder.Services.AddScoped<IdentityService>();
-builder.Services.AddScoped<IIdentityService>(sp => sp.GetRequiredService<IdentityService>());
-builder.Services.AddScoped<RolePermissionService>();
-builder.Services.AddScoped<IRolePermissionService>(sp => sp.GetRequiredService<RolePermissionService>());
-builder.Services.AddScoped<CaslAbilityService>();
-builder.Services.AddScoped<ICaslAbilityService>(sp => sp.GetRequiredService<CaslAbilityService>());
-builder.Services.AddScoped<VisitService>();
-builder.Services.AddScoped<IVisitService>(sp => sp.GetRequiredService<VisitService>());
-builder.Services.AddScoped<LookupService>();
-builder.Services.AddScoped<ILookupService>(sp => sp.GetRequiredService<LookupService>());
-builder.Services.AddScoped<TrainingProviderService>();
-builder.Services.AddScoped<ITrainingProviderService>(sp => sp.GetRequiredService<TrainingProviderService>());
-
-// Phase 7: SDP Delivery Site Infrastructure & Assessor Linking
-builder.Services.AddScoped<SdpSiteService>();
-builder.Services.AddScoped<ISdpSiteService>(sp => sp.GetRequiredService<SdpSiteService>());
-builder.Services.AddScoped<SdpCampusService>();
-builder.Services.AddScoped<ISdpCampusService>(sp => sp.GetRequiredService<SdpSiteService>());
-builder.Services.AddScoped<SdpDisciplinaryService>();
-builder.Services.AddScoped<ISdpDisciplinaryService>(sp => sp.GetRequiredService<SdpDisciplinaryService>());
-builder.Services.AddScoped<WspService>();
-builder.Services.AddScoped<IWspService>(sp => sp.GetRequiredService<WspService>());
-builder.Services.AddScoped<IMgWindowGovernanceService, MgWindowGovernanceService>();
-builder.Services.AddScoped<GrantService>();
-builder.Services.AddScoped<IGrantService>(sp => sp.GetRequiredService<GrantService>());
-builder.Services.AddScoped<LevyService>();
-builder.Services.AddScoped<ILevyService>(sp => sp.GetRequiredService<LevyService>());
-builder.Services.AddScoped<EtqaService>();
-builder.Services.AddScoped<IEtqaService>(sp => sp.GetRequiredService<EtqaService>());
-builder.Services.AddScoped<IMentorRatioPolicyEngine, MentorRatioPolicyEngine>();
-builder.Services.AddScoped<WorkplaceApprovalService>();
-builder.Services.AddScoped<IWorkplaceApprovalService>(sp => sp.GetRequiredService<WorkplaceApprovalService>());
-builder.Services.AddScoped<LearnerService>();
-builder.Services.AddScoped<ILearnerService>(sp => sp.GetRequiredService<LearnerService>());
-builder.Services.AddScoped<IBusinessRuleEngineService, BusinessRuleEngineService>();
-builder.Services.AddScoped<ILearnerStpRiskEngine, LearnerStpRiskEngine>();
-builder.Services.AddScoped<ILearnerBulkIngestionService, LearnerBulkIngestionService>();
-builder.Services.AddScoped<IWspBulkIngestionService, WspBulkIngestionService>();
-
-// Workflow Engine & Storage Services
-builder.Services.AddScoped<IWorkflowEngineService, WorkflowEngineService>();
-builder.Services.AddScoped<IStorageService, StorageService>();
-
-// Financial Governance & MOA Services (Phase 4)
-builder.Services.AddScoped<IFinanceService, FinanceService>();
-
-// Executive Skills Business Intelligence & Analytics
-builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
-
-// Developer Documentation & Database Schema Engine
-builder.Services.AddScoped<IDatabaseDocumentationService, DatabaseDocumentationService>();
-
-// System Configuration & Feature Flags Engine
-builder.Services.AddScoped<ISystemConfigurationService, SystemConfigurationService>();
-builder.Services.AddScoped<IFeatureFlagService, FeatureFlagService>();
-
-// Advanced Administration Catalog & Search Engine
-builder.Services.AddScoped<IAdminCatalogService, AdminCatalogService>();
-
-// Module 17: Open Knowledge Format (OKF v0.2) Living Knowledge & Attestation Engine
-builder.Services.AddSingleton<Nsdms.Application.Interfaces.IOkfFrontmatterParser, Nsdms.Application.Services.OkfFrontmatterParser>();
-builder.Services.AddScoped<Nsdms.Application.Interfaces.IKnowledgeCatalogService, Nsdms.Application.Services.KnowledgeCatalogService>();
-builder.Services.AddScoped<Nsdms.Application.Interfaces.ITsqlAttestationEngine, Nsdms.Infrastructure.Services.TsqlAttestationEngine>();
-
-// Grid View Preferences Persistence (Clause 11.2.7)
-builder.Services.AddScoped<IGridViewPreferenceService, GridViewPreferenceService>();
-
-// Wizard Draft Persistence & Resume Lifecycle Engine (Option 1)
-builder.Services.AddScoped<IWizardDraftService, Nsdms.Infrastructure.Services.WizardDraftService>();
-
-// Modern Navigation Menu & Role-Based Workspaces (Option C)
-builder.Services.AddScoped<INavigationMenuService, NavigationMenuService>();
-
-// Configurable Document & File Storage
-builder.Services.AddScoped<IFileStorageService, Nsdms.Infrastructure.Services.LocalFileStorageService>();
-
-// Templated PDF & Certificate Generation (QuestPDF)
-builder.Services.AddScoped<IPdfDocumentService, Nsdms.Infrastructure.Services.QuestPdfDocumentService>();
-
-// Decoupled ERP Integration Adapter (Off by default)
-builder.Services.AddScoped<IErpIntegrationService, Nsdms.Infrastructure.Services.ErpIntegrationService>();
-builder.Services.AddScoped<IErpOutboxQueueService, Nsdms.Infrastructure.Services.ErpOutboxQueueService>();
-builder.Services.AddScoped<INonLevyNumberGeneratorService, Nsdms.Infrastructure.Services.NonLevyNumberGeneratorService>();
-builder.Services.AddScoped<IChamberDerivationService, Nsdms.Infrastructure.Services.ChamberDerivationService>();
-
-// Advanced Learner Lifecycle Transitions
-builder.Services.AddScoped<ILearnerLifecycleService, LearnerLifecycleService>();
-
-// Workplace Monitoring & Inspection Surveys (Cluster 1)
-builder.Services.AddScoped<IWorkplaceMonitoringService, WorkplaceMonitoringService>();
-
-// Governance, Review Committees & Accreditation Scope (Cluster 2)
-builder.Services.AddScoped<IReviewCommitteeService, ReviewCommitteeService>();
-
-// DG Project Implementation Plans & Payment Claims (Cluster 3)
-builder.Services.AddScoped<IDgProjectImplementationService, DgProjectImplementationService>();
-
-// Training Committees & WSP Disputes (Cluster 4)
-builder.Services.AddScoped<ITrainingCommitteeAndDisputeService, TrainingCommitteeAndDisputeService>();
-
-// Trade Test Administration & ARPL (Area 13)
-builder.Services.AddScoped<ITradeTestAndArplService, TradeTestAndArplService>();
-
-// Phase 5: Artisan Development & NAMB Batch Governance
-builder.Services.AddScoped<INambBatchService, NambBatchService>();
-
-// Summative Assessment Reports & Moderation (Area 14)
-builder.Services.AddScoped<ISummativeAssessmentAndModerationService, SummativeAssessmentAndModerationService>();
-
-// Qualifications Curriculum Development & QDF (Area 15)
-builder.Services.AddScoped<IQcdAndCurriculumService, QcdAndCurriculumService>();
-
-// Non-SETA Qualifications & Provider Verification (Area 16)
-builder.Services.AddScoped<INonSetaVerificationService, NonSetaVerificationService>();
-builder.Services.AddScoped<IQualificationEnrolmentGatekeeperService, QualificationEnrolmentGatekeeperService>();
-
-// Advanced SARS Historical Levy Reconciliation (Area 17)
-builder.Services.AddScoped<ISarsLevyReconAuditService, SarsLevyReconAuditService>();
-
-// Option A: Reactive Streaming Pipeline & SqlBulkCopy Staging Table Architecture
-builder.Services.AddScoped<ISarsBulkStagingWriter, SarsBulkStagingWriter>();
-builder.Services.AddScoped<ISarsCompliancePreProcessor, SarsCompliancePreProcessor>();
-builder.Services.AddScoped<ISarsLevyStreamingPipeline, SarsLevyStreamingPipeline>();
-
-// Auxiliary Enterprise Services (Options A, B, C, D)
-builder.Services.AddScoped<IBankingDetailsService, BankingDetailsService>();
-builder.Services.AddScoped<ISdfAppointmentService, SdfAppointmentService>();
-builder.Services.AddScoped<IContractVariationService, ContractVariationService>();
-builder.Services.AddScoped<IExtensionOfScopeService, ExtensionOfScopeService>();
-
-// WSP Qualitative Survey & Skills Gap Service
-builder.Services.AddScoped<IWspSurveyService, WspSurveyService>();
-
-// Statutory Batch Pre-Submission Validation Engine (SETMIS & NLRD)
-builder.Services.AddScoped<Nsdms.Application.Validation.IStatutoryValidationService, StatutoryValidationService>();
-
-// Production Statutory Extract Generation Engines (DHET SETMIS & SAQA NLRD Edu.Dex)
-builder.Services.AddScoped<ISetmisExtractService, SetmisExtractService>();
-builder.Services.AddScoped<INlrdExtractService, NlrdExtractService>();
-
-// Automated Statutory Schedulers & Background Jobs
-builder.Services.AddScoped<IStatutorySchedulerService, StatutorySchedulerService>();
-
-// AQP Quality Partner & EISA Assessment Service
-builder.Services.AddScoped<IAqpPartnerService, AqpPartnerService>();
-
-// Phase 3: Core Statutory Workflow Services
-builder.Services.AddScoped<IWspSignoffService, WspSignoffService>();
-builder.Services.AddScoped<IDiscretionaryGrantClaimService, DiscretionaryGrantClaimService>();
-
-// Phase 4: ETQA Assessor Statutory Lifecycle & Registration Services
-builder.Services.AddScoped<IAssessorRegistrationService, AssessorRegistrationService>();
-builder.Services.AddScoped<IAssessorReRegistrationService, AssessorReRegistrationService>();
-builder.Services.AddScoped<IAssessorDisciplinaryService, AssessorDisciplinaryService>();
-
-// Brand Asset Service
-builder.Services.AddScoped<IBrandAssetService, Nsdms.Infrastructure.Services.BrandAssetService>();
-
-// Enterprise PDF & Excel Report Export Service (QuestPDF)
-builder.Services.AddScoped<IReportExportService, Nsdms.Infrastructure.Services.ReportExportService>();
-
-// Workflow Governance & Delegations Service
-builder.Services.AddScoped<IWorkflowGovernanceService, WorkflowGovernanceService>();
-
-// MoA Template & Reusable Clause Engine (Option A)
-builder.Services.AddScoped<IMoaTemplateEngineService, MoaTemplateEngineService>();
-
-// Hierarchical Fiscal Calendar & Quarters Engine
-builder.Services.AddScoped<IFiscalCalendarService, FiscalCalendarService>();
-
-// Enterprise Holiday & Institutional Closure Hub (Option A)
-builder.Services.AddScoped<IWorkingDayCalculationEngine, WorkingDayCalculationEngine>();
-builder.Services.AddScoped<IHolidayClosureService, HolidayClosureService>();
-
-// BankservAfrica AVS Service (Option C)
-builder.Services.AddScoped<IBankservAvsService, Nsdms.Infrastructure.Services.BankservAvsService>();
-
-// High-Throughput Streaming Batch Ingestion Service (Option D)
-builder.Services.AddScoped<ISqlBulkBatchIngestionService, Nsdms.Infrastructure.Services.SqlBulkBatchIngestionService>();
-
-// Universal Document Template & Cryptographic Verification Engine (Strategic Action Items)
-builder.Services.AddScoped<IDocumentVerificationService, DocumentVerificationService>();
-builder.Services.AddScoped<IDocumentPlaceholderRegistry, DocumentPlaceholderRegistry>();
-builder.Services.AddScoped<IEnterpriseDocumentTemplateService, EnterpriseDocumentTemplateService>();
-builder.Services.AddScoped<IDocumentIngestionBarcodeService, Nsdms.Infrastructure.Services.DocumentIngestionBarcodeService>();
-
-// Option B: Dynamic Portfolio & Capability Dispatch Engine
-builder.Services.AddScoped<IPortfolioDispatchService, PortfolioDispatchService>();
-builder.Services.AddScoped<IZoneAndCaseloadService, ZoneAndCaseloadService>();
+builder.Services.PostConfigure<AuthenticationOptions>(options =>
+{
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+});
 
 // Real-time SignalR Notification Service & Transport Publisher
-builder.Services.AddSingleton<Nsdms.Web.Services.RealtimeNotificationService>();
-builder.Services.AddSingleton<IRealtimeNotificationService>(sp => sp.GetRequiredService<Nsdms.Web.Services.RealtimeNotificationService>());
-builder.Services.AddSingleton<ISignalRNotificationPublisher>(sp => sp.GetRequiredService<Nsdms.Web.Services.RealtimeNotificationService>());
-
-// Persistent Notification Inbox Service
-builder.Services.AddScoped<INotificationService, Nsdms.Infrastructure.Services.NotificationService>();
-
-// SLA Monitoring & Statutory Deadline Alert Engine
-builder.Services.AddScoped<ISlaMonitoringService, Nsdms.Infrastructure.Services.SlaMonitoringService>();
-
-// Background Scheduler Hosted Service (Off by default)
-builder.Services.AddHostedService<Nsdms.Infrastructure.Services.BackgroundSchedulerHostedService>();
-
-// Sprint 1 & 2: Background Job Queue Pipeline & Processing Worker
-builder.Services.AddSingleton<IBackgroundJobQueue, InMemoryBackgroundJobQueue>();
-builder.Services.AddHostedService<BackgroundJobProcessingWorker>();
+builder.Services.AddSingleton<RealtimeNotificationService>();
+builder.Services.AddSingleton<IRealtimeNotificationService>(sp => sp.GetRequiredService<RealtimeNotificationService>());
+builder.Services.AddSingleton<ISignalRNotificationPublisher>(sp => sp.GetRequiredService<RealtimeNotificationService>());
 
 // Client-Side Draft State Hydration
-builder.Services.AddScoped<IFormDraftService, Nsdms.Web.Services.FormDraftService>();
+builder.Services.AddScoped<IFormDraftService, FormDraftService>();
 
-// SQL Server AuditLog Partitioning & Archival Service
-builder.Services.AddScoped<IAuditLogArchivalService, AuditLogArchivalService>();
-
-// Production APM & Native OpenTelemetry Prometheus Metrics Exporter
-builder.Services.AddScoped<IMetricsScraperService, MetricsScraperService>();
-
-// Module 18: Interest and Conflict of Interest (COI) Management
-builder.Services.AddScoped<IConflictManagementService, ConflictManagementService>();
-
-// Module 19: Enterprise Broadcast Messaging, Outbox Queue & Office 365 Rate Limiting
-builder.Services.AddScoped<IEmailTransportService, EmailTransportService>();
-builder.Services.AddScoped<IEmailOutboxService, EmailOutboxService>();
-builder.Services.AddHostedService<ThrottledEmailOutboxWorker>();
+// Modular Clean Architecture Layer Registrations
+builder.Services.AddApplicationServices();
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
 var app = builder.Build();
 
@@ -393,6 +250,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseResponseCompression();
+app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 
 app.Use(async (context, next) =>
@@ -413,359 +271,15 @@ app.MapStaticAssets();
 app.UseStaticFiles();
 
 // Map Real-time SignalR Hub
-app.MapHub<Nsdms.Web.Hubs.NsdmsNotificationHub>("/hubs/notifications");
+app.MapHub<NsdmsNotificationHub>("/hubs/notifications");
 
-// PDF & Statutory Document Download Endpoints (Secured per POPIA & Statutory Governance)
-app.MapGet("/api/documents/moa/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
-{
-    try
-    {
-        var bytes = await pdf.GenerateGrantMoaContractPdfAsync(id);
-        return Results.File(bytes, "application/pdf", $"GrantMoa_Contract_{id}.pdf");
-    }
-    catch (KeyNotFoundException)
-    {
-        return Results.NotFound(new { message = $"MoA contract #{id} not found." });
-    }
-}).RequireAuthorization();
-
-app.MapGet("/api/documents/tradetest/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
-{
-    try
-    {
-        var bytes = await pdf.GenerateTradeTestCertificatePdfAsync(id);
-        return Results.File(bytes, "application/pdf", $"TradeTest_Artisan_Certificate_{id}.pdf");
-    }
-    catch (KeyNotFoundException)
-    {
-        return Results.NotFound(new { message = $"Trade test #{id} not found." });
-    }
-}).RequireAuthorization();
-
-app.MapGet("/api/documents/tradetest/{id:int}/form-pdf", async (int id, IPdfDocumentService pdf) =>
-{
-    try
-    {
-        var bytes = await pdf.GenerateArplApplicationFormPdfAsync(id);
-        return Results.File(bytes, "application/pdf", $"ARPL_Application_Form_ETQ_TP_ARPL_01_{id}.pdf");
-    }
-    catch (KeyNotFoundException)
-    {
-        return Results.NotFound(new { message = $"ARPL application #{id} not found." });
-    }
-}).RequireAuthorization();
-
-app.MapGet("/api/documents/wsp/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
-{
-    try
-    {
-        var bytes = await pdf.GenerateWspOutcomeLetterPdfAsync(id);
-        return Results.File(bytes, "application/pdf", $"WSP_Outcome_Letter_{id}.pdf");
-    }
-    catch (KeyNotFoundException)
-    {
-        return Results.NotFound(new { message = $"WSP submission #{id} not found." });
-    }
-}).RequireAuthorization();
-
-app.MapGet("/api/documents/remittance/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
-{
-    try
-    {
-        var bytes = await pdf.GenerateMandatoryRebateRemittancePdfAsync(id);
-        return Results.File(bytes, "application/pdf", $"Mandatory_Rebate_Remittance_{id}.pdf");
-    }
-    catch (KeyNotFoundException)
-    {
-        return Results.NotFound(new { message = $"Disbursement #{id} not found." });
-    }
-}).RequireAuthorization();
-
-app.MapGet("/api/documents/workplace-approval/{id:int}/letter-pdf", async (int id, IPdfDocumentService pdf) =>
-{
-    try
-    {
-        var bytes = await pdf.GenerateWorkplaceApprovalLetterPdfAsync(id);
-        return Results.File(bytes, "application/pdf", $"WorkplaceApproval_Outcome_Letter_ETQ_TP_003_{id}.pdf");
-    }
-    catch (KeyNotFoundException)
-    {
-        return Results.NotFound(new { message = $"Workplace approval #{id} not found." });
-    }
-}).RequireAuthorization();
-
-app.MapGet("/api/documents/workplace-approval/{id:int}/report-pdf", async (int id, IPdfDocumentService pdf) =>
-{
-    try
-    {
-        var bytes = await pdf.GenerateWorkplaceApprovalReportPdfAsync(id);
-        return Results.File(bytes, "application/pdf", $"WorkplaceApproval_Report_ETQ_TP_054_{id}.pdf");
-    }
-    catch (KeyNotFoundException)
-    {
-        return Results.NotFound(new { message = $"Workplace approval #{id} not found." });
-    }
-}).RequireAuthorization();
-
-// Phase 35: Summative Assessment & Certification Endpoints
-app.MapGet("/api/documents/summative/{id:int}/results-pdf", async (int id, IPdfDocumentService pdf) =>
-{
-    var bytes = await pdf.GenerateSummativeAssessmentResultsFormPdfAsync(id);
-    return Results.File(bytes, "application/pdf", $"ETQ_FM_005_SummativeResults_{id}.pdf");
-}).RequireAuthorization();
-
-app.MapGet("/api/documents/summative/batch/{id:int}/validation-report-pdf", async (int id, IPdfDocumentService pdf) =>
-{
-    var bytes = await pdf.GenerateModerationValidationReportPdfAsync(id);
-    return Results.File(bytes, "application/pdf", $"ETQ_TP_043_ModerationReport_Batch_{id}.pdf");
-}).RequireAuthorization();
-
-app.MapGet("/api/documents/summative/certificate/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
-{
-    var bytes = await pdf.GenerateLearnerQualificationCertificatePdfAsync(id);
-    return Results.File(bytes, "application/pdf", $"MerSETA_Certificate_{id}.pdf");
-}).RequireAuthorization();
-
-app.MapGet("/api/documents/summative/batch/{id:int}/distribution-letter-pdf", async (int id, IPdfDocumentService pdf) =>
-{
-    var bytes = await pdf.GenerateBatchDistributionLetterPdfAsync(id);
-    return Results.File(bytes, "application/pdf", $"ETQ_LT_012_DistributionLetter_Batch_{id}.pdf");
-}).RequireAuthorization();
-
-app.MapGet("/api/documents/summative/batch/{id:int}/consolidated-certificates-pdf", async (int id, IPdfDocumentService pdf) =>
-{
-    var bytes = await pdf.GenerateBatchConsolidatedCertificatesPdfAsync(id);
-    return Results.File(bytes, "application/pdf", $"MerSETA_Consolidated_Certificates_Batch_{id}.pdf");
-}).RequireAuthorization();
-
-
-// Statutory Flat-File and Batch Zip Package Download Endpoints
-app.MapGet("/api/statutory/setmis/files/{fileCode}", async (string fileCode, ISetmisExtractService setmis) =>
-{
-    var res = await setmis.ExtractSetmisFileAsync(fileCode);
-    return Results.File(res.ContentBytes, "text/plain", res.FileName);
-}).RequireAuthorization();
-
-app.MapGet("/api/statutory/nlrd/files/{fileCode}", async (string fileCode, INlrdExtractService nlrd) =>
-{
-    var res = await nlrd.ExtractNlrdFileAsync(fileCode);
-    return Results.File(res.ContentBytes, "text/plain", res.FileName);
-}).RequireAuthorization();
-
-app.MapGet("/api/statutory/batches/{id:int}/download", async (int id, ISetmisExtractService setmis, INlrdExtractService nlrd, INsdmsDbContextFactory dbFactory) =>
-{
-    using var db = await dbFactory.CreateDbContextAsync();
-    var b = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(db.StatutorySubmissionBatches, x => x.Id == id);
-    if (b == null) return Results.NotFound();
-
-    if (b.BatchType == "SETMIS")
-    {
-        var zip = await setmis.DownloadSetmisBatchArchiveAsync(id);
-        return Results.File(zip.ZipBytes, "application/zip", zip.ArchiveFileName);
-    }
-    else
-    {
-        var zip = await nlrd.DownloadNlrdBatchArchiveAsync(id);
-        return Results.File(zip.ZipBytes, "application/zip", zip.ArchiveFileName);
-    }
-}).RequireAuthorization();
-
-app.MapGet("/api/documents/templates/{id:int}/simulation-pdf", async (int id, IEnterpriseDocumentTemplateService templateService, string? scenario, HttpContext context) =>
-{
-    var profiles = templateService.GetDefaultScenarioTokenProfiles();
-    var selectedScenario = !string.IsNullOrEmpty(scenario) && profiles.ContainsKey(scenario) ? scenario : "LevyEmployer";
-    var tokens = new Dictionary<string, string>(profiles[selectedScenario]);
-
-    foreach (var query in context.Request.Query)
-    {
-        if (query.Key != "scenario" && query.Key != "t" && !string.IsNullOrWhiteSpace(query.Value))
-        {
-            tokens[query.Key] = query.Value.ToString();
-        }
-    }
-
-    var bytes = await templateService.GenerateSimulatedPdfAsync(id, tokens, includeWatermark: true);
-    return Results.File(bytes, "application/pdf", $"Template_Simulation_{id}_{selectedScenario}.pdf");
-}).RequireAuthorization();
-
-app.MapGet("/api/documents/moa-templates/{id:int}/simulation-pdf", async (int id, IMoaTemplateEngineService moaService, string? scenario, HttpContext context) =>
-{
-    var profiles = moaService.GetDefaultScenarioTokenProfiles();
-    var selectedScenario = !string.IsNullOrEmpty(scenario) && profiles.ContainsKey(scenario) ? scenario : "LevyEmployer";
-    var tokens = new Dictionary<string, string>(profiles[selectedScenario]);
-
-    foreach (var query in context.Request.Query)
-    {
-        if (query.Key != "scenario" && query.Key != "t" && !string.IsNullOrWhiteSpace(query.Value))
-        {
-            tokens[query.Key] = query.Value.ToString();
-        }
-    }
-
-    var bytes = await moaService.GenerateSimulatedPdfAsync(id, tokens, includeWatermark: true);
-    return Results.File(bytes, "application/pdf", $"MoaTemplate_Simulation_{id}_{selectedScenario}.pdf");
-}).RequireAuthorization();
-
-app.MapGet("/api/documents/attachments/{id:int}/download", async (int id, IFileStorageService storage) =>
-{
-    var fileResult = await storage.GetFileAsync(id);
-    if (fileResult == null)
-    {
-        return Results.NotFound(new { message = $"Document attachment #{id} not found or inaccessible." });
-    }
-    return Results.File(fileResult.Value.ContentStream, fileResult.Value.ContentType, fileResult.Value.FileName);
-}).RequireAuthorization();
-
-// ASP.NET Core Identity & Cookie Authentication Endpoints
-app.MapPost("/api/auth/login", async (
-    HttpContext context,
-    IIdentityService identityService,
-    IRolePermissionService roleService,
-    IAuditService audit) =>
-{
-    var form = await context.Request.ReadFormAsync();
-    var username = form["username"].ToString()?.Trim() ?? string.Empty;
-    var password = form["password"].ToString() ?? string.Empty;
-    var returnUrl = form["returnUrl"].ToString();
-    var rememberMe = form["rememberMe"].ToString() == "true" || form["rememberMe"].ToString() == "on";
-
-    if (string.IsNullOrWhiteSpace(returnUrl) || !returnUrl.StartsWith('/') || returnUrl.StartsWith("//") || returnUrl.StartsWith("/\\"))
-    {
-        returnUrl = "/";
-    }
-
-    var authResult = await identityService.ValidateCredentialsExtendedAsync(username, password);
-    if (!authResult.Succeeded)
-    {
-        var errorMsg = authResult.IsLockedOut 
-            ? "Account is temporarily locked out due to multiple failed login attempts. Please try again in 15 minutes."
-            : (authResult.IsNotActive 
-                ? "Account has been deactivated. Please contact your system administrator." 
-                : (authResult.IsEmailUnconfirmed 
-                    ? "Email address has not been confirmed. Please check your email to activate your account." 
-                    : (authResult.ErrorMessage ?? "Invalid username/email or password.")));
-
-        return Results.Redirect($"/login?error={Uri.EscapeDataString(errorMsg)}&returnUrl={Uri.EscapeDataString(returnUrl)}");
-    }
-
-    var user = authResult.User!;
-    var roles = await identityService.GetUserRolesAsync(user.Id);
-    var userPermissions = await roleService.GetUserPermissionsAsync(user.Id);
-
-    var claims = new List<Claim>
-    {
-        new(ClaimTypes.Name, user.UserName ?? user.Email ?? "User"),
-        new(ClaimTypes.Email, user.Email ?? string.Empty),
-        new(ClaimTypes.GivenName, user.Person != null ? $"{user.Person.FirstName} {user.Person.LastName}" : (user.UserName ?? "User")),
-        new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new("PersonId", user.PersonId?.ToString() ?? string.Empty),
-        new("OrganisationId", user.DefaultOrganisationId?.ToString() ?? string.Empty)
-    };
-
-    foreach (var role in roles)
-    {
-        claims.Add(new Claim(ClaimTypes.Role, role));
-    }
-
-    foreach (var perm in userPermissions)
-    {
-        claims.Add(new Claim("Permission", perm));
-    }
-
-    var identity = new ClaimsIdentity(claims, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
-    var principal = new ClaimsPrincipal(identity);
-
-    var authProperties = new AuthenticationProperties
-    {
-        IsPersistent = rememberMe,
-        ExpiresUtc = rememberMe ? DateTimeOffset.UtcNow.AddDays(14) : DateTimeOffset.UtcNow.AddHours(8),
-        IssuedUtc = DateTimeOffset.UtcNow
-    };
-
-    await context.SignInAsync(
-        Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme,
-        principal,
-        authProperties);
-
-    // Audit login action
-    await audit.LogActionAsync(
-        "ApplicationUser",
-        user.Id,
-        "InteractiveLogin",
-        user.UserName ?? user.Email ?? "SYSTEM",
-        null,
-        new { ClientIp = context.Connection.RemoteIpAddress?.ToString(), UserAgent = context.Request.Headers.UserAgent.ToString() }
-    );
-
-    return Results.Redirect(returnUrl);
-}).RequireRateLimiting("auth-limiter");
-
-app.MapGet("/api/auth/logout", async (HttpContext context) =>
-{
-    await context.SignOutAsync(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
-    return Results.Redirect("/login?loggedOut=true");
-});
-
-app.MapPost("/api/auth/logout", async (HttpContext context) =>
-{
-    await context.SignOutAsync(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
-    return Results.Redirect("/login?loggedOut=true");
-});
-
-// --- Sprint 1 & 2: Background Jobs, Metrics & Archival Endpoints ---
-app.MapGet("/metrics", async (IMetricsScraperService metricsService, CancellationToken ct) =>
-{
-    var text = await metricsService.GetPrometheusMetricsTextAsync(ct);
-    return Results.Content(text, "text/plain; version=0.0.4; charset=utf-8");
-}).RequireAuthorization();
-
-app.MapGet("/api/jobs/{id:guid}/status", (Guid id, IBackgroundJobQueue jobQueue) =>
-{
-    var job = jobQueue.GetJob(id);
-    return job != null ? Results.Ok(new
-    {
-        job.JobId,
-        job.JobType,
-        job.Description,
-        Status = job.Status.ToString(),
-        job.ProgressPercentage,
-        job.CurrentStep,
-        job.CreatedAt,
-        job.StartedAt,
-        job.CompletedAt,
-        job.ResultDownloadUrl,
-        job.ErrorMessage
-    }) : Results.NotFound(new { message = $"Job #{id} not found." });
-}).RequireAuthorization();
-
-app.MapGet("/api/jobs/{id:guid}/download", (Guid id, IBackgroundJobQueue jobQueue) =>
-{
-    var job = jobQueue.GetJob(id);
-    if (job == null) return Results.NotFound(new { message = $"Job #{id} not found." });
-    if (job.Status != BackgroundJobStatus.Completed || job.ResultData == null)
-        return Results.BadRequest(new { message = $"Job #{id} is not completed or has no binary data." });
-
-    return Results.File(job.ResultData, job.ResultContentType ?? "application/pdf", job.ResultFileName ?? $"JobResult_{id}.pdf");
-}).RequireAuthorization();
-
-app.MapPost("/api/documents/async-generate", async (AsyncDocumentRequest req, IBackgroundJobQueue jobQueue, HttpContext httpContext) =>
-{
-    var user = httpContext.User.Identity?.Name ?? "ANONYMOUS";
-    var ticket = await jobQueue.EnqueueDocumentGenerationAsync(req.DocumentType, req.RecordId, user, req.FileName);
-    return Results.Accepted($"/api/jobs/{ticket.JobId}/status", new
-    {
-        ticket.JobId,
-        ticket.Description,
-        Status = ticket.Status.ToString(),
-        StatusUrl = $"/api/jobs/{ticket.JobId}/status"
-    });
-}).RequireAuthorization();
-
-app.MapGet("/api/admin/audit-logs/archival-metrics", async (IAuditLogArchivalService archivalService, CancellationToken ct) =>
-{
-    var metrics = await archivalService.GetArchivalMetricsAsync(ct);
-    return Results.Ok(metrics);
-}).RequireAuthorization();
+// Map Modular Route Groups (Minimal APIs)
+app.MapAuthEndpoints();
+app.MapDocumentEndpoints();
+app.MapStatutoryEndpoints();
+app.MapBackgroundJobEndpoints();
+app.MapMetricsEndpoints();
+app.MapB2bApiEndpoints();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
@@ -776,14 +290,27 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<NsdmsDbContext>();
     try { db.Database.EnsureCreated(); } catch (Exception ex) { app.Logger.LogWarning(ex, "EnsureCreated skipped or already initialized."); }
 
+    // Initialize Schema Migration Journal to skip already executed DDL in sub-millisecond time
+    SchemaMigrationJournal.Initialize(db, app.Logger);
+
     void RunMigrator(string name, Action action)
     {
+        if (SchemaMigrationJournal.IsApplied(name))
+        {
+            return;
+        }
+
+        var sw = Stopwatch.StartNew();
         try
         {
             action();
+            sw.Stop();
+            SchemaMigrationJournal.RecordApplied(db, name, sw.ElapsedMilliseconds, app.Logger);
+            app.Logger.LogInformation("Migrator {MigratorName} completed in {ElapsedMs}ms.", name, sw.ElapsedMilliseconds);
         }
         catch (Exception ex)
         {
+            sw.Stop();
             app.Logger.LogWarning(ex, "Migrator {MigratorName} logged a warning or partial skip.", name);
         }
     }
@@ -849,7 +376,12 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase53BroadcastMessagingAndEmailThrottling", () => Phase53BroadcastMessagingAndEmailThrottlingMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase54HoldingHierarchy", () => Phase54HoldingHierarchyMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase55WspBulkIngestion", () => Phase55WspBulkIngestionMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase56DatabaseEngineOptimization", () => Phase56DatabaseEngineOptimizationMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase53OrganisationEmployeeRosterMigrator", () => new Phase53OrganisationEmployeeRosterMigrator(app.Services).MigrateAsync().GetAwaiter().GetResult());
+    RunMigrator("Phase52EnterpriseDataTierRemediation", () => Phase52EnterpriseDataTierRemediationMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase57TransactionalOutbox", () => Phase57TransactionalOutboxMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase58EntraResilience", () => Phase58EntraResilienceSchemaMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase59B2bApiArchitecture", () => Phase59B2bApiArchitectureMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
     RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
     RunMigrator("SystemConfigs", () => scope.ServiceProvider.GetRequiredService<ISystemConfigurationService>().SeedDefaultConfigsAsync().GetAwaiter().GetResult());

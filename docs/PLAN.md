@@ -1,209 +1,170 @@
-# Comprehensive Plan: Eradication of Mobile Device Administration & IT Asset Prototype Menu & Code
+# Comprehensive Blueprint: Best-in-Class B2B API Architecture for MerSETA NSDMS
 
-## 1. Executive Summary & Context
+## 1. Executive Summary & Strategic Objective
 
-### 1.1 Background & Origin
-During early prototype iteration, a set of UI navigation items and Razor components titled **"merSETA | Mobile Device Administration"** was developed. This prototype introduced IT hardware inventory management, SIM card tracking, cell line management, staff mobile device loan allocations, roaming approvals, and IT incidents into the system.
+The **National Skills Development Management System (NSDMS)** serves as the statutory digital spine for MerSETA, handling skills development levies, mandatory grants (WSP/ATR), discretionary grants (MoAs and claims), learner agreements, and artisan trade testing. 
 
-In accordance with the **MerSETA Statutory Navigation Pillar Architecture & Persona Governance Standard**, the National Skills Development Management System (NSDMS) is exclusively mandated to manage skills development, levies, grants, learner registrations, provider accreditations, and statutory SETA governance. Internal IT hardware asset tracking and mobile fleet administration are out of scope and represent architectural domain leakage.
+To enable corporate employers (automotive, manufacturing, plastics, engineering), major HRIS/Payroll platforms (SAP, Workday, Sage VIP), accredited Skills Development Providers (SDPs), and Trade Test Centres (TTCs) to integrate seamlessly, MerSETA requires a **truly best-in-class, modern, secure, and resilient API platform**.
 
-This plan details the full eradication of the prototype artifacts, synchronization of core operational routes, verification protocols across all 433+ automated unit/integration tests and 94 Playwright end-to-end page tests, and a formal compliance mapping across the **7 Statutory NSDMS Domain Pillars**.
+This blueprint details the architectural roadmap to transition from isolated, manual UI uploads to an enterprise-grade, event-driven B2B integration platform.
 
 ---
 
-## 2. Target Image Analysis & Scoping
-
-The prototype navigation menu in the reference image consists of three circled functional areas which are decommissioned:
+## 2. Target High-Level Architecture Topology
 
 ```mermaid
-graph TD
-    subgraph Decommissioned["❌ Decommissioned Mobile Device Prototype"]
-        subgraph Operations["1. OPERATIONS"]
-            D1["CIO Cockpit (/dashboard, /cio-cockpit)"]
-            D2["Devices Master Register (/devices)"]
-            D3["Device Detail & Loans (/devices/{id})"]
-            D4["SIM Cards & Cell Lines"]
-            D5["Staff Self-Service & Bulk Data Import"]
-        end
-        subgraph Organization["2. ORGANIZATION"]
-            O1["Officials & Staff Directory (/officials, /directory)"]
-            O2["3-Tier Organizational Structure"]
-        end
-        subgraph Governance["3. GOVERNANCE"]
-            G1["Roaming Requests & Approvals (/roaming, /roaming/{id})"]
-            G2["Inbound Email Queue & Incident Claims"]
-        end
+flowchart TD
+    subgraph External["External B2B Consumers"]
+        HRIS["Corporate HRIS / Payroll (SAP, Workday, Sage VIP)"]
+        SDP["Skills Development Providers (SIS Engines)"]
+        TTC["Accredited Trade Test Centres"]
+        Verif["Public / B2B Verification Portals"]
     end
 
-    subgraph Authentic["✅ Authentic MerSETA NSDMS Statutory Architecture"]
-        P1["1. Overview & Tasks"]
-        P2["2. Registries & Stakeholders"]
-        P3["3. Grants, Levies & Finance"]
-        P4["4. Learner & Artisan Development"]
-        P5["5. Quality Assurance & ETQA"]
-        P6["6. Legal, Compliance & BI"]
-        P7["7. System Administration"]
+    subgraph Security["Zero-Trust Edge & Security Tier"]
+        mTLS["mTLS / FAPI 2.0 / DPoP (RFC 9449)"]
+        YARP["Nsdms.Gateway (YARP Reverse Proxy)"]
+        RateLimit["Distributed Rate Limiter (Token Bucket / Redis)"]
+        WAF["POPIA Sanitizer & Idempotency Filter"]
     end
+
+    subgraph Ingestion["Hybrid Ingestion Tier"]
+        DirectBlob["Encrypted Object Store / Staging Lake"]
+        Channels["Background Job Queue (System.Threading.Channels)"]
+        Staging["Two-Tier Staging Tables (WspBulkImportStaging, etc.)"]
+    end
+
+    subgraph Core["Core Application & Domain Tier"]
+        Controllers[".NET 10 REST Controllers (OpenAPI 3.1)"]
+        Webhooks["AsyncAPI Webhook Dispatcher"]
+        Domain["Application Services & CASL Authorization"]
+    end
+
+    subgraph Persistence["Persistence & Audit Tier"]
+        DB[(SQL Server Express / Enterprise - RCSI & Temporal)]
+        AuditLog["Immutable Audit Logs (Double-Write with SHA-256)"]
+    end
+
+    External -->|mTLS / DPoP Bearer| mTLS
+    mTLS --> YARP
+    YARP --> RateLimit
+    RateLimit --> WAF
+
+    WAF -->|Synchronous Inquiries & CRUD| Controllers
+    WAF -->|Direct Chunked Upload| DirectBlob
+
+    DirectBlob --> Channels
+    Channels --> Staging
+    Staging --> Domain
+
+    Controllers --> Domain
+    Domain --> DB
+    Domain --> AuditLog
+    Domain --> Webhooks
+    Webhooks -.->|Signed HMAC-SHA256 Events| External
 ```
-
-### Detailed Decommission Breakdown:
-1. **OPERATIONS Group**:
-   - `CIO Cockpit` (`/dashboard`, `/cio-cockpit`): Replaced by the authentic MerSETA Executive Operations Portal (`Home.razor`).
-   - `Devices` & `Device Users` (`/devices`, `/devices/{Id}`): Eradicated completely.
-   - `SIM Cards`, `Cell Lines`, `Allocations & Loans`, `Staff Self-Service`, `Bulk Data Import`: Eradicated.
-2. **ORGANIZATION Group**:
-   - `Officials & Staff` (`/officials`, `/directory`): Eradicated. Authentic NSDMS stakeholder registries reside in `Registries & Stakeholders` (`/people`, `/employers`, `/sdp`).
-   - `3-Tier Structure`: Handled natively through standard organizational profiling and chamber classifications.
-3. **GOVERNANCE Group**:
-   - `Roaming` (`/roaming`, `/roaming/{Id}`): Eradicated.
-   - `Approval Queue` & `Inbound Email Queue`: Replaced by the Universal Task Inbox (`/tasks`) and CASL workflow engines.
 
 ---
 
-## 3. Exact List of Files to be Removed
+## 3. The 5 Pillars of the Best-in-Class API Standard
 
-The following files and directories are scoped for deletion:
+### Pillar 1: Zero-Trust Security & POPIA Compliance
+1. **Cryptographic Token Binding (DPoP / mTLS)**:
+   - Implement **RFC 9449 (Demonstrating Proof-of-Possession)** and mutual TLS (mTLS) for B2B machine-to-machine authentication.
+   - Access tokens are bound to the client's public key; intercepted or leaked tokens cannot be replayed.
+2. **Statutory Non-Repudiation (RFC 9421 HTTP Message Signatures)**:
+   - High-consequence submissions (e.g. WSP sign-off before 30 April, DG MoA acceptance) require cryptographic payload signing using the employer's private key.
+3. **POPIA Field-Level Envelope Encryption**:
+   - 13-digit RSA National ID numbers, bank accounts, and executive payroll totals are encrypted at rest with field-level envelope keys.
+   - Logs and debug diagnostics automatically mask sensitive identifiers (e.g. `9504******082`).
+4. **Tenant Isolation by SDL Number**:
+   - The verified `SdlNumber` is embedded as an immutable claim in the access token.
+   - EF Core Global Query Filters enforce `OrganisationId == caller.OrganisationId`, preventing cross-tenant leakage.
 
-| Target Path | Type | Original Route(s) | Description / Reason for Removal |
+### Pillar 2: High-Volume Asynchronous Ingestion & Streaming
+1. **Direct-to-Storage Presigned Uploads**:
+   - Large employers pushing 10,000+ employees or training plans bypass web server HTTP request buffers.
+   - The client requests a presigned secure upload URL, pushes the payload directly to encrypted staging storage, and initiates an async processing job.
+2. **Fast 202 Accepted & Tracking Pattern**:
+   - Endpoints respond in `< 100ms` with `HTTP 202 Accepted` and an `Operation-Location: /api/v1/jobs/{id}` header.
+   - External systems track progress without encountering 30-60s HTTP gateway timeouts.
+3. **Zero-Allocation Stream Processing**:
+   - Background workers process staged batches using `System.Text.Json` streaming and `System.IO.Pipelines` to eliminate Garbage Collection pressure.
+
+### Pillar 3: API Gateway & Circuit Protection (YARP / APIM)
+1. **Dedicated Gateway Project (`Nsdms.Gateway`)**:
+   - Implemented using Microsoft's **YARP (Yet Another Reverse Proxy)** in a separate lightweight .NET 10 project.
+   - Completely isolates B2B API traffic from internal MerSETA officers' interactive Blazor Server circuits.
+2. **Tiered Rate Limiting & DoS Protection**:
+   - Implements ASP.NET Core Partitioned Rate Limiter (`SlidingWindowLimiter` / Token Bucket) with tiered quotas:
+     - **Tier 1 (Small SDPs / Consultancies)**: 60 requests/minute.
+     - **Tier 2 (Large Enterprise Employers)**: 1,200 requests/minute.
+     - **Tier 3 (Public Verification Portals)**: 3,000 requests/minute (cached).
+3. **Idempotency Guardrails**:
+   - High-value write operations (e.g. DG Tranche Claims) require an `Idempotency-Key` UUID header, caching results for 24 hours to prevent duplicate claims on network retries.
+
+### Pillar 4: Dual-Integration Protocol (REST + AsyncAPI Webhooks)
+1. **REST with OpenAPI 3.1**:
+   - Clean, resource-oriented REST endpoints for queries, synchronous validations, and resource creation.
+   - Comprehensive OpenAPI 3.1 schemas with automated SDK generation for C#, Java, TypeScript, and Python.
+2. **Event-Driven Webhooks Engine**:
+   - Emits asynchronous statutory events (e.g., `wsp.status.changed`, `dg_claim.approved`, `trade_test.serial_issued`, `moa.signed`).
+   - Webhook payloads are cryptographically signed with an `X-Signature-SHA256` header (HMAC-SHA256).
+   - Failed webhook deliveries use an exponential backoff retry queue with dead-letter logging.
+
+### Pillar 5: Developer Experience, Self-Service & Sandbox
+1. **Self-Service Developer Portal**:
+   - Authenticated Skills Development Facilitators (SDFs) and corporate administrators can generate, rotate, and revoke API credentials directly in the MerSETA portal.
+2. **Mock / Sandbox Environment**:
+   - An isolated testing realm with synthetic SDL numbers (`L999...`), pre-seeded test OFO codes, and mock SARS levy reconciliations.
+   - Enables commercial vendors (Workday, SAP, VIP Payroll) to certify integrations without contaminating statutory production data.
+
+---
+
+## 4. Priority API Candidates & Endpoint Specifications
+
+| Priority | Endpoint Route | HTTP | Description & Statutory Governance |
 | :--- | :--- | :--- | :--- |
-| [`dotnet/Nsdms.Web/Components/Pages/Developer/CioCockpitDashboard.razor`](file:///c:/Antigravity/nsdms-2026-04-01/nsdms/MerSETA/dotnet/Nsdms.Web/Components/Pages/Developer/CioCockpitDashboard.razor) | Razor Page | `/dashboard`, `/cio-cockpit` | Mobile IT prototype dashboard with device stats. Replaced by `Home.razor`. |
-| [`dotnet/Nsdms.Web/Components/Pages/Devices/DeviceList.razor`](file:///c:/Antigravity/nsdms-2026-04-01/nsdms/MerSETA/dotnet/Nsdms.Web/Components/Pages/Devices/DeviceList.razor) | Razor Page | `/devices` | Mobile device master register table and loan status cards. |
-| [`dotnet/Nsdms.Web/Components/Pages/Devices/DeviceDetail.razor`](file:///c:/Antigravity/nsdms-2026-04-01/nsdms/MerSETA/dotnet/Nsdms.Web/Components/Pages/Devices/DeviceDetail.razor) | Razor Page | `/devices/{Id:int}` | Hardware device lifecycle, SIM card, IMEI, and warranty detail page. |
-| `dotnet/Nsdms.Web/Components/Pages/Devices/` | Directory | N/A | Entire directory containing mobile device pages. |
-| [`dotnet/Nsdms.Web/Components/Pages/Officials/OfficialList.razor`](file:///c:/Antigravity/nsdms-2026-04-01/nsdms/MerSETA/dotnet/Nsdms.Web/Components/Pages/Officials/OfficialList.razor) | Razor Page | `/officials`, `/directory` | Internal staff phone directory and device allocation listing. |
-| `dotnet/Nsdms.Web/Components/Pages/Officials/` | Directory | N/A | Entire directory containing official list pages. |
-| [`dotnet/Nsdms.Web/Components/Pages/Roaming/RoamingDetail.razor`](file:///c:/Antigravity/nsdms-2026-04-01/nsdms/MerSETA/dotnet/Nsdms.Web/Components/Pages/Roaming/RoamingDetail.razor) | Razor Page | `/roaming`, `/roaming/{Id:int}` | International data/voice roaming approval workflow for mobile carriers. |
-| `dotnet/Nsdms.Web/Components/Pages/Roaming/` | Directory | N/A | Entire directory containing roaming management pages. |
+| **P0** | `/api/v1/wsp/staging/upload` | `POST` | Presigned intake for WSP/ATR training plan bulk data. |
+| **P0** | `/api/v1/wsp/batches/{id}/health` | `GET` | Pre-flight validation health dashboard (valid, exception, committed counts). |
+| **P0** | `/api/v1/wsp/batches/{id}/commit` | `POST` | Atomic commit of validated staging records into production WSP tables. |
+| **P0** | `/api/v1/workforce/sync` | `PUT` | Delta synchronization of employer personnel roster and OFO classifications. |
+| **P0** | `/api/v1/learners/enrolments` | `POST` | Direct intake of apprentices, learnerships, and internships from SDP systems. |
+| **P1** | `/api/v1/grants/moa/{moaNumber}/claims` | `POST` | Discretionary Grant tranche claim submission with invoice and attendance data. |
+| **P1** | `/api/v1/trade-tests/applications` | `POST` | Decentralised ARPL and Trade Test candidate registrations for accredited TTCs. |
+| **P1** | `/api/v1/trade-tests/{serial}/results` | `PUT` | Upload of practical module task results with 50% credit retention enforcement. |
+| **P1** | `/api/v1/verify/certificates/{hash}` | `GET` | Public / B2B 2D barcode digital seal verification for issued certificates and MoAs. |
+| **P2** | `/api/v1/organisations/{sdl}/levies` | `GET` | Reconciled SARS levy actuals and Mandatory Grant rebate disbursement inquiries. |
+| **P2** | `/api/v1/workplace-approvals/mentors` | `POST` | Artisan mentor registration and live workplace capacity ratio evaluation. |
+| **P2** | `/api/v1/webhooks/subscriptions` | `POST` | Webhook subscription management for partner ERP event listening. |
 
 ---
 
-## 4. Exact List of Files to be Updated & Synchronized
+## 5. Phased Implementation Roadmap
 
-The following files require route mapping, cleanups, and test target updates:
+### Phase 1: Foundation & Gateway (`Nsdms.Gateway`)
+- Provision `Nsdms.Gateway` project with Microsoft YARP.
+- Configure mTLS termination, DPoP validation, and distributed rate limiting.
+- Integrate token validation against Azure AD B2C / OpenIddict.
 
-### 4.1 `dotnet/Nsdms.Web/Components/Pages/Home.razor`
-- **Location**: [`dotnet/Nsdms.Web/Components/Pages/Home.razor`](file:///c:/Antigravity/nsdms-2026-04-01/nsdms/MerSETA/dotnet/Nsdms.Web/Components/Pages/Home.razor)
-- **Change**: Ensure both `@page "/"` and `@page "/dashboard"` directives are declared.
-- **Rationale**: Directs all traffic navigating to `/dashboard` to the MerSETA Executive Operations Portal (Archetype A5 Dashboard) with authentic skills development intelligence (WSPs, Discretionary Grants, Levy collections, Learner pipeline, and SLA Task queues) rather than the deprecated CIO Cockpit.
+### Phase 2: Core Ingestion & High-Volume APIs
+- Implement presigned upload and staging endpoints for WSP/ATR and Workforce Roster.
+- Implement background channel workers for set-based OFO and RSA ID validation.
+- Build Learner Enrolment and Document Verification endpoints.
 
-### 4.2 `test_theme_design_screenshots.py`
-- **Location**: [`test_theme_design_screenshots.py`](file:///c:/Antigravity/nsdms-2026-04-01/nsdms/MerSETA/test_theme_design_screenshots.py)
-- **Change**: Replace deprecated URLs (`/devices`, `/devices/3`, `/roaming/1`, `/officials`) with core statutory domain pages:
-  - `("01_executive_operations_dashboard.png", "http://localhost:5121/")`
-  - `("02_universal_task_inbox.png", "http://localhost:5121/tasks")`
-  - `("03_organisations_master_grid.png", "http://localhost:5121/employers")`
-  - `("04_wsp_submissions_grid.png", "http://localhost:5121/wsp")`
-  - `("05_dg_grants_grid.png", "http://localhost:5121/dg-grants")`
-  - `("06_learners_directory.png", "http://localhost:5121/learners")`
-  - `("07_moa_template_detail.png", "http://localhost:5121/legal/moa-templates/1")`
-- **Rationale**: Guarantees visual regression and UI showcase runs exclusively validate genuine MerSETA operational pages.
+### Phase 3: Financial & Workflow APIs
+- Implement DG Tranche Claim submission with idempotency key enforcement.
+- Implement Trade Test result submission with statutory credit retention logic.
+- Implement SARS levy reconciliation and grant rebate inquiry endpoints.
 
-### 4.3 `dotnet/Nsdms.Application/Services/NavigationMenuService.cs`
-- **Location**: [`dotnet/Nsdms.Application/Services/NavigationMenuService.cs`](file:///c:/Antigravity/nsdms-2026-04-01/nsdms/MerSETA/dotnet/Nsdms.Application/Services/NavigationMenuService.cs)
-- **Status**: Audit confirmed clean.
-- **Details**: All menu groups, items, quick actions, and persona tag filters strictly enforce the 7 statutory pillars with 0% hardware/telecom leakage.
+### Phase 4: Webhooks, Developer Portal & Sandbox
+- Build Webhook Subscription and Dispatcher engine with HMAC-SHA256 signing.
+- Create the Self-Service API Management tab in the Employer Portal.
+- Stand up the Mock Sandbox environment with synthetic SDL numbers.
 
 ---
 
-## 5. Summary of Statutory Domain Pillars Compliance
-
-All navigation items and system routes strictly map to the **7 Statutory NSDMS Domain Pillars**:
-
-```mermaid
-flowchart LR
-    P1["1. Overview & Tasks"] --> R1["/ (Executive Portal)<br/>/dashboard<br/>/tasks (Universal Task Inbox)"]
-    P2["2. Registries & Stakeholders"] --> R2["/people (Directory)<br/>/employers (Organisations)<br/>/sdp (Training Providers)<br/>/employers/sdf (SDF Appointments)"]
-    P3["3. Grants, Levies & Finance"] --> R3["/wsp (Mandatory Grants)<br/>/dg-grants (Discretionary Grants)<br/>/finance/dg-moa (MOAs & Tranches)<br/>/finance/banking-details (Dual-Signoff)<br/>/finance/mg-rebates (Levy Rebates)<br/>/finance/levy-audits (SARS Audits)<br/>/levies (Monthly Levies)<br/>/inter-seta-transfers (Inter-SETA)"]
-    P4["4. Learner & Artisan Development"] --> R4["/learners (Company Learners)<br/>/tradetests (ARPL & Trade Tests)<br/>/assessments/summative (SOR)<br/>/curriculum (QCD Development)"]
-    P5["5. Quality Assurance & ETQA"] --> R5["/etqa (Assessors & Moderators)<br/>/etqa/aqp (Assessment Partners)<br/>/etqa/scope-extensions (Accreditation)<br/>/workplace-approvals (Workplace Visits)<br/>/monitoring (Workplace Audits)<br/>/non-seta/verifications (Articulations)"]
-    P6["6. Legal, Compliance & BI"] --> R6["/contracts/variations (Addenda)<br/>/legal/moa-templates (MOA Builder)<br/>/legal/clauses (Clause Library)<br/>/governance/meetings (MANCO)<br/>/governance/delegations (Delegations)<br/>/governance/thresholds (DoA Limits)<br/>/reports/bi (Executive BI)<br/>/reports/dg-strategic (Strategic BI)<br/>/compliance/statutory (Statutory Hub)<br/>/verify (Digital Verification Portal)"]
-    P7["7. System Administration"] --> R7["/admin (Admin Hub)<br/>/admin/roles (Security & RBAC)<br/>/admin/settings (System Features)<br/>/admin/lookups (Lookup Manager)<br/>/admin/document-templates (Templates)<br/>/admin/document-snapshots (Snapshots)<br/>/admin/workflows (Workflow Engine)<br/>/audit-logs (Audit Trail Logs)<br/>/developer/schema (Data Dictionary)<br/>/developer/compliance-audit (UI Compliance)"]
-```
-
-### Statutory Pillar Matrix
-
-| Pillar # | Statutory Pillar Name | Authorized Scope & Key Routes | Hardware / Asset Leakage |
-| :--- | :--- | :--- | :---: |
-| **Pillar 1** | **Overview & tasks** | Executive Operations Portal (`/`, `/dashboard`), Universal Task Inbox (`/tasks`), Personal Workflows | **0% (Clean)** |
-| **Pillar 2** | **Registries & stakeholders** | Stakeholder Management, Organisations (`/employers`), SDPs (`/sdp`), People Directory (`/people`), SDF Appointments (`/employers/sdf`) | **0% (Clean)** |
-| **Pillar 3** | **Grants, levies & finance** | Mandatory Grants / WSP (`/wsp`), Discretionary Grants (`/dg-grants`), DG Windows (`/dg-funding-windows`), DG MOAs (`/finance/dg-moa`), Banking Details (`/finance/banking-details`), Mandatory Grant Rebates (`/finance/mg-rebates`), SARS Levies (`/levies`, `/finance/levy-audits`), Inter-SETA (`/inter-seta-transfers`) | **0% (Clean)** |
-| **Pillar 4** | **Learner & artisan development** | Company Learners (`/learners`), Trade Tests & ARPL (`/tradetests`), Summative Assessment / SOR (`/assessments/summative`), Curriculum QCD (`/curriculum`) | **0% (Clean)** |
-| **Pillar 5** | **Quality assurance & ETQA** | ETQA Assessor/Moderator Directory (`/etqa`), Assessment Quality Partners (`/etqa/aqp`), Scope Extensions (`/etqa/scope-extensions`), Workplace Approvals (`/workplace-approvals`), Workplace Monitoring (`/monitoring`), Non-SETA Articulations (`/non-seta/verifications`) | **0% (Clean)** |
-| **Pillar 6** | **Legal, compliance & BI** | Contract Addenda & Variations (`/contracts/variations`), Enterprise MOA Templates (`/legal/moa-templates`), Clause Library (`/legal/clauses`), Governance Meetings (`/governance/meetings`), Role Delegations (`/governance/delegations`), DoA Thresholds (`/governance/thresholds`), Executive BI (`/reports/bi`), DG Strategic BI (`/reports/dg-strategic`), Statutory Compliance (`/compliance/statutory`), QR Verification (`/verify`) | **0% (Clean)** |
-| **Pillar 7** | **System administration** | System Administration Hub (`/admin`), Security Roles & Permissions (`/admin/roles`), System Settings & Feature Flags (`/admin/settings`), Lookups Management (`/admin/lookups`), Enterprise Templates (`/admin/document-templates`), Document Snapshots (`/admin/document-snapshots`), Workflow Engine (`/admin/workflows`), Audit Trails (`/audit-logs`), Developer Schema (`/developer/schema`), UI Compliance Audit (`/developer/compliance-audit`) | **0% (Clean)** |
-
----
-
-## 6. Verification and Test Plan
-
-A five-tier automated verification sequence is defined to guarantee zero regressions and complete compliance.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Dev as Architect / CI
-    participant Dotnet as .NET 10 SDK
-    participant Tests as XUnit Suite (433 Tests)
-    participant Server as Kestrel Engine (Port 5121)
-    participant PW as Playwright Suite (94 Pages)
-
-    Dev->>Dotnet: dotnet build Nsdms.slnx
-    Dotnet-->>Dev: Build Succeeded (0 Errors)
-    Dev->>Tests: dotnet test dotnet/Nsdms.Tests/Nsdms.Tests.csproj
-    Tests-->>Dev: Passed: 433, Failed: 0, Skipped: 0
-    Dev->>Server: Launch Web Application
-    Dev->>PW: Run test_all_pages_playwright.py
-    PW-->>Dev: 94 / 94 Pages Passed (0 Broken Routes, 0 Error Boundaries)
-    Dev->>PW: Run test_theme_design_screenshots.py
-    PW-->>Dev: 7 Statutory Domain Showcases Captured
-```
-
-### 6.1 Step 1: Compilation & Solution Integrity
-- **Command**: `dotnet build Nsdms.slnx`
-- **Criteria**: Zero compilation errors, zero missing references, zero broken Razor view imports.
-
-### 6.2 Step 2: XUnit Unit & Integration Test Suite
-- **Command**: `dotnet test dotnet/Nsdms.Tests/Nsdms.Tests.csproj`
-- **Scope**:
-  - `NavigationMenuServiceTests.cs`: Validates superadmin tree, SDF, Legal, Compliance persona filtering, deduplication, badge calculations, and pinned items.
-  - `WorkflowEngineTests.cs`: Validates step-level transitions, document requirements, and SLA tracking.
-  - `CaslAbilityTests.cs`: Validates union RBAC and role permissions across all statutory domains.
-  - `GrantMoaServiceTests.cs`, `BankingDetailsServiceTests.cs`, `LevyServiceTests.cs`, `LearnerServiceTests.cs`.
-- **Target**: 433 / 433 tests passing with 0 failures.
-
-### 6.3 Step 3: Playwright 94-Page Full Navigation & Rendering Test
-- **Command**: `python test_all_pages_playwright.py`
-- **Scope**: Tests all 94 authentic statutory routes across all 7 pillars.
-- **Criteria**:
-  - HTTP 200 responses across all URLs.
-  - Absence of MudBlazor `<div id="blazor-error-ui">` unhandled exceptions.
-  - Absence of missing route fallback screens on valid pages.
-
-### 6.4 Step 4: Decommissioned Route Verification (404 / Redirect Assertions)
-- **Verification Protocol**:
-  1. Access `http://localhost:5121/dashboard` $\rightarrow$ Successfully renders `Home.razor` (Executive Operations Portal).
-  2. Access `http://localhost:5121/devices` $\rightarrow$ Returns 404 / NotFound component.
-  3. Access `http://localhost:5121/devices/3` $\rightarrow$ Returns 404 / NotFound component.
-  4. Access `http://localhost:5121/officials` $\rightarrow$ Returns 404 / NotFound component.
-  5. Access `http://localhost:5121/roaming` $\rightarrow$ Returns 404 / NotFound component.
-  6. Access `http://localhost:5121/cio-cockpit` $\rightarrow$ Returns 404 / NotFound component.
-
-### 6.5 Step 5: Visual Regression & Design Showcase
-- **Command**: `python test_theme_design_screenshots.py`
-- **Criteria**: Clean generation of screenshots for authentic statutory pages (`/`, `/tasks`, `/employers`, `/wsp`, `/dg-grants`, `/learners`, `/legal/moa-templates/1`).
-
----
-
-## 7. Implementation Checklist & Status
-
-- [x] **Audit Codebase**: Identified all prototype artifacts (`CioCockpitDashboard.razor`, `DeviceList.razor`, `DeviceDetail.razor`, `OfficialList.razor`, `RoamingDetail.razor`).
-- [x] **Remove Prototype Pages & Directories**:
-  - Decommissioned `dotnet/Nsdms.Web/Components/Pages/Developer/CioCockpitDashboard.razor`.
-  - Decommissioned `dotnet/Nsdms.Web/Components/Pages/Devices/` directory.
-  - Decommissioned `dotnet/Nsdms.Web/Components/Pages/Officials/` directory.
-  - Decommissioned `dotnet/Nsdms.Web/Components/Pages/Roaming/` directory.
-- [x] **Update `Home.razor`**: Added `@page "/dashboard"` route directive.
-- [x] **Update `test_theme_design_screenshots.py`**: Cleaned up obsolete routes and redirected showcase captures to authentic statutory routes.
-- [x] **Verify Navigation Catalog**: Confirmed `NavigationMenuService.cs` strictly contains only the 7 statutory NSDMS domain pillars.
-- [x] **Execute .NET Test Suite**: Ran `dotnet test`, achieving 433/433 passed tests.
-- [x] **Document Master Plan**: Completed comprehensive architectural plan in `docs/PLAN.md`.
+## 6. Verification & Quality Gates
+- **Automated Unit & Integration Tests**: Minimum 95% code coverage for all API request validation and authorization handlers.
+- **Load Testing**: Execute `Nsdms.LoadTester` to verify that 5,000 concurrent bulk submissions achieve sub-200ms response times without impacting interactive Blazor circuits.
+- **Security & Vulnerability Scans**: Run automated security checks (`security_scan.py`), OWASP ZAP API vulnerability scans, and POPIA data sanitization checks.

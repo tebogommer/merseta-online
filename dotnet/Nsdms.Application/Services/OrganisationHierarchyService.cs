@@ -28,57 +28,98 @@ public class OrganisationHierarchyService : IOrganisationHierarchyService
 
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
-        // 1. Traverse upwards to find the Ultimate Holding Parent
+        List<Organisation> familyOrgs;
         int rootId = organisationId;
-        var visitedUp = new HashSet<int> { organisationId };
 
-        while (true)
+        if (context.Database.ProviderName?.EndsWith("SqlServer", StringComparison.OrdinalIgnoreCase) == true)
         {
-            var parentRef = await context.Organisations
-                .AsNoTracking()
-                .Where(o => o.Id == rootId)
-                .Select(o => new { o.ParentOrganisationId })
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (parentRef?.ParentOrganisationId != null && !visitedUp.Contains(parentRef.ParentOrganisationId.Value))
-            {
-                rootId = parentRef.ParentOrganisationId.Value;
-                visitedUp.Add(rootId);
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        // 2. Fetch all organisations in the system that could belong to this family tree
-        // To build the tree efficiently, fetch the root and its reachable descendants
-        var allDescendantIds = new HashSet<int> { rootId };
-        var queue = new Queue<int>();
-        queue.Enqueue(rootId);
-
-        while (queue.Count > 0)
-        {
-            var currentId = queue.Dequeue();
-            var childIds = await context.Organisations
-                .AsNoTracking()
-                .Where(o => o.ParentOrganisationId == currentId)
-                .Select(o => o.Id)
+            var familyIds = await context.Database
+                .SqlQueryRaw<int>(@"
+WITH RootCTE AS (
+    SELECT Id, ParentOrganisationId
+    FROM dbo.Organisation
+    WHERE Id = {0}
+    UNION ALL
+    SELECT o.Id, o.ParentOrganisationId
+    FROM dbo.Organisation o
+    INNER JOIN RootCTE r ON o.Id = r.ParentOrganisationId
+),
+UltimateRoot AS (
+    SELECT TOP 1 Id AS RootId
+    FROM RootCTE
+    WHERE ParentOrganisationId IS NULL OR ParentOrganisationId = 0
+),
+FamilyTreeCTE AS (
+    SELECT o.Id
+    FROM dbo.Organisation o
+    WHERE o.Id = (SELECT RootId FROM UltimateRoot)
+    UNION ALL
+    SELECT o.Id
+    FROM dbo.Organisation o
+    INNER JOIN FamilyTreeCTE f ON o.ParentOrganisationId = f.Id
+)
+SELECT Id FROM FamilyTreeCTE;", organisationId)
                 .ToListAsync(cancellationToken);
 
-            foreach (var childId in childIds)
+            familyOrgs = await context.Organisations
+                .AsNoTracking()
+                .Where(o => familyIds.Contains(o.Id))
+                .ToListAsync(cancellationToken);
+
+            var rootCandidate = familyOrgs.FirstOrDefault(o => o.ParentOrganisationId == null || !familyIds.Contains(o.ParentOrganisationId.Value));
+            if (rootCandidate != null) rootId = rootCandidate.Id;
+        }
+        else
+        {
+            // In-memory fallback for unit tests
+            var visitedUp = new HashSet<int> { organisationId };
+
+            while (true)
             {
-                if (allDescendantIds.Add(childId))
+                var parentRef = await context.Organisations
+                    .AsNoTracking()
+                    .Where(o => o.Id == rootId)
+                    .Select(o => new { o.ParentOrganisationId })
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (parentRef?.ParentOrganisationId != null && !visitedUp.Contains(parentRef.ParentOrganisationId.Value))
                 {
-                    queue.Enqueue(childId);
+                    rootId = parentRef.ParentOrganisationId.Value;
+                    visitedUp.Add(rootId);
+                }
+                else
+                {
+                    break;
                 }
             }
-        }
 
-        var familyOrgs = await context.Organisations
-            .AsNoTracking()
-            .Where(o => allDescendantIds.Contains(o.Id))
-            .ToListAsync(cancellationToken);
+            var allDescendantIds = new HashSet<int> { rootId };
+            var queue = new Queue<int>();
+            queue.Enqueue(rootId);
+
+            while (queue.Count > 0)
+            {
+                var currentId = queue.Dequeue();
+                var childIds = await context.Organisations
+                    .AsNoTracking()
+                    .Where(o => o.ParentOrganisationId == currentId)
+                    .Select(o => o.Id)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var childId in childIds)
+                {
+                    if (allDescendantIds.Add(childId))
+                    {
+                        queue.Enqueue(childId);
+                    }
+                }
+            }
+
+            familyOrgs = await context.Organisations
+                .AsNoTracking()
+                .Where(o => allDescendantIds.Contains(o.Id))
+                .ToListAsync(cancellationToken);
+        }
 
         var rootOrg = familyOrgs.FirstOrDefault(o => o.Id == rootId);
         if (rootOrg == null) return null;

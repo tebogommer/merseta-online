@@ -1,0 +1,876 @@
+@page "/admin/entra-resilience"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@attribute [Authorize(Roles = "SuperAdmin,Admin")]
+@inject IEntraResilienceService EntraService
+@inject IIdentityService IdentityService
+@inject ISystemConfigurationService ConfigService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<!-- Archetype A5: Dashboard / Control Hub (16-Point UI Standard compliant) -->
+<PageTitle>Microsoft Entra ID resilience &amp; backup credentials - merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-2 pa-sm-4">
+    <!-- BREADCRUMBS (16-Point Standard #7) -->
+    <MudBreadcrumbs Items="_breadcrumbItems" Separator="›" Class="pa-0 mb-2" Style="font-size: 0.8125rem;" />
+
+    <!-- STICKY TOP BAR (Archetype A5 Dashboard / Control Hub, 16-Point Standard #4, #5, #6) -->
+    <MudPaper Elevation="2" Class="sticky-top pa-3 pa-sm-4 mb-4 rounded-lg bg-surface d-flex justify-space-between align-center flex-wrap gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+        <div class="d-flex align-center gap-3">
+            <MudTooltip Text="Back to admin hub">
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" Href="/admin" aria-label="Back to admin hub" />
+            </MudTooltip>
+            <div class="d-inline-flex align-center justify-center rounded pa-2" style="background-color: var(--mud-palette-primary-hover);">
+                <MudIcon Icon="@Icons.Material.Filled.Security" Color="Color.Primary" Size="Size.Medium" />
+            </div>
+            <div>
+                <div class="d-flex align-center gap-2 flex-wrap">
+                    <MudText Typo="Typo.h5" Class="fw-bold">Microsoft Entra ID resilience hub</MudText>
+                    <!-- PRIMARY STATE BADGE (16-Point Standard #4: Exactly one in header) -->
+                    @if (_isManualOverrideActive)
+                    {
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">
+                            Outage contingency active
+                        </MudChip>
+                    }
+                    else if (_healthStatus == EntraHealthStatus.Healthy)
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Outlined">
+                            Operational
+                        </MudChip>
+                    }
+                    else if (_healthStatus == EntraHealthStatus.Degraded)
+                    {
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Outlined">
+                            Degraded
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled">
+                            Outage detected
+                        </MudChip>
+                    }
+                </div>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Automated cloud outage circuit-breaker, directory delta caching, and disaster recovery backup password governance
+                </MudText>
+            </div>
+        </div>
+        <!-- ACTION ZONE (16-Point Standard #6: Single right-aligned action zone, max 1 primary action) -->
+        <div class="d-flex align-center flex-wrap gap-2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="@LoadDataAsync"
+                       aria-label="Refresh resilience data">
+                Refresh
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Sync"
+                       OnClick="@BatchSyncEntraAccountsAsync"
+                       Disabled="@_isSyncing">
+                @if (_isSyncing)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <span>Syncing...</span>
+                }
+                else
+                {
+                    <span>Sync all employee accounts</span>
+                }
+            </MudButton>
+            <MudButton Variant="@(_isManualOverrideActive ? Variant.Filled : Variant.Outlined)"
+                       Color="Color.Warning"
+                       StartIcon="@(_isManualOverrideActive ? Icons.Material.Filled.CloudOff : Icons.Material.Filled.PowerSettingsNew)"
+                       OnClick="@ToggleManualOutageOverrideAsync">
+                @(_isManualOverrideActive ? "Disable outage contingency" : "Force outage contingency mode")
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    <!-- LIVE RESILIENCE METRICS -->
+    <MudGrid Class="mb-4">
+        <!-- Card 1: Circuit-Breaker Status -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2" Class="rounded-lg h-100 pa-4">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="fw-bold">Entra service health</MudText>
+                    @if (_healthStatus == EntraHealthStatus.Healthy)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                    }
+                    else if (_healthStatus == EntraHealthStatus.Degraded)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" />
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                    }
+                </div>
+                <div class="d-flex align-baseline gap-2">
+                    <MudText Typo="Typo.h5" Class="fw-bold" Color="@GetHealthColor(_healthStatus)">
+                        @_healthStatus.ToString()
+                    </MudText>
+                </div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1 d-block">
+                    @(_isManualOverrideActive ? "Manual override enforced by SecOps" : "Automated circuit-breaker probe active")
+                </MudText>
+            </MudCard>
+        </MudItem>
+
+        <!-- Card 2: Federated Staff Accounts -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2" Class="rounded-lg h-100 pa-4">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="fw-bold">Federated employees</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Badge" Color="Color.Primary" />
+                </div>
+                <div class="d-flex align-baseline gap-2">
+                    <MudText Typo="Typo.h5" Class="fw-bold">@_users.Count</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">internal staff</MudText>
+                </div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1 d-block">
+                    @_users.Count(u => u.EntraAccountEnabled != false) enabled in directory
+                </MudText>
+            </MudCard>
+        </MudItem>
+
+        <!-- Card 3: Disaster Recovery Enrollment -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2" Class="rounded-lg h-100 pa-4">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="fw-bold">Backup password enrollment</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Key" Color="Color.Success" />
+                </div>
+                <div class="d-flex align-baseline gap-2">
+                    <MudText Typo="Typo.h5" Class="fw-bold" Color="Color.Success">
+                        @_users.Count(u => u.HasBackupPassword) / @_users.Count
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        (@GetEnrollmentPercentage()%)
+                    </MudText>
+                </div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1 d-block">
+                    @_users.Count(u => !u.HasBackupPassword) pending enrollment
+                </MudText>
+            </MudCard>
+        </MudItem>
+
+        <!-- Card 4: Offline Grace Window Compliance -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2" Class="rounded-lg h-100 pa-4">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="fw-bold">@(_settingsModel.OfflineGracePeriodDays)-day grace compliance</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.HourglassBottom" Color="Color.Info" />
+                </div>
+                <div class="d-flex align-baseline gap-2">
+                    <MudText Typo="Typo.h5" Class="fw-bold" Color="Color.Info">
+                        @_users.Count(u => u.IsOfflineGraceValid)
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">synced &lt; @(_settingsModel.OfflineGracePeriodDays)d</MudText>
+                </div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1 d-block">
+                    Persistent @(_settingsModel.OfflineGracePeriodDays)-day session enabled
+                </MudText>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <!-- DASHBOARD TABS -->
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Primary" Class="mb-4">
+        <!-- Tab 1: Staff Directory & Resilience Status -->
+        <MudTabPanel Text="Staff directory &amp; resilience status" Icon="@Icons.Material.Filled.People">
+            <div class="pt-3">
+                <!-- SEARCH & FILTER BAR -->
+                <MudCard Elevation="2" Class="mb-4 pa-3">
+        <div class="d-flex align-center gap-4 flex-wrap">
+            <div style="min-width: 200px; flex: 1;">
+                <MudTextField @bind-Value="_searchString"
+                              Placeholder="Search employee name, email, or UPN..."
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Medium"
+                              Immediate="true"
+                              Clearable="true"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              TextChanged="@FilterUsers" />
+            </div>
+            <MudChipSet T="string" SelectedValue="@_statusFilter" SelectedValueChanged="@OnFilterChanged">
+                <MudChip T="string" Value="@("All")" Text="All staff" Color="Color.Default" Variant="Variant.Filled" />
+                <MudChip T="string" Value="@("Enrolled")" Text="Backup password set" Color="Color.Success" Variant="Variant.Outlined" />
+                <MudChip T="string" Value="@("Pending")" Text="Pending setup" Color="Color.Warning" Variant="Variant.Outlined" />
+                <MudChip T="string" Value="@("Disabled")" Text="Disabled on Entra" Color="Color.Error" Variant="Variant.Outlined" />
+                <MudChip T="string" Value="@("Locked")" Text="Locked out" Color="Color.Dark" Variant="Variant.Outlined" />
+            </MudChipSet>
+        </div>
+    </MudCard>
+
+    <!-- EMPLOYEES RESILIENCE DATA TABLE (16-Point Standard #8, #9, #10, #13, #16) -->
+    <MudCard Elevation="2" Class="rounded-lg">
+        @if (_isLoading)
+        {
+            <!-- STATE 1: LOADING -->
+            <div class="pa-8 text-center">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium" />
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">Loading directory resilience status...</MudText>
+            </div>
+        }
+        else if (_loadFailed)
+        {
+            <!-- STATE 2: ERROR -->
+            <div class="pa-8 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Color="Color.Error" Size="Size.Large" Class="mb-2" />
+                <MudText Typo="Typo.subtitle1" Class="fw-bold" Color="Color.Error">Failed to load directory resilience data</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@_errorMessage</MudText>
+                <div class="mt-3">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@LoadDataAsync">
+                        Retry
+                    </MudButton>
+                </div>
+            </div>
+        }
+        else if (!_filteredUsers.Any())
+        {
+            @if (!_users.Any())
+            {
+                <!-- STATE 3: EMPTY DATABASE -->
+                <div class="pa-8 text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.FolderOpen" Color="Color.Secondary" Size="Size.Large" Class="mb-2" />
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold">No employee directory records</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">No federated staff accounts have been synchronized from Microsoft Entra yet.</MudText>
+                    <div class="mt-3">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Sync" OnClick="@BatchSyncEntraAccountsAsync">
+                            Sync all employee accounts
+                        </MudButton>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- STATE 4: EMPTY FILTER -->
+                <div class="pa-8 text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Color="Color.Secondary" Size="Size.Large" Class="mb-2" />
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold">No matching employee accounts found</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Adjust your search query or filter tags above.</MudText>
+                    <div class="mt-3">
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="@ResetFilters">
+                            Clear filters
+                        </MudButton>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <!-- STATE 5: POPULATED TABLE (16-Point Standard #8: Baseline sorting, pagination, horizontal scroll) -->
+            <MudTable Items="@_filteredUsers" Dense="true" Hover="true" Striped="true" Elevation="0" HorizontalScrollbar="true" Breakpoint="Breakpoint.Sm">
+                <HeaderContent>
+                    <MudTh><MudTableSortLabel SortBy="new Func<EntraStatusDto, object>(x => x.DisplayName ?? x.UserName ?? x.Email)">Employee</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<EntraStatusDto, object>(x => x.EntraUserPrincipalName ?? x.Email)">Entra UPN</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<EntraStatusDto, object>(x => x.EntraAccountEnabled ?? false)">Cloud directory status</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<EntraStatusDto, object>(x => x.LastEntraSyncUtc ?? DateTime.MinValue)">Last directory sync</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<EntraStatusDto, object>(x => x.HasBackupPassword)">Backup password</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<EntraStatusDto, object>(x => x.GracePeriodDaysRemaining)">Grace period</MudTableSortLabel></MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>
+                        <div>
+                            <!-- UNIQUE KEY LINK (16-Point Standard #10) -->
+                            <MudLink OnClick="@(() => OpenSetBackupPasswordDialog(context.UserId))" Color="Color.Primary" Class="fw-bold cursor-pointer">
+                                @(context.DisplayName ?? context.UserName ?? context.Email)
+                            </MudLink>
+                            <div class="d-flex align-center gap-1">
+                                <span class="font-mono text-secondary" style="font-size: 0.72rem;">#@context.UserId</span>
+                                <span class="text-secondary" style="font-size: 0.75rem;">• @context.Email</span>
+                            </div>
+                        </div>
+                    </MudTd>
+                    <MudTd>
+                        <!-- MONOSPACE IDENTIFIERS (16-Point Standard #9) -->
+                        <span class="font-mono text-secondary" style="font-size: 0.78rem;">
+                            @(context.EntraUserPrincipalName ?? context.Email)
+                        </span>
+                    </MudTd>
+                    <MudTd>
+                        <!-- READ-ONLY STATE BADGES (16-Point Standard #3) -->
+                        @if (context.EntraAccountEnabled != false)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">
+                                Active on Entra
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled">
+                                Disabled on Entra
+                            </MudChip>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        <MudText Typo="Typo.caption">
+                            @(context.LastEntraSyncUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "Never")
+                        </MudText>
+                    </MudTd>
+                    <MudTd>
+                        @if (context.HasBackupPassword)
+                        {
+                            <div class="d-flex align-center gap-1">
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                                <MudText Typo="Typo.caption" Color="Color.Success" Class="fw-bold">
+                                    Enrolled (@(context.BackupPasswordSetAt?.ToLocalTime().ToString("yyyy-MM-dd") ?? "Active"))
+                                </MudText>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="d-flex align-center gap-1">
+                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Small" />
+                                <MudText Typo="Typo.caption" Color="Color.Warning">Not enrolled</MudText>
+                            </div>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        @if (context.IsOfflineGraceValid)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Success">
+                                @(context.GracePeriodDaysRemaining) days remaining
+                            </MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error" Class="fw-bold">
+                                Grace expired
+                            </MudText>
+                        }
+                    </MudTd>
+                    <MudTd Style="text-align: right;">
+                        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Dense="true" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" aria-label="Employee actions menu">
+                            <MudMenuItem Icon="@Icons.Material.Filled.Key" OnClick="@(() => OpenSetBackupPasswordDialog(context.UserId))">
+                                Set / rotate backup password
+                            </MudMenuItem>
+                            <MudMenuItem Icon="@Icons.Material.Filled.Sync" OnClick="@(() => SyncUserAccountAsync(context.UserId, true))">
+                                Mark active on Entra
+                            </MudMenuItem>
+                            <MudMenuItem Icon="@Icons.Material.Filled.Block" IconColor="Color.Error" OnClick="@(() => SyncUserAccountAsync(context.UserId, false))">
+                                Simulate disabled on Entra
+                            </MudMenuItem>
+                            @if (context.IsLockedOut)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.LockOpen" IconColor="Color.Warning" OnClick="@(() => ResetLockoutAsync(context.UserId))">
+                                    Reset emergency lockout
+                                </MudMenuItem>
+                            }
+                        </MudMenu>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" RowsPerPageString="Rows per page:" />
+                </PagerContent>
+            </MudTable>
+        }
+    </MudCard>
+            </div>
+        </MudTabPanel>
+
+        <!-- Tab 2: Resilience & Security Settings -->
+        <MudTabPanel Text="Resilience &amp; security parameters" Icon="@Icons.Material.Filled.Tune">
+            <div class="pa-2 pa-sm-4">
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4">
+                    <strong>Zero-Hardcoding Resilience Governance:</strong> The parameters below dynamically govern the cloud circuit-breaker, probe timeouts, statutory offline grace periods, and temporary lockout thresholds. All modifications execute audited double-writes into <code>audit_logs</code>.
+                </MudAlert>
+
+                <MudGrid>
+                    <!-- Card 1: Cloud Circuit-Breaker & Health Probe Parameters -->
+                    <MudItem xs="12" md="6">
+                        <MudCard Outlined="true" Class="pa-4 h-100 rounded-lg">
+                            <div class="d-flex align-center gap-2 mb-3">
+                                <MudIcon Icon="@Icons.Material.Filled.CloudSync" Color="Color.Primary" />
+                                <MudText Typo="Typo.h6" Class="fw-bold">Entra ID health probe &amp; circuit-breaker</MudText>
+                            </div>
+
+                            <MudStack Spacing="3">
+                                <div>
+                                    <label class="mud-input-label mud-typography-caption fw-bold mb-1 d-block">
+                                        Canonical OIDC discovery probe URL
+                                    </label>
+                                    <MudTextField @bind-Value="_settingsModel.HealthProbeUrl"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Placeholder="https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"
+                                                  HelperText="OpenID Connect endpoint queried to detect Microsoft 365 / Entra cloud outages" />
+                                </div>
+
+                                <MudGrid>
+                                    <MudItem xs="12" sm="6">
+                                        <label class="mud-input-label mud-typography-caption fw-bold mb-1 d-block">
+                                            Probe request timeout (seconds)
+                                        </label>
+                                        <MudNumericField @bind-Value="_settingsModel.ProbeTimeoutSeconds"
+                                                         Variant="Variant.Outlined"
+                                                         Margin="Margin.Dense"
+                                                         Min="1"
+                                                         Max="30"
+                                                         HelperText="Max wait before treating probe as timed out" />
+                                    </MudItem>
+
+                                    <MudItem xs="12" sm="6">
+                                        <label class="mud-input-label mud-typography-caption fw-bold mb-1 d-block">
+                                            Degraded latency threshold (ms)
+                                        </label>
+                                        <MudNumericField @bind-Value="_settingsModel.DegradedThresholdMs"
+                                                         Variant="Variant.Outlined"
+                                                         Margin="Margin.Dense"
+                                                         Min="500"
+                                                         Max="10000"
+                                                         Step="250"
+                                                         HelperText="Latency threshold indicating degraded cloud connectivity" />
+                                    </MudItem>
+                                </MudGrid>
+
+                                <div>
+                                    <label class="mud-input-label mud-typography-caption fw-bold mb-1 d-block">
+                                        Probe cache duration (seconds)
+                                    </label>
+                                    <MudNumericField @bind-Value="_settingsModel.ProbeCacheSeconds"
+                                                     Variant="Variant.Outlined"
+                                                     Margin="Margin.Dense"
+                                                     Min="5"
+                                                     Max="300"
+                                                     Step="5"
+                                                     HelperText="Minimum interval between network probes to eliminate traffic flooding" />
+                                </div>
+
+                                <MudDivider Class="my-2" />
+
+                                <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Secondary"
+                                               StartIcon="@Icons.Material.Filled.Speed"
+                                               OnClick="TestLiveProbeAsync"
+                                               Disabled="@_isTestingProbe">
+                                        @if (_isTestingProbe)
+                                        {
+                                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                            <span>Probing endpoint...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Test live health probe now</span>
+                                        }
+                                    </MudButton>
+
+                                    @if (_probeTestResult != null)
+                                    {
+                                        <MudChip T="string"
+                                                 Color="@GetHealthColor(_probeTestResult.Value.Status)"
+                                                 Size="Size.Small"
+                                                 Variant="Variant.Filled">
+                                            @_probeTestResult.Value.Status (@(_probeTestResult.Value.ElapsedMs) ms)
+                                        </MudChip>
+                                    }
+                                </div>
+                            </MudStack>
+                        </MudCard>
+                    </MudItem>
+
+                    <!-- Card 2: Disaster Recovery & Offline Access Governance -->
+                    <MudItem xs="12" md="6">
+                        <MudCard Outlined="true" Class="pa-4 h-100 rounded-lg">
+                            <div class="d-flex align-center gap-2 mb-3">
+                                <MudIcon Icon="@Icons.Material.Filled.VpnKey" Color="Color.Warning" />
+                                <MudText Typo="Typo.h6" Class="fw-bold">Disaster recovery &amp; lockout governance</MudText>
+                            </div>
+
+                            <MudStack Spacing="3">
+                                <div>
+                                    <label class="mud-input-label mud-typography-caption fw-bold mb-1 d-block">
+                                        Internal employee domain suffixes
+                                    </label>
+                                    <MudTextField @bind-Value="_settingsModel.InternalEmployeeDomains"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Placeholder="@@merseta.org.za"
+                                                  HelperText="Comma-separated domain suffixes identified as internal merSETA personnel" />
+                                </div>
+
+                                <div>
+                                    <label class="mud-input-label mud-typography-caption fw-bold mb-1 d-block">
+                                        Statutory offline grace period (days)
+                                    </label>
+                                    <MudNumericField @bind-Value="_settingsModel.OfflineGracePeriodDays"
+                                                     Variant="Variant.Outlined"
+                                                     Margin="Margin.Dense"
+                                                     Min="1"
+                                                     Max="90"
+                                                     HelperText="Maximum duration emergency backup credentials remain valid after last Entra sync" />
+                                </div>
+
+                                <MudGrid>
+                                    <MudItem xs="12" sm="6">
+                                        <label class="mud-input-label mud-typography-caption fw-bold mb-1 d-block">
+                                            Max failed backup attempts
+                                        </label>
+                                        <MudNumericField @bind-Value="_settingsModel.MaxFailedAttempts"
+                                                         Variant="Variant.Outlined"
+                                                         Margin="Margin.Dense"
+                                                         Min="3"
+                                                         Max="20"
+                                                         HelperText="Consecutive failed attempts before temporary lockout" />
+                                    </MudItem>
+
+                                    <MudItem xs="12" sm="6">
+                                        <label class="mud-input-label mud-typography-caption fw-bold mb-1 d-block">
+                                            Lockout duration (minutes)
+                                        </label>
+                                        <MudNumericField @bind-Value="_settingsModel.LockoutMinutes"
+                                                         Variant="Variant.Outlined"
+                                                         Margin="Margin.Dense"
+                                                         Min="5"
+                                                         Max="1440"
+                                                         Step="5"
+                                                         HelperText="Duration account is locked after exceeding attempt limit" />
+                                    </MudItem>
+                                </MudGrid>
+
+                                <MudDivider Class="my-2" />
+
+                                <div class="d-flex align-center justify-end gap-2 mt-2">
+                                    <MudButton Variant="Variant.Text"
+                                               Color="Color.Default"
+                                               StartIcon="@Icons.Material.Filled.Restore"
+                                               OnClick="ResetSettingsToDefaultsAsync">
+                                        Reset to defaults
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               StartIcon="@Icons.Material.Filled.Save"
+                                               OnClick="SaveResilienceSettingsAsync"
+                                               Disabled="@_isSavingSettings">
+                                        @if (_isSavingSettings)
+                                        {
+                                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                            <span>Saving parameters...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Save resilience parameters</span>
+                                        }
+                                    </MudButton>
+                                </div>
+                            </MudStack>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </div>
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+@code {
+    private readonly List<BreadcrumbItem> _breadcrumbItems = new()
+    {
+        new BreadcrumbItem("Admin", href: "/admin"),
+        new BreadcrumbItem("Entra resilience hub", href: null, disabled: true)
+    };
+
+    private bool _isLoading = true;
+    private bool _loadFailed = false;
+    private string? _errorMessage;
+    private bool _isSyncing = false;
+    private EntraHealthStatus _healthStatus = EntraHealthStatus.Healthy;
+    private bool _isManualOverrideActive = false;
+    private List<EntraStatusDto> _users = new();
+    private List<EntraStatusDto> _filteredUsers = new();
+    private string _searchString = string.Empty;
+    private string _statusFilter = "All";
+
+    public class ResilienceSettingsModel
+    {
+        public string HealthProbeUrl { get; set; } = "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration";
+        public int ProbeTimeoutSeconds { get; set; } = 3;
+        public int DegradedThresholdMs { get; set; } = 2500;
+        public int ProbeCacheSeconds { get; set; } = 30;
+        public int OfflineGracePeriodDays { get; set; } = 14;
+        public int MaxFailedAttempts { get; set; } = 5;
+        public int LockoutMinutes { get; set; } = 15;
+        public string InternalEmployeeDomains { get; set; } = "@merseta.org.za";
+    }
+
+    private ResilienceSettingsModel _settingsModel = new();
+    private bool _isSavingSettings = false;
+    private bool _isTestingProbe = false;
+    private (EntraHealthStatus Status, long ElapsedMs)? _probeTestResult;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        _loadFailed = false;
+        _errorMessage = null;
+        try
+        {
+            _healthStatus = await EntraService.CheckEntraServiceHealthAsync(forceProbe: true);
+            _isManualOverrideActive = _healthStatus == EntraHealthStatus.ManualOverride;
+            await LoadSettingsAsync();
+            _users = await EntraService.GetAllEntraUsersStatusAsync();
+            FilterUsers();
+        }
+        catch (Exception ex)
+        {
+            _loadFailed = true;
+            _errorMessage = ex.Message;
+            Snackbar.Add($"Error loading Entra resilience data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void FilterUsers()
+    {
+        var query = _users.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            var s = _searchString.Trim().ToLowerInvariant();
+            query = query.Where(u =>
+                u.Email.ToLower().Contains(s) ||
+                (u.DisplayName != null && u.DisplayName.ToLower().Contains(s)) ||
+                (u.EntraUserPrincipalName != null && u.EntraUserPrincipalName.ToLower().Contains(s)));
+        }
+
+        query = _statusFilter switch
+        {
+            "Enrolled" => query.Where(u => u.HasBackupPassword),
+            "Pending" => query.Where(u => !u.HasBackupPassword),
+            "Disabled" => query.Where(u => u.EntraAccountEnabled == false),
+            "Locked" => query.Where(u => u.IsLockedOut),
+            _ => query
+        };
+
+        _filteredUsers = query.ToList();
+    }
+
+    private void OnFilterChanged(string filter)
+    {
+        _statusFilter = filter;
+        FilterUsers();
+    }
+
+    private void ResetFilters()
+    {
+        _searchString = string.Empty;
+        _statusFilter = "All";
+        FilterUsers();
+    }
+
+    private int GetEnrollmentPercentage()
+    {
+        if (!_users.Any()) return 0;
+        return (int)Math.Round((double)_users.Count(u => u.HasBackupPassword) / _users.Count * 100);
+    }
+
+    private Color GetHealthColor(EntraHealthStatus status) => status switch
+    {
+        EntraHealthStatus.Healthy => Color.Success,
+        EntraHealthStatus.Degraded => Color.Warning,
+        _ => Color.Error
+    };
+
+    private async Task<string> GetActorUsernameAsync()
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            return authState.User.Identity?.Name ?? "Admin";
+        }
+        catch
+        {
+            return "Admin";
+        }
+    }
+
+    private async Task LoadSettingsAsync()
+    {
+        _settingsModel.HealthProbeUrl = await ConfigService.GetValueAsync(
+            "Auth:EntraHealthProbeUrl",
+            "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration")!;
+        _settingsModel.ProbeTimeoutSeconds = await ConfigService.GetValueAsync<int>("Auth:EntraProbeTimeoutSeconds", 3);
+        _settingsModel.DegradedThresholdMs = await ConfigService.GetValueAsync<int>("Auth:EntraDegradedThresholdMs", 2500);
+        _settingsModel.ProbeCacheSeconds = await ConfigService.GetValueAsync<int>("Auth:EntraProbeCacheSeconds", 30);
+        _settingsModel.OfflineGracePeriodDays = await ConfigService.GetValueAsync<int>("Auth:EntraOfflineGracePeriodDays", 14);
+        _settingsModel.MaxFailedAttempts = await ConfigService.GetValueAsync<int>("Auth:EntraMaxBackupPasswordFailedAttempts", 5);
+        _settingsModel.LockoutMinutes = await ConfigService.GetValueAsync<int>("Auth:EntraBackupPasswordLockoutMinutes", 15);
+        _settingsModel.InternalEmployeeDomains = await ConfigService.GetValueAsync<string>("Auth:InternalEmployeeDomains", "@merseta.org.za") ?? "@merseta.org.za";
+    }
+
+    private async Task SaveResilienceSettingsAsync()
+    {
+        _isSavingSettings = true;
+        try
+        {
+            var actor = await GetActorUsernameAsync();
+
+            await ConfigService.SetConfigAsync("Auth:EntraHealthProbeUrl", _settingsModel.HealthProbeUrl, "Security", "Canonical OpenID Connect discovery URI used to probe Microsoft Entra service availability.", "String", actor);
+            await ConfigService.SetConfigAsync("Auth:EntraProbeTimeoutSeconds", _settingsModel.ProbeTimeoutSeconds.ToString(), "Security", "Maximum HTTP timeout in seconds for Microsoft Entra OIDC discovery probe request.", "Integer", actor);
+            await ConfigService.SetConfigAsync("Auth:EntraDegradedThresholdMs", _settingsModel.DegradedThresholdMs.ToString(), "Security", "Latency threshold in milliseconds beyond which Entra connection is flagged as Degraded.", "Integer", actor);
+            await ConfigService.SetConfigAsync("Auth:EntraProbeCacheSeconds", _settingsModel.ProbeCacheSeconds.ToString(), "Security", "Duration in seconds to cache Microsoft Entra health probe results before re-querying cloud endpoint.", "Integer", actor);
+            await ConfigService.SetConfigAsync("Auth:EntraOfflineGracePeriodDays", _settingsModel.OfflineGracePeriodDays.ToString(), "Security", "Maximum allowable offline access window in days for staff using emergency backup credentials during extended outages.", "Integer", actor);
+            await ConfigService.SetConfigAsync("Auth:EntraMaxBackupPasswordFailedAttempts", _settingsModel.MaxFailedAttempts.ToString(), "Security", "Consecutive failed emergency backup password attempts permitted before triggering temporary lockout.", "Integer", actor);
+            await ConfigService.SetConfigAsync("Auth:EntraBackupPasswordLockoutMinutes", _settingsModel.LockoutMinutes.ToString(), "Security", "Duration in minutes of temporary lockout after exceeding failed backup password attempts.", "Integer", actor);
+            await ConfigService.SetConfigAsync("Auth:InternalEmployeeDomains", _settingsModel.InternalEmployeeDomains, "Security", "Comma-separated list of domain suffixes identified as internal employees requiring Entra resilience.", "String", actor);
+
+            Snackbar.Add("Resilience and security parameters updated successfully.", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving parameters: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSavingSettings = false;
+        }
+    }
+
+    private async Task TestLiveProbeAsync()
+    {
+        _isTestingProbe = true;
+        _probeTestResult = null;
+        try
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var status = await EntraService.CheckEntraServiceHealthAsync(forceProbe: true);
+            sw.Stop();
+            _probeTestResult = (status, sw.ElapsedMilliseconds);
+            _healthStatus = status;
+            Snackbar.Add($"Live probe finished in {sw.ElapsedMilliseconds} ms: Status is {status}", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Live probe failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isTestingProbe = false;
+        }
+    }
+
+    private async Task ResetSettingsToDefaultsAsync()
+    {
+        _settingsModel = new ResilienceSettingsModel();
+        await SaveResilienceSettingsAsync();
+    }
+
+    private async Task BatchSyncEntraAccountsAsync()
+    {
+        _isSyncing = true;
+        try
+        {
+            var actor = await GetActorUsernameAsync();
+            var count = await EntraService.SyncAllEntraAccountsBatchAsync(actor);
+            Snackbar.Add($"Batch synchronized {count} merSETA employee directory accounts.", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error during batch sync: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSyncing = false;
+        }
+    }
+
+    private async Task ToggleManualOutageOverrideAsync()
+    {
+        var newState = !_isManualOverrideActive;
+        try
+        {
+            var actor = await GetActorUsernameAsync();
+            await EntraService.SetEmergencyOutageOverrideAsync(
+                newState,
+                newState ? "Simulated disaster recovery drill" : "Normal operations restored",
+                actor);
+
+            Snackbar.Add(
+                newState
+                    ? "Emergency outage contingency mode activated. Staff can now log in via emergency backup credentials."
+                    : "Emergency outage contingency mode released. Standard Entra authentication resumed.",
+                newState ? Severity.Warning : Severity.Success);
+
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error toggling override: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SyncUserAccountAsync(int userId, bool active)
+    {
+        try
+        {
+            var actor = await GetActorUsernameAsync();
+            await EntraService.SyncEntraAccountStatusAsync(userId, active, actor);
+            Snackbar.Add(
+                active
+                    ? "Marked account as active and enabled on Entra."
+                    : "Simulated account disablement on Entra. Emergency backup logins are now blocked for this account.",
+                active ? Severity.Success : Severity.Warning);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating status: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ResetLockoutAsync(int userId)
+    {
+        try
+        {
+            var actor = await GetActorUsernameAsync();
+            await EntraService.ResetBackupPasswordLockoutAsync(userId, actor);
+            Snackbar.Add("Emergency backup password lockout cleared.", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error resetting lockout: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OpenSetBackupPasswordDialog(int userId)
+    {
+        var parameters = new DialogParameters<BackupPasswordDialog>
+        {
+            { x => x.UserId, userId }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<BackupPasswordDialog>("Disaster recovery backup password", parameters, options);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled)
+        {
+            await LoadDataAsync();
+        }
+    }
+}

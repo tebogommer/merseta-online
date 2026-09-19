@@ -225,7 +225,19 @@ public class SystemConfigurationService : ISystemConfigurationService
             // UI & Display Defaults
             ("UiDefaults:DebounceIntervalMs", "300", "UI & Display", "Search input debouncing interval in milliseconds.", "Integer"),
             ("UiDefaults:SearchMinCharacters", "2", "UI & Display", "Minimum characters required to trigger lookup and catalog autocomplete searches.", "Integer"),
-            ("UiDefaults:DefaultRowsPerPage", "20", "UI & Display", "Default pagination page size across enterprise data grids.", "Integer")
+            ("UiDefaults:DefaultRowsPerPage", "20", "UI & Display", "Default pagination page size across enterprise data grids.", "Integer"),
+
+            // Security, Identity & Entra Resilience
+            ("Auth:InternalEmployeeDomains", "@merseta.org.za", "Security", "Comma-separated list of domain suffixes identified as internal employees requiring Entra resilience.", "String"),
+            ("Auth:EntraProbeCacheSeconds", "30", "Security", "Duration in seconds to cache Microsoft Entra health probe results before re-querying cloud endpoint.", "Integer"),
+            ("Auth:EntraProbeTimeoutSeconds", "3", "Security", "Maximum HTTP timeout in seconds for Microsoft Entra OIDC discovery probe request.", "Integer"),
+            ("Auth:EntraDegradedThresholdMs", "2500", "Security", "Latency threshold in milliseconds beyond which Entra connection is flagged as Degraded.", "Integer"),
+            ("Auth:EntraOfflineGracePeriodDays", "14", "Security", "Maximum allowable offline access window in days for staff using emergency backup credentials during extended outages.", "Integer"),
+            ("Auth:EntraMaxBackupPasswordFailedAttempts", "5", "Security", "Consecutive failed emergency backup password attempts permitted before triggering temporary lockout.", "Integer"),
+            ("Auth:EntraBackupPasswordLockoutMinutes", "15", "Security", "Duration in minutes of temporary lockout after exceeding failed backup password attempts.", "Integer"),
+            ("Auth:EntraHealthProbeUrl", "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration", "Security", "Canonical OpenID Connect discovery URI used to probe Microsoft Entra service availability.", "String"),
+            ("Lockout:MaxFailedAttempts", "5", "Security", "Maximum standard password login failures before account lockout.", "Integer"),
+            ("Lockout:DefaultLockoutMinutes", "15", "Security", "Standard password login account lockout duration in minutes.", "Integer")
         };
 
         bool anyAdded = false;

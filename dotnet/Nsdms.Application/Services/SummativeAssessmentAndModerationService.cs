@@ -483,192 +483,231 @@ public class SummativeAssessmentAndModerationService : ISummativeAssessmentAndMo
         string currentUsername = "SYSTEM")
     {
         using var db = await _contextFactory.CreateDbContextAsync();
+        var strategy = db.Database.CreateExecutionStrategy();
 
-        Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction = null;
-        if (db.Database.IsRelational())
+        var pendingNotification = ((string Role, string Title, string Message, string Link, string Type, string Severity)?)null;
+
+        var outcomeBatch = await strategy.ExecuteAsync(async () =>
         {
-            transaction = await db.Database.BeginTransactionAsync();
-        }
-
-        var batch = await db.AssessmentBatches
-            .Include(b => b.BatchLearners)
-                .ThenInclude(bl => bl.SummativeAssessmentReport)
-                    .ThenInclude(r => r!.CompanyLearner)
-            .Include(b => b.BatchLearners)
-                .ThenInclude(bl => bl.SummativeAssessmentReport)
-                    .ThenInclude(r => r!.Person)
-            .Include(b => b.BatchLearners)
-                .ThenInclude(bl => bl.SummativeAssessmentReport)
-                    .ThenInclude(r => r!.UnitStandardAssessments)
-            .FirstOrDefaultAsync(b => b.Id == batchId);
-
-        if (batch == null)
-        {
-            throw new KeyNotFoundException($"AssessmentBatch with ID {batchId} not found.");
-        }
-
-        var checklist = new ModerationChecklistEtqTp043
-        {
-            AssessmentBatchId = batch.Id,
-            ValidationBatchNumber = batch.BatchNumber,
-            QualityAssurorUserId = currentUsername,
-            DateOfModeration = DateTime.UtcNow,
-            StageOfModerationCode = batch.AssessmentStageCode,
-            ValidationDecisionCode = isUpheld ? "Upheld" : "Rejected",
-            PrimaryRejectionReasonCode = primaryRejectionReason,
-            VacsPrincipleViolatedCode = vacsViolation,
-            RejectionRemarks = remarks,
-            RemedialActionRequired = remedialAction,
-            TamperProofHashSha256 = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{batch.BatchNumber}:{isUpheld}:{DateTime.UtcNow:O}"))).ToLowerInvariant(),
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = currentUsername
-        };
-
-        if (checklistItems != null)
-        {
-            foreach (var item in checklistItems)
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction = null;
+            if (db.Database.IsRelational())
             {
-                checklist.ChecklistItems.Add(new ModerationChecklistItem
+                transaction = await db.Database.BeginTransactionAsync();
+            }
+
+            try
+            {
+                var batch = await db.AssessmentBatches
+                    .Include(b => b.BatchLearners)
+                        .ThenInclude(bl => bl.SummativeAssessmentReport)
+                            .ThenInclude(r => r!.CompanyLearner)
+                    .Include(b => b.BatchLearners)
+                        .ThenInclude(bl => bl.SummativeAssessmentReport)
+                            .ThenInclude(r => r!.Person)
+                    .Include(b => b.BatchLearners)
+                        .ThenInclude(bl => bl.SummativeAssessmentReport)
+                            .ThenInclude(r => r!.UnitStandardAssessments)
+                    .FirstOrDefaultAsync(b => b.Id == batchId);
+
+                if (batch == null)
                 {
-                    SectionNumber = item.SectionNumber,
-                    CriteriaTitle = item.CriteriaTitle,
-                    EvidenceRequirements = item.EvidenceRequirements,
-                    IsCompliant = item.IsCompliant,
-                    Comments = item.Comments,
+                    throw new KeyNotFoundException($"AssessmentBatch with ID {batchId} not found.");
+                }
+
+                var checklist = new ModerationChecklistEtqTp043
+                {
+                    AssessmentBatchId = batch.Id,
+                    ValidationBatchNumber = batch.BatchNumber,
+                    QualityAssurorUserId = currentUsername,
+                    DateOfModeration = DateTime.UtcNow,
+                    StageOfModerationCode = batch.AssessmentStageCode,
+                    ValidationDecisionCode = isUpheld ? "Upheld" : "Rejected",
+                    PrimaryRejectionReasonCode = primaryRejectionReason,
+                    VacsPrincipleViolatedCode = vacsViolation,
+                    RejectionRemarks = remarks,
+                    RemedialActionRequired = remedialAction,
+                    TamperProofHashSha256 = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{batch.BatchNumber}:{isUpheld}:{DateTime.UtcNow:O}"))).ToLowerInvariant(),
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = currentUsername
-                });
-            }
-        }
-        db.ModerationChecklists.Add(checklist);
+                };
 
-        if (isUpheld)
-        {
-            batch.StatusCode = "Upheld";
-            foreach (var bl in batch.BatchLearners)
-            {
-                bl.LearnerOutcomeStatus = "Upheld";
-                bl.ModifiedAt = DateTime.UtcNow;
-                bl.ModifiedBy = currentUsername;
-
-                var rep = bl.SummativeAssessmentReport;
-                if (rep != null)
+                if (checklistItems != null)
                 {
-                    rep.StatusCode = "CreditsApproved";
-                    rep.ExternalModeratorUserId = currentUsername;
-                    rep.ExternalModeratorApprovalDate = DateTime.UtcNow;
-                    rep.ExternalModeratorComments = remarks;
-                    rep.ModifiedAt = DateTime.UtcNow;
-                    rep.ModifiedBy = currentUsername;
-
-                    if (batch.AssessmentStageCode == "Completion")
+                    foreach (var item in checklistItems)
                     {
-                        if (rep.CompanyLearner != null)
+                        checklist.ChecklistItems.Add(new ModerationChecklistItem
                         {
-                            rep.CompanyLearner.EnrolmentStatusId = "02";
-                            rep.CompanyLearner.EnrolmentStatusCode = "Completed";
-                            rep.CompanyLearner.CompletionDate = batch.ScheduledSiteVisitDate ?? DateTime.UtcNow;
-
-                            var certNo = StatutoryCertificateNumberGenerator.Generate(rep.Person?.RsaIdNumber, rep.Person?.DateOfBirth);
-                            rep.CompanyLearner.CertificateNumber = certNo;
-
-                            var cert = new LearnerCertificate
-                            {
-                                CompanyLearnerId = rep.CompanyLearnerId,
-                                PersonId = rep.PersonId,
-                                SummativeAssessmentReportId = rep.Id,
-                                CertificateNumber = certNo,
-                                QualificationTitle = rep.QualificationTitle,
-                                SaqaQualificationId = rep.SaqaQualificationId,
-                                NqfLevel = rep.NqfLevel,
-                                IssueDate = DateTime.UtcNow,
-                                TamperProofHashSha256 = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{certNo}:{rep.PersonId}:{DateTime.UtcNow:O}"))).ToLowerInvariant(),
-                                CreatedAt = DateTime.UtcNow,
-                                CreatedBy = currentUsername
-                            };
-                            db.LearnerCertificates.Add(cert);
-                        }
-
-                        foreach (var us in rep.UnitStandardAssessments.Where(u => u.CompetencyStatusCode == "Competent"))
-                        {
-                            int? parsedUsId = int.TryParse(us.UnitStandardCode, out var parsed) ? parsed : null;
-                            db.LearnerAssessments.Add(new LearnerAssessment
-                            {
-                                CompanyLearnerId = rep.CompanyLearnerId,
-                                PersonId = rep.PersonId,
-                                UnitStandardId = parsedUsId,
-                                UnitStandardTitle = us.UnitStandardTitle,
-                                QualificationTitle = rep.QualificationTitle ?? string.Empty,
-                                OrganisationId = rep.CompanyLearner?.OrganisationId ?? 1,
-                                AssessmentDate = us.AssessmentDate,
-                                EnrolmentStatusId = "02",
-                                AssessorRegistrationNumber = rep.AssessorRegistrationNumber ?? "SYSTEM",
-                                AssessorEtqaId = "17",
-                                CreatedAt = DateTime.UtcNow,
-                                CreatedBy = currentUsername
-                            });
-                        }
+                            SectionNumber = item.SectionNumber,
+                            CriteriaTitle = item.CriteriaTitle,
+                            EvidenceRequirements = item.EvidenceRequirements,
+                            IsCompliant = item.IsCompliant,
+                            Comments = item.Comments,
+                            CreatedAt = DateTime.UtcNow,
+                            CreatedBy = currentUsername
+                        });
                     }
                 }
-            }
+                db.ModerationChecklists.Add(checklist);
 
-            if (_notificationService != null)
-            {
-                await _notificationService.SendNotificationAsync(
-                    null,
-                    "SDF",
-                    "Assessment & Moderation Outcomes Upheld",
-                    $"Moderation outcomes for Batch {batch.BatchNumber} have been officially Upheld. Qualifications and Statements of Results are ready.",
-                    $"/assessments/batching/{batch.Id}",
-                    "SystemAlert",
-                    "Success",
-                    currentUsername);
-            }
-        }
-        else
-        {
-            batch.StatusCode = "RejectedRemedialRequired";
-            foreach (var bl in batch.BatchLearners)
-            {
-                bl.LearnerOutcomeStatus = "Rejected";
-                bl.RejectionReasonCodes = $"{primaryRejectionReason}:{vacsViolation}";
-                bl.ModifiedAt = DateTime.UtcNow;
-                bl.ModifiedBy = currentUsername;
-
-                if (bl.SummativeAssessmentReport != null)
+                if (isUpheld)
                 {
-                    bl.SummativeAssessmentReport.StatusCode = "RejectedRemedialRequired";
-                    bl.SummativeAssessmentReport.ModifiedAt = DateTime.UtcNow;
-                    bl.SummativeAssessmentReport.ModifiedBy = currentUsername;
-                }
-            }
+                    batch.StatusCode = "Upheld";
+                    foreach (var bl in batch.BatchLearners)
+                    {
+                        bl.LearnerOutcomeStatus = "Upheld";
+                        bl.ModifiedAt = DateTime.UtcNow;
+                        bl.ModifiedBy = currentUsername;
 
-            if (_notificationService != null)
+                        var rep = bl.SummativeAssessmentReport;
+                        if (rep != null)
+                        {
+                            rep.StatusCode = "CreditsApproved";
+                            rep.ExternalModeratorUserId = currentUsername;
+                            rep.ExternalModeratorApprovalDate = DateTime.UtcNow;
+                            rep.ExternalModeratorComments = remarks;
+                            rep.ModifiedAt = DateTime.UtcNow;
+                            rep.ModifiedBy = currentUsername;
+
+                            if (batch.AssessmentStageCode == "Completion")
+                            {
+                                if (rep.CompanyLearner != null)
+                                {
+                                    rep.CompanyLearner.EnrolmentStatusId = "02";
+                                    rep.CompanyLearner.EnrolmentStatusCode = "Completed";
+                                    rep.CompanyLearner.CompletionDate = batch.ScheduledSiteVisitDate ?? DateTime.UtcNow;
+
+                                    var certNo = StatutoryCertificateNumberGenerator.Generate(rep.Person?.RsaIdNumber, rep.Person?.DateOfBirth);
+                                    rep.CompanyLearner.CertificateNumber = certNo;
+
+                                    var cert = new LearnerCertificate
+                                    {
+                                        CompanyLearnerId = rep.CompanyLearnerId,
+                                        PersonId = rep.PersonId,
+                                        SummativeAssessmentReportId = rep.Id,
+                                        CertificateNumber = certNo,
+                                        QualificationTitle = rep.QualificationTitle,
+                                        SaqaQualificationId = rep.SaqaQualificationId,
+                                        NqfLevel = rep.NqfLevel,
+                                        IssueDate = DateTime.UtcNow,
+                                        TamperProofHashSha256 = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{certNo}:{rep.PersonId}:{DateTime.UtcNow:O}"))).ToLowerInvariant(),
+                                        CreatedAt = DateTime.UtcNow,
+                                        CreatedBy = currentUsername
+                                    };
+                                    db.LearnerCertificates.Add(cert);
+                                }
+
+                                foreach (var us in rep.UnitStandardAssessments.Where(u => u.CompetencyStatusCode == "Competent"))
+                                {
+                                    int? parsedUsId = int.TryParse(us.UnitStandardCode, out var parsed) ? parsed : null;
+                                    db.LearnerAssessments.Add(new LearnerAssessment
+                                    {
+                                        CompanyLearnerId = rep.CompanyLearnerId,
+                                        PersonId = rep.PersonId,
+                                        UnitStandardId = parsedUsId,
+                                        UnitStandardTitle = us.UnitStandardTitle,
+                                        QualificationTitle = rep.QualificationTitle ?? string.Empty,
+                                        OrganisationId = rep.CompanyLearner?.OrganisationId ?? 1,
+                                        AssessmentDate = us.AssessmentDate,
+                                        EnrolmentStatusId = "02",
+                                        AssessorRegistrationNumber = rep.AssessorRegistrationNumber ?? "SYSTEM",
+                                        AssessorEtqaId = "17",
+                                        CreatedAt = DateTime.UtcNow,
+                                        CreatedBy = currentUsername
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    if (_notificationService != null)
+                    {
+                        pendingNotification = (
+                            "SDF",
+                            "Assessment & Moderation Outcomes Upheld",
+                            $"Moderation outcomes for Batch {batch.BatchNumber} have been officially Upheld. Qualifications and Statements of Results are ready.",
+                            $"/assessments/batching/{batch.Id}",
+                            "SystemAlert",
+                            "Success");
+                    }
+                }
+                else
+                {
+                    batch.StatusCode = "RejectedRemedialRequired";
+                    foreach (var bl in batch.BatchLearners)
+                    {
+                        bl.LearnerOutcomeStatus = "Rejected";
+                        bl.RejectionReasonCodes = $"{primaryRejectionReason}:{vacsViolation}";
+                        bl.ModifiedAt = DateTime.UtcNow;
+                        bl.ModifiedBy = currentUsername;
+
+                        if (bl.SummativeAssessmentReport != null)
+                        {
+                            bl.SummativeAssessmentReport.StatusCode = "RejectedRemedialRequired";
+                            bl.SummativeAssessmentReport.ModifiedAt = DateTime.UtcNow;
+                            bl.SummativeAssessmentReport.ModifiedBy = currentUsername;
+                        }
+                    }
+
+                    if (_notificationService != null)
+                    {
+                        pendingNotification = (
+                            "SDF",
+                            "Assessment Moderation Rejected — Remedial Work Required",
+                            $"Batch {batch.BatchNumber} rejected. Reason: {primaryRejectionReason} ({vacsViolation}). Remedial Action: {remedialAction}",
+                            $"/assessments/batching/{batch.Id}",
+                            "SystemAlert",
+                            "Error");
+                    }
+                }
+
+                batch.ModifiedAt = DateTime.UtcNow;
+                batch.ModifiedBy = currentUsername;
+                _audit.LogAction(db, "AssessmentBatch", batch.Id, "RecordExternalModerationOutcome", currentUsername, null, batch);
+                await db.SaveChangesAsync();
+
+                if (transaction != null)
+                {
+                    await transaction.CommitAsync();
+                }
+
+                return batch;
+            }
+            catch
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+                throw;
+            }
+            finally
+            {
+                transaction?.Dispose();
+            }
+        });
+
+        if (pendingNotification.HasValue && _notificationService != null)
+        {
+            var notif = pendingNotification.Value;
+            try
             {
                 await _notificationService.SendNotificationAsync(
                     null,
-                    "SDF",
-                    "Assessment Moderation Rejected — Remedial Work Required",
-                    $"Batch {batch.BatchNumber} rejected. Reason: {primaryRejectionReason} ({vacsViolation}). Remedial Action: {remedialAction}",
-                    $"/assessments/batching/{batch.Id}",
-                    "SystemAlert",
-                    "Error",
+                    notif.Role,
+                    notif.Title,
+                    notif.Message,
+                    notif.Link,
+                    notif.Type,
+                    notif.Severity,
                     currentUsername);
+            }
+            catch
+            {
+                // Non-fatal post-commit side-effect fault tolerance
             }
         }
 
-        batch.ModifiedAt = DateTime.UtcNow;
-        batch.ModifiedBy = currentUsername;
-        _audit.LogAction(db, "AssessmentBatch", batch.Id, "RecordExternalModerationOutcome", currentUsername, null, batch);
-        await db.SaveChangesAsync();
-
-        if (transaction != null)
-        {
-            await transaction.CommitAsync();
-            await transaction.DisposeAsync();
-        }
-
-        return batch;
+        return outcomeBatch;
     }
     public async Task<SummativeAssessmentReport> PerformEtqaExternalModerationAsync(
         int reportId,
@@ -1164,7 +1203,7 @@ public class SummativeAssessmentAndModerationService : ISummativeAssessmentAndMo
         using var db = await _contextFactory.CreateDbContextAsync();
         var list = await db.CompanyLearners
             .Where(c => c.TrainingProviderId == providerId && !string.IsNullOrEmpty(c.QualificationTitle))
-            .Select(c => c.QualificationTitle)
+            .Select(c => c.QualificationTitle!)
             .Distinct()
             .ToListAsync();
 

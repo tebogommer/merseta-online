@@ -141,6 +141,16 @@ public class BankingDetailsService : IBankingDetailsService
         using var db = await _factory.CreateDbContextAsync();
         var entity = await db.BankingDetails.FindAsync(id) ?? throw new InvalidOperationException($"Banking details #{id} not found.");
 
+        // Segregation of Duties (Maker-Checker / Dual Authorisation Control)
+        if (!string.IsNullOrEmpty(entity.FirstSignoffUserId) && string.Equals(entity.FirstSignoffUserId, currentUsername, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Dual Authorisation Governance breach: The officer who completed the first banking sign-off cannot perform the second sign-off.");
+        }
+        if (!string.IsNullOrEmpty(entity.CreatedBy) && string.Equals(entity.CreatedBy, currentUsername, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Dual Authorisation Governance breach: The user who submitted the banking details cannot perform the final approval.");
+        }
+
         entity.SecondSignoffUserId = currentUsername;
         entity.SecondSignoffDate = DateTime.UtcNow;
         entity.SecondSignoffNotes = notes;

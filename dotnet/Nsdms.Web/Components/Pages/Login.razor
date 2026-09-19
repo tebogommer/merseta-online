@@ -3,16 +3,22 @@
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Hosting
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Services
 @using Nsdms.Web.Services
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
 @inject AuthenticationStateProvider AuthStateProvider
+@inject IEntraResilienceService EntraService
+@inject IWebHostEnvironment HostEnvironment
+@inject ISystemConfigurationService ConfigService
 
-<PageTitle>Sign In - merSETA NSDMS</PageTitle>
+<PageTitle>Sign in - merSETA NSDMS</PageTitle>
 
-<div class="d-flex align-center justify-center pa-2" style="width: 100%;">
-    <div style="width: 100%; max-width: 480px;">
+<div class="d-flex align-center justify-center pa-2 pa-sm-4" style="width: 100%;">
+    <div style="width: 100%; max-width: 520px;">
         <!-- Brand Header -->
         <div class="text-center mb-6">
             <div class="d-inline-flex align-center justify-center rounded-circle pa-3 mb-3" 
@@ -24,6 +30,19 @@
                 National Skills Development Management System
             </MudText>
         </div>
+
+        <!-- Entra Outage Automated Circuit-Breaker Alert -->
+        @if (_isOutageModeActive)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="mb-4 rounded-xl" Elevation="3" Icon="@Icons.Material.Filled.WarningAmber">
+                <div class="d-flex flex-column gap-1">
+                    <span class="fw-bold" style="font-size: 0.95rem;">Microsoft Entra ID outage contingency active</span>
+                    <span style="font-size: 0.82rem; opacity: 0.95;">
+                        Microsoft cloud directory services are currently degraded or unreachable. merSETA employees may sign in using their self-service <strong>disaster recovery backup password</strong>.
+                    </span>
+                </div>
+            </MudAlert>
+        }
 
         <!-- Alert Notifications -->
         @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -40,74 +59,175 @@
         }
 
         <!-- Login Card -->
-        <MudCard Elevation="4" Class="rounded-xl pa-6 bg-surface" Style="border: 1px solid var(--mud-palette-lines-default);">
+        <MudCard Elevation="4" Class="rounded-xl pa-4 pa-sm-6" Style="border: 1px solid var(--mud-palette-lines-default); background-color: var(--mud-palette-surface);">
             <div class="mb-4">
-                <MudText Typo="Typo.h6" Class="fw-bold">Sign in to your account</MudText>
+                <div class="d-flex align-center justify-space-between">
+                    <MudText Typo="Typo.h6" Class="fw-bold">Sign in to your account</MudText>
+                    @if (_isOutageModeActive)
+                    {
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CloudOff">
+                            DR mode active
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.CloudDone">
+                            Entra online
+                        </MudChip>
+                    }
+                </div>
                 <MudText Typo="Typo.caption" Color="Color.Secondary">
-                    Enter your authorized statutory credentials or select a workspace persona below.
+                    Authenticate using authorized statutory credentials or contingency backup access.
                 </MudText>
             </div>
 
-            <!-- Standard HTML form posting to /api/auth/login for reliable HTTP Cookie issuance -->
-            <form method="post" action="/api/auth/login">
-                <AntiforgeryToken />
-                <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+            <!-- Tabbed Interface: Standard vs Emergency Backup Password -->
+            <MudTabs @bind-ActivePanelIndex="_activeTabIndex" Rounded="true" Centered="false" ApplyEffectsToContainer="true" Class="mb-4" Color="Color.Transparent">
+                
+                <!-- Tab 1: Standard / Entra SSO Login -->
+                <MudTabPanel Text="Standard access" Icon="@Icons.Material.Filled.Login">
+                    <form method="post" action="/api/auth/login" class="mt-3">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="returnUrl" value="@ReturnUrl" />
 
-                <div class="mb-3">
-                    <label for="username" class="mud-input-label mud-typography-caption mb-1 d-block fw-bold">
-                        Username or email address
-                    </label>
-                    <input type="text"
-                           id="username"
-                           name="username"
-                           required
-                           value="@_username"
-                           placeholder="e.g. sysadmin@merseta.org.za"
-                           class="mud-input-slot mud-input-root mud-input-root-outlined py-2 px-3 w-100 rounded"
-                           style="width: 100%; height: 42px; border: 1px solid var(--mud-palette-lines-inputs); background: var(--mud-palette-background); color: var(--mud-palette-text-primary);" />
-                </div>
+                        <div class="mb-3">
+                            <label for="username" class="mud-input-label mud-typography-caption mb-1 d-block fw-bold">
+                                Username or email address
+                            </label>
+                            <input type="text"
+                                   id="username"
+                                   name="username"
+                                   required
+                                   value="@_username"
+                                   placeholder="e.g. sysadmin@merseta.org.za"
+                                   class="mud-input-slot mud-input-root mud-input-root-outlined py-2 px-3 w-100 rounded"
+                                   style="width: 100%; height: 42px; border: 1px solid var(--mud-palette-lines-inputs); background: var(--mud-palette-background); color: var(--mud-palette-text-primary);" />
+                        </div>
 
-                <div class="mb-3">
-                    <div class="d-flex justify-space-between align-center mb-1">
-                        <label for="password" class="mud-input-label mud-typography-caption fw-bold">
-                            Password
-                        </label>
+                        <div class="mb-3">
+                            <div class="d-flex justify-space-between align-center mb-1">
+                                <label for="password" class="mud-input-label mud-typography-caption fw-bold">
+                                    Password
+                                </label>
+                            </div>
+                            <div class="d-flex align-center position-relative">
+                                <input type="@(_showPassword ? "text" : "password")"
+                                       id="password"
+                                       name="password"
+                                       required
+                                       value="@_password"
+                                       placeholder="Enter your account password"
+                                       class="mud-input-slot mud-input-root mud-input-root-outlined py-2 px-3 w-100 rounded"
+                                       style="width: 100%; height: 42px; padding-right: 44px; border: 1px solid var(--mud-palette-lines-inputs); background: var(--mud-palette-background); color: var(--mud-palette-text-primary);" />
+                                <MudTooltip Text="@(_showPassword ? "Hide password" : "Show password")">
+                                    <MudIconButton Icon="@(_showPassword ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                                   Color="Color.Default"
+                                                   Size="Size.Small"
+                                                   OnClick="@TogglePasswordVisibility"
+                                                   aria-label="@(_showPassword ? "Hide password" : "Show password")"
+                                                   Class="position-absolute"
+                                                   Style="right: 6px;" />
+                                </MudTooltip>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-2">
+                            <label class="d-flex align-center gap-2 cursor-pointer" style="font-size: 0.85rem; color: var(--mud-palette-text-secondary);">
+                                <input type="checkbox" name="rememberMe" value="true" checked />
+                                <span>Keep me signed in (@(_gracePeriodDays)-day persistent session)</span>
+                            </label>
+                        </div>
+
+                        <button type="submit" 
+                                class="mud-button-root mud-button mud-button-filled mud-button-filled-primary mud-ripple w-100 rounded py-2 fw-bold d-flex align-center justify-center gap-2"
+                                style="width: 100%; height: 44px; text-transform: none; font-weight: 600; cursor: pointer; border: none; background-color: var(--mud-palette-primary); color: var(--mud-palette-primary-contrast-text);">
+                            <svg style="width: 18px; height: 18px; fill: currentColor;" viewBox="0 0 24 24">
+                                <path d="M10 17l5-5-5-5v10zM2 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4h-2V5H4v14h12v-4h2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/>
+                            </svg>
+                            <span>Sign in with standard credentials</span>
+                        </button>
+                    </form>
+                </MudTabPanel>
+
+                <!-- Tab 2: Emergency Disaster Recovery Backup Password -->
+                <MudTabPanel Text="Emergency staff login" 
+                             Icon="@Icons.Material.Filled.Shield" 
+                             BadgeData="@(_isOutageModeActive ? "Active" : null)" 
+                             BadgeColor="Color.Warning">
+                    
+                    <div class="pa-2 mb-3 rounded-lg" style="background-color: var(--mud-palette-background); border: 1px solid var(--mud-palette-lines-default);">
+                        <div class="d-flex align-center gap-2 mb-1">
+                            <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Primary" Size="Size.Small" />
+                            <MudText Typo="Typo.caption" Class="fw-bold">merSETA disaster recovery contingency</MudText>
+                        </div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size: 0.74rem;">
+                            Valid for merSETA staff during Microsoft Entra outages. Access is strictly validated against the last known directory snapshot; accounts disabled on Entra are permanently blocked.
+                        </MudText>
                     </div>
-                    <div class="d-flex align-center position-relative">
-                        <input type="@(_showPassword ? "text" : "password")"
-                               id="password"
-                               name="password"
-                               required
-                               value="@_password"
-                               placeholder="Enter your account password"
-                               class="mud-input-slot mud-input-root mud-input-root-outlined py-2 px-3 w-100 rounded"
-                               style="width: 100%; height: 42px; border: 1px solid var(--mud-palette-lines-inputs); background: var(--mud-palette-background); color: var(--mud-palette-text-primary);" />
-                    </div>
-                </div>
 
-                <div class="d-flex justify-space-between align-center mb-4">
-                    <label class="d-flex align-center gap-2 cursor-pointer" style="font-size: 0.85rem; color: var(--mud-palette-text-secondary);">
-                        <input type="checkbox" name="rememberMe" value="true" checked />
-                        <span>Keep me signed in</span>
-                    </label>
-                    <MudButton Variant="Variant.Text" 
-                               Color="Color.Primary" 
-                               Size="Size.Small" 
-                               OnClick="@TogglePasswordVisibility"
-                               Style="text-transform: none; font-size: 0.75rem;">
-                        @(_showPassword ? "Hide password" : "Show password")
-                    </MudButton>
-                </div>
+                    <form method="post" action="/api/auth/backup-login">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="returnUrl" value="@ReturnUrl" />
 
-                <button type="submit" 
-                        class="mud-button-root mud-button mud-button-filled mud-button-filled-primary mud-ripple w-100 rounded py-2 fw-bold d-flex align-center justify-center gap-2"
-                        style="width: 100%; height: 44px; text-transform: none; font-weight: 600; cursor: pointer; border: none; background-color: var(--mud-palette-primary); color: var(--mud-palette-primary-contrast-text);">
-                    <svg style="width: 18px; height: 18px; fill: currentColor;" viewBox="0 0 24 24">
-                        <path d="M10 17l5-5-5-5v10zM2 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4h-2V5H4v14h12v-4h2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/>
-                    </svg>
-                    <span>Sign in</span>
-                </button>
-            </form>
+                        <div class="mb-3">
+                            <label for="backupUsername" class="mud-input-label mud-typography-caption mb-1 d-block fw-bold">
+                                merSETA staff email address
+                            </label>
+                            <input type="text"
+                                   id="backupUsername"
+                                   name="username"
+                                   required
+                                   value="@_backupUsername"
+                                   placeholder="e.g. employee@merseta.org.za"
+                                   class="mud-input-slot mud-input-root mud-input-root-outlined py-2 px-3 w-100 rounded"
+                                   style="width: 100%; height: 42px; border: 1px solid var(--mud-palette-lines-inputs); background: var(--mud-palette-background); color: var(--mud-palette-text-primary);" />
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-space-between align-center mb-1">
+                                <label for="backupPassword" class="mud-input-label mud-typography-caption fw-bold">
+                                    Disaster recovery backup password
+                                </label>
+                            </div>
+                            <div class="d-flex align-center position-relative">
+                                <input type="@(_showBackupPassword ? "text" : "password")"
+                                       id="backupPassword"
+                                       name="backupPassword"
+                                       required
+                                       value="@_backupPassword"
+                                       placeholder="Enter your emergency backup password"
+                                       class="mud-input-slot mud-input-root mud-input-root-outlined py-2 px-3 w-100 rounded"
+                                       style="width: 100%; height: 42px; padding-right: 44px; border: 1px solid var(--mud-palette-lines-inputs); background: var(--mud-palette-background); color: var(--mud-palette-text-primary);" />
+                                <MudTooltip Text="@(_showBackupPassword ? "Hide password" : "Show password")">
+                                    <MudIconButton Icon="@(_showBackupPassword ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                                   Color="Color.Default"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => _showBackupPassword = !_showBackupPassword)"
+                                                   aria-label="@(_showBackupPassword ? "Hide password" : "Show password")"
+                                                   Class="position-absolute"
+                                                   Style="right: 6px;" />
+                                </MudTooltip>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-2">
+                            <label class="d-flex align-center gap-2 cursor-pointer" style="font-size: 0.85rem; color: var(--mud-palette-text-secondary);">
+                                <input type="checkbox" name="rememberMe" value="true" checked />
+                                <span>Keep me signed in (@(_gracePeriodDays)-day persistent ticket)</span>
+                            </label>
+                        </div>
+
+                        <button type="submit" 
+                                class="mud-button-root mud-button mud-button-filled mud-button-filled-warning mud-ripple w-100 rounded py-2 fw-bold d-flex align-center justify-center gap-2"
+                                style="width: 100%; height: 44px; text-transform: none; font-weight: 600; cursor: pointer; border: none; background-color: var(--mud-palette-warning); color: var(--mud-palette-warning-contrast-text);">
+                            <svg style="width: 18px; height: 18px; fill: currentColor;" viewBox="0 0 24 24">
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                            </svg>
+                            <span>Sign in with emergency backup password</span>
+                        </button>
+                    </form>
+                </MudTabPanel>
+            </MudTabs>
 
             <MudDivider Class="my-4" />
 
@@ -123,7 +243,7 @@
                                StartIcon="@Icons.Material.Filled.PersonAdd"
                                Href="/register"
                                Style="text-transform: none; font-weight: 600; height: 40px;">
-                        Self-Service User Registration
+                        Self-service user registration
                     </MudButton>
                     <MudButton Variant="Variant.Text"
                                Color="Color.Secondary"
@@ -136,40 +256,52 @@
                 </div>
             </div>
 
-            <MudDivider Class="my-4" />
+            @if (HostEnvironment.IsDevelopment())
+            {
+                <MudDivider Class="my-4" />
 
-            <!-- Quick Demo Credentials for Fast Evaluation -->
-            <div>
-                <MudText Typo="Typo.caption" Class="fw-bold d-block mb-2" Color="Color.Secondary">
-                    Quick test accounts (Password: MerSETA@2026!)
-                </MudText>
-                <div class="d-flex flex-wrap gap-1">
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" 
-                             OnClick="@(() => SetCredentials("sysadmin@merseta.org.za", "MerSETA@2026!"))">
-                        SysAdmin (Proposer)
-                    </MudChip>
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary" 
-                             OnClick="@(() => SetCredentials("admin.checker@merseta.org.za", "MerSETA@2026!"))">
-                        Admin (Reviewer / Approver)
-                    </MudChip>
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" 
-                             OnClick="@(() => SetCredentials("clo.officer@merseta.org.za", "MerSETA@2026!"))">
-                        CLO Officer
-                    </MudChip>
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" 
-                             OnClick="@(() => SetCredentials("sdf.employer@toyota.co.za", "MerSETA@2026!"))">
-                        SDF Facilitator
-                    </MudChip>
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success" 
-                             OnClick="@(() => SetCredentials("finance.officer@merseta.org.za", "MerSETA@2026!"))">
-                        Finance
-                    </MudChip>
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary" 
-                             OnClick="@(() => SetCredentials("review.committee@merseta.org.za", "MerSETA@2026!"))">
-                        Committee
-                    </MudChip>
+                <!-- Quick Demo Credentials for Fast Evaluation (Development Only) -->
+                <div>
+                    <div class="d-flex align-center justify-space-between mb-2">
+                        <MudText Typo="Typo.caption" Class="fw-bold" Color="Color.Secondary">
+                            Quick test accounts (Password: MerSETA@2026!)
+                        </MudText>
+                        <MudButton Variant="Variant.Text" 
+                                   Color="Color.Warning" 
+                                   Size="Size.Small" 
+                                   Style="text-transform: none; font-size: 0.7rem;"
+                                   OnClick="ToggleSimulatedOutage">
+                            @(_isOutageModeActive ? "Disable simulated outage" : "Simulate Entra outage")
+                        </MudButton>
+                    </div>
+                    <div class="d-flex flex-wrap gap-1">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" 
+                                 OnClick="@(() => SetCredentials("sysadmin@merseta.org.za", "MerSETA@2026!", false))">
+                            SysAdmin (standard)
+                        </MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Warning" 
+                                 OnClick="@(() => SetCredentials("sysadmin@merseta.org.za", "MerSETA@2026!", true))">
+                            SysAdmin (DR backup password)
+                        </MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary" 
+                                 OnClick="@(() => SetCredentials("admin.checker@merseta.org.za", "MerSETA@2026!", false))">
+                            Admin checker
+                        </MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" 
+                                 OnClick="@(() => SetCredentials("clo.officer@merseta.org.za", "MerSETA@2026!", false))">
+                            CLO officer
+                        </MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" 
+                                 OnClick="@(() => SetCredentials("sdf.employer@toyota.co.za", "MerSETA@2026!", false))">
+                            SDF facilitator
+                        </MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success" 
+                                 OnClick="@(() => SetCredentials("finance.officer@merseta.org.za", "MerSETA@2026!", false))">
+                            Finance officer
+                        </MudChip>
+                    </div>
                 </div>
-            </div>
+            }
         </MudCard>
 
         <!-- STAKEHOLDER REGISTRATION PATHWAYS DIALOG -->
@@ -177,7 +309,7 @@
             <TitleContent>
                 <div class="d-flex align-center gap-2">
                     <MudIcon Icon="@Icons.Material.Filled.AppRegistration" Color="Color.Primary" />
-                    <MudText Typo="Typo.h6" Class="fw-bold">Statutory Registration Pathways</MudText>
+                    <MudText Typo="Typo.h6" Class="fw-bold">Statutory registration pathways</MudText>
                 </div>
             </TitleContent>
             <DialogContent>
@@ -191,8 +323,8 @@
                         <div class="d-flex align-center gap-3">
                             <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Color="Color.Primary" />
                             <div>
-                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Individual Self-Service Registration</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Register a personal stakeholder profile with RSA ID or Passport verification</MudText>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Individual self-service registration</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Register a personal stakeholder profile with RSA ID or passport verification</MudText>
                             </div>
                         </div>
                     </MudPaper>
@@ -203,7 +335,7 @@
                         <div class="d-flex align-center gap-3">
                             <MudIcon Icon="@Icons.Material.Filled.Business" Color="Color.Info" />
                             <div>
-                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Skills Development Facilitator (SDF)</MudText>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Skills development facilitator (SDF)</MudText>
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">Register and appoint an SDF profile linked to an employer organisation</MudText>
                             </div>
                         </div>
@@ -215,8 +347,8 @@
                         <div class="d-flex align-center gap-3">
                             <MudIcon Icon="@Icons.Material.Filled.FactCheck" Color="Color.Warning" />
                             <div>
-                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Assessor &amp; Moderator Registration</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Apply for ETQA Assessor or Moderator accreditation with 3-year industry verification</MudText>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Assessor &amp; moderator registration</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Apply for ETQA assessor or moderator accreditation with 3-year industry verification</MudText>
                             </div>
                         </div>
                     </MudPaper>
@@ -227,7 +359,7 @@
                         <div class="d-flex align-center gap-3">
                             <MudIcon Icon="@Icons.Material.Filled.School" Color="Color.Success" />
                             <div>
-                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Learner &amp; Apprentice Agreement</MudText>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Learner &amp; apprentice agreement</MudText>
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">Register tripartite learnership or apprenticeship contracts</MudText>
                             </div>
                         </div>
@@ -239,8 +371,8 @@
                         <div class="d-flex align-center gap-3">
                             <MudIcon Icon="@Icons.Material.Filled.WorkspacePremium" Color="Color.Secondary" />
                             <div>
-                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Bursary Agreement Registration</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Apply for merSETA funded, institution, or donor bursaries</MudText>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Bursary agreement registration</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Apply for merSETA-funded, institution, or donor bursaries</MudText>
                             </div>
                         </div>
                     </MudPaper>
@@ -256,7 +388,7 @@
             <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size: 0.72rem;">
                 Official system of the Manufacturing, Engineering and Related Services SETA.
                 <br />
-                Protected by ASP.NET Core Identity, PBKDF2 cryptography, and POPIA statutory controls.
+                Protected by ASP.NET Core Identity, Microsoft Entra ID Federation, PBKDF2 cryptography &amp; POPIA controls.
             </MudText>
         </div>
     </div>
@@ -272,9 +404,51 @@
     [SupplyParameterFromQuery(Name = "loggedOut")]
     public bool IsLoggedOut { get; set; }
 
-    private string _username = "sysadmin@merseta.org.za";
-    private string _password = "MerSETA@2026!";
+    [SupplyParameterFromQuery(Name = "backupMode")]
+    public bool IsBackupMode { get; set; }
+
+    private string _username = "";
+    private string _password = "";
     private bool _showPassword = false;
+
+    private string _backupUsername = "";
+    private string _backupPassword = "";
+    private bool _showBackupPassword = false;
+
+    private int _activeTabIndex = 0;
+    private bool _isOutageModeActive = false;
+    private int _gracePeriodDays = 14;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _gracePeriodDays = await ConfigService.GetValueAsync<int>("Auth:EntraOfflineGracePeriodDays", 14);
+
+        if (HostEnvironment.IsDevelopment())
+        {
+            _username = "sysadmin@merseta.org.za";
+            _password = "MerSETA@2026!";
+            _backupUsername = "sysadmin@merseta.org.za";
+            _backupPassword = "MerSETA@2026!";
+        }
+
+        try
+        {
+            var health = await EntraService.CheckEntraServiceHealthAsync();
+            _isOutageModeActive = health == EntraHealthStatus.OutageDetected || health == EntraHealthStatus.ManualOverride || IsBackupMode;
+            if (_isOutageModeActive || IsBackupMode)
+            {
+                _activeTabIndex = 1;
+            }
+        }
+        catch
+        {
+            if (IsBackupMode)
+            {
+                _activeTabIndex = 1;
+                _isOutageModeActive = true;
+            }
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -298,12 +472,38 @@
         _showPassword = !_showPassword;
     }
 
-    private void SetCredentials(string username, string password)
+    private void SetCredentials(string username, string password, bool forBackup)
     {
-        _username = username;
-        _password = password;
-        Snackbar.Add($"Loaded credentials for {username}", Severity.Info);
+        if (forBackup)
+        {
+            _backupUsername = username;
+            _backupPassword = password;
+            _activeTabIndex = 1;
+            Snackbar.Add($"Loaded emergency backup credentials for {username}", Severity.Warning);
+        }
+        else
+        {
+            _username = username;
+            _password = password;
+            _activeTabIndex = 0;
+            Snackbar.Add($"Loaded credentials for {username}", Severity.Info);
+        }
         StateHasChanged();
+    }
+
+    private void ToggleSimulatedOutage()
+    {
+        _isOutageModeActive = !_isOutageModeActive;
+        if (_isOutageModeActive)
+        {
+            _activeTabIndex = 1;
+            Snackbar.Add("Simulating Microsoft Entra outage. Emergency fallback active.", Severity.Warning);
+        }
+        else
+        {
+            _activeTabIndex = 0;
+            Snackbar.Add("Microsoft Entra simulation normal.", Severity.Success);
+        }
     }
 
     private bool _showRegistrationDialog = false;

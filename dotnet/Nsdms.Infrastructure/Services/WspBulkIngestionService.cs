@@ -1,13 +1,16 @@
+using System.Data;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using ClosedXML.Excel;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nsdms.Application.Common;
 using Nsdms.Application.Common.Interfaces;
 using Nsdms.Application.Services;
 using Nsdms.Domain.Entities;
+using Nsdms.Infrastructure.Data;
 
 namespace Nsdms.Infrastructure.Services;
 
@@ -92,14 +95,8 @@ public class WspBulkIngestionService : IWspBulkIngestionService
             throw new InvalidOperationException("The uploaded spreadsheet contains no data rows.");
         }
 
-        // Add staged rows in chunks
-        const int chunkSize = 1000;
-        for (int i = 0; i < stagedRows.Count; i += chunkSize)
-        {
-            var chunk = stagedRows.Skip(i).Take(chunkSize);
-            db.WspBulkImportStagings.AddRange(chunk);
-            await db.SaveChangesAsync();
-        }
+        // Stage rows via fast streaming SqlBulkCopy (with resilient EF Core fallback)
+        await WriteStagedRowsAsync(db, stagedRows);
 
         batch.TotalRowCount = stagedRows.Count;
 
@@ -642,5 +639,144 @@ public class WspBulkIngestionService : IWspBulkIngestionService
         await db.SaveChangesAsync();
 
         return batch;
+    }
+
+    private async Task WriteStagedRowsAsync(INsdmsDbContext db, IList<WspBulkImportStaging> stagedRows)
+    {
+        if (db is NsdmsDbContext concreteDb && concreteDb.Database.IsSqlServer())
+        {
+            try
+            {
+                await WriteViaSqlBulkCopyAsync(concreteDb, stagedRows);
+                return;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "SqlBulkCopy for WspBulkImportStaging encountered an issue. Falling back to EF Core chunked insertion.");
+            }
+        }
+
+        // Resilient fallback (or in-memory/test mode)
+        const int chunkSize = 1000;
+        for (int i = 0; i < stagedRows.Count; i += chunkSize)
+        {
+            var chunk = stagedRows.Skip(i).Take(chunkSize);
+            db.WspBulkImportStagings.AddRange(chunk);
+            await db.SaveChangesAsync();
+        }
+    }
+
+    private async Task WriteViaSqlBulkCopyAsync(NsdmsDbContext context, IList<WspBulkImportStaging> records)
+    {
+        var connection = (SqlConnection)context.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open)
+        {
+            await connection.OpenAsync();
+        }
+
+        using var table = BuildStagingDataTable(records);
+        using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.CheckConstraints | SqlBulkCopyOptions.FireTriggers, null)
+        {
+            DestinationTableName = "dbo.WspBulkImportStaging",
+            BatchSize = Math.Min(5000, records.Count),
+            BulkCopyTimeout = 120
+        };
+
+        bulkCopy.ColumnMappings.Add("BatchId", "BatchId");
+        bulkCopy.ColumnMappings.Add("RowIndex", "RowIndex");
+        bulkCopy.ColumnMappings.Add("RawIdType", "RawIdType");
+        bulkCopy.ColumnMappings.Add("RawIdNumber", "RawIdNumber");
+        bulkCopy.ColumnMappings.Add("RawFirstName", "RawFirstName");
+        bulkCopy.ColumnMappings.Add("RawLastName", "RawLastName");
+        bulkCopy.ColumnMappings.Add("RawGenderCode", "RawGenderCode");
+        bulkCopy.ColumnMappings.Add("RawEquityCode", "RawEquityCode");
+        bulkCopy.ColumnMappings.Add("RawNationalityCode", "RawNationalityCode");
+        bulkCopy.ColumnMappings.Add("RawOfoCode", "RawOfoCode");
+        bulkCopy.ColumnMappings.Add("RawSpecialisationCode", "RawSpecialisationCode");
+        bulkCopy.ColumnMappings.Add("RawInterventionTypeCode", "RawInterventionTypeCode");
+        bulkCopy.ColumnMappings.Add("RawQualificationCode", "RawQualificationCode");
+        bulkCopy.ColumnMappings.Add("RawSkillsProgramCode", "RawSkillsProgramCode");
+        bulkCopy.ColumnMappings.Add("RawSkillsSetCode", "RawSkillsSetCode");
+        bulkCopy.ColumnMappings.Add("RawEmploymentTypeCode", "RawEmploymentTypeCode");
+        bulkCopy.ColumnMappings.Add("RawProviderTypeCode", "RawProviderTypeCode");
+        bulkCopy.ColumnMappings.Add("RawTrainingDeliveryMethodCode", "RawTrainingDeliveryMethodCode");
+        bulkCopy.ColumnMappings.Add("RawMunicipalityCode", "RawMunicipalityCode");
+        bulkCopy.ColumnMappings.Add("RawStartDate", "RawStartDate");
+        bulkCopy.ColumnMappings.Add("RawEndDate", "RawEndDate");
+        bulkCopy.ColumnMappings.Add("RawEstimatedCost", "RawEstimatedCost");
+        bulkCopy.ColumnMappings.Add("RawBeneficiaryCount", "RawBeneficiaryCount");
+        bulkCopy.ColumnMappings.Add("IsValid", "IsValid");
+        bulkCopy.ColumnMappings.Add("IsCommitted", "IsCommitted");
+        bulkCopy.ColumnMappings.Add("CreatedAt", "CreatedAt");
+        bulkCopy.ColumnMappings.Add("CreatedBy", "CreatedBy");
+
+        await bulkCopy.WriteToServerAsync(table);
+    }
+
+    private DataTable BuildStagingDataTable(IList<WspBulkImportStaging> records)
+    {
+        var table = new DataTable("WspBulkImportStaging");
+        table.Columns.Add("BatchId", typeof(int));
+        table.Columns.Add("RowIndex", typeof(int));
+        table.Columns.Add("RawIdType", typeof(string));
+        table.Columns.Add("RawIdNumber", typeof(string));
+        table.Columns.Add("RawFirstName", typeof(string));
+        table.Columns.Add("RawLastName", typeof(string));
+        table.Columns.Add("RawGenderCode", typeof(string));
+        table.Columns.Add("RawEquityCode", typeof(string));
+        table.Columns.Add("RawNationalityCode", typeof(string));
+        table.Columns.Add("RawOfoCode", typeof(string));
+        table.Columns.Add("RawSpecialisationCode", typeof(string));
+        table.Columns.Add("RawInterventionTypeCode", typeof(string));
+        table.Columns.Add("RawQualificationCode", typeof(string));
+        table.Columns.Add("RawSkillsProgramCode", typeof(string));
+        table.Columns.Add("RawSkillsSetCode", typeof(string));
+        table.Columns.Add("RawEmploymentTypeCode", typeof(string));
+        table.Columns.Add("RawProviderTypeCode", typeof(string));
+        table.Columns.Add("RawTrainingDeliveryMethodCode", typeof(string));
+        table.Columns.Add("RawMunicipalityCode", typeof(string));
+        table.Columns.Add("RawStartDate", typeof(string));
+        table.Columns.Add("RawEndDate", typeof(string));
+        table.Columns.Add("RawEstimatedCost", typeof(string));
+        table.Columns.Add("RawBeneficiaryCount", typeof(string));
+        table.Columns.Add("IsValid", typeof(bool));
+        table.Columns.Add("IsCommitted", typeof(bool));
+        table.Columns.Add("CreatedAt", typeof(DateTime));
+        table.Columns.Add("CreatedBy", typeof(string));
+
+        foreach (var r in records)
+        {
+            table.Rows.Add(
+                r.BatchId,
+                r.RowIndex,
+                (object?)r.RawIdType ?? DBNull.Value,
+                (object?)r.RawIdNumber ?? DBNull.Value,
+                (object?)r.RawFirstName ?? DBNull.Value,
+                (object?)r.RawLastName ?? DBNull.Value,
+                (object?)r.RawGenderCode ?? DBNull.Value,
+                (object?)r.RawEquityCode ?? DBNull.Value,
+                (object?)r.RawNationalityCode ?? DBNull.Value,
+                (object?)r.RawOfoCode ?? DBNull.Value,
+                (object?)r.RawSpecialisationCode ?? DBNull.Value,
+                (object?)r.RawInterventionTypeCode ?? DBNull.Value,
+                (object?)r.RawQualificationCode ?? DBNull.Value,
+                (object?)r.RawSkillsProgramCode ?? DBNull.Value,
+                (object?)r.RawSkillsSetCode ?? DBNull.Value,
+                (object?)r.RawEmploymentTypeCode ?? DBNull.Value,
+                (object?)r.RawProviderTypeCode ?? DBNull.Value,
+                (object?)r.RawTrainingDeliveryMethodCode ?? DBNull.Value,
+                (object?)r.RawMunicipalityCode ?? DBNull.Value,
+                (object?)r.RawStartDate ?? DBNull.Value,
+                (object?)r.RawEndDate ?? DBNull.Value,
+                (object?)r.RawEstimatedCost ?? DBNull.Value,
+                (object?)r.RawBeneficiaryCount ?? DBNull.Value,
+                r.IsValid,
+                r.IsCommitted,
+                r.CreatedAt,
+                (object?)r.CreatedBy ?? DBNull.Value
+            );
+        }
+
+        return table;
     }
 }

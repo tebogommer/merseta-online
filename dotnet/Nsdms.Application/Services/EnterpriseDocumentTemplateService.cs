@@ -199,63 +199,67 @@ public class EnterpriseDocumentTemplateService : IEnterpriseDocumentTemplateServ
     public async Task<DocumentTemplate> ApproveAndActivateTemplateAsync(int templateId, string actor)
     {
         using var db = await _factory.CreateDbContextAsync();
-        Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
-        if (db.Database.IsRelational())
+        var strategy = db.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
         {
-            tx = await db.Database.BeginTransactionAsync();
-        }
-
-        try
-        {
-            var template = await db.DocumentTemplates.FindAsync(templateId)
-                ?? throw new InvalidOperationException($"Document template #{templateId} not found.");
-
-            // 1. Supersede all other currently active templates in the same family (by TemplateCode)
-            var activePeers = await db.DocumentTemplates
-                .Where(t => t.TemplateCode == template.TemplateCode && t.Id != templateId && t.IsActive)
-                .ToListAsync();
-
-            foreach (var peer in activePeers)
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
+            if (db.Database.IsRelational())
             {
-                peer.IsActive = false;
-                peer.ApprovalStatus = "Superseded";
-                peer.EffectiveTo = DateTime.UtcNow;
-                peer.ModifiedAt = DateTime.UtcNow;
-                peer.ModifiedBy = actor;
+                tx = await db.Database.BeginTransactionAsync();
             }
 
-            // 2. Activate target template
-            template.ApprovalStatus = "Approved";
-            template.ApprovedBy = actor;
-            template.ApprovedAt = DateTime.UtcNow;
-            template.IsActive = true;
-            template.ModifiedAt = DateTime.UtcNow;
-            template.ModifiedBy = actor;
-
-            await db.SaveChangesAsync();
-            if (tx != null)
+            try
             {
-                await tx.CommitAsync();
+                var template = await db.DocumentTemplates.FindAsync(templateId)
+                    ?? throw new InvalidOperationException($"Document template #{templateId} not found.");
+
+                // 1. Supersede all other currently active templates in the same family (by TemplateCode)
+                var activePeers = await db.DocumentTemplates
+                    .Where(t => t.TemplateCode == template.TemplateCode && t.Id != templateId && t.IsActive)
+                    .ToListAsync();
+
+                foreach (var peer in activePeers)
+                {
+                    peer.IsActive = false;
+                    peer.ApprovalStatus = "Superseded";
+                    peer.EffectiveTo = DateTime.UtcNow;
+                    peer.ModifiedAt = DateTime.UtcNow;
+                    peer.ModifiedBy = actor;
+                }
+
+                // 2. Activate target template
+                template.ApprovalStatus = "Approved";
+                template.ApprovedBy = actor;
+                template.ApprovedAt = DateTime.UtcNow;
+                template.IsActive = true;
+                template.ModifiedAt = DateTime.UtcNow;
+                template.ModifiedBy = actor;
+
+                _audit.LogAction(db, "DocumentTemplate", template.Id, "ApproveAndActivateTemplate", actor,
+                    null, new { template.TemplateCode, template.VersionNumber, SupersededCount = activePeers.Count });
+
+                await db.SaveChangesAsync();
+                if (tx != null)
+                {
+                    await tx.CommitAsync();
+                }
+
+                return template;
             }
-
-            await _audit.LogAsync("DocumentTemplate", template.Id, "ApproveAndActivateTemplate", 
-                $"Approved and activated template {template.TemplateCode} v{template.VersionNumber}; superseded {activePeers.Count} predecessor active versions.", 
-                actor, template);
-
-            return template;
-        }
-        catch
-        {
-            if (tx != null)
+            catch
             {
-                await tx.RollbackAsync();
+                if (tx != null)
+                {
+                    await tx.RollbackAsync();
+                }
+                throw;
             }
-            throw;
-        }
-        finally
-        {
-            tx?.Dispose();
-        }
+            finally
+            {
+                tx?.Dispose();
+            }
+        });
     }
 
     /// <summary>

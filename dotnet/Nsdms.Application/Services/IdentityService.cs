@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Interfaces;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
@@ -58,12 +59,16 @@ public class IdentityService : IIdentityService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
+    private readonly ISystemConfigurationService? _configService;
     private readonly PasswordHasher<ApplicationUser> _passwordHasher;
+    private static readonly ApplicationUser _dummyUser = new() { Id = -1, UserName = "anti_timing_dummy_canary" };
+    private static readonly string DummyPasswordHash = new PasswordHasher<ApplicationUser>().HashPassword(_dummyUser, "Dummy#IdentityAntiTimingVerification#2026");
 
-    public IdentityService(INsdmsDbContextFactory contextFactory, IAuditService audit)
+    public IdentityService(INsdmsDbContextFactory contextFactory, IAuditService audit, ISystemConfigurationService? configService = null)
     {
         _contextFactory = contextFactory;
         _audit = audit;
+        _configService = configService;
         _passwordHasher = new PasswordHasher<ApplicationUser>();
     }
 
@@ -311,6 +316,8 @@ public class IdentityService : IIdentityService
 
         if (user == null)
         {
+            // Non-existent user dummy timing evaluation: execute dummy password verification to equalize latency and mitigate user enumeration
+            _passwordHasher.VerifyHashedPassword(_dummyUser, DummyPasswordHash, password);
             return new AuthResultDto { Succeeded = false, ErrorMessage = "Invalid username/email or password." };
         }
 
@@ -351,6 +358,7 @@ public class IdentityService : IIdentityService
 
         if (string.IsNullOrEmpty(user.PasswordHash))
         {
+            _passwordHasher.VerifyHashedPassword(_dummyUser, DummyPasswordHash, password);
             return new AuthResultDto { Succeeded = false, User = user, ErrorMessage = "No password configured for this account." };
         }
 
@@ -381,10 +389,17 @@ public class IdentityService : IIdentityService
         // Handle Failed Attempt
         if (user.LockoutEnabled)
         {
+            var maxFailed = _configService != null
+                ? await _configService.GetValueAsync<int>("Lockout:MaxFailedAttempts", 5)
+                : 5;
+            var lockoutMin = _configService != null
+                ? await _configService.GetValueAsync<int>("Lockout:DefaultLockoutMinutes", 15)
+                : 15;
+
             user.AccessFailedCount++;
-            if (user.AccessFailedCount >= 5)
+            if (user.AccessFailedCount >= maxFailed)
             {
-                user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(15);
+                user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(lockoutMin);
                 _audit.LogAction(db, "ApplicationUser", user.Id, "AccountLockout", "SYSTEM", null, new { user.Id, user.AccessFailedCount, user.LockoutEnd });
             }
             await db.SaveChangesAsync();
@@ -397,7 +412,7 @@ public class IdentityService : IIdentityService
                     User = user,
                     IsLockedOut = true,
                     LockoutEnd = user.LockoutEnd,
-                    ErrorMessage = "Account has been temporarily locked out for 15 minutes due to 5 consecutive failed login attempts."
+                    ErrorMessage = $"Account has been temporarily locked out for {lockoutMin} minutes due to {maxFailed} consecutive failed login attempts."
                 };
             }
         }
@@ -693,10 +708,14 @@ public class IdentityService : IIdentityService
             new { UserName = "review.committee@merseta.org.za", Email = "review.committee@merseta.org.za", Role = "ReviewCommittee", SecondRole = (string?)null }
         };
 
+        var defaultSeedPassword = Environment.GetEnvironmentVariable("INITIAL_ADMIN_PASSWORD") ?? "MerSETA@2026!";
+
         foreach (var acc in defaultAccounts)
         {
             var normalizedEmail = acc.Email.ToUpperInvariant();
             var existing = await db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail || u.NormalizedUserName == normalizedEmail);
+            var isMersetaEmployee = acc.Email.EndsWith("@merseta.org.za", StringComparison.OrdinalIgnoreCase);
+
             if (existing == null)
             {
                 var user = new ApplicationUser
@@ -709,10 +728,20 @@ public class IdentityService : IIdentityService
                     IsActive = true,
                     LockoutEnabled = true,
                     SecurityStamp = Guid.NewGuid().ToString(),
+                    IsEntraUser = isMersetaEmployee,
+                    EntraAccountEnabled = isMersetaEmployee ? true : null,
+                    EntraUserPrincipalName = isMersetaEmployee ? acc.Email : null,
+                    LastEntraSyncUtc = isMersetaEmployee ? DateTime.UtcNow : null,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = "SYSTEM"
                 };
-                user.PasswordHash = _passwordHasher.HashPassword(user, "MerSETA@2026!");
+                user.PasswordHash = _passwordHasher.HashPassword(user, defaultSeedPassword);
+                if (isMersetaEmployee)
+                {
+                    user.BackupPasswordHash = _passwordHasher.HashPassword(user, defaultSeedPassword);
+                    user.BackupPasswordSetAt = DateTime.UtcNow;
+                }
+
                 db.Users.Add(user);
                 await db.SaveChangesAsync();
 
@@ -720,6 +749,31 @@ public class IdentityService : IIdentityService
                 if (acc.SecondRole != null)
                 {
                     await EnsureUserInRoleAsync(db, user.Id, acc.SecondRole);
+                }
+            }
+            else if (isMersetaEmployee)
+            {
+                // Ensure existing merSETA employees have Entra federation and backup credentials configured
+                var updated = false;
+                if (!existing.IsEntraUser)
+                {
+                    existing.IsEntraUser = true;
+                    existing.EntraAccountEnabled = true;
+                    existing.EntraUserPrincipalName = existing.Email;
+                    existing.LastEntraSyncUtc = DateTime.UtcNow;
+                    updated = true;
+                }
+                if (string.IsNullOrEmpty(existing.BackupPasswordHash))
+                {
+                    existing.BackupPasswordHash = _passwordHasher.HashPassword(existing, defaultSeedPassword);
+                    existing.BackupPasswordSetAt = DateTime.UtcNow;
+                    updated = true;
+                }
+                if (updated)
+                {
+                    existing.ModifiedAt = DateTime.UtcNow;
+                    existing.ModifiedBy = "SYSTEM";
+                    await db.SaveChangesAsync();
                 }
             }
         }

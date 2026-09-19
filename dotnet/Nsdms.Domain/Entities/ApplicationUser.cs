@@ -33,6 +33,65 @@ public class ApplicationUser : IdentityUser<int>, IAuditableEntity
     /// </summary>
     public bool IsActive { get; set; } = true;
 
+    // --- Microsoft Entra ID Federation & Resilience Cache ---
+
+    /// <summary>
+    /// Indicates whether this user account is federated / mapped to Microsoft Entra ID (primarily merSETA internal staff).
+    /// </summary>
+    public bool IsEntraUser { get; set; } = false;
+
+    /// <summary>
+    /// Microsoft Entra Object ID (GUID format) identifying the account in the cloud directory.
+    /// </summary>
+    public string? EntraObjectId { get; set; }
+
+    /// <summary>
+    /// User Principal Name (UPN) in Microsoft Entra (e.g. employee@merseta.org.za).
+    /// </summary>
+    public string? EntraUserPrincipalName { get; set; }
+
+    /// <summary>
+    /// Cached account status from Microsoft Entra (true = enabled in cloud directory, false = disabled/revoked).
+    /// </summary>
+    public bool? EntraAccountEnabled { get; set; } = true;
+
+    /// <summary>
+    /// UTC timestamp when accountEnabled status and directory claims were last confirmed with Entra.
+    /// </summary>
+    public DateTime? LastEntraSyncUtc { get; set; }
+
+    // --- Self-Service Disaster Recovery / Emergency Backup Password ---
+
+    /// <summary>
+    /// Securely hashed disaster recovery / emergency fallback password for Entra outage contingency.
+    /// </summary>
+    public string? BackupPasswordHash { get; set; }
+
+    /// <summary>
+    /// UTC timestamp when the disaster recovery backup password was established or last rotated.
+    /// </summary>
+    public DateTime? BackupPasswordSetAt { get; set; }
+
+    /// <summary>
+    /// Indicates whether the user is required to rotate or configure their emergency backup password.
+    /// </summary>
+    public bool BackupPasswordMustChange { get; set; } = false;
+
+    /// <summary>
+    /// UTC timestamp when the user last authenticated using their emergency backup password.
+    /// </summary>
+    public DateTime? LastBackupPasswordLoginUtc { get; set; }
+
+    /// <summary>
+    /// Consecutive failed login attempts specifically against the emergency backup password.
+    /// </summary>
+    public int BackupPasswordFailedAttempts { get; set; } = 0;
+
+    /// <summary>
+    /// Temporary lockout timestamp specifically for emergency backup password attempts.
+    /// </summary>
+    public DateTimeOffset? BackupPasswordLockoutEnd { get; set; }
+
     /// <summary>
     /// UTC timestamp when the user account was created.
     /// </summary>

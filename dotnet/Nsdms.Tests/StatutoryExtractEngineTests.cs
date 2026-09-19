@@ -300,8 +300,8 @@ public class StatutoryExtractEngineTests
         Assert.Equal("SETMIS", batch.BatchType);
         Assert.Equal(2026, batch.SubmissionYear);
         Assert.Equal("Extracted", batch.StatusCode);
-        Assert.NotEmpty(batch.DigitalSecuritySeal);
-        Assert.Equal(64, batch.DigitalSecuritySeal.Length); // SHA-256 hex string length
+        Assert.NotEmpty(batch.DigitalSecuritySeal!);
+        Assert.Equal(64, batch.DigitalSecuritySeal!.Length); // SHA-256 hex string length
         Assert.Equal(11, batch.Files.Count);
 
         // Download archive and verify zip contents
@@ -323,8 +323,8 @@ public class StatutoryExtractEngineTests
         Assert.Equal("NLRD", batch.BatchType);
         Assert.Equal(2026, batch.SubmissionYear);
         Assert.Equal("Extracted", batch.StatusCode);
-        Assert.NotEmpty(batch.DigitalSecuritySeal);
-        Assert.Equal(64, batch.DigitalSecuritySeal.Length); // SHA-256 hex string length
+        Assert.NotEmpty(batch.DigitalSecuritySeal!);
+        Assert.Equal(64, batch.DigitalSecuritySeal!.Length); // SHA-256 hex string length
         Assert.Equal(8, batch.Files.Count);
 
         // Download archive and verify zip contents

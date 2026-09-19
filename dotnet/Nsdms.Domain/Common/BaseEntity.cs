@@ -55,6 +55,17 @@ public abstract class BaseEntity<TKey> : IAuditableEntity
     /// Username or system process that last modified the record.
     /// </summary>
     public string? ModifiedBy { get; set; }
+
+    private readonly List<object> _domainEvents = new();
+
+    /// <summary>
+    /// In-memory collection of domain events raised by this entity instance.
+    /// </summary>
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public IReadOnlyCollection<object> DomainEvents => _domainEvents.AsReadOnly();
+
+    public void AddDomainEvent(object domainEvent) => _domainEvents.Add(domainEvent);
+    public void ClearDomainEvents() => _domainEvents.Clear();
 }
 
 /// <summary>

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Nsdms.Domain.Common;
 
@@ -41,6 +41,49 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
                 if (string.IsNullOrEmpty(entry.Entity.ModifiedBy))
                 {
                     entry.Entity.ModifiedBy = "SYSTEM";
+                }
+            }
+        }
+
+        TouchParentAggregates(context, now);
+    }
+
+    private static void TouchParentAggregates(DbContext context, DateTime now)
+    {
+        var childEntries = context.ChangeTracker.Entries()
+            .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted)
+            .ToList();
+
+        foreach (var child in childEntries)
+        {
+            if (child.Entity is Nsdms.Domain.Entities.WspTrainingPlan plan && plan.WspSubmissionId > 0)
+            {
+                var parent = context.ChangeTracker.Entries<Nsdms.Domain.Entities.WspSubmission>()
+                    .FirstOrDefault(p => p.Entity.Id == plan.WspSubmissionId);
+                if (parent != null && parent.State == EntityState.Unchanged)
+                {
+                    parent.Entity.ModifiedAt = now;
+                    parent.State = EntityState.Modified;
+                }
+            }
+            else if (child.Entity is Nsdms.Domain.Entities.WspEmploymentSummary summary && summary.WspSubmissionId > 0)
+            {
+                var parent = context.ChangeTracker.Entries<Nsdms.Domain.Entities.WspSubmission>()
+                    .FirstOrDefault(p => p.Entity.Id == summary.WspSubmissionId);
+                if (parent != null && parent.State == EntityState.Unchanged)
+                {
+                    parent.Entity.ModifiedAt = now;
+                    parent.State = EntityState.Modified;
+                }
+            }
+            else if (child.Entity is Nsdms.Domain.Entities.GrantApplicationIntervention interv && interv.GrantApplicationId > 0)
+            {
+                var parent = context.ChangeTracker.Entries<Nsdms.Domain.Entities.GrantApplication>()
+                    .FirstOrDefault(p => p.Entity.Id == interv.GrantApplicationId);
+                if (parent != null && parent.State == EntityState.Unchanged)
+                {
+                    parent.Entity.ModifiedAt = now;
+                    parent.State = EntityState.Modified;
                 }
             }
         }

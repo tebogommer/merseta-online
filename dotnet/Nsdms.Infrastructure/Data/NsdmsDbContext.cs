@@ -80,6 +80,49 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<WspBulkImportStaging> WspBulkImportStagings => Set<WspBulkImportStaging>();
     public DbSet<OrganisationEmployee> OrganisationEmployees => Set<OrganisationEmployee>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<BackgroundJobJournal> BackgroundJobJournals => Set<BackgroundJobJournal>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        ProcessDomainEventsIntoOutbox();
+        return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override int SaveChanges()
+    {
+        ProcessDomainEventsIntoOutbox();
+        return base.SaveChanges();
+    }
+
+    private void ProcessDomainEventsIntoOutbox()
+    {
+        var entitiesWithEvents = ChangeTracker.Entries<BaseEntity>()
+            .Where(e => e.Entity.DomainEvents.Count > 0)
+            .Select(e => e.Entity)
+            .ToList();
+
+        if (entitiesWithEvents.Count == 0) return;
+
+        foreach (var entity in entitiesWithEvents)
+        {
+            foreach (var domainEvent in entity.DomainEvents)
+            {
+                var eventType = domainEvent.GetType().Name;
+                var payloadJson = System.Text.Json.JsonSerializer.Serialize(domainEvent);
+
+                OutboxMessages.Add(new OutboxMessage
+                {
+                    EventType = eventType,
+                    PayloadJson = payloadJson,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = entity.ModifiedBy ?? entity.CreatedBy ?? "SYSTEM"
+                });
+            }
+
+            entity.ClearDomainEvents();
+        }
+    }
 
     // Workflow Engine & Task Matrix
     public DbSet<WorkflowDefinition> WorkflowDefinitions => Set<WorkflowDefinition>();
@@ -340,9 +383,18 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<QualificationTypeType> QualificationTypeTypes => Set<QualificationTypeType>();
     public DbSet<HonoursClassType> HonoursClassTypes => Set<HonoursClassType>();
 
+    // Phase 59: B2B API Architecture & Webhook Event Engine
+    public DbSet<ApiClient> ApiClients => Set<ApiClient>();
+    public DbSet<ApiWebhookSubscription> ApiWebhookSubscriptions => Set<ApiWebhookSubscription>();
+    public DbSet<ApiWebhookDeliveryLog> ApiWebhookDeliveryLogs => Set<ApiWebhookDeliveryLog>();
+    public DbSet<ApiIdempotencyRecord> ApiIdempotencyRecords => Set<ApiIdempotencyRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Modular Entity Configurations (Wave 3 Decoupling)
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(NsdmsDbContext).Assembly);
 
         modelBuilder.HasSequence<int>("Seq_StatutoryCertificateNumber").StartsAt(1).IncrementsBy(1);
 
@@ -356,6 +408,12 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(u => u.NormalizedEmail).HasMaxLength(150);
             entity.Property(u => u.PhoneNumber).HasMaxLength(50);
             entity.Property(u => u.IsActive).HasDefaultValue(true);
+            entity.Property(u => u.IsEntraUser).HasDefaultValue(false);
+            entity.Property(u => u.EntraObjectId).HasMaxLength(100);
+            entity.Property(u => u.EntraUserPrincipalName).HasMaxLength(150);
+            entity.Property(u => u.EntraAccountEnabled).HasDefaultValue(true);
+            entity.Property(u => u.BackupPasswordMustChange).HasDefaultValue(false);
+            entity.Property(u => u.BackupPasswordFailedAttempts).HasDefaultValue(0);
 
             entity.HasOne(u => u.Person)
                   .WithOne()
@@ -369,6 +427,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
 
             entity.HasIndex(u => u.PersonId).IsUnique();
             entity.HasIndex(u => u.DefaultOrganisationId);
+            entity.HasIndex(u => u.EntraObjectId).HasFilter("[EntraObjectId] IS NOT NULL");
+            entity.HasIndex(u => u.EntraUserPrincipalName).HasFilter("[EntraUserPrincipalName] IS NOT NULL");
         });
 
         modelBuilder.Entity<ApplicationRole>(entity =>
@@ -825,11 +885,12 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
 
             entity.HasIndex(l => l.LevyFileId);
             entity.HasIndex(l => l.SdlNumber);
+            entity.HasIndex(l => new { l.SdlNumber, l.SchemeYear });
             entity.HasIndex(l => l.SicCode);
             entity.HasIndex(l => l.ChamberCode);
             entity.HasIndex(l => l.SetaCode);
-            entity.HasIndex(l => l.IsOutOfScopeSeta);
-            entity.HasIndex(l => l.HasSicCodeMismatch);
+            entity.HasIndex(l => l.IsOutOfScopeSeta).HasFilter("[IsOutOfScopeSeta] = 1");
+            entity.HasIndex(l => l.HasSicCodeMismatch).HasFilter("[HasSicCodeMismatch] = 1");
         });
 
         modelBuilder.Entity<SarsLevyStaging>(entity =>
@@ -1945,7 +2006,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(t => t.TradeTestCentreEtqaId).HasMaxLength(10).HasDefaultValue("17");
             entity.Property(t => t.TradeTitle).HasMaxLength(150).IsRequired();
             entity.Property(t => t.TradeCode).HasMaxLength(50);
-            entity.Property(t => t.QualificationId).HasMaxLength(50);
+            entity.Property(t => t.QualificationId);
             entity.Property(t => t.TradeTestResultId).HasMaxLength(10).HasDefaultValue("01");
             entity.Property(t => t.TradeTestResultReasonId).HasMaxLength(10).HasDefaultValue("01");
             entity.Property(t => t.ResultStatusCode).HasMaxLength(50);
@@ -4053,6 +4114,14 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(e => e.ReferenceKey);
             entity.HasIndex(e => e.OrganisationId);
             entity.HasIndex(e => e.MessageCorrelationId).IsUnique();
+        });
+
+        modelBuilder.Entity<OutboxMessage>(entity =>
+        {
+            entity.ToTable("OutboxMessage");
+            entity.Property(e => e.EventType).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.PayloadJson).IsRequired();
+            entity.HasIndex(e => e.ProcessedAt);
         });
 
         // AssessorReRegistrationApplication

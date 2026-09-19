@@ -92,38 +92,74 @@ BEGIN
     
     DECLARE @BatchCount INT = 1;
     
-    WHILE @BatchCount > 0 AND @ArchivedCount < @MaxRows
+    -- Support both dbo.AuditLog (EF Core PascalCase) and dbo.audit_logs
+    IF OBJECT_ID('dbo.AuditLog', 'U') IS NOT NULL
     BEGIN
-        BEGIN TRANSACTION;
-        
-        -- Copy batch to archive
-        INSERT INTO dbo.audit_logs_archive (id, entity_name, record_id, action_name, actor, metadata_json, timestamp, archived_at)
-        SELECT TOP (@BatchSize) id, entity_name, record_id, action_name, actor, metadata_json, timestamp, SYSUTCDATETIME()
-        FROM dbo.audit_logs WITH (READPAST)
-        WHERE timestamp < @CutoffDate
-          AND id NOT IN (SELECT id FROM dbo.audit_logs_archive)
-        ORDER BY timestamp ASC;
-        
-        SET @BatchCount = @@ROWCOUNT;
-        
-        IF @BatchCount > 0
+        WHILE @BatchCount > 0 AND @ArchivedCount < @MaxRows
         BEGIN
-            -- Delete the archived records from active audit_logs
-            DELETE FROM dbo.audit_logs
-            WHERE id IN (
-                SELECT TOP (@BatchSize) id 
-                FROM dbo.audit_logs_archive 
-                WHERE timestamp < @CutoffDate
-                ORDER BY archived_at DESC
-            );
+            BEGIN TRANSACTION;
             
-            SET @ArchivedCount = @ArchivedCount + @BatchCount;
+            INSERT INTO dbo.audit_logs_archive (id, entity_name, record_id, action_name, actor, metadata_json, timestamp, archived_at)
+            SELECT TOP (@BatchSize) Id, EntityName, RecordId, ActionName, Actor, MetadataJson, Timestamp, SYSUTCDATETIME()
+            FROM dbo.AuditLog WITH (READPAST)
+            WHERE Timestamp < @CutoffDate
+              AND Id NOT IN (SELECT id FROM dbo.audit_logs_archive)
+            ORDER BY Timestamp ASC;
+            
+            SET @BatchCount = @@ROWCOUNT;
+            
+            IF @BatchCount > 0
+            BEGIN
+                DELETE FROM dbo.AuditLog
+                WHERE Id IN (
+                    SELECT TOP (@BatchSize) id 
+                    FROM dbo.audit_logs_archive 
+                    WHERE timestamp < @CutoffDate
+                    ORDER BY archived_at DESC
+                );
+                
+                SET @ArchivedCount = @ArchivedCount + @BatchCount;
+            END;
+            
+            COMMIT TRANSACTION;
+            
+            IF @BatchCount < @BatchSize
+                BREAK;
         END;
-        
-        COMMIT TRANSACTION;
-        
-        IF @BatchCount < @BatchSize
-            BREAK;
+    END
+    ELSE IF OBJECT_ID('dbo.audit_logs', 'U') IS NOT NULL
+    BEGIN
+        WHILE @BatchCount > 0 AND @ArchivedCount < @MaxRows
+        BEGIN
+            BEGIN TRANSACTION;
+            
+            INSERT INTO dbo.audit_logs_archive (id, entity_name, record_id, action_name, actor, metadata_json, timestamp, archived_at)
+            SELECT TOP (@BatchSize) id, entity_name, record_id, action_name, actor, metadata_json, timestamp, SYSUTCDATETIME()
+            FROM dbo.audit_logs WITH (READPAST)
+            WHERE timestamp < @CutoffDate
+              AND id NOT IN (SELECT id FROM dbo.audit_logs_archive)
+            ORDER BY timestamp ASC;
+            
+            SET @BatchCount = @@ROWCOUNT;
+            
+            IF @BatchCount > 0
+            BEGIN
+                DELETE FROM dbo.audit_logs
+                WHERE id IN (
+                    SELECT TOP (@BatchSize) id 
+                    FROM dbo.audit_logs_archive 
+                    WHERE timestamp < @CutoffDate
+                    ORDER BY archived_at DESC
+                );
+                
+                SET @ArchivedCount = @ArchivedCount + @BatchCount;
+            END;
+            
+            COMMIT TRANSACTION;
+            
+            IF @BatchCount < @BatchSize
+                BREAK;
+        END;
     END;
 END;
 GO
