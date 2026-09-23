@@ -504,6 +504,22 @@ The agent may only declare testing phase complete when:
    - Always nest inner padding inside `<MudMainContent>`: `<MudMainContent><div class="pa-4"><main id="main-content">@Body</main></div></MudMainContent>`.
    - All sticky action bars, detail top bars, and table toolbars must use `top: var(--mud-appbar-height, 64px) !important;` (or the `.sticky-top` / `.sticky-top-header` CSS classes) so they dock flush underneath the `MudAppBar` during scroll.
 
+---
+
+### 🛡️ ISO 9001:2015 & DPSA Directive Compliant Atomic Audit Logging Standard
+1. **Zero Partial Commits & Transactional Double-Write**:
+   - Every domain entity mutation and its associated audit log entry MUST be executed atomically within a single transactional unit via `IAtomicAuditTransactionManager.ExecuteAtomicAsync` or `ExecuteAtomicBatchAsync`.
+   - In SQL Server environments, user transactions must be enclosed within `db.Database.CreateExecutionStrategy().ExecuteAsync(...)` to ensure resilience under transient failures. Any failure in business logic, specification validation, or persistence MUST trigger an immediate, complete rollback of both entity mutations and audit entries (`RollbackAsync()`).
+2. **ISO 9001:2015 Clause 7.5 Control of Documented Information**:
+   - Every audit entry MUST preserve mandatory identification attributes (`EntityName`, `ActionName`, `Actor`), positive auto-generated integer `RecordId`, and structured differential state capture (`before` and `after` snapshots in `MetadataJson`).
+   - Every recorded transaction computes an immutable SHA-256 digital security seal (`ComputeDigitalSecuritySeal`) across the payload, enabling real-time cryptographic tamper detection and non-repudiation.
+3. **DPSA Information Security Directive & CGICTPF Public Sector Compliance**:
+   - **Zero Anonymous Actors**: 100% actor accountability is strictly enforced. Any attempt to record mutations with empty, `"ANONYMOUS"`, or `"UNKNOWN"` actors must fail fast and abort the transaction.
+   - **Chronological UTC Precision**: Audit timestamps must record UTC timestamps with sub-second precision; future-dated timestamps exceeding reasonable drift thresholds are rejected.
+   - **POPIA Sensitive PII Redaction**: Sensitive personal identifiers (such as 13-digit RSA National ID numbers and bank account numbers) must be masked in `MetadataJson` payloads before database persistence.
+   - **PFMA Maker-Checker Segregation of Duties**: Approvals and statutory signoffs (e.g., Banking Details, Discretionary Grant MoAs, Tranche Claims) must verify that the creator and approver are distinct individuals (`CreatedBy != ApproverUserId`).
+4. **Auditor Verification Portal**:
+   - Administrative users and statutory auditors inspect logs and evaluate compliance at `/admin/audit-logs` and `/admin/audit-compliance` via `IIsoDpsaAuditComplianceService`.
 
 ---
 

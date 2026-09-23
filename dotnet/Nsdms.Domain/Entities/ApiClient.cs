@@ -15,7 +15,7 @@ public class ApiClient : BaseEntity
     public string ClientName { get; set; } = string.Empty;
     public string HashedClientSecret { get; set; } = string.Empty;
     public string AllowedScopes { get; set; } = "wsp:write,workforce:sync,claims:submit,learners:register,trade_tests:write,verify:read";
-    
+
     /// <summary>
     /// Optional JWK JSON or public key thumbprint for Demonstrating Proof-of-Possession (RFC 9449 DPoP).
     /// </summary>

@@ -290,7 +290,7 @@ public class BroadcastAndEmailOutboxTests
         // 3. Retry all failed items
         var throttled1 = new EmailOutboxItem { RecipientEmail = "t1@ex.com", Subject = "T1", BodyHtml = "T", Status = "Throttled", AttemptCount = 3 };
         var failed2 = new EmailOutboxItem { RecipientEmail = "f2@ex.com", Subject = "F2", BodyHtml = "F", Status = "Failed", AttemptCount = 5 };
-        
+
         using (var db2 = await factory.CreateDbContextAsync())
         {
             db2.EmailOutboxItems.AddRange(throttled1, failed2);

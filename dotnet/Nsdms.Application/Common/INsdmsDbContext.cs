@@ -342,6 +342,12 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<ApiWebhookDeliveryLog> ApiWebhookDeliveryLogs { get; }
     DbSet<ApiIdempotencyRecord> ApiIdempotencyRecords { get; }
 
+    // Phase 56: Mandatory Grant Window Governance & OFO Code Sets
+    DbSet<OfoCodeSet> OfoCodeSets { get; }
+    DbSet<OfoCodeSetItem> OfoCodeSetItems { get; }
+    DbSet<MgWindow> MgWindows { get; }
+    DbSet<MgWindowOfoCode> MgWindowOfoCodes { get; }
+
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
     ValueTask<object?> FindAsync(Type entityType, params object?[]? keyValues);
     Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry Add(object entity);

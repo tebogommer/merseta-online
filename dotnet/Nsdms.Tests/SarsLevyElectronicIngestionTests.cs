@@ -25,7 +25,7 @@ public class SarsLevyElectronicIngestionTests
         var service = new LevyService(factory, audit);
 
         // Standard Case 1 format: SDL|Year|Mandatory|Discretionary|Admin|Qcto|Interest|Penalty|Total|SIC
-        string rawContent = 
+        string rawContent =
             "SDL_NO|SCHEME_YEAR|MANDATORY|DISCRETIONARY|ADMIN|QCTO|INTEREST|PENALTY|TOTAL_AMOUNT|SIC_CODE\r\n" +
             "L123456789|2026|20000.00|49500.00|10500.00|500.00|0.00|0.00|100000.00|35100\r\n" +
             "L987654321|2026|100000.00\r\n"; // 3-column auto-split format
@@ -80,7 +80,7 @@ public class SarsLevyElectronicIngestionTests
 
         var service = new LevyService(factory, audit);
 
-        string rawFile = 
+        string rawFile =
             "L100000001|2026|40000.00|99000.00|21000.00|1000.00|0.00|0.00|200000.00|35100\r\n" +
             "L200000002|2026|20000.00|49500.00|10500.00|500.00|0.00|0.00|100000.00|11100\r\n";
 

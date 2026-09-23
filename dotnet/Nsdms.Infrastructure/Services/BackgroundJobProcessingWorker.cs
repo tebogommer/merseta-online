@@ -44,9 +44,9 @@ public class BackgroundJobProcessingWorker : BackgroundService
     }
 
     private async Task ProcessChannelAsync(
-        System.Threading.Channels.ChannelReader<BackgroundJobTicket> reader, 
-        int maxParallelism, 
-        string channelName, 
+        System.Threading.Channels.ChannelReader<BackgroundJobTicket> reader,
+        int maxParallelism,
+        string channelName,
         CancellationToken stoppingToken)
     {
         var parallelOptions = new ParallelOptions
@@ -82,7 +82,7 @@ public class BackgroundJobProcessingWorker : BackgroundService
 
     private async Task ProcessJobAsync(BackgroundJobTicket ticket, CancellationToken ct)
     {
-        _logger.LogInformation("Processing background job #{JobId} [{JobType}] requested by '{User}'", 
+        _logger.LogInformation("Processing background job #{JobId} [{JobType}] requested by '{User}'",
             ticket.JobId, ticket.JobType, ticket.RequestedBy);
 
         _jobQueue.UpdateProgress(ticket.JobId, 10, "Worker assigned. Initializing processing environment...");

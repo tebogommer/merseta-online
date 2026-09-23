@@ -171,7 +171,7 @@ public class AssessorReRegistrationService : IAssessorReRegistrationService
         };
 
         db.AssessorCpdActivities.Add(activity);
-        
+
         // Update accumulated points on parent application
         app.CpdPointsAccumulated += activity.PointsApproved;
         await db.SaveChangesAsync();

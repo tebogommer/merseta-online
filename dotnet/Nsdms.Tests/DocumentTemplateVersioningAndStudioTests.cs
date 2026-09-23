@@ -58,9 +58,9 @@ public class DocumentTemplateVersioningAndStudioTests
 
         // 2. Act: Branch new draft revision 1.1.0
         var v11 = await _templateService.CreateNewVersionAsync(
-            v1.Id, 
-            "1.1.0", 
-            "Updated statutory wording for 2026", 
+            v1.Id,
+            "1.1.0",
+            "Updated statutory wording for 2026",
             "ComplianceOfficer");
 
         // Verify intermediate state: v1.0.0 is still active, v1.1.0 is draft and inactive

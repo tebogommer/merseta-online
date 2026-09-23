@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-19 18:55:25 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 261
+> **Generated:** 2026-09-23 17:08:41 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 269
 
 ---
 
@@ -8,6 +8,10 @@
 
 | Schema | Table Name | CLR Entity | Columns | Primary Key | Description |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| `dbo` | [`ApiClient`](#apiclient) | `ApiClient` | 16 | `Id` | Represents a registered external machine-to-machine (M2M) API client (e.g., SAP, Workday, VIP Payroll, SDP SIS). |
+| `dbo` | [`ApiIdempotencyRecord`](#apiidempotencyrecord) | `ApiIdempotencyRecord` | 11 | `Id` | Persisted record of idempotent API requests to eliminate double-submission hazards on network retry. |
+| `dbo` | [`ApiWebhookDeliveryLog`](#apiwebhookdeliverylog) | `ApiWebhookDeliveryLog` | 13 | `Id` | High-volume audit record of outbound webhook delivery attempts, HTTP responses, and error traces. |
+| `dbo` | [`ApiWebhookSubscription`](#apiwebhooksubscription) | `ApiWebhookSubscription` | 12 | `Id` | Represents an external partner webhook registration for asynchronous statutory event notifications. |
 | `dbo` | [`AppRole`](#approle) | `ApplicationRole` | 6 | `Id` | Application security role for CASL/RBAC authorization. |
 | `dbo` | [`AppRoleClaim`](#approleclaim) | `IdentityRoleClaim`1` | 4 | `Id` | System entity for IdentityRoleClaim`1 data governance. |
 | `dbo` | [`AppUser`](#appuser) | `ApplicationUser` | 33 | `Id` | Application authentication user account integrated with ASP.NET Core Identity. |
@@ -115,6 +119,8 @@
 | `dbo` | [`LevyFile`](#levyfile) | `LevyFile` | 16 | `Id` | Monthly SARS Skills Development Levy file import batches. |
 | `dbo` | [`LevyFileLine`](#levyfileline) | `LevyFileLine` | 21 | `Id` | Individual employer monthly SARS levy transaction breakdown. |
 | `dbo` | [`MandatoryGrantDisbursement`](#mandatorygrantdisbursement) | `MandatoryGrantDisbursement` | 17 | `Id` | Mandatory Grant 20% Rebate Payouts for compliant employers submitting WSP/ATR. |
+| `dbo` | [`MgWindow`](#mgwindow) | `MgWindow` | 23 | `Id` | Master Mandatory Grant (WSP / ATR) statutory submission window aggregate root. Governs scheme year submission windows, statutory dates, gazette citations, dual authorisation governance, and scopes eligible occupational classifications via the OFO code manager. |
+| `dbo` | [`MgWindowOfoCode`](#mgwindowofocode) | `MgWindowOfoCode` | 10 | `Id` | Child entity scoping an individual OFO occupational code to a specific Mandatory Grant submission window. Flags sector priority skills, scarce trades, and chamber-specific commentary for grant scoring. |
 | `dbo` | [`MgWindowScheduleProposal`](#mgwindowscheduleproposal) | `MgWindowScheduleProposal` | 20 | `Id` | Mandatory Grant (MG / WSP / ATR) Window Schedule Proposal governed by Dual Authorisation Control and Segregation of Duties. A Proposer prepares and submits a schedule change proposal, and an independent Reviewer reviews and adjudicates. |
 | `dbo` | [`MoaClause`](#moaclause) | `MoaClause` | 11 | `Id` | Reusable atomic legal clause in the MerSETA clause library. |
 | `dbo` | [`MoaExecutionSnapshot`](#moaexecutionsnapshot) | `MoaExecutionSnapshot` | 14 | `Id` | Cryptographically frozen snapshot of an issued MoA contract for legal non-repudiation and audit defense. |
@@ -127,6 +133,8 @@
 | `dbo` | [`NonSetaCompany`](#nonsetacompany) | `NonSetaCompany` | 13 | `Id` | Non-SETA External Employer / Organisation registered with other Quality Councils / SETAs. |
 | `dbo` | [`NonSetaQualificationsCompletion`](#nonsetaqualificationscompletion) | `NonSetaQualificationsCompletion` | 19 | `Id` | Cross-SETA Qualification & TVET College Achievement Verification for merSETA articulation. |
 | `dbo` | [`NonWorkingDay`](#nonworkingday) | `NonWorkingDay` | 17 | `Id` | Master definition for national statutory public holidays, merSETA annual year-end shutdowns, and ad-hoc institutional closures. Governs universal workflow SLA business day calculations. |
+| `dbo` | [`OfoCodeSet`](#ofocodeset) | `OfoCodeSet` | 11 | `Id` | Authoritative DHET Organising Framework for Occupations (OFO) statutory framework release (e.g. 2019, 2021, 2025). Serves as the statutory code set catalog for Mandatory Grant submission cycles and SETMIS reporting. |
+| `dbo` | [`OfoCodeSetItem`](#ofocodesetitem) | `OfoCodeSetItem` | 15 | `Id` | Individual occupational classification record scoped to a statutory OFO framework release. Links DHET hierarchical groups (Major, Sub-Major, Minor, Unit) and trade designations to lookup.OfoCodeType. |
 | `dbo` | [`Organisation`](#organisation) | `Organisation` | 53 | `Id` | Registered employer, host workplace, or skills development entity under MerSETA jurisdiction, fully normalized with statutory columns required for SETMIS File 100 and File 200 reporting. |
 | `dbo` | [`OrganisationContact`](#organisationcontact) | `OrganisationContact` | 12 | `Id` | Liaison contact person link associating an individual Person with an Employer Organisation. |
 | `dbo` | [`OrganisationEmployee`](#organisationemployee) | `OrganisationEmployee` | 17 | `Id` | Represents an active or historical employee record within an employer organisation's roster (Option B: The Living Employer Roster). Enables 1-Click WSP/ATR statutory report auto-harvesting with full demographics, occupational categorisation, and OFO alignment. |
@@ -273,6 +281,156 @@
 ---
 
 ## 🏛️ Table Details & Column Specifications
+
+### <a id="apiclient"></a> `dbo.ApiClient`
+
+**Description:** Represents a registered external machine-to-machine (M2M) API client (e.g., SAP, Workday, VIP Payroll, SDP SIS).  
+**CLR Model:** `Nsdms.Domain.Entities.ApiClient`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AllowedScopes` | `nvarchar(1000)` | **NOT NULL** |  | Domain property for AllowedScopes. |
+| `ClientCertificateThumbprint` | `nvarchar(100)` | NULL |  | Optional SHA-256 certificate thumbprint for Mutual TLS (mTLS) client certificate pinning. |
+| `ClientIdentifier` | `nvarchar(100)` | **NOT NULL** |  | Domain property for ClientIdentifier. |
+| `ClientName` | `nvarchar(200)` | **NOT NULL** |  | Domain property for ClientName. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DpopPublicKeyJwk` | `nvarchar(4000)` | NULL |  | Optional JWK JSON or public key thumbprint for Demonstrating Proof-of-Possession (RFC 9449 DPoP). |
+| `HashedClientSecret` | `nvarchar(256)` | **NOT NULL** |  | Domain property for HashedClientSecret. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active and operational. |
+| `LastUsedAt` | `datetime2` | NULL |  | Domain property for LastUsedAt. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `RateLimitPerMinute` | `int` | **NOT NULL** |  | Domain property for RateLimitPerMinute. |
+| `Tier` | `nvarchar(50)` | **NOT NULL** |  | Domain property for Tier. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_ApiClient_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `Restrict` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ApiClient_ClientIdentifier` | `ClientIdentifier` | ✅ Yes |
+| `IX_ApiClient_OrganisationId` | `OrganisationId` | No |
+
+---
+
+### <a id="apiidempotencyrecord"></a> `dbo.ApiIdempotencyRecord`
+
+**Description:** Persisted record of idempotent API requests to eliminate double-submission hazards on network retry.  
+**CLR Model:** `Nsdms.Domain.Entities.ApiIdempotencyRecord`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `bigint` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ClientIdentifier` | `nvarchar(100)` | **NOT NULL** |  | Domain property for ClientIdentifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ExpiresAt` | `datetime2` | **NOT NULL** |  | Domain property for ExpiresAt. |
+| `IdempotencyKey` | `nvarchar(100)` | **NOT NULL** |  | Domain property for IdempotencyKey. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `RequestPath` | `nvarchar(500)` | **NOT NULL** |  | Domain property for RequestPath. |
+| `ResponseBodyJson` | `nvarchar(max)` | **NOT NULL** |  | Domain property for ResponseBodyJson. |
+| `ResponseStatusCode` | `int` | **NOT NULL** |  | Domain property for ResponseStatusCode. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ApiIdempotencyRecord_ExpiresAt` | `ExpiresAt` | No |
+| `IX_ApiIdempotencyRecord_IdempotencyKey` | `IdempotencyKey` | ✅ Yes |
+
+---
+
+### <a id="apiwebhookdeliverylog"></a> `dbo.ApiWebhookDeliveryLog`
+
+**Description:** High-volume audit record of outbound webhook delivery attempts, HTTP responses, and error traces.  
+**CLR Model:** `Nsdms.Domain.Entities.ApiWebhookDeliveryLog`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `bigint` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AttemptNumber` | `int` | **NOT NULL** |  | Domain property for AttemptNumber. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `DeliveredAt` | `datetime2` | **NOT NULL** |  | Domain property for DeliveredAt. |
+| `ErrorMessage` | `nvarchar(4000)` | NULL |  | Domain property for ErrorMessage. |
+| `EventTopic` | `nvarchar(100)` | **NOT NULL** |  | Domain property for EventTopic. |
+| `HttpStatusCode` | `int` | NULL |  | Domain property for HttpStatusCode. |
+| `IsSuccess` | `bit` | **NOT NULL** |  | Domain property for IsSuccess. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `PayloadJson` | `nvarchar(max)` | **NOT NULL** |  | Domain property for PayloadJson. |
+| `SubscriptionId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_ApiWebhookDeliveryLog_ApiWebhookSubscription_SubscriptionId` | `SubscriptionId` | `dbo.ApiWebhookSubscription` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ApiWebhookDeliveryLog_DeliveredAt` | `DeliveredAt` | No |
+| `IX_ApiWebhookDeliveryLog_SubscriptionId` | `SubscriptionId` | No |
+
+---
+
+### <a id="apiwebhooksubscription"></a> `dbo.ApiWebhookSubscription`
+
+**Description:** Represents an external partner webhook registration for asynchronous statutory event notifications.  
+**CLR Model:** `Nsdms.Domain.Entities.ApiWebhookSubscription`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `EventTopic` | `nvarchar(100)` | **NOT NULL** |  | Domain property for EventTopic. |
+| `FailureCount` | `int` | **NOT NULL** |  | Domain property for FailureCount. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active and operational. |
+| `LastTriggeredAt` | `datetime2` | NULL |  | Domain property for LastTriggeredAt. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
+| `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `SecretKey` | `nvarchar(256)` | **NOT NULL** |  | Shared secret used to compute HMAC-SHA256 signatures for payload verification. |
+| `TargetUrl` | `nvarchar(1000)` | **NOT NULL** |  | Domain property for TargetUrl. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_ApiWebhookSubscription_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `Restrict` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_ApiWebhookSubscription_OrganisationId` | `OrganisationId` | No |
+| `IX_ApiWebhookSubscription_EventTopic_IsActive` | `EventTopic, IsActive` | No |
+
+---
 
 ### <a id="approle"></a> `dbo.AppRole`
 
@@ -4926,6 +5084,94 @@
 
 ---
 
+### <a id="mgwindow"></a> `dbo.MgWindow`
+
+**Description:** Master Mandatory Grant (WSP / ATR) statutory submission window aggregate root. Governs scheme year submission windows, statutory dates, gazette citations, dual authorisation governance, and scopes eligible occupational classifications via the OFO code manager.  
+**CLR Model:** `Nsdms.Domain.Entities.MgWindow`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AdjudicatedByUserId` | `nvarchar(100)` | NULL |  | User ID of the independent executive authority who reviewed and adjudicated the window. |
+| `AdjudicatedByUserName` | `nvarchar(150)` | NULL |  | Display name of the adjudicating authority. |
+| `AdjudicatedDate` | `datetime2` | NULL |  | Timestamp when the schedule was adjudicated. |
+| `AdjudicationComments` | `nvarchar(max)` | NULL |  | Audit commentary and reason recorded by the adjudicating authority. |
+| `ApprovalStatus` | `nvarchar(50)` | **NOT NULL** |  | Dual Authorisation governance review stage: 'Draft', 'PendingReview', 'Approved', 'Rejected'. |
+| `ClosingDate` | `datetime2` | **NOT NULL** |  | Statutory closing deadline under Regulation 4(1) of the SETA Grant Regulations (typically 30 April). |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(100)` | NULL |  | User identifier or system process that created the record. |
+| `ExtensionCutoffDate` | `datetime2` | **NOT NULL** |  | Statutory extension filing deadline under Regulation 4(2) (typically 15 April). |
+| `GazetteReference` | `nvarchar(200)` | NULL |  | Statutory authority, Government Gazette publication reference, or departmental circular citation. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this submission window is currently active. |
+| `Justification` | `nvarchar(max)` | NULL |  | Detailed operational and statutory motivation recorded for PFMA audit compliance. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(100)` | NULL |  | User identifier or system process that last updated the record. |
+| `OfoCodeSetId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the governing DHET Gazetted OFO Set release. |
+| `OfoCodeSetYear` | `int` | NULL |  | Denormalized OFO set year for high-performance querying and historical integrity. |
+| `OpeningDate` | `datetime2` | **NOT NULL** |  | UTC timestamp when employer submissions open on the NSDMS portal. |
+| `ProposedByUserId` | `nvarchar(100)` | NULL |  | User ID of the officer who initiated or proposed the window schedule. |
+| `ProposedByUserName` | `nvarchar(150)` | NULL |  | Display name of the proposing officer. |
+| `ProposedDate` | `datetime2` | NULL |  | Timestamp when the schedule proposal was submitted for review. |
+| `SchemeYear` | `int` | **NOT NULL** |  | Statutory financial scheme year (e.g. 2026 for the 2026/2027 grant cycle). |
+| `WindowName` | `nvarchar(150)` | **NOT NULL** |  | Official business name (e.g. "2026/27 Mandatory Grant (WSP/ATR) Submission Window"). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_MgWindow_OfoCodeSet_OfoCodeSetId` | `OfoCodeSetId` | `dbo.OfoCodeSet` | `SetNull` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_MgWindow_Status` | `ApprovalStatus` | No |
+| `IX_MgWindow_OfoCodeSetId` | `OfoCodeSetId` | No |
+| `IX_MgWindow_SchemeYear` | `SchemeYear` | No |
+
+---
+
+### <a id="mgwindowofocode"></a> `dbo.MgWindowOfoCode`
+
+**Description:** Child entity scoping an individual OFO occupational code to a specific Mandatory Grant submission window. Flags sector priority skills, scarce trades, and chamber-specific commentary for grant scoring.  
+**CLR Model:** `Nsdms.Domain.Entities.MgWindowOfoCode`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(100)` | NULL |  | User identifier or system process that created the record. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this occupational code is active within the scoped window. |
+| `IsPrioritySkill` | `bit` | **NOT NULL** |  | Flags whether this occupation is a national or sectoral priority skill for merSETA. |
+| `MgWindowId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent Mandatory Grant submission window. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(100)` | NULL |  | User identifier or system process that last updated the record. |
+| `OfoCodeId` | `nvarchar(50)` | **NOT NULL** | 🔗 **FK** | Statutory OFO occupational code referencing lookup.OfoCodeType.Code (e.g. "651202", "653101"). |
+| `SectorNotes` | `nvarchar(500)` | NULL |  | Chamber priorities, specialisation notes, or critical skill commentary. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_MgWindowOfoCode_MgWindow_MgWindowId` | `MgWindowId` | `dbo.MgWindow` | `Cascade` |
+| `FK_MgWindowOfoCode_OfoCodeType_OfoCodeId` | `OfoCodeId` | `lookup.OfoCodeType` | `Restrict` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_MgWindowOfoCode_OfoCodeId` | `OfoCodeId` | No |
+| `IX_MgWindowOfoCode_Priority` | `MgWindowId, IsPrioritySkill` | No |
+| `IX_MgWindowOfoCode_Window_Code` | `MgWindowId, OfoCodeId` | ✅ Yes |
+
+---
+
 ### <a id="mgwindowscheduleproposal"></a> `dbo.MgWindowScheduleProposal`
 
 **Description:** Mandatory Grant (MG / WSP / ATR) Window Schedule Proposal governed by Dual Authorisation Control and Segregation of Duties. A Proposer prepares and submits a schedule change proposal, and an independent Reviewer reviews and adjudicates.  
@@ -5391,6 +5637,78 @@
 | `IX_NonWorkingDay_TypeCode` | `TypeCode` | No |
 | `IX_NonWorkingDay_StartDate_EndDate` | `StartDate, EndDate` | No |
 | `IX_NonWorkingDay_StatusCode_IsActive` | `StatusCode, IsActive` | No |
+
+---
+
+### <a id="ofocodeset"></a> `dbo.OfoCodeSet`
+
+**Description:** Authoritative DHET Organising Framework for Occupations (OFO) statutory framework release (e.g. 2019, 2021, 2025). Serves as the statutory code set catalog for Mandatory Grant submission cycles and SETMIS reporting.  
+**CLR Model:** `Nsdms.Domain.Entities.OfoCodeSet`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(100)` | NULL |  | User identifier or system process that created the record. |
+| `Description` | `nvarchar(500)` | NULL |  | Detailed scope, legislative authority, and version commentary. |
+| `GazetteNumber` | `nvarchar(100)` | NULL |  | Government Gazette publication reference number (e.g. "Gazette No. 51234"). |
+| `GazettedDate` | `datetime2` | NULL |  | Date the OFO framework version was published in the Government Gazette. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether this OFO code set is active and available for grant cycle scoping. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(100)` | NULL |  | User identifier or system process that last updated the record. |
+| `Name` | `nvarchar(150)` | **NOT NULL** |  | Official release title (e.g. "OFO 2025 Release (v25)"). |
+| `SetYear` | `int` | **NOT NULL** |  | Statutory OFO framework release year (e.g. 2019, 2021, 2025). |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_OfoCodeSet_SetYear` | `SetYear` | ✅ Yes |
+
+---
+
+### <a id="ofocodesetitem"></a> `dbo.OfoCodeSetItem`
+
+**Description:** Individual occupational classification record scoped to a statutory OFO framework release. Links DHET hierarchical groups (Major, Sub-Major, Minor, Unit) and trade designations to lookup.OfoCodeType.  
+**CLR Model:** `Nsdms.Domain.Entities.OfoCodeSetItem`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(100)` | NULL |  | User identifier or system process that created the record. |
+| `GreenOccupation` | `bit` | **NOT NULL** |  | Indicates whether this occupation is designated as a green economy occupation. |
+| `GreenSkill` | `bit` | **NOT NULL** |  | Indicates whether this occupation involves designated green skills. |
+| `IsActiveInSet` | `bit` | **NOT NULL** |  | Indicates whether this occupational code is active and valid within this specific set version. |
+| `MajorGroup` | `nvarchar(10)` | NULL |  | 1-digit DHET Major Group classification (e.g. "1" Managers, "2" Professionals, "6" Craft and Related Trades). |
+| `MinorGroup` | `nvarchar(10)` | NULL |  | 3-digit DHET Minor Group classification (e.g. "651" Sheet and Structural Metal Workers). |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(100)` | NULL |  | User identifier or system process that last updated the record. |
+| `OfoCodeId` | `nvarchar(50)` | **NOT NULL** | 🔗 **FK** | Statutory OFO occupational code referencing lookup.OfoCodeType.Code (e.g. "651202", "653101"). |
+| `OfoCodeSetId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent statutory OFO framework release. |
+| `SubMajorGroup` | `nvarchar(10)` | NULL |  | 2-digit DHET Sub-Major Group classification (e.g. "65" Metal, Machinery and Related Trades). |
+| `Trade` | `bit` | **NOT NULL** |  | Indicates whether this occupation is officially designated as a statutory trade under the Skills Development Act. |
+| `UnitGroup` | `nvarchar(10)` | NULL |  | 4-digit DHET Unit Group classification (e.g. "6512" Welders and Flamecutters). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_OfoCodeSetItem_OfoCodeType_OfoCodeId` | `OfoCodeId` | `lookup.OfoCodeType` | `Restrict` |
+| `FK_OfoCodeSetItem_OfoCodeSet_OfoCodeSetId` | `OfoCodeSetId` | `dbo.OfoCodeSet` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_OfoCodeSetItem_OfoCodeId` | `OfoCodeId` | No |
+| `IX_OfoCodeSetItem_Set_Code` | `OfoCodeSetId, OfoCodeId` | ✅ Yes |
 
 ---
 

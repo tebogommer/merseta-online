@@ -16,8 +16,8 @@ public static class FileFormatSniffer
     };
 
     public static async Task<(Encoding Encoding, char Delimiter, bool IsExcel)> SniffFilePropertiesAsync(
-        Stream stream, 
-        string fileName, 
+        Stream stream,
+        string fileName,
         CancellationToken ct = default)
     {
         var ext = Path.GetExtension(fileName).ToLowerInvariant();

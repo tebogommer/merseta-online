@@ -33,7 +33,7 @@ public class HareNiemeyerLevyPrecisionTests
 
         // Assert
         decimal sumComponents = split.MandatoryGrantAmount + split.DiscretionaryGrantAmount + split.AdminLevyAmount + split.QctoLevyAmount;
-        
+
         // Total SETA portion must match sum of all 4 components exactly to the cent
         Assert.Equal(split.TotalSetaPortion, sumComponents);
 

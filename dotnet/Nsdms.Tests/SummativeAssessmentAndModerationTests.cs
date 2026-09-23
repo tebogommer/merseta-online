@@ -65,12 +65,12 @@ public class SummativeAssessmentAndModerationTests
         db.TrainingProviders.Add(sdp);
         await db.SaveChangesAsync();
 
-        var learner = new CompanyLearner 
-        { 
-            PersonId = person.Id, 
-            OrganisationId = org.Id, 
+        var learner = new CompanyLearner
+        {
+            PersonId = person.Id,
+            OrganisationId = org.Id,
             TrainingProviderId = sdp.Id,
-            LearnerStatusCode = "Registered" 
+            LearnerStatusCode = "Registered"
         };
         db.CompanyLearners.Add(learner);
         await db.SaveChangesAsync();
@@ -132,12 +132,12 @@ public class SummativeAssessmentAndModerationTests
         db.TrainingProviders.Add(sdp);
         await db.SaveChangesAsync();
 
-        var learner = new CompanyLearner 
-        { 
-            PersonId = person.Id, 
-            OrganisationId = fundedOrg.Id, 
+        var learner = new CompanyLearner
+        {
+            PersonId = person.Id,
+            OrganisationId = fundedOrg.Id,
             TrainingProviderId = sdp.Id,
-            LearnerStatusCode = "Registered" 
+            LearnerStatusCode = "Registered"
         };
         db.CompanyLearners.Add(learner);
         await db.SaveChangesAsync();
@@ -250,12 +250,12 @@ public class SummativeAssessmentAndModerationTests
         db.TrainingProviders.Add(sdp);
         await db.SaveChangesAsync();
 
-        var learner = new CompanyLearner 
-        { 
-            PersonId = person.Id, 
-            OrganisationId = org.Id, 
+        var learner = new CompanyLearner
+        {
+            PersonId = person.Id,
+            OrganisationId = org.Id,
             TrainingProviderId = sdp.Id,
-            LearnerStatusCode = "Registered" 
+            LearnerStatusCode = "Registered"
         };
         db.CompanyLearners.Add(learner);
         await db.SaveChangesAsync();

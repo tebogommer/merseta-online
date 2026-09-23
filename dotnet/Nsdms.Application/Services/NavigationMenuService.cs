@@ -266,7 +266,7 @@ public class NavigationMenuService : INavigationMenuService
     {
         if (string.IsNullOrWhiteSpace(personaKeyOrTitle)) return null;
         var profiles = GetPersonaProfiles();
-        return profiles.FirstOrDefault(p => 
+        return profiles.FirstOrDefault(p =>
             p.PersonaKey.Equals(personaKeyOrTitle, StringComparison.OrdinalIgnoreCase) ||
             p.PersonaTitle.Equals(personaKeyOrTitle, StringComparison.OrdinalIgnoreCase) ||
             p.ShortLabel.Equals(personaKeyOrTitle, StringComparison.OrdinalIgnoreCase) ||
@@ -293,8 +293,8 @@ public class NavigationMenuService : INavigationMenuService
         var badgeCounts = await GetDynamicBadgeCountsAsync(username, roles);
 
         // Determine if user is super admin
-        bool isSuperAdmin = roles.Any(r => r.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase) || 
-                                           r.Equals("Admin", StringComparison.OrdinalIgnoreCase) || 
+        bool isSuperAdmin = roles.Any(r => r.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase) ||
+                                           r.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
                                            username.Equals("Admin", StringComparison.OrdinalIgnoreCase));
 
         var pinnedSet = new HashSet<string>(preferences.PinnedItemIds, StringComparer.OrdinalIgnoreCase);
@@ -334,7 +334,7 @@ public class NavigationMenuService : INavigationMenuService
                 var action = item.RequiredAction ?? AppPermissions.ActionView;
                 var claim = AppPermissions.Create(item.RequiredModule, action);
                 var manageClaim = AppPermissions.Create(item.RequiredModule, AppPermissions.ActionManage);
-                
+
                 if (permissions.Contains(claim) || permissions.Contains(manageClaim))
                 {
                     return true;
@@ -409,7 +409,7 @@ public class NavigationMenuService : INavigationMenuService
         var prefs = await GetUserPreferencesAsync(username);
         var master = BuildMasterNavigationCatalog();
         var pinnedSet = new HashSet<string>(prefs.PinnedItemIds, StringComparer.OrdinalIgnoreCase);
-        
+
         return master
             .Where(i => pinnedSet.Contains(i.Id))
             .OrderBy(i => i.DisplayOrder)
@@ -583,8 +583,8 @@ public class NavigationMenuService : INavigationMenuService
 
         // 1. Search in master navigation items
         var navItems = BuildMasterNavigationCatalog();
-        bool isSuperAdmin = roles.Any(r => r.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase) || 
-                                           r.Equals("Admin", StringComparison.OrdinalIgnoreCase) || 
+        bool isSuperAdmin = roles.Any(r => r.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase) ||
+                                           r.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
                                            username.Equals("Admin", StringComparison.OrdinalIgnoreCase));
 
         foreach (var item in navItems)
@@ -622,7 +622,7 @@ public class NavigationMenuService : INavigationMenuService
             {
                 score = 80;
             }
-            else if (item.Description.Contains(cleanQuery, StringComparison.OrdinalIgnoreCase) || 
+            else if (item.Description.Contains(cleanQuery, StringComparison.OrdinalIgnoreCase) ||
                      item.Category.Contains(cleanQuery, StringComparison.OrdinalIgnoreCase))
             {
                 score = 50;
@@ -1203,6 +1203,21 @@ public class NavigationMenuService : INavigationMenuService
                 PersonaTags = new() { "Admin", "SDF", "CLO" },
                 DisplayOrder = 4,
                 Keywords = new() { "extension", "deadline extension", "wsp extension", "late filing", "postponement" }
+            },
+            new()
+            {
+                Id = "nav-mg-windows",
+                Title = "Mandatory grant windows",
+                Href = "admin/mg-windows",
+                Icon = "CalendarMonth",
+                Category = "Grants, levies & finance",
+                Description = "Statutory annual Mandatory Grant submission cycles, lodgement deadlines, and gazetted OFO framework releases",
+                RequiredModule = AppPermissions.ModuleWsp,
+                RequiredAction = AppPermissions.ActionView,
+                RequiredRoles = new() { "SuperAdmin", "Admin", "CLO", "Finance" },
+                PersonaTags = new() { "Admin", "CLO", "Finance" },
+                DisplayOrder = 5,
+                Keywords = new() { "mg window", "mandatory grant window", "wsp window", "ofo set", "ofo codes", "submission window" }
             },
             new()
             {

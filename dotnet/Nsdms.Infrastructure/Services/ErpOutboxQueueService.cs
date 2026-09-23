@@ -99,7 +99,7 @@ public class ErpOutboxQueueService : IErpOutboxQueueService
             );
         }
 
-        var endpoint = await _config.GetValueAsync("Integrations:DynamicsGp:EndpointUrl", 
+        var endpoint = await _config.GetValueAsync("Integrations:DynamicsGp:EndpointUrl",
             await _config.GetValueAsync("Integrations.DynamicsGp.EndpointUrl", "https://erp.merseta.org.za/GP/v1/Transactions"));
 
         if (!isGpEnabled)

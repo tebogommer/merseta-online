@@ -223,8 +223,8 @@ public class ZoneAndCaseloadService : IZoneAndCaseloadService
     #region 2. Event-Driven Auto-Demarcation Hook
 
     public async Task<OrganisationDemarcationResultDto> AutoDemarcateOrganisationAsync(
-        int organisationId, 
-        bool forceReassignment, 
+        int organisationId,
+        bool forceReassignment,
         string currentUsername)
     {
         using var context = _contextFactory.CreateDbContext();
@@ -268,7 +268,7 @@ public class ZoneAndCaseloadService : IZoneAndCaseloadService
         var postalCode = org.PostalAddressPostalCode?.ToLower() ?? "";
 
         // Exact town name match on postal/physical
-        matchedDemarcation = allDemarcations.FirstOrDefault(d => 
+        matchedDemarcation = allDemarcations.FirstOrDefault(d =>
             !string.IsNullOrWhiteSpace(postalCode) && d.TownName.ToLower() == postalCode);
 
         if (matchedDemarcation == null && !string.IsNullOrWhiteSpace(physical))
@@ -318,8 +318,8 @@ public class ZoneAndCaseloadService : IZoneAndCaseloadService
         }
 
         // If existing portfolio already matches, preserve
-        if (activePortfolio != null && 
-            activePortfolio.RelationshipOfficerUserId == officerUserId && 
+        if (activePortfolio != null &&
+            activePortfolio.RelationshipOfficerUserId == officerUserId &&
             activePortfolio.ManagingRegionCode == targetRegion &&
             !forceReassignment)
         {

@@ -16,19 +16,19 @@ namespace Nsdms.Application.Services;
 public class OkfFrontmatterParser : IOkfFrontmatterParser
 {
     private static readonly Regex FrontmatterRegex = new(
-        @"^---\r?\n(.*?)\r?\n---\r?\n(.*)$", 
+        @"^---\r?\n(.*?)\r?\n---\r?\n(.*)$",
         RegexOptions.Singleline | RegexOptions.Compiled);
 
     private static readonly Regex FootnoteRegex = new(
-        @"\[\^([a-zA-Z0-9_\.\-]+)\]", 
+        @"\[\^([a-zA-Z0-9_\.\-]+)\]",
         RegexOptions.Compiled);
 
     private static readonly Regex InternalLinkRegex = new(
-        @"\[([^\]]+)\]\((/[^)]+\.md)\)", 
+        @"\[([^\]]+)\]\((/[^)]+\.md)\)",
         RegexOptions.Compiled);
 
     private static readonly Regex ComputationFenceRegex = new(
-        @"#\s+Computation\s*\r?\n(?:```(?:sql|tsql)?\r?\n)?(.*?)(?:```|$)", 
+        @"#\s+Computation\s*\r?\n(?:```(?:sql|tsql)?\r?\n)?(.*?)(?:```|$)",
         RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private readonly MarkdownPipeline _markdownPipeline;
@@ -76,7 +76,7 @@ public class OkfFrontmatterParser : IOkfFrontmatterParser
         Dictionary<string, object?> rawMap;
         try
         {
-            rawMap = _yamlDeserializer.Deserialize<Dictionary<string, object?>>(yamlText) 
+            rawMap = _yamlDeserializer.Deserialize<Dictionary<string, object?>>(yamlText)
                      ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         }
         catch

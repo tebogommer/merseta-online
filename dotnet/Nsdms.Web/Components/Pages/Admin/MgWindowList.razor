@@ -1,0 +1,347 @@
+@page "/admin/mg-windows"
+@namespace Nsdms.Web.Components.Pages.Admin
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Application.Common.Models
+@using Nsdms.Application.Services
+@using Nsdms.Web.Components.Pages.Admin.Dialogs
+@using Nsdms.Web.Components.Shared
+@attribute [Authorize]
+@inject IMgWindowGovernanceService WindowGovService
+@inject IOfoCodeSetService OfoSetService
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Mandatory Grant Windows - NSDMS merSETA</PageTitle>
+
+<main id="main-content" style="max-width: 1600px; margin: 0 auto;">
+    <!-- 1. Header with Breadcrumbs & Action Zone (UI-STANDARD §4.1) -->
+    <EntityHeader Title="Mandatory Grant Submission Windows"
+                  Subtitle="Official annual mandatory grant cycles, statutory deadlines, dual authorisation controls, and gazetted OFO occupational frameworks."
+                  BreadcrumbItems="_breadcrumbs">
+        <Actions>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenCreateDialog">
+                Propose New Grant Window
+            </MudButton>
+        </Actions>
+    </EntityHeader>
+
+    <!-- 2. StatCardRow (UI-STANDARD §4.4) -->
+    <StatCardRow>
+        <StatCard Title="Active Window"
+                  Value="@(_activeWindow != null ? $"MG-WIN-{_activeWindow.SchemeYear}" : "None Active")"
+                  TargetText="@(_activeWindow != null ? (_activeWindow.IsCurrentlyOpen ? "Portal open & accepting submissions" : "Upcoming cycle") : "No live cycle")"
+                  IsTargetGreen="@(_activeWindow?.IsCurrentlyOpen ?? false)"
+                  TrendColor="@(_activeWindow != null ? Color.Success : Color.Default)"
+                  Icon="@Icons.Material.Filled.CalendarMonth" />
+
+        <StatCard Title="Pending Review"
+                  Value="@_pendingCount.ToString()"
+                  TargetText="@($"{_draftCount} in draft stage")"
+                  TrendColor="Color.Warning"
+                  Icon="@Icons.Material.Filled.PendingActions" />
+
+        <StatCard Title="Gazetted OFO Releases"
+                  Value="@_totalOfoSets.ToString()"
+                  TargetText="National statutory reference sets"
+                  TrendColor="Color.Info"
+                  Icon="@Icons.Material.Filled.AccountTree" />
+
+        <StatCard Title="Governing Version"
+                  Value="@(_activeWindow != null ? (!string.IsNullOrWhiteSpace(_activeWindow.OfoCodeSetVersion) ? $"{_activeWindow.OfoCodeSetVersion} Release" : _activeWindow.OfoCodeSetName) : "v25 Release")"
+                  TargetText="@(_activeWindow?.OfoCodeSetName ?? "DHET statutory baseline")"
+                  TrendColor="Color.Primary"
+                  Icon="@Icons.Material.Filled.Gavel" />
+    </StatCardRow>
+
+    <!-- 3. Filter Bar (UI-STANDARD §4.5) -->
+    <FilterBar SearchPlaceholder="Search by scheme year, title, gazette citation..."
+               SearchText="@_searchTerm"
+               SearchTextChanged="OnSearchChanged"
+               ResultCount="@_filteredWindows.Count"
+               HasActiveFilters="@(ActiveFilterCount > 0)"
+               OnClearAll="ResetFilters">
+        <FilterContent>
+            <div class="d-flex align-center gap-2 flex-wrap">
+                <MudSelect T="int?" Value="_selectedYear" ValueChanged="OnYearFilterChanged"
+                           Label="Scheme Year"
+                           Clearable="true"
+                           Dense="true"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Style="min-width: 150px;">
+                    @foreach (var yr in _availableYears)
+                    {
+                        <MudSelectItem Value="@((int?)yr)">@yr Cycle</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSelect T="string" Value="_selectedStatus" ValueChanged="OnStatusFilterChanged"
+                           Label="Governance Stage"
+                           Clearable="true"
+                           Dense="true"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Style="min-width: 200px;">
+                    <MudSelectItem Value="@("Approved")">Approved & Active</MudSelectItem>
+                    <MudSelectItem Value="@("PendingReview")">Pending Independent Review</MudSelectItem>
+                    <MudSelectItem Value="@("Draft")">Draft Schedule</MudSelectItem>
+                    <MudSelectItem Value="@("Rejected")">Rejected</MudSelectItem>
+                    <MudSelectItem Value="@("Archived")">Archived</MudSelectItem>
+                </MudSelect>
+            </div>
+        </FilterContent>
+    </FilterBar>
+
+    <!-- 4. DataGridShell (UI-STANDARD §11) -->
+    <DataGridShell TItem="MgWindowListDto"
+                   GridKey="MgWindowsRegister"
+                   Items="@_filteredWindows"
+                   IsLoading="@_isLoading"
+                   TotalItemsCount="@_filteredWindows.Count"
+                   EmptyTitle="No Mandatory Grant Windows Found"
+                   EmptyMessage="No grant submission windows match the specified search or filter criteria. Propose a new window schedule to commence the statutory cycle."
+                   EmptyActionLabel="Propose New Grant Window"
+                   OnEmptyAction="OpenCreateDialog">
+        <ChildContent>
+            <MudTable Items="@_filteredWindows"
+                      Hover="true"
+                      Dense="true"
+                      Elevation="0"
+                      Breakpoint="Breakpoint.Sm"
+                      Class="border-default">
+                <HeaderContent>
+                    <MudTh>Reference</MudTh>
+                    <MudTh>Scheme Year</MudTh>
+                    <MudTh>Window Official Title</MudTh>
+                    <MudTh>Governing OFO Framework</MudTh>
+                    <MudTh>Lodgement Period</MudTh>
+                    <MudTh>Extension Cutoff</MudTh>
+                    <MudTh>Governance Status</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Reference">
+                        <MudLink Href="@($"/admin/mg-windows/{context.Id}")"
+                                 Class="font-mono font-weight-bold text-primary"
+                                 Underline="Underline.Hover">
+                            @context.ReferenceNumber
+                        </MudLink>
+                    </MudTd>
+
+                    <MudTd DataLabel="Scheme Year">
+                        <span class="font-weight-bold font-mono">@context.SchemeYear</span>
+                    </MudTd>
+
+                    <MudTd DataLabel="Window Official Title">
+                        <div class="fw-bold">@context.WindowName</div>
+                        @if (!string.IsNullOrWhiteSpace(context.GazetteReference))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Citation: @context.GazetteReference
+                            </MudText>
+                        }
+                    </MudTd>
+
+                    <MudTd DataLabel="Governing OFO Framework">
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Color="Color.Primary"
+                                 Variant="Variant.Filled"
+                                 Icon="@Icons.Material.Filled.AccountTree">
+                            @context.OfoCodeSetName (@context.OfoCodeSetVersion)
+                        </MudChip>
+                    </MudTd>
+
+                    <MudTd DataLabel="Lodgement Period">
+                        <div class="font-mono" style="font-size: 0.8125rem;">
+                            @context.OpeningDate.ToString("yyyy-MM-dd") to @context.ClosingDate.ToString("yyyy-MM-dd")
+                        </div>
+                        @if (context.IsCurrentlyOpen)
+                        {
+                            <span class="badge text-success" style="font-size: 0.75rem;">● Open Now</span>
+                        }
+                    </MudTd>
+
+                    <MudTd DataLabel="Extension Cutoff">
+                        <span class="font-mono" style="font-size: 0.8125rem;">
+                            @context.ExtensionCutoffDate.ToString("yyyy-MM-dd")
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="Governance Status">
+                        @switch (context.ApprovalStatus)
+                        {
+                            case "Approved":
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Approved & Active</MudChip>
+                                break;
+                            case "PendingReview":
+                                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled">Pending Review</MudChip>
+                                break;
+                            case "Draft":
+                                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">Draft</MudChip>
+                                break;
+                            case "Rejected":
+                                <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled">Rejected</MudChip>
+                                break;
+                            case "Archived":
+                                <MudChip T="string" Size="Size.Small" Color="Color.Dark" Variant="Variant.Outlined">Archived</MudChip>
+                                break;
+                            default:
+                                <MudChip T="string" Size="Size.Small" Color="Color.Default">@context.ApprovalStatus</MudChip>
+                                break;
+                        }
+                    </MudTd>
+
+                    <MudTd DataLabel="Actions" Style="text-align: right;">
+                        <MudButton Variant="Variant.Outlined"
+                                   Size="Size.Small"
+                                   Color="Color.Primary"
+                                   EndIcon="@Icons.Material.Filled.ArrowForward"
+                                   Href="@($"/admin/mg-windows/{context.Id}")">
+                            Manage Window
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50 }" />
+                </PagerContent>
+            </MudTable>
+        </ChildContent>
+    </DataGridShell>
+</main>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Administration", href: "/admin"),
+        new BreadcrumbItem("Mandatory Grant Windows", href: null, disabled: true)
+    };
+
+    private bool _isLoading = true;
+    private List<MgWindowListDto> _windows = new();
+    private List<MgWindowListDto> _filteredWindows = new();
+
+    private MgWindowListDto? _activeWindow;
+    private int _pendingCount;
+    private int _draftCount;
+    private int _totalOfoSets;
+
+    private string _searchTerm = string.Empty;
+    private int? _selectedYear;
+    private string? _selectedStatus;
+    private List<int> _availableYears = new();
+
+    private int ActiveFilterCount =>
+        (!string.IsNullOrWhiteSpace(_searchTerm) ? 1 : 0) +
+        (_selectedYear.HasValue ? 1 : 0) +
+        (!string.IsNullOrWhiteSpace(_selectedStatus) ? 1 : 0);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _windows = await WindowGovService.GetWindowsAsync();
+            var sets = await OfoSetService.GetActiveSetsAsync();
+            _totalOfoSets = sets.Count;
+
+            _availableYears = _windows.Select(w => w.SchemeYear).Distinct().OrderByDescending(y => y).ToList();
+            if (!_availableYears.Any())
+            {
+                _availableYears.Add(DateTime.UtcNow.Year);
+            }
+
+            _activeWindow = _windows.FirstOrDefault(w => w.IsActive && w.ApprovalStatus == "Approved");
+            _pendingCount = _windows.Count(w => w.ApprovalStatus == "PendingReview");
+            _draftCount = _windows.Count(w => w.ApprovalStatus == "Draft");
+
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading Mandatory Grant windows: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        var result = _windows.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            var s = _searchTerm.Trim();
+            result = result.Where(w =>
+                w.WindowName.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                w.SchemeYear.ToString().Contains(s) ||
+                w.ReferenceNumber.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                (w.GazetteReference != null && w.GazetteReference.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                w.OfoCodeSetName.Contains(s, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (_selectedYear.HasValue)
+        {
+            result = result.Where(w => w.SchemeYear == _selectedYear.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(_selectedStatus))
+        {
+            result = result.Where(w => w.ApprovalStatus == _selectedStatus);
+        }
+
+        _filteredWindows = result.ToList();
+    }
+
+    private void OnSearchChanged(string search)
+    {
+        _searchTerm = search;
+        ApplyFilters();
+    }
+
+    private void OnYearFilterChanged(int? year)
+    {
+        _selectedYear = year;
+        ApplyFilters();
+    }
+
+    private void OnStatusFilterChanged(string? status)
+    {
+        _selectedStatus = status;
+        ApplyFilters();
+    }
+
+    private void ResetFilters()
+    {
+        _searchTerm = string.Empty;
+        _selectedYear = null;
+        _selectedStatus = null;
+        ApplyFilters();
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<ProposeMgWindowDialog>("Propose Mandatory Grant Window", options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled && result.Data is MgWindow created)
+        {
+            await LoadDataAsync();
+            Navigation.NavigateTo($"/admin/mg-windows/{created.Id}");
+        }
+    }
+}

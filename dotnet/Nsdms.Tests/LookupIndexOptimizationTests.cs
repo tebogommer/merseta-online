@@ -70,6 +70,7 @@ public class LookupIndexOptimizationTests
 
         var audit = new AuditService(contextFactory);
         var service = new LookupService(contextFactory, audit);
+        service.ClearCache();
 
         // Act
         var results = await service.GetSicCodesAsync("SIC-TEST-01");
@@ -96,6 +97,7 @@ public class LookupIndexOptimizationTests
 
         var audit = new AuditService(contextFactory);
         var service = new LookupService(contextFactory, audit);
+        service.ClearCache();
 
         // Act
         var results = await service.GetOfoCodesAsync("Welder");
@@ -122,6 +124,7 @@ public class LookupIndexOptimizationTests
 
         var audit = new AuditService(contextFactory);
         var service = new LookupService(contextFactory, audit);
+        service.ClearCache();
 
         // Act
         var results = await service.GetStatssaAreaCodesAsync("Johannesburg");

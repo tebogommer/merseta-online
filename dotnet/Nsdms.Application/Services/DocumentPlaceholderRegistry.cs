@@ -94,8 +94,8 @@ public class DocumentPlaceholderRegistry : IDocumentPlaceholderRegistry
             return _placeholders.Where(p => p.Category != "Legacy Aliases").ToList().AsReadOnly();
         }
 
-        return _placeholders.Where(p => 
-            p.Category != "Legacy Aliases" && 
+        return _placeholders.Where(p =>
+            p.Category != "Legacy Aliases" &&
             (p.ApplicableCategory.Equals("All", StringComparison.OrdinalIgnoreCase) ||
              p.ApplicableCategory.Equals(documentCategory, StringComparison.OrdinalIgnoreCase)))
             .ToList()

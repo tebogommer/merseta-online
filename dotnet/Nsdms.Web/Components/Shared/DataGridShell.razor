@@ -41,101 +41,102 @@
         </div>
     }
 
-    <!-- Toolbar: Search, Result Count, Columns, Custom Actions -->
-    @if (QuickFilter != null || CustomActions != null || !string.IsNullOrWhiteSpace(SearchPlaceholder) || FilterContent != null || ActiveFilterChips != null)
-    {
-        <div class="grid-toolbar mb-3 d-flex flex-column flex-md-row justify-space-between align-start align-md-center gap-3">
-            <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 480px; width: 100%;">
-                <MudTextField Value="SearchString"
-                              ValueChanged="OnSearchStringChanged"
-                              T="string"
-                              Placeholder="@(SearchPlaceholder ?? "Search records...")"
-                              Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search"
-                              IconSize="Size.Small"
-                              Clearable="true"
-                              Immediate="true"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Class="flex-grow-1"
-                              Style="border-radius: var(--radius-md); background: var(--surface);" />
-            </div>
-
-            <div class="d-flex align-center gap-2 flex-wrap">
-                <span class="text-secondary font-mono mr-1" style="font-size: 0.8125rem;">
-                    @EffectiveCount @(EffectiveCount == 1 ? "record" : "records")
-                </span>
-
-                @if (CustomActions != null)
-                {
-                    @CustomActions
-                }
-                @if (ExportCallback.HasDelegate)
-                {
-                    <MudTooltip Text="Export visible data">
-                        <MudIconButton Icon="@Icons.Material.Filled.Download" 
-                                       Color="Color.Default" 
-                                       Size="Size.Small" 
-                                       OnClick="ExportCallback" 
-                                       aria-label="Export data" />
-                    </MudTooltip>
-                }
-            </div>
-        </div>
-
-        @if (FilterContent != null || ActiveFilterChips != null || (HasActiveFilters && OnClearFilters.HasDelegate))
+    <!-- Unified Workspace Surface Container (DESIGN.md §8.2 & §13.2) -->
+    <div class="nsdms-workspace-surface">
+        @if (QuickFilter != null || CustomActions != null || !string.IsNullOrWhiteSpace(SearchPlaceholder) || FilterContent != null || ActiveFilterChips != null)
         {
-            <div class="pa-3 mb-3 rounded border" style="background: var(--surface); border-color: var(--border);">
-                @if (FilterContent != null)
-                {
-                    <div class="d-flex flex-wrap align-center gap-2 flex-grow-1 mb-2">
-                        @FilterContent
-                    </div>
-                }
-                @if (ActiveFilterChips != null || (HasActiveFilters && OnClearFilters.HasDelegate))
-                {
-                    <div class="d-flex flex-wrap align-center gap-2 pt-2 border-t" style="border-color: var(--border);">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-weight-medium">Active Filters:</MudText>
-                        @ActiveFilterChips
-                        @if (HasActiveFilters && OnClearFilters.HasDelegate)
-                        {
-                            <MudChip T="string" Color="Color.Error" Variant="Variant.Text" Size="Size.Small" OnClick="OnClearFilters" Icon="@Icons.Material.Filled.ClearAll">
-                                Clear All
-                            </MudChip>
-                        }
-                    </div>
-                }
+            <div class="nsdms-workspace-toolbar d-flex flex-column flex-md-row justify-space-between align-start align-md-center gap-3">
+                <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 480px; width: 100%;">
+                    <MudTextField Value="SearchString"
+                                  ValueChanged="OnSearchStringChanged"
+                                  T="string"
+                                  Placeholder="@(SearchPlaceholder ?? "Search records...")"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Small"
+                                  Clearable="true"
+                                  Immediate="true"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="flex-grow-1"
+                                  Style="border-radius: var(--radius-md); background: var(--surface);" />
+                </div>
+
+                <div class="d-flex align-center gap-2 flex-wrap">
+                    <span class="text-secondary font-mono mr-1" style="font-size: 0.8125rem;">
+                        @EffectiveCount @(EffectiveCount == 1 ? "record" : "records")
+                    </span>
+
+                    @if (CustomActions != null)
+                    {
+                        @CustomActions
+                    }
+                    @if (ExportCallback.HasDelegate)
+                    {
+                        <MudTooltip Text="Export visible data">
+                            <MudIconButton Icon="@Icons.Material.Filled.Download" 
+                                           Color="Color.Default" 
+                                           Size="Size.Small" 
+                                           OnClick="ExportCallback" 
+                                           aria-label="Export data" />
+                        </MudTooltip>
+                    }
+                </div>
+            </div>
+
+            @if (FilterContent != null || ActiveFilterChips != null || (HasActiveFilters && OnClearFilters.HasDelegate))
+            {
+                <div class="nsdms-workspace-subbar">
+                    @if (FilterContent != null)
+                    {
+                        <div class="d-flex flex-wrap align-center gap-2 flex-grow-1 mb-2">
+                            @FilterContent
+                        </div>
+                    }
+                    @if (ActiveFilterChips != null || (HasActiveFilters && OnClearFilters.HasDelegate))
+                    {
+                        <div class="d-flex flex-wrap align-center gap-2 pt-2 border-t" style="border-color: var(--border);">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-weight-medium">Active Filters:</MudText>
+                            @ActiveFilterChips
+                            @if (HasActiveFilters && OnClearFilters.HasDelegate)
+                            {
+                                <MudChip T="string" Color="Color.Error" Variant="Variant.Text" Size="Size.Small" OnClick="OnClearFilters" Icon="@Icons.Material.Filled.ClearAll">
+                                    Clear All
+                                </MudChip>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        <!-- Bulk Action Bar -->
+        @if (EffectiveSelectedItems != null && EffectiveSelectedItems.Any())
+        {
+            <div class="px-3 py-2 d-flex justify-space-between align-center flex-wrap gap-2 border-b" style="background-color: var(--brand-gold-subtle); border-color: var(--brand-gold);">
+                <div class="d-flex align-center gap-2">
+                    <MudChip T="string" Color="Color.Primary" Size="Size.Small">
+                        @EffectiveSelectedItems.Count() selected
+                    </MudChip>
+                    <MudButton Variant="Variant.Text" Color="Color.Default" Size="Size.Small" OnClick="ClearSelection">
+                        Clear selection
+                    </MudButton>
+                </div>
+                <div class="d-flex align-center gap-2">
+                    @if (BulkActionBarContent != null)
+                    {
+                        @BulkActionBarContent
+                    }
+                    else if (BulkActions != null)
+                    {
+                        @BulkActions(EffectiveSelectedItems)
+                    }
+                </div>
             </div>
         }
-    }
 
-    <!-- Bulk Action Bar -->
-    @if (EffectiveSelectedItems != null && EffectiveSelectedItems.Any())
-    {
-        <MudPaper Elevation="0" Class="pa-3 mb-3 border rounded d-flex justify-space-between align-center flex-wrap gap-2" style="background-color: var(--brand-gold-subtle); border-color: var(--brand-gold);">
-            <div class="d-flex align-center gap-2">
-                <MudChip T="string" Color="Color.Primary" Size="Size.Small">
-                    @EffectiveSelectedItems.Count() selected
-                </MudChip>
-                <MudButton Variant="Variant.Text" Color="Color.Default" Size="Size.Small" OnClick="ClearSelection">
-                    Clear selection
-                </MudButton>
-            </div>
-            <div class="d-flex align-center gap-2">
-                @if (BulkActionBarContent != null)
-                {
-                    @BulkActionBarContent
-                }
-                else if (BulkActions != null)
-                {
-                    @BulkActions(EffectiveSelectedItems)
-                }
-            </div>
-        </MudPaper>
-    }
-
-    <!-- 5 Discrete Grid States -->
-    <MudCard Elevation="0" Class="border rounded-lg overflow-hidden" Style="border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface);">
+        <!-- 5 Discrete Grid States inside Unified Workspace Surface -->
+        <div class="nsdms-workspace-content">
         @if (IsLoading)
         {
             <div class="pa-6">
@@ -242,7 +243,8 @@
                 </PagerContent>
             </MudTable>
         }
-    </MudCard>
+        </div>
+    </div>
 </div>
 
 @code {

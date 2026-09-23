@@ -1085,7 +1085,7 @@ public class GrantServiceTests
             ProjectTitle = "National Tooling & Apprenticeship Modernisation Programme",
             GrantTypeCode = "HYBRID",
             ApplicationStatusCode = "Submitted",
-            
+
             // Strategic Project Motivation Questions
             ProjectDescription = "Dual-intervention initiative combining accredited artisan apprenticeships with regional TVET tooling modernisation.",
             Purpose = "Upgrade tooling infrastructure and train high-absorption toolmakers.",

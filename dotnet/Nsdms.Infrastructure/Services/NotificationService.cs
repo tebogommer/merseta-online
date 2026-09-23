@@ -13,8 +13,8 @@ public class NotificationService : INotificationService
     private readonly IAuditService _audit;
 
     public NotificationService(
-        INsdmsDbContextFactory contextFactory, 
-        IAuditService audit, 
+        INsdmsDbContextFactory contextFactory,
+        IAuditService audit,
         ISignalRNotificationPublisher? publisher = null)
     {
         _contextFactory = contextFactory;
@@ -23,13 +23,13 @@ public class NotificationService : INotificationService
     }
 
     public async Task<SystemNotificationDto> SendNotificationAsync(
-        string? recipientUsername, 
-        string? recipientRole, 
-        string title, 
-        string message, 
-        string? actionUrl = null, 
-        string notificationType = "SystemAlert", 
-        string severity = "Info", 
+        string? recipientUsername,
+        string? recipientRole,
+        string title,
+        string message,
+        string? actionUrl = null,
+        string notificationType = "SystemAlert",
+        string severity = "Info",
         string actor = "SYSTEM",
         string? bodyHtml = null,
         string? senderDisplayName = null,
@@ -160,9 +160,9 @@ public class NotificationService : INotificationService
     }
 
     public async Task<List<SystemNotificationDto>> GetUserNotificationsAsync(
-        string username, 
-        List<string>? userRoles = null, 
-        bool unreadOnly = false, 
+        string username,
+        List<string>? userRoles = null,
+        bool unreadOnly = false,
         int maxCount = 20)
     {
         using var db = await _contextFactory.CreateDbContextAsync();

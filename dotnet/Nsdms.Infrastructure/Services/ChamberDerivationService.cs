@@ -141,8 +141,8 @@ public class ChamberDerivationService : IChamberDerivationService
             );
         }
 
-        bool isMissing = org.HasMissingChamberMapping || 
-                         string.IsNullOrWhiteSpace(org.ChamberCode) || 
+        bool isMissing = org.HasMissingChamberMapping ||
+                         string.IsNullOrWhiteSpace(org.ChamberCode) ||
                          string.IsNullOrWhiteSpace(org.GpVendorClass);
 
         if (isMissing)

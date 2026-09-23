@@ -25,7 +25,7 @@ public class BackgroundJobTicket
     public DateTime? CompletedAt { get; set; }
     public string? PayloadJson { get; set; }
     public string? ErrorMessage { get; set; }
-    
+
     // Result payload
     public string? ResultDownloadUrl { get; set; }
     public string? ResultFileName { get; set; }
@@ -41,7 +41,7 @@ public interface IBackgroundJobQueue
     ChannelReader<BackgroundJobTicket> BatchReader { get; }
 
     ValueTask<BackgroundJobTicket> EnqueueAsync(BackgroundJobTicket ticket, CancellationToken cancellationToken = default);
-    
+
     ValueTask<BackgroundJobTicket> EnqueueDocumentGenerationAsync(
         string documentType,
         int recordId,
@@ -56,14 +56,14 @@ public interface IBackgroundJobQueue
         CancellationToken cancellationToken = default);
 
     BackgroundJobTicket? GetJob(Guid jobId);
-    
+
     IEnumerable<BackgroundJobTicket> GetRecentJobs(int limit = 50);
-    
+
     IEnumerable<BackgroundJobTicket> GetUserJobs(string requestedBy, int limit = 20);
-    
+
     void UpdateProgress(Guid jobId, int progressPercentage, string? currentStep = null);
-    
+
     void MarkCompleted(Guid jobId, byte[]? resultData, string? contentType, string? fileName, string? downloadUrl = null, string? storagePath = null);
-    
+
     void MarkFailed(Guid jobId, string errorMessage);
 }

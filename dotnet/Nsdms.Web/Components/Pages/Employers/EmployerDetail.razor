@@ -9,6 +9,7 @@
 @inject IOrganisationService OrgService
 @inject IBrandAssetService BrandAssetService
 @inject IZoneAndCaseloadService ZoneService
+@inject IWspService WspService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -48,9 +49,18 @@
                 <MudMenuItem Icon="@Icons.Material.Filled.EventAvailable" OnClick="@(() => NavManager.NavigateTo($"/monitoring?organisationId={Id}"))">
                     Schedule Monitoring Visit
                 </MudMenuItem>
-                <MudMenuItem Icon="@Icons.Material.Filled.Assignment" OnClick="@(() => NavManager.NavigateTo($"/wsp/create?organisationId={Id}"))">
-                    Submit Annual WSP / ATR
-                </MudMenuItem>
+                @if (_wspWindowStatus == null || _wspWindowStatus.IsOpen)
+                {
+                    <MudMenuItem Icon="@Icons.Material.Filled.Assignment" OnClick="@(() => NavManager.NavigateTo($"/wsp/create?organisationId={Id}"))">
+                        @(_wspWindowStatus?.HasApprovedExtension == true ? "Submit Annual WSP / ATR (Extension Active)" : "Submit Annual WSP / ATR")
+                    </MudMenuItem>
+                }
+                else
+                {
+                    <MudMenuItem Icon="@Icons.Material.Filled.EventBusy" IconColor="Color.Warning" OnClick="@(() => NavManager.NavigateTo($"/wsp/extension-request?organisationId={Id}"))">
+                        Submit Annual WSP / ATR (Closed — Extension Required)
+                    </MudMenuItem>
+                }
                 <MudMenuItem Icon="@Icons.Material.Filled.AccountBalanceWallet" OnClick="@(() => NavManager.NavigateTo($"/grants/create?organisationId={Id}"))">
                     Apply for Discretionary Grant
                 </MudMenuItem>
@@ -250,6 +260,7 @@ else
     private string _newLogoUri = string.Empty;
     private string _newBrandColor = string.Empty;
     private bool _canAccessGovernance = false;
+    private WspWindowStatusDto? _wspWindowStatus;
 
     protected override void OnParametersSet()
     {
@@ -325,6 +336,14 @@ else
         {
             _organisation = org;
             _logoDataUri = await BrandAssetService.GetLogoDataUriAsync(Id, "Organisation");
+            try
+            {
+                _wspWindowStatus = await WspService.GetWindowStatusAsync(Id);
+            }
+            catch
+            {
+                // Graceful fallback
+            }
         }
         else
         {

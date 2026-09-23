@@ -224,7 +224,76 @@ None. All multi-step flows strictly adhere to `WizardShell`.
 
 ---
 
-## 11. Revision History & Changelog
+## 12. Form Layout, Label Architecture & Input Field Governance
+
+### 12.1 Typography & Label Hierarchy
+1. **Sentence Case Invariant**: All labels, subheadings, helper texts, and placeholder prompts MUST use standard sentence case. All-caps labels (`text-uppercase`) are strictly prohibited.
+2. **Label Proximity & Sizing**:
+   - Outlined inputs: Label size is governed by MudBlazor tokens (`0.875rem` default, scaling to `0.75rem` when floated).
+   - Read-only fields (`ReadOnlyField.razor`): The label MUST render at `0.75rem` (12px), `font-weight: 600`, color `var(--text-secondary)`, with no letter-spacing expansion.
+   - Values in read-only fields MUST render at `0.875rem` (14px), color `var(--text-primary)`, with `font-weight: 500`.
+3. **Concise Label Invariant (Max 4 Words)**:
+   - Form control labels must not exceed 4 words.
+   - Long statutory explanations, parenthetical file indicators, or calculations belong strictly in `HelperText` or an inline `<MudTooltip>`, never in the field label.
+   - **Bad**: `Estimated 20% Mandatory Grant (MG) rebate based on annual payroll`
+   - **Good**: Label: `Estimated MG rebate` | HelperText: `Statutory 20% levy rebate allocation upon approval`
+4. **Zero Parenthetical Jargon**:
+   - System/batch codes (e.g. `SETMIS File 400`, `File 200`, `EMP201`, `CIPC CoR 14.3`) must not appear in user-facing labels or card titles. Use plain language business labels.
+5. **No Double-Labeling**:
+   - When using MudBlazor outlined controls (`Variant.Outlined`), do not wrap the control in `<FormField Label="...">` with the same label text. `<FormField>` is reserved for inputs that lack built-in outlined labels.
+
+### 12.2 Form Row Height Normalization & Alignment
+1. **Row Baseline Invariant**: All controls placed on the same `<MudGrid>` or `<FormRow>` row must align to a consistent 56px input control box height.
+2. **Compound Controls**: When a switch (`<MudSwitch>`), checkbox, or action button is placed alongside outlined text fields, it MUST be wrapped in a `.nsdms-control-aligner` container (`min-height: 56px; display: flex; align-items: center; padding-top: 4px;`) so its vertical baseline matches the adjacent text boxes.
+
+---
+
+## 13. Spatial Hierarchy, Padding Budget & Container Nesting Constraints
+
+### 13.1 Single-Layer Padding Budget
+To prevent the "Box-in-a-Box" nested margin collapse and excessive horizontal whitespace:
+1. **Page Level**: The master layout (`MainLayout`) provides the sole outer gutter (`pa-4 pa-md-6`, max-width `1600px`).
+2. **Cards Inside Tabs**: When a `<MudCard>` or section is rendered inside `<MudTabPanel>`, the tab panel container must NOT have additional outer padding (`Class="pa-0"` on tab container).
+3. **No Double Card Containers**: Never place a `<MudCard>` directly inside another `<MudCard>`. Group nested subsections with `<FormSection>` using subtle top borders (`border-top: 1px solid var(--border)`).
+4. **Grid Item Margins**: Elements placed inside `<MudItem>` within a `<MudGrid Spacing="3">` MUST NOT declare vertical margin classes (`mb-3`, `mb-4`, `my-4`). Inter-item spacing is governed strictly by the parent grid.
+
+### 13.2 Unified Table Workspace Surface (`.nsdms-workspace-surface`)
+All data lists must encapsulate table controls inside a single cohesive surface card:
+```html
+<div class="nsdms-workspace-surface bg-surface border-default rounded-lg">
+    <!-- 1. Header Toolbar (Search, View Filters, Count, Primary Actions) -->
+    <div class="nsdms-workspace-toolbar pa-3 d-flex align-center justify-space-between gap-3">
+        ...
+    </div>
+    <!-- 2. Active Filter Chips & Bulk Action Bar (Subtle Divider) -->
+    @if (HasFilters) {
+        <div class="nsdms-workspace-subbar px-3 py-2 border-t border-default">...</div>
+    }
+    <!-- 3. Integrated Table Data -->
+    <div class="nsdms-workspace-grid">
+        <MudTable ... />
+    </div>
+</div>
+```
+Standalone floating filter cards or disjointed search boxes above data tables are prohibited.
+
+### 13.3 Standardized Sticky Header Docking
+All sticky detail headers and action bars must use the centralized design token:
+```css
+.sticky-top-header {
+    position: sticky !important;
+    top: var(--nsdms-header-height, 60px) !important;
+    z-index: 10 !important;
+    background-color: var(--surface) !important;
+    border-bottom: 1px solid var(--border) !important;
+}
+```
+Pages must never hardcode arbitrary inline pixel offsets like `top: 64px`.
+
+---
+
+## 14. Revision History & Changelog
+- **v1.7 (2026-09-23)**: Standardized Form Layout, Label Architecture & Input Field Governance (Section 12), Spatial Hierarchy & Padding Budget (Section 13), Unified Workspace Surface (`.nsdms-workspace-surface`), ReadOnlyField sentence case label typography (0.75rem / 600 weight), and FormShell fixed sticky footer padding (`.nsdms-form-shell`).
 - **v1.6 (2026-09-05)**: Full completion of all 9 strategic wizard candidates in the Enterprise Multi-Step Wizard Matrix (Section 10.4). Deployed Candidate #7 (`SdpAccreditationApplicationWizard.razor`) and Candidate #9 (`InterSetaTransferWizard.razor`) with shared forms (`SdpAccreditationFields`, `InterSetaTransferFields`), QCTO institutional accreditation self-audit checklist, Section 32 SIC code corroboration, and bUnit parity test coverage.
 - **v1.5 (2026-09-05)**: Deployed Candidate #8 (`WspAtrSubmissionWizard.razor`) with shared form (`WspAtrSubmissionFields.razor`), bipartite/tripartite sign-off quorum constitution based on workforce headcount, 20% Mandatory Grant levy rebate estimation, SETMIS File 500 pre-flight validation, and bUnit parity tests.
 - **v1.4 (2026-09-05)**: Deployed Candidates #5 (`TradeTestApplicationWizard.razor`) and #6 (`DgTrancheClaimWizard.razor`) with shared forms (`TradeTestApplicationFields`, `DgTrancheClaimFields`), CFO executive dual authorization gating, serialized payment vouchers (`PV-{yyyy}-DG-{id:D5}`), and bUnit parity tests.
@@ -232,3 +301,4 @@ None. All multi-step flows strictly adhere to `WizardShell`.
 - **v1.2 (2026-09-04)**: Installed Enterprise Multi-Step Wizard Standard (Section 10). Implemented shared components (`WizardShell`, `WizardStepper`, `WizardStep`, `WizardReviewStep`), build-time guard `[NSDMS0001]`, rebuilt `AssessorReRegistrationWizard` with zero raw stepper tags, added bUnit parity tests and automated discovery tests.
 - **v1.1**: Added SARS Monthly Levy Reactive Streaming & SqlBulkCopy Staging Standard.
 - **v1.0**: Initial baseline enterprise design system.
+

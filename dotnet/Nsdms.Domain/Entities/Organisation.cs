@@ -65,7 +65,7 @@ public class Organisation : BaseEntity
     /// SARS Income Tax reference number.
     /// </summary>
     public string? TaxNumber { get; set; }
-    
+
     /// <summary>
     /// Organisation SARS levy compliance category code (e.g. LEVY_PAYING, NON_LEVY_PAYING, EXEMPT).
     /// </summary>
@@ -275,7 +275,7 @@ public class Organisation : BaseEntity
     /// Optional enterprise-wide uniform mentor capacity cap override (e.g. 5 learners per mentor across all site workshops).
     /// </summary>
     public int? CustomMentorRatioCap { get; set; }
-    
+
     /// <summary>
     /// Registered contact persons and Skills Development Facilitators (SDFs).
     /// </summary>

@@ -161,11 +161,11 @@ public class WorkflowEngineTests
         var reviewTransitions = await workflowService.GetAvailableTransitionsAsync(instanceId, null);
         var queryTransition = reviewTransitions.First(t => t.ActionName == "Issue RFI / Query Documentation");
         var queryResult = await workflowService.AdvanceWorkflowAsync(
-            instanceId, 
-            queryTransition.Id, 
-            "clo@merseta.org.za", 
-            "MerSETA CLO", 
-            "Client Liaison Officer (CLO)", 
+            instanceId,
+            queryTransition.Id,
+            "clo@merseta.org.za",
+            "MerSETA CLO",
+            "Client Liaison Officer (CLO)",
             "OshAct fire safety certificate is expired. Please upload renewed compliance certificate.");
 
         Assert.True(queryResult.Success);
@@ -175,11 +175,11 @@ public class WorkflowEngineTests
         var queryStateTransitions = await workflowService.GetAvailableTransitionsAsync(instanceId, null);
         var resubmitTransition = queryStateTransitions.First(t => t.ActionName == "Resubmit Supporting Documents");
         var resubmitResult = await workflowService.AdvanceWorkflowAsync(
-            instanceId, 
-            resubmitTransition.Id, 
-            "admin@apex.co.za", 
-            "Apex Director", 
-            "Provider", 
+            instanceId,
+            resubmitTransition.Id,
+            "admin@apex.co.za",
+            "Apex Director",
+            "Provider",
             "Uploaded renewed fire safety compliance certificate valid until 2028.");
 
         Assert.True(resubmitResult.Success);

@@ -19,14 +19,36 @@
                     <MudText Typo="Typo.caption" Color="Color.Secondary">Annual Workplace Skills Plans and Training Reports</MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               Size="Size.Small"
-                               StartIcon="@Icons.Material.Filled.PostAdd"
-                               Href="@($"/wsp/create?organisationId={OrganisationId}")"
-                               aria-label="Submit New WSP / ATR">
-                        Submit WSP
-                    </MudButton>
+                    <div class="d-flex align-center gap-2 flex-wrap">
+                        <WspWindowCountdownBadge OrganisationId="@OrganisationId"
+                                                 Dense="true"
+                                                 OnStatusLoaded="HandleWindowStatusLoaded"
+                                                 OnWindowExpired="HandleWindowExpired" />
+                        @if (_windowStatus == null || _windowStatus.IsOpen)
+                        {
+                            <MudButton Variant="Variant.Filled"
+                                       Color="@(_windowStatus?.HasApprovedExtension == true ? Color.Tertiary : Color.Primary)"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.PostAdd"
+                                       Href="@($"/wsp/create?organisationId={OrganisationId}")"
+                                       aria-label="Submit New WSP / ATR">
+                                @(_windowStatus?.HasApprovedExtension == true ? "Submit WSP (Extension Active)" : "Submit WSP")
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="Statutory submission deadline closed. Request an extension under Regulation 4(2).">
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Warning"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.EventBusy"
+                                           Href="@($"/wsp/extension-request?organisationId={OrganisationId}")"
+                                           aria-label="Submission Window Closed. Request Statutory Deadline Extension">
+                                    Request Deadline Extension
+                                </MudButton>
+                            </MudTooltip>
+                        }
+                    </div>
                 </CardHeaderActions>
             </MudCardHeader>
             <MudCardContent>
@@ -102,9 +124,11 @@
 @code {
     [Parameter] public int OrganisationId { get; set; }
     [Parameter] public IEnumerable<WspSubmission>? WspSubmissions { get; set; }
+    [Inject] private IWspService WspService { get; set; } = default!;
 
     private bool _loadingRecons = true;
     private List<OrganisationLevyReconDto> _levyRecons = new();
+    private WspWindowStatusDto? _windowStatus;
 
     protected override async Task OnInitializedAsync()
     {
@@ -113,12 +137,38 @@
             _loadingRecons = true;
             try
             {
-                _levyRecons = await OrgService.GetLevyReconHistoryAsync(OrganisationId);
+                var reconsTask = OrgService.GetLevyReconHistoryAsync(OrganisationId);
+                var windowTask = WspService.GetWindowStatusAsync(OrganisationId);
+                await Task.WhenAll(reconsTask, windowTask);
+
+                _levyRecons = await reconsTask;
+                _windowStatus = await windowTask;
+            }
+            catch
+            {
+                // Graceful fallback
             }
             finally
             {
                 _loadingRecons = false;
             }
         }
+    }
+
+    private void HandleWindowStatusLoaded(WspWindowStatusDto status)
+    {
+        _windowStatus = status;
+        StateHasChanged();
+    }
+
+    private void HandleWindowExpired()
+    {
+        if (_windowStatus != null)
+        {
+            _windowStatus.IsOpen = false;
+            _windowStatus.IsClosed = true;
+            _windowStatus.UrgencyTier = WspUrgencyTier.Closed;
+        }
+        StateHasChanged();
     }
 }

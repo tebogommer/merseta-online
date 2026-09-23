@@ -349,8 +349,8 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         if (existing == null) throw new KeyNotFoundException($"WorkplaceApproval with ID {id} not found.");
 
         var beforeState = new { existing.ApprovalStatusCode, existing.InspectionDueDate };
-        var slaDays = _configService != null 
-            ? await _configService.GetValueAsync<int>("WorkplaceApproval:InspectionSlaBusinessDays", 20) 
+        var slaDays = _configService != null
+            ? await _configService.GetValueAsync<int>("WorkplaceApproval:InspectionSlaBusinessDays", 20)
             : 20;
 
         existing.ApprovalStatusCode = "APPLICATION";
@@ -457,8 +457,8 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
 
         if (isApproved)
         {
-            var defaultValidity = _configService != null 
-                ? await _configService.GetValueAsync<int>("WorkplaceApproval:DefaultValidityYears", 3) 
+            var defaultValidity = _configService != null
+                ? await _configService.GetValueAsync<int>("WorkplaceApproval:DefaultValidityYears", 3)
                 : 3;
             var years = validityYears.HasValue && validityYears.Value is >= 1 and <= 5 ? validityYears.Value : defaultValidity;
             existing.ApprovalStatusCode = "APPROVED";
@@ -553,8 +553,8 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         if (existing == null)
             throw new KeyNotFoundException($"WorkplaceApproval with ID {existingApprovalId} not found.");
 
-        var slaDays = _configService != null 
-            ? await _configService.GetValueAsync<int>("WorkplaceApproval:InspectionSlaBusinessDays", 20) 
+        var slaDays = _configService != null
+            ? await _configService.GetValueAsync<int>("WorkplaceApproval:InspectionSlaBusinessDays", 20)
             : 20;
 
         var renewal = new WorkplaceApproval

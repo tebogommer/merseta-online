@@ -56,7 +56,7 @@ public class OrganisationService : IOrganisationService
     private readonly IChamberDerivationService _chamberService;
 
     public OrganisationService(
-        INsdmsDbContextFactory contextFactory, 
+        INsdmsDbContextFactory contextFactory,
         IAuditService audit,
         ITenantProvider? tenantProvider = null,
         INonLevyNumberGeneratorService? nonLevyGenerator = null,
@@ -75,7 +75,7 @@ public class OrganisationService : IOrganisationService
     }
 
     public OrganisationService(
-        INsdmsDbContextFactory contextFactory, 
+        INsdmsDbContextFactory contextFactory,
         IAuditService audit,
         INonLevyNumberGeneratorService? nonLevyGenerator,
         IChamberDerivationService? chamberService)
@@ -261,83 +261,108 @@ public class OrganisationService : IOrganisationService
     public async Task<Organisation> CreateAsync(Organisation org, string currentUsername = "Admin")
     {
         using var db = await _contextFactory.CreateDbContextAsync();
-        org.CreatedAt = DateTime.UtcNow;
-        org.CreatedBy = currentUsername;
+        var strategy = db.Database.CreateExecutionStrategy();
 
-        // 1. Auto-assign statutory N-Number for non-levy organisations, TVETs, NGOs, and exempt SMEs
-        bool isNonLevy = string.IsNullOrWhiteSpace(org.SdlNumber) || 
-                         org.LevyCategoryCode == "NON_LEVY_PAYING" ||
-                         org.OrganisationTypeCode?.Contains("TVET", StringComparison.OrdinalIgnoreCase) == true ||
-                         org.OrganisationTypeCode?.Contains("NGO", StringComparison.OrdinalIgnoreCase) == true ||
-                         org.OrganisationTypeCode?.Contains("NPO", StringComparison.OrdinalIgnoreCase) == true ||
-                         org.OrganisationTypeCode?.Contains("UNIVERSITY", StringComparison.OrdinalIgnoreCase) == true;
-
-        if (isNonLevy && (string.IsNullOrWhiteSpace(org.SdlNumber) || org.SdlNumber == "N/A" || org.SdlNumber == "PENDING"))
+        return await strategy.ExecuteAsync(async () =>
         {
-            org.SdlNumber = _nonLevyGenerator != null
-                ? await _nonLevyGenerator.GenerateNextNonLevyNumberAsync()
-                : $"N{DateTime.UtcNow.Ticks % 1000000000:D9}";
-            org.LevyCategoryCode = "NON_LEVY_PAYING";
-        }
-
-        // 2. Chamber & Dynamics GP Vendor Class Derivation & Governance
-        if (_chamberService != null)
-        {
-            var derivation = await _chamberService.DeriveChamberAndVendorClassAsync(
-                org.SicCode,
-                org.OrganisationTypeCode,
-                org.ChamberCode,
-                org.IsManualChamberOverride
-            );
-
-            if (derivation.IsSuccess)
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
+            if (db.Database.IsRelational())
             {
-                org.ChamberCode = derivation.ChamberCode;
-                org.GpVendorClass = derivation.GpVendorClass;
-                org.HasMissingChamberMapping = false;
+                tx = await db.Database.BeginTransactionAsync();
             }
-            else
+
+            try
             {
-                org.ChamberCode = null;
-                org.GpVendorClass = null;
-                org.HasMissingChamberMapping = true;
-            }
-        }
-        else if (!org.IsManualChamberOverride && !string.IsNullOrWhiteSpace(org.SicCode))
-        {
-            var matchedSic = await db.SicCodeTypes.AsNoTracking().FirstOrDefaultAsync(s => s.Code == org.SicCode.Trim());
-            if (matchedSic != null && !string.IsNullOrWhiteSpace(matchedSic.ChamberCode))
-            {
-                org.ChamberCode = matchedSic.ChamberCode;
-                org.HasMissingChamberMapping = false;
-                org.GpVendorClass = matchedSic.ChamberCode switch
+                org.CreatedAt = DateTime.UtcNow;
+                org.CreatedBy = currentUsername;
+
+                // 1. Auto-assign statutory N-Number for non-levy organisations, TVETs, NGOs, and exempt SMEs
+                bool isNonLevy = string.IsNullOrWhiteSpace(org.SdlNumber) ||
+                                 org.LevyCategoryCode == "NON_LEVY_PAYING" ||
+                                 org.OrganisationTypeCode?.Contains("TVET", StringComparison.OrdinalIgnoreCase) == true ||
+                                 org.OrganisationTypeCode?.Contains("NGO", StringComparison.OrdinalIgnoreCase) == true ||
+                                 org.OrganisationTypeCode?.Contains("NPO", StringComparison.OrdinalIgnoreCase) == true ||
+                                 org.OrganisationTypeCode?.Contains("UNIVERSITY", StringComparison.OrdinalIgnoreCase) == true;
+
+                if (isNonLevy && (string.IsNullOrWhiteSpace(org.SdlNumber) || org.SdlNumber == "N/A" || org.SdlNumber == "PENDING"))
                 {
-                    "AUTO" => "AUTO",
-                    "METAL" => "METAL",
-                    "MOTOR" => "MOTOR",
-                    "NEW_TYRE" or "NEW TYRE" => "NEW TYRE",
-                    "PLASTICS" => "PLASTICS",
-                    _ => "SETA"
-                };
+                    org.SdlNumber = _nonLevyGenerator != null
+                        ? await _nonLevyGenerator.GenerateNextNonLevyNumberAsync()
+                        : $"N{DateTime.UtcNow.Ticks % 1000000000:D9}";
+                    org.LevyCategoryCode = "NON_LEVY_PAYING";
+                }
+
+                // 2. Chamber & Dynamics GP Vendor Class Derivation & Governance
+                if (_chamberService != null)
+                {
+                    var derivation = await _chamberService.DeriveChamberAndVendorClassAsync(
+                        org.SicCode,
+                        org.OrganisationTypeCode,
+                        org.ChamberCode,
+                        org.IsManualChamberOverride
+                    );
+
+                    if (derivation.IsSuccess)
+                    {
+                        org.ChamberCode = derivation.ChamberCode;
+                        org.GpVendorClass = derivation.GpVendorClass;
+                        org.HasMissingChamberMapping = false;
+                    }
+                    else
+                    {
+                        org.ChamberCode = null;
+                        org.GpVendorClass = null;
+                        org.HasMissingChamberMapping = true;
+                    }
+                }
+                else if (!org.IsManualChamberOverride && !string.IsNullOrWhiteSpace(org.SicCode))
+                {
+                    var matchedSic = await db.SicCodeTypes.AsNoTracking().FirstOrDefaultAsync(s => s.Code == org.SicCode.Trim());
+                    if (matchedSic != null && !string.IsNullOrWhiteSpace(matchedSic.ChamberCode))
+                    {
+                        org.ChamberCode = matchedSic.ChamberCode;
+                        org.HasMissingChamberMapping = false;
+                        org.GpVendorClass = matchedSic.ChamberCode switch
+                        {
+                            "AUTO" => "AUTO",
+                            "METAL" => "METAL",
+                            "MOTOR" => "MOTOR",
+                            "NEW_TYRE" or "NEW TYRE" => "NEW TYRE",
+                            "PLASTICS" => "PLASTICS",
+                            _ => "SETA"
+                        };
+                    }
+                    else
+                    {
+                        org.HasMissingChamberMapping = true;
+                    }
+                }
+
+                if (org.IsManualChamberOverride)
+                {
+                    org.ChamberOverrideDate ??= DateTime.UtcNow;
+                    org.ChamberOverrideApprovedBy ??= currentUsername;
+                }
+
+                db.Organisations.Add(org);
+                await db.SaveChangesAsync();
+
+                _audit.LogAction(db, "Organisation", org.Id, "Create", currentUsername, null, org);
+                await db.SaveChangesAsync();
+
+                if (tx != null) await tx.CommitAsync();
+                return org;
             }
-            else
+            catch
             {
-                org.HasMissingChamberMapping = true;
+                if (tx != null) await tx.RollbackAsync();
+                throw;
             }
-        }
-
-        if (org.IsManualChamberOverride)
-        {
-            org.ChamberOverrideDate ??= DateTime.UtcNow;
-            org.ChamberOverrideApprovedBy ??= currentUsername;
-        }
-
-        db.Organisations.Add(org);
-        await db.SaveChangesAsync();
-
-        _audit.LogAction(db, "Organisation", org.Id, "Create", currentUsername, null, org);
-        await db.SaveChangesAsync();
-        return org;
+            finally
+            {
+                tx?.Dispose();
+            }
+        });
     }
 
     public async Task<Organisation> UpdateAsync(Organisation org, string currentUsername = "Admin")
@@ -388,7 +413,7 @@ public class OrganisationService : IOrganisationService
         };
 
         // 1. Auto-assign statutory N-Number if missing on non-levy organisations
-        bool isNonLevy = string.IsNullOrWhiteSpace(org.SdlNumber) || 
+        bool isNonLevy = string.IsNullOrWhiteSpace(org.SdlNumber) ||
                          org.LevyCategoryCode == "NON_LEVY_PAYING" ||
                          org.OrganisationTypeCode?.Contains("TVET", StringComparison.OrdinalIgnoreCase) == true ||
                          org.OrganisationTypeCode?.Contains("NGO", StringComparison.OrdinalIgnoreCase) == true ||
@@ -615,28 +640,53 @@ public class OrganisationService : IOrganisationService
     public async Task<OrganisationContact> AddContactAsync(OrganisationContact contact, string currentUsername = "Admin")
     {
         using var db = await _contextFactory.CreateDbContextAsync();
-        contact.CreatedAt = DateTime.UtcNow;
-        contact.CreatedBy = currentUsername;
+        var strategy = db.Database.CreateExecutionStrategy();
 
-        if (contact.IsPrimary)
+        return await strategy.ExecuteAsync(async () =>
         {
-            // Unset previous primary contacts for this organisation
-            var existingPrimaries = await db.OrganisationContacts
-                .Where(c => c.OrganisationId == contact.OrganisationId && c.IsPrimary)
-                .ToListAsync();
-
-            foreach (var existingPrimary in existingPrimaries)
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
+            if (db.Database.IsRelational())
             {
-                existingPrimary.IsPrimary = false;
+                tx = await db.Database.BeginTransactionAsync();
             }
-        }
 
-        db.OrganisationContacts.Add(contact);
-        await db.SaveChangesAsync();
+            try
+            {
+                contact.CreatedAt = DateTime.UtcNow;
+                contact.CreatedBy = currentUsername;
 
-        _audit.LogAction(db, "OrganisationContact", contact.Id, "AddContact", currentUsername, null, contact);
-        await db.SaveChangesAsync();
-        return contact;
+                if (contact.IsPrimary)
+                {
+                    // Unset previous primary contacts for this organisation
+                    var existingPrimaries = await db.OrganisationContacts
+                        .Where(c => c.OrganisationId == contact.OrganisationId && c.IsPrimary)
+                        .ToListAsync();
+
+                    foreach (var existingPrimary in existingPrimaries)
+                    {
+                        existingPrimary.IsPrimary = false;
+                    }
+                }
+
+                db.OrganisationContacts.Add(contact);
+                await db.SaveChangesAsync();
+
+                _audit.LogAction(db, "OrganisationContact", contact.Id, "AddContact", currentUsername, null, contact);
+                await db.SaveChangesAsync();
+
+                if (tx != null) await tx.CommitAsync();
+                return contact;
+            }
+            catch
+            {
+                if (tx != null) await tx.RollbackAsync();
+                throw;
+            }
+            finally
+            {
+                tx?.Dispose();
+            }
+        });
     }
 
     public async Task<OrganisationContact> AddContactAsync(int organisationId, int personId, string contactType = "General", bool isPrimary = false, string currentUsername = "Admin", string? designation = null)

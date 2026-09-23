@@ -15,6 +15,12 @@ public interface IBusinessRuleEngineService
     Task<RuleWorkflowEvaluationResult> EvaluateWorkflowAsync<T>(string workflowName, T inputPayload);
 
     /// <summary>
+    /// Evaluates all active rules in the specified workflow against a raw JSON input string.
+    /// Safely normalizes numeric and boolean primitives to prevent dynamic operand mismatch exceptions.
+    /// </summary>
+    Task<RuleWorkflowEvaluationResult> EvaluateWorkflowFromJsonAsync(string workflowName, string jsonPayload);
+
+    /// <summary>
     /// Executes an interactive rule test against a sample JSON payload in the testing sandbox.
     /// </summary>
     Task<RuleSandboxTestResult> TestRuleExpressionAsync(RuleSandboxTestRequest request);

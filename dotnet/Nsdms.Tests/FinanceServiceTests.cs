@@ -111,7 +111,7 @@ public class FinanceServiceTests
         Assert.Equal("Submitted", submitted.PaymentStatusCode);
 
         // Gatekeeping assertion: Unverified milestone approval must be blocked
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             financeService.ApproveTranchePaymentAsync(submitted.Id, "cfo@merseta.org.za", "BATCH-2026-01", "Should fail unverified"));
 
         // Act 2: Verify milestone first

@@ -13,7 +13,7 @@ public class ApiWebhookSubscription : BaseEntity
 
     public string EventTopic { get; set; } = string.Empty;
     public string TargetUrl { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Shared secret used to compute HMAC-SHA256 signatures for payload verification.
     /// </summary>

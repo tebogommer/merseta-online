@@ -519,6 +519,23 @@ public class AdminCatalogService : IAdminCatalogService
 
         items.Add(new AdminSearchItemDto
         {
+            Key = "MOD-MG-WINDOWS",
+            Title = "Mandatory Grant Submission Windows & OFO Sets",
+            Category = AdminCategoryConstants.SystemConfiguration,
+            Description = "Manage annual Mandatory Grant cycles, statutory deadlines, dual authorisation approvals, and gazetted OFO occupational framework releases.",
+            Icon = "Icons.Material.Filled.CalendarMonth",
+            RouteUrl = "/admin/mg-windows",
+            ItemType = "Module",
+            CurrentValue = "Statutory Windows",
+            ValueType = "Badge",
+            IsEditableInline = false,
+            Tags = new List<string> { "mg window", "wsp", "atr", "mandatory grants", "ofo set", "ofo codes", "dual authorisation", "deadlines" },
+            StatusBadgeColor = "Success",
+            DisplayOrder = 6
+        });
+
+        items.Add(new AdminSearchItemDto
+        {
             Key = "MOD-DOC-TEMPLATES",
             Title = "Enterprise Document Template Studio",
             Category = AdminCategoryConstants.DocumentsAndTemplates,

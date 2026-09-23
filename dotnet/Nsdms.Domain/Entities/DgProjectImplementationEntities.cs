@@ -67,7 +67,7 @@ public class GrantPaymentClaim : BaseEntity
     public decimal ClaimAmount { get; set; } = 0m;
     public string DeliverableDescription { get; set; } = string.Empty;
     public string StatusCode { get; set; } = "PendingSubmission"; // PendingSubmission, CloVerified, FinanceApproved, CfoApproved, Paid, Rejected
-    
+
     // Multi-tier Financial Approval Attestation Chain
     public string? CloVerifiedBy { get; set; }
     public DateTime? CloVerifiedDate { get; set; }

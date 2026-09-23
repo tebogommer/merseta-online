@@ -63,7 +63,7 @@ public interface IMentorRatioPolicyEngine
 {
     Task<MentorRatioEvaluationResult> EvaluateWorkplaceApprovalCapacityAsync(int workplaceApprovalId);
     Task<MentorRatioEvaluationResult> EvaluatePlacementFeasibilityAsync(int workplaceApprovalId, int additionalLearners = 1);
-    
+
     Task<List<TradeMentorRatioPolicy>> GetAllTradePoliciesAsync(bool activeOnly = false);
     Task<TradeMentorRatioPolicy?> GetTradePolicyByIdAsync(int id);
     Task<TradeMentorRatioPolicy?> GetTradePolicyByCodeAsync(string tradeCode);
@@ -72,7 +72,7 @@ public interface IMentorRatioPolicyEngine
 
     Task<bool> GetGlobalRatioEnforcementAsync();
     Task<bool> SetGlobalRatioEnforcementAsync(bool isEnabled, string currentUsername = "SYSTEM");
-    
+
     Task SetOrganisationRatioOverrideAsync(int organisationId, bool? isEnforced, string? exemptionReason, int? customCap, string currentUsername = "SYSTEM");
     Task SetWorkplaceRatioOverrideAsync(int workplaceApprovalId, bool? isEnforced, int? customRatio, string? tradeCode, string? exemptionNotes, string currentUsername = "SYSTEM");
     Task SetMentorCapacityOverrideAsync(int mentorId, int? maxCapacity, bool isExempt, bool isEnforced, string? notes, string currentUsername = "SYSTEM");

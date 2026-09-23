@@ -671,8 +671,8 @@ public class LearnerLifecycleService : ILearnerLifecycleService
             termination.TerminationStatusCode = "InInvestigation";
             termination.InvestigationStartDate = DateTime.UtcNow;
             // Statutory dispute investigation SLA per Section 5 Business Rules
-            var slaDays = _configService != null 
-                ? await _configService.GetValueAsync<int>("LearnerLifecycle:TerminationInvestigationSlaDays", 14) 
+            var slaDays = _configService != null
+                ? await _configService.GetValueAsync<int>("LearnerLifecycle:TerminationInvestigationSlaDays", 14)
                 : 14;
             termination.InvestigationDueDate = WorkplaceApprovalService.AddBusinessDays(DateTime.UtcNow, slaDays);
         }

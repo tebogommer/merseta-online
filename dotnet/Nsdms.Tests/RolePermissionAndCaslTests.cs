@@ -433,7 +433,7 @@ public class RolePermissionAndCaslTests
         await roleService.SeedDefaultRolePermissionsAsync();
 
         var roles = await roleService.GetAllRolesAsync();
-        
+
         // 1. SDF must have Learners:Submit
         var sdfRole = await roleService.GetRoleByIdAsync(roles.First(r => r.Name == "SDF").Id);
         Assert.NotNull(sdfRole);
@@ -502,32 +502,32 @@ public class RolePermissionAndCaslTests
         });
 
         // Users
-        var sdfUser = new ApplicationUser 
-        { 
-            Id = 401, 
-            UserName = "sipho_sdf", 
+        var sdfUser = new ApplicationUser
+        {
+            Id = 401,
+            UserName = "sipho_sdf",
             NormalizedUserName = "SIPHO_SDF",
-            Email = "sipho@bell.co.za", 
+            Email = "sipho@bell.co.za",
             NormalizedEmail = "SIPHO@BELL.CO.ZA",
-            PersonId = sdfPerson.Id 
+            PersonId = sdfPerson.Id
         };
-        var sdpUser = new ApplicationUser 
-        { 
-            Id = 402, 
-            UserName = "nomvula_sdp", 
+        var sdpUser = new ApplicationUser
+        {
+            Id = 402,
+            UserName = "nomvula_sdp",
             NormalizedUserName = "NOMVULA_SDP",
-            Email = "nomvula@ekurhuleni-academy.co.za", 
+            Email = "nomvula@ekurhuleni-academy.co.za",
             NormalizedEmail = "NOMVULA@EKURHULENI-ACADEMY.CO.ZA",
-            PersonId = sdpPerson.Id 
+            PersonId = sdpPerson.Id
         };
-        var outsiderUser = new ApplicationUser 
-        { 
-            Id = 403, 
-            UserName = "outsider", 
+        var outsiderUser = new ApplicationUser
+        {
+            Id = 403,
+            UserName = "outsider",
             NormalizedUserName = "OUTSIDER",
-            Email = "outsider@other.co.za", 
+            Email = "outsider@other.co.za",
             NormalizedEmail = "OUTSIDER@OTHER.CO.ZA",
-            PersonId = unaffiliatedPerson.Id 
+            PersonId = unaffiliatedPerson.Id
         };
         db.Users.AddRange(sdfUser, sdpUser, outsiderUser);
         await db.SaveChangesAsync();

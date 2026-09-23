@@ -35,17 +35,17 @@ public class TsqlAttestationEngine : ITsqlAttestationEngine
     }
 
     public async Task<AttestationExecutionResultDto> ExecuteAndAttestAsync(
-        int computationId, 
-        Dictionary<string, object?> parameterValues, 
-        string actor, 
+        int computationId,
+        Dictionary<string, object?> parameterValues,
+        string actor,
         CancellationToken ct = default)
     {
         return await ExecuteInternalAsync(computationId, parameterValues, actor, persistAudit: true, ct);
     }
 
     public async Task<AttestationExecutionResultDto> DryRunAttestationAsync(
-        int computationId, 
-        Dictionary<string, object?> parameterValues, 
+        int computationId,
+        Dictionary<string, object?> parameterValues,
         CancellationToken ct = default)
     {
         return await ExecuteInternalAsync(computationId, parameterValues, "dry-run", persistAudit: false, ct);
@@ -110,9 +110,9 @@ public class TsqlAttestationEngine : ITsqlAttestationEngine
         foreach (var p in computation.Parameters)
         {
             var pName = p.ParameterName.StartsWith("@") ? p.ParameterName : "@" + p.ParameterName;
-            
+
             // Match parameter by name case-insensitively
-            var matchedEntry = parameterValues.FirstOrDefault(kv => 
+            var matchedEntry = parameterValues.FirstOrDefault(kv =>
                 kv.Key.Equals(p.ParameterName, StringComparison.OrdinalIgnoreCase) ||
                 kv.Key.Equals(pName, StringComparison.OrdinalIgnoreCase) ||
                 kv.Key.Equals(p.ParameterName.TrimStart('@'), StringComparison.OrdinalIgnoreCase));
@@ -205,7 +205,7 @@ public class TsqlAttestationEngine : ITsqlAttestationEngine
         {
             stopwatch.Stop();
             _logger.LogError(ex, "T-SQL Attested Computation execution error for computation #{Id}", computationId);
-            
+
             var failReason = $"Database Execution Error: {ex.Message}";
             if (persistAudit)
             {
@@ -247,20 +247,20 @@ public class TsqlAttestationEngine : ITsqlAttestationEngine
         if (persistAudit)
         {
             await RecordExecutionAuditAsync(
-                db, 
-                computationId, 
-                actor, 
-                parameterValues, 
-                executedSqlDigest, 
-                "Pass", 
-                null, 
-                digitalSecuritySeal, 
-                (int)stopwatch.ElapsedMilliseconds, 
-                receiptJson, 
+                db,
+                computationId,
+                actor,
+                parameterValues,
+                executedSqlDigest,
+                "Pass",
+                null,
+                digitalSecuritySeal,
+                (int)stopwatch.ElapsedMilliseconds,
+                receiptJson,
                 ct);
         }
 
-        _logger.LogInformation("Attested computation #{Id} passed attestation in {Ms}ms. Digital Security Seal: {Seal}", 
+        _logger.LogInformation("Attested computation #{Id} passed attestation in {Ms}ms. Digital Security Seal: {Seal}",
             computationId, stopwatch.ElapsedMilliseconds, digitalSecuritySeal);
 
         return new AttestationExecutionResultDto

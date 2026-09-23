@@ -382,6 +382,7 @@ using (var scope = app.Services.CreateScope())
     RunMigrator("Phase57TransactionalOutbox", () => Phase57TransactionalOutboxMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase58EntraResilience", () => Phase58EntraResilienceSchemaMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("Phase59B2bApiArchitecture", () => Phase59B2bApiArchitectureMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
+    RunMigrator("Phase56MgWindowOfoSet", () => Phase56MgWindowOfoSetMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult());
     RunMigrator("SampleData", () => SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult());
     RunMigrator("FeatureFlags", () => scope.ServiceProvider.GetRequiredService<IFeatureFlagService>().SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult());
     RunMigrator("SystemConfigs", () => scope.ServiceProvider.GetRequiredService<ISystemConfigurationService>().SeedDefaultConfigsAsync().GetAwaiter().GetResult());

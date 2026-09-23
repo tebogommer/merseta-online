@@ -64,7 +64,7 @@
     --chart-2: #D49336;
     --chart-3: #16A34A;
     --chart-4: #DC2626;
-    --chart-5: #6366F1;
+    --chart-5: #0D9488;
     --chart-grid: #E2E8F0;
     --chart-axis: #64748B;
 
@@ -73,6 +73,16 @@
     --radius-md: 8px;
     --radius-lg: 10px;
     --radius-xl: 12px;
+
+    /* Form Input Focus Halo Tokens (Option A: Modern Enterprise Soft Halo Ring) */
+    --input-focus-border: var(--brand-gold);
+    --input-focus-ring-color: rgba(212, 147, 54, 0.20);
+    --input-focus-ring: 0 0 0 3.5px var(--input-focus-ring-color);
+    --input-border-radius: var(--radius-md, 8px);
+    --input-border-color: #E2E8F0;
+    --input-border-hover: #CBD5E1;
+    --input-transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                        box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
     /* Legacy / Backward Compatible Aliases */
     --nsdms-bg: var(--background);
@@ -173,9 +183,16 @@
     --chart-2: #E0A353;
     --chart-3: #4ADE80;
     --chart-4: #F87171;
-    --chart-5: #A78BFA;
+    --chart-5: #2DD4BF;
     --chart-grid: #293548;
     --chart-axis: #94A3B8;
+
+    /* Form Input Focus Halo Tokens (Dark Mode) */
+    --input-focus-border: var(--brand-gold);
+    --input-focus-ring-color: rgba(212, 147, 54, 0.32);
+    --input-focus-ring: 0 0 0 3.5px var(--input-focus-ring-color);
+    --input-border-color: #293548;
+    --input-border-hover: #3A475B;
 
     /* Legacy / Backward Compatible Aliases */
     --nsdms-bg: var(--background);
@@ -288,13 +305,142 @@ kbd,
     letter-spacing: normal;
 }
 
-/* Accessible Focus Outlines (WCAG 2.2 AA) */
-:focus-visible, 
+/* ==========================================================================
+   Focus Appearance & Interactive States (Option A: Modern Enterprise Soft Halo Ring)
+   Complies with WCAG 2.2 AA (SC 2.4.11 / SC 2.4.13 Focus Appearance)
+   ========================================================================== */
+
+/* 1. Interactive Navigable Controls: High-visibility crisp focus ring */
 .mud-button:focus-visible, 
-.mud-input-control:focus-within,
-.mud-nav-link:focus-visible {
+.mud-icon-button:focus-visible,
+.mud-nav-link:focus-visible,
+.mud-tab:focus-visible,
+.mud-chip:focus-visible,
+.mud-table-pagination-actions button:focus-visible,
+.btn:focus-visible,
+a.mud-link:focus-visible,
+a:focus-visible,
+button:focus-visible {
     outline: 2px solid var(--brand-gold) !important;
     outline-offset: 2px !important;
+}
+
+/* 2. Form Control Outline Suppression:
+   Completely extinguish raw browser user-agent & container outlines
+   Eliminates the clashing triple-border artifact on focused inputs */
+.mud-input-control:focus-within,
+.mud-input:focus-within,
+.mud-input-slot,
+.mud-input-root,
+.mud-input-slot:focus,
+.mud-input-slot:focus-visible,
+.mud-input-root:focus,
+.mud-input-root:focus-visible,
+input.mud-input-slot,
+textarea.mud-input-slot,
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible {
+    outline: none !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+}
+
+/* 3. Prevent clipping of focus halos across form inputs, dialogs, and dense wrappers */
+.mud-input-control,
+.mud-input-control-input-container,
+.mud-input,
+.mud-input-outlined {
+    overflow: visible;
+}
+
+/* 4. MudBlazor Outlined Fields (Variant.Outlined) — Base & Hover State */
+.mud-input.mud-input-outlined fieldset.mud-input-outlined-border,
+.mud-input-outlined fieldset.mud-input-outlined-border {
+    border-radius: var(--radius-md, 8px) !important;
+    border-color: var(--input-border-color, #E2E8F0);
+    transition: var(--input-transition, border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1)) !important;
+}
+
+[data-theme="dark"] .mud-input.mud-input-outlined fieldset.mud-input-outlined-border,
+[data-theme="dark"] .mud-input-outlined fieldset.mud-input-outlined-border,
+.mud-theme-dark .mud-input.mud-input-outlined fieldset.mud-input-outlined-border,
+.mud-theme-dark .mud-input-outlined fieldset.mud-input-outlined-border {
+    border-color: var(--input-border-color, #293548);
+}
+
+.mud-input.mud-input-outlined:hover:not(.mud-disabled) fieldset.mud-input-outlined-border,
+.mud-input-control:hover:not(.mud-disabled) .mud-input-outlined fieldset.mud-input-outlined-border {
+    border-color: var(--input-border-hover, #CBD5E1);
+}
+
+[data-theme="dark"] .mud-input.mud-input-outlined:hover:not(.mud-disabled) fieldset.mud-input-outlined-border,
+[data-theme="dark"] .mud-input-control:hover:not(.mud-disabled) .mud-input-outlined fieldset.mud-input-outlined-border,
+.mud-theme-dark .mud-input.mud-input-outlined:hover:not(.mud-disabled) fieldset.mud-input-outlined-border,
+.mud-theme-dark .mud-input-control:hover:not(.mud-disabled) .mud-input-outlined fieldset.mud-input-outlined-border {
+    border-color: var(--input-border-hover, #3A475B);
+}
+
+/* 5. MudBlazor Outlined Fields (Variant.Outlined) — Focused Soft Halo Ring */
+.mud-input-control:focus-within .mud-input-outlined fieldset.mud-input-outlined-border,
+.mud-input.mud-input-outlined:focus-within fieldset.mud-input-outlined-border,
+.mud-input-outlined:focus-within fieldset.mud-input-outlined-border {
+    border-color: var(--brand-gold) !important;
+    border-width: 1.5px !important;
+    border-radius: var(--radius-md, 8px) !important;
+    box-shadow: 0 0 0 3.5px rgba(212, 147, 54, 0.20) !important;
+    transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Dark Mode Focused Halo Ring */
+[data-theme="dark"] .mud-input-control:focus-within .mud-input-outlined fieldset.mud-input-outlined-border,
+[data-theme="dark"] .mud-input.mud-input-outlined:focus-within fieldset.mud-input-outlined-border,
+[data-theme="dark"] .mud-input-outlined:focus-within fieldset.mud-input-outlined-border,
+.mud-theme-dark .mud-input-control:focus-within .mud-input-outlined fieldset.mud-input-outlined-border,
+.mud-theme-dark .mud-input.mud-input-outlined:focus-within fieldset.mud-input-outlined-border,
+.mud-theme-dark .mud-input-outlined:focus-within fieldset.mud-input-outlined-border {
+    box-shadow: 0 0 0 3.5px rgba(212, 147, 54, 0.32) !important;
+}
+
+/* 6. Floating Label & Adornment Synchronization on Focus */
+.mud-input-control:focus-within .mud-input-label-outlined,
+.mud-input-control:focus-within .mud-input-label,
+.mud-input-control:focus-within label.mud-input-label {
+    color: var(--brand-gold) !important;
+    font-weight: 600;
+}
+
+.mud-input-control:focus-within .mud-input-adornment .mud-icon-root {
+    color: var(--brand-gold) !important;
+    transition: color 0.2s ease;
+}
+
+/* 7. MudBlazor Filled Fields (Variant.Filled) */
+.mud-input-control:focus-within .mud-input-filled,
+.mud-input-filled:focus-within {
+    border-color: var(--brand-gold) !important;
+    box-shadow: 0 0 0 3.5px rgba(212, 147, 54, 0.20) !important;
+}
+
+[data-theme="dark"] .mud-input-control:focus-within .mud-input-filled,
+[data-theme="dark"] .mud-input-filled:focus-within,
+.mud-theme-dark .mud-input-control:focus-within .mud-input-filled,
+.mud-theme-dark .mud-input-filled:focus-within {
+    box-shadow: 0 0 0 3.5px rgba(212, 147, 54, 0.32) !important;
+}
+
+/* 8. MudBlazor Standard Underlined Fields (Variant.Text) */
+.mud-input-control:focus-within .mud-input-underline:after,
+.mud-input-underline:focus-within:after {
+    border-bottom-color: var(--brand-gold) !important;
+}
+
+/* 9. Multiline Textarea Alignment */
+textarea.mud-input-slot {
+    resize: vertical;
 }
 
 /* App Bar Modern Styling */
@@ -823,6 +969,84 @@ kbd,
 /* Pointer Events Utility */
 .pointer-events-none {
     pointer-events: none !important;
+}
+
+/* ==========================================================================
+   Surface Primitives, Form Containers & Workspace Surface
+   Source Standard: DESIGN.md §8.2, §12, §13
+   ========================================================================== */
+.bg-surface {
+    background-color: var(--surface) !important;
+}
+
+.border-default {
+    border: 1px solid var(--border) !important;
+}
+
+.border-t-default {
+    border-top: 1px solid var(--border) !important;
+}
+
+.border-b-default {
+    border-bottom: 1px solid var(--border) !important;
+}
+
+/* Form Section Container */
+.nsdms-form-section {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md, 8px);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.nsdms-form-section-header {
+    border-bottom: 1px solid var(--border);
+}
+
+/* Operational Context Rail */
+.nsdms-context-rail {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md, 8px);
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+/* Unified Table Workspace Surface (DESIGN.md §8.2 & §13.2) */
+.nsdms-workspace-surface {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg, 10px);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.nsdms-workspace-toolbar {
+    padding: 12px 16px;
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.nsdms-workspace-subbar {
+    padding: 8px 16px;
+    background-color: var(--surface-subtle);
+    border-bottom: 1px solid var(--border);
+}
+
+/* Form Shell & Fixed Bottom Action Bar Containment (eliminates bottom field overlap) */
+.nsdms-form-shell {
+    padding-bottom: 84px !important;
+}
+
+/* Form Control Row Baseline Aligner (aligns switches, chips, buttons adjacent to 56px inputs) */
+.nsdms-control-aligner {
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    padding-top: 4px;
 }
 
 /* ==========================================================================

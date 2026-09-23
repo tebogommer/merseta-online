@@ -241,6 +241,7 @@ public class Round2RemediationTests
 
         var audit = new AuditService(factory);
         var lookupService = new LookupService(factory, audit);
+        lookupService.ClearCache();
 
         // Act: Search for "weld"
         var results = await lookupService.GetOfoCodesAsync("weld");

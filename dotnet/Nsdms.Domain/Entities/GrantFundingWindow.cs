@@ -82,16 +82,16 @@ public class GrantFundingWindow : BaseEntity
     public bool IsOpen => IsActive && ApprovalStatusCode == "Active" && OpeningDate <= DateTime.UtcNow && ClosingDate >= DateTime.UtcNow;
 
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
-    public string StatusDisplay => !IsActive || ApprovalStatusCode == "Closed" 
-        ? "Closed" 
-        : (ApprovalStatusCode == "Draft" 
-            ? "Draft" 
-            : (ApprovalStatusCode == "PendingApproval" 
-                ? "Pending Approval" 
-                : (ApprovalStatusCode == "Rejected" 
-                    ? "Rejected" 
-                    : (DateTime.UtcNow < OpeningDate 
-                        ? "Upcoming" 
+    public string StatusDisplay => !IsActive || ApprovalStatusCode == "Closed"
+        ? "Closed"
+        : (ApprovalStatusCode == "Draft"
+            ? "Draft"
+            : (ApprovalStatusCode == "PendingApproval"
+                ? "Pending Approval"
+                : (ApprovalStatusCode == "Rejected"
+                    ? "Rejected"
+                    : (DateTime.UtcNow < OpeningDate
+                        ? "Upcoming"
                         : (DateTime.UtcNow > ClosingDate ? "Expired" : "Open")))));
 
     /// <summary>

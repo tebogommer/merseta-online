@@ -14,8 +14,8 @@ public record PersonLookupDto(
     string? Email,
     string? PhoneNumber)
 {
-    public string DisplayText => string.IsNullOrWhiteSpace(RsaIdNumber) 
-        ? $"{FullName} ({Email ?? PhoneNumber ?? "ID: " + Id})" 
+    public string DisplayText => string.IsNullOrWhiteSpace(RsaIdNumber)
+        ? $"{FullName} ({Email ?? PhoneNumber ?? "ID: " + Id})"
         : $"{FullName} (ID: {RsaIdNumber})";
 }
 
@@ -207,93 +207,116 @@ public class PersonService : IPersonService
     public async Task<Person> CreateAsync(Person person, string currentUsername = "SYSTEM")
     {
         using var db = await _contextFactory.CreateDbContextAsync();
+        var strategy = db.Database.CreateExecutionStrategy();
 
-        if (!string.IsNullOrWhiteSpace(person.RsaIdNumber))
+        return await strategy.ExecuteAsync(async () =>
         {
-            var parse = RsaIdValidator.Parse(person.RsaIdNumber);
-            if (!parse.IsValid)
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
+            if (db.Database.IsRelational())
             {
-                throw new ArgumentException($"Invalid RSA ID number: {parse.ErrorMessage}");
+                tx = await db.Database.BeginTransactionAsync();
             }
 
-            var duplicate = await db.People.AnyAsync(p => p.RsaIdNumber == person.RsaIdNumber);
-            if (duplicate)
+            try
             {
-                throw new InvalidOperationException($"A person with RSA ID {person.RsaIdNumber} already exists.");
+                if (!string.IsNullOrWhiteSpace(person.RsaIdNumber))
+                {
+                    var parse = RsaIdValidator.Parse(person.RsaIdNumber);
+                    if (!parse.IsValid)
+                    {
+                        throw new ArgumentException($"Invalid RSA ID number: {parse.ErrorMessage}");
+                    }
+
+                    var duplicate = await db.People.AnyAsync(p => p.RsaIdNumber == person.RsaIdNumber);
+                    if (duplicate)
+                    {
+                        throw new InvalidOperationException($"A person with RSA ID {person.RsaIdNumber} already exists.");
+                    }
+                }
+
+                // Auto-calculate demographic data from RSA ID if provided
+                AutoPopulateFromRsaId(person);
+
+                person.CreatedAt = DateTime.UtcNow;
+                person.CreatedBy = currentUsername;
+
+                db.People.Add(person);
+                await db.SaveChangesAsync();
+
+                // Synchronize initial satellite records
+                var contact = new PersonContact
+                {
+                    PersonId = person.Id,
+                    Email = person.Email,
+                    PhoneNumber = person.PhoneNumber,
+                    CellNumber = person.CellNumber,
+                    FaxNumber = person.FaxNumber,
+                    PhysicalAddress = person.PhysicalAddress,
+                    PhysicalAddressPostalCode = person.PhysicalAddressPostalCode,
+                    PostalAddress = person.PostalAddress,
+                    PostalAddressPostalCode = person.PostalAddressPostalCode,
+                    ProvinceCode = person.ProvinceCode,
+                    StatssaAreaCode = person.StatssaAreaCode,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = currentUsername
+                };
+
+                var demographics = new PersonDemographics
+                {
+                    PersonId = person.Id,
+                    EquityCode = person.EquityCode,
+                    DisabilityCode = person.DisabilityCode,
+                    NationalityCode = person.NationalityCode,
+                    HomeLanguageCode = person.HomeLanguageCode,
+                    CitizenStatusCode = person.CitizenStatusCode,
+                    PopiActStatusId = person.PopiActStatusId ?? "01",
+                    PopiActConsentDate = person.PopiActConsentDate ?? DateTime.UtcNow,
+                    LastSchoolEmisNumber = person.LastSchoolEmisNumber,
+                    LastSchoolYear = person.LastSchoolYear,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = currentUsername
+                };
+
+                var disabilityRating = new PersonDisabilityRating
+                {
+                    PersonId = person.Id,
+                    DisabilityCode = person.DisabilityCode ?? "00",
+                    SeeingRatingId = person.SeeingRatingId ?? "01",
+                    HearingRatingId = person.HearingRatingId ?? "01",
+                    WalkingRatingId = person.WalkingRatingId ?? "01",
+                    RememberingRatingId = person.RememberingRatingId ?? "01",
+                    CommunicatingRatingId = person.CommunicatingRatingId ?? "01",
+                    SelfCareRatingId = person.SelfCareRatingId ?? "01",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = currentUsername
+                };
+
+                db.PersonContacts.Add(contact);
+                db.PersonDemographics.Add(demographics);
+                db.PersonDisabilityRatings.Add(disabilityRating);
+                await db.SaveChangesAsync();
+
+                person.Contact = contact;
+                person.Demographics = demographics;
+                person.DisabilityRating = disabilityRating;
+
+                // Double-write audit log
+                _audit.LogAction(db, "Person", person.Id, "Create", currentUsername, null, person);
+                await db.SaveChangesAsync();
+
+                if (tx != null) await tx.CommitAsync();
+                return person;
             }
-        }
-
-        // Auto-calculate demographic data from RSA ID if provided
-        AutoPopulateFromRsaId(person);
-
-        person.CreatedAt = DateTime.UtcNow;
-        person.CreatedBy = currentUsername;
-
-        db.People.Add(person);
-        await db.SaveChangesAsync();
-
-        // Synchronize initial satellite records
-        var contact = new PersonContact
-        {
-            PersonId = person.Id,
-            Email = person.Email,
-            PhoneNumber = person.PhoneNumber,
-            CellNumber = person.CellNumber,
-            FaxNumber = person.FaxNumber,
-            PhysicalAddress = person.PhysicalAddress,
-            PhysicalAddressPostalCode = person.PhysicalAddressPostalCode,
-            PostalAddress = person.PostalAddress,
-            PostalAddressPostalCode = person.PostalAddressPostalCode,
-            ProvinceCode = person.ProvinceCode,
-            StatssaAreaCode = person.StatssaAreaCode,
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = currentUsername
-        };
-
-        var demographics = new PersonDemographics
-        {
-            PersonId = person.Id,
-            EquityCode = person.EquityCode,
-            DisabilityCode = person.DisabilityCode,
-            NationalityCode = person.NationalityCode,
-            HomeLanguageCode = person.HomeLanguageCode,
-            CitizenStatusCode = person.CitizenStatusCode,
-            PopiActStatusId = person.PopiActStatusId ?? "01",
-            PopiActConsentDate = person.PopiActConsentDate ?? DateTime.UtcNow,
-            LastSchoolEmisNumber = person.LastSchoolEmisNumber,
-            LastSchoolYear = person.LastSchoolYear,
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = currentUsername
-        };
-
-        var disabilityRating = new PersonDisabilityRating
-        {
-            PersonId = person.Id,
-            DisabilityCode = person.DisabilityCode ?? "00",
-            SeeingRatingId = person.SeeingRatingId ?? "01",
-            HearingRatingId = person.HearingRatingId ?? "01",
-            WalkingRatingId = person.WalkingRatingId ?? "01",
-            RememberingRatingId = person.RememberingRatingId ?? "01",
-            CommunicatingRatingId = person.CommunicatingRatingId ?? "01",
-            SelfCareRatingId = person.SelfCareRatingId ?? "01",
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = currentUsername
-        };
-
-        db.PersonContacts.Add(contact);
-        db.PersonDemographics.Add(demographics);
-        db.PersonDisabilityRatings.Add(disabilityRating);
-        await db.SaveChangesAsync();
-
-        person.Contact = contact;
-        person.Demographics = demographics;
-        person.DisabilityRating = disabilityRating;
-
-        // Double-write audit log
-        _audit.LogAction(db, "Person", person.Id, "Create", currentUsername, null, person);
-        await db.SaveChangesAsync();
-
-        return person;
+            catch
+            {
+                if (tx != null) await tx.RollbackAsync();
+                throw;
+            }
+            finally
+            {
+                tx?.Dispose();
+            }
+        });
     }
 
     public async Task<Person> UpdateAsync(Person person, string currentUsername = "SYSTEM")

@@ -1,0 +1,159 @@
+@namespace Nsdms.Web.Components.Pages.Admin.Dialogs
+@using MudBlazor
+@using Nsdms.Application.Common.Models
+@using Nsdms.Application.Services
+@inject IMgWindowGovernanceService WindowGovService
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthStateProvider
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@(_approve ? Icons.Material.Filled.FactCheck : Icons.Material.Filled.CancelPresentation)"
+                     Color="@(_approve ? Color.Success : Color.Error)" />
+            <MudText Typo="Typo.h6">Dual Authorisation Review & Decision</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="mb-4">
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Adjudicating Mandatory Grant Window: <strong>@Window.WindowName</strong> (Scheme Year @Window.SchemeYear)
+            </MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                Proposed by: <strong>@(Window.ProposedByUserName ?? Window.ProposedByUserId ?? "Unknown")</strong> on @(Window.ProposedDate?.ToString("yyyy-MM-dd HH:mm") ?? "N/A")
+            </MudText>
+        </div>
+
+        @if (_isSelfApprovalAttempt)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">
+                <strong>Segregation of Duties Violation (PFMA Section 51):</strong>
+                You cannot review or approve this Mandatory Grant window schedule because you submitted the proposal. An independent reviewing officer or executive authority is required.
+            </MudAlert>
+        }
+        else
+        {
+            <MudRadioGroup T="bool" @bind-Value="_approve" Class="mb-4">
+                <MudRadio Value="true" Color="Color.Success">
+                    <strong>Approve & Activate Schedule</strong>
+                    <div class="text-secondary" style="font-size: 0.8125rem;">
+                        Window becomes live for employer submissions. Dates will sync automatically to system governance settings. Any prior live window for @Window.SchemeYear will be archived.
+                    </div>
+                </MudRadio>
+                <MudRadio Value="false" Color="Color.Error" Class="mt-2">
+                    <strong>Reject Schedule Proposal</strong>
+                    <div class="text-secondary" style="font-size: 0.8125rem;">
+                        Proposal is returned with audit commentary. Requires mandatory rejection remarks.
+                    </div>
+                </MudRadio>
+            </MudRadioGroup>
+
+            @if (_approve)
+            {
+                <MudPaper Elevation="0" Class="pa-3 mb-4 border rounded" Style="background: var(--mud-palette-background-grey);">
+                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold text-success mb-1">
+                        Active Schedule Parameters to be Gazetted:
+                    </MudText>
+                    <MudText Typo="Typo.body2">Portal Opens: <strong>@Window.OpeningDate.ToString("yyyy-MM-dd HH:mm")</strong></MudText>
+                    <MudText Typo="Typo.body2">Statutory Deadline: <strong>@Window.ClosingDate.ToString("yyyy-MM-dd HH:mm")</strong></MudText>
+                    <MudText Typo="Typo.body2">Extension Cutoff: <strong>@Window.ExtensionCutoffDate.ToString("yyyy-MM-dd")</strong></MudText>
+                    <MudText Typo="Typo.body2">Governing OFO Set: <strong>@Window.OfoCodeSetName</strong></MudText>
+                </MudPaper>
+            }
+
+            <MudTextField @bind-Value="_comments"
+                          Label="@(_approve ? "Approval Audit Commentary (Optional)" : "Rejection Reason & Auditor Remarks (Mandatory)")"
+                          Placeholder="@(_approve ? "Enter approval confirmation or executive notes..." : "Specify the regulatory or operational reasons for rejection...")"
+                          Lines="3"
+                          Required="@(!_approve)"
+                          RequiredError="Rejection remarks are mandatory"
+                          Variant="Variant.Outlined" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" StartIcon="@Icons.Material.Filled.Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="@(_approve ? Color.Success : Color.Error)"
+                   OnClick="Submit"
+                   Disabled="@(_isSelfApprovalAttempt || _isSaving || (!_approve && string.IsNullOrWhiteSpace(_comments)))"
+                   StartIcon="@(_approve ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Processing...</span>
+            }
+            else
+            {
+                <span>@(_approve ? "Confirm Approval & Activate" : "Confirm Rejection")</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public MgWindowDetailDto Window { get; set; } = default!;
+
+    private bool _approve = true;
+    private string? _comments;
+    private bool _isSaving;
+    private bool _isSelfApprovalAttempt;
+    private string _currentUserId = string.Empty;
+    private string _currentUserName = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _currentUserId = user.Identity?.Name ?? "SYSTEM";
+        _currentUserName = user.Identity?.Name ?? "System Administrator";
+
+        if (!string.IsNullOrWhiteSpace(Window.ProposedByUserId) &&
+            string.Equals(Window.ProposedByUserId, _currentUserId, StringComparison.OrdinalIgnoreCase))
+        {
+            _isSelfApprovalAttempt = true;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        if (_isSelfApprovalAttempt)
+        {
+            Snackbar.Add("Segregation of Duties breach: You cannot adjudicate your own proposal.", Severity.Error);
+            return;
+        }
+
+        if (!_approve && string.IsNullOrWhiteSpace(_comments))
+        {
+            Snackbar.Add("Rejection remarks are mandatory.", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            var result = await WindowGovService.AdjudicateWindowAsync(Window.Id, _approve, _comments, _currentUserId, _currentUserName);
+
+            if (_approve)
+            {
+                Snackbar.Add($"Mandatory Grant Window #{result.Id} ({result.WindowName}) approved and activated successfully.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"Mandatory Grant Window #{result.Id} rejected.", Severity.Warning);
+            }
+
+            MudDialog.Close(DialogResult.Ok(result));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adjudicating window: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

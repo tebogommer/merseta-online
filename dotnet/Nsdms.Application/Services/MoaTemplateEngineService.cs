@@ -17,7 +17,7 @@ public class MoaTemplateEngineService : IMoaTemplateEngineService
     private readonly IPdfDocumentService _pdfService;
 
     public MoaTemplateEngineService(
-        INsdmsDbContextFactory factory, 
+        INsdmsDbContextFactory factory,
         AuditService audit,
         IPdfDocumentService pdfService)
     {

@@ -124,3 +124,28 @@ updated: 2026-09-19
 - **Client Concurrency Token Hydration**: In disconnected edit operations with optimistic concurrency (`RowVersion`), assign the client-provided token to `db.Entry(existing).Property(e => e.RowVersion).OriginalValue` so EF Core correctly detects Last-Write-Wins collisions.
 - **Queue Row-Locking Concurrency**: High-throughput message queues (`ErpOutboxMessage`, `OutboxMessage`) must use atomic row-level reservation (`WITH (UPDLOCK, READPAST)`) to prevent multiple workers from leasing and dispatching duplicate transactions.
 - **Database Engine Concurrency Baseline**: Ensure database options `AUTO_CLOSE OFF`, `READ_COMMITTED_SNAPSHOT ON`, and `ALLOW_SNAPSHOT_ISOLATION ON` are permanently configured to eliminate reader/writer deadlock cascades (SQL Error 1205).
+
+## UI Accessibility, Form Spacing & Test Cache Isolation Standards
+- **Accessible Landmark Hierarchy (WCAG SC 1.3.1)**: Single `<main id="main-content">` landmark per page provided by `MainLayout.razor`. Inner components, wizards (`WizardShell`), and tabs must use `<section>` or `<article>`, never `<main>`. Detail headers (`EntityHeader`) must use `HtmlTag="h1"` for primary titles.
+- **Form Layout & Spacing Budget**: Never place hardcoded bottom margins (e.g. `mb-4`) on field primitives (`ReadOnlyField`, `MudTextField`); spacing must be governed exclusively by parent `<MudGrid Spacing="3">`. Labels must use sentence case (`0.75rem`, weight 600, opacity 0.85); `text-uppercase` is strictly prohibited. Forms with sticky bottom actions must use `.nsdms-form-shell` (`padding-bottom: 84px !important`).
+- **Static Cache Test Isolation**: Services maintaining static in-memory lookup caches (`LookupService._lookupCache`) must expose `ClearCache()` / `ResetCache()`. Automated unit/integration tests running against unique in-memory databases must call `service.ClearCache()` during `Arrange` to prevent cross-test cache contamination.
+
+## ISO 9001:2015 & DPSA Directive Compliant Atomic Audit Logging Standard
+1. **Zero Partial Commits & Transactional Double-Write**:
+   - Every domain entity mutation and its associated audit log entry MUST be executed atomically within a single transactional unit via `IAtomicAuditTransactionManager.ExecuteAtomicAsync` or `ExecuteAtomicBatchAsync`.
+   - In SQL Server environments, user transactions must be enclosed within `db.Database.CreateExecutionStrategy().ExecuteAsync(...)` to ensure resilience under transient failures. Any failure in business logic, specification validation, or persistence MUST trigger an immediate, complete rollback of both entity mutations and audit entries (`RollbackAsync()`).
+2. **Pre-Validation Ordering Invariant**:
+   - Specification validation (checking `EntityName`, `ActionName`, and verifying `Actor` against `"ANONYMOUS"` or `"UNKNOWN"`) MUST occur BEFORE calling `db.SaveChangesAsync()` to ensure zero partial commits in both relational and in-memory test databases.
+   - On transaction abort when `tx == null` (such as in unit test environments), invoke `db.ChangeTracker.Clear()` to guarantee untracked entities are purged.
+3. **ISO 9001:2015 Clause 7.5 Control of Documented Information**:
+   - Every audit entry MUST preserve mandatory identification attributes (`EntityName`, `ActionName`, `Actor`), positive auto-generated integer `RecordId`, and structured differential state capture (`before` and `after` snapshots in `MetadataJson`).
+   - Every recorded transaction computes an immutable SHA-256 digital security seal (`ComputeDigitalSecuritySeal`) across the payload, enabling real-time cryptographic tamper detection and non-repudiation.
+4. **DPSA Information Security Directive & CGICTPF Public Sector Compliance**:
+   - **Zero Anonymous Actors**: 100% actor accountability is strictly enforced. Any attempt to record mutations with empty, `"ANONYMOUS"`, or `"UNKNOWN"` actors must fail fast and abort the transaction.
+   - **Chronological UTC Precision**: Audit timestamps must record UTC timestamps with sub-second precision; future-dated timestamps exceeding reasonable drift thresholds are rejected.
+   - **POPIA Sensitive PII Redaction**: Sensitive personal identifiers (such as 13-digit RSA National ID numbers and bank account numbers) must be masked in `MetadataJson` payloads before database persistence.
+   - **PFMA Maker-Checker Segregation of Duties**: Approvals and statutory signoffs (e.g., Banking Details, Discretionary Grant MoAs, Tranche Claims) must verify that the creator and approver are distinct individuals (`CreatedBy != ApproverUserId`).
+5. **Windows MSBuild Assembly Lock Safeguard in Test Pipelines**:
+   - When running test suites (`dotnet test`) on Windows environments with an active local dev server (`Nsdms.Web`), pass `/p:BuildProjectReferences=false` to prevent MSBuild locked DLL copy collisions.
+
+

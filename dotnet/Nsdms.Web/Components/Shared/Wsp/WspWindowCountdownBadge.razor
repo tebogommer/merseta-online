@@ -1,0 +1,538 @@
+@namespace Nsdms.Web.Components.Shared.Wsp
+@using MudBlazor
+@using Nsdms.Application.Services
+@using Nsdms.Application.Common.Models
+@using System.Threading
+@implements IAsyncDisposable
+
+<style>
+    @@keyframes nsdms-urgency-pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7);
+        }
+        70% {
+            transform: scale(1.03);
+            box-shadow: 0 0 0 8px rgba(211, 47, 47, 0);
+        }
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(211, 47, 47, 0);
+        }
+    }
+    .nsdms-ticker-critical {
+        animation: nsdms-urgency-pulse 1.8s infinite;
+        font-weight: 700 !important;
+    }
+    .nsdms-ticker-warning {
+        font-weight: 600 !important;
+    }
+    .nsdms-ticker-badge {
+        user-select: none;
+        letter-spacing: 0.01em;
+    }
+</style>
+
+@if (_loading)
+{
+    <MudChip T="string"
+             Color="Color.Default"
+             Variant="Variant.Outlined"
+             Size="@(Dense ? Size.Small : Size.Medium)"
+             Class="@($"nsdms-ticker-badge {Class}")"
+             Style="@Style"
+             aria-label="Loading Mandatory Grant submission window status">
+        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+        <span>Loading submission window...</span>
+    </MudChip>
+}
+else if (BadgeVariant == "AlertBanner")
+{
+    <MudAlert Severity="@GetAlertSeverity()"
+              Variant="Variant.Filled"
+              Elevation="1"
+              Class="@($"rounded-lg {Class}")"
+              Style="@Style">
+        <div class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center gap-3">
+            <div>
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
+                    @GetAlertHeadline()
+                </MudText>
+                <MudText Typo="Typo.body2">
+                    @GetAlertDetail()
+                </MudText>
+            </div>
+            @if (_status?.IsClosed == true && !_status.HasApprovedExtension)
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Surface"
+                           StartIcon="@Icons.Material.Filled.EventBusy"
+                           Href="@($"/wsp/extension-request{(OrganisationId.HasValue ? $"?organisationId={OrganisationId.Value}" : "")}")"
+                           aria-label="Request statutory deadline extension under Regulation 4(2)">
+                    Request deadline extension
+                </MudButton>
+            }
+        </div>
+    </MudAlert>
+}
+else if (BadgeVariant == "Inline")
+{
+    @if (ShowDetailsOnHover && _status != null)
+    {
+        <MudTooltip Arrow="true" Placement="Placement.Bottom">
+            <TooltipContent>
+                @RenderTooltipDetails()
+            </TooltipContent>
+            <ChildContent>
+                <span class="@($"d-inline-flex align-center gap-1 font-mono text-caption {GetStatusTextClass()} {Class}")"
+                      style="@Style"
+                      aria-label="@GetAccessibleLabel()">
+                    <MudIcon Icon="@GetChipIcon()" Size="Size.Small" />
+                    <span>@GetDisplayCountdownText()</span>
+                </span>
+            </ChildContent>
+        </MudTooltip>
+    }
+    else
+    {
+        <span class="@($"d-inline-flex align-center gap-1 font-mono text-caption {GetStatusTextClass()} {Class}")"
+              style="@Style"
+              aria-label="@GetAccessibleLabel()">
+            <MudIcon Icon="@GetChipIcon()" Size="Size.Small" />
+            <span>@GetDisplayCountdownText()</span>
+        </span>
+    }
+}
+else
+{
+    @* Default: Chip format *@
+    @if (ShowDetailsOnHover && _status != null)
+    {
+        <MudTooltip Arrow="true" Placement="Placement.Bottom">
+            <TooltipContent>
+                @RenderTooltipDetails()
+            </TooltipContent>
+            <ChildContent>
+                <MudChip T="string"
+                         Color="@GetChipColor()"
+                         Variant="@GetChipVariant()"
+                         Size="@(Dense ? Size.Small : Size.Medium)"
+                         Icon="@GetChipIcon()"
+                         Class="@GetChipClass()"
+                         Style="@Style"
+                         aria-label="@GetAccessibleLabel()">
+                    @GetDisplayCountdownText()
+                </MudChip>
+            </ChildContent>
+        </MudTooltip>
+    }
+    else
+    {
+        <MudChip T="string"
+                 Color="@GetChipColor()"
+                 Variant="@GetChipVariant()"
+                 Size="@(Dense ? Size.Small : Size.Medium)"
+                 Icon="@GetChipIcon()"
+                 Class="@GetChipClass()"
+                 Style="@Style"
+                 aria-label="@GetAccessibleLabel()">
+            @GetDisplayCountdownText()
+        </MudChip>
+    }
+}
+
+@code {
+    [Inject] private IWspService WspService { get; set; } = default!;
+
+    [Parameter] public int? OrganisationId { get; set; }
+    [Parameter] public int? SchemeYear { get; set; }
+    [Parameter] public bool Dense { get; set; } = false;
+    [Parameter] public bool ShowDetailsOnHover { get; set; } = true;
+    [Parameter] public string BadgeVariant { get; set; } = "Badge";
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? Style { get; set; }
+    [Parameter] public EventCallback<WspWindowStatusDto> OnStatusLoaded { get; set; }
+    [Parameter] public EventCallback OnWindowExpired { get; set; }
+
+    private WspWindowStatusDto? _status;
+    private WspUrgencyTier _currentUrgencyTier = WspUrgencyTier.Normal;
+    private TimeSpan _timeRemaining = TimeSpan.Zero;
+    private bool _loading = true;
+    private int? _lastLoadedOrgId;
+    private int? _lastLoadedSchemeYear;
+
+    private CancellationTokenSource? _cts;
+    private Task? _tickerTask;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _cts = new CancellationTokenSource();
+        await LoadStatusAsync();
+        _tickerTask = RunTickerAsync(_cts.Token);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_lastLoadedOrgId != OrganisationId || _lastLoadedSchemeYear != SchemeYear)
+        {
+            await LoadStatusAsync();
+        }
+    }
+
+    private async Task LoadStatusAsync(bool triggerCallback = true)
+    {
+        try
+        {
+            _lastLoadedOrgId = OrganisationId;
+            _lastLoadedSchemeYear = SchemeYear;
+            var status = await WspService.GetWindowStatusAsync(OrganisationId, SchemeYear);
+            _status = status;
+            _currentUrgencyTier = status.UrgencyTier;
+            _timeRemaining = status.TimeRemaining;
+            _loading = false;
+
+            if (triggerCallback && OnStatusLoaded.HasDelegate)
+            {
+                await OnStatusLoaded.InvokeAsync(status);
+            }
+        }
+        catch
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task RunTickerAsync(CancellationToken ct)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        int tickCounter = 0;
+
+        try
+        {
+            while (await timer.WaitForNextTickAsync(ct))
+            {
+                tickCounter++;
+                if (tickCounter % 60 == 0)
+                {
+                    // Periodically resynchronize against server for administrative adjustments
+                    await LoadStatusAsync(triggerCallback: false);
+                }
+                else
+                {
+                    await UpdateLocalTickerAsync();
+                }
+
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Normal task cancellation during component disposal
+        }
+    }
+
+    private async Task UpdateLocalTickerAsync()
+    {
+        if (_status == null) return;
+
+        var now = DateTime.UtcNow;
+        if (now < _status.OpeningDate)
+        {
+            _status.IsUpcoming = true;
+            _status.IsOpen = false;
+            _status.IsClosed = false;
+            _currentUrgencyTier = WspUrgencyTier.Upcoming;
+            _timeRemaining = _status.OpeningDate - now;
+            return;
+        }
+
+        var remaining = _status.EffectiveDeadline - now;
+        if (remaining <= TimeSpan.Zero)
+        {
+            bool wasOpen = _status.IsOpen;
+            _status.IsOpen = false;
+            _status.IsClosed = true;
+            _status.IsUpcoming = false;
+            _timeRemaining = TimeSpan.Zero;
+            _currentUrgencyTier = WspUrgencyTier.Closed;
+
+            if (wasOpen && OnWindowExpired.HasDelegate)
+            {
+                await OnWindowExpired.InvokeAsync();
+            }
+            return;
+        }
+
+        _status.IsOpen = true;
+        _status.IsClosed = false;
+        _status.IsUpcoming = false;
+        _timeRemaining = remaining;
+
+        if (_status.HasApprovedExtension && now > _status.ClosingDate)
+        {
+            _currentUrgencyTier = WspUrgencyTier.ExtensionActive;
+        }
+        else if (remaining <= TimeSpan.FromHours(72))
+        {
+            _currentUrgencyTier = WspUrgencyTier.Critical;
+        }
+        else if (remaining <= TimeSpan.FromDays(14))
+        {
+            _currentUrgencyTier = WspUrgencyTier.Warning;
+        }
+        else
+        {
+            _currentUrgencyTier = WspUrgencyTier.Normal;
+        }
+    }
+
+    private string GetDisplayCountdownText()
+    {
+        if (_status == null) return "Loading...";
+
+        if (_currentUrgencyTier == WspUrgencyTier.Upcoming)
+        {
+            return Dense
+                ? $"📅 Opens {_status.OpeningDate:dd MMM}"
+                : $"📅 Opens on {_status.OpeningDate:dd MMMM yyyy}";
+        }
+
+        if (_currentUrgencyTier == WspUrgencyTier.Closed || _status.IsClosed)
+        {
+            return Dense
+                ? $"⚠️ Window Closed ({_status.ClosingDate:dd MMM})"
+                : $"⚠️ Window Closed on {_status.ClosingDate:dd MMMM yyyy}";
+        }
+
+        if (_currentUrgencyTier == WspUrgencyTier.ExtensionActive)
+        {
+            var extDate = _status.GrantedExtensionDate ?? _status.EffectiveDeadline;
+            return Dense
+                ? $"🕒 Ext Active ({extDate:dd MMM})"
+                : $"🕒 Extension Active until {extDate:dd MMMM yyyy}";
+        }
+
+        if (_currentUrgencyTier == WspUrgencyTier.Critical)
+        {
+            var totalHours = (int)Math.Floor(_timeRemaining.TotalHours);
+            return Dense
+                ? $"⏳ {totalHours:D2}h {_timeRemaining.Minutes:D2}m {_timeRemaining.Seconds:D2}s"
+                : $"⏳ {totalHours:D2}h {_timeRemaining.Minutes:D2}m {_timeRemaining.Seconds:D2}s remaining";
+        }
+
+        if (_currentUrgencyTier == WspUrgencyTier.Warning)
+        {
+            return Dense
+                ? $"⏳ {_timeRemaining.Days}d {_timeRemaining.Hours:D2}h ({_status.EffectiveDeadline:dd MMM})"
+                : $"⏳ {_timeRemaining.Days}d {_timeRemaining.Hours:D2}h {_timeRemaining.Minutes:D2}m remaining ({_status.EffectiveDeadline:dd MMMM})";
+        }
+
+        // Normal (> 14 days)
+        return Dense
+            ? $"⏳ {_timeRemaining.Days}d {_timeRemaining.Hours:D2}h ({_status.EffectiveDeadline:dd MMM})"
+            : $"⏳ {_timeRemaining.Days}d {_timeRemaining.Hours:D2}h {_timeRemaining.Minutes:D2}m remaining ({_status.EffectiveDeadline:dd MMMM})";
+    }
+
+    private Color GetChipColor() => _currentUrgencyTier switch
+    {
+        WspUrgencyTier.Upcoming => Color.Info,
+        WspUrgencyTier.Normal => Color.Info,
+        WspUrgencyTier.Warning => Color.Warning,
+        WspUrgencyTier.Critical => Color.Error,
+        WspUrgencyTier.ExtensionActive => Color.Success,
+        WspUrgencyTier.Closed => Color.Error,
+        _ => Color.Default
+    };
+
+    private Variant GetChipVariant() => _currentUrgencyTier switch
+    {
+        WspUrgencyTier.Upcoming => Variant.Outlined,
+        _ => Variant.Filled
+    };
+
+    private string GetChipIcon() => _currentUrgencyTier switch
+    {
+        WspUrgencyTier.Upcoming => Icons.Material.Filled.CalendarMonth,
+        WspUrgencyTier.Normal => Icons.Material.Filled.HourglassTop,
+        WspUrgencyTier.Warning => Icons.Material.Filled.WarningAmber,
+        WspUrgencyTier.Critical => Icons.Material.Filled.Alarm,
+        WspUrgencyTier.ExtensionActive => Icons.Material.Filled.AccessTimeFilled,
+        WspUrgencyTier.Closed => Icons.Material.Filled.EventBusy,
+        _ => Icons.Material.Filled.Schedule
+    };
+
+    private string GetChipClass()
+    {
+        var classes = new List<string> { "nsdms-ticker-badge" };
+        if (!string.IsNullOrWhiteSpace(Class)) classes.Add(Class);
+        if (_currentUrgencyTier == WspUrgencyTier.Critical) classes.Add("nsdms-ticker-critical");
+        else if (_currentUrgencyTier == WspUrgencyTier.Warning) classes.Add("nsdms-ticker-warning");
+        return string.Join(" ", classes);
+    }
+
+    private Severity GetAlertSeverity() => _currentUrgencyTier switch
+    {
+        WspUrgencyTier.Upcoming => Severity.Info,
+        WspUrgencyTier.Normal => Severity.Info,
+        WspUrgencyTier.Warning => Severity.Warning,
+        WspUrgencyTier.Critical => Severity.Error,
+        WspUrgencyTier.ExtensionActive => Severity.Success,
+        WspUrgencyTier.Closed => Severity.Error,
+        _ => Severity.Normal
+    };
+
+    private string GetAlertHeadline() => _currentUrgencyTier switch
+    {
+        WspUrgencyTier.Upcoming => $"Mandatory Grant Window Opens {_status?.OpeningDate:dd MMMM yyyy}",
+        WspUrgencyTier.Closed => $"Mandatory Grant Submission Window Closed ({_status?.ClosingDate:dd MMMM yyyy})",
+        WspUrgencyTier.ExtensionActive => $"Approved Extension Active until {_status?.EffectiveDeadline:dd MMMM yyyy}",
+        WspUrgencyTier.Critical => $"Urgent: Mandatory Grant Submission Deadline in {GetDisplayCountdownText()}",
+        WspUrgencyTier.Warning => $"Mandatory Grant Submission Window Closing Soon",
+        _ => $"Mandatory Grant (WSP/ATR) Submission Window Open"
+    };
+
+    private string GetAlertDetail()
+    {
+        if (_status == null) return string.Empty;
+
+        if (_currentUrgencyTier == WspUrgencyTier.Closed)
+        {
+            return $"The statutory submission deadline for Scheme Year {_status.SchemeYear} closed on {_status.ClosingDate:dd MMMM yyyy HH:mm} SAST. Further submissions require an approved extension under Regulation 4(2).";
+        }
+        if (_currentUrgencyTier == WspUrgencyTier.ExtensionActive)
+        {
+            return $"An approved statutory extension (Ref: {_status.ExtensionReferenceNumber ?? "N/A"}) is currently active for this organisation until {_status.EffectiveDeadline:dd MMMM yyyy HH:mm} SAST.";
+        }
+        if (_currentUrgencyTier == WspUrgencyTier.Critical)
+        {
+            return $"The statutory submission deadline is imminent. Complete and lodge your Workplace Skills Plan and Annual Training Report before {_status.EffectiveDeadline:dd MMMM yyyy HH:mm} SAST.";
+        }
+        return $"Submissions for Scheme Year {_status.SchemeYear} are open. Standard statutory deadline is {_status.ClosingDate:dd MMMM yyyy HH:mm} SAST.";
+    }
+
+    private string GetStatusTextClass() => _currentUrgencyTier switch
+    {
+        WspUrgencyTier.Critical => "text-error font-weight-bold",
+        WspUrgencyTier.Warning => "text-warning font-weight-medium",
+        WspUrgencyTier.ExtensionActive => "text-success font-weight-medium",
+        WspUrgencyTier.Closed => "text-error",
+        _ => "text-primary"
+    };
+
+    private string GetAccessibleLabel()
+    {
+        if (_status == null) return "Submission window status";
+        return $"{_status.DisplayTitle}: {GetDisplayCountdownText()}";
+    }
+
+    private RenderFragment RenderTooltipDetails() => builder =>
+    {
+        if (_status == null) return;
+
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "pa-2 text-start");
+        builder.AddAttribute(2, "style", "max-width: 320px;");
+
+        // Title
+        builder.OpenElement(3, "div");
+        builder.AddAttribute(4, "class", "font-weight-bold mb-1");
+        builder.AddContent(5, $"Scheme Year {_status.SchemeYear} Submission Window");
+        builder.CloseElement();
+
+        // Scope
+        if (OrganisationId.HasValue && !string.IsNullOrWhiteSpace(_status.OrganisationName))
+        {
+            builder.OpenElement(6, "div");
+            builder.AddAttribute(7, "class", "text-caption text-secondary mb-1");
+            builder.AddContent(8, $"Employer: {_status.OrganisationName}");
+            builder.CloseElement();
+        }
+
+        // Window open
+        builder.OpenElement(9, "div");
+        builder.AddAttribute(10, "class", "d-flex justify-space-between gap-3 text-caption");
+        builder.OpenElement(11, "span");
+        builder.AddContent(12, "Window opens:");
+        builder.CloseElement();
+        builder.OpenElement(13, "span");
+        builder.AddAttribute(14, "class", "font-weight-medium");
+        builder.AddContent(15, $"{_status.OpeningDate:dd MMM yyyy HH:mm} SAST");
+        builder.CloseElement();
+        builder.CloseElement();
+
+        // Standard deadline
+        builder.OpenElement(16, "div");
+        builder.AddAttribute(17, "class", "d-flex justify-space-between gap-3 text-caption");
+        builder.OpenElement(18, "span");
+        builder.AddContent(19, "Statutory deadline:");
+        builder.CloseElement();
+        builder.OpenElement(20, "span");
+        builder.AddAttribute(21, "class", "font-weight-medium");
+        builder.AddContent(22, $"{_status.ClosingDate:dd MMM yyyy HH:mm} SAST");
+        builder.CloseElement();
+        builder.CloseElement();
+
+        // Extension info if present
+        if (_status.HasApprovedExtension)
+        {
+            builder.OpenElement(23, "div");
+            builder.AddAttribute(24, "class", "d-flex justify-space-between gap-3 text-caption text-success mt-1 pt-1 border-t");
+            builder.OpenElement(25, "span");
+            builder.AddContent(26, "Approved extension:");
+            builder.CloseElement();
+            builder.OpenElement(27, "span");
+            builder.AddAttribute(28, "class", "font-weight-bold");
+            builder.AddContent(29, $"{_status.EffectiveDeadline:dd MMM yyyy HH:mm} SAST");
+            builder.CloseElement();
+            builder.CloseElement();
+
+            if (!string.IsNullOrWhiteSpace(_status.ExtensionReferenceNumber))
+            {
+                builder.OpenElement(30, "div");
+                builder.AddAttribute(31, "class", "d-flex justify-space-between gap-3 text-caption text-secondary");
+                builder.OpenElement(32, "span");
+                builder.AddContent(33, "Extension ref:");
+                builder.CloseElement();
+                builder.OpenElement(34, "span");
+                builder.AddAttribute(35, "class", "font-mono");
+                builder.AddContent(36, _status.ExtensionReferenceNumber);
+                builder.CloseElement();
+                builder.CloseElement();
+            }
+        }
+
+        // Time remaining / status summary
+        builder.OpenElement(37, "div");
+        builder.AddAttribute(38, "class", $"text-caption mt-2 pt-1 border-t font-weight-medium {GetStatusTextClass()}");
+        builder.AddContent(39, _currentUrgencyTier switch
+        {
+            WspUrgencyTier.Upcoming => $"Window has not opened yet. Opens on {_status.OpeningDate:dd MMMM yyyy}.",
+            WspUrgencyTier.Closed => $"Window closed. Lodgements require an approved Regulation 4(2) extension.",
+            WspUrgencyTier.ExtensionActive => $"Approved Regulation 4(2) extension in effect until {_status.EffectiveDeadline:dd MMMM yyyy}.",
+            WspUrgencyTier.Critical => "Critical statutory deadline. Submit your WSP/ATR immediately.",
+            WspUrgencyTier.Warning => "Statutory deadline approaching within 14 days.",
+            _ => "Standard statutory lodgement window is open."
+        });
+        builder.CloseElement();
+
+        builder.CloseElement();
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_cts != null)
+        {
+            _cts.Cancel();
+            if (_tickerTask != null)
+            {
+                try
+                {
+                    await _tickerTask;
+                }
+                catch (OperationCanceledException) { }
+            }
+            _cts.Dispose();
+            _cts = null;
+        }
+    }
+}

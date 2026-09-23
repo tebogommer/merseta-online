@@ -6,7 +6,6 @@ using Nsdms.Application.Common;
 using Nsdms.Domain.Common;
 using Nsdms.Domain.Entities;
 using Nsdms.Domain.Lookups;
-using Nsdms.Infrastructure.Services;
 
 namespace Nsdms.Infrastructure.Data;
 
@@ -389,6 +388,12 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<ApiWebhookDeliveryLog> ApiWebhookDeliveryLogs => Set<ApiWebhookDeliveryLog>();
     public DbSet<ApiIdempotencyRecord> ApiIdempotencyRecords => Set<ApiIdempotencyRecord>();
 
+    // Phase 56: Mandatory Grant Window Governance & OFO Code Sets
+    public DbSet<OfoCodeSet> OfoCodeSets => Set<OfoCodeSet>();
+    public DbSet<OfoCodeSetItem> OfoCodeSetItems => Set<OfoCodeSetItem>();
+    public DbSet<MgWindow> MgWindows => Set<MgWindow>();
+    public DbSet<MgWindowOfoCode> MgWindowOfoCodes => Set<MgWindowOfoCode>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -594,6 +599,111 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.ToTable("MgWindowScheduleProposal");
             entity.HasIndex(p => p.SchemeYear);
             entity.HasIndex(p => p.Status);
+        });
+
+        // Phase 56: OFO Code Sets & Mandatory Grant Window Governance
+        modelBuilder.Entity<OfoCodeSet>(entity =>
+        {
+            entity.ToTable("OfoCodeSet");
+            entity.HasKey(s => s.Id);
+            entity.Property(s => s.Name).HasMaxLength(150).IsRequired();
+            entity.Property(s => s.Description).HasMaxLength(500);
+            entity.Property(s => s.GazetteNumber).HasMaxLength(100);
+            entity.Property(s => s.CreatedBy).HasMaxLength(100);
+            entity.Property(s => s.ModifiedBy).HasMaxLength(100);
+
+            entity.HasIndex(s => s.SetYear)
+                .IsUnique()
+                .HasDatabaseName("IX_OfoCodeSet_SetYear");
+        });
+
+        modelBuilder.Entity<OfoCodeSetItem>(entity =>
+        {
+            entity.ToTable("OfoCodeSetItem");
+            entity.HasKey(i => i.Id);
+            entity.Property(i => i.OfoCodeId).HasMaxLength(50).IsRequired();
+            entity.Property(i => i.MajorGroup).HasMaxLength(10);
+            entity.Property(i => i.SubMajorGroup).HasMaxLength(10);
+            entity.Property(i => i.MinorGroup).HasMaxLength(10);
+            entity.Property(i => i.UnitGroup).HasMaxLength(10);
+            entity.Property(i => i.CreatedBy).HasMaxLength(100);
+            entity.Property(i => i.ModifiedBy).HasMaxLength(100);
+
+            entity.HasIndex(i => new { i.OfoCodeSetId, i.OfoCodeId })
+                .IsUnique()
+                .HasDatabaseName("IX_OfoCodeSetItem_Set_Code");
+
+            entity.HasIndex(i => i.OfoCodeId)
+                .HasDatabaseName("IX_OfoCodeSetItem_OfoCodeId");
+
+            entity.HasOne(i => i.OfoCodeSet)
+                .WithMany(s => s.Items)
+                .HasForeignKey(i => i.OfoCodeSetId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(i => i.OfoCode)
+                .WithMany()
+                .HasForeignKey(i => i.OfoCodeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MgWindow>(entity =>
+        {
+            entity.ToTable("MgWindow");
+            entity.HasKey(w => w.Id);
+            entity.Property(w => w.WindowName).HasMaxLength(150).IsRequired();
+            entity.Property(w => w.GazetteReference).HasMaxLength(200);
+            entity.Property(w => w.ApprovalStatus).HasMaxLength(50).IsRequired();
+            entity.Property(w => w.ProposedByUserId).HasMaxLength(100);
+            entity.Property(w => w.ProposedByUserName).HasMaxLength(150);
+            entity.Property(w => w.AdjudicatedByUserId).HasMaxLength(100);
+            entity.Property(w => w.AdjudicatedByUserName).HasMaxLength(150);
+            entity.Property(w => w.CreatedBy).HasMaxLength(100);
+            entity.Property(w => w.ModifiedBy).HasMaxLength(100);
+
+            entity.HasIndex(w => w.SchemeYear)
+                .HasDatabaseName("IX_MgWindow_SchemeYear");
+
+            entity.HasIndex(w => w.ApprovalStatus)
+                .HasDatabaseName("IX_MgWindow_Status");
+
+            entity.HasIndex(w => w.OfoCodeSetId)
+                .HasDatabaseName("IX_MgWindow_OfoCodeSetId");
+
+            entity.HasOne(w => w.OfoCodeSet)
+                .WithMany()
+                .HasForeignKey(w => w.OfoCodeSetId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<MgWindowOfoCode>(entity =>
+        {
+            entity.ToTable("MgWindowOfoCode");
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.OfoCodeId).HasMaxLength(50).IsRequired();
+            entity.Property(c => c.SectorNotes).HasMaxLength(500);
+            entity.Property(c => c.CreatedBy).HasMaxLength(100);
+            entity.Property(c => c.ModifiedBy).HasMaxLength(100);
+
+            entity.HasIndex(c => new { c.MgWindowId, c.OfoCodeId })
+                .IsUnique()
+                .HasDatabaseName("IX_MgWindowOfoCode_Window_Code");
+
+            entity.HasIndex(c => new { c.MgWindowId, c.IsPrioritySkill })
+                .HasDatabaseName("IX_MgWindowOfoCode_Priority");
+
+            entity.HasIndex(c => c.OfoCodeId)
+                .HasDatabaseName("IX_MgWindowOfoCode_OfoCodeId");
+
+            entity.HasOne(c => c.MgWindow)
+                .WithMany(w => w.ScopedOfoCodes)
+                .HasForeignKey(c => c.MgWindowId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(c => c.OfoCode)
+                .WithMany()
+                .HasForeignKey(c => c.OfoCodeId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Organisation table & indexes

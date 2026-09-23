@@ -11,8 +11,8 @@ namespace Nsdms.Application.Services;
 /// <param name="Instance">The updated workflow instance.</param>
 /// <param name="NewStateName">The resulting state name.</param>
 public record WorkflowActionResult(
-    bool Success, 
-    string Message, 
+    bool Success,
+    string Message,
     WorkflowInstance? Instance = null,
     string? NewStateName = null
 );

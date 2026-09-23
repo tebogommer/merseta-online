@@ -125,7 +125,7 @@ public class AssessorRegistrationService : IAssessorRegistrationService
     private readonly ISystemConfigurationService? _systemConfig;
 
     public AssessorRegistrationService(
-        INsdmsDbContextFactory contextFactory, 
+        INsdmsDbContextFactory contextFactory,
         IAuditService audit,
         ISystemConfigurationService? systemConfig = null)
     {
@@ -255,7 +255,7 @@ public class AssessorRegistrationService : IAssessorRegistrationService
     public async Task<AssessorApplicationScope> AddQualificationScopeAsync(int applicationId, AddQualificationScopeRequest request, string currentUsername = "SYSTEM")
     {
         // Enforce post-qualification experience invariant (Spec Section 5)
-        var minYears = _systemConfig != null 
+        var minYears = _systemConfig != null
             ? await _systemConfig.GetValueAsync("StatutorySlas.AssessorMinExperienceYears", 3.0)
             : 3.0;
 

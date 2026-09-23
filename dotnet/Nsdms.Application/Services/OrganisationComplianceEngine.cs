@@ -64,7 +64,7 @@ public class OrganisationComplianceEngine : IOrganisationComplianceEngine
 
         var conflictFlags = await context.ConflictFlags
             .AsNoTracking()
-            .Where(c => c.TargetOrganisationId == organisationId || 
+            .Where(c => c.TargetOrganisationId == organisationId ||
                        (govPersonIds.Contains(c.PersonId) && c.ResolutionStatusCode != "CLEARED_WITH_JUSTIFICATION" && c.ResolutionStatusCode != "RESOLVED"))
             .ToListAsync(cancellationToken);
 
@@ -233,7 +233,7 @@ public class OrganisationComplianceEngine : IOrganisationComplianceEngine
             BadgeIcon = "AccountBalance"
         };
 
-        var directors = governanceMembers.Where(g => g.GovernanceRoleCode.Contains("DIRECTOR", StringComparison.OrdinalIgnoreCase) || 
+        var directors = governanceMembers.Where(g => g.GovernanceRoleCode.Contains("DIRECTOR", StringComparison.OrdinalIgnoreCase) ||
                                                     !string.IsNullOrWhiteSpace(g.DirectorCategory)).ToList();
         var shareholders = governanceMembers.Where(g => g.MemberType == "CORPORATE_ENTITY" || g.ShareholdingPercentage > 0).ToList();
 

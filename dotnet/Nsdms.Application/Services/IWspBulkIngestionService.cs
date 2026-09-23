@@ -14,10 +14,10 @@ public interface IWspBulkIngestionService
     /// and immediately executes pre-flight set-based validation.
     /// </summary>
     Task<WspBulkImportBatch> StageAndValidateBatchAsync(
-        int wspSubmissionId, 
-        string fileName, 
-        Stream fileStream, 
-        string currentUsername, 
+        int wspSubmissionId,
+        string fileName,
+        Stream fileStream,
+        string currentUsername,
         bool allowPartial = false);
 
     /// <summary>

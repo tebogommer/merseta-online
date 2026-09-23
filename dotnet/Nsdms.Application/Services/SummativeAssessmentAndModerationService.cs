@@ -15,7 +15,7 @@ public class SummativeAssessmentAndModerationService : ISummativeAssessmentAndMo
     private readonly ISystemConfigurationService? _configService;
 
     public SummativeAssessmentAndModerationService(
-        INsdmsDbContextFactory contextFactory, 
+        INsdmsDbContextFactory contextFactory,
         AuditService audit,
         INotificationService? notificationService = null,
         ISystemConfigurationService? configService = null)

@@ -16,7 +16,7 @@ public class DocumentAttachment : BaseEntity
     /// Primary key identifier of the associated target entity.
     /// </summary>
     public int TargetEntityId { get; set; }
-    
+
     /// <summary>
     /// Stored sanitized file name.
     /// </summary>
@@ -36,7 +36,7 @@ public class DocumentAttachment : BaseEntity
     /// File size in bytes.
     /// </summary>
     public long FileSizeBytes { get; set; }
-    
+
     /// <summary>
     /// Storage provider engine (e.g. Local, AzureBlob, Database).
     /// </summary>
@@ -51,7 +51,7 @@ public class DocumentAttachment : BaseEntity
     /// Cryptographic SHA-256 integrity hash for document tampering verification.
     /// </summary>
     public string? FileHashSha256 { get; set; }
-    
+
     /// <summary>
     /// Document categorization code (e.g. ID_DOCUMENT, QUALIFICATION_CERT, SITE_PHOTO, BANK_CONFIRMATION, SIGNED_MOA).
     /// </summary>

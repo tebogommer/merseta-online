@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
 using Nsdms.Domain.Entities;
+using Nsdms.Domain.Lookups;
 
 namespace Nsdms.Application.Services;
 
@@ -287,53 +288,8 @@ public class SarsLevyStreamingPipeline : ISarsLevyStreamingPipeline
                     // Out-of-Scope SETA Check (SETA != 17)
                     if (matchedSic.SetaCode != "17")
                     {
-                        stage.IsOutOfScopeSeta = true;
                         outOfScopeCount++;
-
-                        db.SarsLevyReconAudits.Add(new SarsLevyReconAudit
-                        {
-                            FinancialYear = stage.SchemeYear.Length >= 4 ? stage.SchemeYear[..4] : DateTime.UtcNow.Year.ToString(),
-                            SchemeYear = stage.SchemeYear,
-                            SdlNumber = stage.SdlNumber,
-                            OrganisationId = org?.Id,
-                            TotalSarsLeviesReceived = stage.TotalLevyAmount,
-                            TotalCalculatedLeviesExpected = 0m,
-                            VarianceAmount = stage.TotalLevyAmount,
-                            DiscrepancyReasonCode = "OutOfScopeSeta",
-                            CounterpartSetaCode = matchedSic.SetaCode,
-                            ActualSarsSicCode = stage.SicCode,
-                            ActualSarsChamberCode = matchedSic.ChamberCode,
-                            ExpectedSicCode = org?.SicCode,
-                            ExpectedChamberCode = org?.ChamberCode,
-                            AuditStatusCode = "DiscrepancyFlagged",
-                            AuditNotes = $"Streaming SARS levy reported non-merSETA SIC Code '{stage.SicCode}' belonging to SETA '{matchedSic.SetaCode}'. Out-of-scope Inter-SETA transfer required.",
-                            AuditorUserId = currentUsername,
-                            ReconciliationDate = DateTime.UtcNow,
-                            CreatedAt = DateTime.UtcNow,
-                            CreatedBy = currentUsername
-                        });
-
-                        if (org != null)
-                        {
-                            var hasActiveTransfer = await db.InterSetaTransfers.AnyAsync(t =>
-                                t.OrganisationId == org.Id && t.TransferStatusCode == "Initiated", cancellationToken);
-                            if (!hasActiveTransfer)
-                            {
-                                db.InterSetaTransfers.Add(new InterSetaTransfer
-                                {
-                                    OrganisationId = org.Id,
-                                    TransferType = "Outgoing",
-                                    OtherSetaCode = matchedSic.SetaCode,
-                                    OtherSetaName = matchedSic.Description ?? $"SETA {matchedSic.SetaCode}",
-                                    TransferReason = $"Streaming boundary detection: SARS reported non-merSETA SIC Code {stage.SicCode} (SETA {matchedSic.SetaCode})",
-                                    EffectiveDate = DateTime.UtcNow,
-                                    TransferStatusCode = "Initiated",
-                                    TransferAmount = stage.TotalLevyAmount,
-                                    CreatedAt = DateTime.UtcNow,
-                                    CreatedBy = currentUsername
-                                });
-                            }
-                        }
+                        await ProcessOutOfScopeSetaAsync(db, stage, org, matchedSic, currentUsername, cancellationToken);
                     }
                 }
                 else if (org != null && !string.IsNullOrWhiteSpace(org.ChamberCode))
@@ -344,30 +300,8 @@ public class SarsLevyStreamingPipeline : ISarsLevyStreamingPipeline
                 // SIC Code Mismatch Check
                 if (org != null && !string.IsNullOrWhiteSpace(stage.SicCode) && !string.IsNullOrWhiteSpace(org.SicCode) && stage.SicCode != org.SicCode)
                 {
-                    stage.HasSicCodeMismatch = true;
                     sicMismatchCount++;
-
-                    db.SarsLevyReconAudits.Add(new SarsLevyReconAudit
-                    {
-                        FinancialYear = stage.SchemeYear.Length >= 4 ? stage.SchemeYear[..4] : DateTime.UtcNow.Year.ToString(),
-                        SchemeYear = stage.SchemeYear,
-                        SdlNumber = stage.SdlNumber,
-                        OrganisationId = org.Id,
-                        TotalSarsLeviesReceived = stage.TotalLevyAmount,
-                        TotalCalculatedLeviesExpected = stage.TotalLevyAmount,
-                        VarianceAmount = 0m,
-                        DiscrepancyReasonCode = "SicCodeMismatch",
-                        ExpectedSicCode = org.SicCode,
-                        ActualSarsSicCode = stage.SicCode,
-                        ExpectedChamberCode = org.ChamberCode,
-                        ActualSarsChamberCode = matchedSic?.ChamberCode,
-                        AuditStatusCode = "DiscrepancyFlagged",
-                        AuditNotes = $"Streaming SARS declared SIC Code '{stage.SicCode}' differs from verified master record '{org.SicCode}'.",
-                        AuditorUserId = currentUsername,
-                        ReconciliationDate = DateTime.UtcNow,
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedBy = currentUsername
-                    });
+                    ProcessSicMismatch(db, stage, org, matchedSic, currentUsername);
                 }
 
                 stage.StagingStatus = "Promoted";
@@ -479,9 +413,7 @@ public class SarsLevyStreamingPipeline : ISarsLevyStreamingPipeline
         // 3. Delimited Parsing
         if (trimmed.Contains('|') || trimmed.Contains(',') || trimmed.Contains('\t') || trimmed.Contains(';'))
         {
-            char delimiter = trimmed.Contains('|') ? '|' :
-                             trimmed.Contains('\t') ? '\t' :
-                             trimmed.Contains(';') ? ';' : ',';
+            char delimiter = DetectDelimiter(trimmed);
 
             var parts = trimmed.Split(delimiter).Select(p => p.Trim().Trim('"')).ToArray();
             if (parts.Length < 2) return null;
@@ -521,35 +453,18 @@ public class SarsLevyStreamingPipeline : ISarsLevyStreamingPipeline
                     extractedSic = parts[9].Trim();
                 }
             }
-            // 4-column: SDL, Year, SIC, Amount
-            else if (parts.Length >= 4)
+            // Compact delimited formats (2, 3, or 4 columns)
+            else
             {
-                if (parts[2].Trim().Length == 5 && parts[2].Trim().All(char.IsDigit))
+                if (parts.Length >= 4 && parts[2].Trim().Length == 5 && parts[2].Trim().All(char.IsDigit))
                 {
                     extractedSic = parts[2].Trim();
                 }
-                decimal.TryParse(parts[3], NumberStyles.Any, CultureInfo.InvariantCulture, out totalAmount);
-                var split = _levyService.CalculateStatutorySplit(totalAmount);
-                mandatory = split.MandatoryGrantAmount;
-                discretionary = split.DiscretionaryGrantAmount;
-                admin = split.AdminLevyAmount;
-                qcto = split.QctoLevyAmount;
-            }
-            // 3-column: SDL, Year, Amount
-            else if (parts.Length == 3)
-            {
-                decimal.TryParse(parts[2], NumberStyles.Any, CultureInfo.InvariantCulture, out totalAmount);
-                var split = _levyService.CalculateStatutorySplit(totalAmount);
-                mandatory = split.MandatoryGrantAmount;
-                discretionary = split.DiscretionaryGrantAmount;
-                admin = split.AdminLevyAmount;
-                qcto = split.QctoLevyAmount;
-            }
-            // 2-column: SDL, Amount
-            else if (parts.Length == 2)
-            {
-                decimal.TryParse(parts[1], NumberStyles.Any, CultureInfo.InvariantCulture, out totalAmount);
-                schemeYear = DateTime.UtcNow.Year.ToString();
+
+                var amountIndex = parts.Length == 2 ? 1 : (parts.Length == 3 ? 2 : 3);
+                if (parts.Length == 2) schemeYear = DateTime.UtcNow.Year.ToString();
+
+                decimal.TryParse(parts[amountIndex], NumberStyles.Any, CultureInfo.InvariantCulture, out totalAmount);
                 var split = _levyService.CalculateStatutorySplit(totalAmount);
                 mandatory = split.MandatoryGrantAmount;
                 discretionary = split.DiscretionaryGrantAmount;
@@ -598,5 +513,98 @@ public class SarsLevyStreamingPipeline : ISarsLevyStreamingPipeline
         }
 
         return null;
+    }
+
+    private static char DetectDelimiter(string line) =>
+        line.Contains('|') ? '|' :
+        line.Contains('\t') ? '\t' :
+        line.Contains(';') ? ';' : ',';
+
+    private static async Task ProcessOutOfScopeSetaAsync(
+        INsdmsDbContext db,
+        SarsLevyStaging stage,
+        Organisation? org,
+        SicCodeType matchedSic,
+        string currentUsername,
+        CancellationToken cancellationToken)
+    {
+        stage.IsOutOfScopeSeta = true;
+
+        db.SarsLevyReconAudits.Add(new SarsLevyReconAudit
+        {
+            FinancialYear = stage.SchemeYear.Length >= 4 ? stage.SchemeYear[..4] : DateTime.UtcNow.Year.ToString(),
+            SchemeYear = stage.SchemeYear,
+            SdlNumber = stage.SdlNumber,
+            OrganisationId = org?.Id,
+            TotalSarsLeviesReceived = stage.TotalLevyAmount,
+            TotalCalculatedLeviesExpected = 0m,
+            VarianceAmount = stage.TotalLevyAmount,
+            DiscrepancyReasonCode = "OutOfScopeSeta",
+            CounterpartSetaCode = matchedSic.SetaCode,
+            ActualSarsSicCode = stage.SicCode,
+            ActualSarsChamberCode = matchedSic.ChamberCode,
+            ExpectedSicCode = org?.SicCode,
+            ExpectedChamberCode = org?.ChamberCode,
+            AuditStatusCode = "DiscrepancyFlagged",
+            AuditNotes = $"Streaming SARS levy reported non-merSETA SIC Code '{stage.SicCode}' belonging to SETA '{matchedSic.SetaCode}'. Out-of-scope Inter-SETA transfer required.",
+            AuditorUserId = currentUsername,
+            ReconciliationDate = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        });
+
+        if (org != null)
+        {
+            var hasActiveTransfer = await db.InterSetaTransfers.AnyAsync(t =>
+                t.OrganisationId == org.Id && t.TransferStatusCode == "Initiated", cancellationToken);
+            if (!hasActiveTransfer)
+            {
+                db.InterSetaTransfers.Add(new InterSetaTransfer
+                {
+                    OrganisationId = org.Id,
+                    TransferType = "Outgoing",
+                    OtherSetaCode = matchedSic.SetaCode,
+                    OtherSetaName = matchedSic.Description ?? $"SETA {matchedSic.SetaCode}",
+                    TransferReason = $"Streaming boundary detection: SARS reported non-merSETA SIC Code {stage.SicCode} (SETA {matchedSic.SetaCode})",
+                    EffectiveDate = DateTime.UtcNow,
+                    TransferStatusCode = "Initiated",
+                    TransferAmount = stage.TotalLevyAmount,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = currentUsername
+                });
+            }
+        }
+    }
+
+    private static void ProcessSicMismatch(
+        INsdmsDbContext db,
+        SarsLevyStaging stage,
+        Organisation org,
+        SicCodeType? matchedSic,
+        string currentUsername)
+    {
+        stage.HasSicCodeMismatch = true;
+
+        db.SarsLevyReconAudits.Add(new SarsLevyReconAudit
+        {
+            FinancialYear = stage.SchemeYear.Length >= 4 ? stage.SchemeYear[..4] : DateTime.UtcNow.Year.ToString(),
+            SchemeYear = stage.SchemeYear,
+            SdlNumber = stage.SdlNumber,
+            OrganisationId = org.Id,
+            TotalSarsLeviesReceived = stage.TotalLevyAmount,
+            TotalCalculatedLeviesExpected = stage.TotalLevyAmount,
+            VarianceAmount = 0m,
+            DiscrepancyReasonCode = "SicCodeMismatch",
+            ExpectedSicCode = org.SicCode,
+            ActualSarsSicCode = stage.SicCode,
+            ExpectedChamberCode = org.ChamberCode,
+            ActualSarsChamberCode = matchedSic?.ChamberCode,
+            AuditStatusCode = "DiscrepancyFlagged",
+            AuditNotes = $"Streaming SARS declared SIC Code '{stage.SicCode}' differs from verified master record '{org.SicCode}'.",
+            AuditorUserId = currentUsername,
+            ReconciliationDate = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        });
     }
 }

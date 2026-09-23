@@ -15,17 +15,17 @@ public class StorageService : IStorageService
     }
 
     public async Task<DocumentMetadata> UploadDocumentAsync(
-        string entityName, 
-        int entityId, 
-        string docTypeCode, 
-        string docTypeName, 
-        string fileName, 
-        Stream contentStream, 
-        string contentType, 
-        string userId, 
+        string entityName,
+        int entityId,
+        string docTypeCode,
+        string docTypeName,
+        string fileName,
+        Stream contentStream,
+        string contentType,
+        string userId,
         string userName)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
 
         // Compute SHA-256 Checksum
         using var sha256 = SHA256.Create();
@@ -54,39 +54,23 @@ public class StorageService : IStorageService
         var strategy = context.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
         {
-            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
-            if (context.Database.IsRelational())
-            {
-                tx = await context.Database.BeginTransactionAsync();
-            }
+            await using var tx = context.Database.IsRelational() ? await context.Database.BeginTransactionAsync() : null;
 
-            try
-            {
-                context.DocumentMetadatas.Add(doc);
-                await context.SaveChangesAsync();
+            context.DocumentMetadatas.Add(doc);
+            await context.SaveChangesAsync();
 
-                context.AuditLogs.Add(new AuditLog
-                {
-                    EntityName = "DocumentMetadata",
-                    RecordId = doc.Id,
-                    ActionName = "UPLOAD_DOCUMENT",
-                    Actor = userId,
-                    Timestamp = DateTime.UtcNow,
-                    MetadataJson = $"{{\"fileName\":\"{fileName}\",\"docType\":\"{docTypeCode}\",\"targetEntity\":\"{entityName}\",\"targetId\":{entityId}}}"
-                });
+            context.AuditLogs.Add(new AuditLog
+            {
+                EntityName = "DocumentMetadata",
+                RecordId = doc.Id,
+                ActionName = "UPLOAD_DOCUMENT",
+                Actor = userId,
+                Timestamp = DateTime.UtcNow,
+                MetadataJson = $"{{\"fileName\":\"{fileName}\",\"docType\":\"{docTypeCode}\",\"targetEntity\":\"{entityName}\",\"targetId\":{entityId}}}"
+            });
 
-                await context.SaveChangesAsync();
-                if (tx != null) await tx.CommitAsync();
-            }
-            catch
-            {
-                if (tx != null) await tx.RollbackAsync();
-                throw;
-            }
-            finally
-            {
-                tx?.Dispose();
-            }
+            await context.SaveChangesAsync();
+            if (tx != null) await tx.CommitAsync();
         });
 
         return doc;
@@ -94,7 +78,7 @@ public class StorageService : IStorageService
 
     public async Task<List<DocumentMetadata>> GetDocumentsForEntityAsync(string entityName, int entityId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
         return await context.DocumentMetadatas
             .Where(d => d.TargetEntityName == entityName && d.TargetEntityId == entityId)
             .OrderByDescending(d => d.UploadDate)
@@ -103,13 +87,13 @@ public class StorageService : IStorageService
 
     public async Task<DocumentMetadata?> GetDocumentByIdAsync(int documentId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
         return await context.DocumentMetadatas.FirstOrDefaultAsync(d => d.Id == documentId);
     }
 
     public async Task<bool> VerifyDocumentAsync(int documentId, string verifierUserId, string? notes = null)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
         var doc = await context.DocumentMetadatas.FirstOrDefaultAsync(d => d.Id == documentId);
         if (doc == null) return false;
 
@@ -134,7 +118,7 @@ public class StorageService : IStorageService
 
     public async Task<bool> DeleteDocumentAsync(int documentId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
         var doc = await context.DocumentMetadatas.FirstOrDefaultAsync(d => d.Id == documentId);
         if (doc == null) return false;
 

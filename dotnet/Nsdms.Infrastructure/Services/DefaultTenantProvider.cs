@@ -1,6 +1,6 @@
 using Nsdms.Application.Common;
 
-namespace Nsdms.Infrastructure.Services;
+namespace Nsdms.Infrastructure.Data;
 
 /// <summary>
 /// Default implementation of ITenantProvider with configurable tenancy state and administrative bypass.

@@ -1,0 +1,574 @@
+@page "/admin/mg-windows/{id:int}"
+@namespace Nsdms.Web.Components.Pages.Admin
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using Nsdms.Application.Common.Models
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Pages.Admin.Dialogs
+@using Nsdms.Web.Components.Shared
+@attribute [Authorize]
+@inject IMgWindowGovernanceService WindowGovService
+@inject IOfoCodeSetService OfoSetService
+@inject IAuditService AuditService
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>@(Window?.WindowName ?? "Mandatory Grant Window") - NSDMS merSETA</PageTitle>
+
+@if (_isLoading)
+{
+    <div class="d-flex justify-center align-center pa-12">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else if (Window == null)
+{
+    <MudAlert Severity="Severity.Error" Class="ma-4">
+        Mandatory Grant Window with ID #@Id was not found.
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/admin/mg-windows" Class="ml-2">
+            Back to Windows Register
+        </MudButton>
+    </MudAlert>
+}
+else
+{
+    <main id="main-content" style="max-width: 1600px; margin: 0 auto;">
+        <!-- 1. Sticky Top Bar Header (UI-STANDARD §4.1, §4.2) -->
+        <div class="sticky-top-header mb-4 pa-4 rounded-lg border border-default"
+             style="background: var(--mud-palette-surface); box-shadow: var(--mud-elevation-1);">
+            <div class="d-flex justify-space-between align-center mb-2">
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 text-secondary" Separator="›" Style="font-size: 0.8125rem;" />
+                <MudButton Variant="Variant.Text"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Href="/admin/mg-windows">
+                    Back to Register
+                </MudButton>
+            </div>
+
+            <div class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center gap-4">
+                <div>
+                    <div class="d-flex align-center flex-wrap gap-2">
+                        <MudText Typo="Typo.h5" Class="font-weight-bold" Style="color: var(--mud-palette-text-primary);">
+                            @Window.WindowName
+                        </MudText>
+                        <span class="font-mono px-2 py-0.5 border rounded text-secondary" style="font-size: 0.8125rem; background: var(--mud-palette-background);">
+                            @Window.ReferenceNumber
+                        </span>
+
+                        @switch (Window.ApprovalStatus)
+                        {
+                            case "Approved":
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Approved & Active</MudChip>
+                                break;
+                            case "PendingReview":
+                                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled">Pending Independent Review</MudChip>
+                                break;
+                            case "Draft":
+                                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">Draft Schedule</MudChip>
+                                break;
+                            case "Rejected":
+                                <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled">Rejected</MudChip>
+                                break;
+                            case "Archived":
+                                <MudChip T="string" Size="Size.Small" Color="Color.Dark" Variant="Variant.Outlined">Archived</MudChip>
+                                break;
+                            default:
+                                <MudChip T="string" Size="Size.Small">@Window.ApprovalStatus</MudChip>
+                                break;
+                        }
+
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.AccountTree">
+                            @Window.OfoCodeSetName
+                        </MudChip>
+                    </div>
+
+                    <div class="d-flex align-center flex-wrap gap-4 mt-2 text-secondary" style="font-size: 0.8125rem;">
+                        <div>Scheme Year: <strong>@Window.SchemeYear</strong></div>
+                        <div>•</div>
+                        <div>Lodgement: <strong>@Window.OpeningDate.ToString("yyyy-MM-dd HH:mm")</strong> to <strong>@Window.ClosingDate.ToString("yyyy-MM-dd HH:mm")</strong></div>
+                        <div>•</div>
+                        <div>Extension Cutoff: <strong>@Window.ExtensionCutoffDate.ToString("yyyy-MM-dd")</strong></div>
+                        @if (Window.IsCurrentlyOpen)
+                        {
+                            <span class="badge text-success font-weight-bold">● Portal Open & Active</span>
+                        }
+                    </div>
+                </div>
+
+                <!-- Context-Adaptive Action Zone (UI-STANDARD §4.1) -->
+                <div class="action-zone d-flex align-center gap-2 flex-wrap">
+                    @if (Window.ApprovalStatus == "Draft" || Window.ApprovalStatus == "Rejected")
+                    {
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   StartIcon="@Icons.Material.Filled.Edit"
+                                   OnClick="OpenEditDialog">
+                            Edit Schedule
+                        </MudButton>
+
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Send"
+                                   OnClick="SubmitForReview">
+                            Submit for Review
+                        </MudButton>
+                    }
+                    else if (Window.ApprovalStatus == "PendingReview")
+                    {
+                        @if (_isProposer)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Shield">
+                                Segregation of Duties: Awaiting Checker
+                            </MudChip>
+
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Warning"
+                                       StartIcon="@Icons.Material.Filled.Undo"
+                                       OnClick="WithdrawProposal">
+                                Withdraw Proposal
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Success"
+                                       StartIcon="@Icons.Material.Filled.FactCheck"
+                                       OnClick="OpenAdjudicateDialog">
+                                Review & Adjudicate
+                            </MudButton>
+                        }
+                    }
+                    else if (Window.ApprovalStatus == "Approved")
+                    {
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.FileDownload"
+                                   OnClick="ExportOfoFramework">
+                            Export OFO Framework
+                        </MudButton>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Master-Detail Tabs (UI-STANDARD §4.3) -->
+        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-4" Color="Color.Transparent">
+            <!-- TAB 1: General & Statutory Schedule -->
+            <MudTabPanel Text="General & Statutory Schedule" Icon="@Icons.Material.Filled.EventNote">
+                <MudGrid Spacing="4">
+                    <!-- Schedule Parameters Card -->
+                    <MudItem xs="12" md="6">
+                        <MudCard Elevation="1" Class="h-100 border border-default">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
+                                        <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Statutory Submission Dates</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Skills Development Act Grant Regulations (Regulation 4)</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <ReadOnlyField Label="Scheme Year" Value="@Window.SchemeYear.ToString()" IsMonospace="true" />
+                                <ReadOnlyField Label="Submission Portal Opens" Value="@Window.OpeningDate.ToString("yyyy-MM-dd HH:mm SAST")" Icon="@Icons.Material.Filled.LockOpen" />
+                                <ReadOnlyField Label="Standard Submission Deadline" Value="@Window.ClosingDate.ToString("yyyy-MM-dd HH:mm SAST")" Icon="@Icons.Material.Filled.Lock" />
+                                <ReadOnlyField Label="Regulation 4(2) Extension Cutoff" Value="@Window.ExtensionCutoffDate.ToString("yyyy-MM-dd SAST")" Icon="@Icons.Material.Filled.HourglassTop" />
+                                <ReadOnlyField Label="Current Operational State">
+                                    @if (Window.IsCurrentlyOpen)
+                                    {
+                                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">
+                                            Open for Employer Submissions
+                                        </MudChip>
+                                    }
+                                    else
+                                    {
+                                        <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">
+                                            @(DateTime.UtcNow < Window.OpeningDate ? "Upcoming Lodgement Period" : "Closed for Submissions")
+                                        </MudChip>
+                                    }
+                                </ReadOnlyField>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <!-- Governing OFO Framework Version & Statutory Authority Card -->
+                    <MudItem xs="12" md="6">
+                        <MudCard Elevation="1" Class="h-100 border border-default">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Small">
+                                        <MudIcon Icon="@Icons.Material.Filled.Gavel" Size="Size.Small" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Governing OFO Framework Version & Statutory Authority</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">DHET Gazette Publication & PFMA Compliance</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <div class="pa-3 mb-3 rounded border border-default" style="background: var(--mud-palette-background-grey);">
+                                    <div class="d-flex align-center justify-space-between mb-1">
+                                        <span class="text-secondary" style="font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Governing Taxonomy Release</span>
+                                        <div class="d-flex align-center gap-1">
+                                            @if (_ofoSet?.IsActive == true || Window.IsActive)
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Active Baseline</MudChip>
+                                            }
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
+                                                @(!string.IsNullOrWhiteSpace(Window.OfoCodeSetVersion) ? $"{Window.OfoCodeSetName} ({Window.OfoCodeSetVersion})" : Window.OfoCodeSetName)
+                                            </MudChip>
+                                        </div>
+                                    </div>
+                                    <MudText Typo="Typo.body1" Class="font-weight-bold text-primary d-flex align-center gap-2">
+                                        <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                                        @Window.OfoCodeSetName
+                                    </MudText>
+                                    @if (!string.IsNullOrWhiteSpace(_ofoSet?.Description))
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mt-1">
+                                            @_ofoSet.Description
+                                        </MudText>
+                                    }
+                                    @if (_ofoSet != null && _ofoSet.TotalOccupationsCount > 0)
+                                    {
+                                        <div class="d-flex align-center gap-2 mt-2 pt-2 border-top border-default">
+                                            <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Size="Size.Small" Color="Color.Success" />
+                                            <span style="font-size: 0.8125rem;">
+                                                <strong>@_ofoSet.TotalOccupationsCount.ToString("N0")</strong> Active Gazetted Occupations (@_ofoSet.TradeCount Designated Trades)
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+
+                                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.Policy">
+                                    <span style="font-size: 0.8125rem;">
+                                        In terms of DHET Gazette regulations, gazetted OFO taxonomy releases are national statutory reference benchmarks. Submission cycles bind to a gazetted release version; individual occupations are not altered on a per-window basis.
+                                    </span>
+                                </MudAlert>
+
+                                <ReadOnlyField Label="Government Gazette Citation" Value="@(Window.GazetteReference ?? _ofoSet?.GazetteNumber ?? "Not gazetted / departmental notice")" Icon="@Icons.Material.Filled.MenuBook" />
+                                <ReadOnlyField Label="Statutory Motivation & Operational Rationale" Value="@Window.Justification" />
+
+                                <MudDivider Class="my-3" />
+
+                                <MudText Typo="Typo.caption" Class="font-weight-bold text-uppercase text-secondary mb-2 d-block">
+                                    Dual Authorisation Governance Trail
+                                </MudText>
+
+                                <div class="d-flex justify-space-between align-center mb-2">
+                                    <span class="text-secondary" style="font-size: 0.8125rem;">Proposed By:</span>
+                                    <span class="font-weight-bold" style="font-size: 0.8125rem;">
+                                        @(Window.ProposedByUserName ?? Window.ProposedByUserId ?? "SYSTEM")
+                                        <span class="text-secondary font-weight-normal">(@(Window.ProposedDate?.ToString("yyyy-MM-dd HH:mm") ?? "—"))</span>
+                                    </span>
+                                </div>
+
+                                <div class="d-flex justify-space-between align-center mb-2">
+                                    <span class="text-secondary" style="font-size: 0.8125rem;">Adjudicated By:</span>
+                                    <span class="font-weight-bold" style="font-size: 0.8125rem;">
+                                        @(Window.AdjudicatedByUserName ?? Window.AdjudicatedByUserId ?? "Awaiting Decision")
+                                        @if (Window.AdjudicatedDate.HasValue)
+                                        {
+                                            <span class="text-secondary font-weight-normal">(@Window.AdjudicatedDate.Value.ToString("yyyy-MM-dd HH:mm"))</span>
+                                        }
+                                    </span>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(Window.AdjudicationComments))
+                                {
+                                    <div class="mt-2 pa-2 rounded border border-default" style="background: var(--mud-palette-background-grey); font-size: 0.8125rem;">
+                                        <strong>Auditor Comments:</strong> @Window.AdjudicationComments
+                                    </div>
+                                }
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- TAB 2: Audited Proposal & Review History -->
+            <MudTabPanel Text="Audited Proposal & Review History" Icon="@Icons.Material.Filled.History">
+                <MudCard Elevation="1" Class="border border-default">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <div class="d-flex justify-space-between align-center">
+                                <div>
+                                    <MudText Typo="Typo.h6" Class="font-weight-bold">
+                                        Non-Repudiable Governance Audit Trail
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        Permanent immutable log of all schedule proposals, date adjustments, review decisions, and OFO scoping mutations for Window #@Window.Id.
+                                    </MudText>
+                                </div>
+                                <MudButton Variant="Variant.Text"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.Refresh"
+                                           OnClick="LoadAuditLogsAsync">
+                                    Refresh Log
+                                </MudButton>
+                            </div>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        @if (_isLoadingAudit)
+                        {
+                            <div class="d-flex justify-center pa-6">
+                                <MudProgressCircular Size="Size.Medium" Indeterminate="true" Color="Color.Primary" />
+                            </div>
+                        }
+                        else if (!_auditLogs.Any())
+                        {
+                            <MudAlert Severity="Severity.Normal" Variant="Variant.Outlined">
+                                No audit entries recorded for this window yet.
+                            </MudAlert>
+                        }
+                        else
+                        {
+                            <MudTimeline TimelineOrientation="TimelineOrientation.Vertical" TimelinePosition="TimelinePosition.Start">
+                                @foreach (var log in _auditLogs)
+                                {
+                                    <MudTimelineItem Color="@GetAuditColor(log.ActionName)" Size="Size.Small" Elevation="1">
+                                        <ItemOpposite>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-mono">
+                                                @log.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                                            </MudText>
+                                        </ItemOpposite>
+                                        <ItemContent>
+                                            <MudPaper Class="pa-3 border border-default" Elevation="0">
+                                                <div class="d-flex justify-space-between align-center mb-1">
+                                                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold">
+                                                        @FormatActionName(log.ActionName)
+                                                    </MudText>
+                                                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">
+                                                        Actor: @(string.IsNullOrWhiteSpace(log.Actor) ? "SYSTEM" : log.Actor)
+                                                    </MudChip>
+                                                </div>
+                                                @if (!string.IsNullOrWhiteSpace(log.MetadataJson))
+                                                {
+                                                    <div class="font-mono mt-1 text-secondary" style="font-size: 0.75rem; word-break: break-all; max-height: 80px; overflow-y: auto;">
+                                                        @log.MetadataJson
+                                                    </div>
+                                                }
+                                            </MudPaper>
+                                        </ItemContent>
+                                    </MudTimelineItem>
+                                }
+                            </MudTimeline>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudTabPanel>
+        </MudTabs>
+    </main>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private bool _isLoading = true;
+    private bool _isLoadingAudit;
+
+    private MgWindowDetailDto? Window;
+    private OfoCodeSetDto? _ofoSet;
+    private List<BreadcrumbItem> _breadcrumbs = new();
+
+    private string _currentUserId = string.Empty;
+    private string _currentUserName = string.Empty;
+    private bool _isProposer;
+
+    // Audit logs
+    private List<AuditLog> _auditLogs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _currentUserId = user.Identity?.Name ?? "SYSTEM";
+        _currentUserName = user.Identity?.Name ?? "System Administrator";
+
+        await LoadWindowDataAsync();
+    }
+
+    private async Task LoadWindowDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            Window = await WindowGovService.GetWindowDetailAsync(Id);
+
+            if (Window != null)
+            {
+                _breadcrumbs = new List<BreadcrumbItem>
+                {
+                    new BreadcrumbItem("Home", href: "/"),
+                    new BreadcrumbItem("Administration", href: "/admin"),
+                    new BreadcrumbItem("Mandatory Grant Windows", href: "/admin/mg-windows"),
+                    new BreadcrumbItem(Window.ReferenceNumber, href: null, disabled: true)
+                };
+
+                _isProposer = !string.IsNullOrWhiteSpace(Window.ProposedByUserId) &&
+                              string.Equals(Window.ProposedByUserId, _currentUserId, StringComparison.OrdinalIgnoreCase);
+
+                if (Window.OfoCodeSetId.HasValue)
+                {
+                    _ofoSet = await OfoSetService.GetSetByIdAsync(Window.OfoCodeSetId.Value);
+                }
+
+                await LoadAuditLogsAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading window details: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task LoadAuditLogsAsync()
+    {
+        _isLoadingAudit = true;
+        try
+        {
+            _auditLogs = await AuditService.GetLogsForEntityAsync("MgWindow", Id);
+            _auditLogs = _auditLogs.OrderByDescending(a => a.Timestamp).ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading audit trail: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoadingAudit = false;
+        }
+    }
+
+    private async Task OpenEditDialog()
+    {
+        if (Window == null) return;
+
+        var parameters = new DialogParameters
+        {
+            { "ExistingWindow", Window }
+        };
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<ProposeMgWindowDialog>("Edit Mandatory Grant Window Schedule", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadWindowDataAsync();
+        }
+    }
+
+    private async Task SubmitForReview()
+    {
+        if (Window == null) return;
+
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Submit Schedule for Independent Review",
+            $"Are you sure you want to submit the schedule for '{Window.WindowName}' for independent Dual Authorisation review? Once submitted, an independent officer must review and approve it.",
+            yesText: "Submit for Review", cancelText: "Cancel");
+
+        if (confirmed != true) return;
+
+        try
+        {
+            await WindowGovService.SubmitForReviewAsync(Window.Id, _currentUserId, _currentUserName);
+            Snackbar.Add("Mandatory Grant Window submitted for independent review.", Severity.Success);
+            await LoadWindowDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error submitting proposal: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OpenAdjudicateDialog()
+    {
+        if (Window == null) return;
+
+        var parameters = new DialogParameters
+        {
+            { "Window", Window }
+        };
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<AdjudicateMgWindowDialog>("Dual Authorisation Review & Decision", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadWindowDataAsync();
+        }
+    }
+
+    private async Task WithdrawProposal()
+    {
+        if (Window == null) return;
+
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Withdraw Proposal",
+            $"Are you sure you want to withdraw the schedule proposal for '{Window.WindowName}' back to Draft stage?",
+            yesText: "Withdraw to Draft", cancelText: "Cancel");
+
+        if (confirmed != true) return;
+
+        try
+        {
+            await WindowGovService.WithdrawWindowProposalAsync(Window.Id, _currentUserId);
+            Snackbar.Add("Window schedule proposal withdrawn to Draft stage.", Severity.Info);
+            await LoadWindowDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error withdrawing proposal: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void ExportOfoFramework()
+    {
+        Snackbar.Add("Exporting designated OFO framework catalog to CSV...", Severity.Info);
+    }
+
+    private static Color GetAuditColor(string? action)
+    {
+        return action switch
+        {
+            "CreateDraft" => Color.Info,
+            "SubmitForReview" => Color.Warning,
+            "ApproveSchedule" => Color.Success,
+            "RejectSchedule" => Color.Error,
+            "BulkSyncOfoCodes" => Color.Primary,
+            "AddScopedOfoCode" => Color.Primary,
+            "TogglePrioritySkill" => Color.Warning,
+            "RemoveScopedOfoCode" => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    private static string FormatActionName(string? action)
+    {
+        return action switch
+        {
+            "CreateDraft" => "Window Proposal Created (Draft)",
+            "SubmitForReview" => "Submitted for Independent Review",
+            "ApproveSchedule" => "Schedule Approved & Activated",
+            "RejectSchedule" => "Schedule Proposal Rejected",
+            "BulkSyncOfoCodes" => "Populated from Gazetted OFO Set",
+            "AddScopedOfoCode" => "Added Designated Occupation",
+            "TogglePrioritySkill" => "Updated Sector Priority Skill Flag",
+            "RemoveScopedOfoCode" => "Removed Occupation from Scope",
+            _ => action ?? "System Mutation"
+        };
+    }
+}

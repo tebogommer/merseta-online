@@ -5,14 +5,14 @@ namespace Nsdms.Application.Services;
 public interface IStorageService
 {
     Task<DocumentMetadata> UploadDocumentAsync(
-        string entityName, 
-        int entityId, 
-        string docTypeCode, 
-        string docTypeName, 
-        string fileName, 
-        Stream contentStream, 
-        string contentType, 
-        string userId, 
+        string entityName,
+        int entityId,
+        string docTypeCode,
+        string docTypeName,
+        string fileName,
+        Stream contentStream,
+        string contentType,
+        string userId,
         string userName);
 
     Task<List<DocumentMetadata>> GetDocumentsForEntityAsync(string entityName, int entityId);

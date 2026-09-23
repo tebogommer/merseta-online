@@ -50,10 +50,10 @@ public class WizardDraftService : IWizardDraftService
         if (session == null)
         {
             session = await db.WizardDraftSessions
-                .FirstOrDefaultAsync(s => s.CandidateKey == candidateKey 
-                                       && s.UserId == userId 
-                                       && s.OrganisationId == organisationId 
-                                       && s.IsActive 
+                .FirstOrDefaultAsync(s => s.CandidateKey == candidateKey
+                                       && s.UserId == userId
+                                       && s.OrganisationId == organisationId
+                                       && s.IsActive
                                        && s.Status == "Active", cancellationToken);
         }
 

@@ -127,7 +127,7 @@ public class NonLevyAndChamberDerivationTests
         var chamberService = new ChamberDerivationService(factory, audit, NullLogger<ChamberDerivationService>.Instance);
 
         var result = await chamberService.DeriveChamberAndVendorClassAsync(
-            sicCode: null, 
+            sicCode: null,
             organisationTypeCode: "PUBLIC_TVET");
 
         Assert.True(result.IsSuccess);

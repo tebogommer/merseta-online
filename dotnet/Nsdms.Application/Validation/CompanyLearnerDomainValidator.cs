@@ -9,79 +9,54 @@ public static class CompanyLearnerDomainValidator
         var errors = new List<StatutoryValidationError>();
         string desc = $"Contract: {learner.LearnerContractNumber ?? "Draft"} (Learner ID: {learner.PersonId})";
 
+        void AddError(string fieldName, string? fieldValue, string ruleCode, StatutoryValidationSeverity severity, string message, string remediation) =>
+            errors.Add(new StatutoryValidationError
+            {
+                FileIdentifier = fileId,
+                RecordId = learner.Id,
+                EntityName = nameof(CompanyLearner),
+                RecordDescriptor = desc,
+                FieldName = fieldName,
+                FieldValue = fieldValue,
+                RuleCode = ruleCode,
+                Severity = severity,
+                Message = message,
+                Remediation = remediation
+            });
+
         // 1. Part_Of Articulation & Hierarchy Dependencies
-        if (learner.PartOfId == "02" || learner.PartOfId == "2")
+        if (learner.PartOfId is "02" or "2")
         {
             if (!learner.SaqaQualificationId.HasValue || learner.SaqaQualificationId.Value <= 0)
             {
-                errors.Add(new StatutoryValidationError
-                {
-                    FileIdentifier = fileId,
-                    RecordId = learner.Id,
-                    EntityName = nameof(CompanyLearner),
-                    RecordDescriptor = desc,
-                    FieldName = nameof(learner.SaqaQualificationId),
-                    FieldValue = learner.SaqaQualificationId?.ToString(),
-                    RuleCode = "SETMIS_500_03_PARTOF_QUAL_REQUIRED",
-                    Severity = StatutoryValidationSeverity.Fatal,
-                    Message = "When Part_Of is set to 'Part of Qualification' (02), a valid SAQA Qualification ID is mandatory.",
-                    Remediation = "Link a registered SAQA Qualification to this learner agreement."
-                });
+                AddError(nameof(learner.SaqaQualificationId), learner.SaqaQualificationId?.ToString(), "SETMIS_500_03_PARTOF_QUAL_REQUIRED",
+                    StatutoryValidationSeverity.Fatal, "When Part_Of is set to 'Part of Qualification' (02), a valid SAQA Qualification ID is mandatory.",
+                    "Link a registered SAQA Qualification to this learner agreement.");
             }
         }
-        else if (learner.PartOfId == "03" || learner.PartOfId == "3")
+        else if (learner.PartOfId is "03" or "3")
         {
             if (string.IsNullOrWhiteSpace(learner.LearnershipId))
             {
-                errors.Add(new StatutoryValidationError
-                {
-                    FileIdentifier = fileId,
-                    RecordId = learner.Id,
-                    EntityName = nameof(CompanyLearner),
-                    RecordDescriptor = desc,
-                    FieldName = nameof(learner.LearnershipId),
-                    FieldValue = learner.LearnershipId,
-                    RuleCode = "SETMIS_500_02_PARTOF_LEARNERSHIP_REQUIRED",
-                    Severity = StatutoryValidationSeverity.Fatal,
-                    Message = "When Part_Of is set to 'Part of Learnership' (03), a registered SAQA Learnership ID is mandatory.",
-                    Remediation = "Capture the SAQA Learnership Registration Code (e.g. 18Q180026241203)."
-                });
+                AddError(nameof(learner.LearnershipId), learner.LearnershipId, "SETMIS_500_02_PARTOF_LEARNERSHIP_REQUIRED",
+                    StatutoryValidationSeverity.Fatal, "When Part_Of is set to 'Part of Learnership' (03), a registered SAQA Learnership ID is mandatory.",
+                    "Capture the SAQA Learnership Registration Code (e.g. 18Q180026241203).");
             }
         }
 
         // 2. Date Chronology & Lifecycle Milestones
         if (learner.CommencementDate.HasValue && learner.CommencementDate.Value > DateTime.UtcNow.AddMonths(3))
         {
-            errors.Add(new StatutoryValidationError
-            {
-                FileIdentifier = fileId,
-                RecordId = learner.Id,
-                EntityName = nameof(CompanyLearner),
-                RecordDescriptor = desc,
-                FieldName = nameof(learner.CommencementDate),
-                FieldValue = learner.CommencementDate.Value.ToString("yyyy-MM-dd"),
-                RuleCode = "SETMIS_500_08_COMMENCEMENT_DATE_FUTURE",
-                Severity = StatutoryValidationSeverity.Warning,
-                Message = "Learner Agreement commencement date is set more than 3 months in the future.",
-                Remediation = "Verify that the enrolment start date matches the signed tri-partite agreement."
-            });
+            AddError(nameof(learner.CommencementDate), learner.CommencementDate.Value.ToString("yyyy-MM-dd"), "SETMIS_500_08_COMMENCEMENT_DATE_FUTURE",
+                StatutoryValidationSeverity.Warning, "Learner Agreement commencement date is set more than 3 months in the future.",
+                "Verify that the enrolment start date matches the signed tri-partite agreement.");
         }
 
         if (learner.CommencementDate.HasValue && learner.CompletionDate.HasValue && learner.CommencementDate.Value > learner.CompletionDate.Value)
         {
-            errors.Add(new StatutoryValidationError
-            {
-                FileIdentifier = fileId,
-                RecordId = learner.Id,
-                EntityName = nameof(CompanyLearner),
-                RecordDescriptor = desc,
-                FieldName = nameof(learner.CompletionDate),
-                FieldValue = learner.CompletionDate.Value.ToString("yyyy-MM-dd"),
-                RuleCode = "SETMIS_500_09_COMPLETION_BEFORE_COMMENCEMENT",
-                Severity = StatutoryValidationSeverity.Fatal,
-                Message = $"Contract Completion Date ({learner.CompletionDate.Value:yyyy-MM-dd}) cannot precede Commencement Date ({learner.CommencementDate.Value:yyyy-MM-dd}).",
-                Remediation = "Correct the expected/actual completion date."
-            });
+            AddError(nameof(learner.CompletionDate), learner.CompletionDate.Value.ToString("yyyy-MM-dd"), "SETMIS_500_09_COMPLETION_BEFORE_COMMENCEMENT",
+                StatutoryValidationSeverity.Fatal, $"Contract Completion Date ({learner.CompletionDate.Value:yyyy-MM-dd}) cannot precede Commencement Date ({learner.CommencementDate.Value:yyyy-MM-dd}).",
+                "Correct the expected/actual completion date.");
         }
 
         // 3. Minimum Age at Enrolment Invariant (Age >= 15 years per Skills Development Act)
@@ -90,59 +65,29 @@ public static class CompanyLearnerDomainValidator
             var minEnrolmentDate = learner.Person.DateOfBirth.Value.AddYears(15);
             if (learner.CommencementDate.Value < minEnrolmentDate)
             {
-                errors.Add(new StatutoryValidationError
-                {
-                    FileIdentifier = fileId,
-                    RecordId = learner.Id,
-                    EntityName = nameof(CompanyLearner),
-                    RecordDescriptor = desc,
-                    FieldName = nameof(learner.CommencementDate),
-                    FieldValue = learner.CommencementDate.Value.ToString("yyyy-MM-dd"),
-                    RuleCode = "SETMIS_500_08_MINIMUM_AGE_VIOLATION",
-                    Severity = StatutoryValidationSeverity.Fatal,
-                    Message = $"Learner was under 15 years of age on Commencement Date ({learner.CommencementDate.Value:yyyy-MM-dd}). Minimum legal working/training age in SA is 15 years.",
-                    Remediation = "Verify learner birth date and agreement commencement date."
-                });
+                AddError(nameof(learner.CommencementDate), learner.CommencementDate.Value.ToString("yyyy-MM-dd"), "SETMIS_500_08_MINIMUM_AGE_VIOLATION",
+                    StatutoryValidationSeverity.Fatal, $"Learner was under 15 years of age on Commencement Date ({learner.CommencementDate.Value:yyyy-MM-dd}). Minimum legal working/training age in SA is 15 years.",
+                    "Verify learner birth date and agreement commencement date.");
             }
         }
 
         // 4. Financial & Cumulative Spend Rules
         if (learner.CumulativeSpend < 0)
         {
-            errors.Add(new StatutoryValidationError
-            {
-                FileIdentifier = fileId,
-                RecordId = learner.Id,
-                EntityName = nameof(CompanyLearner),
-                RecordDescriptor = desc,
-                FieldName = nameof(learner.CumulativeSpend),
-                FieldValue = learner.CumulativeSpend.ToString("F2"),
-                RuleCode = "SETMIS_500_17_CUMULATIVE_SPEND_NEGATIVE",
-                Severity = StatutoryValidationSeverity.Fatal,
-                Message = "Cumulative spend on learning intervention cannot be negative.",
-                Remediation = "Correct the cumulative expenditure figure."
-            });
+            AddError(nameof(learner.CumulativeSpend), learner.CumulativeSpend.ToString("F2"), "SETMIS_500_17_CUMULATIVE_SPEND_NEGATIVE",
+                StatutoryValidationSeverity.Fatal, "Cumulative spend on learning intervention cannot be negative.",
+                "Correct the cumulative expenditure figure.");
         }
 
         // 5. Enrolment Status Consistency
-        if (learner.EnrolmentStatusId == "02" || learner.EnrolmentStatusId == "03" || learner.EnrolmentStatusId == "2" || learner.EnrolmentStatusId == "3")
+        if (learner.EnrolmentStatusId is "02" or "03" or "2" or "3")
         {
             // Achieved / Certificated
             if (!learner.CompletionDate.HasValue)
             {
-                errors.Add(new StatutoryValidationError
-                {
-                    FileIdentifier = fileId,
-                    RecordId = learner.Id,
-                    EntityName = nameof(CompanyLearner),
-                    RecordDescriptor = desc,
-                    FieldName = nameof(learner.CompletionDate),
-                    FieldValue = null,
-                    RuleCode = "SETMIS_500_09_ACHIEVED_WITHOUT_COMPLETION_DATE",
-                    Severity = StatutoryValidationSeverity.Fatal,
-                    Message = "Learner status is set to Achieved/Certificated but Completion Date is empty.",
-                    Remediation = "Capture the date of achievement/completion."
-                });
+                AddError(nameof(learner.CompletionDate), null, "SETMIS_500_09_ACHIEVED_WITHOUT_COMPLETION_DATE",
+                    StatutoryValidationSeverity.Fatal, "Learner status is set to Achieved/Certificated but Completion Date is empty.",
+                    "Capture the date of achievement/completion.");
             }
         }
 
@@ -152,19 +97,9 @@ public static class CompanyLearnerDomainValidator
             var workingDays = CalculateWorkingDays(learner.LearnerSignatureDate.Value, learner.SubmissionDate.Value);
             if (workingDays > maxWorkingDays)
             {
-                errors.Add(new StatutoryValidationError
-                {
-                    FileIdentifier = fileId,
-                    RecordId = learner.Id,
-                    EntityName = nameof(CompanyLearner),
-                    RecordDescriptor = desc,
-                    FieldName = nameof(learner.SubmissionDate),
-                    FieldValue = $"{workingDays} working days",
-                    RuleCode = "SETMIS_500_30DAY_DEADLINE_EXCEEDED",
-                    Severity = StatutoryValidationSeverity.Fatal,
-                    Message = $"Learner agreement was submitted {workingDays} working days after learner signature date. Maximum statutory submission window is {maxWorkingDays} working days.",
-                    Remediation = "The agreement has lapsed; request a fresh bilateral agreement execution or upload condonation approval."
-                });
+                AddError(nameof(learner.SubmissionDate), $"{workingDays} working days", "SETMIS_500_30DAY_DEADLINE_EXCEEDED",
+                    StatutoryValidationSeverity.Fatal, $"Learner agreement was submitted {workingDays} working days after learner signature date. Maximum statutory submission window is {maxWorkingDays} working days.",
+                    "The agreement has lapsed; request a fresh bilateral agreement execution or upload condonation approval.");
             }
         }
 
@@ -179,43 +114,23 @@ public static class CompanyLearnerDomainValidator
                 var hasActiveGuardian = learner.Person.Guardians != null && learner.Person.Guardians.Any(g => g.IsActive && !string.IsNullOrWhiteSpace(g.GuardianFullName));
                 if (!hasActiveGuardian)
                 {
-                    errors.Add(new StatutoryValidationError
-                    {
-                        FileIdentifier = fileId,
-                        RecordId = learner.Id,
-                        EntityName = nameof(CompanyLearner),
-                        RecordDescriptor = desc,
-                        FieldName = "PersonGuardians",
-                        FieldValue = null,
-                        RuleCode = "SETMIS_500_GUARDIAN_REQUIRED_FOR_MINOR",
-                        Severity = StatutoryValidationSeverity.Fatal,
-                        Message = $"Learner is an unmarried minor under 18 years of age ({ageYears:F1} years old). A legal parent or guardian must be a co-signatory to this agreement.",
-                        Remediation = "Capture parent or guardian identification, contact details, and signature."
-                    });
+                    AddError("PersonGuardians", null, "SETMIS_500_GUARDIAN_REQUIRED_FOR_MINOR",
+                        StatutoryValidationSeverity.Fatal, $"Learner is an unmarried minor under 18 years of age ({ageYears:F1} years old). A legal parent or guardian must be a co-signatory to this agreement.",
+                        "Capture parent or guardian identification, contact details, and signature.");
                 }
             }
         }
 
         // 8. Programme-Specific Rules (Candidacy & AET)
-        bool isCandidacy = learner.LearningProgrammeTypeCode == "06" || 
+        bool isCandidacy = learner.LearningProgrammeTypeCode == "06" ||
                            (learner.LearningProgrammeTypeCode != null && learner.LearningProgrammeTypeCode.Equals("Candidacy", StringComparison.OrdinalIgnoreCase));
         if (isCandidacy)
         {
             if (string.IsNullOrWhiteSpace(learner.ProfessionalRegistrationNumber))
             {
-                errors.Add(new StatutoryValidationError
-                {
-                    FileIdentifier = fileId,
-                    RecordId = learner.Id,
-                    EntityName = nameof(CompanyLearner),
-                    RecordDescriptor = desc,
-                    FieldName = nameof(learner.ProfessionalRegistrationNumber),
-                    FieldValue = null,
-                    RuleCode = "SETMIS_500_CANDIDACY_REG_NUMBER_REQUIRED",
-                    Severity = StatutoryValidationSeverity.Fatal,
-                    Message = "Candidacy Programme requires a valid Professional Council candidate registration reference (e.g. ECSA Candidate Registration Number).",
-                    Remediation = "Capture the professional council candidate registration number."
-                });
+                AddError(nameof(learner.ProfessionalRegistrationNumber), null, "SETMIS_500_CANDIDACY_REG_NUMBER_REQUIRED",
+                    StatutoryValidationSeverity.Fatal, "Candidacy Programme requires a valid Professional Council candidate registration reference (e.g. ECSA Candidate Registration Number).",
+                    "Capture the professional council candidate registration number.");
             }
         }
         else
@@ -223,19 +138,9 @@ public static class CompanyLearnerDomainValidator
             // For non-candidacy programmes, QualificationTitle is mandatory
             if (string.IsNullOrWhiteSpace(learner.QualificationTitle))
             {
-                errors.Add(new StatutoryValidationError
-                {
-                    FileIdentifier = fileId,
-                    RecordId = learner.Id,
-                    EntityName = nameof(CompanyLearner),
-                    RecordDescriptor = desc,
-                    FieldName = nameof(learner.QualificationTitle),
-                    FieldValue = null,
-                    RuleCode = "SETMIS_500_01_QUAL_TITLE_REQUIRED",
-                    Severity = StatutoryValidationSeverity.Fatal,
-                    Message = "Qualification Title is required for learner registration agreements.",
-                    Remediation = "Select or enter the qualification title."
-                });
+                AddError(nameof(learner.QualificationTitle), null, "SETMIS_500_01_QUAL_TITLE_REQUIRED",
+                    StatutoryValidationSeverity.Fatal, "Qualification Title is required for learner registration agreements.",
+                    "Select or enter the qualification title.");
             }
         }
 
@@ -272,13 +177,28 @@ public static class CompanyLearnerDomainValidator
     /// - Academic year & study year progression.
     /// </summary>
     public static List<StatutoryValidationError> ValidateBursaryApplication(
-        CompanyLearner learner, 
-        CompanyLearner? previousBursary = null, 
+        CompanyLearner learner,
+        CompanyLearner? previousBursary = null,
         string fileId = "BURSARY_APP",
         int maxWorkingDays = 30)
     {
         var errors = new List<StatutoryValidationError>();
         string desc = $"Bursary: {learner.LearnerContractNumber ?? "Draft"} (Learner ID: {learner.PersonId})";
+
+        void AddError(string fieldName, string? fieldValue, string ruleCode, StatutoryValidationSeverity severity, string message, string remediation) =>
+            errors.Add(new StatutoryValidationError
+            {
+                FileIdentifier = fileId,
+                RecordId = learner.Id,
+                EntityName = nameof(CompanyLearner),
+                RecordDescriptor = desc,
+                FieldName = fieldName,
+                FieldValue = fieldValue,
+                RuleCode = ruleCode,
+                Severity = severity,
+                Message = message,
+                Remediation = remediation
+            });
 
         bool isEmployed = string.Equals(learner.EmploymentStatusCode, "Employed", StringComparison.OrdinalIgnoreCase) ||
                           learner.EconomicStatusId == "01";
@@ -290,19 +210,9 @@ public static class CompanyLearnerDomainValidator
         {
             if (!learner.OrganisationId.HasValue || learner.OrganisationId.Value <= 0)
             {
-                errors.Add(new StatutoryValidationError
-                {
-                    FileIdentifier = fileId,
-                    RecordId = learner.Id,
-                    EntityName = nameof(CompanyLearner),
-                    RecordDescriptor = desc,
-                    FieldName = nameof(learner.OrganisationId),
-                    FieldValue = null,
-                    RuleCode = "BURSARY_EMPLOYER_REQUIRED_FOR_EMPLOYED",
-                    Severity = StatutoryValidationSeverity.Fatal,
-                    Message = "For employed bursary applicants, host employer identification (Levy number / Organisation) is mandatory.",
-                    Remediation = "Select the registered employer from the organisation directory."
-                });
+                AddError(nameof(learner.OrganisationId), null, "BURSARY_EMPLOYER_REQUIRED_FOR_EMPLOYED",
+                    StatutoryValidationSeverity.Fatal, "For employed bursary applicants, host employer identification (Levy number / Organisation) is mandatory.",
+                    "Select the registered employer from the organisation directory.");
             }
         }
         // For unemployed applicants, employer details are NOT required (bypassed per statutory rule).
@@ -314,37 +224,17 @@ public static class CompanyLearnerDomainValidator
 
         if (!hasInstitution)
         {
-            errors.Add(new StatutoryValidationError
-            {
-                FileIdentifier = fileId,
-                RecordId = learner.Id,
-                EntityName = nameof(CompanyLearner),
-                RecordDescriptor = desc,
-                FieldName = nameof(learner.InstitutionName),
-                FieldValue = null,
-                RuleCode = "BURSARY_INSTITUTION_REQUIRED",
-                Severity = StatutoryValidationSeverity.Fatal,
-                Message = "Registered Higher Education Institution (HEI) or TVET College is mandatory for bursary applications.",
-                Remediation = "Select or capture the tertiary educational institution."
-            });
+            AddError(nameof(learner.InstitutionName), null, "BURSARY_INSTITUTION_REQUIRED",
+                StatutoryValidationSeverity.Fatal, "Registered Higher Education Institution (HEI) or TVET College is mandatory for bursary applications.",
+                "Select or capture the tertiary educational institution.");
         }
 
         // 3. Qualification Title
         if (string.IsNullOrWhiteSpace(learner.QualificationTitle))
         {
-            errors.Add(new StatutoryValidationError
-            {
-                FileIdentifier = fileId,
-                RecordId = learner.Id,
-                EntityName = nameof(CompanyLearner),
-                RecordDescriptor = desc,
-                FieldName = nameof(learner.QualificationTitle),
-                FieldValue = null,
-                RuleCode = "BURSARY_QUALIFICATION_TITLE_REQUIRED",
-                Severity = StatutoryValidationSeverity.Fatal,
-                Message = "Tertiary qualification title is mandatory for bursary registration.",
-                Remediation = "Enter the degree, diploma, or national certificate title."
-            });
+            AddError(nameof(learner.QualificationTitle), null, "BURSARY_QUALIFICATION_TITLE_REQUIRED",
+                StatutoryValidationSeverity.Fatal, "Tertiary qualification title is mandatory for bursary registration.",
+                "Enter the degree, diploma, or national certificate title.");
         }
 
         // 4. Dual-Path: Continuation Application Preconditions (Section 5 Business Rules)
@@ -355,82 +245,42 @@ public static class CompanyLearnerDomainValidator
         {
             if (!learner.PreviousCompanyLearnerId.HasValue || learner.PreviousCompanyLearnerId.Value <= 0)
             {
-                errors.Add(new StatutoryValidationError
-                {
-                    FileIdentifier = fileId,
-                    RecordId = learner.Id,
-                    EntityName = nameof(CompanyLearner),
-                    RecordDescriptor = desc,
-                    FieldName = nameof(learner.PreviousCompanyLearnerId),
-                    FieldValue = null,
-                    RuleCode = "BURSARY_CONTINUATION_PREVIOUS_RECORD_REQUIRED",
-                    Severity = StatutoryValidationSeverity.Fatal,
-                    Message = "A continuation bursary application requires linkage to a prior active bursary record on the learner profile.",
-                    Remediation = "Select the active prior-year bursary agreement to continue."
-                });
+                AddError(nameof(learner.PreviousCompanyLearnerId), null, "BURSARY_CONTINUATION_PREVIOUS_RECORD_REQUIRED",
+                    StatutoryValidationSeverity.Fatal, "A continuation bursary application requires linkage to a prior active bursary record on the learner profile.",
+                    "Select the active prior-year bursary agreement to continue.");
             }
 
             if (previousBursary != null)
             {
                 // Must be an active bursary
-                bool isPreviousActive = previousBursary.IsActive && 
-                    (previousBursary.EnrolmentStatusCode == "Registered" || 
-                     previousBursary.EnrolmentStatusCode == "InProgress" || 
+                bool isPreviousActive = previousBursary.IsActive &&
+                    (previousBursary.EnrolmentStatusCode == "Registered" ||
+                     previousBursary.EnrolmentStatusCode == "InProgress" ||
                      previousBursary.EnrolmentStatusCode == "Completed");
 
                 if (!isPreviousActive)
                 {
-                    errors.Add(new StatutoryValidationError
-                    {
-                        FileIdentifier = fileId,
-                        RecordId = learner.Id,
-                        EntityName = nameof(CompanyLearner),
-                        RecordDescriptor = desc,
-                        FieldName = nameof(learner.PreviousCompanyLearnerId),
-                        FieldValue = previousBursary.Id.ToString(),
-                        RuleCode = "BURSARY_CONTINUATION_PREVIOUS_MUST_BE_ACTIVE",
-                        Severity = StatutoryValidationSeverity.Fatal,
-                        Message = $"Prior bursary #{previousBursary.Id} is not in an active or eligible state ({previousBursary.EnrolmentStatusCode}).",
-                        Remediation = "Only active, registered bursaries can be submitted for continuation."
-                    });
+                    AddError(nameof(learner.PreviousCompanyLearnerId), previousBursary.Id.ToString(), "BURSARY_CONTINUATION_PREVIOUS_MUST_BE_ACTIVE",
+                        StatutoryValidationSeverity.Fatal, $"Prior bursary #{previousBursary.Id} is not in an active or eligible state ({previousBursary.EnrolmentStatusCode}).",
+                        "Only active, registered bursaries can be submitted for continuation.");
                 }
 
                 // Anti-tamper: Cannot apply for New and Continuation on the same date
                 if (learner.LearnerSignatureDate.HasValue && previousBursary.LearnerSignatureDate.HasValue &&
                     learner.LearnerSignatureDate.Value.Date == previousBursary.LearnerSignatureDate.Value.Date)
                 {
-                    errors.Add(new StatutoryValidationError
-                    {
-                        FileIdentifier = fileId,
-                        RecordId = learner.Id,
-                        EntityName = nameof(CompanyLearner),
-                        RecordDescriptor = desc,
-                        FieldName = nameof(learner.LearnerSignatureDate),
-                        FieldValue = learner.LearnerSignatureDate.Value.ToString("yyyy-MM-dd"),
-                        RuleCode = "BURSARY_CONTINUATION_SAME_DATE_PROHIBITED",
-                        Severity = StatutoryValidationSeverity.Fatal,
-                        Message = "Anti-tamper violation: New Bursary and Continuation cannot be applied for on the same execution date.",
-                        Remediation = "Continuation applications must occur in a subsequent academic period."
-                    });
+                    AddError(nameof(learner.LearnerSignatureDate), learner.LearnerSignatureDate.Value.ToString("yyyy-MM-dd"), "BURSARY_CONTINUATION_SAME_DATE_PROHIBITED",
+                        StatutoryValidationSeverity.Fatal, "Anti-tamper violation: New Bursary and Continuation cannot be applied for on the same execution date.",
+                        "Continuation applications must occur in a subsequent academic period.");
                 }
 
                 // Academic progression: Year of Study must advance
                 if (learner.YearOfStudy.HasValue && previousBursary.YearOfStudy.HasValue &&
                     learner.YearOfStudy.Value <= previousBursary.YearOfStudy.Value)
                 {
-                    errors.Add(new StatutoryValidationError
-                    {
-                        FileIdentifier = fileId,
-                        RecordId = learner.Id,
-                        EntityName = nameof(CompanyLearner),
-                        RecordDescriptor = desc,
-                        FieldName = nameof(learner.YearOfStudy),
-                        FieldValue = learner.YearOfStudy.Value.ToString(),
-                        RuleCode = "BURSARY_CONTINUATION_YEAR_MUST_ADVANCE",
-                        Severity = StatutoryValidationSeverity.Fatal,
-                        Message = $"Academic progression violation: Year of Study ({learner.YearOfStudy.Value}) must advance beyond prior year ({previousBursary.YearOfStudy.Value}).",
-                        Remediation = "Set the study year to the progressive level (e.g. Year 2, Year 3)."
-                    });
+                    AddError(nameof(learner.YearOfStudy), learner.YearOfStudy.Value.ToString(), "BURSARY_CONTINUATION_YEAR_MUST_ADVANCE",
+                        StatutoryValidationSeverity.Fatal, $"Academic progression violation: Year of Study ({learner.YearOfStudy.Value}) must advance beyond prior year ({previousBursary.YearOfStudy.Value}).",
+                        "Set the study year to the progressive level (e.g. Year 2, Year 3).");
                 }
             }
         }
@@ -451,19 +301,9 @@ public static class CompanyLearnerDomainValidator
 
             if (!validFundingCodes.Contains(learner.BursaryFundingTypeCode))
             {
-                errors.Add(new StatutoryValidationError
-                {
-                    FileIdentifier = fileId,
-                    RecordId = learner.Id,
-                    EntityName = nameof(CompanyLearner),
-                    RecordDescriptor = desc,
-                    FieldName = nameof(learner.BursaryFundingTypeCode),
-                    FieldValue = learner.BursaryFundingTypeCode,
-                    RuleCode = "BURSARY_INVALID_FUNDING_TYPE",
-                    Severity = StatutoryValidationSeverity.Fatal,
-                    Message = $"Invalid bursary funding type '{learner.BursaryFundingTypeCode}'. Must be one of the 7 statutory categories.",
-                    Remediation = "Select a valid funding category from the 7 statutory options."
-                });
+                AddError(nameof(learner.BursaryFundingTypeCode), learner.BursaryFundingTypeCode, "BURSARY_INVALID_FUNDING_TYPE",
+                    StatutoryValidationSeverity.Fatal, $"Invalid bursary funding type '{learner.BursaryFundingTypeCode}'. Must be one of the 7 statutory categories.",
+                    "Select a valid funding category from the 7 statutory options.");
             }
         }
 

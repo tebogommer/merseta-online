@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
 using Nsdms.Application.Common.Interfaces;
@@ -5,48 +6,6 @@ using Nsdms.Application.Common.Models;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
-
-public interface IWspService
-{
-    Task<PagedResult<WspSubmission>> GetPagedSubmissionsAsync(PaginationQuery query, CancellationToken cancellationToken = default);
-    Task<List<WspSubmission>> GetAllAsync(int? finYear = null, string? search = null, int? organisationId = null);
-    Task<List<WspSubmission>> GetAllSubmissionsAsync(int? organisationId = null, int? finYear = null);
-    Task<WspSubmission?> GetByIdAsync(int id);
-    Task<WspSubmission?> GetSubmissionByIdAsync(int id);
-    Task<WspSubmission> CreateAsync(WspSubmission submission, string currentUsername = "SYSTEM");
-    Task<WspSubmission> CreateSubmissionAsync(WspSubmission submission, string currentUsername = "SYSTEM");
-    Task<WspSubmission> UpdateAsync(WspSubmission submission, string currentUsername = "SYSTEM");
-    Task<WspSubmission> UpdateSubmissionAsync(WspSubmission submission, string currentUsername = "SYSTEM");
-    Task<WspSubmission> SaveAsync(WspSubmission submission, string currentUsername = "SYSTEM");
-    Task<WspSubmission> UpdateSubmissionStatusAsync(int id, string statusCode, string currentUsername = "SYSTEM");
-    Task<bool> DeleteAsync(int id, string currentUsername = "SYSTEM");
-    Task<bool> DeleteSubmissionAsync(int id, string currentUsername = "SYSTEM");
-
-    Task<WspEmploymentSummary> AddEmploymentSummaryAsync(WspEmploymentSummary summary, string currentUsername = "SYSTEM");
-    Task<WspEmploymentSummary> AddEmploymentSummaryAsync(int submissionId, WspEmploymentSummary summary, string currentUsername = "SYSTEM");
-    Task<List<WspEmploymentSummary>> GetEmploymentSummariesAsync(int submissionId);
-    Task<int> RecalculateEmploymentTotalsAsync(int submissionId);
-    Task<bool> RemoveEmploymentSummaryAsync(int summaryId, string currentUsername = "SYSTEM");
-
-    Task<WspTrainingPlan> AddTrainingPlanAsync(WspTrainingPlan plan, string currentUsername = "SYSTEM");
-    Task<WspTrainingPlan> AddTrainingPlanAsync(int submissionId, WspTrainingPlan plan, string currentUsername = "SYSTEM");
-    Task<List<WspTrainingPlan>> GetTrainingPlansAsync(int submissionId);
-    Task<decimal> RecalculateTrainingPlanBudgetAsync(int submissionId);
-    Task<bool> RemoveTrainingPlanAsync(long planId, string currentUsername = "SYSTEM");
-
-    Task<decimal> CalculateMandatoryGrantClaimAsync(int wspSubmissionId);
-    decimal CalculateMandatoryGrant(decimal totalLevyPaid);
-    bool ValidateMandatoryGrantEligibility(WspSubmission submission);
-
-    // Statutory Window & Extension Requests
-    Task<bool> IsSubmissionWindowOpenAsync(int organisationId, int schemeYear);
-    Task<DateTime> GetEffectiveSubmissionDeadlineAsync(int organisationId, int schemeYear);
-    Task<List<WspExtensionRequest>> GetExtensionRequestsAsync(int? organisationId = null, int? schemeYear = null, string? statusCode = null);
-    Task<WspExtensionRequest?> GetExtensionRequestByIdAsync(int id);
-    Task<WspExtensionRequest> SubmitExtensionRequestAsync(WspExtensionRequest request, string currentUsername = "SYSTEM");
-    Task<WspExtensionRequest> ReviewExtensionRequestAsync(int id, string reviewerUserId, bool recommend, string comments);
-    Task<WspExtensionRequest> AdjudicateExtensionRequestAsync(int id, string approverUserId, bool approve, DateTime? grantedDate, string comments);
-}
 
 public class WspService : IWspService
 {
@@ -241,6 +200,19 @@ public class WspService : IWspService
         if (submission.RowVersion != null && submission.RowVersion.Length > 0)
         {
             db.Entry(existing).Property(e => e.RowVersion).OriginalValue = submission.RowVersion;
+        }
+
+        if ((string.Equals(submission.WspApprovalStatusCode, "Submitted", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(submission.StatusCode, "Submitted", StringComparison.OrdinalIgnoreCase)) &&
+            !string.Equals(existing.WspApprovalStatusCode, "Submitted", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(existing.StatusCode, "Submitted", StringComparison.OrdinalIgnoreCase))
+        {
+            var isOpen = await IsSubmissionWindowOpenAsync(existing.OrganisationId, existing.FinYear);
+            if (!isOpen)
+            {
+                var deadline = await GetEffectiveSubmissionDeadlineAsync(existing.OrganisationId, existing.FinYear);
+                throw new InvalidOperationException($"Mandatory Grant (WSP/ATR) submission window for scheme year {existing.FinYear} closed on {deadline:yyyy-MM-dd}. Submissions cannot be accepted after deadline without an approved extension.");
+            }
         }
 
         var beforeState = new
@@ -643,99 +615,265 @@ public class WspService : IWspService
     }
 
     // Statutory Window & Extension Requests
-    public async Task<DateTime> GetEffectiveSubmissionDeadlineAsync(int organisationId, int schemeYear)
+    public async Task<WspWindowStatusDto> GetWindowStatusAsync(int? organisationId = null, int? schemeYear = null, CancellationToken ct = default)
     {
-        // 1. Resolve standard submission deadline for the scheme year (default April 30 23:59:59 SAST/UTC)
-        var deadlineConfig = "04-30";
-        if (_configService != null)
+        // 1. Resolve schemeYear: default to DateTime.UtcNow.Year or Governance:CurrentSchemeYear
+        int resolvedSchemeYear = schemeYear.GetValueOrDefault();
+        if (resolvedSchemeYear <= 0)
         {
-            deadlineConfig = await _configService.GetValueAsync("Governance:WspAnnualSubmissionDeadline", "04-30") ?? "04-30";
-        }
-
-        DateTime baseDeadline;
-        if (DateTime.TryParse(deadlineConfig, out var parsedExactDeadline))
-        {
-            baseDeadline = DateTime.SpecifyKind(parsedExactDeadline, DateTimeKind.Utc);
-        }
-        else
-        {
-            int month = 4;
-            int day = 30;
-            if (deadlineConfig.Contains('-'))
+            if (_configService != null)
             {
-                var parts = deadlineConfig.Split('-');
-                if (parts.Length == 2 && int.TryParse(parts[0], out var m) && int.TryParse(parts[1], out var d))
+                var configuredYearStr = await _configService.GetValueAsync("Governance:CurrentSchemeYear", string.Empty);
+                if (int.TryParse(configuredYearStr, out var parsedYear) && parsedYear > 0)
                 {
-                    month = m;
-                    day = d;
-                }
-                else if (parts.Length == 3 && int.TryParse(parts[1], out var m3) && int.TryParse(parts[2], out var d3))
-                {
-                    month = m3;
-                    day = d3;
+                    resolvedSchemeYear = parsedYear;
                 }
             }
-            baseDeadline = new DateTime(schemeYear, month, day, 23, 59, 59, DateTimeKind.Utc);
         }
-
-        // 2. Check if an approved extension request exists for this organisation and scheme year
-        using var db = await _contextFactory.CreateDbContextAsync();
-        var approvedExtension = await db.WspExtensionRequests
-            .Where(r => r.OrganisationId == organisationId && r.SchemeYear == schemeYear && r.ApprovalStatusCode == "Approved" && r.GrantedExtensionDate.HasValue)
-            .OrderByDescending(r => r.GrantedExtensionDate)
-            .FirstOrDefaultAsync();
-
-        if (approvedExtension?.GrantedExtensionDate != null)
+        if (resolvedSchemeYear <= 0)
         {
-            var extDate = approvedExtension.GrantedExtensionDate.Value;
-            var extensionDeadline = new DateTime(extDate.Year, extDate.Month, extDate.Day, 23, 59, 59, DateTimeKind.Utc);
-            if (extensionDeadline > baseDeadline)
-            {
-                return extensionDeadline;
-            }
+            resolvedSchemeYear = DateTime.UtcNow.Year;
         }
 
-        return baseDeadline;
-    }
-
-    public async Task<bool> IsSubmissionWindowOpenAsync(int organisationId, int schemeYear)
-    {
+        // 2. Resolve OpeningDate from Governance:WspWindowOpenDate (fallback: Jan 1 00:00:00 UTC)
         var openConfig = "01-01";
         if (_configService != null)
         {
             openConfig = await _configService.GetValueAsync("Governance:WspWindowOpenDate", "01-01") ?? "01-01";
         }
+        DateTime openingDate = ParseWindowDate(openConfig, resolvedSchemeYear, fallbackMonth: 1, fallbackDay: 1, fallbackHour: 0, fallbackMinute: 0, fallbackSecond: 0);
 
-        DateTime windowOpen;
-        if (DateTime.TryParse(openConfig, out var parsedExactOpen))
+        // 3. Resolve ClosingDate from Governance:WspAnnualSubmissionDeadline (fallback: Apr 30 23:59:59 UTC)
+        var closeConfig = "04-30";
+        if (_configService != null)
         {
-            windowOpen = DateTime.SpecifyKind(parsedExactOpen, DateTimeKind.Utc);
+            closeConfig = await _configService.GetValueAsync("Governance:WspAnnualSubmissionDeadline", "04-30") ?? "04-30";
+        }
+        DateTime closingDate = ParseWindowDate(closeConfig, resolvedSchemeYear, fallbackMonth: 4, fallbackDay: 30, fallbackHour: 23, fallbackMinute: 59, fallbackSecond: 59);
+
+        // 4. Resolve Organisation-specific approved extension
+        bool hasApprovedExtension = false;
+        DateTime? grantedExtensionDate = null;
+        string? extensionReferenceNumber = null;
+        string? organisationName = null;
+        DateTime effectiveDeadline = closingDate;
+
+        if (organisationId.HasValue && organisationId.Value > 0)
+        {
+            using var db = await _contextFactory.CreateDbContextAsync(ct);
+            organisationName = await db.Organisations
+                .AsNoTracking()
+                .Where(o => o.Id == organisationId.Value)
+                .Select(o => o.CompanyName)
+                .FirstOrDefaultAsync(ct);
+
+            var approvedExtension = await db.WspExtensionRequests
+                .AsNoTracking()
+                .Where(r => r.OrganisationId == organisationId.Value
+                            && r.SchemeYear == resolvedSchemeYear
+                            && r.ApprovalStatusCode == "Approved"
+                            && r.GrantedExtensionDate.HasValue)
+                .OrderByDescending(r => r.GrantedExtensionDate)
+                .FirstOrDefaultAsync(ct);
+
+            if (approvedExtension?.GrantedExtensionDate != null)
+            {
+                var rawGrantedDate = approvedExtension.GrantedExtensionDate.Value;
+                var extensionDeadline = new DateTime(rawGrantedDate.Year, rawGrantedDate.Month, rawGrantedDate.Day, 23, 59, 59, DateTimeKind.Utc);
+                if (extensionDeadline > closingDate)
+                {
+                    hasApprovedExtension = true;
+                    grantedExtensionDate = extensionDeadline;
+                    extensionReferenceNumber = approvedExtension.ApplicationReference;
+                    effectiveDeadline = extensionDeadline;
+                }
+            }
+        }
+
+        // 5. Calculate window state and urgency tier
+        var now = DateTime.UtcNow;
+        bool isOpen = false;
+        bool isUpcoming = false;
+        bool isClosed = false;
+        TimeSpan timeRemaining = TimeSpan.Zero;
+        WspUrgencyTier urgencyTier;
+
+        if (now < openingDate)
+        {
+            isUpcoming = true;
+            isOpen = false;
+            isClosed = false;
+            timeRemaining = openingDate - now;
+            urgencyTier = WspUrgencyTier.Upcoming;
+        }
+        else if (now > effectiveDeadline)
+        {
+            isUpcoming = false;
+            isOpen = false;
+            isClosed = true;
+            timeRemaining = TimeSpan.Zero;
+            urgencyTier = WspUrgencyTier.Closed;
         }
         else
         {
-            int openMonth = 1;
-            int openDay = 1;
-            if (openConfig.Contains('-'))
+            isOpen = true;
+            isUpcoming = false;
+            isClosed = false;
+            timeRemaining = effectiveDeadline - now;
+
+            if (now > closingDate && hasApprovedExtension)
             {
-                var parts = openConfig.Split('-');
-                if (parts.Length == 2 && int.TryParse(parts[0], out var m) && int.TryParse(parts[1], out var d))
-                {
-                    openMonth = m;
-                    openDay = d;
-                }
+                urgencyTier = WspUrgencyTier.ExtensionActive;
             }
-            windowOpen = new DateTime(schemeYear, openMonth, openDay, 0, 0, 0, DateTimeKind.Utc);
+            else if (timeRemaining <= TimeSpan.FromHours(72))
+            {
+                urgencyTier = WspUrgencyTier.Critical;
+            }
+            else if (timeRemaining <= TimeSpan.FromDays(14))
+            {
+                urgencyTier = WspUrgencyTier.Warning;
+            }
+            else
+            {
+                urgencyTier = WspUrgencyTier.Normal;
+            }
         }
 
-        var now = DateTime.UtcNow;
+        // 6. Format TimeRemaining and StatusBadgeText
+        string statusBadgeText;
+        string formattedTimeRemaining;
 
-        if (now < windowOpen)
+        switch (urgencyTier)
         {
-            return false;
+            case WspUrgencyTier.Upcoming:
+                statusBadgeText = "Upcoming Window";
+                formattedTimeRemaining = timeRemaining.TotalDays >= 1
+                    ? $"{timeRemaining.Days}d {timeRemaining.Hours:D2}h {timeRemaining.Minutes:D2}m remaining"
+                    : $"{timeRemaining.Hours:D2}h {timeRemaining.Minutes:D2}m remaining";
+                break;
+
+            case WspUrgencyTier.Closed:
+                statusBadgeText = "Window Closed";
+                formattedTimeRemaining = $"Window Closed on {effectiveDeadline:dd MMMM yyyy}";
+                break;
+
+            case WspUrgencyTier.ExtensionActive:
+                statusBadgeText = "Approved Extension Active";
+                formattedTimeRemaining = timeRemaining.TotalDays >= 1
+                    ? $"{timeRemaining.Days}d {timeRemaining.Hours:D2}h {timeRemaining.Minutes:D2}m remaining"
+                    : $"{timeRemaining.Hours:D2}h {timeRemaining.Minutes:D2}m remaining";
+                break;
+
+            case WspUrgencyTier.Critical:
+                statusBadgeText = "Critical (<= 72 Hours)";
+                formattedTimeRemaining = timeRemaining.TotalDays >= 1
+                    ? $"{timeRemaining.Days}d {timeRemaining.Hours:D2}h {timeRemaining.Minutes:D2}m remaining"
+                    : $"{timeRemaining.Hours:D2}h {timeRemaining.Minutes:D2}m remaining";
+                break;
+
+            case WspUrgencyTier.Warning:
+                statusBadgeText = "Warning (<= 14 Days)";
+                formattedTimeRemaining = $"{timeRemaining.Days}d {timeRemaining.Hours:D2}h {timeRemaining.Minutes:D2}m remaining";
+                break;
+
+            case WspUrgencyTier.Normal:
+            default:
+                statusBadgeText = "Window Active";
+                formattedTimeRemaining = $"{timeRemaining.Days}d {timeRemaining.Hours:D2}h {timeRemaining.Minutes:D2}m remaining";
+                break;
         }
 
-        var effectiveDeadline = await GetEffectiveSubmissionDeadlineAsync(organisationId, schemeYear);
-        return now <= effectiveDeadline;
+        string displayMessage = urgencyTier switch
+        {
+            WspUrgencyTier.Upcoming => $"The Mandatory Grant (WSP/ATR) submission window for Scheme Year {resolvedSchemeYear} opens on {openingDate:dd MMMM yyyy HH:mm} UTC.",
+            WspUrgencyTier.Closed => $"The Mandatory Grant submission window for Scheme Year {resolvedSchemeYear} closed on {effectiveDeadline:dd MMMM yyyy HH:mm} UTC.",
+            WspUrgencyTier.ExtensionActive => $"Approved Regulation 4(2) extension is active until {effectiveDeadline:dd MMMM yyyy HH:mm} UTC (Ref: {extensionReferenceNumber}).",
+            WspUrgencyTier.Critical => $"Statutory deadline is imminent. Submission closes in {formattedTimeRemaining} on {effectiveDeadline:dd MMMM yyyy HH:mm} UTC.",
+            WspUrgencyTier.Warning => $"Submission window is closing soon. {formattedTimeRemaining} remaining before deadline on {effectiveDeadline:dd MMMM yyyy HH:mm} UTC.",
+            _ => $"Mandatory Grant submission window is open until {effectiveDeadline:dd MMMM yyyy HH:mm} UTC."
+        };
+
+        return new WspWindowStatusDto
+        {
+            SchemeYear = resolvedSchemeYear,
+            OpeningDate = openingDate,
+            ClosingDate = closingDate,
+            EffectiveDeadline = effectiveDeadline,
+            HasApprovedExtension = hasApprovedExtension,
+            GrantedExtensionDate = grantedExtensionDate,
+            ExtensionReferenceNumber = extensionReferenceNumber,
+            IsOpen = isOpen,
+            IsUpcoming = isUpcoming,
+            IsClosed = isClosed,
+            TimeRemaining = timeRemaining,
+            UrgencyTier = urgencyTier,
+            StatusBadgeText = statusBadgeText,
+            FormattedTimeRemaining = formattedTimeRemaining,
+            OrganisationId = organisationId,
+            OrganisationName = organisationName,
+            DisplayMessage = displayMessage
+        };
+    }
+
+    private static DateTime ParseWindowDate(string configValue, int schemeYear, int fallbackMonth, int fallbackDay, int fallbackHour, int fallbackMinute, int fallbackSecond)
+    {
+        if (string.IsNullOrWhiteSpace(configValue))
+        {
+            return new DateTime(schemeYear, fallbackMonth, fallbackDay, fallbackHour, fallbackMinute, fallbackSecond, DateTimeKind.Utc);
+        }
+
+        var trimmed = configValue.Trim();
+
+        // Month-Day format: "MM-dd" (e.g. "01-01" or "04-30")
+        if (trimmed.Length <= 5 && trimmed.Contains('-') && !trimmed.Contains(':'))
+        {
+            var parts = trimmed.Split('-');
+            if (parts.Length == 2 && int.TryParse(parts[0], out var m) && int.TryParse(parts[1], out var d))
+            {
+                return new DateTime(schemeYear, m, d, fallbackHour, fallbackMinute, fallbackSecond, DateTimeKind.Utc);
+            }
+        }
+
+        if (DateTime.TryParse(trimmed, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsed))
+        {
+            int year = parsed.Year > 1900 ? parsed.Year : schemeYear;
+            int hour = parsed.Hour;
+            int minute = parsed.Minute;
+            int second = parsed.Second;
+
+            // If time was 00:00:00 and fallback was end-of-day 23:59:59 (e.g. "2026-04-30" date-only)
+            if (fallbackHour == 23 && hour == 0 && minute == 0 && second == 0 && !trimmed.Contains(':'))
+            {
+                hour = fallbackHour;
+                minute = fallbackMinute;
+                second = fallbackSecond;
+            }
+
+            return new DateTime(year, parsed.Month, parsed.Day, hour, minute, second, DateTimeKind.Utc);
+        }
+
+        if (trimmed.Contains('-'))
+        {
+            var parts = trimmed.Split('-');
+            if (parts.Length == 3 && int.TryParse(parts[0], out var y) && int.TryParse(parts[1], out var m) && int.TryParse(parts[2], out var d))
+            {
+                return new DateTime(y, m, d, fallbackHour, fallbackMinute, fallbackSecond, DateTimeKind.Utc);
+            }
+        }
+
+        return new DateTime(schemeYear, fallbackMonth, fallbackDay, fallbackHour, fallbackMinute, fallbackSecond, DateTimeKind.Utc);
+    }
+
+    public async Task<DateTime> GetEffectiveSubmissionDeadlineAsync(int organisationId, int schemeYear)
+    {
+        var status = await GetWindowStatusAsync(organisationId, schemeYear);
+        return status.EffectiveDeadline;
+    }
+
+    public async Task<bool> IsSubmissionWindowOpenAsync(int organisationId, int schemeYear)
+    {
+        var status = await GetWindowStatusAsync(organisationId, schemeYear);
+        return status.IsOpen;
     }
 
     public async Task<List<WspExtensionRequest>> GetExtensionRequestsAsync(int? organisationId = null, int? schemeYear = null, string? statusCode = null)
@@ -790,8 +928,8 @@ public class WspService : IWspService
         using var db = await _contextFactory.CreateDbContextAsync();
 
         var existingActive = await db.WspExtensionRequests
-            .AnyAsync(r => r.OrganisationId == request.OrganisationId 
-                        && r.SchemeYear == request.SchemeYear 
+            .AnyAsync(r => r.OrganisationId == request.OrganisationId
+                        && r.SchemeYear == request.SchemeYear
                         && (r.ApprovalStatusCode == "PendingReview" || r.ApprovalStatusCode == "Recommended"));
 
         if (existingActive)

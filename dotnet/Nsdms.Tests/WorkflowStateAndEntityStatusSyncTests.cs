@@ -115,11 +115,11 @@ public class WorkflowStateAndEntityStatusSyncTests
 
         // Act - Advance across transition
         var advanceResult = await workflowService.AdvanceWorkflowAsync(
-            instanceId, 
-            transitionId, 
-            "reviewer-1", 
-            "CLO Reviewer", 
-            "Client Liaison Officer (CLO)", 
+            instanceId,
+            transitionId,
+            "reviewer-1",
+            "CLO Reviewer",
+            "Client Liaison Officer (CLO)",
             "All preliminary desktop documentation submitted.");
 
         // Assert

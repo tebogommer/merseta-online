@@ -77,6 +77,8 @@ public static class DependencyInjection
         // Audit Archival & APM Prometheus Metrics
         services.AddScoped<IAuditLogArchivalService, AuditLogArchivalService>();
         services.AddScoped<IMetricsScraperService, MetricsScraperService>();
+        services.AddScoped<IAtomicAuditTransactionManager, AtomicAuditTransactionManager>();
+        services.AddScoped<IIsoDpsaAuditComplianceService, IsoDpsaAuditComplianceService>();
 
         // Outbox Email Messaging
         services.AddScoped<IEmailTransportService, EmailTransportService>();

@@ -109,7 +109,7 @@ END";
                     continue;
 
                 // Check existing count in table: if already populated, skip re-insertion for instant startup
-                var existingCount = await db.Database.SqlQueryRaw<int>($"SELECT COUNT(1) AS Value FROM [lookup].[{tableName}]").FirstOrDefaultAsync();
+                var existingCount = await db.Database.SqlQueryRaw<int>(string.Format("SELECT COUNT(1) AS Value FROM [lookup].[{0}]", tableName)).FirstOrDefaultAsync();
                 if (existingCount >= items.Count)
                 {
                     totalInserted += existingCount;

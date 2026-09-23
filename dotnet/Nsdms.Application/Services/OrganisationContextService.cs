@@ -48,7 +48,7 @@ public class OrganisationContextService : IOrganisationContextService
             if (person == null && userEmail.Contains('@'))
             {
                 var username = userEmail.Split('@')[0].Replace(".", "");
-                person = await db.People.AsNoTracking().FirstOrDefaultAsync(p => 
+                person = await db.People.AsNoTracking().FirstOrDefaultAsync(p =>
                     (p.FirstName + p.LastName).ToLower() == username.ToLower());
             }
         }
@@ -79,8 +79,8 @@ public class OrganisationContextService : IOrganisationContextService
                     resultDict[org.Id] = dto;
                 }
 
-                var roleLabel = !string.IsNullOrWhiteSpace(c.Designation) 
-                    ? c.Designation 
+                var roleLabel = !string.IsNullOrWhiteSpace(c.Designation)
+                    ? c.Designation
                     : (!string.IsNullOrWhiteSpace(c.ContactType) ? c.ContactType : "Organisation Contact");
 
                 if (!dto.Roles.Contains(roleLabel))
@@ -180,7 +180,7 @@ public class OrganisationContextService : IOrganisationContextService
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var term = searchTerm.Trim().ToLower();
-            query = query.Where(o => 
+            query = query.Where(o =>
                 o.CompanyName.ToLower().Contains(term) ||
                 (o.TradingName != null && o.TradingName.ToLower().Contains(term)) ||
                 o.SdlNumber.ToLower().Contains(term));

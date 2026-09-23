@@ -3,12 +3,13 @@
 @using Microsoft.EntityFrameworkCore
 @using Nsdms.Application.Common
 @using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
 @attribute [Authorize(Roles = "SuperAdmin,Admin")]
 @inject IApiSecurityService ApiSecurityService
 @inject IWebhookDispatcherService WebhookDispatcher
-@inject INsdmsDbContextFactory DbFactory
+@inject IOrganisationService OrganisationService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject NavigationManager Navigation
@@ -505,27 +506,12 @@
         _isLoading = true;
         try
         {
-            using var db = await DbFactory.CreateDbContextAsync();
-            _clients = await db.ApiClients
-                .Include(c => c.Organisation)
-                .OrderByDescending(c => c.CreatedAt)
-                .ToListAsync();
+            _clients = await ApiSecurityService.GetAllClientsAsync();
+            _subscriptions = await ApiSecurityService.GetAllWebhookSubscriptionsAsync();
+            _deliveryLogs = await ApiSecurityService.GetRecentDeliveryLogsAsync(100);
 
-            _subscriptions = await db.ApiWebhookSubscriptions
-                .Include(s => s.Organisation)
-                .OrderByDescending(s => s.CreatedAt)
-                .ToListAsync();
-
-            _deliveryLogs = await db.ApiWebhookDeliveryLogs
-                .Include(l => l.Subscription)
-                .OrderByDescending(l => l.DeliveredAt)
-                .Take(100)
-                .ToListAsync();
-
-            _organisations = await db.Organisations
-                .OrderBy(o => o.CompanyName)
-                .Take(50)
-                .ToListAsync();
+            var orgs = await OrganisationService.GetAllAsync();
+            _organisations = orgs.Take(50).ToList();
 
             if (_organisations.Count > 0 && _selectedOrgId == 0)
             {
@@ -601,24 +587,11 @@
         _isSubmitting = true;
         try
         {
-            using var db = await DbFactory.CreateDbContextAsync();
-            var randomBytes = new byte[32];
-            System.Security.Cryptography.RandomNumberGenerator.Fill(randomBytes);
-            var secretKey = Convert.ToHexString(randomBytes).ToLowerInvariant();
-
-            var sub = new ApiWebhookSubscription
-            {
-                OrganisationId = _selectedOrgId,
-                EventTopic = _selectedTopic,
-                TargetUrl = _webhookUrl,
-                SecretKey = secretKey,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = "PORTAL_ADMIN"
-            };
-
-            db.ApiWebhookSubscriptions.Add(sub);
-            await db.SaveChangesAsync();
+            await ApiSecurityService.RegisterWebhookSubscriptionAsync(
+                _selectedOrgId,
+                _selectedTopic,
+                _webhookUrl,
+                "PORTAL_ADMIN");
 
             _showWebhookDialog = false;
             Snackbar.Add($"Webhook subscription for '{_selectedTopic}' registered successfully.", Severity.Success);
@@ -638,16 +611,10 @@
     {
         try
         {
-            using var db = await DbFactory.CreateDbContextAsync();
-            var target = await db.ApiClients.FirstOrDefaultAsync(c => c.Id == client.Id);
-            if (target != null)
+            bool ok = await ApiSecurityService.ToggleClientStatusAsync(client.Id, "PORTAL_ADMIN");
+            if (ok)
             {
-                target.IsActive = !target.IsActive;
-                target.ModifiedAt = DateTime.UtcNow;
-                target.ModifiedBy = "PORTAL_ADMIN";
-                await db.SaveChangesAsync();
-
-                client.IsActive = target.IsActive;
+                client.IsActive = !client.IsActive;
                 Snackbar.Add($"Client {client.ClientIdentifier} is now {(client.IsActive ? "Active" : "Deactivated")}.", Severity.Info);
             }
         }

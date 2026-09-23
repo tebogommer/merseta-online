@@ -138,7 +138,7 @@ public class ArplSpecificationRemediationTests
         var (qualifies, passRate, expiryDate) = ArplTradeValidator.EvaluateTaskCreditRetention(tasks, DateTime.UtcNow);
         Assert.True(qualifies, "Candidate passing >= 50% of tasks must be eligible for credit retention.");
         Assert.Equal(50m, passRate);
-        
+
         // Expiry date must be approximately 18 months in the future
         var monthsDiff = ((expiryDate.Year - DateTime.UtcNow.Year) * 12) + expiryDate.Month - DateTime.UtcNow.Month;
         Assert.True(monthsDiff >= 17 && monthsDiff <= 19, $"Expiry must be ~18 months, got {monthsDiff} months.");
@@ -292,7 +292,7 @@ public class ArplSpecificationRemediationTests
         };
 
         var scored2 = await service.RecordTaskResultsAsync(app.Id, attempt2Tasks, "Candidate competent on re-test.", "AssessorDave");
-        
+
         // Both Attempt 1 tasks AND Attempt 2 tasks must be preserved (never deleted!)
         var allDbTasks = await db.TradeTestTasks.Where(t => t.LearnerTradeTestApplicationId == app.Id).ToListAsync();
         Assert.Equal(3, allDbTasks.Count);

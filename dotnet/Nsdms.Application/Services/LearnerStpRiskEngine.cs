@@ -157,8 +157,8 @@ public class LearnerStpRiskEngine : ILearnerStpRiskEngine
             else if (hasSaqa)
                 compliantFactors.Add($"Active SAQA qualification confirmed.");
 
-            var maxSignatureDays = _configService != null 
-                ? await _configService.GetValueAsync<int>("LearnerRegistration:MaxSignatureElapsedBusinessDays", 30) 
+            var maxSignatureDays = _configService != null
+                ? await _configService.GetValueAsync<int>("LearnerRegistration:MaxSignatureElapsedBusinessDays", 30)
                 : 30;
 
             if (!hasExecutionDate)

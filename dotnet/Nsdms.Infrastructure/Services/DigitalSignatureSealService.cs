@@ -27,8 +27,8 @@ public class DigitalSignatureSealService : IDigitalSignatureSealService
 
     private (string Version, byte[] Key) GetSigningKey(string? requestedVersion = null)
     {
-        string version = requestedVersion 
-            ?? _configuration?["Cryptography:ActiveKeyVersion"] 
+        string version = requestedVersion
+            ?? _configuration?["Cryptography:ActiveKeyVersion"]
             ?? DefaultKeyVersion;
 
         string? configKey = _configuration?[$"Cryptography:Keys:{version}"]

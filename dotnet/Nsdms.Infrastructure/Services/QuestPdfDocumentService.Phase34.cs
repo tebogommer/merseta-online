@@ -61,7 +61,7 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
                         // Legal Entity Name
                         var legalName = provider.Organisation?.CompanyName ?? "Accredited Training Institution";
                         inner.Item().AlignCenter().Text(legalName.ToUpper()).Bold().FontSize(18).FontColor(Colors.Black);
-                        
+
                         if (!string.IsNullOrWhiteSpace(provider.Organisation?.SdlNumber))
                         {
                             inner.Item().AlignCenter().Text($"SDL Reference: {provider.Organisation.SdlNumber} | Registration No: {provider.Organisation.RegistrationNumber ?? "N/A"}").FontSize(10).FontColor(Colors.Grey.Darken2);

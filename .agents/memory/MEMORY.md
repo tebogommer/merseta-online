@@ -19,7 +19,14 @@
 - [project] Component metadata uses SemVer while toolkit releases use CalVer → tech-decisions.md
 - [project] Always add Core Infrastructure & Architecture Invariants block to GEMINI.md when generated → project-conventions.md
 - [project] Ensure transactions are managed properly for data integrity (atomic double-writes, CreateExecutionStrategy, RCSI) → project-conventions.md
+- [project] UI Accessibility & Landmarks: single <main> on MainLayout, EntityHeader uses HtmlTag="h1", wizards use <section> → project-conventions.md
+- [project] Form Field Spacing & Typography: zero child mb-4 margins, sentence case labels, 84px bottom padding on FormShell → project-conventions.md
+- [testing] Static cache test isolation: clear static in-memory lookup caches during Arrange in unit/integration test fixtures → project-conventions.md
+- [project] ISO 9001:2015 & DPSA Directive Compliant Atomic Audit Logging Standard: Pre-validate specs before flush, execute mutations inside CreateExecutionStrategy().ExecuteAsync() + BeginTransactionAsync(), enforce zero anonymous actors, UTC precision, POPIA PII masking, PFMA maker-checker segregation of duties, zero partial commits → project-conventions.md
+- [testing] Atomic audit test isolation: pre-validate specs before SaveChangesAsync and invoke db.ChangeTracker.Clear() on error when tx is null (EF Core InMemory compatibility) → project-conventions.md
+- [testing] Windows MSBuild project reference locks: when dev server is running on Windows, use /p:BuildProjectReferences=false on dotnet test / dotnet build to prevent locked dll collision → project-conventions.md
 ## Preferences
 - [preference] Test suite verification: add visual/console assertions to Playwright harness so only true, visually styled, fully interactive pages pass → user-preferences.md
 ## Feedback
 - [feedback] Human test cases must use UI menu names and button labels, never raw URLs → feedback-history.md
+

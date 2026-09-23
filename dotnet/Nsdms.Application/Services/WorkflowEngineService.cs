@@ -17,7 +17,7 @@ public class WorkflowEngineService : IWorkflowEngineService
     private readonly IWorkingDayCalculationEngine? _workingDayEngine;
 
     public WorkflowEngineService(
-        INsdmsDbContextFactory contextFactory, 
+        INsdmsDbContextFactory contextFactory,
         IRealtimeNotificationService? notificationService = null,
         ICaslAbilityService? caslService = null,
         IWorkingDayCalculationEngine? workingDayEngine = null)
@@ -61,11 +61,11 @@ public class WorkflowEngineService : IWorkflowEngineService
     }
 
     public async Task<WorkflowInstance?> GetOrInitiateInstanceAsync(
-        string processCode, 
-        int entityId, 
-        string entityTitle, 
-        string entityRef, 
-        string initiatorUserId, 
+        string processCode,
+        int entityId,
+        string entityTitle,
+        string entityRef,
+        string initiatorUserId,
         string initiatorName)
     {
         var existing = await GetInstanceByEntityAsync(processCode, entityId);
@@ -109,19 +109,19 @@ public class WorkflowEngineService : IWorkflowEngineService
             return transitions;
         }
 
-        return transitions.Where(t => 
-            string.IsNullOrEmpty(t.RequiredPermission) || 
-            userContext.Permissions.Contains(t.RequiredPermission) || 
+        return transitions.Where(t =>
+            string.IsNullOrEmpty(t.RequiredPermission) ||
+            userContext.Permissions.Contains(t.RequiredPermission) ||
             userContext.Permissions.Contains($"{t.RequiredPermission.Split(':')[0]}:Manage")
         ).ToList();
     }
 
     public async Task<WorkflowActionResult> StartWorkflowAsync(
-        string processCode, 
-        int entityId, 
-        string entityTitle, 
-        string entityRef, 
-        string initiatorUserId, 
+        string processCode,
+        int entityId,
+        string entityTitle,
+        string entityRef,
+        string initiatorUserId,
         string initiatorName)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -202,11 +202,11 @@ public class WorkflowEngineService : IWorkflowEngineService
     }
 
     public async Task<WorkflowActionResult> AdvanceWorkflowAsync(
-        int instanceId, 
-        int transitionId, 
-        string actorUserId, 
-        string actorName, 
-        string actorRole, 
+        int instanceId,
+        int transitionId,
+        string actorUserId,
+        string actorName,
+        string actorRole,
         string? comments = null)
     {
         using var context = await _contextFactory.CreateDbContextAsync();

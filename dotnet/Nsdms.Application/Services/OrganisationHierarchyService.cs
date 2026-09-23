@@ -160,8 +160,8 @@ SELECT Id FROM FamilyTreeCTE;", organisationId)
         }
 
         // 3. Group Average Compliance Score
-        decimal avgCompliance = flattened.Count > 0 
-            ? Math.Round(flattened.Average(f => f.ComplianceScore), 1) 
+        decimal avgCompliance = flattened.Count > 0
+            ? Math.Round(flattened.Average(f => f.ComplianceScore), 1)
             : 0m;
 
         string grade = avgCompliance switch

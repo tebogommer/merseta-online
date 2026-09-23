@@ -39,9 +39,9 @@ public interface IChamberDerivationService
     /// based on the declared 5-digit SIC code or organisation legal constitution type.
     /// </summary>
     Task<ChamberDerivationResult> DeriveChamberAndVendorClassAsync(
-        string? sicCode, 
-        string? organisationTypeCode = null, 
-        string? manualChamberCode = null, 
+        string? sicCode,
+        string? organisationTypeCode = null,
+        string? manualChamberCode = null,
         bool isManualOverride = false);
 
     /// <summary>

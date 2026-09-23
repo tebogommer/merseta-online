@@ -144,7 +144,7 @@ public class CompanyLearnerTransfer : BaseEntity
     /// Optional foreign key referencing the generated LPM-FM-005 Transfer Application Form document.
     /// </summary>
     public int? TransferFormDocumentId { get; set; }
-    
+
     /// <summary>
     /// Reviewer or approval justification notes.
     /// </summary>
@@ -197,7 +197,7 @@ public class CompanyLearnerLostTime : BaseEntity
     /// Total cumulative days lost during this interruption period.
     /// </summary>
     public int DaysLost { get; set; }
-    
+
     /// <summary>
     /// Original contractual completion date prior to lost time extension.
     /// </summary>
@@ -207,7 +207,7 @@ public class CompanyLearnerLostTime : BaseEntity
     /// Revised contractual completion date extended by the lost days.
     /// </summary>
     public DateTime RevisedContractEndDate { get; set; }
-    
+
     /// <summary>
     /// Current approval status code for the time extension request (Pending, Approved, Rejected).
     /// </summary>
@@ -280,7 +280,7 @@ public class CompanyLearnerTermination : BaseEntity
     /// Detailed settlement notes, mutual release terms, or disciplinary minutes.
     /// </summary>
     public string? SettlementNotes { get; set; }
-    
+
     /// <summary>
     /// Current cancellation approval status code (Pending, InInvestigation, CommitteeAgenda, Approved, Rejected, RequirementsNotMet).
     /// </summary>

@@ -37,6 +37,23 @@ When user's prompt is NOT in English:
 
 ---
 
+### 🛡️ ISO 9001:2015 & DPSA Directive Compliant Atomic Audit Logging Standard
+1. **Zero Partial Commits & Transactional Double-Write**:
+   - Every domain entity mutation and its associated audit log entry MUST be executed atomically within a single transactional unit via `IAtomicAuditTransactionManager.ExecuteAtomicAsync` or `ExecuteAtomicBatchAsync`.
+   - In SQL Server environments, user transactions must be enclosed within `db.Database.CreateExecutionStrategy().ExecuteAsync(...)` to ensure resilience under transient failures. Any failure in business logic, specification validation, or persistence MUST trigger an immediate, complete rollback of both entity mutations and audit entries (`RollbackAsync()`).
+2. **ISO 9001:2015 Clause 7.5 Control of Documented Information**:
+   - Every audit entry MUST preserve mandatory identification attributes (`EntityName`, `ActionName`, `Actor`), positive auto-generated integer `RecordId`, and structured differential state capture (`before` and `after` snapshots in `MetadataJson`).
+   - Every recorded transaction computes an immutable SHA-256 digital security seal (`ComputeDigitalSecuritySeal`) across the payload, enabling real-time cryptographic tamper detection and non-repudiation.
+3. **DPSA Information Security Directive & CGICTPF Public Sector Compliance**:
+   - **Zero Anonymous Actors**: 100% actor accountability is strictly enforced. Any attempt to record mutations with empty, `"ANONYMOUS"`, or `"UNKNOWN"` actors must fail fast and abort the transaction.
+   - **Chronological UTC Precision**: Audit timestamps must record UTC timestamps with sub-second precision; future-dated timestamps exceeding reasonable drift thresholds are rejected.
+   - **POPIA Sensitive PII Redaction**: Sensitive personal identifiers (such as 13-digit RSA National ID numbers and bank account numbers) must be masked in `MetadataJson` payloads before database persistence.
+   - **PFMA Maker-Checker Segregation of Duties**: Approvals and statutory signoffs (e.g., Banking Details, Discretionary Grant MoAs, Tranche Claims) must verify that the creator and approver are distinct individuals (`CreatedBy != ApproverUserId`).
+4. **Auditor Verification Portal**:
+   - Administrative users and statutory auditors inspect logs and evaluate compliance at `/admin/audit-logs` and `/admin/audit-compliance` via `IIsoDpsaAuditComplianceService`.
+
+---
+
 ## 🎨 MudBlazor Layout & Sticky Top Bar Invariant
 1. **No Utility Classes on `MudMainContent`**: Never add `Class="pa-*"` or `Class="pt-*"` directly to `<MudMainContent>`. MudBlazor utility classes apply `!important`, which cancels the computed `padding-top: var(--mud-appbar-height)` (64px) and causes the header to overlap page content. Always wrap `@Body` inside `<MudMainContent><div class="pa-4">@Body</div></MudMainContent>`.
 2. **Sticky Sub-Header Offsets**: Sticky top bars on Master-Detail pages must always dock below the 64px `MudAppBar` using `top: var(--mud-appbar-height, 64px) !important;` (or `.sticky-top-header`).
@@ -358,3 +375,23 @@ When user's prompt is NOT in English:
 1. **Cookie Scheme Lock Invariant**: When combining ASP.NET Core Identity with Cookie Authentication in .NET 10, ALWAYS lock `AuthenticationOptions` via `builder.Services.PostConfigure<AuthenticationOptions>(...)` to guarantee `DefaultAuthenticateScheme`, `DefaultSignInScheme`, and `DefaultChallengeScheme` remain bound to `CookieAuthenticationDefaults.AuthenticationScheme`. Never permit Identity's default `IdentityConstants.ApplicationScheme` to override the application cookie ticket.
 2. **Dynamic HttpContext Resolution in AuthenticationStateProvider**: In Blazor Server interactive circuits, `AuthenticationStateProvider.GetAuthenticationStateAsync()` must dynamically inspect `IHttpContextAccessor.HttpContext?.User` rather than caching constructor state to ensure post-middleware authenticated claims are reflected immediately upon navigation.
 3. **Zero-Trust Diagnostic Endpoint Protection**: All user profile, diagnostic, or session state endpoints (e.g. `/api/auth/me`) MUST declare `.RequireAuthorization()` to enforce Zero Trust access control and prevent anonymous information disclosure.
+
+---
+
+### 🛡️ Accessible Landmark & Heading Hierarchy Invariant (WCAG SC 1.3.1)
+1. **Single `<main>` Landmark**: The outer application layout (`MainLayout.razor`) provides the single `<main id="main-content">` landmark. Multi-step wizards (`WizardShell`), form shells, and tabs MUST NEVER render nested `<main>` tags; use semantic `<section>` or `<article>`.
+2. **Single Primary `<h1>` per Page**: Every master and detail page header (`EntityHeader.razor`) MUST render the primary record title with `HtmlTag="h1"` (configured visually with `Typo.h5` or `Typo.h4`). Page subtitles and cards must use `<h2>` or `<h3>` (`Typo.h6` / `Typo.subtitle1`).
+
+---
+
+### 🛡️ Form Field Spacing & Typography Budget
+1. **Zero Child Gutters**: Primitives such as `<ReadOnlyField>` and `<MudTextField>` MUST NOT define root bottom margins (e.g. avoid `mb-4`). Spacing between form fields must be governed exclusively by parent grid spacing (`<MudGrid Spacing="3">`).
+2. **Sentence Case Labels**: Field labels must use sentence case at `0.75rem` (`Typo.caption`, `font-weight: 600`, opacity `0.85`). `text-uppercase` is strictly prohibited on labels to maintain readability for complex statutory descriptions and acronyms.
+3. **Sticky Action Clearance**: All forms utilizing sticky action bars (`FormShell`) must wrap content in `.nsdms-form-shell` with mandatory `padding-bottom: 84px !important` to prevent action bar overlap over input fields.
+
+---
+
+### 🛡️ Static Cache & In-Memory Test Isolation Invariant
+1. **Cache Reset Expose**: Any application service utilizing `static` in-memory dictionaries or memory caches for lookup optimization (e.g. `LookupService._lookupCache`) must expose instance `ClearCache()` and static `ResetCache()` methods.
+2. **Test Setup Invariant**: Unit and integration test fixtures that construct mock or in-memory databases (`TestDbContextFactory`) MUST call `service.ClearCache()` or `ServiceType.ResetCache()` in `Arrange` (or test class constructor/fixture) to prevent test contamination and assertion failures from prior test executions.
+

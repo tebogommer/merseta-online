@@ -1,0 +1,272 @@
+@namespace Nsdms.Web.Components.Pages.Admin.Dialogs
+@using MudBlazor
+@using Nsdms.Application.Common.Models
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject IMgWindowGovernanceService WindowGovService
+@inject IOfoCodeSetService OfoSetService
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthStateProvider
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@(IsEditMode ? Icons.Material.Filled.EditCalendar : Icons.Material.Filled.AddCircle)" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">@(IsEditMode ? "Edit Mandatory Grant Window Schedule" : "Propose Mandatory Grant Submission Window")</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                Configure the statutory annual Mandatory Grant (WSP / ATR) submission cycle, lodgement dates, and select the governing DHET Gazetted OFO framework release.
+            </MudText>
+
+            <MudGrid Spacing="3">
+                <MudItem xs="12" sm="4">
+                    <MudNumericField @bind-Value="_schemeYear"
+                                     Label="Scheme Year"
+                                     Min="2020"
+                                     Max="2040"
+                                     Required="true"
+                                     RequiredError="Scheme year is required"
+                                     Disabled="@IsEditMode"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+
+                <MudItem xs="12" sm="8">
+                    <MudTextField @bind-Value="_windowName"
+                                  Label="Window Official Title"
+                                  Placeholder="e.g. 2026/2027 Mandatory Grant (WSP/ATR) Submission Window"
+                                  Required="true"
+                                  RequiredError="Window title is required"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int?" @bind-Value="_ofoCodeSetId"
+                               Label="Governing OFO Taxonomy Version"
+                               Required="true"
+                               RequiredError="A governing OFO taxonomy version must be selected"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var set in _availableSets)
+                        {
+                            <MudSelectItem Value="@((int?)set.Id)">
+                                @set.Name (v@(set.SetYear % 100)) - @set.TotalOccupationsCount.ToString("N0") occupations
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="_gazetteReference"
+                                  Label="Gazette Citation / Circular Reference"
+                                  Placeholder="e.g. Government Gazette No. 51234"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudDatePicker @bind-Date="_openingDate"
+                                   Label="Portal Opening Date"
+                                   Required="true"
+                                   RequiredError="Opening date is required"
+                                   DateFormat="yyyy-MM-dd"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudDatePicker @bind-Date="_closingDate"
+                                   Label="Standard Statutory Deadline"
+                                   Required="true"
+                                   RequiredError="Closing deadline is required"
+                                   DateFormat="yyyy-MM-dd"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudDatePicker @bind-Date="_extensionCutoffDate"
+                                   Label="Extension Filing Cutoff"
+                                   Required="true"
+                                   RequiredError="Extension cutoff date is required"
+                                   DateFormat="yyyy-MM-dd"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_justification"
+                                  Label="Statutory Motivation & Operational Rationale"
+                                  Placeholder="Enter statutory basis, regulatory provisions, and motivation for this schedule..."
+                                  Lines="3"
+                                  Required="true"
+                                  RequiredError="Motivation is required for governance audit trail"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" StartIcon="@Icons.Material.Filled.Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(!_isValid || _isSaving)"
+                   StartIcon="@(IsEditMode ? Icons.Material.Filled.Save : Icons.Material.Filled.Send)">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>@(IsEditMode ? "Save Changes" : "Create Window Proposal")</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public MgWindowDetailDto? ExistingWindow { get; set; }
+
+    private MudForm _form = default!;
+    private bool _isValid;
+    private bool _isSaving;
+
+    private int _schemeYear = DateTime.UtcNow.Year;
+    private string _windowName = string.Empty;
+    private int? _ofoCodeSetId;
+    private string? _gazetteReference;
+    private string _justification = string.Empty;
+    private DateTime? _openingDate;
+    private DateTime? _closingDate;
+    private DateTime? _extensionCutoffDate;
+
+    private List<OfoCodeSetDto> _availableSets = new();
+
+    private bool IsEditMode => ExistingWindow != null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _availableSets = await OfoSetService.GetActiveSetsAsync();
+
+            if (ExistingWindow != null)
+            {
+                _schemeYear = ExistingWindow.SchemeYear;
+                _windowName = ExistingWindow.WindowName;
+                _ofoCodeSetId = ExistingWindow.OfoCodeSetId ?? _availableSets.FirstOrDefault()?.Id;
+                _gazetteReference = ExistingWindow.GazetteReference;
+                _justification = ExistingWindow.Justification ?? string.Empty;
+                _openingDate = ExistingWindow.OpeningDate;
+                _closingDate = ExistingWindow.ClosingDate;
+                _extensionCutoffDate = ExistingWindow.ExtensionCutoffDate;
+            }
+            else
+            {
+                _schemeYear = DateTime.UtcNow.Year;
+                _windowName = $"{_schemeYear}/{_schemeYear + 1} Mandatory Grant (WSP/ATR) Submission Window";
+                _openingDate = new DateTime(_schemeYear, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                _closingDate = new DateTime(_schemeYear, 4, 30, 23, 59, 59, DateTimeKind.Utc);
+                _extensionCutoffDate = new DateTime(_schemeYear, 4, 15, 23, 59, 59, DateTimeKind.Utc);
+                _ofoCodeSetId = _availableSets.FirstOrDefault()?.Id;
+                _justification = "Statutory annual skills development planning and training reporting cycle under Regulation 4(1) of the SETA Grant Regulations.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading OFO framework sets: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        if (_ofoCodeSetId == null || _ofoCodeSetId.Value <= 0)
+        {
+            Snackbar.Add("A governing OFO taxonomy version must be selected.", Severity.Warning);
+            return;
+        }
+
+        if (_openingDate == null || _closingDate == null || _extensionCutoffDate == null)
+        {
+            Snackbar.Add("All statutory window dates are required.", Severity.Warning);
+            return;
+        }
+
+        if (_openingDate.Value >= _closingDate.Value)
+        {
+            Snackbar.Add("Opening date must precede the standard closing deadline.", Severity.Warning);
+            return;
+        }
+
+        if (_extensionCutoffDate.Value > _closingDate.Value)
+        {
+            Snackbar.Add("Extension cutoff date cannot be later than the standard closing deadline.", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var userId = user.Identity?.Name ?? "SYSTEM";
+            var userName = user.Identity?.Name ?? "System Administrator";
+
+            if (IsEditMode && ExistingWindow != null)
+            {
+                var updateDto = new UpdateMgWindowDto
+                {
+                    WindowName = _windowName,
+                    OpeningDate = _openingDate.Value,
+                    ClosingDate = _closingDate.Value,
+                    ExtensionCutoffDate = _extensionCutoffDate.Value,
+                    OfoCodeSetId = _ofoCodeSetId.Value,
+                    GazetteReference = _gazetteReference,
+                    Justification = _justification
+                };
+
+                var updated = await WindowGovService.UpdateDraftWindowAsync(ExistingWindow.Id, updateDto, userId, userName);
+                Snackbar.Add($"Mandatory Grant Window #{updated.Id} updated successfully.", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(updated));
+            }
+            else
+            {
+                var createDto = new CreateMgWindowDto
+                {
+                    SchemeYear = _schemeYear,
+                    WindowName = _windowName,
+                    OpeningDate = _openingDate.Value,
+                    ClosingDate = _closingDate.Value,
+                    ExtensionCutoffDate = _extensionCutoffDate.Value,
+                    OfoCodeSetId = _ofoCodeSetId.Value,
+                    GazetteReference = _gazetteReference,
+                    Justification = _justification
+                };
+
+                var created = await WindowGovService.CreateDraftWindowAsync(createDto, userId, userName);
+                Snackbar.Add($"Mandatory Grant Window proposal '{created.WindowName}' created successfully.", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(created));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving window schedule: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

@@ -35,10 +35,10 @@ public class OrganisationContact : BaseEntity
     /// <summary>
     /// Alias property exposing ContactTypeCode.
     /// </summary>
-    public string ContactType 
-    { 
-        get => ContactTypeCode ?? "General"; 
-        set => ContactTypeCode = value; 
+    public string ContactType
+    {
+        get => ContactTypeCode ?? "General";
+        set => ContactTypeCode = value;
     }
 
     /// <summary>

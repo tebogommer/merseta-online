@@ -34,9 +34,9 @@ public class ApiSecurityService : IApiSecurityService
     }
 
     public async Task<(bool Success, ApiClient? Client, string? Error)> AuthenticateClientAsync(
-        string clientIdentifier, 
-        string clientSecret, 
-        string? dpopHeader = null, 
+        string clientIdentifier,
+        string clientSecret,
+        string? dpopHeader = null,
         string? clientCertThumbprint = null)
     {
         if (string.IsNullOrWhiteSpace(clientIdentifier) || string.IsNullOrWhiteSpace(clientSecret))
@@ -64,7 +64,7 @@ public class ApiSecurityService : IApiSecurityService
         // Verify Secret Hash
         var incomingHash = HashSecret(clientSecret);
         if (!CryptographicOperations.FixedTimeEquals(
-            Encoding.UTF8.GetBytes(incomingHash), 
+            Encoding.UTF8.GetBytes(incomingHash),
             Encoding.UTF8.GetBytes(client.HashedClientSecret)))
         {
             _logger.LogWarning("B2B API Authentication failed: ClientIdentifier {Id} secret mismatch.", clientIdentifier);
@@ -111,16 +111,16 @@ public class ApiSecurityService : IApiSecurityService
             return false;
 
         var scopes = client.AllowedScopes.Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-        return scopes.Any(s => s.Equals("*", StringComparison.OrdinalIgnoreCase) || 
-                               s.Equals("admin", StringComparison.OrdinalIgnoreCase) || 
+        return scopes.Any(s => s.Equals("*", StringComparison.OrdinalIgnoreCase) ||
+                               s.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
                                s.Equals(requiredScope, StringComparison.OrdinalIgnoreCase));
     }
 
     public async Task<(ApiClient Client, string PlaintextSecret)> RegisterClientAsync(
-        int organisationId, 
-        string clientName, 
-        string[] scopes, 
-        string? dpopKeyJwk = null, 
+        int organisationId,
+        string clientName,
+        string[] scopes,
+        string? dpopKeyJwk = null,
         string? certThumbprint = null,
         string tier = "Enterprise",
         int rateLimitPerMinute = 120)
@@ -194,8 +194,8 @@ public class ApiSecurityService : IApiSecurityService
     }
 
     public async Task<(bool IsDuplicate, string? CachedResponseJson, int StatusCode)> CheckIdempotencyAsync(
-        string idempotencyKey, 
-        string clientIdentifier, 
+        string idempotencyKey,
+        string clientIdentifier,
         string requestPath)
     {
         if (string.IsNullOrWhiteSpace(idempotencyKey))
@@ -216,11 +216,11 @@ public class ApiSecurityService : IApiSecurityService
     }
 
     public async Task RecordIdempotencyAsync(
-        string idempotencyKey, 
-        string clientIdentifier, 
-        string requestPath, 
-        int statusCode, 
-        string responseJson, 
+        string idempotencyKey,
+        string clientIdentifier,
+        string requestPath,
+        int statusCode,
+        string responseJson,
         TimeSpan? ttl = null)
     {
         if (string.IsNullOrWhiteSpace(idempotencyKey))
@@ -265,5 +265,89 @@ public class ApiSecurityService : IApiSecurityService
         using var sha256 = SHA256.Create();
         var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes("merSETA_salt_2026_" + secret));
         return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
+
+    public async Task<List<ApiClient>> GetAllClientsAsync()
+    {
+        using var db = await _dbFactory.CreateDbContextAsync();
+        return await db.ApiClients
+            .Include(c => c.Organisation)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<List<ApiWebhookSubscription>> GetAllWebhookSubscriptionsAsync()
+    {
+        using var db = await _dbFactory.CreateDbContextAsync();
+        return await db.ApiWebhookSubscriptions
+            .Include(s => s.Organisation)
+            .OrderByDescending(s => s.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<List<ApiWebhookDeliveryLog>> GetRecentDeliveryLogsAsync(int limit = 100)
+    {
+        using var db = await _dbFactory.CreateDbContextAsync();
+        return await db.ApiWebhookDeliveryLogs
+            .Include(l => l.Subscription)
+            .OrderByDescending(l => l.DeliveredAt)
+            .Take(limit)
+            .ToListAsync();
+    }
+
+    public async Task<ApiWebhookSubscription> RegisterWebhookSubscriptionAsync(
+        int organisationId, string eventTopic, string targetUrl, string createdBy = "PORTAL_ADMIN")
+    {
+        using var db = await _dbFactory.CreateDbContextAsync();
+        var randomBytes = new byte[32];
+        RandomNumberGenerator.Fill(randomBytes);
+        var secretKey = Convert.ToHexString(randomBytes).ToLowerInvariant();
+
+        var sub = new ApiWebhookSubscription
+        {
+            OrganisationId = organisationId,
+            EventTopic = eventTopic,
+            TargetUrl = targetUrl,
+            SecretKey = secretKey,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = createdBy
+        };
+
+        db.ApiWebhookSubscriptions.Add(sub);
+        await db.SaveChangesAsync();
+
+        await _auditService.LogActionAsync(
+            "ApiWebhookSubscription",
+            sub.Id,
+            "CREATE",
+            createdBy,
+            null,
+            new { sub.Id, sub.OrganisationId, sub.EventTopic, sub.TargetUrl });
+
+        return sub;
+    }
+
+    public async Task<bool> ToggleClientStatusAsync(int clientId, string modifiedBy = "PORTAL_ADMIN")
+    {
+        using var db = await _dbFactory.CreateDbContextAsync();
+        var target = await db.ApiClients.FirstOrDefaultAsync(c => c.Id == clientId);
+        if (target == null) return false;
+
+        bool previous = target.IsActive;
+        target.IsActive = !target.IsActive;
+        target.ModifiedAt = DateTime.UtcNow;
+        target.ModifiedBy = modifiedBy;
+        await db.SaveChangesAsync();
+
+        await _auditService.LogActionAsync(
+            "ApiClient",
+            target.Id,
+            "TOGGLE_STATUS",
+            modifiedBy,
+            new { target.Id, Previous = previous },
+            new { target.Id, Current = target.IsActive });
+
+        return true;
     }
 }

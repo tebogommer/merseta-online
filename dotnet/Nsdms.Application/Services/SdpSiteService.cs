@@ -21,7 +21,7 @@ public interface ISdpSiteService
     Task<bool> UnlinkAssessorAsync(int linkId, string currentUsername = "SYSTEM");
 }
 
-public interface ISdpCampusService : ISdpSiteService 
+public interface ISdpCampusService : ISdpSiteService
 {
     Task<List<TrainingProviderCampus>> GetCampusesByProviderAsync(int providerId);
     Task<TrainingProviderCampus> AddCampusAsync(TrainingProviderCampus campus, string currentUsername = "SYSTEM");

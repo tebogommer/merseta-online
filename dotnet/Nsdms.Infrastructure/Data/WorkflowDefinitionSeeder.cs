@@ -216,7 +216,7 @@ public static class WorkflowDefinitionSeeder
             context.WorkflowTransitions.AddRange(
                 // 1. Draft -> Submitted
                 new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS1.Id, ToStateId = lrnS2.Id, ActionName = "Submit Application", ButtonColor = "#1e40af", ButtonIcon = "Send", RequiredPermission = "Learners:Submit", NewEntityStatusCode = "SUBMITTED" },
-                
+
                 // 2. Reviewer actions on Submitted
                 new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS2.Id, ToStateId = lrnS5.Id, ActionName = "Recommend for Registration", ButtonColor = "#0284c7", ButtonIcon = "ThumbUp", RequiredPermission = "Learners:Review", NewEntityStatusCode = "RECOMMENDED" },
                 new WorkflowTransition { WorkflowDefinitionId = lrnDef.Id, FromStateId = lrnS2.Id, ToStateId = lrnS3.Id, ActionName = "Reject for Resubmission (RFI)", ButtonColor = "#f59e0b", ButtonIcon = "HelpOutline", RequiresComments = true, RequiredPermission = "Learners:Review", NewEntityStatusCode = "REJECTED_RESUBMIT" },

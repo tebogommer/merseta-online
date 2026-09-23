@@ -14,7 +14,7 @@ public class EnterpriseDocumentTemplateService : IEnterpriseDocumentTemplateServ
     private readonly IDocumentPlaceholderRegistry _placeholderRegistry;
 
     public EnterpriseDocumentTemplateService(
-        INsdmsDbContextFactory factory, 
+        INsdmsDbContextFactory factory,
         AuditService audit,
         IPdfDocumentService pdfService,
         IDocumentPlaceholderRegistry? placeholderRegistry = null)
@@ -326,8 +326,8 @@ public class EnterpriseDocumentTemplateService : IEnterpriseDocumentTemplateServ
             await db.SaveChangesAsync();
         }
 
-        await _audit.LogAsync("DocumentTemplate", revision.Id, "CreateNewVersion", 
-            $"Created draft revision {revision.VersionNumber} of {revision.TemplateCode} derived from #{source.Id}", 
+        await _audit.LogAsync("DocumentTemplate", revision.Id, "CreateNewVersion",
+            $"Created draft revision {revision.VersionNumber} of {revision.TemplateCode} derived from #{source.Id}",
             actor, revision);
 
         return revision;
@@ -457,10 +457,10 @@ public class EnterpriseDocumentTemplateService : IEnterpriseDocumentTemplateServ
         var template = await db.DocumentTemplates
             .Include(t => t.Sections.OrderBy(s => s.SequenceOrder))
                 .ThenInclude(s => s.DocumentClause)
-            .Where(t => t.DocumentTypeCode == documentTypeCode 
-                     && t.FinancialYear == financialYear 
+            .Where(t => t.DocumentTypeCode == documentTypeCode
+                     && t.FinancialYear == financialYear
                      && (t.TargetEntityType == targetEntityType || t.TargetEntityType == "All")
-                     && t.IsActive 
+                     && t.IsActive
                      && t.ApprovalStatus == "Approved")
             .OrderByDescending(t => t.VersionNumber)
             .FirstOrDefaultAsync();
@@ -471,8 +471,8 @@ public class EnterpriseDocumentTemplateService : IEnterpriseDocumentTemplateServ
         template = await db.DocumentTemplates
             .Include(t => t.Sections.OrderBy(s => s.SequenceOrder))
                 .ThenInclude(s => s.DocumentClause)
-            .Where(t => t.DocumentTypeCode == documentTypeCode 
-                     && t.IsActive 
+            .Where(t => t.DocumentTypeCode == documentTypeCode
+                     && t.IsActive
                      && t.ApprovalStatus == "Approved")
             .OrderByDescending(t => t.FinancialYear)
             .ThenByDescending(t => t.VersionNumber)

@@ -76,6 +76,23 @@ Every page must pass all 16 items before being declared complete:
 
 ---
 
+### 🛡️ ISO 9001:2015 & DPSA Directive Compliant Atomic Audit Logging Standard
+1. **Zero Partial Commits & Transactional Double-Write**:
+   - Every domain entity mutation and its associated audit log entry MUST be executed atomically within a single transactional unit via `IAtomicAuditTransactionManager.ExecuteAtomicAsync` or `ExecuteAtomicBatchAsync`.
+   - In SQL Server environments, user transactions must be enclosed within `db.Database.CreateExecutionStrategy().ExecuteAsync(...)` to ensure resilience under transient failures. Any failure in business logic, specification validation, or persistence MUST trigger an immediate, complete rollback of both entity mutations and audit entries (`RollbackAsync()`).
+2. **ISO 9001:2015 Clause 7.5 Control of Documented Information**:
+   - Every audit entry MUST preserve mandatory identification attributes (`EntityName`, `ActionName`, `Actor`), positive auto-generated integer `RecordId`, and structured differential state capture (`before` and `after` snapshots in `MetadataJson`).
+   - Every recorded transaction computes an immutable SHA-256 digital security seal (`ComputeDigitalSecuritySeal`) across the payload, enabling real-time cryptographic tamper detection and non-repudiation.
+3. **DPSA Information Security Directive & CGICTPF Public Sector Compliance**:
+   - **Zero Anonymous Actors**: 100% actor accountability is strictly enforced. Any attempt to record mutations with empty, `"ANONYMOUS"`, or `"UNKNOWN"` actors must fail fast and abort the transaction.
+   - **Chronological UTC Precision**: Audit timestamps must record UTC timestamps with sub-second precision; future-dated timestamps exceeding reasonable drift thresholds are rejected.
+   - **POPIA Sensitive PII Redaction**: Sensitive personal identifiers (such as 13-digit RSA National ID numbers and bank account numbers) must be masked in `MetadataJson` payloads before database persistence.
+   - **PFMA Maker-Checker Segregation of Duties**: Approvals and statutory signoffs (e.g., Banking Details, Discretionary Grant MoAs, Tranche Claims) must verify that the creator and approver are distinct individuals (`CreatedBy != ApproverUserId`).
+4. **Auditor Verification Portal**:
+   - Administrative users and statutory auditors inspect logs and evaluate compliance at `/admin/audit-logs` and `/admin/audit-compliance` via `IIsoDpsaAuditComplianceService`.
+
+---
+
 ### 🛡️ Mandatory Grant (MG / WSP) Submission Window & Extension Governance Standard
 1. **Statutory Submission Deadline & Cutoff Invariant**:
    - In terms of Regulation 4(1) of the SETA Grant Regulations under the Skills Development Act 97 of 1998, the statutory annual submission window for Workplace Skills Plans (WSP) and Annual Training Reports (ATR) closes strictly on **30 April** (`Governance:WspAnnualSubmissionDeadline`).
@@ -93,6 +110,25 @@ Every page must pass all 16 items before being declared complete:
    - Never name a `.razor` component file with the exact same identifier as a Domain Entity within the same namespace (e.g. avoid `WspExtensionRequest.razor` when `Nsdms.Domain.Entities.WspExtensionRequest` exists). Use `WspExtensionApply.razor` or an explicit `@using WspExtensionRequest = Nsdms.Domain.Entities.WspExtensionRequest` alias to avoid Roslyn compiler class shadowing.
 5. **Audited Double-Write**:
    - All extension submissions, reviews, adjudications, and status changes must perform atomic double-writes into `audit_logs` capturing before and after state snapshots.
+
+---
+
+### 🛡️ Mandatory Grant (WSP / ATR) Submission Window Gating & Countdown Alert System (Option B — The Smart Responsive Ticker)
+1. **Dual-Scope Statutory Deadline Resolution**:
+   - The submission window MUST be resolved across two scopes:
+     - **Global Sector Scope** (`OrganisationId == null`): Resolves against gazetted statutory dates (`01 Jan` to `30 April 23:59:59 SAST`).
+     - **Employer-Specific Scope** (`OrganisationId != null`): If an approved `WspExtensionRequest` exists for the given organisation and scheme year (`GrantedExtensionDate > StandardDeadline`), the effective deadline is dynamically overridden by the granted extension date (capped at `31 May`).
+2. **Context-Adaptive Action Button Morphing**:
+   - The "New WSP Submission" / "Initiate WSP" button must adapt dynamically:
+     - If Window Open: Active Primary button (`New WSP Submission`).
+     - If Window Closed & No Approved Extension: Replaced by an Amber Outlined action button (`Request Deadline Extension`) routing to `/wsp/extension-request`.
+     - If Window Closed but Approved Extension Active: Active button displaying `New WSP Submission (Extension Active)`.
+3. **Reactive Countdown Component Invariant**:
+   - Pages rendering WSP intake controls (`/wsp`, `/wsp/create`, `/wsp/submit`, `/employers/{id}`) MUST embed the standardized `<WspWindowCountdownBadge>` component.
+   - The component runs a client-side sub-second ticker loop using `PeriodicTimer` with clean `IAsyncDisposable` circuit disposal and 60-second background server resynchronization.
+   - Urgency visual tiers: `Normal` (> 14 days), `Warning` (<= 14 days), `Critical` (<= 72 hours with pulsating animation), `ExtensionActive` (Green/Success), `Closed` (Red/Error), and `Upcoming` (Info).
+4. **Hard Server-Side Mutation Gate**:
+   - `WspService.CreateAsync`, `UpdateAsync`, and `UpdateSubmissionStatusAsync` MUST invoke `IsSubmissionWindowOpenAsync` before transitioning to `"Submitted"` status. Any submission post-deadline without an approved extension MUST throw an informative `InvalidOperationException`. Draft saves remain permitted to prevent data loss.
 
 ---
 
@@ -1394,4 +1430,75 @@ Every page must pass all 16 items before being declared complete:
    - In Blazor `.razor` component markup, any attribute value (such as `Placeholder="@merseta.org.za"`) containing an `@` character that is intended as a literal string MUST be escaped as `@@` (e.g. `Placeholder="@@merseta.org.za"`). Failing to escape `@` causes the Razor compiler to parse the subsequent string as a C# expression, triggering Roslyn error `CS0103: The name 'xxx' does not exist in the current context`.
 2. **Dynamic Resilience & Health Probe Governance**:
    - All cloud circuit-breaker thresholds, discovery probe URLs, probe timeouts, employee internal domain matches, and lockout limits must be dynamically resolved via `ISystemConfigurationService` and managed via administrative UI with audited double-write persistence. Never embed static literals for domain suffixes or network timeouts in service classes.
+
+---
+
+### 🛡️ Dynamic Business Rule Engine & Sandbox Type Resilience Standard
+1. **Dynamic Expression Operand Typing & Serialization Invariant**:
+   - In dynamic lambda expression evaluation engines (e.g. `RulesEngine` / `System.Linq.Dynamic.Core`), dynamic evaluation against JSON test payloads must normalize numeric and boolean tokens into strongly typed CLR primitives (`long`, `double`, `bool`) rather than raw `JsonElement` or untyped `object`.
+   - Never pass `JsonSerializer.Deserialize<ExpandoObject>` directly to rule compilation as it leaves property values as `JsonElement`. Always use `EvaluateWorkflowFromJsonAsync` with safe type conversion (`ConvertJsonElementToDynamic`).
+2. **Context-Aware Sandbox Presets & Dynamic Variable Discovery**:
+   - The interactive rule sandbox (`RuleDetail.razor`) must automatically pre-populate valid test JSON payloads matching the active workflow's registered variables upon load (`SetDefaultPresetForWorkflow`).
+   - Standard presets must be provided for every statutory workflow (`ArplTradeEligibility`, `ETQAPractitionerVerification`, `LearnerStpEvaluation`, `FinancialClaimApproval`).
+   - Dynamic chips displaying the available/expected variables in the workflow must be rendered above the JSON test editor.
+3. **Actionable Missing Property Diagnostics**:
+   - When dynamic LINQ expressions encounter missing payload variables (`Operator '...' incompatible with operand types 'Object' and 'Object'`), the rule service must intercept the type mismatch and diagnose missing variables clearly, guiding administrators on exactly which variables are missing from their test JSON.
+
+---
+
+### 🛡️ Mandatory Grant (MG / WSP) Submission Window Hub & Gazetted OFO Sets Standard (Option A)
+1. **Multi-Version Gazetted OFO Sets Model**:
+   - Mandatory Grant (WSP / ATR) submission cycles must be bound to a gazetted version of the OFO taxonomy (`OfoCodeSet`, e.g. "OFO 2019 Release", "OFO 2021 Release", "OFO 2025 Release").
+   - Each set links to specific active OFO codes via `OfoCodeSetItem`.
+2. **Active OFO Code Invariant**:
+   - In accordance with statutory governance, occupations scoped to a Mandatory Grant submission window (`MgWindowOfoCode`) can STRICTLY only come from active OFO codes (`lookup.OfoCodeType.Active == true`).
+   - If an attempt is made to scope an inactive or deprecated OFO code, `IMgWindowGovernanceService` must reject it with an `InvalidOperationException`.
+3. **Clean Single-Schedule Hub (A1 List / A3 Detail Hub - 2-Tab Architecture)**:
+   - Master list at `/admin/mg-windows` provides an overview of all annual MG cycles, displaying scheme year, governing OFO release badge (`OFO 2025 Release (v25)`), lodgement dates, review status, and quick drill-down.
+   - Detail hub at `/admin/mg-windows/{id:int}` opens in read-only View mode by default with exactly 2 tabs:
+     - Header: Sticky top bar with dual authorisation workflow status badge, submission dates, and action zone.
+     - Tab 1 (General & Statutory Schedule): Window parameters, statutory lodgement dates, operational state, and the "Governing OFO Framework Version & Statutory Authority" card displaying the version release badge and gazette provenance. In edit/propose mode, a clean dropdown `<MudSelect>` allows selecting the active set.
+     - Tab 2 (Audited Proposal & Review History): Non-repudiable audit timeline tracking proposals, review submissions, and adjudications from `audit_logs`.
+   - **OFO Set Immutability & Dropdown Binding Invariant**: Gazetted OFO sets are immutable national reference benchmarks. Submission windows bind directly to an active version via a single dropdown lookup (`OfoCodeSetId`). Never render per-window ChildGrids for adding, deleting, or editing individual occupations on the submission window hub.
+4. **Dual Authorisation Maker-Checker Governance & Audited Double-Write**:
+   - Opening, editing, and activating a window enforces Segregation of Duties: the proposing officer cannot approve their own window (`ProposedByUserId != currentUsername`).
+   - Activating a window synchronizes the statutory submission dates into `ISystemConfigurationService` keys (`Governance:WspAnnualSubmissionDeadline`).
+   - All window creations, revisions, reviews, adjudications, and OFO scoping mutations record double-writes in `audit_logs`.
+5. **MudSwitch Duplicate Parameter Invariant**:
+   - In MudBlazor 8, do not combine `@bind-Value` and `ValueChanged` on `<MudSwitch>` (triggers `RZ10010: The component parameter 'ValueChanged' is used two or more times for this component`). Use `Value="_prop" ValueChanged="@(async (bool v) => ...)"`.
+
+---
+
+### 🛡️ Form Input Focus & Selection Highlighting Standard (Modern Enterprise Soft Halo Ring)
+1. **Bifurcated Focus Strategy**:
+   - Interactive navigable controls (`.mud-button:focus-visible`, `.mud-icon-button:focus-visible`, `.mud-nav-link:focus-visible`, `.mud-tab:focus-visible`, `.mud-chip:focus-visible`, `a:focus-visible`, `button:focus-visible`) retain crisp, accessible focus rings: `outline: 2px solid var(--brand-gold) !important; outline-offset: 2px !important;`.
+   - Form inputs and text fields (`.mud-input-control`, `.mud-input`, `.mud-input-slot`, `input`, `textarea`, `select`) MUST suppress all raw outer container and user-agent outlines: `outline: none !important; outline-offset: 0 !important; box-shadow: none !important;`. Never apply `outline` directly to `.mud-input-control:focus-within`.
+2. **Unified Soft Halo Ring**:
+   - Focus styling for form fields MUST be applied directly to the fieldset border (`fieldset.mud-input-outlined-border`) or input container, contoured to match the field's 8px corner radius (`--radius-md`):
+     - `border-color: var(--brand-gold) !important;` (1.5px border)
+     - `box-shadow: 0 0 0 3.5px rgba(212, 147, 54, 0.20) !important;` (Light mode) and `rgba(212, 147, 54, 0.32) !important;` (Dark mode)
+     - Smooth cubic-bezier transition on border-color and box-shadow.
+3. **Floating Label & Adornment Synchronization**:
+   - When focused, `.mud-input-control:focus-within .mud-input-label` smoothly shifts to brand accent (`var(--brand-gold)` with `font-weight: 600`).
+4. **Zero Double-Box / Clashing Artifact Invariant**:
+   - No form field may render concentric nested boxes, inner black UA rectangles, or offset outer boxes cutting through floating labels or helper text.
+
+---
+
+### 🛡️ Accessible Landmark & Heading Hierarchy Invariant (WCAG SC 1.3.1)
+1. **Single `<main>` Landmark**: The outer application layout (`MainLayout.razor`) provides the single `<main id="main-content">` landmark. Multi-step wizards (`WizardShell`), form shells, and tabs MUST NEVER render nested `<main>` tags; use semantic `<section>` or `<article>`.
+2. **Single Primary `<h1>` per Page**: Every master and detail page header (`EntityHeader.razor`) MUST render the primary record title with `HtmlTag="h1"` (configured visually with `Typo.h5` or `Typo.h4`). Page subtitles and cards must use `<h2>` or `<h3>` (`Typo.h6` / `Typo.subtitle1`).
+
+---
+
+### 🛡️ Form Field Spacing & Typography Budget
+1. **Zero Child Gutters**: Primitives such as `<ReadOnlyField>` and `<MudTextField>` MUST NOT define root bottom margins (e.g. avoid `mb-4`). Spacing between form fields must be governed exclusively by parent grid spacing (`<MudGrid Spacing="3">`).
+2. **Sentence Case Labels**: Field labels must use sentence case at `0.75rem` (`Typo.caption`, `font-weight: 600`, opacity `0.85`). `text-uppercase` is strictly prohibited on labels to maintain readability for complex statutory descriptions and acronyms.
+3. **Sticky Action Clearance**: All forms utilizing sticky action bars (`FormShell`) must wrap content in `.nsdms-form-shell` with mandatory `padding-bottom: 84px !important` to prevent action bar overlap over input fields.
+
+---
+
+### 🛡️ Static Cache & In-Memory Test Isolation Invariant
+1. **Cache Reset Expose**: Any application service utilizing `static` in-memory dictionaries or memory caches for lookup optimization (e.g. `LookupService._lookupCache`) must expose instance `ClearCache()` and static `ResetCache()` methods.
+2. **Test Setup Invariant**: Unit and integration test fixtures that construct mock or in-memory databases (`TestDbContextFactory`) MUST call `service.ClearCache()` or `ServiceType.ResetCache()` in `Arrange` (or test class constructor/fixture) to prevent test contamination and assertion failures from prior test executions.
 

@@ -933,7 +933,7 @@ public class LevyService : ILevyService
 
         // Load active Chambers dynamically from the database lookup table (zero hardcoding)
         var dbChambers = await db.ChamberTypes.Where(c => c.Active).OrderBy(c => c.Name).ToListAsync();
-        
+
         var breakdownMap = new Dictionary<string, ChamberLevyBreakdownDto>(StringComparer.OrdinalIgnoreCase);
         var seenEmployersPerChamber = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
 

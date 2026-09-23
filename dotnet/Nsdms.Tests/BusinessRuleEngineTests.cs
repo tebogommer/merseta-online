@@ -167,6 +167,90 @@ public class BusinessRuleEngineTests
     }
 
     [Fact]
+    public async Task TestRuleExpression_ArplExperienceThreshold_ValidJson_EvaluatesToTrue()
+    {
+        var (_, _, _, _, ruleEngine) = CreateTestContext();
+
+        var request = new RuleSandboxTestRequest
+        {
+            Expression = "ExperienceMonths >= RequiredExperienceMonths",
+            SampleJsonPayload = "{\"ExperienceMonths\": 48, \"RequiredExperienceMonths\": 36}"
+        };
+
+        var result = await ruleEngine.TestRuleExpressionAsync(request);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(result.ExpressionEvaluatedToTrue);
+        Assert.Null(result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task TestRuleExpression_MissingVariables_ProvidesHelpfulDiagnosticMessage()
+    {
+        var (_, _, _, _, ruleEngine) = CreateTestContext();
+
+        // Pass payload missing ExperienceMonths and RequiredExperienceMonths
+        var request = new RuleSandboxTestRequest
+        {
+            Expression = "ExperienceMonths >= RequiredExperienceMonths",
+            SampleJsonPayload = "{\"Age\": 35.0, \"HasMinorGuardian\": false}"
+        };
+
+        var result = await ruleEngine.TestRuleExpressionAsync(request);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.ExpressionEvaluatedToTrue);
+        Assert.NotNull(result.ErrorMessage);
+        Assert.Contains("missing from the input JSON", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task EvaluateWorkflowFromJson_ArplEligibility_ValidJson_EvaluatesSuccessfully()
+    {
+        var (_, _, _, _, ruleEngine) = CreateTestContext();
+
+        var json = "{\"ExperienceMonths\": 48, \"RequiredExperienceMonths\": 36, \"IsCategory7\": true, \"IsDesignatedToolkitTrade\": true}";
+        var result = await ruleEngine.EvaluateWorkflowFromJsonAsync("ArplTradeEligibility", json);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.TotalRulesEvaluated);
+        Assert.Equal(2, result.PassedCount);
+        Assert.Empty(result.Failures);
+    }
+
+    [Fact]
+    public async Task EvaluateWorkflowFromJson_ArplInsufficientExperience_FailsExpectedRule()
+    {
+        var (_, _, _, _, ruleEngine) = CreateTestContext();
+
+        var json = "{\"ExperienceMonths\": 24, \"RequiredExperienceMonths\": 36, \"IsCategory7\": false, \"IsDesignatedToolkitTrade\": false}";
+        var result = await ruleEngine.EvaluateWorkflowFromJsonAsync("ArplTradeEligibility", json);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Failures, f => f.RuleName == "ExperienceThresholdGate");
+    }
+
+    [Fact]
+    public async Task TestRuleExpression_UnaryNotOnOmittedBoolean_NormalizesAndEvaluatesSuccessfully()
+    {
+        var (_, _, _, _, ruleEngine) = CreateTestContext();
+
+        // Pass payload with IsDesignatedToolkitTrade but omitting IsCategory7
+        var request = new RuleSandboxTestRequest
+        {
+            Expression = "!IsCategory7 || IsDesignatedToolkitTrade",
+            SampleJsonPayload = "{\"IsDesignatedToolkitTrade\": true}"
+        };
+
+        var result = await ruleEngine.TestRuleExpressionAsync(request);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(result.ExpressionEvaluatedToTrue);
+        Assert.Null(result.ErrorMessage);
+        Assert.Contains("IsCategory7", result.DiagnosticDetails);
+    }
+
+    [Fact]
     public async Task DiscretionaryGrantClaim_DynamicThreshold_ResolvesViaSystemConfig()
     {
         var (factory, db, audit, sysConfig, _) = CreateTestContext();

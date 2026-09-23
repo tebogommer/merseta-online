@@ -57,7 +57,7 @@ public class CaslAbilityService : ICaslAbilityService
             .ToListAsync();
 
         var perms = await _rolePermissionService.GetUserPermissionsAsync(userId);
-        var isAdmin = roles.Any(r => r.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase) || 
+        var isAdmin = roles.Any(r => r.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase) ||
                                      r.Equals("Admin", StringComparison.OrdinalIgnoreCase));
 
         var associatedOrgIds = new List<int>();

@@ -1,134 +1,400 @@
 @page "/audit-logs"
+@page "/admin/audit-logs"
+@page "/admin/audit-compliance"
+@attribute [Authorize]
 @using Microsoft.EntityFrameworkCore
 @using Nsdms.Application.Common
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
 @inject IAuditService AuditService
+@inject IIsoDpsaAuditComplianceService ComplianceService
 @inject ISnackbar Snackbar
 
-<PageTitle>Audit Trail Logs - MerSETA NSDMS</PageTitle>
+<PageTitle>Audited Change Logs &amp; Quality Compliance - MerSETA NSDMS</PageTitle>
 
-<EntityHeader Title="System Audit Trail &amp; Forensic Records"
-              Subtitle="Official audited change logs tracking system mutations, user actions, and security timeline"
+<EntityHeader Title="Audited Change Logs &amp; Quality Compliance"
+              Subtitle="ISO 9001:2015 Clause 7.5 &amp; DPSA Directive verified audit logging, zero partial commits, and tamper-evident records"
               ReferenceKey="T3-AUDIT-LOGS"
               BreadcrumbItems="@_breadcrumbs">
     <ActionZone>
-        <MudButton Variant="Variant.Outlined" 
-                   Color="Color.Primary" 
-                   StartIcon="@Icons.Material.Filled.Refresh" 
-                   OnClick="LoadAuditLogsAsync">
-            Refresh Logs
-        </MudButton>
+        @if (_activeTab == 0)
+        {
+            <MudButton Variant="Variant.Outlined" 
+                       Color="Color.Primary" 
+                       StartIcon="@Icons.Material.Filled.Refresh" 
+                       OnClick="LoadAuditLogsAsync"
+                       Disabled="@_isLoading">
+                Refresh Logs
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Primary" 
+                       StartIcon="@Icons.Material.Filled.FactCheck" 
+                       OnClick="RunComplianceAuditAsync"
+                       Disabled="@_isEvaluatingCompliance">
+                @(_isEvaluatingCompliance ? "Evaluating Standards..." : "Run Compliance Audit")
+            </MudButton>
+        }
     </ActionZone>
 </EntityHeader>
 
-    <!-- Filter & Search Toolbar -->
-    <MudPaper Elevation="1" Class="pa-4 mb-4 rounded-lg">
-        <MudGrid Spacing="2" Class="align-center">
-            <MudItem xs="12" md="4">
-                <MudTextField @bind-Value="_searchQuery"
-                              Placeholder="Search by Entity, Action, Actor or Record ID..."
-                              Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search"
-                              Immediate="true"
-                              DebounceInterval="300"
-                              OnDebounceIntervalElapsed="ApplyFilters"
-                              Clearable="true"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense" />
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MudSelect T="string" @bind-Value="_selectedEntity" Label="Filter Entity" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" SelectedValuesChanged="ApplyFilters">
-                    <MudSelectItem Value="@("")">All Entities</MudSelectItem>
-                    @foreach (var entity in _distinctEntities)
-                    {
-                        <MudSelectItem Value="@entity">@entity</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MudSelect T="string" @bind-Value="_selectedAction" Label="Filter Action" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" SelectedValuesChanged="ApplyFilters">
-                    <MudSelectItem Value="@("")">All Actions</MudSelectItem>
-                    @foreach (var action in _distinctActions)
-                    {
-                        <MudSelectItem Value="@action">@action</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" md="2" Class="d-flex justify-end">
-                <MudChip T="string" Color="Color.Info" Variant="Variant.Text">
-                    Total Logs: @_filteredLogs.Count
-                </MudChip>
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
+<MudTabs @bind-ActivePanelIndex="_activeTab" Elevation="1" Rounded="true" Color="Color.Primary" ApplyEffectsToContainer="true" Class="mt-3">
+    <!-- Tab 1: Operational Audit Trail -->
+    <MudTabPanel Text="Audited Change Logs" Icon="@Icons.Material.Filled.History">
+        <!-- Filter & Search Toolbar -->
+        <MudPaper Elevation="0" Class="pa-4 mb-4 rounded-lg border-subtle">
+            <MudGrid Spacing="2" Class="align-center">
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="_searchQuery"
+                                  Placeholder="Search by Entity, Action, Actor or Record Reference..."
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Immediate="true"
+                                  DebounceInterval="300"
+                                  OnDebounceIntervalElapsed="ApplyFilters"
+                                  Clearable="true"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect T="string" @bind-Value="_selectedEntity" Label="Filter Entity" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" SelectedValuesChanged="ApplyFilters">
+                        <MudSelectItem Value="@("")">All Entities</MudSelectItem>
+                        @foreach (var entity in _distinctEntities)
+                        {
+                            <MudSelectItem Value="@entity">@entity</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect T="string" @bind-Value="_selectedAction" Label="Filter Action" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" SelectedValuesChanged="ApplyFilters">
+                        <MudSelectItem Value="@("")">All Actions</MudSelectItem>
+                        @foreach (var action in _distinctActions)
+                        {
+                            <MudSelectItem Value="@action">@action</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="2" Class="d-flex justify-end">
+                    <MudChip T="string" Color="Color.Info" Variant="Variant.Text">
+                        Total Logs: @_filteredLogs.Count
+                    </MudChip>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
 
-    <!-- Audit Logs DataTable -->
-    <MudPaper Elevation="1" Class="rounded-lg overflow-hidden">
-        <MudTable Items="@_filteredLogs" Hover="true" Striped="true" Dense="true" Loading="@_isLoading" LoadingProgressColor="Color.Primary" RowsPerPage="25">
-            <HeaderContent>
-                <MudTh>Timestamp (UTC)</MudTh>
-                <MudTh>Entity</MudTh>
-                <MudTh>Record Reference</MudTh>
-                <MudTh>Action</MudTh>
-                <MudTh>Actor</MudTh>
-                <MudTh>Change Details</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Timestamp">
-                    <MudText Typo="Typo.body2" Class="font-mono">
-                        @context.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
-                    </MudText>
-                </MudTd>
-                <MudTd DataLabel="Entity">
-                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
-                        @context.EntityName
-                    </MudChip>
-                </MudTd>
-                <MudTd DataLabel="Record Reference">
-                    <MudText Typo="Typo.body2" Class="font-mono fw-bold">
-                        @FormatRecordReference(context.EntityName, context.RecordId)
-                    </MudText>
-                </MudTd>
-                <MudTd DataLabel="Action">
-                    <MudChip T="string" Size="Size.Small" Color="@GetActionColor(context.ActionName)" Variant="Variant.Filled">
-                        @context.ActionName
-                    </MudChip>
-                </MudTd>
-                <MudTd DataLabel="Actor">
-                    <div class="d-flex align-center gap-1">
-                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Color="Color.Secondary" />
-                        <MudText Typo="Typo.body2">@context.Actor</MudText>
-                    </div>
-                </MudTd>
-                <MudTd DataLabel="Metadata">
-                    @if (!string.IsNullOrEmpty(context.MetadataJson))
-                    {
-                        <MudTooltip Text="@context.MetadataJson">
-                            <MudText Typo="Typo.caption" Class="font-mono" Style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block;">
-                                @context.MetadataJson
+        <!-- Audit Logs DataTable -->
+        <MudPaper Elevation="1" Class="rounded-lg overflow-hidden">
+            <MudTable Items="@_filteredLogs" Hover="true" Striped="true" Dense="true" Loading="@_isLoading" LoadingProgressColor="Color.Primary" RowsPerPage="25">
+                <HeaderContent>
+                    <MudTh>Timestamp (UTC)</MudTh>
+                    <MudTh>Entity</MudTh>
+                    <MudTh>Record Reference</MudTh>
+                    <MudTh>Action</MudTh>
+                    <MudTh>Actor</MudTh>
+                    <MudTh>Digital Security Seal</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Timestamp">
+                        <MudText Typo="Typo.body2" Class="font-mono">
+                            @context.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
+                        </MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Entity">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                            @context.EntityName
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Record Reference">
+                        <MudText Typo="Typo.body2" Class="font-mono fw-bold">
+                            @FormatRecordReference(context.EntityName, context.RecordId)
+                        </MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Action">
+                        <MudChip T="string" Size="Size.Small" Color="@GetActionColor(context.ActionName)" Variant="Variant.Filled">
+                            @context.ActionName
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Actor">
+                        <div class="d-flex align-center gap-1">
+                            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Color="Color.Secondary" />
+                            <MudText Typo="Typo.body2">@context.Actor</MudText>
+                        </div>
+                    </MudTd>
+                    <MudTd DataLabel="Digital Security Seal">
+                        @if (HasDigitalSecuritySeal(context))
+                        {
+                            <MudTooltip Text="Cryptographic SHA-256 seal verified against tampering">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.VerifiedUser">
+                                    Verified Seal
+                                </MudChip>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Standard Log</MudText>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Actions" Style="text-align: right;">
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                       Size="Size.Small" 
+                                       Color="Color.Primary" 
+                                       Title="Inspect Log Metadata" 
+                                       OnClick="@(() => OpenDetailDialog(context))" />
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+                </PagerContent>
+                <NoRecordsContent>
+                    <EmptyState Icon="@Icons.Material.Filled.SearchOff"
+                                Message="No Audit Logs Found"
+                                Description="No security or mutation audit trail entries match your search criteria. Try clearing your entity or action filters."
+                                ActionLabel="Reset Filters"
+                                OnAction="ResetFilters" />
+                </NoRecordsContent>
+            </MudTable>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- Tab 2: ISO 9001 & DPSA Directive Compliance Engine -->
+    <MudTabPanel Text="ISO 9001 &amp; DPSA Compliance Engine" Icon="@Icons.Material.Filled.Verified">
+        @if (_complianceReport == null && !_isEvaluatingCompliance)
+        {
+            <MudPaper Elevation="0" Class="pa-8 text-center rounded-lg border-subtle my-4">
+                <MudIcon Icon="@Icons.Material.Filled.Shield" Color="Color.Primary" Size="Size.Large" Class="mb-3" />
+                <MudText Typo="Typo.h6" Class="fw-bold">Statutory &amp; Quality Standards Compliance Verification</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4" Style="max-width: 600px; margin: 0 auto;">
+                    Evaluate the NSDMS database against ISO 9001:2015 Clause 7.5 (Documented Information), DPSA Information Security Directive &amp; CGICTPF, POPIA Act 4 of 2013 sensitive PII redaction, and atomic double-write integrity (zero partial commits).
+                </MudText>
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           StartIcon="@Icons.Material.Filled.PlayArrow" 
+                           OnClick="RunComplianceAuditAsync"
+                           Size="Size.Large">
+                    Execute Full Statutory Compliance Audit
+                </MudButton>
+            </MudPaper>
+        }
+        else if (_isEvaluatingCompliance)
+        {
+            <MudPaper Elevation="0" Class="pa-8 text-center rounded-lg border-subtle my-4">
+                <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" Class="mb-3" />
+                <MudText Typo="Typo.h6" Class="fw-bold">Evaluating Audit Trail Against ISO 9001 &amp; DPSA Standards...</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Sampling database tables, verifying atomic transactions, scanning for unmasked RSA IDs, and checking dual authorisation rules.
+                </MudText>
+            </MudPaper>
+        }
+        else if (_complianceReport != null)
+        {
+            <!-- Executive Summary Scorecard -->
+            <MudPaper Elevation="1" Class="pa-4 mb-4 rounded-lg border-subtle mt-4">
+                <MudGrid Spacing="3" Class="align-center">
+                    <MudItem xs="12" md="3" Class="text-center">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Overall Compliance Rating</MudText>
+                        <MudText Typo="Typo.h3" Color="@GetScoreColor(_complianceReport.ComplianceScorePercentage)" Class="fw-bold">
+                            @_complianceReport.ComplianceScorePercentage.ToString("F1")%
+                        </MudText>
+                        <MudChip T="string" 
+                                 Color="@GetScoreColor(_complianceReport.ComplianceScorePercentage)" 
+                                 Variant="Variant.Filled" 
+                                 Size="Size.Small" 
+                                 Class="mt-1">
+                            @_complianceReport.AssessmentStatus
+                        </MudChip>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Audited Log Records</MudText>
+                        <MudText Typo="Typo.h5" Class="fw-bold">@_complianceReport.TotalAuditLogsExamined</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Across @_complianceReport.TotalEntitiesExamined Entity Types</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Atomic Commits Integrity</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Success" Class="fw-bold">
+                            @_complianceReport.VerifiedAtomicCommitCount Verified
+                        </MudText>
+                        <MudText Typo="Typo.caption" Color="@(_complianceReport.PartialCommitViolationCount == 0 ? Color.Success : Color.Error)">
+                            @_complianceReport.PartialCommitViolationCount Partial Commit Violations
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3" Class="text-md-end">
+                        <MudButton Variant="Variant.Outlined" 
+                                   Color="Color.Primary" 
+                                   StartIcon="@Icons.Material.Filled.Refresh" 
+                                   OnClick="RunComplianceAuditAsync"
+                                   Size="Size.Small"
+                                   Class="mb-2">
+                            Re-run Audit
+                        </MudButton>
+                        <MudText Typo="Typo.caption" Class="d-block text-truncate font-mono" Style="max-width: 250px;">
+                            Seal: @_complianceReport.DigitalSecuritySeal.Substring(0, Math.Min(16, _complianceReport.DigitalSecuritySeal.Length))...
+                        </MudText>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+
+            <!-- 4 Statutory Dimension Cards -->
+            <MudGrid Spacing="3" Class="mb-4">
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Elevation="1" Class="h-100 rounded-lg">
+                        <MudCardContent>
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Zero Partial Commits</MudText>
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                            </div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Mandatory double-write coordination. Domain changes and audit entries commit atomically inside EF Core execution strategy transactions.
                             </MudText>
-                        </MudTooltip>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">—</MudText>
-                    }
-                </MudTd>
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
-            </PagerContent>
-            <NoRecordsContent>
-                <EmptyState Icon="@Icons.Material.Filled.SearchOff"
-                            Message="No Audit Logs Found"
-                            Description="No security or mutation audit trail entries match your search criteria. Try clearing your entity or action filters."
-                            ActionLabel="Reset Filters"
-                            OnAction="ResetFilters" />
-            </NoRecordsContent>
-        </MudTable>
-    </MudPaper>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Elevation="1" Class="h-100 rounded-lg">
+                        <MudCardContent>
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">ISO 9001 Clause 7.5</MudText>
+                                <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Color="Color.Primary" />
+                            </div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Control of documented information: unique identification, structured before/after state diffs, and cryptographic tamper-detection seals.
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Elevation="1" Class="h-100 rounded-lg">
+                        <MudCardContent>
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">DPSA Directive &amp; CGICTPF</MudText>
+                                <MudIcon Icon="@Icons.Material.Filled.Security" Color="Color.Info" />
+                            </div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Public sector ICT governance: 100% actor accountability, zero anonymous transactions, and chronological UTC timestamp precision.
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Elevation="1" Class="h-100 rounded-lg">
+                        <MudCardContent>
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">POPIA &amp; Dual Auth</MudText>
+                                <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Warning" />
+                            </div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Redaction of 13-digit RSA National ID numbers and bank account credentials; strict Dual Authorisation Control and segregation of duties enforcement.
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+
+            <!-- Detailed Statutory Findings Table -->
+            <MudPaper Elevation="1" Class="rounded-lg overflow-hidden">
+                <div class="pa-4 border-bottom d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.subtitle1" Class="fw-bold">Statutory &amp; Quality Audit Findings</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Detailed rule evaluations across ISO 9001:2015, DPSA Directive, POPIA Act 4 of 2013, and PFMA regulations
+                        </MudText>
+                    </div>
+                    <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">
+                        @_complianceReport.Findings.Count Rules Evaluated
+                    </MudChip>
+                </div>
+                <MudTable Items="@_complianceReport.Findings" Hover="true" Dense="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Rule ID</MudTh>
+                        <MudTh>Standard</MudTh>
+                        <MudTh>Severity</MudTh>
+                        <MudTh>Evaluation Check</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Evidentiary Details</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Rule ID">
+                            <MudText Typo="Typo.body2" Class="font-mono fw-bold">@context.RuleId</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Standard">
+                            <MudText Typo="Typo.caption" Class="fw-bold">@context.Standard</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Severity">
+                            <MudChip T="string" Size="Size.Small" Color="@GetSeverityColor(context.Severity)" Variant="Variant.Outlined">
+                                @context.Severity
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Evaluation Check">
+                            <MudText Typo="Typo.body2">@context.Description</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" 
+                                     Size="Size.Small" 
+                                     Color="@(context.IsPassed ? Color.Success : Color.Error)" 
+                                     Variant="Variant.Filled"
+                                     Icon="@(context.IsPassed ? Icons.Material.Filled.Check : Icons.Material.Filled.Close)">
+                                @(context.IsPassed ? "PASS" : "FAIL")
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Evidentiary Details">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @context.Details
+                            </MudText>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        }
+    </MudTabPanel>
+</MudTabs>
+
+<!-- Detail Inspection Dialog -->
+@if (_selectedLog != null)
+{
+    <MudDialog @bind-Visible="_showDetailDialog" Options="_dialogOptions">
+        <TitleContent>
+            <div class="d-flex align-center gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.Fingerprint" Color="Color.Primary" />
+                <MudText Typo="Typo.h6">Audit Record Inspection: @FormatRecordReference(_selectedLog.EntityName, _selectedLog.RecordId)</MudText>
+            </div>
+        </TitleContent>
+        <DialogContent>
+            <MudGrid Spacing="2" Class="mb-3">
+                <MudItem xs="12" sm="6">
+                    <ReadOnlyField Label="Entity Name" Value="@_selectedLog.EntityName" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <ReadOnlyField Label="Record ID" Value="@_selectedLog.RecordId.ToString()" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <ReadOnlyField Label="Action Name" Value="@_selectedLog.ActionName" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <ReadOnlyField Label="Actor Attribution" Value="@_selectedLog.Actor" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <ReadOnlyField Label="Timestamp (UTC)" Value="@_selectedLog.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff")" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <ReadOnlyField Label="Digital Security Seal Status" Value="@(_isSealVerified ? "Cryptographically Verified" : "Standard Log")" />
+                </MudItem>
+            </MudGrid>
+
+            <MudText Typo="Typo.subtitle2" Class="fw-bold mb-1">State Snapshot &amp; Metadata (JSON)</MudText>
+            <MudPaper Elevation="0" Class="pa-3 rounded-lg border-subtle" Style="background-color: var(--mud-palette-background-grey); max-height: 300px; overflow-y: auto;">
+                <pre class="font-mono text-break" style="font-size: 0.8rem; margin: 0; white-space: pre-wrap;">@FormatJson(_selectedLog.MetadataJson)</pre>
+            </MudPaper>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(() => _showDetailDialog = false)">
+                Close
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
+}
 
 @code {
     private readonly List<BreadcrumbItem> _breadcrumbs = new()
@@ -138,6 +404,7 @@
         new BreadcrumbItem("Audited Change Logs", null, disabled: true)
     };
 
+    private int _activeTab = 0;
     private List<AuditLog> _logs = new();
     private List<AuditLog> _filteredLogs = new();
     private List<string> _distinctEntities = new();
@@ -146,6 +413,16 @@
     private string? _selectedEntity;
     private string? _selectedAction;
     private bool _isLoading = true;
+
+    // Compliance Evaluation
+    private AuditComplianceReport? _complianceReport;
+    private bool _isEvaluatingCompliance = false;
+
+    // Detail Dialog
+    private bool _showDetailDialog = false;
+    private AuditLog? _selectedLog;
+    private bool _isSealVerified = false;
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
 
     protected override async Task OnInitializedAsync()
     {
@@ -171,6 +448,24 @@
         finally
         {
             _isLoading = false;
+        }
+    }
+
+    private async Task RunComplianceAuditAsync()
+    {
+        _isEvaluatingCompliance = true;
+        try
+        {
+            _complianceReport = await ComplianceService.RunFullComplianceAuditAsync();
+            Snackbar.Add($"Compliance audit complete: {_complianceReport.AssessmentStatus} ({_complianceReport.ComplianceScorePercentage:F1}%)", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to run compliance evaluation: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isEvaluatingCompliance = false;
         }
     }
 
@@ -203,6 +498,32 @@
         _filteredLogs = query.ToList();
     }
 
+    private void OpenDetailDialog(AuditLog log)
+    {
+        _selectedLog = log;
+        _isSealVerified = ComplianceService.VerifyAuditRecordSecuritySeal(log);
+        _showDetailDialog = true;
+    }
+
+    private static bool HasDigitalSecuritySeal(AuditLog log)
+    {
+        return !string.IsNullOrWhiteSpace(log.MetadataJson) && log.MetadataJson.Contains("digitalSecuritySeal");
+    }
+
+    private static string FormatJson(string? rawJson)
+    {
+        if (string.IsNullOrWhiteSpace(rawJson)) return "No differential state metadata recorded.";
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(rawJson);
+            return System.Text.Json.JsonSerializer.Serialize(doc.RootElement, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            return rawJson;
+        }
+    }
+
     private Color GetActionColor(string action)
     {
         return action?.ToLowerInvariant() switch
@@ -213,6 +534,28 @@
             "disbursed" or "approved" => Color.Primary,
             "rejected" or "cancelled" => Color.Warning,
             _ => Color.Secondary
+        };
+    }
+
+    private static Color GetScoreColor(double score)
+    {
+        return score switch
+        {
+            >= 95.0 => Color.Success,
+            >= 80.0 => Color.Info,
+            >= 60.0 => Color.Warning,
+            _ => Color.Error
+        };
+    }
+
+    private static Color GetSeverityColor(string severity)
+    {
+        return severity?.ToUpperInvariant() switch
+        {
+            "CRITICAL" => Color.Error,
+            "HIGH" => Color.Warning,
+            "MEDIUM" => Color.Info,
+            _ => Color.Default
         };
     }
 

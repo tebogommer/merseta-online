@@ -59,7 +59,7 @@ public class WspSignoffService : IWspSignoffService
     private readonly ISystemConfigurationService? _configService;
 
     public WspSignoffService(
-        INsdmsDbContextFactory contextFactory, 
+        INsdmsDbContextFactory contextFactory,
         IAuditService audit,
         ISystemConfigurationService? configService = null)
     {

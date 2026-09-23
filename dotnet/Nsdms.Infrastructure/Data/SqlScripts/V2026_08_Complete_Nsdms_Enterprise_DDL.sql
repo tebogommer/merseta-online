@@ -2765,6 +2765,112 @@ BEGIN
     CREATE NONCLUSTERED INDEX [IX_AppUser_EntraUserPrincipalName] ON [dbo].[AppUser]([EntraUserPrincipalName]) WHERE [EntraUserPrincipalName] IS NOT NULL;
 END
 
+-- ----------------------------------------------------------------------------------------------------
+-- Phase 56: Mandatory Grant Window Hub and OFO Code Sets
+-- ----------------------------------------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'OfoCodeSet' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE [dbo].[OfoCodeSet] (
+        [Id] INT IDENTITY(1,1) NOT NULL,
+        [SetYear] INT NOT NULL,
+        [Name] NVARCHAR(150) NOT NULL,
+        [Description] NVARCHAR(500) NULL,
+        [GazettedDate] DATETIME2 NULL,
+        [GazetteNumber] NVARCHAR(100) NULL,
+        [IsActive] BIT NOT NULL CONSTRAINT [DF_OfoCodeSet_IsActive] DEFAULT (1),
+        [CreatedAt] DATETIME2 NOT NULL CONSTRAINT [DF_OfoCodeSet_CreatedAt] DEFAULT (SYSUTCDATETIME()),
+        [CreatedBy] NVARCHAR(100) NULL CONSTRAINT [DF_OfoCodeSet_CreatedBy] DEFAULT ('SYSTEM'),
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL,
+        CONSTRAINT [PK_OfoCodeSet] PRIMARY KEY CLUSTERED ([Id] ASC)
+    );
+    CREATE UNIQUE NONCLUSTERED INDEX [IX_OfoCodeSet_SetYear] ON [dbo].[OfoCodeSet] ([SetYear]);
+    PRINT 'Created table [dbo].[OfoCodeSet].';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'OfoCodeSetItem' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE [dbo].[OfoCodeSetItem] (
+        [Id] INT IDENTITY(1,1) NOT NULL,
+        [OfoCodeSetId] INT NOT NULL,
+        [OfoCodeId] NVARCHAR(15) NOT NULL,
+        [MajorGroup] NVARCHAR(10) NULL,
+        [SubMajorGroup] NVARCHAR(10) NULL,
+        [MinorGroup] NVARCHAR(10) NULL,
+        [UnitGroup] NVARCHAR(10) NULL,
+        [Trade] BIT NOT NULL CONSTRAINT [DF_OfoCodeSetItem_Trade] DEFAULT (0),
+        [GreenOccupation] BIT NOT NULL CONSTRAINT [DF_OfoCodeSetItem_GreenOccupation] DEFAULT (0),
+        [GreenSkill] BIT NOT NULL CONSTRAINT [DF_OfoCodeSetItem_GreenSkill] DEFAULT (0),
+        [IsActiveInSet] BIT NOT NULL CONSTRAINT [DF_OfoCodeSetItem_IsActiveInSet] DEFAULT (1),
+        [CreatedAt] DATETIME2 NOT NULL CONSTRAINT [DF_OfoCodeSetItem_CreatedAt] DEFAULT (SYSUTCDATETIME()),
+        [CreatedBy] NVARCHAR(100) NULL CONSTRAINT [DF_OfoCodeSetItem_CreatedBy] DEFAULT ('SYSTEM'),
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL,
+        CONSTRAINT [PK_OfoCodeSetItem] PRIMARY KEY CLUSTERED ([Id] ASC),
+        CONSTRAINT [FK_OfoCodeSetItem_OfoCodeSet] FOREIGN KEY ([OfoCodeSetId]) REFERENCES [dbo].[OfoCodeSet] ([Id]) ON DELETE CASCADE
+    );
+    CREATE UNIQUE NONCLUSTERED INDEX [IX_OfoCodeSetItem_Set_Code] ON [dbo].[OfoCodeSetItem] ([OfoCodeSetId], [OfoCodeId]);
+    CREATE NONCLUSTERED INDEX [IX_OfoCodeSetItem_OfoCodeId] ON [dbo].[OfoCodeSetItem] ([OfoCodeId]);
+    PRINT 'Created table [dbo].[OfoCodeSetItem].';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'MgWindow' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE [dbo].[MgWindow] (
+        [Id] INT IDENTITY(1,1) NOT NULL,
+        [SchemeYear] INT NOT NULL,
+        [WindowName] NVARCHAR(150) NOT NULL,
+        [OpeningDate] DATETIME2 NOT NULL,
+        [ClosingDate] DATETIME2 NOT NULL,
+        [ExtensionCutoffDate] DATETIME2 NOT NULL,
+        [OfoCodeSetId] INT NULL,
+        [OfoCodeSetYear] INT NULL,
+        [GazetteReference] NVARCHAR(200) NULL,
+        [Justification] NVARCHAR(MAX) NULL,
+        [ApprovalStatus] NVARCHAR(50) NOT NULL CONSTRAINT [DF_MgWindow_ApprovalStatus] DEFAULT ('Draft'),
+        [ProposedByUserId] NVARCHAR(100) NULL,
+        [ProposedByUserName] NVARCHAR(150) NULL,
+        [ProposedDate] DATETIME2 NULL,
+        [AdjudicatedByUserId] NVARCHAR(100) NULL,
+        [AdjudicatedByUserName] NVARCHAR(150) NULL,
+        [AdjudicatedDate] DATETIME2 NULL,
+        [AdjudicationComments] NVARCHAR(MAX) NULL,
+        [IsActive] BIT NOT NULL CONSTRAINT [DF_MgWindow_IsActive] DEFAULT (1),
+        [CreatedAt] DATETIME2 NOT NULL CONSTRAINT [DF_MgWindow_CreatedAt] DEFAULT (SYSUTCDATETIME()),
+        [CreatedBy] NVARCHAR(100) NULL CONSTRAINT [DF_MgWindow_CreatedBy] DEFAULT ('SYSTEM'),
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL,
+        CONSTRAINT [PK_MgWindow] PRIMARY KEY CLUSTERED ([Id] ASC),
+        CONSTRAINT [FK_MgWindow_OfoCodeSet] FOREIGN KEY ([OfoCodeSetId]) REFERENCES [dbo].[OfoCodeSet] ([Id])
+    );
+    CREATE NONCLUSTERED INDEX [IX_MgWindow_SchemeYear] ON [dbo].[MgWindow] ([SchemeYear]);
+    CREATE NONCLUSTERED INDEX [IX_MgWindow_Status] ON [dbo].[MgWindow] ([ApprovalStatus]);
+    CREATE NONCLUSTERED INDEX [IX_MgWindow_OfoCodeSetId] ON [dbo].[MgWindow] ([OfoCodeSetId]);
+    PRINT 'Created table [dbo].[MgWindow].';
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'MgWindowOfoCode' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE [dbo].[MgWindowOfoCode] (
+        [Id] INT IDENTITY(1,1) NOT NULL,
+        [MgWindowId] INT NOT NULL,
+        [OfoCodeId] NVARCHAR(15) NOT NULL,
+        [IsPrioritySkill] BIT NOT NULL CONSTRAINT [DF_MgWindowOfoCode_IsPrioritySkill] DEFAULT (0),
+        [SectorNotes] NVARCHAR(500) NULL,
+        [IsActive] BIT NOT NULL CONSTRAINT [DF_MgWindowOfoCode_IsActive] DEFAULT (1),
+        [CreatedAt] DATETIME2 NOT NULL CONSTRAINT [DF_MgWindowOfoCode_CreatedAt] DEFAULT (SYSUTCDATETIME()),
+        [CreatedBy] NVARCHAR(100) NULL CONSTRAINT [DF_MgWindowOfoCode_CreatedBy] DEFAULT ('SYSTEM'),
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL,
+        CONSTRAINT [PK_MgWindowOfoCode] PRIMARY KEY CLUSTERED ([Id] ASC),
+        CONSTRAINT [FK_MgWindowOfoCode_MgWindow] FOREIGN KEY ([MgWindowId]) REFERENCES [dbo].[MgWindow] ([Id]) ON DELETE CASCADE
+    );
+    CREATE UNIQUE NONCLUSTERED INDEX [IX_MgWindowOfoCode_Window_Code] ON [dbo].[MgWindowOfoCode] ([MgWindowId], [OfoCodeId]);
+    CREATE NONCLUSTERED INDEX [IX_MgWindowOfoCode_Priority] ON [dbo].[MgWindowOfoCode] ([MgWindowId], [IsPrioritySkill]);
+    CREATE NONCLUSTERED INDEX [IX_MgWindowOfoCode_OfoCodeId] ON [dbo].[MgWindowOfoCode] ([OfoCodeId]);
+    PRINT 'Created table [dbo].[MgWindowOfoCode].';
+END
+
 PRINT 'Complete Idempotent Enterprise DDL Deployment Succeeded!';
 
 

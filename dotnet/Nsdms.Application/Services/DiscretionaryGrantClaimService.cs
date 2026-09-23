@@ -66,7 +66,7 @@ public class DiscretionaryGrantClaimService : IDiscretionaryGrantClaimService
     private readonly ISystemConfigurationService? _systemConfig;
 
     public DiscretionaryGrantClaimService(
-        INsdmsDbContextFactory contextFactory, 
+        INsdmsDbContextFactory contextFactory,
         IAuditService audit,
         ISystemConfigurationService? systemConfig = null)
     {
@@ -234,7 +234,7 @@ public class DiscretionaryGrantClaimService : IDiscretionaryGrantClaimService
             case "FINANCE":
                 claim.FinanceOfficerApprovedBy = request.ApproverName;
                 claim.FinanceOfficerApprovedDate = DateTime.UtcNow;
-                
+
                 // If claim requires CFO (high-value threshold) and CFO hasn't signed yet, keep waiting for CFO
                 if (claim.RequiresCfoApproval)
                 {

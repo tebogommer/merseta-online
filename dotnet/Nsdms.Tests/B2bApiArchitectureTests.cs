@@ -138,21 +138,21 @@ public class B2bApiArchitectureTests
         const string expectedThumbprint = "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855";
 
         var (client, plaintextSecret) = await service.RegisterClientAsync(
-            org.Id, 
-            "Secure Banking Connector", 
-            new[] { "claims:submit" }, 
+            org.Id,
+            "Secure Banking Connector",
+            new[] { "claims:submit" },
             certThumbprint: expectedThumbprint);
 
         // Act 1: Correct thumbprint
         var (successPass, _, _) = await service.AuthenticateClientAsync(
-            client.ClientIdentifier, 
-            plaintextSecret, 
+            client.ClientIdentifier,
+            plaintextSecret,
             clientCertThumbprint: expectedThumbprint);
 
         // Act 2: Mismatched thumbprint
         var (successFail, _, errorFail) = await service.AuthenticateClientAsync(
-            client.ClientIdentifier, 
-            plaintextSecret, 
+            client.ClientIdentifier,
+            plaintextSecret,
             clientCertThumbprint: "BAD_THUMBPRINT_00000000000000000000000000000000000000000000000000");
 
         // Assert
@@ -169,21 +169,21 @@ public class B2bApiArchitectureTests
         const string jwkKey = "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU\",\"y\":\"x_daQjjUz3WQKpHUnIoPpPpqHpQcgDTgA956_hS3bGQ\"}";
 
         var (client, plaintextSecret) = await service.RegisterClientAsync(
-            org.Id, 
-            "DPoP Client", 
-            new[] { "wsp:write" }, 
+            org.Id,
+            "DPoP Client",
+            new[] { "wsp:write" },
             dpopKeyJwk: jwkKey);
 
         // Act 1: Without DPoP header
         var (successNoHeader, _, errorNoHeader) = await service.AuthenticateClientAsync(
-            client.ClientIdentifier, 
-            plaintextSecret, 
+            client.ClientIdentifier,
+            plaintextSecret,
             dpopHeader: null);
 
         // Act 2: With valid DPoP header
         var (successValid, _, _) = await service.AuthenticateClientAsync(
-            client.ClientIdentifier, 
-            plaintextSecret, 
+            client.ClientIdentifier,
+            plaintextSecret,
             dpopHeader: "eyJhbGciOiJFUzI1NiIsInR5cCI6ImRwb3Arand0In0.eyJqdGkiOiItQjEtU...");
 
         // Assert

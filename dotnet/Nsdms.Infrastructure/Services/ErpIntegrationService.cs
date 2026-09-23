@@ -249,13 +249,13 @@ public class ErpIntegrationService : IErpIntegrationService
             MessageType = "VendorSync",
             ReferenceKey = organisationId.ToString(),
             OrganisationId = organisationId,
-            PayloadJson = System.Text.Json.JsonSerializer.Serialize(new 
-            { 
-                organisationId, 
-                org.CompanyName, 
-                org.SdlNumber, 
-                ChamberCode = org.ChamberCode, 
-                GpVendorClass = org.GpVendorClass ?? "SETA" 
+            PayloadJson = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                organisationId,
+                org.CompanyName,
+                org.SdlNumber,
+                ChamberCode = org.ChamberCode,
+                GpVendorClass = org.GpVendorClass ?? "SETA"
             }),
             QueueStatusCode = "Pending",
             ExecutionPriority = 1,

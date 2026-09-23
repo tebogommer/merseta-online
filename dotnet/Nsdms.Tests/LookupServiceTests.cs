@@ -69,7 +69,7 @@ public class LookupServiceTests
         // Act 1: Create
         await service.SaveLookupItemAsync("ProvinceType", newCode, "AdminUser");
         var items1 = await service.GetLookupItemsAsync("ProvinceType", "TEST_CODE");
-        
+
         // Assert 1: Active
         Assert.Single(items1);
         Assert.True(items1[0].Active);

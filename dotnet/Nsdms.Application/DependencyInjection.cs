@@ -48,6 +48,7 @@ public static class DependencyInjection
         services.AddScoped<WspService>();
         services.AddScoped<IWspService>(sp => sp.GetRequiredService<WspService>());
         services.AddScoped<IMgWindowGovernanceService, MgWindowGovernanceService>();
+        services.AddScoped<IOfoCodeSetService, OfoCodeSetService>();
         services.AddScoped<GrantService>();
         services.AddScoped<IGrantService>(sp => sp.GetRequiredService<GrantService>());
         services.AddScoped<LevyService>();

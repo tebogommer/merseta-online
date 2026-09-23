@@ -95,7 +95,7 @@ public class DocumentVerificationService : IDocumentVerificationService
 
         var snapshot = await db.DocumentSnapshots
             .Include(s => s.DocumentTemplate)
-            .FirstOrDefaultAsync(s => s.RenderedContentHash.ToLower() == cleanQuery 
+            .FirstOrDefaultAsync(s => s.RenderedContentHash.ToLower() == cleanQuery
                                    || s.DocumentSnapshotNumber.ToLower() == cleanQuery);
 
         if (snapshot == null)

@@ -25,7 +25,7 @@ public static class Phase13FiscalCalendarMigrator
             // Resolve script from output directory or relative path
             var baseDir = AppContext.BaseDirectory;
             var scriptPath = Path.Combine(baseDir, "Data", "SqlScripts", "V2026_13_Add_Fiscal_Calendar_Tables.sql");
-            
+
             if (!File.Exists(scriptPath))
             {
                 scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "SqlScripts", "V2026_13_Add_Fiscal_Calendar_Tables.sql");

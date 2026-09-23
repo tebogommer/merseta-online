@@ -18,7 +18,7 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
 
     public QuestPdfDocumentService(
         INsdmsDbContextFactory contextFactory,
-        IFeatureFlagService featureFlags, 
+        IFeatureFlagService featureFlags,
         ISystemConfigurationService config,
         IDocumentVerificationService? verificationService = null)
     {
@@ -841,8 +841,8 @@ public partial class QuestPdfDocumentService : IPdfDocumentService
                     col.Item().Background("#fff8e1").Padding(8).Column(b =>
                     {
                         b.Item().Text("CREDIT SETTLEMENT ACCOUNT:").FontSize(9).Bold().FontColor("#b78103");
-                        b.Item().Text(string.IsNullOrEmpty(disb?.BankAccountSnapshot) 
-                            ? "Standard Bank SA | Acc: ************4821 (Verified Dual-Signoff)" 
+                        b.Item().Text(string.IsNullOrEmpty(disb?.BankAccountSnapshot)
+                            ? "Standard Bank SA | Acc: ************4821 (Verified Dual-Signoff)"
                             : disb.BankAccountSnapshot);
                     });
 

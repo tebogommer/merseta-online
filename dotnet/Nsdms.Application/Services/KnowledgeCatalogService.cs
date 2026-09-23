@@ -47,7 +47,7 @@ public class KnowledgeCatalogService : IKnowledgeCatalogService
         if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
         {
             var term = filter.SearchTerm.Trim().ToLower();
-            query = query.Where(c => 
+            query = query.Where(c =>
                 c.ConceptId.ToLower().Contains(term) ||
                 c.Title.ToLower().Contains(term) ||
                 (c.SummaryDescription != null && c.SummaryDescription.ToLower().Contains(term)));
@@ -492,15 +492,15 @@ public class KnowledgeCatalogService : IKnowledgeCatalogService
             concept.Id,
             "RecordVerification",
             currentUser,
-            new 
-            { 
-                Verifier = verifierActor, 
-                ActorType = verificationEvent.ActorType, 
+            new
+            {
+                Verifier = verifierActor,
+                ActorType = verificationEvent.ActorType,
                 NewTrustTier = concept.DerivedTrustTier.ToString(),
-                Notes = verificationEvent.Notes 
+                Notes = verificationEvent.Notes
             });
 
-        _logger.LogInformation("Recorded verification for {ConceptId} by {Verifier}. New Trust Tier: {Tier}.", 
+        _logger.LogInformation("Recorded verification for {ConceptId} by {Verifier}. New Trust Tier: {Tier}.",
             concept.ConceptId, verifierActor, concept.DerivedTrustTier);
 
         return true;
@@ -512,7 +512,7 @@ public class KnowledgeCatalogService : IKnowledgeCatalogService
         if (list.Count == 0) return TrustTier.Unverified;
 
         // If any human verifier exists => HumanReviewed (Tier 2)
-        if (list.Any(v => v.ActorType.Equals("human", StringComparison.OrdinalIgnoreCase) || 
+        if (list.Any(v => v.ActorType.Equals("human", StringComparison.OrdinalIgnoreCase) ||
                           v.VerifiedByActor.StartsWith("human:", StringComparison.OrdinalIgnoreCase)))
         {
             return TrustTier.HumanReviewed;

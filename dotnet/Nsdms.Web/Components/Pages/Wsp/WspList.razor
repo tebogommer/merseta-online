@@ -49,14 +49,36 @@
                    aria-label="View Consultative Training Committees">
             Training Committees
         </MudButton>
-        <MudButton Variant="Variant.Filled" 
-                   Color="Color.Primary" 
-                   StartIcon="@Icons.Material.Filled.PostAdd" 
-                   OnClick="CreateNewWsp"
-                   aria-label="Initiate New WSP Submission">
-            New WSP Submission
-        </MudButton>
+        @if (_windowStatus == null || _windowStatus.IsOpen)
+        {
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Primary" 
+                       StartIcon="@Icons.Material.Filled.PostAdd" 
+                       OnClick="CreateNewWsp"
+                       aria-label="Initiate New WSP Submission">
+                New WSP Submission
+            </MudButton>
+        }
+        else
+        {
+            <MudTooltip Text="Standard submission window closed on 30 April. Click to request a statutory deadline extension under Regulation 4(2).">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Warning"
+                           StartIcon="@Icons.Material.Filled.EventBusy"
+                           OnClick="@(() => NavManager.NavigateTo("/wsp/extension-request"))"
+                           aria-label="Submission Window Closed. Request Statutory Deadline Extension">
+                    Request Deadline Extension
+                </MudButton>
+            </MudTooltip>
+        }
     </ActionZone>
+    <ContextStrip>
+        <div class="d-flex align-center gap-3 flex-wrap">
+            <span class="text-caption text-secondary font-weight-medium">Submission Window:</span>
+            <WspWindowCountdownBadge OnStatusLoaded="HandleWindowStatusLoaded"
+                                     OnWindowExpired="HandleWindowExpired" />
+        </div>
+    </ContextStrip>
 </EntityHeader>
 
 <!-- Filter Bar (Clause 11.4) -->
@@ -214,6 +236,7 @@
     private HashSet<WspSubmission> _selectedSubmissions = new();
     private string _searchString = string.Empty;
     private string _statusFilter = "All";
+    private WspWindowStatusDto? _windowStatus;
 
     private List<BreadcrumbItem> _breadcrumbs = new()
     {
@@ -221,6 +244,35 @@
         new BreadcrumbItem("Grants & WSP", href: null, disabled: true),
         new BreadcrumbItem("WSP Submissions", href: "/wsp")
     };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _windowStatus = await WspService.GetWindowStatusAsync();
+        }
+        catch
+        {
+            // Graceful fallback
+        }
+    }
+
+    private void HandleWindowStatusLoaded(WspWindowStatusDto status)
+    {
+        _windowStatus = status;
+        StateHasChanged();
+    }
+
+    private void HandleWindowExpired()
+    {
+        if (_windowStatus != null)
+        {
+            _windowStatus.IsOpen = false;
+            _windowStatus.IsClosed = true;
+            _windowStatus.UrgencyTier = WspUrgencyTier.Closed;
+        }
+        StateHasChanged();
+    }
 
     private async Task<TableData<WspSubmission>> ServerReload(TableState state, CancellationToken ct)
     {

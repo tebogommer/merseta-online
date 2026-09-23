@@ -882,7 +882,7 @@ public class GrantService : IGrantService
                     {
                         var allowedCodes = window.EligibleStakeholders.Select(e => e.StakeholderEligibilityTypeCode).ToHashSet(StringComparer.OrdinalIgnoreCase);
                         bool isEligible = false;
-                        var isLevyPayer = string.Equals(org.LevyCategoryCode, "LEVY_PAYING", StringComparison.OrdinalIgnoreCase) || 
+                        var isLevyPayer = string.Equals(org.LevyCategoryCode, "LEVY_PAYING", StringComparison.OrdinalIgnoreCase) ||
                                           (!string.IsNullOrWhiteSpace(org.SdlNumber) && org.SdlNumber.StartsWith("L", StringComparison.OrdinalIgnoreCase));
 
                         if (allowedCodes.Contains("LEVY_PAYING") && isLevyPayer)
@@ -893,7 +893,7 @@ public class GrantService : IGrantService
                         {
                             isEligible = true;
                         }
-                        else if (!string.IsNullOrWhiteSpace(org.NonEmployerEntityType) && 
+                        else if (!string.IsNullOrWhiteSpace(org.NonEmployerEntityType) &&
                                  (allowedCodes.Contains(org.NonEmployerEntityType) || allowedCodes.Any(c => c.Contains(org.NonEmployerEntityType, StringComparison.OrdinalIgnoreCase))))
                         {
                             isEligible = true;
@@ -2095,7 +2095,7 @@ public class GrantService : IGrantService
         {
             var code = kvp.Key;
             var provName = kvp.Value;
-            var provApps = applications.Where(a => 
+            var provApps = applications.Where(a =>
                 (a.Organisation != null && (a.Organisation.ProvinceCode == code || a.Organisation.PhysicalAddress?.Contains(provName, StringComparison.OrdinalIgnoreCase) == true))
                 || (code == "GP" && (a.Organisation == null || string.IsNullOrWhiteSpace(a.Organisation.ProvinceCode)))
             ).ToList();

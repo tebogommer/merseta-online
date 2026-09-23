@@ -22,7 +22,7 @@ public class SystemConfigurationService : ISystemConfigurationService
     public async Task<string?> GetValueAsync(string key, string? defaultValue = null)
     {
         using var db = await _contextFactory.CreateDbContextAsync();
-        
+
         var altKey = key.Contains(':') ? key.Replace(':', '.') : key.Replace('.', ':');
         var config = await db.SystemConfigs.FirstOrDefaultAsync(c => (c.ConfigKey == key || c.ConfigKey == altKey) && c.IsActive);
         if (config != null && !string.IsNullOrEmpty(config.ConfigValue))

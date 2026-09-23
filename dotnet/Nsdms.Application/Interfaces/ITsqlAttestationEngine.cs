@@ -13,13 +13,13 @@ namespace Nsdms.Application.Interfaces;
 public interface ITsqlAttestationEngine
 {
     Task<AttestationExecutionResultDto> ExecuteAndAttestAsync(
-        int computationId, 
-        Dictionary<string, object?> parameterValues, 
-        string actor, 
+        int computationId,
+        Dictionary<string, object?> parameterValues,
+        string actor,
         CancellationToken ct = default);
 
     Task<AttestationExecutionResultDto> DryRunAttestationAsync(
-        int computationId, 
-        Dictionary<string, object?> parameterValues, 
+        int computationId,
+        Dictionary<string, object?> parameterValues,
         CancellationToken ct = default);
 }

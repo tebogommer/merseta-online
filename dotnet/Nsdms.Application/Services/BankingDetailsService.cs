@@ -14,8 +14,8 @@ public class BankingDetailsService : IBankingDetailsService
     private readonly IWorkingDayCalculationEngine? _workingDayEngine;
 
     public BankingDetailsService(
-        INsdmsDbContextFactory factory, 
-        AuditService audit, 
+        INsdmsDbContextFactory factory,
+        AuditService audit,
         IBankservAvsService? avsService = null,
         IWorkingDayCalculationEngine? workingDayEngine = null)
     {
@@ -47,123 +47,197 @@ public class BankingDetailsService : IBankingDetailsService
     public async Task<BankingDetails> SubmitBankingDetailsAsync(int? organisationId, int? trainingProviderId, string bankName, string branchCode, string? branchName, string accountNumber, string accountHolderName, string accountTypeCode, string? docPath, DateTime? docDate, string currentUsername)
     {
         using var db = await _factory.CreateDbContextAsync();
+        var strategy = db.Database.CreateExecutionStrategy();
 
-        // 1. Anti-Collusion Duplicate Account Check (Check if account exists across distinct entities)
-        var isDuplicateAccount = await db.BankingDetails.AnyAsync(b => 
-            b.AccountNumber == accountNumber && 
-            b.BranchCode == branchCode && 
-            b.IsActive &&
-            ((organisationId.HasValue && b.OrganisationId != organisationId.Value) ||
-             (trainingProviderId.HasValue && b.TrainingProviderId != trainingProviderId.Value)));
-
-        // 2. Check if this is an updated bank account on an existing organisation (triggers 14-day cooling-off)
-        var hasExistingActiveBank = organisationId.HasValue && await db.BankingDetails.AnyAsync(b => b.OrganisationId == organisationId.Value && b.IsActive && b.ApprovalStatusCode == "FullyApproved");
-
-        // 3. Run Real-Time Bankserv AVS Verification
-        AvsVerificationResult? avsResult = null;
-        if (_avsService != null)
+        return await strategy.ExecuteAsync(async () =>
         {
-            avsResult = await _avsService.VerifyAccountAsync(new AvsVerificationRequest
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
+            if (db.Database.IsRelational())
             {
-                BankName = bankName,
-                BranchCode = branchCode,
-                AccountNumber = accountNumber,
-                AccountHolderName = accountHolderName
-            });
-        }
+                tx = await db.Database.BeginTransactionAsync();
+            }
 
-        var entity = new BankingDetails
-        {
-            OrganisationId = organisationId,
-            TrainingProviderId = trainingProviderId,
-            BankName = bankName,
-            BranchCode = branchCode,
-            BranchName = branchName,
-            AccountNumber = accountNumber,
-            AccountHolderName = accountHolderName,
-            AccountTypeCode = accountTypeCode,
-            BankConfirmationDocumentPath = docPath,
-            BankConfirmationDate = docDate ?? DateTime.UtcNow,
-            ApprovalStatusCode = isDuplicateAccount 
-                ? "FlaggedForForensicReview" 
-                : (avsResult != null && !avsResult.IsValid ? "AvsFailed" : "PendingVerification"),
-            RequiresForensicApproval = isDuplicateAccount,
-            FraudRiskFlags = isDuplicateAccount ? "CROSS_ORGANISATION_DUPLICATE_ACCOUNT" : (avsResult != null && !avsResult.IsValid ? avsResult.ResponseCode : null),
-            IsCoolingOffActive = hasExistingActiveBank,
-            CoolingOffExpiresAt = hasExistingActiveBank 
-                ? (_workingDayEngine != null ? await _workingDayEngine.AddBusinessDaysAsync(DateTime.UtcNow, 14) : DateTime.UtcNow.AddDays(14)) 
-                : null,
-            AvsVerificationReference = avsResult?.VerificationReference,
-            AvsVerifiedAt = avsResult?.VerifiedAt,
-            AvsStatusResponse = avsResult?.ResponseMessage,
-            IsErpActive = false,
-            CreatedBy = currentUsername,
-            CreatedAt = DateTime.UtcNow
-        };
+            try
+            {
+                // 1. Anti-Collusion Duplicate Account Check (Check if account exists across distinct entities)
+                var isDuplicateAccount = await db.BankingDetails.AnyAsync(b =>
+                    b.AccountNumber == accountNumber &&
+                    b.BranchCode == branchCode &&
+                    b.IsActive &&
+                    ((organisationId.HasValue && b.OrganisationId != organisationId.Value) ||
+                     (trainingProviderId.HasValue && b.TrainingProviderId != trainingProviderId.Value)));
 
-        db.BankingDetails.Add(entity);
-        await db.SaveChangesAsync();
+                // 2. Check if this is an updated bank account on an existing organisation (triggers 14-day cooling-off)
+                var hasExistingActiveBank = organisationId.HasValue && await db.BankingDetails.AnyAsync(b => b.OrganisationId == organisationId.Value && b.IsActive && b.ApprovalStatusCode == "FullyApproved");
 
-        var auditLog = new BankingDetailsAudit
-        {
-            BankingDetailsId = entity.Id,
-            ActionType = isDuplicateAccount ? "SubmitBankingDetails_FLAGGED_DUPLICATE" : "SubmitBankingDetails",
-            NewStateJson = JsonSerializer.Serialize(new { entity.BankName, entity.AccountNumber, entity.ApprovalStatusCode, entity.RequiresForensicApproval, entity.IsCoolingOffActive }),
-            ChangedByUserId = currentUsername,
-            ChangedAt = DateTime.UtcNow
-        };
-        db.BankingDetailsAudits.Add(auditLog);
-        await db.SaveChangesAsync();
+                // 3. Run Real-Time Bankserv AVS Verification
+                AvsVerificationResult? avsResult = null;
+                if (_avsService != null)
+                {
+                    avsResult = await _avsService.VerifyAccountAsync(new AvsVerificationRequest
+                    {
+                        BankName = bankName,
+                        BranchCode = branchCode,
+                        AccountNumber = accountNumber,
+                        AccountHolderName = accountHolderName
+                    });
+                }
 
-        await _audit.LogAsync("BankingDetails", entity.Id, "SubmitBankingDetails", currentUsername, new { entity.BankName, entity.AccountNumber, entity.ApprovalStatusCode, entity.RequiresForensicApproval, entity.IsCoolingOffActive });
-        return entity;
+                var entity = new BankingDetails
+                {
+                    OrganisationId = organisationId,
+                    TrainingProviderId = trainingProviderId,
+                    BankName = bankName,
+                    BranchCode = branchCode,
+                    BranchName = branchName,
+                    AccountNumber = accountNumber,
+                    AccountHolderName = accountHolderName,
+                    AccountTypeCode = accountTypeCode,
+                    BankConfirmationDocumentPath = docPath,
+                    BankConfirmationDate = docDate ?? DateTime.UtcNow,
+                    ApprovalStatusCode = isDuplicateAccount
+                        ? "FlaggedForForensicReview"
+                        : (avsResult != null && !avsResult.IsValid ? "AvsFailed" : "PendingVerification"),
+                    RequiresForensicApproval = isDuplicateAccount,
+                    FraudRiskFlags = isDuplicateAccount ? "CROSS_ORGANISATION_DUPLICATE_ACCOUNT" : (avsResult != null && !avsResult.IsValid ? avsResult.ResponseCode : null),
+                    IsCoolingOffActive = hasExistingActiveBank,
+                    CoolingOffExpiresAt = hasExistingActiveBank
+                        ? (_workingDayEngine != null ? await _workingDayEngine.AddBusinessDaysAsync(DateTime.UtcNow, 14) : DateTime.UtcNow.AddDays(14))
+                        : null,
+                    AvsVerificationReference = avsResult?.VerificationReference,
+                    AvsVerifiedAt = avsResult?.VerifiedAt,
+                    AvsStatusResponse = avsResult?.ResponseMessage,
+                    IsErpActive = false,
+                    CreatedBy = currentUsername,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                db.BankingDetails.Add(entity);
+                await db.SaveChangesAsync();
+
+                var auditLog = new BankingDetailsAudit
+                {
+                    BankingDetailsId = entity.Id,
+                    ActionType = isDuplicateAccount ? "SubmitBankingDetails_FLAGGED_DUPLICATE" : "SubmitBankingDetails",
+                    NewStateJson = JsonSerializer.Serialize(new { entity.BankName, entity.AccountNumber, entity.ApprovalStatusCode, entity.RequiresForensicApproval, entity.IsCoolingOffActive }),
+                    ChangedByUserId = currentUsername,
+                    ChangedAt = DateTime.UtcNow
+                };
+                db.BankingDetailsAudits.Add(auditLog);
+
+                _audit.LogAction(db, "BankingDetails", entity.Id, "SubmitBankingDetails", currentUsername, null, new { entity.BankName, entity.AccountNumber, entity.ApprovalStatusCode, entity.RequiresForensicApproval, entity.IsCoolingOffActive });
+                await db.SaveChangesAsync();
+
+                if (tx != null) await tx.CommitAsync();
+                return entity;
+            }
+            catch
+            {
+                if (tx != null) await tx.RollbackAsync();
+                throw;
+            }
+            finally
+            {
+                tx?.Dispose();
+            }
+        });
     }
 
     public async Task<BankingDetails> FirstSignoffAsync(int id, bool approved, string? notes, string currentUsername)
     {
         using var db = await _factory.CreateDbContextAsync();
-        var entity = await db.BankingDetails.FindAsync(id) ?? throw new InvalidOperationException($"Banking details #{id} not found.");
+        var strategy = db.Database.CreateExecutionStrategy();
 
-        entity.FirstSignoffUserId = currentUsername;
-        entity.FirstSignoffDate = DateTime.UtcNow;
-        entity.FirstSignoffNotes = notes;
-        entity.ApprovalStatusCode = approved ? "FirstSignoffApproved" : "Rejected";
-        entity.ModifiedAt = DateTime.UtcNow;
-        entity.ModifiedBy = currentUsername;
+        return await strategy.ExecuteAsync(async () =>
+        {
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
+            if (db.Database.IsRelational())
+            {
+                tx = await db.Database.BeginTransactionAsync();
+            }
 
-        await db.SaveChangesAsync();
-        await _audit.LogAsync("BankingDetails", entity.Id, "FirstSignoff", currentUsername, new { entity.ApprovalStatusCode, notes });
-        return entity;
+            try
+            {
+                var entity = await db.BankingDetails.FindAsync(id) ?? throw new InvalidOperationException($"Banking details #{id} not found.");
+
+                entity.FirstSignoffUserId = currentUsername;
+                entity.FirstSignoffDate = DateTime.UtcNow;
+                entity.FirstSignoffNotes = notes;
+                entity.ApprovalStatusCode = approved ? "FirstSignoffApproved" : "Rejected";
+                entity.ModifiedAt = DateTime.UtcNow;
+                entity.ModifiedBy = currentUsername;
+
+                _audit.LogAction(db, "BankingDetails", entity.Id, "FirstSignoff", currentUsername, null, new { entity.ApprovalStatusCode, notes });
+                await db.SaveChangesAsync();
+
+                if (tx != null) await tx.CommitAsync();
+                return entity;
+            }
+            catch
+            {
+                if (tx != null) await tx.RollbackAsync();
+                throw;
+            }
+            finally
+            {
+                tx?.Dispose();
+            }
+        });
     }
 
     public async Task<BankingDetails> SecondSignoffAndActivateErpAsync(int id, bool approved, string? notes, string currentUsername)
     {
         using var db = await _factory.CreateDbContextAsync();
-        var entity = await db.BankingDetails.FindAsync(id) ?? throw new InvalidOperationException($"Banking details #{id} not found.");
+        var strategy = db.Database.CreateExecutionStrategy();
 
-        // Segregation of Duties (Maker-Checker / Dual Authorisation Control)
-        if (!string.IsNullOrEmpty(entity.FirstSignoffUserId) && string.Equals(entity.FirstSignoffUserId, currentUsername, StringComparison.OrdinalIgnoreCase))
+        return await strategy.ExecuteAsync(async () =>
         {
-            throw new InvalidOperationException("Dual Authorisation Governance breach: The officer who completed the first banking sign-off cannot perform the second sign-off.");
-        }
-        if (!string.IsNullOrEmpty(entity.CreatedBy) && string.Equals(entity.CreatedBy, currentUsername, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException("Dual Authorisation Governance breach: The user who submitted the banking details cannot perform the final approval.");
-        }
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
+            if (db.Database.IsRelational())
+            {
+                tx = await db.Database.BeginTransactionAsync();
+            }
 
-        entity.SecondSignoffUserId = currentUsername;
-        entity.SecondSignoffDate = DateTime.UtcNow;
-        entity.SecondSignoffNotes = notes;
-        entity.ApprovalStatusCode = approved ? "FullyApproved" : "Rejected";
-        entity.IsErpActive = approved;
-        entity.ErpVendorId = approved ? $"ERP-VND-{entity.Id:D6}" : null;
-        entity.ErpSyncDate = approved ? DateTime.UtcNow : null;
-        entity.ModifiedAt = DateTime.UtcNow;
-        entity.ModifiedBy = currentUsername;
+            try
+            {
+                var entity = await db.BankingDetails.FindAsync(id) ?? throw new InvalidOperationException($"Banking details #{id} not found.");
 
-        await db.SaveChangesAsync();
-        await _audit.LogAsync("BankingDetails", entity.Id, "SecondSignoffAndActivateErp", currentUsername, new { entity.ApprovalStatusCode, entity.IsErpActive, entity.ErpVendorId });
-        return entity;
+                // Segregation of Duties (Maker-Checker / Dual Authorisation Control)
+                if (!string.IsNullOrEmpty(entity.FirstSignoffUserId) && string.Equals(entity.FirstSignoffUserId, currentUsername, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException("Dual Authorisation Governance breach: The officer who completed the first banking sign-off cannot perform the second sign-off.");
+                }
+                if (!string.IsNullOrEmpty(entity.CreatedBy) && string.Equals(entity.CreatedBy, currentUsername, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException("Dual Authorisation Governance breach: The user who submitted the banking details cannot perform the final approval.");
+                }
+
+                entity.SecondSignoffUserId = currentUsername;
+                entity.SecondSignoffDate = DateTime.UtcNow;
+                entity.SecondSignoffNotes = notes;
+                entity.ApprovalStatusCode = approved ? "FullyApproved" : "Rejected";
+                entity.IsErpActive = approved;
+                entity.ErpVendorId = approved ? $"ERP-VND-{entity.Id:D6}" : null;
+                entity.ErpSyncDate = approved ? DateTime.UtcNow : null;
+                entity.ModifiedAt = DateTime.UtcNow;
+                entity.ModifiedBy = currentUsername;
+
+                _audit.LogAction(db, "BankingDetails", entity.Id, "SecondSignoffAndActivateErp", currentUsername, null, new { entity.ApprovalStatusCode, entity.IsErpActive, entity.ErpVendorId });
+                await db.SaveChangesAsync();
+
+                if (tx != null) await tx.CommitAsync();
+                return entity;
+            }
+            catch
+            {
+                if (tx != null) await tx.RollbackAsync();
+                throw;
+            }
+            finally
+            {
+                tx?.Dispose();
+            }
+        });
     }
 
     public async Task<BankingDetails> SubmitBankingDetailsAsync(

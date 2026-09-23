@@ -86,7 +86,7 @@ public class SdfAppointmentService : ISdfAppointmentService
         entity.ModifiedBy = currentUsername;
 
         // If primary SDF, supersede any prior active primary appointments for this organisation
-        if (string.Equals(entity.SdfTypeCode, "PRIMARY", StringComparison.OrdinalIgnoreCase) || 
+        if (string.Equals(entity.SdfTypeCode, "PRIMARY", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(entity.SdfTypeCode, "Primary", StringComparison.OrdinalIgnoreCase))
         {
             var priorPrimaries = await db.SdfCompanies

@@ -48,8 +48,8 @@ public class TradeTestAndArplService : ITradeTestAndArplService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
 
-        var maxAttempts = _configService != null 
-            ? await _configService.GetValueAsync<int>("TradeTest:MaxAllowedAttempts", 3) 
+        var maxAttempts = _configService != null
+            ? await _configService.GetValueAsync<int>("TradeTest:MaxAllowedAttempts", 3)
             : 3;
 
         if (attemptNumber > maxAttempts)
@@ -565,16 +565,16 @@ public class TradeTestAndArplService : ITradeTestAndArplService
         app.StatusCode = allPassed ? "Competent" : "Assessed";
 
         // Section 4.2.5: Assessment report SLA from test completion
-        var resultsUploadDays = _configService != null 
-            ? await _configService.GetValueAsync<int>("TradeTest:ResultsUploadSlaDays", 5) 
+        var resultsUploadDays = _configService != null
+            ? await _configService.GetValueAsync<int>("TradeTest:ResultsUploadSlaDays", 5)
             : 5;
         app.ResultsUploadDeadlineDate = _workingDayEngine != null
             ? await _workingDayEngine.AddBusinessDaysAsync(assessmentDate, resultsUploadDays)
             : assessmentDate.AddDays(resultsUploadDays);
 
         // Section 4.0 / DFD: Configurable QA achievement audit sampling percentage
-        var samplePct = _configService != null 
-            ? await _configService.GetValueAsync<int>("TradeTest:QaAuditSamplingPercentage", 10) 
+        var samplePct = _configService != null
+            ? await _configService.GetValueAsync<int>("TradeTest:QaAuditSamplingPercentage", 10)
             : 10;
         int divisor = samplePct > 0 ? (100 / samplePct) : 10;
         app.IsSelectedForQaAuditSample = (divisor > 0 && app.Id % divisor == 0);

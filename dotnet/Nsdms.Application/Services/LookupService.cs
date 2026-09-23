@@ -44,7 +44,7 @@ public class LookupService : ILookupService
     private static readonly TimeSpan DefaultCacheTtl = TimeSpan.FromHours(1);
 
     public LookupService(
-        INsdmsDbContextFactory contextFactory, 
+        INsdmsDbContextFactory contextFactory,
         IAuditService audit,
         ISystemConfigurationService? configService = null)
     {
@@ -182,9 +182,9 @@ public class LookupService : ILookupService
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim();
-            filtered = filtered.Where(x => 
-                x.Code.Contains(term, StringComparison.OrdinalIgnoreCase) || 
-                x.Name.Contains(term, StringComparison.OrdinalIgnoreCase) || 
+            filtered = filtered.Where(x =>
+                x.Code.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                x.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                 (x.Description != null && x.Description.Contains(term, StringComparison.OrdinalIgnoreCase)));
         }
 
@@ -204,9 +204,9 @@ public class LookupService : ILookupService
                 return cached.Items.Count;
             }
             var term = search.Trim();
-            return cached.Items.Count(x => 
-                x.Code.Contains(term, StringComparison.OrdinalIgnoreCase) || 
-                x.Name.Contains(term, StringComparison.OrdinalIgnoreCase) || 
+            return cached.Items.Count(x =>
+                x.Code.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                x.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                 (x.Description != null && x.Description.Contains(term, StringComparison.OrdinalIgnoreCase)));
         }
 
@@ -267,9 +267,10 @@ public class LookupService : ILookupService
         await db.SaveChangesAsync();
 
         // Invalidate cached lookups for this table
+        _lookupCache.TryRemove($"all:{tableName}", out _);
         foreach (var key in _lookupCache.Keys)
         {
-            if (key.StartsWith($"{tableName}:", StringComparison.OrdinalIgnoreCase))
+            if (key.Contains(tableName, StringComparison.OrdinalIgnoreCase))
             {
                 _lookupCache.TryRemove(key, out _);
             }
@@ -277,6 +278,9 @@ public class LookupService : ILookupService
 
         return true;
     }
+
+    public static void ResetCache() => _lookupCache.Clear();
+    public void ClearCache() => _lookupCache.Clear();
 
     public async Task<List<LookupItemDto>> GetOfoCodesAsync(string? search = null, int limit = 50) =>
         await GetLookupItemsAsync("OfoCodeType", search, 0, limit);

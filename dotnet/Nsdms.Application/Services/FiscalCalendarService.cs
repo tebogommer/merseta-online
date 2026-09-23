@@ -190,7 +190,7 @@ public class FiscalCalendarService : IFiscalCalendarService
 
         // Update or replace quarters
         var incomingCodes = dto.Quarters.Select(q => q.QuarterCode.ToUpperInvariant()).ToHashSet();
-        
+
         // Remove quarters not in incoming list
         var toRemove = entity.Quarters.Where(q => !incomingCodes.Contains(q.QuarterCode.ToUpperInvariant())).ToList();
         foreach (var r in toRemove)

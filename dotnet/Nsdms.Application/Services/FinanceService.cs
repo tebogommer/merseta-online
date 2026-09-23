@@ -12,7 +12,7 @@ public class FinanceService : IFinanceService
     private readonly IWorkflowGovernanceService? _workflowGovernance;
 
     public FinanceService(
-        INsdmsDbContextFactory contextFactory, 
+        INsdmsDbContextFactory contextFactory,
         ISystemConfigurationService? configService = null,
         IWorkflowGovernanceService? workflowGovernance = null)
     {
@@ -325,8 +325,8 @@ public class FinanceService : IFinanceService
         }
 
         // Gatekeeping: Ensure milestone is verified prior to finance approval
-        if (pay.GrantMoaMilestone != null && 
-            pay.GrantMoaMilestone.MilestoneStatusCode != "Verified" && 
+        if (pay.GrantMoaMilestone != null &&
+            pay.GrantMoaMilestone.MilestoneStatusCode != "Verified" &&
             pay.GrantMoaMilestone.MilestoneStatusCode != "CloVerified")
         {
             throw new InvalidOperationException($"Cannot approve tranche payment #{paymentId}: Associated Milestone #{pay.GrantMoaMilestone.MilestoneNumber} must be verified by the project officer first.");
@@ -340,7 +340,7 @@ public class FinanceService : IFinanceService
         pay.ModifiedAt = DateTime.UtcNow;
         pay.ModifiedBy = userId;
 
-        var cfoDualSignoffThreshold = _configService != null 
+        var cfoDualSignoffThreshold = _configService != null
             ? await _configService.GetValueAsync<decimal>("Finance:MandatoryApprovalDualSignOffThreshold", 500000.00m)
             : 500000.00m;
 
@@ -567,7 +567,7 @@ public class FinanceService : IFinanceService
         }
 
         // Gatekeeping 1: Ensure linked WSP Submission is approved
-        if (disb.WspSubmission != null && 
+        if (disb.WspSubmission != null &&
             !string.Equals(disb.WspSubmission.StatusCode, "APPROVED", StringComparison.OrdinalIgnoreCase) &&
             !string.Equals(disb.WspSubmission.StatusCode, "Approved", StringComparison.OrdinalIgnoreCase))
         {
@@ -577,11 +577,11 @@ public class FinanceService : IFinanceService
         // Gatekeeping 2: Ensure banking details are not under active 14-day statutory cooling-off hold
         if (disb.OrganisationId > 0)
         {
-            var isCoolingOff = await context.BankingDetails.AnyAsync(b => 
-                b.OrganisationId == disb.OrganisationId && 
-                b.IsActive && 
-                b.IsCoolingOffActive && 
-                b.CoolingOffExpiresAt.HasValue && 
+            var isCoolingOff = await context.BankingDetails.AnyAsync(b =>
+                b.OrganisationId == disb.OrganisationId &&
+                b.IsActive &&
+                b.IsCoolingOffActive &&
+                b.CoolingOffExpiresAt.HasValue &&
                 b.CoolingOffExpiresAt.Value > DateTime.UtcNow);
 
             if (isCoolingOff)
@@ -862,7 +862,7 @@ public class FinanceService : IFinanceService
     public async Task<Nsdms.Application.Common.Models.ClawbackNettingResult> NetClawbackLiabilitiesAsync(int organisationId, decimal requestedDisbursementAmount, string userId)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         // Find unsettled statutory SARS / transfer clawbacks for this organisation
         var unsettledAudits = await context.SarsLevyReconAudits
             .Where(a => a.OrganisationId == organisationId && a.ClawbackActionRequired && a.AuditStatusCode != "Resolved" && a.ClawbackAmount > 0)
@@ -936,7 +936,7 @@ public class FinanceService : IFinanceService
             RemainingClawbackBalance = remainingBalance,
             SettledAuditRecordsCount = settledIds.Count,
             SettledReconAuditIds = settledIds,
-            SummaryMessage = netted > 0 
+            SummaryMessage = netted > 0
                 ? $"Successfully netted R {netted:N2} against statutory clawbacks. Net payable disbursement: R {netPayable:N2}."
                 : "No outstanding clawback liabilities found. Full amount approved for disbursement."
         };

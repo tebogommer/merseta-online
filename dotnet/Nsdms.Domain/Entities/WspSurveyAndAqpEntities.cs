@@ -67,7 +67,7 @@ public class AqpPartner : BaseEntity
     public string AqpCode { get; set; } = string.Empty;
     public string AccreditationNumber { get; set; } = string.Empty;
     public string QualityAssuranceBody { get; set; } = "QCTO";
-    
+
     public int? ContactPersonId { get; set; }
     public Person? ContactPerson { get; set; }
 
@@ -120,11 +120,11 @@ public class AqpLearnerAssessment : BaseEntity
     public string EisaExamSession { get; set; } = string.Empty; // e.g. 2026-OCT-EISA-01
     public DateTime AssessmentDate { get; set; } = DateTime.UtcNow;
     public string AssessmentCenter { get; set; } = string.Empty;
-    
+
     public decimal? TheoryScorePercentage { get; set; }
     public decimal? PracticalScorePercentage { get; set; }
     public decimal FinalOverallPercentage { get; set; } = 0;
-    
+
     public string ResultStatusCode { get; set; } = "Pending"; // Competent, NotYetCompetent, Absent, Deferred, Pending
     public string ModerationStatusCode { get; set; } = "Pending"; // Approved, Endorsed, FlaggedForRecheck, Pending
     public string? CertificateNumber { get; set; }

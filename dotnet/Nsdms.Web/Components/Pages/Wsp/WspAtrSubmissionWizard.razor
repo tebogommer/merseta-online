@@ -1,6 +1,7 @@
 @page "/wsp/submit"
 @page "/wsp/create"
 @using Nsdms.Application.Services
+@using Nsdms.Application.Common.Models
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
 @using Nsdms.Web.Components.Shared.Wsp
@@ -17,14 +18,21 @@
 @rendermode InteractiveServer
 
 <div class="mb-4">
-    <div class="d-flex align-center gap-2 mb-2">
-        <MudButton Variant="Variant.Text"
-                   StartIcon="@Icons.Material.Filled.ArrowBack"
-                   Color="Color.Default"
-                   OnClick="GoBack">
-            Back to WSP Submissions
-        </MudButton>
-        <MudBreadcrumbs Items="_breadcrumbs" Separator=">" Class="pa-0 ma-0" />
+    <div class="d-flex align-center justify-space-between flex-wrap gap-2 mb-2">
+        <div class="d-flex align-center gap-2">
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Color="Color.Default"
+                       OnClick="GoBack">
+                Back to WSP Submissions
+            </MudButton>
+            <MudBreadcrumbs Items="_breadcrumbs" Separator=">" Class="pa-0 ma-0" />
+        </div>
+        <WspWindowCountdownBadge OrganisationId="@_organisationId"
+                                 SchemeYear="@_finYear"
+                                 Dense="true"
+                                 OnStatusLoaded="HandleWindowStatusLoaded"
+                                 OnWindowExpired="HandleWindowExpired" />
     </div>
 </div>
 
@@ -59,20 +67,20 @@ else if (_isSuccess)
 }
 else
 {
-    @if (!_isWindowOpen)
+    @if (!_isWindowOpen && !(_windowStatus?.HasApprovedExtension == true && _windowStatus.IsOpen))
     {
         <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4 rounded-lg">
             <div class="d-flex flex-column flex-md-row justify-space-between align-md-center gap-3">
                 <div>
                     <MudText Typo="Typo.subtitle1" Class="fw-bold">Mandatory Grant (WSP/ATR) Submission Window Closed</MudText>
                     <MudText Typo="Typo.body2">
-                        The statutory submission deadline for Scheme Year @_finYear closed on @_effectiveDeadline.ToString("dd MMMM yyyy HH:mm UTC"). Further submissions cannot be accepted without an approved extension.
+                        The statutory submission deadline for Scheme Year @_finYear closed on @_effectiveDeadline.ToString("dd MMMM yyyy HH:mm") SAST. Further submissions cannot be accepted without an approved extension.
                     </MudText>
                 </div>
                 <MudButton Variant="Variant.Outlined"
                            Color="Color.Surface"
                            StartIcon="@Icons.Material.Filled.EventBusy"
-                           OnClick="@(() => NavManager.NavigateTo("/wsp/extension-request"))">
+                           OnClick="@(() => NavManager.NavigateTo($"/wsp/extension-request{(_organisationId.HasValue ? $"?organisationId={_organisationId.Value}" : "")}"))">
                     Request Deadline Extension
                 </MudButton>
             </div>
@@ -93,8 +101,14 @@ else
                  OnCancel="GoBack"
                  OnSaveDraft="SaveDraftAsync"
                  OnFinish="SubmitApplicationAsync">
-
-        <!-- STEP 1: Organisation & Payroll Standing -->
+        <HeaderActions>
+            <WspWindowCountdownBadge OrganisationId="@_organisationId"
+                                     SchemeYear="@_finYear"
+                                     OnStatusLoaded="HandleWindowStatusLoaded"
+                                     OnWindowExpired="HandleWindowExpired" />
+        </HeaderActions>
+        <ChildContent>
+            <!-- STEP 1: Organisation & Payroll Standing -->
         <WizardStep Label="Organisation standing"
                     Heading="Employer profile &amp; payroll standing"
                     Description="Verify employer registration, SDL number, financial scheme year, and SARS EMP201 payroll standing"
@@ -234,6 +248,7 @@ else
                                         IsPopiaAndLegalDeclarationAcceptedChanged="@((val) => _isDeclarationAccepted = val)" />
             </ChildContent>
         </WizardReviewStep>
+        </ChildContent>
     </WizardShell>
 }
 
@@ -374,25 +389,50 @@ else
 
     private bool _isWindowOpen = true;
     private DateTime _effectiveDeadline;
+    private WspWindowStatusDto? _windowStatus;
 
     private async Task CheckWindowStatusAsync()
     {
-        if (_organisationId.HasValue && _organisationId.Value > 0)
+        try
         {
-            try
-            {
-                _isWindowOpen = await WspService.IsSubmissionWindowOpenAsync(_organisationId.Value, _finYear);
-                _effectiveDeadline = await WspService.GetEffectiveSubmissionDeadlineAsync(_organisationId.Value, _finYear);
-            }
-            catch
-            {
-                _isWindowOpen = true;
-            }
+            _windowStatus = await WspService.GetWindowStatusAsync(_organisationId, _finYear);
+            _isWindowOpen = _windowStatus.IsOpen;
+            _effectiveDeadline = _windowStatus.EffectiveDeadline;
         }
+        catch
+        {
+            _isWindowOpen = true;
+        }
+    }
+
+    private void HandleWindowStatusLoaded(WspWindowStatusDto status)
+    {
+        _windowStatus = status;
+        _isWindowOpen = status.IsOpen;
+        _effectiveDeadline = status.EffectiveDeadline;
+        StateHasChanged();
+    }
+
+    private async Task HandleWindowExpired()
+    {
+        _isWindowOpen = false;
+        if (_windowStatus != null)
+        {
+            _windowStatus.IsOpen = false;
+            _windowStatus.IsClosed = true;
+            _windowStatus.UrgencyTier = WspUrgencyTier.Closed;
+        }
+        Snackbar.Add("The Mandatory Grant submission window has closed. Submissions can no longer be accepted without an approved extension.", Severity.Error);
+        await InvokeAsync(StateHasChanged);
     }
 
     private void OnStepChanged(int newStep)
     {
+        if (!_isWindowOpen && newStep > _activeStep)
+        {
+            Snackbar.Add($"Mandatory Grant submission window closed on {_effectiveDeadline:dd MMMM yyyy}. Progression is locked without an approved extension.", Severity.Error);
+            return;
+        }
         _activeStep = newStep;
         UpdateReviewGroups();
     }
@@ -500,6 +540,12 @@ else
 
     private Task<bool> ValidateStep1Async()
     {
+        if (!_isWindowOpen)
+        {
+            Snackbar.Add($"Mandatory Grant submission window is closed for scheme year {_finYear}. Progression is locked without an approved extension.", Severity.Error);
+            return Task.FromResult(false);
+        }
+
         if (!_organisationId.HasValue || _organisationId.Value <= 0)
         {
             Snackbar.Add("Please select a submitting employer organisation.", Severity.Warning);

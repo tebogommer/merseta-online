@@ -243,7 +243,7 @@ public class SdpLifecycleAndDisciplinaryTests
     public async Task ReAccreditation_WithinSixMonths_PreservesOperationalStatus()
     {
         var (_, db, _, discService, _) = CreateTestContext();
-        
+
         // Expiry in 3 months (within 6 month window)
         var org = new Organisation { CompanyName = "Precision Training Centre", SdlNumber = "L112233445" };
         db.Organisations.Add(org);

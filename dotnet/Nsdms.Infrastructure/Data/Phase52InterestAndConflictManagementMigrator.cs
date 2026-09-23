@@ -358,7 +358,7 @@ public static class Phase52InterestAndConflictManagementMigrator
         if (orgs.Count > 0)
         {
             var org1 = orgs[0];
-            
+
             // Willem Botha is Director & 60% Shareholder in Org 1
             db.OrganisationGovernanceMembers.Add(new OrganisationGovernanceMember
             {
