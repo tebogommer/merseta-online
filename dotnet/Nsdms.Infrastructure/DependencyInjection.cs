@@ -11,6 +11,8 @@ using Nsdms.Infrastructure.Interceptors;
 using Nsdms.Domain.Entities;
 using Nsdms.Infrastructure.Services;
 using Nsdms.Infrastructure.Services.DocumentCompilers;
+using Nsdms.Application.Common.ExternalToolHooks;
+using Nsdms.Infrastructure.Services.ExternalToolHooks;
 
 namespace Nsdms.Infrastructure;
 
@@ -100,6 +102,14 @@ public static class DependencyInjection
         // B2B API Architecture & Webhook Event Engine
         services.AddScoped<IApiSecurityService, ApiSecurityService>();
         services.AddScoped<IWebhookDispatcherService, WebhookDispatcherService>();
+
+        // External Security Tool Hook Points (Ground Rule 4 / ITGC Compliance)
+        services.AddScoped<ISiemForwarderHook, SiemForwarderHook>();
+        services.AddScoped<IMfaProviderHook, MfaProviderHook>();
+        services.AddScoped<ISecretsVaultHook, SecretsVaultHook>();
+        services.AddScoped<IVulnerabilityScanHook, VulnerabilityScanHook>();
+        services.AddScoped<IBackupVerificationHook, BackupVerificationHook>();
+        services.AddScoped<IItsmChangeTicketHook, ItsmChangeTicketHook>();
 
         return services;
     }

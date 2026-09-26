@@ -253,17 +253,45 @@ public class AnalyticsService : IAnalyticsService
         return result;
     }
 
-    public async Task<ExecutiveDashboardSummaryDto> GetExecutiveDashboardSummaryAsync()
+    public async Task<ExecutiveDashboardSummaryDto> GetExecutiveDashboardSummaryAsync(int? organisationId = null)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
-        var empCount = await context.Organisations.AsNoTracking().CountAsync();
-        var lrnCount = await context.CompanyLearners.AsNoTracking().CountAsync();
-        var provCount = await context.TrainingProviders.AsNoTracking().CountAsync();
-        var grantCount = await context.GrantApplications.AsNoTracking().CountAsync();
 
-        var pendingGrants = await context.GrantApplications.AsNoTracking()
+        int empCount;
+        int lrnCount;
+        int provCount;
+        int grantCount;
+
+        var pendingGrantsQuery = context.GrantApplications.AsNoTracking()
             .Include(g => g.Organisation)
-            .Where(g => g.ApplicationStatusCode == "Pending" || g.ApplicationStatusCode == "Under Review" || g.ApplicationStatusCode == "Committee Review" || g.ApplicationStatusCode == "Submitted")
+            .Where(g => g.ApplicationStatusCode == "Pending" || g.ApplicationStatusCode == "Under Review" || g.ApplicationStatusCode == "Committee Review" || g.ApplicationStatusCode == "Submitted");
+
+        if (organisationId.HasValue)
+        {
+            empCount = await context.Organisations.AsNoTracking()
+                .Where(o => o.Id == organisationId.Value)
+                .CountAsync();
+            lrnCount = await context.CompanyLearners.AsNoTracking()
+                .Where(l => l.EmployerId == organisationId.Value || l.OrganisationId == organisationId.Value)
+                .CountAsync();
+            provCount = await context.TrainingProviders.AsNoTracking()
+                .Where(p => p.OrganisationId == organisationId.Value)
+                .CountAsync();
+            grantCount = await context.GrantApplications.AsNoTracking()
+                .Where(g => g.OrganisationId == organisationId.Value)
+                .CountAsync();
+
+            pendingGrantsQuery = pendingGrantsQuery.Where(g => g.OrganisationId == organisationId.Value);
+        }
+        else
+        {
+            empCount = await context.Organisations.AsNoTracking().CountAsync();
+            lrnCount = await context.CompanyLearners.AsNoTracking().CountAsync();
+            provCount = await context.TrainingProviders.AsNoTracking().CountAsync();
+            grantCount = await context.GrantApplications.AsNoTracking().CountAsync();
+        }
+
+        var pendingGrants = await pendingGrantsQuery
             .OrderByDescending(g => g.CreatedAt)
             .Take(10)
             .ToListAsync();

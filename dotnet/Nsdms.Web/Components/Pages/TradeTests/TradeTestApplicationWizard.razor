@@ -11,12 +11,14 @@
 @using Nsdms.Web.Components.Shared.Wizard
 @using Nsdms.Application.Common.Utilities
 @using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
 @inject ITradeTestAndArplService TradeTestService
 @inject ILearnerService LearnerService
 @inject ITrainingProviderService ProviderService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IWizardDraftService DraftService
+@inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
 
 <div class="mb-4">
@@ -329,11 +331,21 @@ else
         public bool IsDeclarationAccepted { get; init; } = true;
     }
 
+    private string _currentUsername = "CandidateUser";
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
             _loading = true;
+
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (user?.Identity?.IsAuthenticated == true && !string.IsNullOrWhiteSpace(user.Identity.Name))
+            {
+                _currentUsername = user.Identity.Name;
+            }
+
             _learners = await LearnerService.GetAllAsync();
             _trainingProviders = await ProviderService.GetAllAsync();
 
@@ -597,8 +609,8 @@ else
     {
         try
         {
-            var draft = await DraftService.GetActiveDraftAsync("TradeTestApplication", "CandidateUser");
-            if (draft != null && draft.CurrentStepIndex > 0)
+            var draft = await DraftService.GetActiveDraftAsync("TradeTestApplication", _currentUsername);
+            if (draft != null && draft.CurrentStepIndex >= 0)
             {
                 _loadedDraft = draft;
                 _activeDraftKey = draft.DraftKey;
@@ -723,7 +735,7 @@ else
                 "TradeTestApplication",
                 "Artisan trade test & ARPL application",
                 "/trade-tests/apply",
-                "CandidateUser",
+                _currentUsername,
                 null,
                 _activeStep,
                 6,
@@ -772,7 +784,7 @@ else
                 qualifyingCategory: _qualifyingCategory,
                 employmentStatus: _employmentStatus,
                 unregisteredEmployerName: _unregisteredEmployerName,
-                currentUsername: "CandidateUser"
+                currentUsername: _currentUsername
             );
 
             _createdApplicationId = app.Id;
@@ -793,7 +805,7 @@ else
                     experienceDetails: _experienceDetails,
                     trainingDetails: new List<ArplTrainingDetail>(),
                     portfolioScorePercentage: 75m,
-                    currentUsername: "CandidateUser"
+                    currentUsername: _currentUsername
                 );
             }
 
@@ -801,7 +813,7 @@ else
             if (_confirmedDocuments.Any())
             {
                 var docTuples = _confirmedDocuments.Select(docCode => (DocTypeCode: docCode, AttachmentId: (int?)null)).ToList();
-                await TradeTestService.SaveDocumentChecklistAsync(app.Id, docTuples, "CandidateUser");
+                await TradeTestService.SaveDocumentChecklistAsync(app.Id, docTuples, _currentUsername);
             }
 
             // Clear submitted draft

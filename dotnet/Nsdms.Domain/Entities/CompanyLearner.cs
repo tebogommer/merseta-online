@@ -36,6 +36,12 @@ public class CompanyLearner : BaseEntity
     public Organisation? Organisation { get; set; }
 
     /// <summary>
+    /// Alias referencing the sponsoring Employer Organisation.
+    /// </summary>
+    [NotMapped]
+    public int? EmployerId { get => OrganisationId; set => OrganisationId = value; }
+
+    /// <summary>
     /// Optional foreign key referencing the specific host branch / plant facility.
     /// </summary>
     public int? OrganisationSiteId { get; set; }

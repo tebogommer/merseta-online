@@ -9,11 +9,13 @@
 @using Nsdms.Web.Components.Shared.Forms
 @using Nsdms.Web.Components.Shared.Wizard
 @using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
 @inject ITrainingProviderService ProviderService
 @inject IOrganisationService OrgService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IWizardDraftService DraftService
+@inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
 
 <div class="mb-4">
@@ -329,11 +331,21 @@ else
         public bool IsDeclarationAccepted { get; init; } = true;
     }
 
+    private string _currentUsername = "SdpUser";
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
             _loading = true;
+
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (user?.Identity?.IsAuthenticated == true && !string.IsNullOrWhiteSpace(user.Identity.Name))
+            {
+                _currentUsername = user.Identity.Name;
+            }
+
             await Task.Delay(50);
             UpdateReviewGroups();
 
@@ -567,8 +579,8 @@ else
     {
         try
         {
-            var draft = await DraftService.GetActiveDraftAsync("SdpAccreditation", "SdpUser");
-            if (draft != null && draft.CurrentStepIndex > 0)
+            var draft = await DraftService.GetActiveDraftAsync("SdpAccreditation", _currentUsername);
+            if (draft != null && draft.CurrentStepIndex >= 0)
             {
                 _loadedDraft = draft;
                 _activeDraftKey = draft.DraftKey;
@@ -711,7 +723,7 @@ else
                 "SdpAccreditation",
                 "SDP institutional accreditation application",
                 "/providers/apply-accreditation",
-                "SdpUser",
+                _currentUsername,
                 null,
                 _activeStep,
                 5,

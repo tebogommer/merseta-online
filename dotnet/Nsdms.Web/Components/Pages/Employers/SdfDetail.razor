@@ -6,6 +6,7 @@
 @inject ISdfAppointmentService SdfService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @rendermode InteractiveServer
 
 <PageTitle>SDF Appointment 360° Hub | merSETA NSDMS</PageTitle>
@@ -346,6 +347,17 @@ else
 
     private async Task DeactivateAsync()
     {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Deactivate SDF Appointment" },
+            { x => x.Consequence, "Are you sure you want to deactivate this SDF appointment? The facilitator will no longer have submission or management access for this organisation." },
+            { x => x.ConfirmLabel, "Deactivate Appointment" },
+            { x => x.IsDestructive, true }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Deactivate SDF Appointment", parameters);
+        var result = await dialog.Result;
+        if (result == null || result.Canceled) return;
+
         try
         {
             await SdfService.DeleteSdfAppointmentAsync(Id, "Admin");

@@ -8,11 +8,13 @@
 @using Nsdms.Web.Components.Shared.Forms
 @using Nsdms.Web.Components.Shared.Wizard
 @using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IFinanceService FinanceService
 @inject IOrganisationService OrgService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IWizardDraftService DraftService
+@inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
 
 <div class="mb-4">
@@ -222,12 +224,21 @@ else
     };
 
     private List<WizardReviewGroup> _reviewGroups = new();
+    private string _currentUsername = "SdfUser";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             _loading = true;
+
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (user?.Identity?.IsAuthenticated == true && !string.IsNullOrWhiteSpace(user.Identity.Name))
+            {
+                _currentUsername = user.Identity.Name;
+            }
+
             _organisations = await OrgService.GetAllAsync();
 
             if (_organisations.Any())
@@ -389,8 +400,8 @@ else
     {
         try
         {
-            var draft = await DraftService.GetActiveDraftAsync("InterSetaTransfer", "SdfUser", _organisationId);
-            if (draft != null && draft.CurrentStepIndex > 0)
+            var draft = await DraftService.GetActiveDraftAsync("InterSetaTransfer", _currentUsername, _organisationId);
+            if (draft != null && draft.CurrentStepIndex >= 0)
             {
                 _loadedDraft = draft;
                 _activeDraftKey = draft.DraftKey;
@@ -485,7 +496,7 @@ else
                 "InterSetaTransfer",
                 "Section 32 Inter-SETA transfer application",
                 "/inter-seta/transfer-request",
-                "SdfUser",
+                _currentUsername,
                 _organisationId,
                 _activeStep,
                 4,

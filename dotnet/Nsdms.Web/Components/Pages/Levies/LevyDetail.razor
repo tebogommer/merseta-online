@@ -68,14 +68,25 @@
                                     <MudText Typo="Typo.h6">SARS Electronic Data Interchange (EDI) Header</MudText>
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">Batch transmission metadata and financial totals</MudText>
                                 </CardHeaderContent>
+                                <CardHeaderActions>
+                                    <MudTooltip Text="@(_canEditBatchFields ? "Lock financial fields against accidental modification" : "Unlock financial fields to permit manual ledger corrections")">
+                                        <MudButton Variant="Variant.Text"
+                                                   Color="@(_canEditBatchFields ? Color.Warning : Color.Default)"
+                                                   StartIcon="@(_canEditBatchFields ? Icons.Material.Filled.LockOpen : Icons.Material.Filled.Lock)"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => _canEditBatchFields = !_canEditBatchFields)">
+                                            @(_canEditBatchFields ? "Lock Ledger Fields" : "Unlock Ledger Fields")
+                                        </MudButton>
+                                    </MudTooltip>
+                                </CardHeaderActions>
                             </MudCardHeader>
                             <MudCardContent>
                                 <MudGrid>
                                     <MudItem xs="12" md="6">
-                                        <MudTextField T="string" Label="Data File Name" Required="true" @bind-Value="_file.FileName" Variant="Variant.Outlined" />
+                                        <MudTextField T="string" Label="Data File Name" Required="true" @bind-Value="_file.FileName" Variant="Variant.Outlined" ReadOnly="!_canEditBatchFields" HelperText="@(!_canEditBatchFields ? "Protected SARS EDI file name" : null)" />
                                     </MudItem>
                                     <MudItem xs="12" md="6">
-                                        <MudTextField T="string" Label="SARS Transmission Reference" Required="true" @bind-Value="_file.FileRef" Variant="Variant.Outlined" />
+                                        <MudTextField T="string" Label="SARS Transmission Reference" Required="true" @bind-Value="_file.FileRef" Variant="Variant.Outlined" ReadOnly="!_canEditBatchFields" HelperText="@(!_canEditBatchFields ? "Protected SARS transmission reference" : null)" />
                                     </MudItem>
                                     <MudItem xs="12" md="6">
                                         <MudDatePicker Label="Import Transmission Date" @bind-Date="_importDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
@@ -86,10 +97,10 @@
                                         </ReadOnlyField>
                                     </MudItem>
                                     <MudItem xs="12" md="6">
-                                        <MudNumericField T="int" Label="Total Line Item Records" @bind-Value="_file.TotalRecords" Variant="Variant.Outlined" Min="0" />
+                                        <MudNumericField T="int" Label="Total Line Item Records" @bind-Value="_file.TotalRecords" Variant="Variant.Outlined" Min="0" ReadOnly="!_canEditBatchFields" HelperText="@(!_canEditBatchFields ? "Immutable record count from SARS ledger" : null)" />
                                     </MudItem>
                                     <MudItem xs="12" md="6">
-                                        <MudNumericField T="decimal" Label="Total Batch Levy Value (ZAR)" @bind-Value="_file.TotalAmount" Variant="Variant.Outlined" Format="N2" Min="0" />
+                                        <MudNumericField T="decimal" Label="Total Batch Levy Value (ZAR)" @bind-Value="_file.TotalAmount" Variant="Variant.Outlined" Format="N2" Min="0" ReadOnly="!_canEditBatchFields" HelperText="@(!_canEditBatchFields ? "Immutable financial batch total" : null)" />
                                     </MudItem>
                                 </MudGrid>
                             </MudCardContent>
@@ -355,6 +366,7 @@
     private LevyFile _file = new();
     private bool _loading = true;
     private bool _isSaving = false;
+    private bool _canEditBatchFields = false;
 
     private List<LevyFileLine> _lines = new();
     private DateTime? _importDate;

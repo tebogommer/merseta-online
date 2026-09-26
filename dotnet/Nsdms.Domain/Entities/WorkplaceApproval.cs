@@ -83,6 +83,26 @@ public class WorkplaceApproval : BaseEntity
     public Person? AssessorPerson { get; set; }
 
     /// <summary>
+    /// Foreign key referencing the verifying moderator Person.
+    /// </summary>
+    public int? ModeratorPersonId { get; set; }
+
+    /// <summary>
+    /// Navigational reference to the verifying moderator Person.
+    /// </summary>
+    public Person? ModeratorPerson { get; set; }
+
+    /// <summary>
+    /// Foreign key referencing the designated facilitator Person.
+    /// </summary>
+    public int? FacilitatorPersonId { get; set; }
+
+    /// <summary>
+    /// Navigational reference to the facilitator Person.
+    /// </summary>
+    public Person? FacilitatorPerson { get; set; }
+
+    /// <summary>
     /// Official auditor recommendations, tool adjustments, or compliance notes.
     /// </summary>
     public string? Recommendations { get; set; }

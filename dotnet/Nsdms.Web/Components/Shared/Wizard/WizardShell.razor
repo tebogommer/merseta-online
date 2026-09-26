@@ -98,9 +98,9 @@
             </MudButton>
         </div>
 
-        <!-- Left-Centre: Save Draft & Auto-Save Indicator (Hidden on Step 1) -->
+        <!-- Left-Centre: Save Draft & Auto-Save Indicator -->
         <div class="wizard-footer-center flex-grow-1 d-flex align-center justify-start ml-2 gap-2 flex-wrap">
-            @if (ActiveStepIndex > 0 && AllowSaveDraft)
+            @if (ActiveStepIndex >= 0 && AllowSaveDraft)
             {
                 <MudButton Variant="Variant.Text"
                            Color="Color.Primary"
@@ -404,7 +404,7 @@
             {
                 if (cancellationToken.IsCancellationRequested) break;
 
-                if (ActiveStepIndex > 0 && AllowSaveDraft && !IsBusy && !_isAutoSaving && OnSaveDraft.HasDelegate)
+                if (ActiveStepIndex >= 0 && AllowSaveDraft && !IsBusy && !_isAutoSaving && OnSaveDraft.HasDelegate)
                 {
                     await InvokeAsync(async () =>
                     {
@@ -454,7 +454,7 @@
 
     public async Task TriggerAutoSaveNowAsync()
     {
-        if (ActiveStepIndex > 0 && AllowSaveDraft && !IsBusy && !_isAutoSaving && OnSaveDraft.HasDelegate)
+        if (ActiveStepIndex >= 0 && AllowSaveDraft && !IsBusy && !_isAutoSaving && OnSaveDraft.HasDelegate)
         {
             await InvokeAsync(async () =>
             {

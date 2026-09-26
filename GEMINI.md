@@ -93,6 +93,21 @@ Every page must pass all 16 items before being declared complete:
 
 ---
 
+### 🛡️ Top 20 Core Business Application Controls (BAC) Architectural Standard
+1. **Segregation of Duties (AC-01)**:
+   - For all approval and signoff workflows (Banking Details, DG MoAs, WSP Submissions), enforce Maker-Checker at both the application tier (`CreatedBy != ApproverId`) and the physical database tier via native SQL Server `CHECK` constraints (e.g. `CHECK (SecondSignoffUserId IS NULL OR CreatedBy <> SecondSignoffUserId)`).
+2. **Output Governance & Data Leakage Protection (AC-17)**:
+   - All bulk dataset exports (CSV/Excel) must prepend a standardized DLP metadata banner: `# merSETA CONFIDENTIAL - Exported by {Username} on {TimestampUtc:O} - FinYear: {finYear}` and atomically log an `EXPORT_DATASET` event to `dbo.AuditLog`.
+3. **Automated Suspense Queue Alerting (AC-11)**:
+   - Any transaction integration message (e.g. `ErpOutboxMessage`) reaching terminal `DeadLetter` status must automatically dispatch an elevated real-time `SystemAlert` to the administrative role (`FinanceAdmin`) and record `DEAD_LETTER_THRESHOLD_ESCALATION` in `dbo.AuditLog`.
+4. **Data at Rest Protection (AC-13)**:
+   - Sensitive financial and demographic columns (e.g. `BankingDetails.AccountNumber`, `Person.IdentificationNumber`) must be protected at rest using native SQL Server Dynamic Data Masking (`partial(...)`).
+5. **Auditor Evidentiary Packs**:
+   - Application controls compliance audits must produce the standardized 5-table compliance pack (ToD, ToE, Database Scripts, Artifact Register, Remediation Roadmap) via the `application-controls` skill.
+
+---
+
+
 ### 🛡️ Mandatory Grant (MG / WSP) Submission Window & Extension Governance Standard
 1. **Statutory Submission Deadline & Cutoff Invariant**:
    - In terms of Regulation 4(1) of the SETA Grant Regulations under the Skills Development Act 97 of 1998, the statutory annual submission window for Workplace Skills Plans (WSP) and Annual Training Reports (ATR) closes strictly on **30 April** (`Governance:WspAnnualSubmissionDeadline`).
@@ -1501,4 +1516,22 @@ Every page must pass all 16 items before being declared complete:
 ### 🛡️ Static Cache & In-Memory Test Isolation Invariant
 1. **Cache Reset Expose**: Any application service utilizing `static` in-memory dictionaries or memory caches for lookup optimization (e.g. `LookupService._lookupCache`) must expose instance `ClearCache()` and static `ResetCache()` methods.
 2. **Test Setup Invariant**: Unit and integration test fixtures that construct mock or in-memory databases (`TestDbContextFactory`) MUST call `service.ClearCache()` or `ServiceType.ResetCache()` in `Arrange` (or test class constructor/fixture) to prevent test contamination and assertion failures from prior test executions.
+
+---
+
+### 🛡️ AGSA & ISO 27001 IT General Controls (ITGC) Coding Invariants
+1. **Append-Only Immutability Guard**:
+   - `AuditLog`, `WorkflowHistory`, `BackgroundJobJournal`, and `ComputationExecutionAudit` are strictly append-only.
+   - Any query or EF Core change tracker mutation that sets `State = EntityState.Modified` or `EntityState.Deleted` on these entities is prohibited and will throw `InvalidOperationException`.
+2. **Period-Filtered Audit Reporting**:
+   - Every audit trail query or export must accept date ranges (`FromDateUtc`, `ToDateUtc`) and compute a deterministic SHA-256 `ReportIntegrityHash`.
+   - All exported audit files (CSV/PDF) must embed the mandatory DLP header banner (`# merSETA CONFIDENTIAL - Exported by {user} on {timestamp} - ISO 27001 / AGSA Verified - SHA256: {hash}`) and automatically persist an `EXPORT_AUDIT_REPORT` audit log event.
+3. **Statutory Lexicon Policy**:
+   - UI views (Razor) must use statutory public sector terminology: use "Requirement", "Threshold", "Stage", or "Control" instead of technical jargon like "Gate".
+4. **External Tool Hook Points**:
+   - Never implement ad-hoc third-party integrations directly in page code. Always route through the appropriate `IExternalToolHook` (`ISiemForwarderHook`, `IMfaProviderHook`, `ISecretsVaultHook`, `IVulnerabilityScanHook`, `IBackupVerificationHook`, `IItsmChangeTicketHook`).
+
+---
+
+# END OF POLICY — NON-NEGOTIABLE
 

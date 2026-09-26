@@ -10,7 +10,7 @@ public interface IAnalyticsService
     Task<List<SspScarceSkillDto>> GetSspScarceSkillsAsync();
     Task<(decimal TotalCommitted, decimal TotalDisbursed, decimal TotalRebates)> GetFinancialOverviewAsync();
     Task<List<ChamberGrantFinancialSummaryDto>> GetChamberGrantFinancialSummaryAsync(string? schemeYear = null);
-    Task<ExecutiveDashboardSummaryDto> GetExecutiveDashboardSummaryAsync();
+    Task<ExecutiveDashboardSummaryDto> GetExecutiveDashboardSummaryAsync(int? organisationId = null);
 }
 
 public class ExecutiveDashboardSummaryDto

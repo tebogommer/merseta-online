@@ -31,6 +31,7 @@ builder.WebHost.UseStaticWebAssets();
 
 // Add MudBlazor services
 builder.Services.AddMudServices();
+builder.Services.AddMemoryCache();
 
 // Response Compression for High Performance
 builder.Services.AddResponseCompression(options =>
@@ -152,7 +153,17 @@ builder.Services.AddRazorComponents()
         options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(15);
         options.DisconnectedCircuitMaxRetained = 2000;
         options.DetailedErrors = builder.Environment.IsDevelopment();
+    })
+    .AddHubOptions(options =>
+    {
+        options.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10 MB limit for spreadsheet imports
     });
+
+// Configure SignalR Hub options globally for all hubs
+builder.Services.Configure<Microsoft.AspNetCore.SignalR.HubOptions>(options =>
+{
+    options.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10 MB limit
+});
 
 // Multi-Tenancy Provider with Blazor Server Interactive Circuit Fallback
 builder.Services.AddScoped<ITenantProvider>(sp =>

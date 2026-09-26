@@ -4,17 +4,29 @@
 @attribute [Authorize]
 @using Microsoft.EntityFrameworkCore
 @using Nsdms.Application.Common
+@using Nsdms.Application.Models
+@using Nsdms.Application.Common.ExternalToolHooks
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
+@using System.Security.Claims
 @inject IAuditService AuditService
 @inject IIsoDpsaAuditComplianceService ComplianceService
+@inject IReportExportService ReportExportService
 @inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ISiemForwarderHook SiemHook
+@inject IMfaProviderHook MfaHook
+@inject ISecretsVaultHook VaultHook
+@inject IVulnerabilityScanHook VulnHook
+@inject IBackupVerificationHook BackupHook
+@inject IItsmChangeTicketHook ItsmHook
 
 <PageTitle>Audited Change Logs &amp; Quality Compliance - MerSETA NSDMS</PageTitle>
 
 <EntityHeader Title="Audited Change Logs &amp; Quality Compliance"
-              Subtitle="ISO 9001:2015 Clause 7.5 &amp; DPSA Directive verified audit logging, zero partial commits, and tamper-evident records"
+              Subtitle="ISO 9001:2015 Clause 7.5, DPSA Directive, &amp; AGSA ITGC verified audit logging with period-filtered exports"
               ReferenceKey="T3-AUDIT-LOGS"
               BreadcrumbItems="@_breadcrumbs">
     <ActionZone>
@@ -27,8 +39,22 @@
                        Disabled="@_isLoading">
                 Refresh Logs
             </MudButton>
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Secondary" 
+                       StartIcon="@Icons.Material.Filled.FileDownload" 
+                       OnClick="ExportPeriodCsvAsync"
+                       Disabled="@(_isLoading || _isExporting || _isExportingPdf)">
+                @(_isExporting ? "Exporting Dossier..." : "Export Period Dossier (CSV)")
+            </MudButton>
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Primary" 
+                       StartIcon="@Icons.Material.Filled.PictureAsPdf" 
+                       OnClick="ExportItgcPdfAsync"
+                       Disabled="@(_isLoading || _isExporting || _isExportingPdf)">
+                @(_isExportingPdf ? "Generating PDF..." : "Export ITGC Dossier (PDF)")
+            </MudButton>
         }
-        else
+        else if (_activeTab == 1)
         {
             <MudButton Variant="Variant.Filled" 
                        Color="Color.Primary" 
@@ -38,51 +64,105 @@
                 @(_isEvaluatingCompliance ? "Evaluating Standards..." : "Run Compliance Audit")
             </MudButton>
         }
+        else
+        {
+            <MudButton Variant="Variant.Outlined" 
+                       Color="Color.Primary" 
+                       StartIcon="@Icons.Material.Filled.Refresh" 
+                       OnClick="RefreshHookStatusesAsync">
+                Refresh Hook Telemetry
+            </MudButton>
+        }
     </ActionZone>
 </EntityHeader>
 
 <MudTabs @bind-ActivePanelIndex="_activeTab" Elevation="1" Rounded="true" Color="Color.Primary" ApplyEffectsToContainer="true" Class="mt-3">
-    <!-- Tab 1: Operational Audit Trail -->
+    <!-- Tab 1: Operational Audit Trail (Period Filtered) -->
     <MudTabPanel Text="Audited Change Logs" Icon="@Icons.Material.Filled.History">
-        <!-- Filter & Search Toolbar -->
+        <!-- Filter & Search Toolbar with Period Filtering -->
         <MudPaper Elevation="0" Class="pa-4 mb-4 rounded-lg border-subtle">
             <MudGrid Spacing="2" Class="align-center">
-                <MudItem xs="12" md="4">
+                <MudItem xs="12" md="3">
                     <MudTextField @bind-Value="_searchQuery"
-                                  Placeholder="Search by Entity, Action, Actor or Record Reference..."
+                                  Placeholder="Search Entity, Action, Actor, or Record..."
                                   Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.Search"
                                   Immediate="true"
                                   DebounceInterval="300"
-                                  OnDebounceIntervalElapsed="ApplyFilters"
+                                  OnDebounceIntervalElapsed="ApplyFiltersAsync"
                                   Clearable="true"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense" />
                 </MudItem>
-                <MudItem xs="12" sm="6" md="3">
-                    <MudSelect T="string" @bind-Value="_selectedEntity" Label="Filter Entity" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" SelectedValuesChanged="ApplyFilters">
-                        <MudSelectItem Value="@("")">All Entities</MudSelectItem>
+                <MudItem xs="12" sm="6" md="2">
+                    <MudSelect T="string" Value="_periodPreset" Label="Period Preset" Variant="Variant.Outlined" Margin="Margin.Dense" ValueChanged="OnPeriodPresetChanged">
+                        <MudSelectItem Value="@("All")">All Time</MudSelectItem>
+                        <MudSelectItem Value="@("Today")">Today</MudSelectItem>
+                        <MudSelectItem Value="@("Last7Days")">Last 7 Days</MudSelectItem>
+                        <MudSelectItem Value="@("Last30Days")">Last 30 Days</MudSelectItem>
+                        <MudSelectItem Value="@("CurrentQuarter")">Current Quarter</MudSelectItem>
+                        <MudSelectItem Value="@("CurrentFiscalYear")">Current FY (2025/26)</MudSelectItem>
+                        <MudSelectItem Value="@("Custom")">Custom Date Range</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6" sm="3" md="2">
+                    <MudDatePicker Date="_fromDate" Label="From Date" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" DateChanged="OnFromDateChanged" />
+                </MudItem>
+                <MudItem xs="6" sm="3" md="2">
+                    <MudDatePicker Date="_toDate" Label="To Date" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" DateChanged="OnToDateChanged" />
+                </MudItem>
+                <MudItem xs="6" sm="6" md="1">
+                    <MudSelect T="string" @bind-Value="_selectedEntity" Label="Entity" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" SelectedValuesChanged="ApplyFiltersAsync">
+                        <MudSelectItem Value="@("")">All</MudSelectItem>
                         @foreach (var entity in _distinctEntities)
                         {
                             <MudSelectItem Value="@entity">@entity</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>
-                <MudItem xs="12" sm="6" md="3">
-                    <MudSelect T="string" @bind-Value="_selectedAction" Label="Filter Action" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" SelectedValuesChanged="ApplyFilters">
-                        <MudSelectItem Value="@("")">All Actions</MudSelectItem>
+                <MudItem xs="6" sm="6" md="1">
+                    <MudSelect T="string" @bind-Value="_selectedAction" Label="Action" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" SelectedValuesChanged="ApplyFiltersAsync">
+                        <MudSelectItem Value="@("")">All</MudSelectItem>
                         @foreach (var action in _distinctActions)
                         {
                             <MudSelectItem Value="@action">@action</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>
-                <MudItem xs="12" md="2" Class="d-flex justify-end">
-                    <MudChip T="string" Color="Color.Info" Variant="Variant.Text">
-                        Total Logs: @_filteredLogs.Count
-                    </MudChip>
+                <MudItem xs="12" md="1" Class="d-flex justify-end">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="LoadAuditLogsAsync" StartIcon="@Icons.Material.Filled.FilterAlt">
+                        Filter
+                    </MudButton>
                 </MudItem>
             </MudGrid>
+
+            <!-- Integrity Hash & Period Stats Sub-Bar -->
+            <div class="d-flex justify-space-between align-center mt-3 pt-2 border-top flex-wrap gap-2">
+                <div class="d-flex align-center gap-2 flex-wrap">
+                    <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Storage">
+                        Records: @_totalRecordsInPeriod
+                    </MudChip>
+                    @if (!string.IsNullOrWhiteSpace(_reportIntegrityHash))
+                    {
+                        <MudTooltip Text="SHA-256 cryptographic seal of all records matching current period filter">
+                            <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.VerifiedUser">
+                                Batch Seal: @(_reportIntegrityHash.Length >= 16 ? _reportIntegrityHash[..16] + "..." : _reportIntegrityHash)
+                            </MudChip>
+                        </MudTooltip>
+                    }
+                    @if (_fromDate.HasValue || _toDate.HasValue)
+                    {
+                        <MudChip T="string" Color="Color.Primary" Variant="Variant.Text" Size="Size.Small">
+                            Period: @(_fromDate?.ToString("yyyy-MM-dd") ?? "Start") to @(_toDate?.ToString("yyyy-MM-dd") ?? "End")
+                        </MudChip>
+                    }
+                </div>
+                <div>
+                    <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small" StartIcon="@Icons.Material.Filled.ClearAll" OnClick="ResetFilters">
+                        Reset Filters
+                    </MudButton>
+                </div>
+            </div>
         </MudPaper>
 
         <!-- Audit Logs DataTable -->
@@ -152,7 +232,7 @@
                 <NoRecordsContent>
                     <EmptyState Icon="@Icons.Material.Filled.SearchOff"
                                 Message="No Audit Logs Found"
-                                Description="No security or mutation audit trail entries match your search criteria. Try clearing your entity or action filters."
+                                Description="No security or mutation audit trail entries match your period or search criteria. Try adjusting your date range or filters."
                                 ActionLabel="Reset Filters"
                                 OnAction="ResetFilters" />
                 </NoRecordsContent>
@@ -349,6 +429,126 @@
             </MudPaper>
         }
     </MudTabPanel>
+
+    <!-- Tab 3: External Security Hooks Status (AGSA & ITGC Readiness) -->
+    <MudTabPanel Text="External Tool Hooks (ITGC Readiness)" Icon="@Icons.Material.Filled.SettingsInputComponent">
+        <MudPaper Elevation="0" Class="pa-4 mb-4 rounded-lg border-subtle">
+            <MudText Typo="Typo.subtitle1" Class="fw-bold mb-1">External Tool Integrations &amp; Hook Points</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                In compliance with AGSA ITGC and ISO 27001 guidelines, the application exposes standard interfaces and configuration placeholders for enterprise external tools. These controls remain in Standby/Ready status until connected to enterprise external services.
+            </MudText>
+
+            <MudGrid Spacing="3">
+                <!-- Hook 1: SIEM Forwarder -->
+                <MudItem xs="12" md="4">
+                    <MudCard Elevation="1" Class="h-100 rounded-lg">
+                        <MudCardContent>
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">SIEM / Log Aggregation</MudText>
+                                <MudChip T="string" Size="Size.Small" Color="@(_siemStatus.IsConfigured ? Color.Success : Color.Info)" Variant="Variant.Filled">
+                                    @(_siemStatus.IsConfigured ? "Connected" : "Hook Ready")
+                                </MudChip>
+                            </div>
+                            <MudText Typo="Typo.caption" Class="d-block fw-bold mb-1">Provider: @_siemStatus.Provider</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @_siemStatus.StatusMessage
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <!-- Hook 2: MFA Provider -->
+                <MudItem xs="12" md="4">
+                    <MudCard Elevation="1" Class="h-100 rounded-lg">
+                        <MudCardContent>
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">MFA / IdP Federation</MudText>
+                                <MudChip T="string" Size="Size.Small" Color="@(_mfaStatus.IsConfigured ? Color.Success : Color.Info)" Variant="Variant.Filled">
+                                    @(_mfaStatus.IsConfigured ? "Active" : "Hook Ready")
+                                </MudChip>
+                            </div>
+                            <MudText Typo="Typo.caption" Class="d-block fw-bold mb-1">Provider: @_mfaStatus.Provider</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @_mfaStatus.StatusMessage
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <!-- Hook 3: Secrets Vault -->
+                <MudItem xs="12" md="4">
+                    <MudCard Elevation="1" Class="h-100 rounded-lg">
+                        <MudCardContent>
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Secrets &amp; Key Vault</MudText>
+                                <MudChip T="string" Size="Size.Small" Color="@(_vaultStatus.IsConfigured ? Color.Success : Color.Info)" Variant="Variant.Filled">
+                                    @(_vaultStatus.IsConfigured ? "Vault Connected" : "Hook Ready")
+                                </MudChip>
+                            </div>
+                            <MudText Typo="Typo.caption" Class="d-block fw-bold mb-1">Provider: @_vaultStatus.Provider</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @_vaultStatus.StatusMessage
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <!-- Hook 4: Vulnerability Scanner -->
+                <MudItem xs="12" md="4">
+                    <MudCard Elevation="1" Class="h-100 rounded-lg">
+                        <MudCardContent>
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Vulnerability Scanner</MudText>
+                                <MudChip T="string" Size="Size.Small" Color="@(_vulnStatus.IsConfigured ? Color.Success : Color.Info)" Variant="Variant.Filled">
+                                    @(_vulnStatus.IsConfigured ? "Active Control" : "Hook Ready")
+                                </MudChip>
+                            </div>
+                            <MudText Typo="Typo.caption" Class="d-block fw-bold mb-1">Provider: @_vulnStatus.Provider</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @_vulnStatus.StatusMessage
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <!-- Hook 5: Backup & DR Verification -->
+                <MudItem xs="12" md="4">
+                    <MudCard Elevation="1" Class="h-100 rounded-lg">
+                        <MudCardContent>
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">Backup &amp; DR Verification</MudText>
+                                <MudChip T="string" Size="Size.Small" Color="@(_backupStatus.IsConfigured ? Color.Success : Color.Info)" Variant="Variant.Filled">
+                                    @(_backupStatus.IsConfigured ? "Active Monitoring" : "Hook Ready")
+                                </MudChip>
+                            </div>
+                            <MudText Typo="Typo.caption" Class="d-block fw-bold mb-1">Provider: @_backupStatus.Provider</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @_backupStatus.StatusMessage
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <!-- Hook 6: ITSM Change Ticket -->
+                <MudItem xs="12" md="4">
+                    <MudCard Elevation="1" Class="h-100 rounded-lg">
+                        <MudCardContent>
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold">ITSM CAB Change Control</MudText>
+                                <MudChip T="string" Size="Size.Small" Color="@(_itsmStatus.IsConfigured ? Color.Success : Color.Info)" Variant="Variant.Filled">
+                                    @(_itsmStatus.IsConfigured ? "CAB Enforced" : "Hook Ready")
+                                </MudChip>
+                            </div>
+                            <MudText Typo="Typo.caption" Class="d-block fw-bold mb-1">Provider: @_itsmStatus.Provider</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @_itsmStatus.StatusMessage
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </MudTabPanel>
 </MudTabs>
 
 <!-- Detail Inspection Dialog -->
@@ -413,10 +613,27 @@
     private string? _selectedEntity;
     private string? _selectedAction;
     private bool _isLoading = true;
+    private bool _isExporting = false;
+    private bool _isExportingPdf = false;
+
+    // Period Filter State
+    private string _periodPreset = "All";
+    private DateTime? _fromDate;
+    private DateTime? _toDate;
+    private int _totalRecordsInPeriod = 0;
+    private string _reportIntegrityHash = string.Empty;
 
     // Compliance Evaluation
     private AuditComplianceReport? _complianceReport;
     private bool _isEvaluatingCompliance = false;
+
+    // External Hooks Status
+    private ExternalToolStatus _siemStatus = new();
+    private ExternalToolStatus _mfaStatus = new();
+    private ExternalToolStatus _vaultStatus = new();
+    private ExternalToolStatus _vulnStatus = new();
+    private ExternalToolStatus _backupStatus = new();
+    private ExternalToolStatus _itsmStatus = new();
 
     // Detail Dialog
     private bool _showDetailDialog = false;
@@ -426,7 +643,18 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await RefreshHookStatusesAsync();
         await LoadAuditLogsAsync();
+    }
+
+    private async Task RefreshHookStatusesAsync()
+    {
+        _siemStatus = await SiemHook.GetStatusAsync();
+        _mfaStatus = await MfaHook.GetStatusAsync();
+        _vaultStatus = await VaultHook.GetStatusAsync();
+        _vulnStatus = await VulnHook.GetStatusAsync();
+        _backupStatus = await BackupHook.GetStatusAsync();
+        _itsmStatus = await ItsmHook.GetStatusAsync();
     }
 
     private async Task LoadAuditLogsAsync()
@@ -434,21 +662,168 @@
         _isLoading = true;
         try
         {
-            _logs = await AuditService.GetRecentLogsAsync(500);
+            var req = new AuditPeriodFilterRequest
+            {
+                FromDateUtc = _fromDate.HasValue ? DateTime.SpecifyKind(_fromDate.Value, DateTimeKind.Utc) : null,
+                ToDateUtc = _toDate.HasValue ? DateTime.SpecifyKind(_toDate.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc) : null,
+                EntityName = string.IsNullOrWhiteSpace(_selectedEntity) ? null : _selectedEntity,
+                ActionName = string.IsNullOrWhiteSpace(_selectedAction) ? null : _selectedAction,
+                SearchTerm = string.IsNullOrWhiteSpace(_searchQuery) ? null : _searchQuery,
+                PageNumber = 1,
+                PageSize = 250
+            };
+
+            var result = await AuditService.GetAuditReportByPeriodAsync(req);
+            _logs = result.Logs;
+            _totalRecordsInPeriod = result.TotalCount;
+            _reportIntegrityHash = result.ReportIntegrityHash;
 
             _distinctEntities = _logs.Select(l => l.EntityName).Where(e => !string.IsNullOrEmpty(e)).Distinct().OrderBy(e => e).ToList();
             _distinctActions = _logs.Select(l => l.ActionName).Where(a => !string.IsNullOrEmpty(a)).Distinct().OrderBy(a => a).ToList();
 
-            ApplyFilters();
+            _filteredLogs = _logs;
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading audit trail: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error loading period audit trail: {ex.Message}", Severity.Error);
         }
         finally
         {
             _isLoading = false;
         }
+    }
+
+    private async Task ExportPeriodCsvAsync()
+    {
+        _isExporting = true;
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var username = authState.User.Identity?.Name ?? "ADMIN_AUDITOR";
+
+            var req = new AuditPeriodFilterRequest
+            {
+                FromDateUtc = _fromDate.HasValue ? DateTime.SpecifyKind(_fromDate.Value, DateTimeKind.Utc) : null,
+                ToDateUtc = _toDate.HasValue ? DateTime.SpecifyKind(_toDate.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc) : null,
+                EntityName = string.IsNullOrWhiteSpace(_selectedEntity) ? null : _selectedEntity,
+                ActionName = string.IsNullOrWhiteSpace(_selectedAction) ? null : _selectedAction,
+                SearchTerm = string.IsNullOrWhiteSpace(_searchQuery) ? null : _searchQuery,
+                PageNumber = 1,
+                PageSize = 1000
+            };
+
+            var csvBytes = await AuditService.ExportAuditReportCsvAsync(req, username);
+            var base64 = Convert.ToBase64String(csvBytes);
+            var fileName = $"merSETA_Audit_Dossier_{DateTime.UtcNow:yyyyMMdd_HHmmss}.csv";
+
+            await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", fileName, "text/csv", base64);
+            Snackbar.Add($"Audit dossier successfully exported ({csvBytes.Length:N0} bytes) with cryptographic security seal.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to export audit dossier: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isExporting = false;
+        }
+    }
+
+    private async Task ExportItgcPdfAsync()
+    {
+        _isExportingPdf = true;
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var username = authState.User.Identity?.Name ?? "ADMIN_AUDITOR";
+
+            var req = new AuditPeriodFilterRequest
+            {
+                FromDateUtc = _fromDate.HasValue ? DateTime.SpecifyKind(_fromDate.Value, DateTimeKind.Utc) : null,
+                ToDateUtc = _toDate.HasValue ? DateTime.SpecifyKind(_toDate.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc) : null,
+                EntityName = string.IsNullOrWhiteSpace(_selectedEntity) ? null : _selectedEntity,
+                ActionName = string.IsNullOrWhiteSpace(_selectedAction) ? null : _selectedAction,
+                SearchTerm = string.IsNullOrWhiteSpace(_searchQuery) ? null : _searchQuery,
+                PageNumber = 1,
+                PageSize = 1000
+            };
+
+            var pdfBytes = await ReportExportService.GenerateItgcAuditDossierPdfAsync(req, username);
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var fileName = $"merSETA_ITGC_Audit_Dossier_{DateTime.UtcNow:yyyyMMdd_HHmmss}.pdf";
+
+            await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", fileName, "application/pdf", base64);
+            Snackbar.Add($"Statutory ITGC audit dossier successfully generated ({pdfBytes.Length:N0} bytes) with cryptographic security seal and QR verification.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to generate ITGC audit dossier: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isExportingPdf = false;
+        }
+    }
+
+    private async Task OnPeriodPresetChanged(string? preset)
+    {
+        _periodPreset = preset ?? "All";
+        var now = DateTime.UtcNow;
+
+        switch (_periodPreset)
+        {
+            case "Today":
+                _fromDate = now.Date;
+                _toDate = now.Date;
+                break;
+            case "Last7Days":
+                _fromDate = now.Date.AddDays(-7);
+                _toDate = now.Date;
+                break;
+            case "Last30Days":
+                _fromDate = now.Date.AddDays(-30);
+                _toDate = now.Date;
+                break;
+            case "CurrentQuarter":
+                // merSETA Fiscal Quarters: Q1: Apr-Jun, Q2: Jul-Sep, Q3: Oct-Dec, Q4: Jan-Mar
+                var m = now.Month;
+                int qStartMonth = m switch { >= 4 and <= 6 => 4, >= 7 and <= 9 => 7, >= 10 and <= 12 => 10, _ => 1 };
+                var qYear = now.Year;
+                _fromDate = new DateTime(qYear, qStartMonth, 1);
+                _toDate = _fromDate.Value.AddMonths(3).AddDays(-1);
+                break;
+            case "CurrentFiscalYear":
+                var fyStartYear = now.Month >= 4 ? now.Year : now.Year - 1;
+                _fromDate = new DateTime(fyStartYear, 4, 1);
+                _toDate = new DateTime(fyStartYear + 1, 3, 31);
+                break;
+            case "All":
+            default:
+                _fromDate = null;
+                _toDate = null;
+                break;
+        }
+
+        await LoadAuditLogsAsync();
+    }
+
+    private async Task OnFromDateChanged(DateTime? date)
+    {
+        _fromDate = date;
+        _periodPreset = "Custom";
+        await LoadAuditLogsAsync();
+    }
+
+    private async Task OnToDateChanged(DateTime? date)
+    {
+        _toDate = date;
+        _periodPreset = "Custom";
+        await LoadAuditLogsAsync();
+    }
+
+    private async Task ApplyFiltersAsync()
+    {
+        await LoadAuditLogsAsync();
     }
 
     private async Task RunComplianceAuditAsync()
@@ -467,35 +842,6 @@
         {
             _isEvaluatingCompliance = false;
         }
-    }
-
-    private void ApplyFilters()
-    {
-        var query = _logs.AsEnumerable();
-
-        if (!string.IsNullOrWhiteSpace(_searchQuery))
-        {
-            var q = _searchQuery.Trim().ToLowerInvariant();
-            query = query.Where(l =>
-                (l.EntityName?.ToLowerInvariant().Contains(q) ?? false) ||
-                (l.ActionName?.ToLowerInvariant().Contains(q) ?? false) ||
-                (l.Actor?.ToLowerInvariant().Contains(q) ?? false) ||
-                (l.MetadataJson?.ToLowerInvariant().Contains(q) ?? false) ||
-                l.RecordId.ToString().Contains(q) ||
-                FormatRecordReference(l.EntityName, l.RecordId).ToLowerInvariant().Contains(q));
-        }
-
-        if (!string.IsNullOrWhiteSpace(_selectedEntity))
-        {
-            query = query.Where(l => l.EntityName == _selectedEntity);
-        }
-
-        if (!string.IsNullOrWhiteSpace(_selectedAction))
-        {
-            query = query.Where(l => l.ActionName == _selectedAction);
-        }
-
-        _filteredLogs = query.ToList();
     }
 
     private void OpenDetailDialog(AuditLog log)
@@ -533,6 +879,7 @@
             "delete" or "deleted" or "removed" => Color.Error,
             "disbursed" or "approved" => Color.Primary,
             "rejected" or "cancelled" => Color.Warning,
+            "export_audit_report" => Color.Secondary,
             _ => Color.Secondary
         };
     }
@@ -559,12 +906,15 @@
         };
     }
 
-    private void ResetFilters()
+    private async Task ResetFilters()
     {
         _searchQuery = string.Empty;
         _selectedEntity = null;
         _selectedAction = null;
-        ApplyFilters();
+        _periodPreset = "All";
+        _fromDate = null;
+        _toDate = null;
+        await LoadAuditLogsAsync();
     }
 
     private static string FormatRecordReference(string? entityName, long recordId)

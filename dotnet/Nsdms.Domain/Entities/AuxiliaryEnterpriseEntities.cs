@@ -1,15 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Nsdms.Domain.Common;
 
 namespace Nsdms.Domain.Entities;
 
 #region Module 1: Banking Details Verification & Dual-Signoff
 [Table("BankingDetails")]
-public class BankingDetails
+public class BankingDetails : BaseEntity
 {
-    [Key]
-    public int Id { get; set; }
-
     public int? OrganisationId { get; set; }
     public Organisation? Organisation { get; set; }
 
@@ -39,7 +37,7 @@ public class BankingDetails
 
     public int? BankConfirmationDocumentId { get; set; }
 
-    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    [NotMapped]
     public int? BankConfirmationAttachmentId { get => BankConfirmationDocumentId; set => BankConfirmationDocumentId = value; }
 
     public DateTime? BankConfirmationDate { get; set; }
@@ -69,18 +67,11 @@ public class BankingDetails
     public string? AvsStatusResponse { get; set; }
 
     public bool IsActive { get; set; } = true;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public string CreatedBy { get; set; } = "SYSTEM";
-    public DateTime? ModifiedAt { get; set; }
-    public string? ModifiedBy { get; set; }
 }
 
 [Table("BankingDetailsAudit")]
-public class BankingDetailsAudit
+public class BankingDetailsAudit : BaseEntity
 {
-    [Key]
-    public int Id { get; set; }
-
     public int BankingDetailsId { get; set; }
     public BankingDetails? BankingDetails { get; set; }
 
@@ -100,11 +91,8 @@ public class BankingDetailsAudit
 
 #region Module 2: SDF Registration & Access Appointments
 [Table("SdfCompany")]
-public class SdfCompany
+public class OrganisationSdf : BaseEntity
 {
-    [Key]
-    public int Id { get; set; }
-
     public int OrganisationId { get; set; }
     public Organisation? Organisation { get; set; }
 
@@ -138,18 +126,19 @@ public class SdfCompany
     public bool AllowTrancheClaims { get; set; } = false;
 
     public bool IsActive { get; set; } = true;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public string CreatedBy { get; set; } = "SYSTEM";
-    public DateTime? ModifiedAt { get; set; }
-    public string? ModifiedBy { get; set; }
+}
+
+/// <summary>
+/// Backward compatibility alias for OrganisationSdf adhering to merSETA domain nomenclature.
+/// </summary>
+[Table("SdfCompany")]
+public class SdfCompany : OrganisationSdf
+{
 }
 
 [Table("SdfAppointmentHistory")]
-public class SdfAppointmentHistory
+public class SdfAppointmentHistory : BaseEntity
 {
-    [Key]
-    public int Id { get; set; }
-
     public int SdfCompanyId { get; set; }
     public SdfCompany? SdfCompany { get; set; }
 
@@ -170,11 +159,8 @@ public class SdfAppointmentHistory
 
 #region Module 3: Active Contract Addenda & Project Extension Engine
 [Table("ContractAddenda")]
-public class ContractAddenda
+public class ContractAddenda : BaseEntity
 {
-    [Key]
-    public int Id { get; set; }
-
     public int GrantMoaId { get; set; }
     public GrantMoa? GrantMoa { get; set; }
 
@@ -215,19 +201,11 @@ public class ContractAddenda
 
     public string? ExecutiveApprovedByUserId { get; set; }
     public DateTime? ExecutiveApprovalDate { get; set; }
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public string CreatedBy { get; set; } = "SYSTEM";
-    public DateTime? ModifiedAt { get; set; }
-    public string? ModifiedBy { get; set; }
 }
 
 [Table("ContractExtensionRequest")]
-public class ContractExtensionRequest
+public class ContractExtensionRequest : BaseEntity
 {
-    [Key]
-    public int Id { get; set; }
-
     public int GrantMoaId { get; set; }
     public GrantMoa? GrantMoa { get; set; }
 
@@ -250,19 +228,11 @@ public class ContractExtensionRequest
     public string? ReviewedByUserId { get; set; }
     public DateTime? ReviewDate { get; set; }
     public string? ReviewerComments { get; set; }
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public string CreatedBy { get; set; } = "SYSTEM";
-    public DateTime? ModifiedAt { get; set; }
-    public string? ModifiedBy { get; set; }
 }
 
 [Table("ContractTerminationRequest")]
-public class ContractTerminationRequest
+public class ContractTerminationRequest : BaseEntity
 {
-    [Key]
-    public int Id { get; set; }
-
     public int GrantMoaId { get; set; }
     public GrantMoa? GrantMoa { get; set; }
 
@@ -284,21 +254,13 @@ public class ContractTerminationRequest
 
     public string? SettledByUserId { get; set; }
     public DateTime? SettlementDate { get; set; }
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public string CreatedBy { get; set; } = "SYSTEM";
-    public DateTime? ModifiedAt { get; set; }
-    public string? ModifiedBy { get; set; }
 }
 #endregion
 
 #region Module 4: SDP & Assessor Extension of Scope & Re-Accreditation
 [Table("SdpExtensionOfScope")]
-public class SdpExtensionOfScope
+public class SdpExtensionOfScope : BaseEntity
 {
-    [Key]
-    public int Id { get; set; }
-
     public int TrainingProviderId { get; set; }
     public TrainingProvider? TrainingProvider { get; set; }
 
@@ -336,19 +298,11 @@ public class SdpExtensionOfScope
 
     [NotMapped]
     public DateTime? ApprovedDate { get => ApprovalDate; set => ApprovalDate = value; }
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public string CreatedBy { get; set; } = "SYSTEM";
-    public DateTime? ModifiedAt { get; set; }
-    public string? ModifiedBy { get; set; }
 }
 
 [Table("SdpReAccreditationApplication")]
-public class SdpReAccreditationApplication
+public class SdpReAccreditationApplication : BaseEntity
 {
-    [Key]
-    public int Id { get; set; }
-
     public int TrainingProviderId { get; set; }
     public TrainingProvider? TrainingProvider { get; set; }
 
@@ -385,6 +339,7 @@ public class SdpReAccreditationApplication
     public string? CommitteeDecisionNumber { get; set; }
     public DateTime? CommitteeMeetingDate { get; set; }
     public string? RenewalAuditReportRef { get; set; }
+
     [NotMapped]
     public string Status { get => StatusCode; set => StatusCode = value; }
 
@@ -393,11 +348,6 @@ public class SdpReAccreditationApplication
 
     [NotMapped]
     public bool IsAuditPassed { get => QmsComplianceAudited; set => QmsComplianceAudited = value; }
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public string CreatedBy { get; set; } = "SYSTEM";
-    public DateTime? ModifiedAt { get; set; }
-    public string? ModifiedBy { get; set; }
 }
 
 public class SdpReAccreditation : SdpReAccreditationApplication
@@ -405,11 +355,8 @@ public class SdpReAccreditation : SdpReAccreditationApplication
 }
 
 [Table("AssessorExtensionOfScope")]
-public class AssessorExtensionOfScope
+public class AssessorExtensionOfScope : BaseEntity
 {
-    [Key]
-    public int Id { get; set; }
-
     public int AssessorPersonId { get; set; }
     public Person? AssessorPerson { get; set; }
 
@@ -435,12 +382,5 @@ public class AssessorExtensionOfScope
 
     public string? EndorsedByUserId { get; set; }
     public DateTime? EndorsementDate { get; set; }
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public string CreatedBy { get; set; } = "SYSTEM";
-    public DateTime? ModifiedAt { get; set; }
-    public string? ModifiedBy { get; set; }
 }
 #endregion
-
-

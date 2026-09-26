@@ -21,6 +21,7 @@
                       Margin="Margin.Dense"
                       DebounceInterval="300"
                       OnDebounceIntervalElapsed="OnSearchChanged"
+                      OnKeyDown="HandleSearchKeyDown"
                       Class="mb-3"
                       aria-label="Search filter" />
 
@@ -45,6 +46,7 @@
                     {
                         <MudTh>Reference / Name</MudTh>
                         <MudTh>Details</MudTh>
+                        <MudTh Style="width: 120px; text-align: right;">Action</MudTh>
                     }
                 </HeaderContent>
                 <RowTemplate>
@@ -55,12 +57,35 @@
                     else if (DisplayFunc != null)
                     {
                         var display = DisplayFunc(context);
+                        var isSelected = EqualityComparer<TItem>.Default.Equals(context, _selectedItem);
                         <MudTd Class="font-weight-medium">@display.Primary</MudTd>
                         <MudTd Class="text-secondary">@display.Secondary</MudTd>
+                        <MudTd Style="text-align: right;">
+                            <MudButton Variant="@(isSelected ? Variant.Filled : Variant.Outlined)"
+                                       Color="@(isSelected ? Color.Primary : Color.Default)"
+                                       Size="Size.Small"
+                                       StartIcon="@(isSelected ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.CheckCircleOutline)"
+                                       OnClick="@(() => SelectRow(context))"
+                                       aria-label="@($"Select {display.Primary}")">
+                                @(isSelected ? "Selected" : "Select")
+                            </MudButton>
+                        </MudTd>
                     }
                     else
                     {
-                        <MudTd colspan="2">@context?.ToString()</MudTd>
+                        var isSelected = EqualityComparer<TItem>.Default.Equals(context, _selectedItem);
+                        <MudTd Class="font-weight-medium">@context?.ToString()</MudTd>
+                        <MudTd Class="text-secondary">—</MudTd>
+                        <MudTd Style="text-align: right;">
+                            <MudButton Variant="@(isSelected ? Variant.Filled : Variant.Outlined)"
+                                       Color="@(isSelected ? Color.Primary : Color.Default)"
+                                       Size="Size.Small"
+                                       StartIcon="@(isSelected ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.CheckCircleOutline)"
+                                       OnClick="@(() => SelectRow(context))"
+                                       aria-label="Select item">
+                                @(isSelected ? "Selected" : "Select")
+                            </MudButton>
+                        </MudTd>
                     }
                 </RowTemplate>
                 <NoRecordsContent>
@@ -109,6 +134,14 @@
     {
         _searchTerm = text;
         await LoadDataAsync();
+    }
+
+    private void HandleSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && _items.Count > 0 && EqualityComparer<TItem>.Default.Equals(_selectedItem, default))
+        {
+            _selectedItem = _items[0];
+        }
     }
 
     private async Task LoadDataAsync()

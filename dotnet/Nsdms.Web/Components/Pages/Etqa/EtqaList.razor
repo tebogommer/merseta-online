@@ -2,6 +2,7 @@
 @inject IEtqaService EtqaService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @rendermode InteractiveServer
 
 <div class="d-flex justify-space-between align-center mb-4">
@@ -99,9 +100,7 @@
                 </MudTd>
             </RowTemplate>
             <NoRecordsContent>
-                <div class="pa-4 text-center">
-                    <MudText Typo="Typo.body1" Color="Color.Secondary">No ETQA practitioners found matching search criteria.</MudText>
-                </div>
+                <EmptyStateCard Title="No ETQA practitioners found" Description="No ETQA assessors or moderators match your filter criteria." Icon="@Icons.Material.Filled.PersonSearch" />
             </NoRecordsContent>
             <PagerContent>
                 <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
@@ -172,6 +171,17 @@
 
     private async Task DeleteAssessor(int id, string regNo)
     {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Delete ETQA Practitioner" },
+            { x => x.Consequence, "This will permanently remove the practitioner and their accreditation scope history." },
+            { x => x.ConfirmLabel, "Delete Practitioner" },
+            { x => x.IsDestructive, true }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete ETQA Practitioner", parameters);
+        var result = await dialog.Result;
+        if (result == null || result.Canceled) return;
+
         var deleted = await EtqaService.DeleteAssessorAsync(id, "Admin");
         if (deleted)
         {

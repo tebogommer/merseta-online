@@ -72,6 +72,8 @@
 }
 
 @code {
+    [CascadingParameter] public CaslUserContext? CascadedUserContext { get; set; }
+    [Parameter] public CaslUserContext? UserContext { get; set; }
     [Parameter, EditorRequired] public string Action { get; set; } = AppPermissions.ActionView;
     [Parameter, EditorRequired] public string Subject { get; set; } = string.Empty;
     [Parameter] public int? TargetOrganisationId { get; set; }
@@ -100,6 +102,13 @@
     private bool _showReasonModal = false;
     private string _reasonText = string.Empty;
 
+    private string? _evaluatedUsername;
+    private string? _evaluatedAction;
+    private string? _evaluatedSubject;
+    private int? _evaluatedTargetOrgId;
+    private CaslUserContext? _evaluatedContext;
+    private bool _hasEvaluated = false;
+
     protected override async Task OnParametersSetAsync()
     {
         await EvaluateAuthorizationAsync();
@@ -107,14 +116,48 @@
 
     private async Task EvaluateAuthorizationAsync()
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var username = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value 
-            ?? authState.User.Identity?.Name;
+        var effectiveContext = UserContext ?? CascadedUserContext;
+        string? username = null;
 
-        var userContext = !string.IsNullOrEmpty(username)
-            ? await CaslService.GetUserContextByUsernameAsync(username)
-            : new CaslUserContext();
-        _isAuthorized = CaslService.Can(userContext, Action, Subject, TargetOrganisationId);
+        if (effectiveContext == null)
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            username = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value 
+                ?? authState.User.Identity?.Name;
+
+            if (_hasEvaluated &&
+                username == _evaluatedUsername &&
+                Action == _evaluatedAction &&
+                Subject == _evaluatedSubject &&
+                TargetOrganisationId == _evaluatedTargetOrgId)
+            {
+                return;
+            }
+
+            effectiveContext = !string.IsNullOrEmpty(username)
+                ? await CaslService.GetUserContextByUsernameAsync(username)
+                : new CaslUserContext();
+        }
+        else
+        {
+            if (_hasEvaluated &&
+                ReferenceEquals(effectiveContext, _evaluatedContext) &&
+                Action == _evaluatedAction &&
+                Subject == _evaluatedSubject &&
+                TargetOrganisationId == _evaluatedTargetOrgId)
+            {
+                return;
+            }
+        }
+
+        _evaluatedUsername = username;
+        _evaluatedAction = Action;
+        _evaluatedSubject = Subject;
+        _evaluatedTargetOrgId = TargetOrganisationId;
+        _evaluatedContext = effectiveContext;
+        _hasEvaluated = true;
+
+        _isAuthorized = CaslService.Can(effectiveContext, Action, Subject, TargetOrganisationId);
     }
 
     private RenderFragment RenderButton() => __builder =>

@@ -3,6 +3,7 @@
 @inject IOrganisationService OrgService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @rendermode InteractiveServer
 
 <div class="d-flex justify-space-between align-center mb-4">
@@ -158,10 +159,7 @@
                 </MudTd>
             </RowTemplate>
             <NoRecordsContent>
-                <div class="pa-8 text-center text-muted">
-                    <MudIcon Icon="@Icons.Material.Filled.SyncAlt" Size="Size.Large" Class="mb-2" />
-                    <MudText Typo="Typo.body1">No Inter-SETA transfers found matching search criteria.</MudText>
-                </div>
+                <EmptyStateCard Title="No Inter-SETA transfers found" Description="No Inter-SETA transfers match your search or filter criteria." Icon="@Icons.Material.Filled.SwapHoriz" />
             </NoRecordsContent>
             <PagerContent>
                 <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
@@ -262,6 +260,17 @@
 
     private async Task DeleteTransfer(int id)
     {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Delete Inter-SETA Transfer" },
+            { x => x.Consequence, "Are you sure you want to delete this inter-SETA transfer record? This action cannot be undone." },
+            { x => x.ConfirmLabel, "Delete Transfer" },
+            { x => x.IsDestructive, true }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Inter-SETA Transfer", parameters);
+        var result = await dialog.Result;
+        if (result == null || result.Canceled) return;
+
         var deleted = await FinanceService.DeleteInterSetaTransferAsync(id, "Admin");
         if (deleted)
         {

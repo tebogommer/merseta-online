@@ -749,6 +749,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(o => o.ParentOrganisationId)
                   .HasDatabaseName("IX_Organisation_ParentOrganisationId");
 
+            entity.HasIndex(o => o.PrimaryContactPersonId);
+
             entity.HasIndex(o => o.SdlNumber).IsUnique();
             entity.HasIndex(o => o.MainSdlNumber);
             entity.HasIndex(o => o.SetaId);
@@ -1744,6 +1746,16 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                   .HasForeignKey(w => w.AssessorPersonId)
                   .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne(w => w.ModeratorPerson)
+                  .WithMany()
+                  .HasForeignKey(w => w.ModeratorPersonId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(w => w.FacilitatorPerson)
+                  .WithMany()
+                  .HasForeignKey(w => w.FacilitatorPersonId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasMany(w => w.Mentors)
                   .WithOne(m => m.WorkplaceApproval)
                   .HasForeignKey(m => m.WorkplaceApprovalId)
@@ -1775,6 +1787,9 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(w => w.OrganisationId);
             entity.HasIndex(w => w.OrganisationSiteId);
             entity.HasIndex(w => w.ContactPersonId);
+            entity.HasIndex(w => w.AssessorPersonId);
+            entity.HasIndex(w => w.ModeratorPersonId);
+            entity.HasIndex(w => w.FacilitatorPersonId);
             entity.HasIndex(w => w.ApprovalNumber);
             entity.HasIndex(w => w.ApprovalStatusCode);
             entity.HasIndex(w => w.TradeCode);
@@ -2142,6 +2157,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                   .HasForeignKey(t => t.ModeratorPersonId)
                   .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasIndex(t => t.AssessorPersonId);
+            entity.HasIndex(t => t.ModeratorPersonId);
             entity.HasIndex(t => t.CompanyLearnerId);
             entity.HasIndex(t => t.TrainingProviderId);
             entity.HasIndex(t => t.TradeTestCentreCode);
@@ -2289,6 +2306,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                   .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(h => h.WorkflowInstanceId);
+            entity.HasIndex(h => h.FromStateId);
+            entity.HasIndex(h => h.ToStateId);
             entity.HasIndex(h => h.ActionDate);
         });
 
@@ -2305,6 +2324,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                   .HasForeignKey(n => n.WorkflowInstanceId)
                   .OnDelete(DeleteBehavior.Cascade);
 
+            entity.HasIndex(n => n.WorkflowInstanceId);
             entity.HasIndex(n => n.RecipientUserId);
             entity.HasIndex(n => n.IsRead);
             entity.HasIndex(n => n.CreatedDate);
@@ -2582,6 +2602,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                 .HasForeignKey(s => s.DocumentTemplateId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasIndex(s => s.DocumentTemplateId);
             entity.HasIndex(s => s.DocumentSnapshotNumber).IsUnique();
             entity.HasIndex(s => s.RenderedContentHash);
             entity.HasIndex(s => new { s.RelatedEntityType, s.RelatedEntityId });
@@ -3120,6 +3141,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                 .HasForeignKey(a => a.ReviewCommitteeMeetingAgendaId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            entity.HasIndex(a => a.ReviewCommitteeMeetingAgendaId);
             entity.HasIndex(a => a.PersonId);
             entity.HasIndex(a => a.ApplicationNumber);
             entity.HasIndex(a => a.StatusCode);
@@ -3143,6 +3165,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                 .HasForeignKey(s => s.ReviewCommitteeMeetingAgendaId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            entity.HasIndex(s => s.ReviewCommitteeMeetingAgendaId);
             entity.HasIndex(s => s.TrainingProviderId);
             entity.HasIndex(s => s.StatusCode);
         });
@@ -3172,6 +3195,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                 .HasForeignKey(p => p.GrantApplicationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasIndex(p => p.FundingWindowId);
+            entity.HasIndex(p => p.GrantApplicationId);
             entity.HasIndex(p => p.OrganisationId);
             entity.HasIndex(p => p.PlanReferenceNumber);
             entity.HasIndex(p => p.StatusCode);
@@ -3901,7 +3926,10 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         // Auxiliary Enterprise Entities (Options A, B, C, D)
         modelBuilder.Entity<BankingDetails>(entity =>
         {
-            entity.ToTable("BankingDetails");
+            entity.ToTable("BankingDetails", t =>
+            {
+                t.HasCheckConstraint("CK_BankingDetails_MakerChecker_SoD", "[SecondSignoffUserId] IS NULL OR [CreatedBy] <> [SecondSignoffUserId]");
+            });
             entity.HasKey(b => b.Id);
             entity.Property(b => b.BankName).HasMaxLength(100).IsRequired();
             entity.Property(b => b.BranchCode).HasMaxLength(50).IsRequired();
@@ -3911,6 +3939,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(b => b.TrainingProviderId);
             entity.HasIndex(b => b.ApprovalStatusCode);
         });
+
 
         modelBuilder.Entity<BankingDetailsAudit>(entity =>
         {

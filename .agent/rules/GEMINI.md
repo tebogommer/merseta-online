@@ -1155,4 +1155,18 @@ Cite the clause identifier. If the standard does not cover what is needed, stop 
 
 ---
 
+### 🛡️ AGSA & ISO 27001 IT General Controls (ITGC) Coding Invariants
+1. **Append-Only Immutability Guard**:
+   - `AuditLog`, `WorkflowHistory`, `BackgroundJobJournal`, and `ComputationExecutionAudit` are strictly append-only.
+   - Any query or EF Core change tracker mutation that sets `State = EntityState.Modified` or `EntityState.Deleted` on these entities is prohibited and will throw `InvalidOperationException`.
+2. **Period-Filtered Audit Reporting**:
+   - Every audit trail query or export must accept date ranges (`FromDateUtc`, `ToDateUtc`) and compute a deterministic SHA-256 `ReportIntegrityHash`.
+   - All exported audit files (CSV/PDF) must embed the mandatory DLP header banner (`# merSETA CONFIDENTIAL - Exported by {user} on {timestamp} - ISO 27001 / AGSA Verified - SHA256: {hash}`) and automatically persist an `EXPORT_AUDIT_REPORT` audit log event.
+3. **Statutory Lexicon Policy**:
+   - UI views (Razor) must use statutory public sector terminology: use "Requirement", "Threshold", "Stage", or "Control" instead of technical jargon like "Gate".
+4. **External Tool Hook Points**:
+   - Never implement ad-hoc third-party integrations directly in page code. Always route through the appropriate `IExternalToolHook` (`ISiemForwarderHook`, `IMfaProviderHook`, `ISecretsVaultHook`, `IVulnerabilityScanHook`, `IBackupVerificationHook`, `IItsmChangeTicketHook`).
+
+---
+
 # END OF POLICY — NON-NEGOTIABLE

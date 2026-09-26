@@ -160,6 +160,11 @@ public class BankingDetailsService : IBankingDetailsService
             {
                 var entity = await db.BankingDetails.FindAsync(id) ?? throw new InvalidOperationException($"Banking details #{id} not found.");
 
+                if (!string.IsNullOrEmpty(entity.CreatedBy) && string.Equals(entity.CreatedBy, currentUsername, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException("Dual Authorisation Governance breach: The user who submitted the banking details cannot perform the first sign-off.");
+                }
+
                 entity.FirstSignoffUserId = currentUsername;
                 entity.FirstSignoffDate = DateTime.UtcNow;
                 entity.FirstSignoffNotes = notes;

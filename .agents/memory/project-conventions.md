@@ -1,7 +1,7 @@
 ---
 type: project
 created: 2026-05-25
-updated: 2026-09-19
+updated: 2026-09-24
 ---
 
 # Project Conventions
@@ -147,5 +147,19 @@ updated: 2026-09-19
    - **PFMA Maker-Checker Segregation of Duties**: Approvals and statutory signoffs (e.g., Banking Details, Discretionary Grant MoAs, Tranche Claims) must verify that the creator and approver are distinct individuals (`CreatedBy != ApproverUserId`).
 5. **Windows MSBuild Assembly Lock Safeguard in Test Pipelines**:
    - When running test suites (`dotnet test`) on Windows environments with an active local dev server (`Nsdms.Web`), pass `/p:BuildProjectReferences=false` to prevent MSBuild locked DLL copy collisions.
+
+## GEMINI.md Rulebook Synchronization & AGSA / ISO 27001 ITGC Coding Invariants
+- **Always Update GEMINI.md**: Whenever new architectural invariants, compliance policies, or audit controls are introduced or modified, immediately synchronize `GEMINI.md` and `.agent/rules/GEMINI.md` to prevent future regressions.
+- **AGSA & ISO 27001 IT General Controls (ITGC) Coding Invariants**:
+  1. **Append-Only Immutability Guard**:
+     - `AuditLog`, `WorkflowHistory`, `BackgroundJobJournal`, and `ComputationExecutionAudit` are strictly append-only.
+     - Any query or EF Core change tracker mutation that sets `State = EntityState.Modified` or `EntityState.Deleted` on these entities is prohibited and will throw `InvalidOperationException`.
+  2. **Period-Filtered Audit Reporting**:
+     - Every audit trail query or export must accept date ranges (`FromDateUtc`, `ToDateUtc`) and compute a deterministic SHA-256 `ReportIntegrityHash`.
+     - All exported audit files (CSV/PDF) must embed the mandatory DLP header banner (`# merSETA CONFIDENTIAL - Exported by {user} on {timestamp} - ISO 27001 / AGSA Verified - SHA256: {hash}`) and automatically persist an `EXPORT_AUDIT_REPORT` audit log event.
+  3. **Statutory Lexicon Policy**:
+     - UI views (Razor) must use statutory public sector terminology: use "Requirement", "Threshold", "Stage", or "Control" instead of technical jargon like "Gate".
+  4. **External Tool Hook Points**:
+     - Never implement ad-hoc third-party integrations directly in page code. Always route through the appropriate `IExternalToolHook` (`ISiemForwarderHook`, `IMfaProviderHook`, `ISecretsVaultHook`, `IVulnerabilityScanHook`, `IBackupVerificationHook`, `IItsmChangeTicketHook`).
 
 

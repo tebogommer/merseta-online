@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Nsdms.Application.Common;
 using Nsdms.Domain.Security;
 
@@ -24,26 +25,43 @@ public interface ICaslAbilityService
     bool CanViewOrManage(CaslUserContext context, string subject, int? targetOrganisationId = null);
     bool IsOrganisationAccessible(CaslUserContext context, int targetOrganisationId);
     bool CanSubmitLearnerAgreement(CaslUserContext context, int? targetOrganisationId = null, int? targetTrainingProviderId = null);
+    void InvalidateUserContext(string username);
+    void InvalidateUserContext(int userId);
 }
 
 public class CaslAbilityService : ICaslAbilityService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IRolePermissionService _rolePermissionService;
+    private readonly IMemoryCache? _cache;
+    private static readonly TimeSpan SlidingCacheExpiration = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan AbsoluteCacheExpiration = TimeSpan.FromHours(1);
 
-    public CaslAbilityService(INsdmsDbContextFactory contextFactory, IRolePermissionService rolePermissionService)
+    public CaslAbilityService(
+        INsdmsDbContextFactory contextFactory,
+        IRolePermissionService rolePermissionService,
+        IMemoryCache? cache = null)
     {
         _contextFactory = contextFactory;
         _rolePermissionService = rolePermissionService;
+        _cache = cache;
     }
 
     public async Task<CaslUserContext> GetUserContextAsync(int userId)
     {
+        var cacheKey = $"casl_user_ctx_id_{userId}";
+        if (_cache != null && _cache.TryGetValue(cacheKey, out CaslUserContext? cached) && cached != null)
+        {
+            return cached;
+        }
+
         using var db = await _contextFactory.CreateDbContextAsync();
         var user = await db.Users.FindAsync(userId);
         if (user == null)
         {
-            return new CaslUserContext { UserId = userId };
+            var notFoundCtx = new CaslUserContext { UserId = userId };
+            SetCache(cacheKey, notFoundCtx);
+            return notFoundCtx;
         }
 
         var roleIds = await db.UserRoles
@@ -92,7 +110,7 @@ public class CaslAbilityService : ICaslAbilityService
             associatedSdpIds.AddRange(sdpByEmail);
         }
 
-        return new CaslUserContext
+        var context = new CaslUserContext
         {
             UserId = user.Id,
             Username = user.UserName ?? user.Email ?? "Unknown",
@@ -103,32 +121,93 @@ public class CaslAbilityService : ICaslAbilityService
             IsAdmin = isAdmin,
             Permissions = new HashSet<string>(perms, StringComparer.OrdinalIgnoreCase)
         };
+
+        SetCache(cacheKey, context);
+        if (!string.IsNullOrWhiteSpace(context.Username))
+        {
+            SetCache($"casl_user_ctx_name_{context.Username.Trim().ToUpperInvariant()}", context);
+        }
+
+        return context;
     }
 
     public async Task<CaslUserContext> GetUserContextByUsernameAsync(string username)
     {
-        using var db = await _contextFactory.CreateDbContextAsync();
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return new CaslUserContext();
+        }
+
         var normalized = username.Trim().ToUpperInvariant();
+        var cacheKey = $"casl_user_ctx_name_{normalized}";
+
+        if (_cache != null && _cache.TryGetValue(cacheKey, out CaslUserContext? cached) && cached != null)
+        {
+            return cached;
+        }
+
+        // Default fallback for development/demo admin
+        if (normalized == "ADMIN" || normalized == "SYSTEM")
+        {
+            var adminCtx = new CaslUserContext
+            {
+                UserId = 1,
+                Username = username,
+                Roles = new() { "SuperAdmin" },
+                IsAdmin = true,
+                Permissions = new(AppPermissions.GetAllPermissions().Select(p => p.ClaimValue), StringComparer.OrdinalIgnoreCase)
+            };
+            SetCache(cacheKey, adminCtx);
+            return adminCtx;
+        }
+
+        using var db = await _contextFactory.CreateDbContextAsync();
         var user = await db.Users.FirstOrDefaultAsync(u => u.NormalizedUserName == normalized || u.NormalizedEmail == normalized);
         if (user == null)
         {
-            // Default fallback for development/demo admin
-            if (username.Equals("Admin", StringComparison.OrdinalIgnoreCase) || username.Equals("SYSTEM", StringComparison.OrdinalIgnoreCase))
-            {
-                return new CaslUserContext
-                {
-                    UserId = 1,
-                    Username = username,
-                    Roles = new() { "SuperAdmin" },
-                    IsAdmin = true,
-                    Permissions = new(AppPermissions.GetAllPermissions().Select(p => p.ClaimValue), StringComparer.OrdinalIgnoreCase)
-                };
-            }
-
-            return new CaslUserContext { Username = username };
+            var notFoundCtx = new CaslUserContext { Username = username };
+            SetCache(cacheKey, notFoundCtx);
+            return notFoundCtx;
         }
 
-        return await GetUserContextAsync(user.Id);
+        var context = await GetUserContextAsync(user.Id);
+        SetCache(cacheKey, context);
+        return context;
+    }
+
+    private void SetCache(string key, CaslUserContext context)
+    {
+        if (_cache == null) return;
+        var options = new MemoryCacheEntryOptions
+        {
+            SlidingExpiration = SlidingCacheExpiration,
+            AbsoluteExpirationRelativeToNow = AbsoluteCacheExpiration,
+            Size = 1
+        };
+        _cache.Set(key, context, options);
+    }
+
+    public void InvalidateUserContext(string username)
+    {
+        if (string.IsNullOrWhiteSpace(username) || _cache == null) return;
+        var normalized = username.Trim().ToUpperInvariant();
+        var nameKey = $"casl_user_ctx_name_{normalized}";
+        if (_cache.TryGetValue(nameKey, out CaslUserContext? ctx) && ctx != null && ctx.UserId > 0)
+        {
+            _cache.Remove($"casl_user_ctx_id_{ctx.UserId}");
+        }
+        _cache.Remove(nameKey);
+    }
+
+    public void InvalidateUserContext(int userId)
+    {
+        if (_cache == null) return;
+        var idKey = $"casl_user_ctx_id_{userId}";
+        if (_cache.TryGetValue(idKey, out CaslUserContext? ctx) && ctx != null && !string.IsNullOrWhiteSpace(ctx.Username))
+        {
+            _cache.Remove($"casl_user_ctx_name_{ctx.Username.Trim().ToUpperInvariant()}");
+        }
+        _cache.Remove(idKey);
     }
 
     public bool Can(CaslUserContext context, string action, string subject, int? targetOrganisationId = null)

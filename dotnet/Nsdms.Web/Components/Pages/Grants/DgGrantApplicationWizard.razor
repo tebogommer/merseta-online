@@ -9,9 +9,11 @@
 @using Nsdms.Web.Components.Shared.Forms
 @using Nsdms.Web.Components.Shared.Wizard
 @using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IGrantService GrantService
 @inject IOrganisationService OrgService
 @inject IWizardDraftService DraftService
+@inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @rendermode InteractiveServer
@@ -364,10 +366,19 @@ else
         public bool PopiaConsent { get; init; } = false;
     }
 
+    private string _currentUsername = "CurrentSdf";
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (user?.Identity?.IsAuthenticated == true && !string.IsNullOrWhiteSpace(user.Identity.Name))
+            {
+                _currentUsername = user.Identity.Name;
+            }
+
             _fundingWindows = await GrantService.GetFundingWindowsAsync(activeOnly: true);
             _organisations = await OrgService.GetAllAsync();
             _catalogInterventions = await GrantService.GetInterventionCatalogAsync();
@@ -884,8 +895,8 @@ else
     {
         try
         {
-            var draft = await DraftService.GetActiveDraftAsync("DgGrantApplicationComposite", "CurrentSdf", _organisationId > 0 ? _organisationId : null);
-            if (draft != null && draft.CurrentStepIndex > 0)
+            var draft = await DraftService.GetActiveDraftAsync("DgGrantApplicationComposite", _currentUsername, _organisationId > 0 ? _organisationId : null);
+            if (draft != null && draft.CurrentStepIndex >= 0)
             {
                 _loadedDraft = draft;
                 _activeDraftKey = draft.DraftKey;
@@ -1010,7 +1021,7 @@ else
                 "DgGrantApplicationComposite",
                 "Discretionary Grant (DG) application",
                 "/dg-grants/apply",
-                "CurrentSdf",
+                _currentUsername,
                 _organisationId > 0 ? _organisationId : null,
                 _activeStep,
                 8,
@@ -1038,7 +1049,7 @@ else
         try
         {
             var app = BuildApplicationEntity("Submitted");
-            var result = await GrantService.CreateApplicationAsync(app, "CurrentSdf");
+            var result = await GrantService.CreateApplicationAsync(app, _currentUsername);
             _submittedAppId = result.Id;
             _submittedAppNumber = result.ApplicationNumber;
 

@@ -43,14 +43,25 @@
                     return;
                 }
 
-                // Check if user is typing in a form input
-                const activeTag = (document.activeElement?.tagName || '').toLowerCase();
-                const isTyping = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select' || document.activeElement?.isContentEditable;
+                // Check if user is typing in a form input or editable surface
+                const activeEl = document.activeElement;
+                const activeTag = (activeEl?.tagName || '').toLowerCase();
+                const isTyping = activeTag === 'input' || 
+                                 activeTag === 'textarea' || 
+                                 activeTag === 'select' || 
+                                 activeEl?.isContentEditable ||
+                                 activeEl?.getAttribute('role') === 'textbox' ||
+                                 activeEl?.getAttribute('role') === 'searchbox' ||
+                                 activeEl?.getAttribute('role') === 'combobox';
 
-                // 2. '/' shortcut -> Focus primary search input
-                if (e.key === '/' && !isTyping && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                // Single-key shortcut opt-out mechanism (WCAG 2.1.4 Character Key Shortcuts)
+                const isSingleKeyDisabled = window.nsdmsDisableSingleKeyShortcuts === true || 
+                                            localStorage.getItem('nsdms_disable_single_key_shortcuts') === 'true';
+
+                // 2. '/' shortcut -> Focus primary search input (prevent focus hijacking & permit opt-out)
+                if (e.key === '/' && !isTyping && !isSingleKeyDisabled && !e.ctrlKey && !e.metaKey && !e.altKey) {
                     const searchInput = document.querySelector("input[placeholder*='Search' i], input[placeholder*='search' i], .mud-input-slot[type='text']");
-                    if (searchInput) {
+                    if (searchInput && document.activeElement !== searchInput) {
                         e.preventDefault();
                         searchInput.focus();
                         searchInput.select();
@@ -58,19 +69,9 @@
                     return;
                 }
 
-                // 3. 'Escape' shortcut -> Cancel / Back if not in a modal
-                if (e.key === 'Escape' && !isTyping) {
-                    const openDialog = document.querySelector('.mud-dialog-container');
-                    if (!openDialog) {
-                        const backOrCancelBtn = Array.from(document.querySelectorAll('button')).find(b => {
-                            const text = (b.innerText || '').toLowerCase();
-                            return text.includes('back to') || text === 'cancel';
-                        });
-                        if (backOrCancelBtn) {
-                            backOrCancelBtn.click();
-                        }
-                    }
-                }
+                // 3. 'Escape' shortcut handler:
+                // Removed automatic button clicking on Escape to prevent destructively discarding user form edits without warning.
+                // Modal dismissal is handled natively by MudDialog and HTML dialog elements.
             });
         },
 

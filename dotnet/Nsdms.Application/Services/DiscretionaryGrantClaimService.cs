@@ -212,15 +212,38 @@ public class DiscretionaryGrantClaimService : IDiscretionaryGrantClaimService
 
     public async Task<GrantPaymentClaim> ProcessClaimApprovalAsync(ApproveDgClaimRequest request, string currentUsername = "SYSTEM")
     {
+        if (currentUsername == "SYSTEM" && !string.IsNullOrWhiteSpace(request.ApproverName))
+        {
+            currentUsername = request.ApproverName;
+        }
+
         using var db = await _contextFactory.CreateDbContextAsync();
-        var claim = await db.GrantPaymentClaims
-            .Include(c => c.ProjectImplementationPlan)
-            .FirstOrDefaultAsync(c => c.Id == request.ClaimId);
+        var strategy = db.Database.CreateExecutionStrategy();
 
-        if (claim == null)
-            throw new KeyNotFoundException($"GrantPaymentClaim with ID {request.ClaimId} not found.");
+        return await strategy.ExecuteAsync(async () =>
+        {
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
+            if (db.Database.IsRelational())
+            {
+                tx = await db.Database.BeginTransactionAsync();
+            }
 
-        string previousStatus = claim.StatusCode;
+            try
+            {
+                var claim = await db.GrantPaymentClaims
+                    .Include(c => c.ProjectImplementationPlan)
+                    .FirstOrDefaultAsync(c => c.Id == request.ClaimId);
+
+                if (claim == null)
+                    throw new KeyNotFoundException($"GrantPaymentClaim with ID {request.ClaimId} not found.");
+
+                if (!string.IsNullOrEmpty(claim.CreatedBy) && string.Equals(claim.CreatedBy, currentUsername, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("Dual Authorisation Governance breach: Tranche claim preparer cannot approve their own claim.");
+
+                if (!string.IsNullOrEmpty(claim.CloVerifiedBy) && string.Equals(claim.CloVerifiedBy, currentUsername, StringComparison.OrdinalIgnoreCase) && (request.ApprovalRole.Equals("CFO", StringComparison.OrdinalIgnoreCase) || request.ApprovalRole.Equals("EXECUTIVE", StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidOperationException("Dual Authorisation Governance breach: Project CLO verifier cannot provide CFO executive approval.");
+
+                string previousStatus = claim.StatusCode;
 
         switch (request.ApprovalRole.ToUpperInvariant())
         {
@@ -263,18 +286,31 @@ public class DiscretionaryGrantClaimService : IDiscretionaryGrantClaimService
                 throw new ArgumentException($"Unknown approval role '{request.ApprovalRole}'.");
         }
 
-        await db.SaveChangesAsync();
+                await db.SaveChangesAsync();
 
-        await _audit.LogAsync("GrantPaymentClaim", claim.Id, $"ClaimApproval_{request.ApprovalRole}", currentUsername, new
-        {
-            PreviousStatus = previousStatus,
-            NewStatus = claim.StatusCode,
-            Approver = request.ApproverName,
-            Voucher = claim.PaymentVoucherNumber,
-            request.Comments
+                await _audit.LogAsync("GrantPaymentClaim", claim.Id, $"ClaimApproval_{request.ApprovalRole}", currentUsername, new
+                {
+                    PreviousStatus = previousStatus,
+                    NewStatus = claim.StatusCode,
+                    Approver = request.ApproverName,
+                    Voucher = claim.PaymentVoucherNumber,
+                    request.Comments
+                });
+
+                if (tx != null) await tx.CommitAsync();
+
+                return claim;
+            }
+            catch
+            {
+                if (tx != null) await tx.RollbackAsync();
+                throw;
+            }
+            finally
+            {
+                tx?.Dispose();
+            }
         });
-
-        return claim;
     }
 
     public async Task<ErpPaymentBatchHeader> StageApprovedClaimsToErpBatchAsync(List<int> claimIds, string currentUsername = "SYSTEM")

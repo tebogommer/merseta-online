@@ -18,6 +18,7 @@ public class ErpOutboxQueueService : IErpOutboxQueueService
     private readonly IAuditService _audit;
     private readonly ILogger<ErpOutboxQueueService> _logger;
     private readonly HttpClient _httpClient;
+    private readonly INotificationService? _notificationService;
 
     public ErpOutboxQueueService(
         INsdmsDbContextFactory contextFactory,
@@ -26,7 +27,8 @@ public class ErpOutboxQueueService : IErpOutboxQueueService
         ISystemConfigurationService config,
         IAuditService audit,
         ILogger<ErpOutboxQueueService> logger,
-        HttpClient? httpClient = null)
+        HttpClient? httpClient = null,
+        INotificationService? notificationService = null)
     {
         _contextFactory = contextFactory;
         _erpService = erpService;
@@ -35,6 +37,7 @@ public class ErpOutboxQueueService : IErpOutboxQueueService
         _audit = audit;
         _logger = logger;
         _httpClient = httpClient ?? new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        _notificationService = notificationService;
     }
 
     public async Task<ErpOutboxMessage> EnqueueAsync(
@@ -292,8 +295,38 @@ public class ErpOutboxQueueService : IErpOutboxQueueService
                 if (msg.RetryCount >= msg.MaxRetries && !isConnectionFailure)
                 {
                     msg.QueueStatusCode = "DeadLetter";
-                    _logger.LogError("ErpOutboxMessage {Id} reached max retries ({Max}). Escalated to DeadLetter.", msg.Id, msg.MaxRetries);
+                    _logger.LogCritical("ErpOutboxMessage {Id} reached max retries ({Max}). Escalated to DeadLetter status. Error: {Error}", msg.Id, msg.MaxRetries, msg.LastError);
+
+                    _audit.LogAction(db, "ErpOutboxMessage", msg.Id, "DEAD_LETTER_THRESHOLD_ESCALATION", "ErpOutboxWorker", null, new
+                    {
+                        msg.Id,
+                        msg.MessageType,
+                        msg.ReferenceKey,
+                        msg.LastError,
+                        msg.RetryCount
+                    });
+
+                    if (_notificationService != null)
+                    {
+                        try
+                        {
+                            await _notificationService.SendNotificationAsync(
+                                recipientUsername: null,
+                                recipientRole: "FinanceAdmin",
+                                title: "ERP Suspense Queue Alert: DeadLetter Escalation",
+                                message: $"Critical: ErpOutboxMessage #{msg.Id} ({msg.MessageType} - Ref: {msg.ReferenceKey}) exceeded max retries ({msg.MaxRetries}) and moved to DeadLetter suspense queue. Error: {msg.LastError}",
+                                actionUrl: "/finance/erp-outbox",
+                                notificationType: "SystemAlert",
+                                severity: "Error",
+                                actor: "ErpOutboxWorker");
+                        }
+                        catch (Exception notifEx)
+                        {
+                            _logger.LogWarning(notifEx, "Failed to dispatch notification for DeadLetter message {Id}", msg.Id);
+                        }
+                    }
                 }
+
                 else
                 {
                     msg.QueueStatusCode = "FailedRetryable";

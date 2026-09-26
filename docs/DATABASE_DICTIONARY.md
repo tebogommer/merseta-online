@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-09-23 17:08:41 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 269
+> **Generated:** 2026-09-26 19:22:26 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 269
 
 ---
 
@@ -46,7 +46,7 @@
 | `dbo` | [`AuditLog`](#auditlog) | `AuditLog` | 11 | `Id` | Immutable operational audit trail recording entity mutations, actor identity, timestamps, and JSON snapshots. |
 | `dbo` | [`BackgroundJobJournal`](#backgroundjobjournal) | `BackgroundJobJournal` | 18 | `Id` | System entity for BackgroundJobJournal data governance. |
 | `dbo` | [`BankingDetails`](#bankingdetails) | `BankingDetails` | 34 | `Id` | System entity for BankingDetails data governance. |
-| `dbo` | [`BankingDetailsAudit`](#bankingdetailsaudit) | `BankingDetailsAudit` | 8 | `Id` | System entity for BankingDetailsAudit data governance. |
+| `dbo` | [`BankingDetailsAudit`](#bankingdetailsaudit) | `BankingDetailsAudit` | 12 | `Id` | System entity for BankingDetailsAudit data governance. |
 | `dbo` | [`BroadcastMessage`](#broadcastmessage) | `BroadcastMessage` | 19 | `Id` | Persistent broadcast campaign representing an official circular, executive communication, or mass notification. |
 | `dbo` | [`BusinessRule`](#businessrule) | `BusinessRule` | 15 | `Id` | Represents an individual business rule containing a dynamic C# lambda expression, error diagnostics, and evaluation order. |
 | `dbo` | [`BusinessRuleWorkflow`](#businessruleworkflow) | `BusinessRuleWorkflow` | 10 | `Id` | Represents a cohesive grouping of statutory or operational business rules evaluated as a unified decision pipeline (e.g. LearnerStpEvaluation, FinancialClaimApproval). |
@@ -158,8 +158,8 @@
 | `dbo` | [`SarsLevyStaging`](#sarslevystaging) | `SarsLevyStaging` | 25 | `Id` | Staging entity for high-speed bulk ingestion of raw monthly SARS Skills Development Levy transactions. Serves as the landing table for streaming SqlBulkCopy before promotion into the production financial ledger. |
 | `dbo` | [`SarsSchemeYearCalculation`](#sarsschemeyearcalculation) | `SarsSchemeYearCalculation` | 17 | `Id` | System entity for SarsSchemeYearCalculation data governance. |
 | `dbo` | [`ScannedCertificateAttachment`](#scannedcertificateattachment) | `ScannedCertificateAttachment` | 15 | `Id` | Non-destructive physical scanned certificate repository attached to the learner's record. |
-| `dbo` | [`SdfAppointmentHistory`](#sdfappointmenthistory) | `SdfAppointmentHistory` | 7 | `Id` | System entity for SdfAppointmentHistory data governance. |
-| `dbo` | [`SdfCompany`](#sdfcompany) | `SdfCompany` | 21 | `Id` | System entity for SdfCompany data governance. |
+| `dbo` | [`SdfAppointmentHistory`](#sdfappointmenthistory) | `SdfAppointmentHistory` | 11 | `Id` | System entity for SdfAppointmentHistory data governance. |
+| `dbo` | [`SdfCompany`](#sdfcompany) | `SdfCompany` | 21 | `Id` | Backward compatibility alias for OrganisationSdf adhering to merSETA domain nomenclature. |
 | `dbo` | [`SdpDisciplinaryCase`](#sdpdisciplinarycase) | `SdpDisciplinaryCase` | 19 | `Id` | Disciplinary, suspension, and de-accreditation cases against an accredited Skills Development Provider (SDP) (Ref: merSETA ETQA Disciplinary Regulations, Signed SDP Application Use Case Section 4.5 and Form ETQ-TP-015). Enforces immediate system freeze on new learner enrolments upon provider suspension. |
 | `dbo` | [`SdpExtensionOfScope`](#sdpextensionofscope) | `SdpExtensionOfScope` | 19 | `Id` | System entity for SdpExtensionOfScope data governance. |
 | `dbo` | [`SdpReAccreditationApplication`](#sdpreaccreditationapplication) | `SdpReAccreditationApplication` | 23 | `Id` | System entity for SdpReAccreditationApplication data governance. |
@@ -201,7 +201,7 @@
 | `dbo` | [`WorkflowTask`](#workflowtask) | `WorkflowTask` | 17 | `Id` | Task assigned to a specific role or user requiring review, inspection, or verification action. |
 | `dbo` | [`WorkflowTaskLease`](#workflowtasklease) | `WorkflowTaskLease` | 12 | `Id` | Represents a distributed concurrency lock lease on a workflow task to prevent simultaneous claims and race conditions. |
 | `dbo` | [`WorkflowTransition`](#workflowtransition) | `WorkflowTransition` | 14 | `Id` | Authorized state transition path with role authorization gates and UI button metadata. |
-| `dbo` | [`WorkplaceApproval`](#workplaceapproval) | `WorkplaceApproval` | 42 | `Id` | Workplace site inspection approval for hosting apprentice and learnership training. |
+| `dbo` | [`WorkplaceApproval`](#workplaceapproval) | `WorkplaceApproval` | 44 | `Id` | Workplace site inspection approval for hosting apprentice and learnership training. |
 | `dbo` | [`WorkplaceApprovalMentor`](#workplaceapprovalmentor) | `WorkplaceApprovalMentor` | 20 | `Id` | Qualified artisan mentor assigned to supervise apprentices and learners at an approved workplace. |
 | `dbo` | [`WorkplaceApprovalToolList`](#workplaceapprovaltoollist) | `WorkplaceApprovalToolList` | 11 | `Id` | Tool, equipment, or health and safety checklist item inspected for workplace qualification approval. |
 | `dbo` | [`WorkplaceMonitoringActionPlan`](#workplacemonitoringactionplan) | `WorkplaceMonitoringActionPlan` | 15 | `Id` | Corrective Action Plan for identified defects or non-compliances. |
@@ -1303,7 +1303,7 @@
 | `ApplicationNumber` | `nvarchar(50)` | **NOT NULL** |  | Domain property for ApplicationNumber. |
 | `AssessorPersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | **NOT NULL** |  | User identifier or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `EndorsedByUserId` | `nvarchar(max)` | NULL |  | Domain property for EndorsedByUserId. |
 | `EndorsementDate` | `datetime2` | NULL |  | Domain property for EndorsementDate. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
@@ -1367,6 +1367,7 @@
 | :--- | :--- | :--- |
 | `IX_AssessorModeratorApplication_ApplicationNumber` | `ApplicationNumber` | No |
 | `IX_AssessorModeratorApplication_PersonId` | `PersonId` | No |
+| `IX_AssessorModeratorApplication_ReviewCommitteeMeetingAgendaId` | `ReviewCommitteeMeetingAgendaId` | No |
 | `IX_AssessorModeratorApplication_StatusCode` | `StatusCode` | No |
 
 ---
@@ -1739,7 +1740,7 @@
 | `BranchName` | `nvarchar(100)` | NULL |  | Domain property for BranchName. |
 | `CoolingOffExpiresAt` | `datetime2` | NULL |  | Domain property for CoolingOffExpiresAt. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | **NOT NULL** |  | User identifier or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `ErpSyncDate` | `datetime2` | NULL |  | Domain property for ErpSyncDate. |
 | `ErpVendorId` | `nvarchar(max)` | NULL |  | Domain property for ErpVendorId. |
 | `FirstSignoffDate` | `datetime2` | NULL |  | Domain property for FirstSignoffDate. |
@@ -1790,7 +1791,11 @@
 | `BankingDetailsId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `ChangedAt` | `datetime2` | **NOT NULL** |  | Domain property for ChangedAt. |
 | `ChangedByUserId` | `nvarchar(100)` | **NOT NULL** |  | Domain property for ChangedByUserId. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `IpAddress` | `nvarchar(max)` | NULL |  | Domain property for IpAddress. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NewStateJson` | `nvarchar(max)` | NULL |  | Domain property for NewStateJson. |
 | `PreviousStateJson` | `nvarchar(max)` | NULL |  | Domain property for PreviousStateJson. |
 
@@ -2712,7 +2717,7 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `AddendaNumber` | `nvarchar(50)` | **NOT NULL** |  | Domain property for AddendaNumber. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | **NOT NULL** |  | User identifier or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `ExecutiveApprovalDate` | `datetime2` | NULL |  | Domain property for ExecutiveApprovalDate. |
 | `ExecutiveApprovedByUserId` | `nvarchar(max)` | NULL |  | Domain property for ExecutiveApprovedByUserId. |
 | `GrantMoaId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
@@ -2757,7 +2762,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | **NOT NULL** |  | User identifier or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `CurrentEndDate` | `datetime2` | **NOT NULL** |  | Domain property for CurrentEndDate. |
 | `GrantMoaId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `MitigationPlanSummary` | `nvarchar(1000)` | **NOT NULL** |  | Domain property for MitigationPlanSummary. |
@@ -2800,7 +2805,7 @@
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
 | `ClawbackAmountRecoverable` | `decimal(18,2)` | **NOT NULL** |  | Domain property for ClawbackAmountRecoverable. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | **NOT NULL** |  | User identifier or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `DetailedMotivation` | `nvarchar(1000)` | **NOT NULL** |  | Domain property for DetailedMotivation. |
 | `GrantMoaId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
@@ -3104,6 +3109,7 @@
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
 | `IX_DocumentSnapshot_DocumentSnapshotNumber` | `DocumentSnapshotNumber` | ✅ Yes |
+| `IX_DocumentSnapshot_DocumentTemplateId` | `DocumentTemplateId` | No |
 | `IX_DocumentSnapshot_DocumentTypeCode` | `DocumentTypeCode` | No |
 | `IX_DocumentSnapshot_IssuedAt` | `IssuedAt` | No |
 | `IX_DocumentSnapshot_RecipientIdentifier` | `RecipientIdentifier` | No |
@@ -4786,7 +4792,9 @@
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
+| `IX_LearnerTradeTest_AssessorPersonId` | `AssessorPersonId` | No |
 | `IX_LearnerTradeTest_CompanyLearnerId` | `CompanyLearnerId` | No |
+| `IX_LearnerTradeTest_ModeratorPersonId` | `ModeratorPersonId` | No |
 | `IX_LearnerTradeTest_QualificationId` | `QualificationId` | No |
 | `IX_LearnerTradeTest_ResultStatusCode` | `ResultStatusCode` | No |
 | `IX_LearnerTradeTest_SerialCertificateNumber` | `SerialCertificateNumber` | No |
@@ -5799,6 +5807,7 @@
 | `IX_Organisation_MainSdlNumber` | `MainSdlNumber` | No |
 | `IX_Organisation_OrganisationStatusCode` | `OrganisationStatusCode` | No |
 | `IX_Organisation_ParentOrganisationId` | `ParentOrganisationId` | No |
+| `IX_Organisation_PrimaryContactPersonId` | `PrimaryContactPersonId` | No |
 | `IX_Organisation_ProvinceCode` | `ProvinceCode` | No |
 | `IX_Organisation_SdlNumber` | `SdlNumber` | ✅ Yes |
 | `IX_Organisation_SectorCode` | `SectorCode` | No |
@@ -6464,6 +6473,8 @@
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
+| `IX_ProjectImplementationPlan_FundingWindowId` | `FundingWindowId` | No |
+| `IX_ProjectImplementationPlan_GrantApplicationId` | `GrantApplicationId` | No |
 | `IX_ProjectImplementationPlan_OrganisationId` | `OrganisationId` | No |
 | `IX_ProjectImplementationPlan_PlanReferenceNumber` | `PlanReferenceNumber` | No |
 | `IX_ProjectImplementationPlan_StatusCode` | `StatusCode` | No |
@@ -6837,6 +6848,10 @@
 | `ChangeReason` | `nvarchar(max)` | NULL |  | Domain property for ChangeReason. |
 | `ChangedAt` | `datetime2` | **NOT NULL** |  | Domain property for ChangedAt. |
 | `ChangedByUserId` | `nvarchar(100)` | **NOT NULL** |  | Domain property for ChangedByUserId. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `NewStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for NewStatusCode. |
 | `PreviousStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for PreviousStatusCode. |
 | `SdfCompanyId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
@@ -6857,7 +6872,7 @@
 
 ### <a id="sdfcompany"></a> `dbo.SdfCompany`
 
-**Description:** System entity for SdfCompany data governance.  
+**Description:** Backward compatibility alias for OrganisationSdf adhering to merSETA domain nomenclature.  
 **CLR Model:** `Nsdms.Domain.Entities.SdfCompany`  
 **Primary Key:** `Id`
 
@@ -6876,7 +6891,7 @@
 | `ApprovalDate` | `datetime2` | NULL |  | Domain property for ApprovalDate. |
 | `ApprovedByUserId` | `nvarchar(max)` | NULL |  | Domain property for ApprovedByUserId. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | **NOT NULL** |  | User identifier or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active and operational. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
@@ -6967,7 +6982,7 @@
 | `ApprovedByUserId` | `nvarchar(max)` | NULL |  | Domain property for ApprovedByUserId. |
 | `CommitteeDecisionReference` | `nvarchar(max)` | NULL |  | Domain property for CommitteeDecisionReference. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | **NOT NULL** |  | User identifier or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `Credits` | `int` | **NOT NULL** |  | Domain property for Credits. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
@@ -7012,7 +7027,7 @@
 | `CommitteeMeetingDate` | `datetime2` | NULL |  | Domain property for CommitteeMeetingDate. |
 | `CouncilDecisionNumber` | `nvarchar(100)` | NULL |  | Domain property for CouncilDecisionNumber. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
-| `CreatedBy` | `nvarchar(max)` | **NOT NULL** |  | User identifier or system process that created the record. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that created the record. |
 | `CurrentAccreditationExpiryDate` | `datetime2` | **NOT NULL** |  | Domain property for CurrentAccreditationExpiryDate. |
 | `FacilitatorAssessorRatiosCompliant` | `bit` | **NOT NULL** |  | Domain property for FacilitatorAssessorRatiosCompliant. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
@@ -7080,6 +7095,7 @@
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
+| `IX_SdpScopeExtensionApplication_ReviewCommitteeMeetingAgendaId` | `ReviewCommitteeMeetingAgendaId` | No |
 | `IX_SdpScopeExtensionApplication_StatusCode` | `StatusCode` | No |
 | `IX_SdpScopeExtensionApplication_TrainingProviderId` | `TrainingProviderId` | No |
 
@@ -8364,6 +8380,8 @@
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
 | `IX_WorkflowHistory_ActionDate` | `ActionDate` | No |
+| `IX_WorkflowHistory_FromStateId` | `FromStateId` | No |
+| `IX_WorkflowHistory_ToStateId` | `ToStateId` | No |
 | `IX_WorkflowHistory_WorkflowInstanceId` | `WorkflowInstanceId` | No |
 
 ---
@@ -8449,6 +8467,7 @@
 | `IX_WorkflowNotification_CreatedDate` | `CreatedDate` | No |
 | `IX_WorkflowNotification_IsRead` | `IsRead` | No |
 | `IX_WorkflowNotification_RecipientUserId` | `RecipientUserId` | No |
+| `IX_WorkflowNotification_WorkflowInstanceId` | `WorkflowInstanceId` | No |
 
 ---
 
@@ -8657,6 +8676,7 @@
 | `DecisionByPersonId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the manager or committee chairperson who rendered the decision. |
 | `DecisionDate` | `datetime2` | NULL |  | Date when the final committee or management evaluation decision was rendered. |
 | `ExpiryDate` | `datetime2` | NULL |  | Validity expiration date of the workplace approval certificate. |
+| `FacilitatorPersonId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the designated facilitator Person. |
 | `HomeSetaAgreementRef` | `nvarchar(max)` | NULL |  | Statutory Inter-SETA agreement or MOU reference number. |
 | `HomeSetaName` | `nvarchar(max)` | NULL |  | Title of the originating Home SETA if employer is registered outside merSETA. |
 | `InspectionDate` | `datetime2` | NULL |  | Date when the physical on-site audit inspection occurred. |
@@ -8667,6 +8687,7 @@
 | `IsSiteVisitRequired` | `bit` | NULL |  | Indicates whether a physical on-site audit visit is required (true) or desktop verification suffices (false). |
 | `LearningProgramTypeCode` | `nvarchar(100)` | NULL |  | Learning programme stream code (e.g. Apprenticeship, Learnership, InternshipNDiploma, OccupationalQual, SkillsProgramme, Candidacy). |
 | `MentorRatioExemptionNotes` | `nvarchar(500)` | NULL |  | Exemption justification or special dispensation notes for this workplace approval. |
+| `ModeratorPersonId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the verifying moderator Person. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the host Employer Organisation. |
@@ -8693,6 +8714,8 @@
 | `FK_WorkplaceApproval_Person_AssessorPersonId` | `AssessorPersonId` | `dbo.Person` | `Restrict` |
 | `FK_WorkplaceApproval_Person_ContactPersonId` | `ContactPersonId` | `dbo.Person` | `Restrict` |
 | `FK_WorkplaceApproval_Person_DecisionByPersonId` | `DecisionByPersonId` | `dbo.Person` | `Restrict` |
+| `FK_WorkplaceApproval_Person_FacilitatorPersonId` | `FacilitatorPersonId` | `dbo.Person` | `Restrict` |
+| `FK_WorkplaceApproval_Person_ModeratorPersonId` | `ModeratorPersonId` | `dbo.Person` | `Restrict` |
 | `FK_WorkplaceApproval_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `Restrict` |
 | `FK_WorkplaceApproval_OrganisationSite_OrganisationSiteId` | `OrganisationSiteId` | `dbo.OrganisationSite` | `Restrict` |
 | `FK_WorkplaceApproval_Person_VerifiedByPersonId` | `VerifiedByPersonId` | `dbo.Person` | `Restrict` |
@@ -8703,10 +8726,13 @@
 | :--- | :--- | :--- |
 | `IX_WorkplaceApproval_ApprovalNumber` | `ApprovalNumber` | No |
 | `IX_WorkplaceApproval_ApprovalStatusCode` | `ApprovalStatusCode` | No |
+| `IX_WorkplaceApproval_AssessorPersonId` | `AssessorPersonId` | No |
 | `IX_WorkplaceApproval_ContactPersonId` | `ContactPersonId` | No |
 | `IX_WorkplaceApproval_DecisionByPersonId` | `DecisionByPersonId` | No |
+| `IX_WorkplaceApproval_FacilitatorPersonId` | `FacilitatorPersonId` | No |
 | `IX_WorkplaceApproval_InspectionDueDate` | `InspectionDueDate` | No |
 | `IX_WorkplaceApproval_IsRatioEnforced` | `IsRatioEnforced` | No |
+| `IX_WorkplaceApproval_ModeratorPersonId` | `ModeratorPersonId` | No |
 | `IX_WorkplaceApproval_OrganisationId` | `OrganisationId` | No |
 | `IX_WorkplaceApproval_OrganisationSiteId` | `OrganisationSiteId` | No |
 | `IX_WorkplaceApproval_TradeCode` | `TradeCode` | No |

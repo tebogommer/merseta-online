@@ -6,12 +6,14 @@
 @using Nsdms.Web.Components.Shared.Forms
 @using Nsdms.Web.Components.Shared.Wizard
 @using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IWorkplaceApprovalService WpaService
 @inject IOrganisationService OrgService
 @inject IPersonService PersonService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IWizardDraftService DraftService
+@inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
 
 <div class="mb-4">
@@ -333,10 +335,19 @@ else
         public string HomeSetaAgreementRef { get; init; } = string.Empty;
     }
 
+    private string _currentUsername = "CurrentEmployer";
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (user?.Identity?.IsAuthenticated == true && !string.IsNullOrWhiteSpace(user.Identity.Name))
+            {
+                _currentUsername = user.Identity.Name;
+            }
+
             _organisations = await OrgService.GetAllAsync();
             _contacts = await PersonService.GetAllAsync();
 
@@ -613,8 +624,8 @@ else
     {
         try
         {
-            var draft = await DraftService.GetActiveDraftAsync("WorkplaceApproval", "CurrentEmployer", _organisationId > 0 ? _organisationId : null);
-            if (draft != null && draft.CurrentStepIndex > 0)
+            var draft = await DraftService.GetActiveDraftAsync("WorkplaceApproval", _currentUsername, _organisationId > 0 ? _organisationId : null);
+            if (draft != null && draft.CurrentStepIndex >= 0)
             {
                 _loadedDraft = draft;
                 _activeDraftKey = draft.DraftKey;
@@ -717,7 +728,7 @@ else
                 "WorkplaceApproval",
                 "Workplace approval application",
                 "/workplace-approvals/apply",
-                "CurrentEmployer",
+                _currentUsername,
                 _organisationId > 0 ? _organisationId : null,
                 _activeStep,
                 6,
@@ -751,7 +762,7 @@ else
         try
         {
             var approval = BuildApprovalEntity("APPLICATION");
-            var result = await WpaService.CreateAsync(approval, "CurrentEmployer");
+            var result = await WpaService.CreateAsync(approval, _currentUsername);
             _createdApprovalId = result.Id;
             _approvalNumber = result.ApprovalNumber;
 
@@ -765,7 +776,7 @@ else
                 YearsExperience = _mentorExperienceYears,
                 MaxLearnerCapacity = _mentorCapacity,
                 IsRatioExempt = !_isRatioEnforced
-            }, "CurrentEmployer");
+            }, _currentUsername);
 
             // Clear submitted draft
             if (!string.IsNullOrWhiteSpace(_activeDraftKey))

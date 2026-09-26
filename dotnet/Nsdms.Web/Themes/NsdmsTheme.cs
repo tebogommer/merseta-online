@@ -20,7 +20,7 @@ public static class NsdmsTheme
                 Secondary = "#64748B",
                 SecondaryContrastText = "#FFFFFF",
                 Tertiary = "#C8871E",
-                TertiaryContrastText = "#FFFFFF",
+                TertiaryContrastText = "#0F172A",
 
                 // Semantic Status Palettes
                 Info = "#2563EB",
@@ -28,7 +28,7 @@ public static class NsdmsTheme
                 Success = "#16A34A",
                 SuccessContrastText = "#FFFFFF",
                 Warning = "#D97706",
-                WarningContrastText = "#FFFFFF",
+                WarningContrastText = "#0F172A",
                 Error = "#DC2626",
                 ErrorContrastText = "#FFFFFF",
 
@@ -77,7 +77,7 @@ public static class NsdmsTheme
                 Secondary = "#94A3B8",
                 SecondaryContrastText = "#0B1220",
                 Tertiary = "#60A5FA",
-                TertiaryContrastText = "#FFFFFF",
+                TertiaryContrastText = "#0B1220",
 
                 // Semantic Status Palettes (Luminous for Dark Contrast)
                 Info = "#60A5FA",
@@ -173,7 +173,7 @@ public static class NsdmsTheme
                 H5 = new H5Typography
                 {
                     FontFamily = new[] { "Inter", "Plus Jakarta Sans", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" },
-                    FontSize = "0.9375rem",
+                    FontSize = "1.25rem",
                     FontWeight = "600",
                     LineHeight = "1.4"
                 },

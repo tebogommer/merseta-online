@@ -10,11 +10,13 @@
 @using MudBlazor
 @using System.Security.Cryptography
 @using System.Text
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IWspService WspService
 @inject IOrganisationService OrgService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IWizardDraftService DraftService
+@inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
 
 <div class="mb-4">
@@ -359,11 +361,21 @@ else
         public bool IsDeclarationAccepted { get; init; } = true;
     }
 
+    private string _currentUsername = "SdfUser";
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
             _loading = true;
+
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (user?.Identity?.IsAuthenticated == true && !string.IsNullOrWhiteSpace(user.Identity.Name))
+            {
+                _currentUsername = user.Identity.Name;
+            }
+
             _organisations = await OrgService.GetAllAsync();
 
             if (_organisations.Any())
@@ -615,8 +627,8 @@ else
     {
         try
         {
-            var draft = await DraftService.GetActiveDraftAsync("WspAtrSubmission", "SdfUser", _organisationId);
-            if (draft != null && draft.CurrentStepIndex > 0)
+            var draft = await DraftService.GetActiveDraftAsync("WspAtrSubmission", _currentUsername, _organisationId);
+            if (draft != null && draft.CurrentStepIndex >= 0)
             {
                 _loadedDraft = draft;
                 _activeDraftKey = draft.DraftKey;
@@ -735,7 +747,7 @@ else
                 "WspAtrSubmission",
                 "Mandatory Grant WSP / ATR annual submission",
                 "/wsp/submit",
-                "SdfUser",
+                _currentUsername,
                 _organisationId,
                 _activeStep,
                 6,

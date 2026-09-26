@@ -606,5 +606,46 @@ public class RolePermissionAndCaslTests
             }
         }
     }
+
+    [Fact]
+    public async Task CaslAbilityService_WithMemoryCache_ShouldCacheUserContextAcrossMultipleInvocations()
+    {
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var audit = new AuditService(factory);
+        var roleService = new RolePermissionService(factory, audit);
+        var memoryCache = new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions());
+        var caslService = new CaslAbilityService(factory, roleService, memoryCache);
+
+        using (var db = await factory.CreateDbContextAsync())
+        {
+            var user = new ApplicationUser
+            {
+                Id = 888,
+                UserName = "cached_officer",
+                NormalizedUserName = "CACHED_OFFICER",
+                Email = "cached@merseta.org.za",
+                NormalizedEmail = "CACHED@MERSETA.ORG.ZA",
+                IsActive = true
+            };
+            db.Users.Add(user);
+            await db.SaveChangesAsync();
+        }
+
+        // First call should query the database and cache the result
+        var ctx1 = await caslService.GetUserContextByUsernameAsync("cached_officer");
+        Assert.NotNull(ctx1);
+        Assert.Equal(888, ctx1.UserId);
+
+        // Second call should return the exact same cached reference without querying DB
+        var ctx2 = await caslService.GetUserContextByUsernameAsync("cached_officer");
+        Assert.Same(ctx1, ctx2);
+
+        // Invalidation should clear cache and force fresh lookup
+        caslService.InvalidateUserContext("cached_officer");
+        var ctx3 = await caslService.GetUserContextByUsernameAsync("cached_officer");
+        Assert.NotNull(ctx3);
+        Assert.NotSame(ctx1, ctx3);
+        Assert.Equal(888, ctx3.UserId);
+    }
 }
 

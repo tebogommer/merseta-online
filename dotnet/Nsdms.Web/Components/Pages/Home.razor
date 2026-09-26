@@ -9,6 +9,7 @@
 @inject NavigationManager Navigation
 @inject ILogger<Home> Logger
 @inject AuthenticationStateProvider AuthStateProvider
+@inject ITenantProvider TenantProvider
 
 @*
   UI-STANDARD.md Archetype: A5 (Dashboard / Executive Operations Portal & Applicant Portal)
@@ -438,7 +439,26 @@ else
 
             if (!_isStandardUserOnly)
             {
-                var summary = await AnalyticsService.GetExecutiveDashboardSummaryAsync();
+                int? orgId = null;
+                bool isSdfOrNonAdmin = roles.Contains("SDF") || !roles.Any(r => r is "SuperAdmin" or "Admin" or "Executive" or "CLO" or "Finance" or "FinanceManager" or "Legal" or "Compliance" or "ReviewCommittee") || !TenantProvider.IsAdmin;
+
+                if (isSdfOrNonAdmin)
+                {
+                    var orgIdClaim = user.FindFirst("OrganisationId")?.Value
+                                     ?? user.FindFirst("organisation_id")?.Value
+                                     ?? user.FindFirst("tenant_id")?.Value;
+
+                    if (int.TryParse(orgIdClaim, out var parsedId))
+                    {
+                        orgId = parsedId;
+                    }
+                    else if (TenantProvider.CurrentOrganisationId.HasValue)
+                    {
+                        orgId = TenantProvider.CurrentOrganisationId.Value;
+                    }
+                }
+
+                var summary = await AnalyticsService.GetExecutiveDashboardSummaryAsync(orgId);
                 _employerCount = summary.EmployerCount;
                 _learnerCount = summary.LearnerCount;
                 _providerCount = summary.ProviderCount;

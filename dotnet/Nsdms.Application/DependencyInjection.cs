@@ -10,6 +10,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        // Memory Caching for high-performance CASL evaluation & lookup caching
+        services.AddMemoryCache();
+
         // Core Identity & Security Services
         services.AddScoped<AuditService>();
         services.AddScoped<IAuditService>(sp => sp.GetRequiredService<AuditService>());
