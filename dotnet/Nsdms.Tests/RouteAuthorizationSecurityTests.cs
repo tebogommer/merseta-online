@@ -27,7 +27,11 @@ public class RouteAuthorizationSecurityTests
             "/self-service-register",
             "/confirm-email",
             "/verify",
-            "/verify/document/{DocumentHash}"
+            "/verify/document/{DocumentHash}",
+            "/Error",
+            "/not-found",
+            "/signoff/learner",
+            "/signoff/learner/{Token}"
         };
 
         var unprotectedPages = new List<string>();

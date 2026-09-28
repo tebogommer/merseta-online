@@ -107,6 +107,24 @@ Every page must pass all 16 items before being declared complete:
 
 ---
 
+### 🛡️ Multi-Tenant Isolation, Route Authorization & Session Security Standard
+1. **Fail-Secure Multi-Tenant Query Filter Rule**:
+   - Global query filters on tenant-scoped entities (`Organisation`, `OrganisationContact`, `OrganisationSite`, `OrganisationEmployee`, `WspSubmission`, `WspExtensionRequest`, `GrantApplication`, `WorkplaceApproval`, `MandatoryGrantDisbursement`, `SummativeAssessmentReport`) MUST NEVER evaluate `|| _tenantProvider.CurrentOrganisationId == null` as an open bypass. An unlinked user (`CurrentOrganisationId == null`) who is not an administrator (`!_tenantProvider.IsAdmin`) MUST be restricted to 0 records.
+   - When building EF Core `HasQueryFilter` expressions with nullable tenant properties, use `_tenantProvider.IsAdmin || (_tenantProvider.CurrentOrganisationId != null && x.OrganisationId == _tenantProvider.CurrentOrganisationId)`. NEVER call `.Value` on `CurrentOrganisationId` in the lambda expression, as EF Core parameter compilation will throw `System.InvalidOperationException: Nullable object must have a value` when evaluated against null contexts.
+2. **Global Route Authorization & Public Whitelist Principle**:
+   - Global authorization is applied across all routed Razor components via `@attribute [Authorize]` in `Components/Pages/_Imports.razor`.
+   - Every publicly accessible page (such as `/login`, `/register`, `/confirm-email`, `/Error`, `/not-found`, and OTP portals `/signoff/learner/{Token}`) MUST explicitly declare `@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]`.
+   - Any new anonymous route must also be registered in the test whitelist in `RouteAuthorizationSecurityTests.cs`.
+3. **Session Revocation & Real-Time SecurityStamp Validation**:
+   - Authentication cookies issued on `/login` and `/backup-login` MUST contain the `SecurityStamp` claim (`new Claim("SecurityStamp", user.SecurityStamp ?? string.Empty)`).
+   - In `CookieAuthenticationOptions.Events.OnValidatePrincipal`, the claim must be compared against the database `user.SecurityStamp`. Any change or mismatch immediately invalidates the principal and forces sign-out (`context.RejectPrincipal()`).
+4. **Direct Object Reference (IDOR) Protection on File & Job Endpoints**:
+   - Background job status and download endpoints (`/api/jobs/{id}/status`, `/api/jobs/{id}/download`) MUST verify that `job.RequestedBy == httpContext.User.Identity.Name` or that the caller holds administrative permissions (`Admin`, `SuperAdmin`, `Permission=System.Admin`). Unauthorized requests must return HTTP 403 Forbidden.
+5. **Defensive Web Response Headers**:
+   - Every response must include strict defensive headers: `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-XSS-Protection: 1; mode=block`, along with a restrictive `Content-Security-Policy` and `Permissions-Policy`.
+
+---
+
 
 ### 🛡️ Mandatory Grant (MG / WSP) Submission Window & Extension Governance Standard
 1. **Statutory Submission Deadline & Cutoff Invariant**:

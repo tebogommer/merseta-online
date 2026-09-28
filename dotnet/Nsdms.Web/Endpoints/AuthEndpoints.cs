@@ -97,7 +97,8 @@ public static class AuthEndpoints
                 new(ClaimTypes.GivenName, user.Person != null ? $"{user.Person.FirstName} {user.Person.LastName}" : (user.UserName ?? "User")),
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new("PersonId", user.PersonId?.ToString() ?? string.Empty),
-                new("OrganisationId", user.DefaultOrganisationId?.ToString() ?? string.Empty)
+                new("OrganisationId", user.DefaultOrganisationId?.ToString() ?? string.Empty),
+                new("SecurityStamp", user.SecurityStamp ?? string.Empty)
             };
 
             foreach (var role in roles)
@@ -219,7 +220,8 @@ public static class AuthEndpoints
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new("PersonId", user.PersonId?.ToString() ?? string.Empty),
                 new("OrganisationId", user.DefaultOrganisationId?.ToString() ?? string.Empty),
-                new("AuthMethod", "EmergencyBackupPassword")
+                new("AuthMethod", "EmergencyBackupPassword"),
+                new("SecurityStamp", user.SecurityStamp ?? string.Empty)
             };
 
             foreach (var role in roles)

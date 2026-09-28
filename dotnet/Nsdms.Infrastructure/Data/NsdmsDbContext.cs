@@ -772,7 +772,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(o => o.HasMissingChamberMapping);
             entity.HasIndex(o => o.GpVendorClass);
             entity.HasIndex(o => o.IsActive);
-            entity.HasQueryFilter(o => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || o.Id == _tenantProvider.CurrentOrganisationId);
+            entity.HasQueryFilter(o => _tenantProvider.IsAdmin || (_tenantProvider.CurrentOrganisationId != null && o.Id == _tenantProvider.CurrentOrganisationId));
         });
 
         // OrganisationContact table & indexes
@@ -795,7 +795,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(c => c.PersonId);
             entity.HasIndex(c => c.ContactTypeCode);
             entity.HasIndex(c => c.IsActive);
-            entity.HasQueryFilter(c => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || c.OrganisationId == _tenantProvider.CurrentOrganisationId);
+            entity.HasQueryFilter(c => _tenantProvider.IsAdmin || (_tenantProvider.CurrentOrganisationId != null && c.OrganisationId == _tenantProvider.CurrentOrganisationId));
         });
 
         // OrganisationSite table & indexes
@@ -831,7 +831,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(s => s.PrimaryContactPersonId);
             entity.HasIndex(s => s.ProvinceCode);
             entity.HasIndex(s => s.IsActive);
-            entity.HasQueryFilter(s => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || s.OrganisationId == _tenantProvider.CurrentOrganisationId);
+            entity.HasQueryFilter(s => _tenantProvider.IsAdmin || (_tenantProvider.CurrentOrganisationId != null && s.OrganisationId == _tenantProvider.CurrentOrganisationId));
         });
 
         // OrganisationEmployee table & indexes (Option B: Living Employer Roster)
@@ -875,7 +875,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(e => e.IsActive).HasDatabaseName("IX_OrganisationEmployee_IsActive");
             entity.HasIndex(e => new { e.OrganisationId, e.IsActive }).HasDatabaseName("IX_OrganisationEmployee_Org_Active");
 
-            entity.HasQueryFilter(e => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || e.OrganisationId == _tenantProvider.CurrentOrganisationId);
+            entity.HasQueryFilter(e => _tenantProvider.IsAdmin || (_tenantProvider.CurrentOrganisationId != null && e.OrganisationId == _tenantProvider.CurrentOrganisationId));
         });
 
         // Visit relationship & mandatory contact person constraint
@@ -921,7 +921,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(w => w.ReferenceNumber);
             entity.HasIndex(w => w.WspApprovalStatusCode);
 
-            entity.HasQueryFilter(w => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || w.OrganisationId == _tenantProvider.CurrentOrganisationId);
+            entity.HasQueryFilter(w => _tenantProvider.IsAdmin || (_tenantProvider.CurrentOrganisationId != null && w.OrganisationId == _tenantProvider.CurrentOrganisationId));
         });
 
         // WspExtensionRequest
@@ -954,7 +954,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(e => e.ApprovalStatusCode);
             entity.HasIndex(e => e.ReasonCode);
 
-            entity.HasQueryFilter(e => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || e.OrganisationId == _tenantProvider.CurrentOrganisationId);
+            entity.HasQueryFilter(e => _tenantProvider.IsAdmin || (_tenantProvider.CurrentOrganisationId != null && e.OrganisationId == _tenantProvider.CurrentOrganisationId));
         });
 
         // LevyFile & LevyFileLine & SarsLevyStaging
@@ -1083,7 +1083,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(g => g.ApplicationNumber);
             entity.HasIndex(g => g.ApplicationStatusCode);
 
-            entity.HasQueryFilter(g => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || g.OrganisationId == _tenantProvider.CurrentOrganisationId);
+            entity.HasQueryFilter(g => _tenantProvider.IsAdmin || (_tenantProvider.CurrentOrganisationId != null && g.OrganisationId == _tenantProvider.CurrentOrganisationId));
         });
 
         // GrantApplicationIntervention (PIVOTAL training plans and Non-PIVOTAL project deliverables)
@@ -1798,7 +1798,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(w => w.DecisionByPersonId);
             entity.HasIndex(w => w.InspectionDueDate);
 
-            entity.HasQueryFilter(w => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || w.OrganisationId == _tenantProvider.CurrentOrganisationId);
+            entity.HasQueryFilter(w => _tenantProvider.IsAdmin || (_tenantProvider.CurrentOrganisationId != null && w.OrganisationId == _tenantProvider.CurrentOrganisationId));
         });
 
         // WorkplaceApprovalMentor
@@ -2684,7 +2684,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(d => d.DisbursementReference).IsUnique();
             entity.HasIndex(d => d.DisbursementStatusCode);
 
-            entity.HasQueryFilter(d => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || d.OrganisationId == _tenantProvider.CurrentOrganisationId);
+            entity.HasQueryFilter(d => _tenantProvider.IsAdmin || (_tenantProvider.CurrentOrganisationId != null && d.OrganisationId == _tenantProvider.CurrentOrganisationId));
         });
 
         modelBuilder.Entity<InterSetaTransfer>(entity =>
@@ -3549,7 +3549,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                 .HasForeignKey(s => s.InternalModeratorPersonId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            entity.HasQueryFilter(s => _tenantProvider.IsAdmin || _tenantProvider.CurrentOrganisationId == null || s.OrganisationId == _tenantProvider.CurrentOrganisationId);
+            entity.HasQueryFilter(s => _tenantProvider.IsAdmin || (_tenantProvider.CurrentOrganisationId != null && s.OrganisationId == _tenantProvider.CurrentOrganisationId));
 
             entity.HasIndex(s => s.CompanyLearnerId);
             entity.HasIndex(s => s.PersonId);

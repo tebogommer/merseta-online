@@ -110,6 +110,15 @@ builder.Services.AddAuthentication(options =>
                     context.RejectPrincipal();
                     await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 }
+                else if (!string.IsNullOrEmpty(user.SecurityStamp) && context.Principal?.FindFirst("SecurityStamp")?.Value != user.SecurityStamp)
+                {
+                    var logger = context.HttpContext.RequestServices.GetService<ILoggerFactory>()?.CreateLogger("AuthCookieValidation");
+                    logger?.LogWarning("Security Alert: SecurityStamp mismatch for user {UserId} ({Email}). Revoking invalidated session.",
+                        userId, user.Email);
+
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                }
                 else if (user.IsEntraUser && context.Principal?.FindFirst("AuthMethod")?.Value == "EmergencyBackupPassword" && user.LastEntraSyncUtc.HasValue)
                 {
                     var config = context.HttpContext.RequestServices.GetService<ISystemConfigurationService>();
@@ -270,6 +279,17 @@ app.Use(async (context, next) =>
     context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
     context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
     context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Append("Content-Security-Policy",
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+        "font-src 'self' https://fonts.gstatic.com data:; " +
+        "img-src 'self' data: https:; " +
+        "connect-src 'self' ws: wss:; " +
+        "frame-ancestors 'self'; " +
+        "object-src 'none'; " +
+        "base-uri 'self';");
+    context.Response.Headers.Append("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
     await next();
 });
 

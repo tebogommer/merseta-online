@@ -11,10 +11,19 @@ public static class BackgroundJobEndpoints
     {
         var group = app.MapGroup("/api/jobs").RequireAuthorization();
 
-        group.MapGet("/{id:guid}/status", (Guid id, IBackgroundJobQueue jobQueue) =>
+        group.MapGet("/{id:guid}/status", (Guid id, IBackgroundJobQueue jobQueue, HttpContext httpContext) =>
         {
             var job = jobQueue.GetJob(id);
-            return job != null ? Results.Ok(new
+            if (job == null) return Results.NotFound(new { message = $"Job #{id} not found." });
+
+            var currentUsername = httpContext.User.Identity?.Name;
+            bool isAdmin = httpContext.User.IsInRole("Admin") || httpContext.User.IsInRole("SuperAdmin") || httpContext.User.IsInRole("SUPERADMIN") || httpContext.User.HasClaim("Permission", "System.Admin");
+            if (!isAdmin && !string.Equals(job.RequestedBy, currentUsername, StringComparison.OrdinalIgnoreCase))
+            {
+                return Results.Forbid();
+            }
+
+            return Results.Ok(new
             {
                 job.JobId,
                 job.JobType,
@@ -27,13 +36,21 @@ public static class BackgroundJobEndpoints
                 job.CompletedAt,
                 job.ResultDownloadUrl,
                 job.ErrorMessage
-            }) : Results.NotFound(new { message = $"Job #{id} not found." });
+            });
         });
 
-        group.MapGet("/{id:guid}/download", (Guid id, IBackgroundJobQueue jobQueue) =>
+        group.MapGet("/{id:guid}/download", (Guid id, IBackgroundJobQueue jobQueue, HttpContext httpContext) =>
         {
             var job = jobQueue.GetJob(id);
             if (job == null) return Results.NotFound(new { message = $"Job #{id} not found." });
+
+            var currentUsername = httpContext.User.Identity?.Name;
+            bool isAdmin = httpContext.User.IsInRole("Admin") || httpContext.User.IsInRole("SuperAdmin") || httpContext.User.IsInRole("SUPERADMIN") || httpContext.User.HasClaim("Permission", "System.Admin");
+            if (!isAdmin && !string.Equals(job.RequestedBy, currentUsername, StringComparison.OrdinalIgnoreCase))
+            {
+                return Results.Forbid();
+            }
+
             if (job.Status != BackgroundJobStatus.Completed)
                 return Results.BadRequest(new { message = $"Job #{id} is not completed." });
 

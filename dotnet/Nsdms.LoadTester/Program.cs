@@ -5,6 +5,7 @@ using Nsdms.Application.Common;
 using Nsdms.Infrastructure.Data;
 using Nsdms.Infrastructure.Services;
 using Nsdms.LoadTester.Engine;
+using Nsdms.LoadTester.Scenarios;
 using Nsdms.LoadTester.Telemetry;
 
 namespace Nsdms.LoadTester;
@@ -20,6 +21,11 @@ public class Program
 
         // Parse CLI arguments
         bool isSmokeTest = args.Contains("--smoke");
+        bool runNbomber = args.Contains("--nbomber");
+        bool runNbomberHttp = args.Contains("--nbomber-http");
+        string httpUrl = GetArgString(args, "--url", "http://localhost:5121");
+        int nbRate = GetArgValue(args, "--rate", isSmokeTest ? 10 : 30);
+        int nbDuration = GetArgValue(args, "--duration", isSmokeTest ? 5 : 15);
         int users = GetArgValue(args, "--users", isSmokeTest ? 50 : 8000);
         int learners = GetArgValue(args, "--learners", isSmokeTest ? 200 : 30000);
         int dgApps = GetArgValue(args, "--dg", isSmokeTest ? 50 : 5000);
@@ -38,6 +44,18 @@ public class Program
 
         var tenantProvider = new DefaultTenantProvider(null, isAdmin: true);
         var dbContextFactory = new NsdmsDbContextFactory(optionsBuilder.Options, tenantProvider);
+
+        if (runNbomber)
+        {
+            await NBomberScenarios.RunDatabaseBenchmarksAsync(dbContextFactory, rate: nbRate, durationSec: nbDuration);
+            return;
+        }
+
+        if (runNbomberHttp)
+        {
+            await NBomberScenarios.RunHttpBenchmarksAsync(httpUrl, rate: nbRate, durationSec: nbDuration);
+            return;
+        }
 
         var services = new ServiceCollection();
         services.AddSingleton<ITenantProvider>(tenantProvider);
@@ -75,6 +93,18 @@ public class Program
             if (args[i].Equals(flag, StringComparison.OrdinalIgnoreCase) && int.TryParse(args[i + 1], out var val))
             {
                 return val;
+            }
+        }
+        return defaultValue;
+    }
+
+    private static string GetArgString(string[] args, string flag, string defaultValue)
+    {
+        for (int i = 0; i < args.Length - 1; i++)
+        {
+            if (args[i].Equals(flag, StringComparison.OrdinalIgnoreCase))
+            {
+                return args[i + 1];
             }
         }
         return defaultValue;
