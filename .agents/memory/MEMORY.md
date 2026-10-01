@@ -14,7 +14,7 @@
 - [project] Form Keybindings & Empty States: Ctrl+S to save, '/' to search, Esc to cancel, <EmptyStateCard> for empty tables → project-conventions.md
 - [project] CI Quality Gate: All changes must pass python scripts/ci_ux_quality_gate.py with 0 errors and >=90% clean pass → project-conventions.md
 - [project] Systemic Bug Remediation: Fix bugs across entire app and enforce regression tests to prevent recurrence → project-conventions.md
-- [project] When pushing to git, generate and commit DDL SQL script with lookup tables and seed values aligned with code → project-conventions.md
+- [project] When committing or pushing to git, always script database schema and lookup tables with seed values (scripts/script_database.ps1) → project-conventions.md
 - [testing] Playwright visual & console assertions: enforce zero console errors, loaded stylesheets, MudBlazor CSS variables, non-zero bounding box layout, and active interactive controls → project-conventions.md
 - [project] Component metadata uses SemVer while toolkit releases use CalVer → tech-decisions.md
 - [project] Always add Core Infrastructure & Architecture Invariants block to GEMINI.md when generated → project-conventions.md
@@ -29,6 +29,7 @@
 - [project] AGSA & ISO 27001 ITGC Coding Invariants: Append-only audit entities, period-filtered reports with DLP & SHA-256 seal, statutory lexicon, and external tool hooks → project-conventions.md
 ## Preferences
 - [preference] Test suite verification: add visual/console assertions to Playwright harness so only true, visually styled, fully interactive pages pass → user-preferences.md
+- [preference] Git commits & pushes: always script the database schema and all lookup values before committing/pushing → user-preferences.md
 ## Feedback
 - [feedback] Human test cases must use UI menu names and button labels, never raw URLs → feedback-history.md
 

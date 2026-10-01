@@ -122,6 +122,9 @@ Every page must pass all 16 items before being declared complete:
    - Background job status and download endpoints (`/api/jobs/{id}/status`, `/api/jobs/{id}/download`) MUST verify that `job.RequestedBy == httpContext.User.Identity.Name` or that the caller holds administrative permissions (`Admin`, `SuperAdmin`, `Permission=System.Admin`). Unauthorized requests must return HTTP 403 Forbidden.
 5. **Defensive Web Response Headers**:
    - Every response must include strict defensive headers: `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-XSS-Protection: 1; mode=block`, along with a restrictive `Content-Security-Policy` and `Permissions-Policy`.
+6. **Mandatory Database & Lookup Scripting on Git Commit / Push**:
+   - Whenever committing or pushing code to Git, the database schema (all tables, views, stored procedures, indexes, constraints) AND all lookup reference data (`lookup.*` tables, seed values) MUST be scripted using `scripts/script_database.ps1`.
+   - The output script `dotnet/Nsdms.Infrastructure/Data/SqlScripts/Database_Schema_And_Lookups.sql` must be staged, committed, and pushed alongside application changes to ensure the repository remains 100% synchronized with the database.
 
 ---
 

@@ -14,7 +14,7 @@ updated: 2026-09-24
 ## Git Workflow & DDL Synchronization
 - Always create a new dedicated branch for major code changes.
 - Branch name format should follow: `feature/[task-slug]` or `fix/[bug-slug]`.
-- **DDL SQL Script & Lookup Values**: When pushing to Git, always generate the DDL SQL script including all database tables, lookup tables (`lookup.*`), and lookup seed values. These must be committed and pushed to Git aligned with the corresponding application code.
+- **Mandatory Database Scripting on Git Commit & Push**: When committing or pushing to Git, ALWAYS script the database schema (all tables, columns, indexes, foreign keys, constraints) and all lookup tables (`lookup.*`) along with their seed values using `scripts/script_database.ps1`. The resulting SQL script (`dotnet/Nsdms.Infrastructure/Data/SqlScripts/Database_Schema_And_Lookups.sql`) must be staged, committed, and pushed to Git aligned with the corresponding application code.
 
 ## Supported AI platforms (AG Kit)
 - AG Kit **only supports Gemini CLI and Google Antigravity**.
